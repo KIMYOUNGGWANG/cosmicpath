@@ -41,6 +41,7 @@ const ReadingRequestSchema = z.object({
         isReversed: z.boolean(),
     })).optional(),
     tier: z.enum(['free', 'basic', 'premium']).default('free'),
+    language: z.enum(['ko', 'en']).optional().default('ko'),
 });
 
 export async function POST(request: NextRequest) {
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { name, gender, birthDate, birthTime, context, question, tarotCards, tier } = validationResult.data;
+        const { name, gender, birthDate, birthTime, context, question, tarotCards, tier, language } = validationResult.data;
 
         // 1. 사주 계산
         const birthDateTime = new Date(birthDate);
@@ -99,6 +100,7 @@ export async function POST(request: NextRequest) {
                     ascendant: ZODIAC_SIGNS[astrology.ascendant].name,
                 },
                 tarotCards: cards,
+                language: language as 'ko' | 'en',
             };
 
             try {
@@ -131,14 +133,15 @@ export async function POST(request: NextRequest) {
         }
 
         // ===== Standard Mode: Single API Call =====
-        const systemPrompt = buildStructuredSystemPrompt();
+        const systemPrompt = buildStructuredSystemPrompt(language as 'ko' | 'en');
         const userPrompt = buildUserPrompt(
             guide,
             saju,
             astrology,
             cards,
             context as ReadingContext,
-            question
+            question,
+            language as 'ko' | 'en'
         );
 
         try {
@@ -171,7 +174,7 @@ export async function POST(request: NextRequest) {
         } catch (aiError) {
             console.error('AI generation failed:', aiError);
 
-            const fallbackMessage = buildFallbackMessage(context as ReadingContext);
+            const fallbackMessage = buildFallbackMessage(context as ReadingContext, language as 'ko' | 'en');
 
             return NextResponse.json({
                 success: false,

@@ -14,6 +14,7 @@ interface TarotDetailModalProps {
         astroConnection: string;
         insight: string;
     };
+    language?: 'ko' | 'en';
 }
 
 export function TarotDetailModal({
@@ -22,8 +23,10 @@ export function TarotDetailModal({
     cardName,
     role,
     isReversed,
-    convergenceData
+    convergenceData,
+    language = 'ko'
 }: TarotDetailModalProps) {
+    const isEn = language === 'en';
     return (
         <AnimatePresence>
             {isOpen && (
@@ -57,7 +60,7 @@ export function TarotDetailModal({
                                 <div>
                                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
                                         {cardName}
-                                        {isReversed && <span className="text-red-400 text-xs">(역방향)</span>}
+                                        {isReversed && <span className="text-red-400 text-xs">{isEn ? '(Reversed)' : '(역방향)'}</span>}
                                     </h2>
                                     <p className="text-sm text-gold font-medium">{role}</p>
                                 </div>
@@ -103,7 +106,9 @@ export function TarotDetailModal({
                         {/* Footer */}
                         <div className="p-4 bg-black/20 text-center border-t border-white/5">
                             <p className="text-[10px] text-gray-500">
-                                타로의 직관과 사주/점성술의 논리가 결합된 통합 해석입니다.
+                                {isEn
+                                    ? "An integrated interpretation combining Tarot's intuition with Saju/Astrology's logic."
+                                    : "타로의 직관과 사주/점성술의 논리가 결합된 통합 해석입니다."}
                             </p>
                         </div>
                     </motion.div>

@@ -109,9 +109,11 @@ interface PremiumReportProps {
             isReversed: boolean;
         }[];
     };
+    language?: 'ko' | 'en';
 }
 
-export function PremiumReport({ report, metadata }: PremiumReportProps) {
+export function PremiumReport({ report, metadata, language = 'ko' }: PremiumReportProps) {
+    const isEn = language === 'en';
     const [selectedCardIdx, setSelectedCardIdx] = useState<number | null>(null);
 
     if (!report) return null;
@@ -121,7 +123,7 @@ export function PremiumReport({ report, metadata }: PremiumReportProps) {
     return (
         <div className="w-full max-w-2xl mx-auto pb-24 md:pb-32">
             {/* Header */}
-            <HeaderSection summary={report.summary} />
+            <HeaderSection summary={report.summary} language={language} />
 
             {/* Cosmic Radar Section (New) */}
             <section className="mt-8 px-4 md:px-6">
@@ -129,44 +131,46 @@ export function PremiumReport({ report, metadata }: PremiumReportProps) {
                     sajuScore={report.summary.trust_score * 20 - (Math.random() * 5)}
                     starScore={report.summary.trust_score * 20 - (Math.random() * 10)}
                     tarotScore={report.summary.trust_score * 20 - (Math.random() * 15)}
+                    language={language}
                 />
             </section>
 
             {/* Tarot Spread Section (New) */}
             {tarotCards.length > 0 && (
-                <TarotSpreadSection cards={tarotCards} onCardClick={setSelectedCardIdx} />
+                <TarotSpreadSection cards={tarotCards} onCardClick={setSelectedCardIdx} language={language} />
             )}
 
             {/* Traits */}
-            <TraitsSection traits={report.traits} />
+            <TraitsSection traits={report.traits} language={language} />
 
             {/* Core Analysis (Rainbow Cards) */}
             {report.core_analysis && (
-                <CoreAnalysisSection data={report.core_analysis} />
+                <CoreAnalysisSection data={report.core_analysis} language={language} />
             )}
 
             {/* Saju Sections (Accordions) */}
             {report.saju_sections && (
                 <AccordionSection
-                    title="📜 사주 기본 분석"
+                    title={isEn ? "📜 Saju (Four Pillars) Analysis" : "📜 사주 기본 분석"}
                     items={report.saju_sections}
                     source="saju"
+                    language={language}
                 />
             )}
 
             {/* Fortune Flow */}
             {report.fortune_flow && (
-                <FortuneFlowSection data={report.fortune_flow} />
+                <FortuneFlowSection data={report.fortune_flow} language={language} />
             )}
 
             {/* Life Areas */}
             {report.life_areas && (
-                <LifeAreasSection data={report.life_areas} />
+                <LifeAreasSection data={report.life_areas} language={language} />
             )}
 
             {/* Special Analysis */}
             {report.special_analysis && (
-                <SpecialAnalysisSection data={report.special_analysis} />
+                <SpecialAnalysisSection data={report.special_analysis} language={language} />
             )}
 
             {/* Action Plan */}
@@ -174,12 +178,13 @@ export function PremiumReport({ report, metadata }: PremiumReportProps) {
                 <ActionPlanSection
                     actionPlan={report.action_plan}
                     trustScore={report.summary.trust_score}
+                    language={language}
                 />
             )}
 
             {/* Legacy Support - Deep Dive */}
             {report.deep_dive && !report.saju_sections && (
-                <LegacyDeepDiveSection data={report.deep_dive} />
+                <LegacyDeepDiveSection data={report.deep_dive} language={language} />
             )}
 
             {/* Tarot Detail Modal */}
@@ -187,14 +192,19 @@ export function PremiumReport({ report, metadata }: PremiumReportProps) {
                 <TarotDetailModal
                     isOpen={selectedCardIdx !== null}
                     onClose={() => setSelectedCardIdx(null)}
-                    cardName={tarotCards[selectedCardIdx]?.name || "배정된 카드"}
-                    role={["현재 상황", "장애물/과제", "해결책/결과"][selectedCardIdx]}
+                    cardName={tarotCards[selectedCardIdx]?.name || (isEn ? "Assigned Card" : "배정된 카드")}
+                    role={isEn ? ["Current Situation", "Challenge/Obstacle", "Solution/Outcome"][selectedCardIdx] : ["현재 상황", "장애물/과제", "해결책/결과"][selectedCardIdx]}
                     isReversed={tarotCards[selectedCardIdx]?.isReversed}
-                    convergenceData={{
+                    convergenceData={isEn ? {
+                        sajuConnection: "The current flow of your Saju luck strongly resonates with the transformative energy symbolized by this card.",
+                        astroConnection: "The driving force shown by the planetary alignment further strengthens the determination contained in the card.",
+                        insight: "This card represents the direction your intuition is currently pointing. Both Saju and Astrology strongly suggest that now is the time to act."
+                    } : {
                         sajuConnection: "현재 사주의 운 흐름과 이 카드가 상징하는 변화의 에너지가 강하게 공명하고 있습니다.",
                         astroConnection: "행성의 정렬 상태가 보여주는 추진력이 카드에 담긴 결단력을 더욱 강화합니다.",
                         insight: "이 카드는 현재 당신의 직관이 가리키는 방향을 나타냅니다. 사주와 점성술 모두 지금은 행동해야 할 때임을 강력하게 시사하고 있습니다."
                     }}
+                    language={language}
                 />
             )}
         </div>
@@ -203,8 +213,9 @@ export function PremiumReport({ report, metadata }: PremiumReportProps) {
 
 // ... (Sub Components)
 
-function TarotSpreadSection({ cards, onCardClick }: { cards: { name: string; isReversed: boolean }[], onCardClick: (idx: number) => void }) {
-    const roles = ["현재 상황", "장애물/과제", "해결책/결과"];
+function TarotSpreadSection({ cards, onCardClick, language }: { cards: { name: string; isReversed: boolean }[], onCardClick: (idx: number) => void, language: 'ko' | 'en' }) {
+    const isEn = language === 'en';
+    const roles = isEn ? ["Current Situation", "Challenge/Obstacle", "Solution/Outcome"] : ["현재 상황", "장애물/과제", "해결책/결과"];
 
     return (
         <motion.section
@@ -214,8 +225,8 @@ function TarotSpreadSection({ cards, onCardClick }: { cards: { name: string; isR
             className="mt-6 px-4 md:px-6"
         >
             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <EvidenceTooltip tag="🔮" sources={['tarot']} explanation="타로 카드를 통해 현재의 직관과 심리 상태를 읽어냅니다." />
-                타로 리딩
+                <EvidenceTooltip tag="🔮" sources={['tarot']} explanation={isEn ? "Reads the current intuition and psychological state through Tarot cards." : "타로 카드를 통해 현재의 직관과 심리 상태를 읽어냅니다."} />
+                {isEn ? 'Tarot Reading' : '타로 리딩'}
             </h2>
             <div className="grid grid-cols-3 gap-2 md:gap-4">
                 {cards.map((card, idx) => (
@@ -230,22 +241,23 @@ function TarotSpreadSection({ cards, onCardClick }: { cards: { name: string; isR
                                     card.isReversed && "text-red-300"
                                 )}>
                                     {card.name}
-                                    {card.isReversed && " (역)"}
+                                    {card.isReversed && (isEn ? " (Rev)" : " (역)")}
                                 </span>
                             </div>
                         </div>
-                        <span className="text-[10px] md:text-xs text-gold mt-2 font-medium">{roles[idx] || `카드 ${idx + 1}`}</span>
+                        <span className="text-[10px] md:text-xs text-gold mt-2 font-medium">{roles[idx] || (isEn ? `Card ${idx + 1}` : `카드 ${idx + 1}`)}</span>
                     </div>
                 ))}
             </div>
-            <p className="text-[10px] text-gray-500 mt-4 text-center">각 카드를 클릭하면 상세한 융합 해석을 볼 수 있습니다.</p>
+            <p className="text-[10px] text-gray-500 mt-4 text-center">{isEn ? 'Click each card to see detailed integrated interpretation.' : '각 카드를 클릭하면 상세한 융합 해석을 볼 수 있습니다.'}</p>
         </motion.section>
     );
 }
 
 // --- Sub Components ---
 
-function HeaderSection({ summary }: { summary: PremiumReportData['summary'] }) {
+function HeaderSection({ summary, language }: { summary: PremiumReportData['summary'], language: 'ko' | 'en' }) {
+    const isEn = language === 'en';
     const trustScore = summary.trust_score || 3;
 
     return (
@@ -261,7 +273,7 @@ function HeaderSection({ summary }: { summary: PremiumReportData['summary'] }) {
                     ))}
                 </div>
                 <span className="text-xs font-medium text-gold/80 px-2 py-0.5 rounded-full bg-gold/10 border border-gold/20">
-                    신뢰도 {trustScore}/5
+                    {isEn ? 'Confidence' : '신뢰도'} {trustScore}/5
                 </span>
             </div>
 
@@ -271,9 +283,9 @@ function HeaderSection({ summary }: { summary: PremiumReportData['summary'] }) {
 
             <div className="bg-deep-navy/50 border border-white/10 rounded-2xl p-4 md:p-5 backdrop-blur-md">
                 <div className="flex gap-2 mb-2">
-                    <EvidenceTooltip tag="📜" sources={['saju']} explanation="태어난 시각의 기운을 분석합니다." />
-                    <EvidenceTooltip tag="🌌" sources={['astrology']} explanation="행성의 움직임을 분석합니다." />
-                    <EvidenceTooltip tag="🔮" sources={['tarot']} explanation="현재의 직관적 에너지를 읽습니다." />
+                    <EvidenceTooltip tag="📜" sources={['saju']} explanation={isEn ? "Analyzes the energy of the birth time." : "태어난 시각의 기운을 분석합니다."} />
+                    <EvidenceTooltip tag="🌌" sources={['astrology']} explanation={isEn ? "Analyzes the movements of the planets." : "행성의 움직임을 분석합니다."} />
+                    <EvidenceTooltip tag="🔮" sources={['tarot']} explanation={isEn ? "Reads the current intuitive energy." : "현재의 직관적 에너지를 읽습니다."} />
                 </div>
                 <p className="text-gray-200 text-sm leading-relaxed whitespace-pre-line">
                     {summary.content}
@@ -291,7 +303,8 @@ function HeaderSection({ summary }: { summary: PremiumReportData['summary'] }) {
     );
 }
 
-function TraitsSection({ traits }: { traits: PremiumReportData['traits'] }) {
+function TraitsSection({ traits, language }: { traits: PremiumReportData['traits'], language: 'ko' | 'en' }) {
+    const isEn = language === 'en';
     const getTypeIcon = (type: string) => {
         switch (type) {
             case 'saju': return '📜';
@@ -304,11 +317,11 @@ function TraitsSection({ traits }: { traits: PremiumReportData['traits'] }) {
 
     const getSourceLabel = (type: string) => {
         switch (type) {
-            case 'saju': return '사주명리';
+            case 'saju': return isEn ? 'Saju Luck' : '사주명리';
             case 'astro':
-            case 'astrology': return '점성술';
-            case 'tarot': return '타로';
-            default: return '분석';
+            case 'astrology': return isEn ? 'Astrology' : '점성술';
+            case 'tarot': return isEn ? 'Tarot' : '타로';
+            default: return isEn ? 'Analysis' : '분석';
         }
     };
 
@@ -336,7 +349,7 @@ function TraitsSection({ traits }: { traits: PremiumReportData['traits'] }) {
                                 trait.grade === 'S' ? "text-purple-300 border-purple-500/30 bg-purple-500/10" :
                                     trait.grade === 'A' ? "text-blue-300 border-blue-500/30 bg-blue-500/10" :
                                         "text-gray-400 border-gray-600 bg-gray-600/10"
-                            )}>{trait.grade} 등급</span>
+                            )}>Grade {trait.grade}</span>
                         </div>
                         <div>
                             <h3 className="text-white font-bold text-lg mb-2">{trait.name}</h3>
@@ -352,12 +365,13 @@ function TraitsSection({ traits }: { traits: PremiumReportData['traits'] }) {
     );
 }
 
-function CoreAnalysisSection({ data }: { data: NonNullable<PremiumReportData['core_analysis']> }) {
+function CoreAnalysisSection({ data, language }: { data: NonNullable<PremiumReportData['core_analysis']>, language: 'ko' | 'en' }) {
+    const isEn = language === 'en';
     return (
         <section className="mt-6 px-4 md:px-6">
             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <Sparkles size={18} className="text-gold" />
-                내 사주 핵심 정리
+                {isEn ? 'Core Saju Summary' : '내 사주 핵심 정리'}
             </h2>
 
             <div className="space-y-4">
@@ -367,8 +381,8 @@ function CoreAnalysisSection({ data }: { data: NonNullable<PremiumReportData['co
                         <span className="text-2xl">🌊</span>
                         <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                                <h3 className="text-white font-bold">부족한 오행 및 개운법</h3>
-                                <span className="category-tag tag-general">맞춤 개운법 제시</span>
+                                <h3 className="text-white font-bold">{isEn ? 'Lacking Elements & Remedy' : '부족한 오행 및 개운법'}</h3>
+                                <span className="category-tag tag-general">{isEn ? 'Custom Remedy' : '맞춤 개운법 제시'}</span>
                             </div>
                             <p className="text-sm text-gold mb-2">💧 {data.lacking_elements.elements}</p>
                             <p className="text-xs text-gray-400 leading-relaxed whitespace-pre-line">
@@ -376,7 +390,7 @@ function CoreAnalysisSection({ data }: { data: NonNullable<PremiumReportData['co
                             </p>
                             <div className="mt-3 p-3 bg-white/5 rounded-lg">
                                 <p className="text-xs text-gray-300">
-                                    <span className="text-gold font-bold">개운법:</span> {data.lacking_elements.remedy}
+                                    <span className="text-gold font-bold">{isEn ? 'Remedy:' : '개운법:'}</span> {data.lacking_elements.remedy}
                                 </p>
                             </div>
                         </div>
@@ -389,8 +403,8 @@ function CoreAnalysisSection({ data }: { data: NonNullable<PremiumReportData['co
                         <span className="text-2xl">⭐</span>
                         <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                                <h3 className="text-white font-bold">풍부한 오행과 활용법</h3>
-                                <span className="category-tag tag-career">재능 활용법</span>
+                                <h3 className="text-white font-bold">{isEn ? 'Abundant Elements & Usage' : '풍부한 오행과 활용법'}</h3>
+                                <span className="category-tag tag-career">{isEn ? 'Talent Usage' : '재능 활용법'}</span>
                             </div>
                             <p className="text-sm text-gold mb-2">⭐ {data.abundant_elements.elements}</p>
                             <p className="text-xs text-gray-400 leading-relaxed whitespace-pre-line">
@@ -404,7 +418,8 @@ function CoreAnalysisSection({ data }: { data: NonNullable<PremiumReportData['co
     );
 }
 
-function AccordionSection({ title, items, source }: { title: string; items: { id: string; title: string; content: string }[]; source?: string }) {
+function AccordionSection({ title, items, source, language }: { title: string; items: { id: string; title: string; content: string }[]; source?: string; language: 'ko' | 'en' }) {
+    const isEn = language === 'en';
     const [openItems, setOpenItems] = useState<Set<string>>(new Set());
 
     const toggleItem = (id: string) => {
@@ -422,7 +437,7 @@ function AccordionSection({ title, items, source }: { title: string; items: { id
     return (
         <section className="mt-6 px-4 md:px-6">
             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                {source && <EvidenceTooltip tag={source === 'saju' ? '📜' : source === 'tarot' ? '🔮' : '🌌'} sources={[source]} explanation="이 섹션의 분석은 해당 학문 체계를 근거로 합니다." />}
+                {source && <EvidenceTooltip tag={source === 'saju' ? '📜' : source === 'tarot' ? '🔮' : '🌌'} sources={[source]} explanation={isEn ? "Analysis based on this scholarly system." : "이 섹션의 분석은 해당 학문 체계를 근거로 합니다."} />}
                 {title}
             </h2>
             <div className="space-y-3">
@@ -456,7 +471,8 @@ function AccordionSection({ title, items, source }: { title: string; items: { id
     );
 }
 
-function FortuneFlowSection({ data }: { data: NonNullable<PremiumReportData['fortune_flow']> }) {
+function FortuneFlowSection({ data, language }: { data: NonNullable<PremiumReportData['fortune_flow']>, language: 'ko' | 'en' }) {
+    const isEn = language === 'en';
     const [openItems, setOpenItems] = useState<Set<string>>(new Set(['major_luck']));
 
     const toggleItem = (id: string) => {
@@ -477,7 +493,7 @@ function FortuneFlowSection({ data }: { data: NonNullable<PremiumReportData['for
         <section className="mt-6 px-4 md:px-6">
             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <TrendingUp size={18} className="text-gold" />
-                운의 흐름
+                {isEn ? 'Fortune Flow' : '운의 흐름'}
             </h2>
             <div className="space-y-3">
                 {items.map((item) => (
@@ -510,7 +526,8 @@ function FortuneFlowSection({ data }: { data: NonNullable<PremiumReportData['for
     );
 }
 
-function LifeAreasSection({ data }: { data: NonNullable<PremiumReportData['life_areas']> }) {
+function LifeAreasSection({ data, language }: { data: NonNullable<PremiumReportData['life_areas']>, language: 'ko' | 'en' }) {
+    const isEn = language === 'en';
     const [openItems, setOpenItems] = useState<Set<string>>(new Set());
 
     const toggleItem = (id: string) => {
@@ -533,7 +550,7 @@ function LifeAreasSection({ data }: { data: NonNullable<PremiumReportData['life_
         <section className="mt-6 px-4 md:px-6">
             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <Target size={18} className="text-gold" />
-                영역별 상세 분석
+                {isEn ? 'Detailed Analysis by Area' : '영역별 상세 분석'}
             </h2>
             <div className="space-y-3">
                 {areas.map((area) => (
@@ -582,7 +599,8 @@ function LifeAreasSection({ data }: { data: NonNullable<PremiumReportData['life_
     );
 }
 
-function SpecialAnalysisSection({ data }: { data: NonNullable<PremiumReportData['special_analysis']> }) {
+function SpecialAnalysisSection({ data, language }: { data: NonNullable<PremiumReportData['special_analysis']>, language: 'ko' | 'en' }) {
+    const isEn = language === 'en';
     const [openItems, setOpenItems] = useState<Set<string>>(new Set());
 
     const toggleItem = (id: string) => {
@@ -604,7 +622,7 @@ function SpecialAnalysisSection({ data }: { data: NonNullable<PremiumReportData[
         <section className="mt-6 px-4 md:px-6">
             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <Zap size={18} className="text-gold" />
-                특수 분석
+                {isEn ? 'Special Analysis' : '특수 분석'}
             </h2>
             <div className="space-y-3">
                 {specials.map((item) => (
@@ -640,15 +658,17 @@ function SpecialAnalysisSection({ data }: { data: NonNullable<PremiumReportData[
     );
 }
 
-function ActionPlanSection({ actionPlan, trustScore }: {
+function ActionPlanSection({ actionPlan, trustScore, language }: {
     actionPlan: NonNullable<PremiumReportData['action_plan']>;
     trustScore: number;
+    language: 'ko' | 'en';
 }) {
+    const isEn = language === 'en';
     return (
         <section className="mt-8 md:mt-10 px-4 md:px-6">
             <h2 className="text-base md:text-lg font-bold text-white mb-3 md:mb-4 flex items-center gap-2">
                 <Calendar size={18} className="text-gold" />
-                액션 플랜 (Super Days)
+                {isEn ? 'Action Plan (Super Days)' : '액션 플랜 (Super Days)'}
             </h2>
 
             <div className="grid gap-3">
@@ -657,9 +677,10 @@ function ActionPlanSection({ actionPlan, trustScore }: {
                         key={idx}
                         title={item.title}
                         date={item.date}
-                        time="12:00" // 기본값
+                        time={item.date.includes(' ') ? item.date.split(' ')[1] : "12:00"}
                         description={item.description}
                         confidence={trustScore * 20}
+                        language={language}
                         onConfirm={(data) => console.log('Action Confirmed:', data)}
                         onCancel={() => { }}
                     />
@@ -670,7 +691,8 @@ function ActionPlanSection({ actionPlan, trustScore }: {
 }
 
 // Legacy support for old schema
-function LegacyDeepDiveSection({ data }: { data: NonNullable<PremiumReportData['deep_dive']> }) {
+function LegacyDeepDiveSection({ data, language }: { data: NonNullable<PremiumReportData['deep_dive']>, language: 'ko' | 'en' }) {
+    const isEn = language === 'en';
     const [activeTab, setActiveTab] = useState<'saju' | 'astro' | 'tarot'>('saju');
 
     return (
@@ -687,9 +709,9 @@ function LegacyDeepDiveSection({ data }: { data: NonNullable<PremiumReportData['
                                 : "text-gray-400 hover:text-white hover:bg-white/5"
                         )}
                     >
-                        {tab === 'saju' && "📜 사주명리"}
-                        {tab === 'astro' && "🌌 점성술"}
-                        {tab === 'tarot' && "🔮 타로"}
+                        {tab === 'saju' && (isEn ? "📜 Saju" : "📜 사주명리")}
+                        {tab === 'astro' && (isEn ? "🌌 Astrology" : "🌌 점성술")}
+                        {tab === 'tarot' && (isEn ? "🔮 Tarot" : "🔮 타로")}
                     </button>
                 ))}
             </div>
@@ -697,21 +719,21 @@ function LegacyDeepDiveSection({ data }: { data: NonNullable<PremiumReportData['
             <div className="min-h-[300px]">
                 {activeTab === 'saju' && data.saju && (
                     <div className="space-y-4">
-                        <ContentCard title="오행 분석" content={data.saju.balance} />
-                        <ContentCard title="대운 분석" content={data.saju.flow_10yr} />
-                        <ContentCard title="세운 분석" content={data.saju.flow_yearly} />
+                        <ContentCard title={isEn ? "Elemental Analysis" : "오행 분석"} content={data.saju.balance} />
+                        <ContentCard title={isEn ? "Major Luck Analysis" : "대운 분석"} content={data.saju.flow_10yr} />
+                        <ContentCard title={isEn ? "Yearly Luck Analysis" : "세운 분석"} content={data.saju.flow_yearly} />
                     </div>
                 )}
                 {activeTab === 'astro' && data.astro && (
                     <div className="space-y-4">
-                        <ContentCard title="출생 차트" content={data.astro.natal} />
-                        <ContentCard title="트랜짓" content={data.astro.transit} />
+                        <ContentCard title={isEn ? "Natal Chart" : "출생 차트"} content={data.astro.natal} />
+                        <ContentCard title={isEn ? "Transit" : "트랜짓"} content={data.astro.transit} />
                     </div>
                 )}
                 {activeTab === 'tarot' && data.tarot && (
                     <div className="space-y-4">
-                        <ContentCard title="스프레드" content={data.tarot.spread_analysis} />
-                        <ContentCard title="카드 상세" content={data.tarot.card_details} />
+                        <ContentCard title={isEn ? "Spread" : "스프레드"} content={data.tarot.spread_analysis} />
+                        <ContentCard title={isEn ? "Card Detail" : "카드 상세"} content={data.tarot.card_details} />
                     </div>
                 )}
             </div>

@@ -18,6 +18,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingPhase, setLoadingPhase] = useState<{ phase: number; label: string }>({ phase: 0, label: '' });
   const [metadata, setMetadata] = useState<{ tarot?: { name: string; isReversed: boolean }[] } | undefined>(undefined);
+  const [language, setLanguage] = useState<'ko' | 'en'>('ko');
 
   // Convergence Animation State
   const [isConverging, setIsConverging] = useState(false);
@@ -27,6 +28,7 @@ export default function Home() {
 
   const handleInputSubmit = (data: ReadingData) => {
     setReadingData(data);
+    setLanguage(data.language);
     setStep('tarot');
   };
 
@@ -54,7 +56,7 @@ export default function Home() {
       const loadingInterval = setInterval(() => {
         currentPhase++;
         if (currentPhase <= 5) {
-          const labels = [
+          const labelsKo = [
             "",
             "핵심 요약 분석 중... (1/5)",
             "사주 기본 분석 중... (2/5)",
@@ -62,6 +64,15 @@ export default function Home() {
             "영역별 상세 분석 중... (4/5)",
             "특수 분석 & 액션 플랜 생성 중... (5/5)"
           ];
+          const labelsEn = [
+            "",
+            "Analyzing core summary... (1/5)",
+            "Analyzing Saju fundamentals... (2/5)",
+            "Analyzing fortune flow... (3/5)",
+            "Detailed area analysis... (4/5)",
+            "Generating action plan... (5/5)"
+          ];
+          const labels = language === 'en' ? labelsEn : labelsKo;
           setLoadingPhase({ phase: currentPhase, label: labels[currentPhase] });
         }
       }, 10000); // 10초마다 단계 변경 (총 50초 예상)
@@ -72,7 +83,8 @@ export default function Home() {
         body: JSON.stringify({
           ...readingData,
           tarotCards: cards,
-          tier: 'premium', // 프리미엄 모드: 5단계 멀티턴 API
+          tier: 'premium',
+          language,
         }),
       });
 
@@ -81,7 +93,7 @@ export default function Home() {
       const result = await response.json();
 
       if (!result.success) {
-        setStreamContent(result.fallbackMessage || "오류가 발생했습니다.");
+        setStreamContent(result.fallbackMessage || (language === 'en' ? "An error occurred." : "오류가 발생했습니다."));
         return;
       }
 
@@ -91,7 +103,7 @@ export default function Home() {
 
     } catch (error) {
       console.error('Reading failed:', error);
-      setStreamContent("서버 연결에 실패했습니다. 다시 시도해주세요.");
+      setStreamContent(language === 'en' ? "Failed to connect to the server. Please try again." : "서버 연결에 실패했습니다. 다시 시도해주세요.");
     } finally {
       setIsLoading(false);
     }
@@ -121,9 +133,9 @@ export default function Home() {
           </h1>
           <p className="text-gray-400 text-lg md:text-xl font-light tracking-wide">
             {isConverging ? (
-              <span className="text-gold animate-pulse">Aligning Destinies...</span>
+              <span className="text-gold animate-pulse">{language === 'en' ? 'Aligning Destinies...' : '운명을 정렬하는 중...'}</span>
             ) : (
-              "사주, 타로, 점성술로 완성하는 나만의 운명 지도"
+              language === 'en' ? "Your Personal Destiny Map through Saju, Tarot, and Astrology" : "사주, 타로, 점성술로 완성하는 나만의 운명 지도"
             )}
           </p>
 
@@ -192,17 +204,20 @@ export default function Home() {
             >
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-blue-200">
-                  운명의 카드를 선택하세요
+                  {language === 'en' ? 'Select Your Destiny Cards' : '운명의 카드를 선택하세요'}
                 </h2>
                 <p className="text-white/60">
-                  당신의 무의식이 이끄는 카드 3장을 선택해주세요.<br />
-                  <span className="text-xs text-indigo-300">(과거 / 현재 / 미래의 흐름을 읽어냅니다)</span>
+                  {language === 'en'
+                    ? <>Choose 3 cards that your intuition guides you to.<br /><span className="text-xs text-indigo-300">(Reading past / present / future flow)</span></>
+                    : <>당신의 무의식이 이끄는 카드 3장을 선택해주세요.<br /><span className="text-xs text-indigo-300">(과거 / 현재 / 미래의 흐름을 읽어냅니다)</span></>
+                  }
                 </p>
               </div>
 
               <TarotPicker
                 onSelect={handleTarotComplete}
                 maxCards={3} // 3장 리딩으로 변경
+                language={language}
               />
             </motion.div>
           )}
@@ -221,7 +236,7 @@ export default function Home() {
 
                   <div className="text-center space-y-2">
                     <p className="text-lg font-medium text-white animate-pulse">
-                      {loadingPhase.label || "운명의 데이터를 분석하고 있습니다..."}
+                      {loadingPhase.label || (language === 'en' ? "Analyzing your destiny data..." : "운명의 데이터를 분석하고 있습니다...")}
                     </p>
                     {loadingPhase.phase > 0 && (
                       <div className="w-64 h-1.5 bg-white/10 rounded-full overflow-hidden mt-2">
@@ -234,7 +249,9 @@ export default function Home() {
                       </div>
                     )}
                     <p className="text-sm text-gray-500">
-                      {loadingPhase.phase > 0 ? `5단계 정밀 분석 중 (${loadingPhase.phase}/5)` : "AI 엔진 초기화 중..."}
+                      {loadingPhase.phase > 0
+                        ? (language === 'en' ? `Step ${loadingPhase.phase} of 5` : `5단계 정밀 분석 중 (${loadingPhase.phase}/5)`)
+                        : (language === 'en' ? "Initializing AI Engine..." : "AI 엔진 초기화 중...")}
                     </p>
                   </div>
                 </div>
@@ -243,15 +260,16 @@ export default function Home() {
                   <DecisionGuard
                     isOpen={reportData.summary.trust_score <= 2 && !isDecisionAccepted}
                     onAccept={() => setIsDecisionAccepted(true)}
+                    language={language}
                   />
                   {(reportData.summary.trust_score > 2 || isDecisionAccepted) && (
-                    <PremiumReport report={reportData} metadata={metadata} />
+                    <PremiumReport report={reportData} metadata={metadata} language={language} />
                   )}
                 </>
               ) : (
                 // Fallback Display or Error
                 <div className="text-center p-8 bg-white/5 rounded-xl border border-red-500/30">
-                  <p className="text-red-300 mb-2">⚠️ 분석 중 문제가 발생했습니다.</p>
+                  <p className="text-red-300 mb-2">{language === 'en' ? '⚠️ A problem occurred during analysis.' : '⚠️ 분석 중 문제가 발생했습니다.'}</p>
                   <p className="text-sm text-gray-400">{streamContent}</p>
                 </div>
               )}

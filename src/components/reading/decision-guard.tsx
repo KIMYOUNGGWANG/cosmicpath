@@ -5,9 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface DecisionGuardProps {
     isOpen: boolean;
     onAccept: () => void;
+    language?: 'ko' | 'en';
 }
 
-export function DecisionGuard({ isOpen, onAccept }: DecisionGuardProps) {
+export function DecisionGuard({ isOpen, onAccept, language = 'ko' }: DecisionGuardProps) {
+    const isEn = language === 'en';
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -31,22 +34,38 @@ export function DecisionGuard({ isOpen, onAccept }: DecisionGuardProps) {
 
                         <div className="relative z-10">
                             <div className="text-5xl mb-6">⚠️</div>
-                            <h3 className="text-2xl font-bold text-white mb-4">운명의 경고</h3>
+                            <h3 className="text-2xl font-bold text-white mb-4">
+                                {isEn ? 'Destiny Warning' : '운명의 경고'}
+                            </h3>
                             <p className="text-gray-300 mb-8 leading-relaxed">
-                                현재 당신의 사주와 타로 신호가 <strong>강하게 충돌</strong>하거나,
-                                분석 결과의 <strong>신뢰도가 낮은 수준</strong>으로 감지되었습니다.
-                                <br /><br />
-                                AI의 조언은 참고용일 뿐이며, 중요한 선택의 주도권은
-                                오직 <strong>당신 자신</strong>에게 있습니다.
-                                <br /><br />
-                                이 위험성을 인지하고 결과를 확인하시겠습니까?
+                                {isEn ? (
+                                    <>
+                                        Your Saju and Tarot signals are <strong>strongly conflicting</strong>,
+                                        or the <strong>confidence level</strong> of the analysis has been detected as low.
+                                        <br /><br />
+                                        AI advice is for reference only, and the initiative for important choices
+                                        belongs <strong>only to you</strong>.
+                                        <br /><br />
+                                        Are you aware of this risk and wish to check the results?
+                                    </>
+                                ) : (
+                                    <>
+                                        현재 당신의 사주와 타로 신호가 <strong>강하게 충돌</strong>하거나,
+                                        분석 결과의 <strong>신뢰도가 낮은 수준</strong>으로 감지되었습니다.
+                                        <br /><br />
+                                        AI의 조언은 참고용일 뿐이며, 중요한 선택의 주도권은
+                                        오직 <strong>당신 자신</strong>에게 있습니다.
+                                        <br /><br />
+                                        이 위험성을 인지하고 결과를 확인하시겠습니까?
+                                    </>
+                                )}
                             </p>
 
                             <button
                                 onClick={onAccept}
                                 className="w-full py-4 rounded-xl bg-gradient-to-r from-red-600 to-red-800 text-white font-bold hover:shadow-[0_0_30px_rgba(220,38,38,0.3)] transition-all active:scale-95"
                             >
-                                네, 제 의지로 판단하겠습니다
+                                {isEn ? 'Yes, I will judge with my own will' : '네, 제 의지로 판단하겠습니다'}
                             </button>
                         </div>
                     </motion.div>

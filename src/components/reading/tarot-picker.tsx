@@ -11,9 +11,11 @@ import { MAJOR_ARCANA, TarotCard, selectCardByIndex } from '@/lib/engines/tarot'
 interface TarotPickerProps {
     onSelect: (cards: TarotCard[]) => void;
     maxCards?: number;
+    language?: 'ko' | 'en';
 }
 
-export function TarotPicker({ onSelect, maxCards = 1 }: TarotPickerProps) {
+export function TarotPicker({ onSelect, maxCards = 1, language = 'ko' }: TarotPickerProps) {
+    const isEn = language === 'en';
     const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
     const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
     const [selectedCards, setSelectedCards] = useState<TarotCard[]>([]);
@@ -59,11 +61,13 @@ export function TarotPicker({ onSelect, maxCards = 1 }: TarotPickerProps) {
             {/* 안내 메시지 */}
             <div className="text-center">
                 <h3 className="text-xl text-gold mb-2">
-                    🔮 타로 카드를 선택하세요
+                    {isEn ? '🔮 Select Your Tarot Cards' : '🔮 타로 카드를 선택하세요'}
                 </h3>
                 <p className="text-gray-400">
-                    직관적으로 끌리는 카드 {maxCards}장을 선택해주세요
-                    ({selectedIndices.length}/{maxCards})
+                    {isEn
+                        ? `Choose ${maxCards} cards that your intuition guides you to`
+                        : `직관적으로 끌리는 카드 ${maxCards}장을 선택해주세요`
+                    } ({selectedIndices.length}/{maxCards})
                 </p>
             </div>
 
@@ -94,13 +98,13 @@ export function TarotPicker({ onSelect, maxCards = 1 }: TarotPickerProps) {
                                     {/* 실제 이미지 */}
                                     <img
                                         src={card.image}
-                                        alt={card.name}
+                                        alt={isEn ? card.nameEn : card.name}
                                         className="w-full h-full object-cover opacity-90"
                                     />
                                     {/* 텍스트 오버레이 */}
                                     <div className="absolute bottom-0 w-full bg-black/60 p-1 text-center backdrop-blur-sm">
                                         <span className="text-[10px] font-bold text-white">
-                                            {card.name}
+                                            {isEn ? card.nameEn : card.name}
                                         </span>
                                     </div>
                                 </div>
@@ -119,7 +123,7 @@ export function TarotPicker({ onSelect, maxCards = 1 }: TarotPickerProps) {
                         exit={{ opacity: 0 }}
                         className="glass-card p-4"
                     >
-                        <h4 className="text-sm text-gray-400 mb-3">선택된 카드:</h4>
+                        <h4 className="text-sm text-gray-400 mb-3">{isEn ? 'Selected Cards:' : '선택된 카드:'}</h4>
                         <div className="flex flex-wrap gap-4">
                             {selectedCards.map((card, index) => (
                                 <motion.div
@@ -129,14 +133,16 @@ export function TarotPicker({ onSelect, maxCards = 1 }: TarotPickerProps) {
                                     className="flex items-center gap-3 bg-white/5 pr-4 rounded-lg overflow-hidden border border-white/10"
                                 >
                                     <div className={`w-12 h-16 bg-gray-800 shrink-0 ${card.isReversed ? 'rotate-180' : ''}`}>
-                                        <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
+                                        <img src={card.image} alt={isEn ? card.nameEn : card.name} className="w-full h-full object-cover" />
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-gold">
-                                            {card.name}
+                                            {isEn ? card.nameEn : card.name}
                                         </p>
                                         <p className="text-xs text-gray-400">
-                                            {card.isReversed ? '역방향 (Reversed)' : '정방향 (Upright)'}
+                                            {card.isReversed
+                                                ? (isEn ? 'Reversed' : '역방향 (Reversed)')
+                                                : (isEn ? 'Upright' : '정방향 (Upright)')}
                                         </p>
                                     </div>
                                 </motion.div>

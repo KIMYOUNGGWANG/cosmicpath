@@ -20,14 +20,15 @@ export interface ReadingData {
     birthTime: string;
     context: ReadingContext;
     question: string;
+    language: 'ko' | 'en';
 }
 
-const contexts: { value: ReadingContext; label: string; icon: string }[] = [
-    { value: 'career', label: '커리어', icon: '💼' },
-    { value: 'love', label: '연애', icon: '❤️' },
-    { value: 'money', label: '금전', icon: '💰' },
-    { value: 'health', label: '건강', icon: '🏥' },
-    { value: 'general', label: '전반적', icon: '🔮' },
+const contexts: { value: ReadingContext; labelKo: string; labelEn: string; icon: string }[] = [
+    { value: 'career', labelKo: '커리어', labelEn: 'Career', icon: '💼' },
+    { value: 'love', labelKo: '연애', labelEn: 'Love', icon: '❤️' },
+    { value: 'money', labelKo: '금전', labelEn: 'Money', icon: '💰' },
+    { value: 'health', labelKo: '건강', labelEn: 'Health', icon: '🏥' },
+    { value: 'general', labelKo: '전반적', labelEn: 'General', icon: '🔮' },
 ];
 
 export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps) {
@@ -37,10 +38,13 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
     const [birthTime, setBirthTime] = useState('12:00');
     const [context, setContext] = useState<ReadingContext>('general');
     const [question, setQuestion] = useState('');
+    const [language, setLanguage] = useState<'ko' | 'en'>('ko');
+
+    const isEn = language === 'en';
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSubmit({ name, gender, birthDate, birthTime, context, question });
+        onSubmit({ name, gender, birthDate, birthTime, context, question, language });
     };
 
     return (
@@ -50,44 +54,64 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
             onSubmit={handleSubmit}
             className="glass-card p-6 space-y-6"
         >
+            {/* 언어 선택 (Language Selection) */}
+            <div className="flex justify-center mb-2">
+                <div className="flex bg-white/5 p-1 rounded-full border border-white/10">
+                    <button
+                        type="button"
+                        onClick={() => setLanguage('ko')}
+                        className={`px-4 py-1.5 rounded-full text-xs transition-all ${language === 'ko' ? 'bg-gold text-deep-navy font-bold' : 'text-gray-400 hover:text-white'}`}
+                    >
+                        한국어
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setLanguage('en')}
+                        className={`px-4 py-1.5 rounded-full text-xs transition-all ${language === 'en' ? 'bg-gold text-deep-navy font-bold' : 'text-gray-400 hover:text-white'}`}
+                    >
+                        English
+                    </button>
+                </div>
+            </div>
+
             {/* 이름 & 성별 */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm text-gray-400 mb-2">
-                        이름 / 닉네임 <span className="text-gray-500 text-xs">(선택)</span>
+                        {isEn ? 'Name / Nickname' : '이름 / 닉네임'} <span className="text-gray-500 text-xs">{isEn ? '(Optional)' : '(선택)'}</span>
                     </label>
                     <input
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="미입력시 익명"
+                        placeholder={isEn ? "Anonymous if blank" : "미입력시 익명"}
                         className="input-cosmic w-full"
                     />
                 </div>
                 <div>
                     <label className="block text-sm text-gray-400 mb-2">
-                        성별 <span className="text-red-400">*</span>
+                        {isEn ? 'Gender' : '성별'} <span className="text-red-400">*</span>
                     </label>
                     <div className="grid grid-cols-2 gap-2">
                         <button
                             type="button"
                             onClick={() => setGender('male')}
                             className={`py-2.5 rounded-lg border transition-all ${gender === 'male'
-                                    ? 'bg-blue-500/20 border-blue-500 text-blue-300'
-                                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
+                                ? 'bg-blue-500/20 border-blue-500 text-blue-300'
+                                : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
                                 }`}
                         >
-                            남성
+                            {isEn ? 'Male' : '남성'}
                         </button>
                         <button
                             type="button"
                             onClick={() => setGender('female')}
                             className={`py-2.5 rounded-lg border transition-all ${gender === 'female'
-                                    ? 'bg-pink-500/20 border-pink-500 text-pink-300'
-                                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
+                                ? 'bg-pink-500/20 border-pink-500 text-pink-300'
+                                : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
                                 }`}
                         >
-                            여성
+                            {isEn ? 'Female' : '여성'}
                         </button>
                     </div>
                 </div>
@@ -97,7 +121,7 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label className="block text-sm text-gray-400 mb-2">
-                        생년월일 <span className="text-red-400">*</span>
+                        {isEn ? 'Birth Date' : '생년월일'} <span className="text-red-400">*</span>
                     </label>
                     <input
                         type="date"
@@ -109,7 +133,7 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                 </div>
                 <div>
                     <label className="block text-sm text-gray-400 mb-2">
-                        생시 (선택)
+                        {isEn ? 'Birth Time (Optional)' : '생시 (선택)'}
                     </label>
                     <input
                         type="time"
@@ -118,7 +142,7 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                         className="input-cosmic w-full"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                        모르면 정오(12:00)로 설정됩니다
+                        {isEn ? "Defaults to noon (12:00) if unknown" : "모르면 정오(12:00)로 설정됩니다"}
                     </p>
                 </div>
             </div>
@@ -126,7 +150,7 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
             {/* 컨텍스트 선택 */}
             <div>
                 <label className="block text-sm text-gray-400 mb-3">
-                    어떤 영역이 궁금하신가요?
+                    {isEn ? 'Which area are you curious about?' : '어떤 영역이 궁금하신가요?'}
                 </label>
                 <div className="flex flex-wrap gap-2">
                     {contexts.map((ctx) => (
@@ -137,7 +161,7 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                             className={`context-btn ${context === ctx.value ? 'active' : ''}`}
                         >
                             <span className="mr-1">{ctx.icon}</span>
-                            {ctx.label}
+                            {isEn ? ctx.labelEn : ctx.labelKo}
                         </button>
                     ))}
                 </div>
@@ -146,12 +170,12 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
             {/* 질문 입력 */}
             <div>
                 <label className="block text-sm text-gray-400 mb-2">
-                    구체적인 질문 (선택)
+                    {isEn ? 'Specific Question (Optional)' : '구체적인 질문 (선택)'}
                 </label>
                 <textarea
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
-                    placeholder="예: 이번 달 이직 결정을 해도 괜찮을까요?"
+                    placeholder={isEn ? "e.g., Is it a good idea to decide on a career change this month?" : "예: 이번 달 이직 결정을 해도 괜찮을까요?"}
                     className="input-cosmic w-full h-24 resize-none"
                 />
             </div>
@@ -167,12 +191,12 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                 {isLoading ? (
                     <span className="flex items-center justify-center gap-2">
                         <span className="animate-spin">✨</span>
-                        우주의 신호를 해석하는 중...
+                        {isEn ? 'Interpreting cosmic signals...' : '우주의 신호를 해석하는 중...'}
                     </span>
                 ) : (
                     <span className="flex items-center justify-center gap-2">
                         <span>🌌</span>
-                        3원 통합 리딩 시작하기
+                        {isEn ? 'Start 3-Way Integrated Reading' : '3원 통합 리딩 시작하기'}
                     </span>
                 )}
             </motion.button>

@@ -13,6 +13,7 @@ interface CosmicRadarProps {
         star?: string;
         tarot?: string;
     };
+    language?: 'ko' | 'en';
 }
 
 export function CosmicRadar({
@@ -20,8 +21,10 @@ export function CosmicRadar({
     starScore = 0,
     tarotScore = 0,
     isLoading = false,
-    details
+    details,
+    language = 'ko'
 }: CosmicRadarProps) {
+    const isEn = language === 'en';
     // 애니메이션을 위한 상태
     const [currentScores, setCurrentScores] = useState({ saju: 0, star: 0, tarot: 0 });
     const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
@@ -132,7 +135,9 @@ export function CosmicRadar({
                 >
                     <circle cx="0" cy="25" r="4" fill="var(--saju-blue)" />
                     <text x="0" y="10" textAnchor="middle" fill="var(--saju-blue)" fontSize="20">Logic</text>
-                    <text x="0" y="45" textAnchor="middle" fill="white" fontSize="12" opacity="0.6">사주</text>
+                    <text x="0" y="45" textAnchor="middle" fill="white" fontSize="12" opacity="0.6">
+                        {isEn ? 'Saju' : '사주'}
+                    </text>
                 </g>
 
                 {/* 타로 (Right) */}
@@ -143,7 +148,9 @@ export function CosmicRadar({
                 >
                     <circle cx="-15" cy="-10" r="4" fill="var(--tarot-purple)" />
                     <text x="0" y="0" textAnchor="middle" fill="var(--tarot-purple)" fontSize="20">Intuition</text>
-                    <text x="0" y="20" textAnchor="middle" fill="white" fontSize="12" opacity="0.6">타로</text>
+                    <text x="0" y="20" textAnchor="middle" fill="white" fontSize="12" opacity="0.6">
+                        {isEn ? 'Tarot' : '타로'}
+                    </text>
                 </g>
 
                 {/* 점성술 (Left) */}
@@ -154,7 +161,9 @@ export function CosmicRadar({
                 >
                     <circle cx="15" cy="-10" r="4" fill="var(--star-yellow)" />
                     <text x="0" y="0" textAnchor="middle" fill="var(--star-yellow)" fontSize="20">Flow</text>
-                    <text x="0" y="20" textAnchor="middle" fill="white" fontSize="12" opacity="0.6">별자리</text>
+                    <text x="0" y="20" textAnchor="middle" fill="white" fontSize="12" opacity="0.6">
+                        {isEn ? 'Astrology' : '별자리'}
+                    </text>
                 </g>
             </svg>
 
@@ -186,17 +195,17 @@ export function CosmicRadar({
                             {activeTooltip === 'tarot' && "🔮"}
                         </span>
                         <span className="font-bold text-white uppercase tracking-wider">
-                            {activeTooltip === 'saju' && "Saju Logic Breakdown"}
-                            {activeTooltip === 'star' && "Star Flow Breakdown"}
-                            {activeTooltip === 'tarot' && "Tarot Intuition Breakdown"}
+                            {activeTooltip === 'saju' && (isEn ? "Saju Logic Breakdown" : "사주 논리 분석")}
+                            {activeTooltip === 'star' && (isEn ? "Star Flow Breakdown" : "별자리 흐름 분석")}
+                            {activeTooltip === 'tarot' && (isEn ? "Tarot Intuition Breakdown" : "타로 직관 분석")}
                         </span>
                     </div>
                     <p className="text-gray-200 leading-relaxed text-left">
-                        {activeTooltip === 'saju' && (details?.saju || "타고난 오행의 균형과 현재 대운의 흐름이 결합되어 도출된 논리적 지표입니다.")}
-                        {activeTooltip === 'star' && (details?.star || "현재 행성들의 위치와 당신의 네이탈 차트 간의 상호작용을 통한 시기적 지표입니다.")}
-                        {activeTooltip === 'tarot' && (details?.tarot || "선택하신 타로 카드가 상징하는 현재의 심리적 에너지와 잠재력의 지표입니다.")}
+                        {activeTooltip === 'saju' && (details?.saju || (isEn ? "Logical index derived from the balance of innate elements and current energy flow." : "타고난 오행의 균형과 현재 대운의 흐름이 결합되어 도출된 논리적 지표입니다."))}
+                        {activeTooltip === 'star' && (details?.star || (isEn ? "Temporal index based on the interaction between current planetary positions and your natal chart." : "현재 행성들의 위치와 당신의 네이탈 차트 간의 상호작용을 통한 시기적 지표입니다."))}
+                        {activeTooltip === 'tarot' && (details?.tarot || (isEn ? "Index of your current psychological energy and potential symbolized by chosen Tarot cards." : "선택하신 타로 카드가 상징하는 현재의 심리적 에너지와 잠재력의 지표입니다."))}
                     </p>
-                    <div className="mt-2 text-[10px] text-gold/60 text-right">Click to close</div>
+                    <div className="mt-2 text-[10px] text-gold/60 text-right">{isEn ? 'Click to close' : '클릭하여 닫기'}</div>
                 </motion.div>
             )}
         </div>
