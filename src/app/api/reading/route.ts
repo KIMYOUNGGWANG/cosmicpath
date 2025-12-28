@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { calculateSaju } from '@/lib/engines/saju';
-import { calculateAstrology } from '@/lib/engines/astrology';
+import { calculateAstrology, ZODIAC_SIGNS } from '@/lib/engines/astrology';
 import { drawCards, TarotCard } from '@/lib/engines/tarot';
 import { extractAllTags } from '@/lib/core/tag-engine';
 import { generateInterpretationGuide, renderConfidenceStars } from '@/lib/core/conflict-resolver';
@@ -92,25 +92,13 @@ export async function POST(request: NextRequest) {
                 birthTime,
                 context,
                 question,
-                sajuData: {
-                    yearPillar: `${saju.yearPillar.stem}${saju.yearPillar.branch}`,
-                    monthPillar: `${saju.monthPillar.stem}${saju.monthPillar.branch}`,
-                    dayPillar: `${saju.dayPillar.stem}${saju.dayPillar.branch}`,
-                    hourPillar: `${saju.hourPillar.stem}${saju.hourPillar.branch}`,
-                    dayMaster: saju.dayMaster,
-                    // tenGods: saju.tenGods, (십성 정보도 전달하면 좋음)
-                },
+                sajuData: saju,
                 astroData: {
-                    sunSign: astrology.sunSign,
-                    moonSign: astrology.moonSign,
-                    ascendant: astrology.ascendant,
+                    sunSign: ZODIAC_SIGNS[astrology.sunSign].name,
+                    moonSign: ZODIAC_SIGNS[astrology.moonSign].name,
+                    ascendant: ZODIAC_SIGNS[astrology.ascendant].name,
                 },
-                tarotCards: cards.map(c => ({
-                    name: c.name,
-                    nameEn: c.nameEn,
-                    isReversed: c.isReversed,
-                    keywords: c.keywords,
-                })),
+                tarotCards: cards,
             };
 
             try {
