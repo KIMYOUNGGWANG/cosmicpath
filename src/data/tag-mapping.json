@@ -1,0 +1,892 @@
+{
+    "version": "1.0.0",
+    "description": "CosmicPath 태그 매핑 데이터베이스 - 3원 통합을 위한 공통 태그 언어",
+    "saju": {
+        "십신": {
+            "비견": {
+                "tags": [
+                    "#자기주장",
+                    "#독립심",
+                    "#경쟁심",
+                    "#자존심"
+                ],
+                "theme": "자아",
+                "polarity": "neutral"
+            },
+            "겁재": {
+                "tags": [
+                    "#야망",
+                    "#투쟁",
+                    "#경쟁",
+                    "#손재"
+                ],
+                "theme": "도전",
+                "polarity": "caution"
+            },
+            "식신": {
+                "tags": [
+                    "#여유",
+                    "#재능",
+                    "#표현력",
+                    "#창의성"
+                ],
+                "theme": "창조",
+                "polarity": "positive"
+            },
+            "상관": {
+                "tags": [
+                    "#반항",
+                    "#개성",
+                    "#표현욕구",
+                    "#비판"
+                ],
+                "theme": "표현",
+                "polarity": "neutral"
+            },
+            "편재": {
+                "tags": [
+                    "#재물운",
+                    "#투기",
+                    "#변동",
+                    "#모험"
+                ],
+                "theme": "재물",
+                "polarity": "caution"
+            },
+            "정재": {
+                "tags": [
+                    "#안정",
+                    "#저축",
+                    "#성실",
+                    "#재물_증가"
+                ],
+                "theme": "안정",
+                "polarity": "positive"
+            },
+            "편관": {
+                "tags": [
+                    "#강한_압박",
+                    "#책임감",
+                    "#권위_도전",
+                    "#시련"
+                ],
+                "theme": "압박",
+                "polarity": "caution"
+            },
+            "정관": {
+                "tags": [
+                    "#안정",
+                    "#질서",
+                    "#규칙",
+                    "#명예"
+                ],
+                "theme": "안정",
+                "polarity": "positive"
+            },
+            "편인": {
+                "tags": [
+                    "#예술성",
+                    "#고독",
+                    "#직관",
+                    "#비전통"
+                ],
+                "theme": "직관",
+                "polarity": "neutral"
+            },
+            "정인": {
+                "tags": [
+                    "#학문",
+                    "#지혜",
+                    "#보호",
+                    "#성장"
+                ],
+                "theme": "성장",
+                "polarity": "positive"
+            }
+        },
+        "오행": {
+            "목": {
+                "tags": [
+                    "#성장",
+                    "#시작",
+                    "#창조",
+                    "#봄"
+                ],
+                "element": "wood",
+                "season": "spring"
+            },
+            "화": {
+                "tags": [
+                    "#열정",
+                    "#확장",
+                    "#활력",
+                    "#여름"
+                ],
+                "element": "fire",
+                "season": "summer"
+            },
+            "토": {
+                "tags": [
+                    "#중심",
+                    "#균형",
+                    "#변화",
+                    "#환절기"
+                ],
+                "element": "earth",
+                "season": "transition"
+            },
+            "금": {
+                "tags": [
+                    "#결실",
+                    "#수렴",
+                    "#결단",
+                    "#가을"
+                ],
+                "element": "metal",
+                "season": "autumn"
+            },
+            "수": {
+                "tags": [
+                    "#지혜",
+                    "#휴식",
+                    "#잠재력",
+                    "#겨울"
+                ],
+                "element": "water",
+                "season": "winter"
+            }
+        }
+    },
+    "astrology": {
+        "planets": {
+            "sun": {
+                "tags": [
+                    "#자아",
+                    "#정체성",
+                    "#활력",
+                    "#목표"
+                ],
+                "domain": "self",
+                "timeframe": "long"
+            },
+            "moon": {
+                "tags": [
+                    "#감정",
+                    "#본능",
+                    "#습관",
+                    "#무의식"
+                ],
+                "domain": "emotion",
+                "timeframe": "short"
+            },
+            "mercury": {
+                "tags": [
+                    "#의사소통",
+                    "#사고",
+                    "#정보",
+                    "#학습"
+                ],
+                "domain": "communication",
+                "timeframe": "short"
+            },
+            "venus": {
+                "tags": [
+                    "#사랑",
+                    "#미적감각",
+                    "#조화",
+                    "#관계"
+                ],
+                "domain": "love",
+                "timeframe": "medium"
+            },
+            "mars": {
+                "tags": [
+                    "#행동",
+                    "#에너지",
+                    "#충동",
+                    "#용기"
+                ],
+                "domain": "action",
+                "timeframe": "short"
+            },
+            "jupiter": {
+                "tags": [
+                    "#확장",
+                    "#행운",
+                    "#성장",
+                    "#기회"
+                ],
+                "domain": "growth",
+                "timeframe": "long"
+            },
+            "saturn": {
+                "tags": [
+                    "#시련",
+                    "#책임",
+                    "#구조화_필요",
+                    "#제한"
+                ],
+                "domain": "restriction",
+                "timeframe": "long"
+            },
+            "uranus": {
+                "tags": [
+                    "#혁신",
+                    "#돌발",
+                    "#자유",
+                    "#변화"
+                ],
+                "domain": "change",
+                "timeframe": "long"
+            },
+            "neptune": {
+                "tags": [
+                    "#직관",
+                    "#환상",
+                    "#영성",
+                    "#혼란"
+                ],
+                "domain": "intuition",
+                "timeframe": "long"
+            },
+            "pluto": {
+                "tags": [
+                    "#변환",
+                    "#재생",
+                    "#권력",
+                    "#심층"
+                ],
+                "domain": "transformation",
+                "timeframe": "long"
+            }
+        },
+        "houses": {
+            "1": {
+                "tags": [
+                    "#자아",
+                    "#외모",
+                    "#첫인상",
+                    "#시작"
+                ],
+                "domain": "self"
+            },
+            "2": {
+                "tags": [
+                    "#재물",
+                    "#가치관",
+                    "#자원",
+                    "#안정"
+                ],
+                "domain": "resources"
+            },
+            "3": {
+                "tags": [
+                    "#의사소통",
+                    "#형제",
+                    "#단거리여행",
+                    "#학습"
+                ],
+                "domain": "communication"
+            },
+            "4": {
+                "tags": [
+                    "#가정",
+                    "#뿌리",
+                    "#안식처",
+                    "#부모"
+                ],
+                "domain": "home"
+            },
+            "5": {
+                "tags": [
+                    "#창의성",
+                    "#연애",
+                    "#자녀",
+                    "#즐거움"
+                ],
+                "domain": "creativity"
+            },
+            "6": {
+                "tags": [
+                    "#건강",
+                    "#일상",
+                    "#봉사",
+                    "#루틴"
+                ],
+                "domain": "health"
+            },
+            "7": {
+                "tags": [
+                    "#파트너십",
+                    "#결혼",
+                    "#계약",
+                    "#타인"
+                ],
+                "domain": "partnership"
+            },
+            "8": {
+                "tags": [
+                    "#변환",
+                    "#공유자원",
+                    "#심층심리",
+                    "#재탄생"
+                ],
+                "domain": "transformation"
+            },
+            "9": {
+                "tags": [
+                    "#철학",
+                    "#장거리여행",
+                    "#고등교육",
+                    "#확장"
+                ],
+                "domain": "expansion"
+            },
+            "10": {
+                "tags": [
+                    "#커리어_지연",
+                    "#명성",
+                    "#사회적지위",
+                    "#목표"
+                ],
+                "domain": "career"
+            },
+            "11": {
+                "tags": [
+                    "#친구",
+                    "#희망",
+                    "#집단",
+                    "#이상"
+                ],
+                "domain": "community"
+            },
+            "12": {
+                "tags": [
+                    "#무의식",
+                    "#영성",
+                    "#숨겨진것",
+                    "#희생"
+                ],
+                "domain": "unconscious"
+            }
+        },
+        "aspects": {
+            "conjunction": {
+                "tags": [
+                    "#융합",
+                    "#강화",
+                    "#집중"
+                ],
+                "polarity": "intensify"
+            },
+            "opposition": {
+                "tags": [
+                    "#긴장",
+                    "#균형_필요",
+                    "#대립"
+                ],
+                "polarity": "tension"
+            },
+            "trine": {
+                "tags": [
+                    "#조화",
+                    "#행운",
+                    "#자연스러움"
+                ],
+                "polarity": "positive"
+            },
+            "square": {
+                "tags": [
+                    "#도전",
+                    "#성장통",
+                    "#긴장"
+                ],
+                "polarity": "challenge"
+            },
+            "sextile": {
+                "tags": [
+                    "#기회",
+                    "#협력",
+                    "#가능성"
+                ],
+                "polarity": "positive"
+            }
+        }
+    },
+    "tarot": {
+        "majorArcana": {
+            "0": {
+                "name": "바보",
+                "upright": {
+                    "tags": [
+                        "#새로운_시작",
+                        "#순수함",
+                        "#모험",
+                        "#자유"
+                    ],
+                    "polarity": "positive"
+                },
+                "reversed": {
+                    "tags": [
+                        "#무모함",
+                        "#경솔함",
+                        "#방향_상실"
+                    ],
+                    "polarity": "caution"
+                }
+            },
+            "1": {
+                "name": "마법사",
+                "upright": {
+                    "tags": [
+                        "#창조력",
+                        "#의지력",
+                        "#집중",
+                        "#실현"
+                    ],
+                    "polarity": "positive"
+                },
+                "reversed": {
+                    "tags": [
+                        "#속임수",
+                        "#재능_낭비",
+                        "#조작"
+                    ],
+                    "polarity": "negative"
+                }
+            },
+            "2": {
+                "name": "여사제",
+                "upright": {
+                    "tags": [
+                        "#직관",
+                        "#비밀",
+                        "#내면의_지혜",
+                        "#신비"
+                    ],
+                    "polarity": "positive"
+                },
+                "reversed": {
+                    "tags": [
+                        "#직관_무시",
+                        "#비밀_폭로",
+                        "#표면적_판단"
+                    ],
+                    "polarity": "caution"
+                }
+            },
+            "3": {
+                "name": "여황제",
+                "upright": {
+                    "tags": [
+                        "#풍요",
+                        "#양육",
+                        "#창조",
+                        "#모성"
+                    ],
+                    "polarity": "positive"
+                },
+                "reversed": {
+                    "tags": [
+                        "#의존성",
+                        "#창조력_고갈",
+                        "#과잉_보호"
+                    ],
+                    "polarity": "caution"
+                }
+            },
+            "4": {
+                "name": "황제",
+                "upright": {
+                    "tags": [
+                        "#권위",
+                        "#구조",
+                        "#안정",
+                        "#리더십"
+                    ],
+                    "polarity": "positive"
+                },
+                "reversed": {
+                    "tags": [
+                        "#독재",
+                        "#경직됨",
+                        "#권위_남용"
+                    ],
+                    "polarity": "negative"
+                }
+            },
+            "5": {
+                "name": "교황",
+                "upright": {
+                    "tags": [
+                        "#전통",
+                        "#지혜",
+                        "#교육",
+                        "#영적_안내"
+                    ],
+                    "polarity": "positive"
+                },
+                "reversed": {
+                    "tags": [
+                        "#독단적_신념",
+                        "#전통에_반항",
+                        "#나쁜_조언"
+                    ],
+                    "polarity": "caution"
+                }
+            },
+            "6": {
+                "name": "연인",
+                "upright": {
+                    "tags": [
+                        "#사랑",
+                        "#조화",
+                        "#선택",
+                        "#관계"
+                    ],
+                    "polarity": "positive"
+                },
+                "reversed": {
+                    "tags": [
+                        "#불화",
+                        "#잘못된_선택",
+                        "#유혹"
+                    ],
+                    "polarity": "caution"
+                }
+            },
+            "7": {
+                "name": "전차",
+                "upright": {
+                    "tags": [
+                        "#승리",
+                        "#의지력",
+                        "#결단",
+                        "#전진"
+                    ],
+                    "polarity": "positive"
+                },
+                "reversed": {
+                    "tags": [
+                        "#방향_상실",
+                        "#공격성",
+                        "#통제력_상실"
+                    ],
+                    "polarity": "negative"
+                }
+            },
+            "8": {
+                "name": "힘",
+                "upright": {
+                    "tags": [
+                        "#용기",
+                        "#인내",
+                        "#내면의_힘",
+                        "#자제력"
+                    ],
+                    "polarity": "positive"
+                },
+                "reversed": {
+                    "tags": [
+                        "#자기_의심",
+                        "#나약함",
+                        "#공격성"
+                    ],
+                    "polarity": "caution"
+                }
+            },
+            "9": {
+                "name": "은둔자",
+                "upright": {
+                    "tags": [
+                        "#성찰",
+                        "#고독",
+                        "#내면_탐색",
+                        "#지혜"
+                    ],
+                    "polarity": "positive"
+                },
+                "reversed": {
+                    "tags": [
+                        "#고립",
+                        "#외로움_두려움",
+                        "#은둔"
+                    ],
+                    "polarity": "caution"
+                }
+            },
+            "10": {
+                "name": "운명의 수레바퀴",
+                "upright": {
+                    "tags": [
+                        "#변화",
+                        "#운명",
+                        "#순환",
+                        "#기회"
+                    ],
+                    "polarity": "positive"
+                },
+                "reversed": {
+                    "tags": [
+                        "#불운",
+                        "#예상치_못한_변화",
+                        "#저항"
+                    ],
+                    "polarity": "caution"
+                }
+            },
+            "11": {
+                "name": "정의",
+                "upright": {
+                    "tags": [
+                        "#공정",
+                        "#진실",
+                        "#균형",
+                        "#책임"
+                    ],
+                    "polarity": "positive"
+                },
+                "reversed": {
+                    "tags": [
+                        "#불공정",
+                        "#부정직",
+                        "#책임_회피"
+                    ],
+                    "polarity": "negative"
+                }
+            },
+            "12": {
+                "name": "매달린 사람",
+                "upright": {
+                    "tags": [
+                        "#희생",
+                        "#관점_전환",
+                        "#정지",
+                        "#새로운_시각"
+                    ],
+                    "polarity": "neutral"
+                },
+                "reversed": {
+                    "tags": [
+                        "#무의미한_희생",
+                        "#저항",
+                        "#우유부단"
+                    ],
+                    "polarity": "caution"
+                }
+            },
+            "13": {
+                "name": "죽음",
+                "upright": {
+                    "tags": [
+                        "#급격한_변화",
+                        "#전환",
+                        "#끝과_시작",
+                        "#재탄생"
+                    ],
+                    "polarity": "transformative"
+                },
+                "reversed": {
+                    "tags": [
+                        "#변화_저항",
+                        "#정체",
+                        "#두려움"
+                    ],
+                    "polarity": "caution"
+                }
+            },
+            "14": {
+                "name": "절제",
+                "upright": {
+                    "tags": [
+                        "#균형",
+                        "#절제",
+                        "#조화",
+                        "#인내"
+                    ],
+                    "polarity": "positive"
+                },
+                "reversed": {
+                    "tags": [
+                        "#불균형",
+                        "#과도함",
+                        "#조급함"
+                    ],
+                    "polarity": "caution"
+                }
+            },
+            "15": {
+                "name": "악마",
+                "upright": {
+                    "tags": [
+                        "#속박",
+                        "#유혹",
+                        "#중독",
+                        "#물질주의"
+                    ],
+                    "polarity": "caution"
+                },
+                "reversed": {
+                    "tags": [
+                        "#해방",
+                        "#속박에서_자유",
+                        "#새로운_시작"
+                    ],
+                    "polarity": "positive"
+                }
+            },
+            "16": {
+                "name": "탑",
+                "upright": {
+                    "tags": [
+                        "#급격한_변화",
+                        "#붕괴",
+                        "#충격",
+                        "#재구축"
+                    ],
+                    "polarity": "disruptive"
+                },
+                "reversed": {
+                    "tags": [
+                        "#변화_회피",
+                        "#파국_지연",
+                        "#내면의_변화"
+                    ],
+                    "polarity": "caution"
+                }
+            },
+            "17": {
+                "name": "별",
+                "upright": {
+                    "tags": [
+                        "#희망",
+                        "#영감",
+                        "#치유",
+                        "#평화"
+                    ],
+                    "polarity": "positive"
+                },
+                "reversed": {
+                    "tags": [
+                        "#희망_상실",
+                        "#절망",
+                        "#영감_부재"
+                    ],
+                    "polarity": "negative"
+                }
+            },
+            "18": {
+                "name": "달",
+                "upright": {
+                    "tags": [
+                        "#환상",
+                        "#직관",
+                        "#불안",
+                        "#무의식"
+                    ],
+                    "polarity": "neutral"
+                },
+                "reversed": {
+                    "tags": [
+                        "#두려움_극복",
+                        "#혼란_해소",
+                        "#진실_인식"
+                    ],
+                    "polarity": "positive"
+                }
+            },
+            "19": {
+                "name": "태양",
+                "upright": {
+                    "tags": [
+                        "#성공",
+                        "#기쁨",
+                        "#활력",
+                        "#긍정"
+                    ],
+                    "polarity": "positive"
+                },
+                "reversed": {
+                    "tags": [
+                        "#일시적_좌절",
+                        "#과도한_낙관",
+                        "#성공_지연"
+                    ],
+                    "polarity": "caution"
+                }
+            },
+            "20": {
+                "name": "심판",
+                "upright": {
+                    "tags": [
+                        "#부활",
+                        "#갱신",
+                        "#소명",
+                        "#자각"
+                    ],
+                    "polarity": "positive"
+                },
+                "reversed": {
+                    "tags": [
+                        "#자기_의심",
+                        "#판단_회피",
+                        "#후회에_갇힘"
+                    ],
+                    "polarity": "caution"
+                }
+            },
+            "21": {
+                "name": "세계",
+                "upright": {
+                    "tags": [
+                        "#완성",
+                        "#성취",
+                        "#통합",
+                        "#여정의_끝"
+                    ],
+                    "polarity": "positive"
+                },
+                "reversed": {
+                    "tags": [
+                        "#미완성",
+                        "#지연",
+                        "#목표달성_실패"
+                    ],
+                    "polarity": "caution"
+                }
+            }
+        }
+    },
+    "crossReference": {
+        "pressure_career": [
+            "saju.십신.편관",
+            "astrology.planets.saturn",
+            "astrology.houses.10",
+            "tarot.majorArcana.16"
+        ],
+        "new_beginning": [
+            "saju.오행.목",
+            "astrology.planets.uranus",
+            "tarot.majorArcana.0",
+            "tarot.majorArcana.13"
+        ],
+        "love_harmony": [
+            "saju.십신.식신",
+            "astrology.planets.venus",
+            "astrology.houses.7",
+            "tarot.majorArcana.6"
+        ],
+        "financial_growth": [
+            "saju.십신.정재",
+            "astrology.planets.jupiter",
+            "astrology.houses.2",
+            "tarot.majorArcana.3"
+        ],
+        "inner_wisdom": [
+            "saju.십신.정인",
+            "astrology.planets.neptune",
+            "tarot.majorArcana.2",
+            "tarot.majorArcana.9"
+        ]
+    }
+}

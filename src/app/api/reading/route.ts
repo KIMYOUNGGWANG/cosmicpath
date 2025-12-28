@@ -1,0 +1,214 @@
+/**
+ * 3원 통합 리딩 API
+ * POST /api/reading
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { calculateSaju } from '@/lib/engines/saju';
+import { calculateAstrology } from '@/lib/engines/astrology';
+import { drawCards, TarotCard } from '@/lib/engines/tarot';
+import { extractAllTags } from '@/lib/core/tag-engine';
+import { generateInterpretationGuide, renderConfidenceStars } from '@/lib/core/conflict-resolver';
+import {
+    buildSystemPrompt,
+    buildStructuredSystemPrompt,
+    buildUserPrompt,
+    buildDisclaimer,
+    buildFallbackMessage,
+    ReadingContext
+} from '@/lib/ai/prompt-builder';
+import { generateStructuredReport, ModelTier } from '@/lib/ai/llm-client';
+import { generatePremiumReport } from '@/lib/ai/premium-reading-service';
+
+export const maxDuration = 60; // Vercel Function Timeout (Increased for multi-turn)
+export const dynamic = 'force-dynamic';
+
+// 요청 스키마
+const ReadingRequestSchema = z.object({
+    name: z.string().optional().default(''), // 이름/닉네임
+    gender: z.enum(['male', 'female']).default('male'), // 성별 (대운 계산용)
+    birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '생년월일 형식이 올바르지 않습니다'),
+    birthTime: z.string().default('12:00'),
+    context: z.enum(['career', 'love', 'money', 'health', 'general']).default('general'),
+    question: z.string().max(500).optional().default(''),
+    tarotCards: z.array(z.object({
+        id: z.number(),
+        name: z.string(),
+        nameEn: z.string(),
+        keywords: z.array(z.string()),
+        interpretation: z.string(),
+        isReversed: z.boolean(),
+    })).optional(),
+    tier: z.enum(['free', 'basic', 'premium']).default('free'),
+});
+
+export async function POST(request: NextRequest) {
+    try {
+        const body = await request.json();
+
+        // 요청 검증
+        const validationResult = ReadingRequestSchema.safeParse(body);
+        if (!validationResult.success) {
+            return NextResponse.json(
+                { error: '입력 데이터가 올바르지 않습니다', details: validationResult.error.issues },
+                { status: 400 }
+            );
+        }
+
+        const { name, gender, birthDate, birthTime, context, question, tarotCards, tier } = validationResult.data;
+
+        // 1. 사주 계산
+        const birthDateTime = new Date(birthDate);
+        const [hours] = birthTime.split(':').map(Number);
+        const saju = calculateSaju(birthDateTime, hours);
+
+        // 2. 점성술 계산
+        const astrology = calculateAstrology(birthDateTime, birthTime);
+
+        // 3. 타로 카드 (전달받거나 자동 선택)
+        const cards = (tarotCards || drawCards(1)) as TarotCard[];
+
+        // 4. 태그 추출
+        const tagResult = extractAllTags(saju, astrology, cards);
+
+        // 5. 충돌 해결 및 신뢰도 계산
+        const guide = generateInterpretationGuide(tagResult, question);
+
+        // ===== Premium Mode: Multi-Turn API =====
+        if (tier === 'premium') {
+            const apiKey = process.env.GOOGLE_AI_API_KEY;
+            if (!apiKey) {
+                return NextResponse.json(
+                    { error: 'API key not configured' },
+                    { status: 500 }
+                );
+            }
+
+            const userData = {
+                name,
+                gender,
+                birthDate,
+                birthTime,
+                context,
+                question,
+                sajuData: {
+                    yearPillar: `${saju.yearPillar.stem}${saju.yearPillar.branch}`,
+                    monthPillar: `${saju.monthPillar.stem}${saju.monthPillar.branch}`,
+                    dayPillar: `${saju.dayPillar.stem}${saju.dayPillar.branch}`,
+                    hourPillar: `${saju.hourPillar.stem}${saju.hourPillar.branch}`,
+                    dayMaster: saju.dayMaster,
+                    // tenGods: saju.tenGods, (십성 정보도 전달하면 좋음)
+                },
+                astroData: {
+                    sunSign: astrology.sunSign,
+                    moonSign: astrology.moonSign,
+                    ascendant: astrology.ascendant,
+                },
+                tarotCards: cards.map(c => ({
+                    name: c.name,
+                    nameEn: c.nameEn,
+                    isReversed: c.isReversed,
+                    keywords: c.keywords,
+                })),
+            };
+
+            try {
+                const premiumResult = await generatePremiumReport(userData, apiKey);
+
+                return NextResponse.json({
+                    success: premiumResult.success,
+                    report: premiumResult.report,
+                    error: premiumResult.error, // 에러 메시지 포함
+                    isPremium: true,
+                    metadata: {
+                        confidence: guide.confidence,
+                        matching: guide.matching,
+                        keyThemes: guide.keyThemes,
+                        saju: {
+                            yearPillar: `${saju.yearPillar.stem}${saju.yearPillar.branch}`,
+                            dayMaster: saju.dayMaster,
+                        },
+                        astrology: {
+                            sunSign: astrology.sunSign,
+                            moonSign: astrology.moonSign,
+                        },
+                        tarot: cards.map(c => ({ name: c.name, isReversed: c.isReversed })),
+                    }
+                });
+            } catch (premiumError) {
+                console.error('Premium generation failed:', premiumError);
+                // Fall through to standard mode
+            }
+        }
+
+        // ===== Standard Mode: Single API Call =====
+        const systemPrompt = buildStructuredSystemPrompt();
+        const userPrompt = buildUserPrompt(
+            guide,
+            saju,
+            astrology,
+            cards,
+            context as ReadingContext,
+            question
+        );
+
+        try {
+            const report = await generateStructuredReport(
+                systemPrompt,
+                userPrompt,
+                tier as ModelTier
+            );
+
+            return NextResponse.json({
+                success: true,
+                report: report,
+                isPremium: false,
+                metadata: {
+                    confidence: guide.confidence,
+                    matching: guide.matching,
+                    keyThemes: guide.keyThemes,
+                    saju: {
+                        yearPillar: `${saju.yearPillar.stem}${saju.yearPillar.branch}`,
+                        dayMaster: saju.dayMaster,
+                    },
+                    astrology: {
+                        sunSign: astrology.sunSign,
+                        moonSign: astrology.moonSign,
+                    },
+                    tarot: cards.map(c => ({ name: c.name, isReversed: c.isReversed })),
+                }
+            });
+
+        } catch (aiError) {
+            console.error('AI generation failed:', aiError);
+
+            const fallbackMessage = buildFallbackMessage(context as ReadingContext);
+
+            return NextResponse.json({
+                success: false,
+                isFallback: true,
+                error: 'AI 리포트 생성 실패',
+                fallbackMessage: fallbackMessage,
+            });
+        }
+
+    } catch (error) {
+        console.error('Reading API error:', error);
+        return NextResponse.json(
+            { error: '리딩 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' },
+            { status: 500 }
+        );
+    }
+}
+
+// GET - 상태 확인용
+export async function GET() {
+    return NextResponse.json({
+        status: 'ok',
+        service: 'CosmicPath Reading API',
+        version: '2.0.0',
+        features: ['saju', 'astrology', 'tarot', 'ai-interpretation', 'premium-multi-turn'],
+    });
+}
+
