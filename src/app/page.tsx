@@ -109,14 +109,9 @@ export default function Home() {
       }
     } else {
       // Handle "Back" navigation or cancelled payment (paid !== 'true')
-<<<<<<< HEAD
       // Use sessionStorage here too
       const pendingData = sessionStorage.getItem('pending_reading_data');
       const pendingReportJson = sessionStorage.getItem('pending_report_data');
-=======
-      const pendingData = localStorage.getItem('pending_reading_data');
-      const pendingReportJson = localStorage.getItem('pending_report_data');
->>>>>>> feature/email-and-share-fix
 
       // Only restore if we have BOTH input data and report data (meaning we were at the result screen)
       if (pendingData && pendingReportJson) {
@@ -137,7 +132,6 @@ export default function Home() {
         } catch (e) {
           console.error("Failed to restore cached session:", e);
         }
-<<<<<<< HEAD
       } else {
         // !!! IMPORTANT FIX: Check and clear STUCK localStorage items from previous version !!!
         if (localStorage.getItem('pending_reading_data')) {
@@ -146,8 +140,6 @@ export default function Home() {
           localStorage.removeItem('pending_report_data');
           localStorage.removeItem('payment_completed');
         }
-=======
->>>>>>> feature/email-and-share-fix
       }
     }
   }, []);
