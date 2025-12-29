@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Script from 'next/script';
-import { Share2, MessageCircle, Download, Link2, Check, X, Loader2 } from 'lucide-react';
+import { Share2, MessageCircle, Link2, Check, X } from 'lucide-react';
 
 interface SharePanelProps {
     resultRef?: React.RefObject<HTMLElement | null>;
@@ -25,34 +25,6 @@ export function SharePanel({
     const [isSaving, setIsSaving] = useState(false);
     const [copied, setCopied] = useState(false);
 
-    // 이미지로 저장
-    const handleSaveImage = async () => {
-        if (!resultRef?.current) return;
-
-        setIsSaving(true);
-
-        try {
-            const html2canvas = (await import('html2canvas')).default;
-
-            const canvas = await html2canvas(resultRef.current, {
-                backgroundColor: '#0f0f23',
-                scale: 2,
-                logging: false,
-                useCORS: true,
-            });
-
-            const link = document.createElement('a');
-            link.download = `cosmicpath-reading-${Date.now()}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        } catch (error) {
-            console.error('Failed to save image:', error);
-            alert(isEn ? 'Failed to save image.' : '이미지 저장에 실패했습니다.');
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
     // 카카오톡 공유
     const handleKakaoShare = () => {
         if (typeof window === 'undefined') return;
@@ -68,25 +40,28 @@ export function SharePanel({
             kakao.init(process.env.NEXT_PUBLIC_KAKAO_JS_KEY);
         }
 
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+        const finalUrl = shareUrl && !shareUrl.startsWith('http') ? `${appUrl}${shareUrl}` : (shareUrl || window.location.href);
+
         kakao.Share.sendDefault({
             objectType: 'feed',
             content: {
                 title: shareTitle,
                 description: shareDescription,
-                imageUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1200&h=630&fit=crop', // Mystical Space/Nebula
+                imageUrl: `${appUrl}/og-image.png`,
                 imageWidth: 1200,
                 imageHeight: 630,
                 link: {
-                    mobileWebUrl: shareUrl || window.location.href,
-                    webUrl: shareUrl || window.location.href,
+                    mobileWebUrl: finalUrl,
+                    webUrl: finalUrl,
                 },
             },
             buttons: [
                 {
                     title: '결과 보기',
                     link: {
-                        mobileWebUrl: shareUrl || window.location.href,
-                        webUrl: shareUrl || window.location.href,
+                        mobileWebUrl: finalUrl,
+                        webUrl: finalUrl,
                     },
                 },
             ],
@@ -175,31 +150,6 @@ export function SharePanel({
                                 </div>
                             </button>
 
-                            {/* 이미지 저장 */}
-                            <button
-                                onClick={handleSaveImage}
-                                disabled={isSaving}
-                                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-white/5"
-                            >
-                                <div
-                                    className="w-10 h-10 rounded-full flex items-center justify-center"
-                                    style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)' }}
-                                >
-                                    {isSaving ? (
-                                        <Loader2 size={20} className="animate-spin" style={{ color: '#22c55e' }} />
-                                    ) : (
-                                        <Download size={20} style={{ color: '#22c55e' }} />
-                                    )}
-                                </div>
-                                <div className="text-left">
-                                    <p className="font-medium" style={{ color: '#ffffff' }}>
-                                        {isSaving ? (isEn ? 'Saving...' : '저장 중...') : (isEn ? 'Save as Image' : '이미지로 저장')}
-                                    </p>
-                                    <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                                        {isEn ? 'Download as PNG' : 'PNG 파일로 다운로드'}
-                                    </p>
-                                </div>
-                            </button>
 
                             {/* 링크 복사 */}
                             <button
