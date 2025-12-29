@@ -42,3 +42,4 @@ next-env.d.ts
 
 .env.local
 cosmicpath_prd_v3
+/src/generated/prisma

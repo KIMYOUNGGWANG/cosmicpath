@@ -5,96 +5,72 @@
    ================================ */
 
 :root {
-  /* Deep Space Colors */
-  --deep-navy: #0F1419;
-  --space-dark: #0a0e12;
-  --cosmic-purple: #1a1230;
+  /* Deep Space Palette - Refined */
+  --deep-navy: #050508;
+  --space-void: #020203;
 
-  /* Convergence Palette (3-Way System) */
-  --saju-blue: #3B82F6;
-  /* Logic & Structure */
-  --star-yellow: #FBBF24;
-  /* Flow & Timing */
-  --tarot-purple: #8B5CF6;
-  /* Intuition & Psyche */
+  /* Convergence Palette */
+  --saju-blue: #4A90E2;
+  --star-yellow: #FFD700;
+  --tarot-purple: #9D50BB;
 
-  /* Legacy Colors (Backwards Compatibility) */
+  /* Missing Legacy Variables */
   --gold: #FFD700;
-  --gold-dim: #d4af37;
-  --aurora-cyan: #00d4ff;
-  --aurora-purple: #8b5cf6;
-  --star-white: #f0f0f0;
+  --gold-dim: #D4AF37;
+  --aurora-cyan: #00D4FF;
 
-  /* Semantic Colors */
+  /* Accents */
+  --cosmic-accent: #6E48AA;
+  --gold-highlight: #FBF5B7;
+
+  /* Semantic */
   --background: var(--deep-navy);
-  --foreground: var(--star-white);
-  --primary: var(--gold);
-  --secondary: var(--aurora-cyan);
+  --foreground: #E2E2E2;
+  --text-muted: #94A3B8;
+  --glass-border: rgba(255, 255, 255, 0.08);
 
-  /* Confidence Levels */
-  --confidence-high: #22c55e;
-  --confidence-medium: #eab308;
-  --confidence-low: #ef4444;
-
-  /* Spacing */
-  --radius: 12px;
+  --radius: 16px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-secondary: var(--secondary);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* Noise Texture */
+.noise-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
-
-/* Light mode override (optional) */
-@media (prefers-color-scheme: light) {
-  :root {
-    --background: #f8fafc;
-    --foreground: #1e293b;
-  }
-}
-
-/* ================================
-   Base Styles
-   ================================ */
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', Arial, Helvetica, sans-serif;
-  min-height: 100vh;
+  font-family: var(--font-outfit), sans-serif;
+  /* Default to Outfit */
+  overflow-x: hidden;
 }
-
-/* Aurora gradient background */
-.aurora-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background:
-    radial-gradient(ellipse at 20% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 80%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 50%, rgba(255, 215, 0, 0.05) 0%, transparent 70%),
-    var(--deep-navy);
-  z-index: -1;
-}
-
-/* ================================
-   Typography
-   ================================ */
 
 h1,
 h2,
 h3,
 h4,
-h5,
-h6 {
-  font-weight: 600;
-  letter-spacing: -0.02em;
+.font-serif {
+  font-family: var(--font-cinzel), serif;
+}
+
+/* Aurora Background Refined */
+.aurora-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(157, 80, 187, 0.08) 0%, transparent 60%),
+    radial-gradient(circle at 100% 0%, rgba(74, 144, 226, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 0% 100%, rgba(255, 215, 0, 0.03) 0%, transparent 40%),
+    linear-gradient(180deg, var(--space-void) 0%, var(--deep-navy) 100%);
 }
 
 .text-gold {
@@ -131,12 +107,15 @@ h6 {
 
 .btn-primary {
   background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
-  color: var(--deep-navy);
-  font-weight: 600;
+  color: #000000 !important;
+  /* Force high contrast black black */
+  font-weight: 700;
   border-radius: var(--radius);
   padding: 12px 24px;
   transition: all 0.3s ease;
   box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+  border: none;
+  cursor: pointer;
 }
 
 .btn-primary:hover {

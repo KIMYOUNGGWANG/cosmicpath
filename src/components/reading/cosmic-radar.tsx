@@ -142,26 +142,26 @@ export function CosmicRadar({
 
                 {/* 타로 (Right) */}
                 <g
-                    transform={`translate(${maxTarot.x + 15}, ${maxTarot.y + 10})`}
+                    transform={`translate(${maxTarot.x + 30}, ${maxTarot.y + 15})`}
                     className="cursor-pointer"
                     onClick={() => setActiveTooltip('tarot')}
                 >
-                    <circle cx="-15" cy="-10" r="4" fill="var(--tarot-purple)" />
-                    <text x="0" y="0" textAnchor="middle" fill="var(--tarot-purple)" fontSize="20">Intuition</text>
-                    <text x="0" y="20" textAnchor="middle" fill="white" fontSize="12" opacity="0.6">
+                    <circle cx="-30" cy="-15" r="4" fill="var(--tarot-purple)" />
+                    <text x="0" y="0" textAnchor="start" fill="var(--tarot-purple)" fontSize="18">Intuition</text>
+                    <text x="0" y="18" textAnchor="start" fill="white" fontSize="11" opacity="0.6">
                         {isEn ? 'Tarot' : '타로'}
                     </text>
                 </g>
 
                 {/* 점성술 (Left) */}
                 <g
-                    transform={`translate(${maxStar.x - 15}, ${maxStar.y + 10})`}
+                    transform={`translate(${maxStar.x - 30}, ${maxStar.y + 15})`}
                     className="cursor-pointer"
                     onClick={() => setActiveTooltip('star')}
                 >
-                    <circle cx="15" cy="-10" r="4" fill="var(--star-yellow)" />
-                    <text x="0" y="0" textAnchor="middle" fill="var(--star-yellow)" fontSize="20">Flow</text>
-                    <text x="0" y="20" textAnchor="middle" fill="white" fontSize="12" opacity="0.6">
+                    <circle cx="30" cy="-15" r="4" fill="var(--star-yellow)" />
+                    <text x="0" y="0" textAnchor="end" fill="var(--star-yellow)" fontSize="18">Flow</text>
+                    <text x="0" y="18" textAnchor="end" fill="white" fontSize="11" opacity="0.6">
                         {isEn ? 'Astrology' : '별자리'}
                     </text>
                 </g>
