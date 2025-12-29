@@ -21,10 +21,19 @@ export async function POST(request: Request) {
         });
 
         return NextResponse.json({ id: result.id, success: true });
-    } catch (error) {
-        console.error('Failed to save reading:', error);
+    } catch (error: any) {
+        console.error('Failed to save reading:', {
+            message: error.message,
+            stack: error.stack,
+            code: error.code,
+            meta: error.meta
+        });
+
         return NextResponse.json(
-            { error: 'Internal Server Error' },
+            {
+                error: 'Database Save Failed',
+                details: error.message
+            },
             { status: 500 }
         );
     }
