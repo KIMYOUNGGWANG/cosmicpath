@@ -8,15 +8,15 @@ import { READING_PRODUCT } from '@/lib/payment/payment-config';
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { productId = READING_PRODUCT.id, readingData } = body;
+        const { productId = READING_PRODUCT.id } = body;
 
         const origin = request.headers.get('origin') || 'http://localhost:3000';
 
         const session = await createCheckoutSession({
             productId,
-            successUrl: `${origin}/reading?session_id={CHECKOUT_SESSION_ID}`,
+            successUrl: `${origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
             cancelUrl: `${origin}?canceled=true`,
-            metadata: readingData ? { readingData: JSON.stringify(readingData) } : {},
+            metadata: {}, // readingData saved in localStorage on client side
         });
 
         return NextResponse.json({
@@ -24,7 +24,8 @@ export async function POST(request: NextRequest) {
             url: session.url,
         });
     } catch (error) {
-        console.error('Payment session creation failed:', error);
+        console.error('Payment session creation failed - FULL ERROR:', error);
+        console.error('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
         return NextResponse.json(
             { error: 'Failed to create payment session' },
             { status: 500 }

@@ -73,7 +73,9 @@ export function SharePanel({
             content: {
                 title: shareTitle,
                 description: shareDescription,
-                imageUrl: 'https://images.unsplash.com/photo-1543722530-d185855186ba?q=80&w=1200', // Cosmic placeholder from Unsplash
+                imageUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1200&h=630&fit=crop', // Mystical Space/Nebula
+                imageWidth: 1200,
+                imageHeight: 630,
                 link: {
                     mobileWebUrl: shareUrl || window.location.href,
                     webUrl: shareUrl || window.location.href,

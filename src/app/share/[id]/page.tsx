@@ -25,6 +25,16 @@ export async function generateMetadata({ params }: SharedPageProps): Promise<Met
     return {
         title: `${title} | CosmicPath`,
         description: 'Shared reading result from CosmicPath AI.',
+        openGraph: {
+            title: `${title} | CosmicPath`,
+            description: 'Your Sacred Narrative woven through Saju, Astrology, and Tarot',
+            images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: `${title} | CosmicPath`,
+            images: ['/og-image.png'],
+        },
     };
 }
 
@@ -66,7 +76,7 @@ export default async function SharedPage({ params }: SharedPageProps) {
                 </div>
             </header>
 
-            <div className="pt-24 pb-20">
+            <div className="pt-28 pb-20">
                 <PremiumReport
                     report={reportData}
                     metadata={metadata}

@@ -59,7 +59,7 @@ export function clearSession(): void {
 export function createSession(
     paymentSessionId: string,
     readingResult: unknown,
-    followUpMax: number = 3
+    followUpMax: number = 0
 ): ReadingSession {
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24시간 후 만료
@@ -129,4 +129,16 @@ export function addAssistantMessage(session: ReadingSession, content: string): R
  */
 export function getRemainingQuestions(session: ReadingSession): number {
     return session.followUpMax - session.followUpCount;
+}
+
+/**
+ * 질문 횟수 추가 (바이럴/결제 용)
+ */
+export function addCredits(session: ReadingSession, amount: number): ReadingSession {
+    const updatedSession: ReadingSession = {
+        ...session,
+        followUpMax: session.followUpMax + amount,
+    };
+    saveSession(updatedSession);
+    return updatedSession;
 }

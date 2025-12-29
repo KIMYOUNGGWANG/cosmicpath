@@ -7,6 +7,7 @@ import { TarotPicker } from '@/components/reading/tarot-picker';
 import { PremiumReport } from '@/components/reading/premium-report';
 import { DecisionGuard } from '@/components/reading/decision-guard';
 import { FollowUpChat } from '@/components/reading/FollowUpChat';
+import { PaymentModal } from '@/components/payment/PaymentModal';
 import { ReadingSession, createSession, saveSession } from '@/lib/session/reading-session';
 
 export default function Home() {
@@ -34,6 +35,82 @@ export default function Home() {
   // Share URL State
   const [shareUrl, setShareUrl] = useState<string | undefined>(undefined);
 
+  // Payment State
+  const [isPremium, setIsPremium] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+
+  // Resume Reading after Payment
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const paid = urlParams.get('paid');
+
+    if (paid === 'true') {
+      const pendingData = localStorage.getItem('pending_reading_data');
+      const paymentCompleted = localStorage.getItem('payment_completed');
+
+      if (pendingData && paymentCompleted === 'true') {
+        try {
+          console.log('[Resume] Found pending data & payment completed');
+
+          // Clear flags
+          localStorage.removeItem('pending_reading_data');
+          localStorage.removeItem('payment_completed');
+
+          // Remove query param
+          window.history.replaceState({}, '', window.location.pathname);
+
+          // Restore data
+          const data = JSON.parse(pendingData);
+          console.log('[Resume] Restored data:', data);
+
+          // Restore report if exists
+          const pendingReportJson = localStorage.getItem('pending_report_data');
+          let pendingReport = null;
+          if (pendingReportJson) {
+            try {
+              pendingReport = JSON.parse(pendingReportJson);
+              console.log('[Resume] Restored existing report:', pendingReport);
+              localStorage.removeItem('pending_report_data');
+
+              // Set initial report state so UI shows it immediately
+              setReportData(pendingReport);
+            } catch (e) {
+              console.error('Failed to parse pending report:', e);
+            }
+          }
+
+          setReadingData(data);
+          setLanguage(data.language as 'ko' | 'en');
+          setStep('result');
+          setIsPremium(true);
+
+          if (data.tarotCards) {
+            console.log('[Resume] Starting reading with restored cards:', data.tarotCards);
+            setSelectedCards(data.tarotCards);
+
+            // Resume specific logic:
+            // If we have a pending report (Phase 1-2 done), start from Phase 3.
+            // Otherwise, start from Phase 1 (full re-analysis fallback).
+            const startPhase = pendingReport ? 3 : 1;
+
+            // Slight delay to ensure state updates
+            setTimeout(() => startReading(data.tarotCards, true, data, pendingReport, startPhase), 500);
+          } else {
+            console.error('[Resume] Missing tarotCards in pending data');
+            setStreamContent('Error: Could not restore session data (Missing Tarot Cards)');
+          }
+        } catch (e) {
+          console.error("Failed to resume reading:", e);
+          setStreamContent(`Error: Failed to resume session (${e})`);
+        }
+      } else {
+        console.log('[Resume] No pending data found or payment not completed');
+      }
+    }
+  }, []);
+
   const handleInputSubmit = (data: ReadingData) => {
     setReadingData(data);
     setLanguage(data.language);
@@ -53,12 +130,21 @@ export default function Home() {
     }, 2000);
   };
 
-  const startReading = async (cards: any[]) => {
-    if (!readingData) return;
+  const startReading = async (
+    cards: any[],
+    isPremiumOverride = false,
+    readingDataOverride?: ReadingData,
+    initialReport?: any,
+    startPhaseOverride?: number
+  ) => {
+    const dataToUse = readingDataOverride || readingData;
+    if (!dataToUse) return;
 
     try {
       setIsLoading(true);
-      let accumulatedReport = {};
+
+      // If resuming, use existing report, otherwise start empty
+      let accumulatedReport: any = initialReport || {};
       const totalPhases = 5;
 
       const labelsKo = [
@@ -69,6 +155,7 @@ export default function Home() {
         "영역별 상세 분석 중... (4/5)",
         "특수 분석 & 액션 플랜 생성 중... (5/5)"
       ];
+      // ... (labelsEn omitted for brevity, assuming existing code structure)
       const labelsEn = [
         "",
         "Analyzing core summary... (1/5)",
@@ -79,18 +166,24 @@ export default function Home() {
       ];
       const labels = language === 'en' ? labelsEn : labelsKo;
 
-      // Sequential Execution: Phase 1 -> 5
-      for (let phase = 1; phase <= totalPhases; phase++) {
+      // Determine phases to run
+      // If resuming (initialReport exists), we might start from Phase 3
+      const startPhase = startPhaseOverride || 1;
+      const maxPhase = (isPremium || isPremiumOverride) ? 5 : 2;
+
+      // If we are just starting fresh free reading, phases 1-2.
+      // If we upgraded, we run 3-5 (assuming startPhase=3).
+
+      for (let phase = startPhase; phase <= maxPhase; phase++) {
         setLoadingPhase({ phase, label: labels[phase] });
 
         const response = await fetch('/api/reading', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            ...readingData,
+            ...dataToUse,
             tarotCards: cards,
             tier: 'premium',
-            language,
             phase, // Execute specific phase
             previousReport: accumulatedReport, // Pass context
           }),
@@ -138,7 +231,15 @@ export default function Home() {
           if (id) {
             const protocol = window.location.protocol;
             const host = window.location.host;
-            setShareUrl(`${protocol}//${host}/share/${id}`);
+            const newUrl = `/share/${id}`;
+            setShareUrl(`${protocol}//${host}${newUrl}`);
+
+            // 브라우저 주소창 동기화 (새로고침 시 결과 유지)
+            window.history.replaceState(
+              { readingId: id },
+              '',
+              newUrl
+            );
 
             // Send Email if user email exists in localStorage (비회원 주문)
             const userEmail = localStorage.getItem('user_email');
@@ -159,8 +260,8 @@ export default function Home() {
         }
       })();
 
-      // Create session for follow-up chat (무료 버전: 3회 추가 질문 제공)
-      const newSession = createSession('free_session', accumulatedReport, 3);
+      // Create session for follow-up chat (바이럴 모드: 기본 0회, 공유 시 추가)
+      const newSession = createSession('free_session', accumulatedReport, 0);
       setSession(newSession);
 
     } catch (error) {
@@ -352,10 +453,11 @@ export default function Home() {
                         metadata={metadata}
                         language={language}
                         shareUrl={shareUrl}
+                        onUnlock={() => setIsPaymentModalOpen(true)}
                       />
 
-                      {/* Follow-up Chat */}
-                      {session && (
+                      {/* Follow-up Chat (Temporarily Disabled by User Request) */}
+                      {/* {session && (
                         <div className="max-w-2xl mx-auto px-4 mt-8">
                           <FollowUpChat
                             session={session}
@@ -363,9 +465,10 @@ export default function Home() {
                               setSession(updatedSession);
                               saveSession(updatedSession);
                             }}
+                            shareUrl={shareUrl}
                           />
                         </div>
-                      )}
+                      )} */}
                     </>
                   )}
                 </div>
@@ -397,6 +500,14 @@ export default function Home() {
 
         </AnimatePresence>
       </div>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        readingData={readingData ? { ...readingData, tarotCards: selectedCards } : undefined}
+        currentReport={reportData}
+      />
 
       {/* Ambient Footer */}
       <footer className="w-full py-12 text-center relative z-10 px-6">

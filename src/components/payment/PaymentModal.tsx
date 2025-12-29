@@ -10,13 +10,15 @@ interface PaymentModalProps {
     onClose: () => void;
     onPaymentStart?: () => void;
     readingData?: Record<string, unknown>;
+    currentReport?: any; // To persist Phase 1-2 results
 }
 
 export function PaymentModal({
     isOpen,
     onClose,
     onPaymentStart,
-    readingData
+    readingData,
+    currentReport
 }: PaymentModalProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -34,6 +36,16 @@ export function PaymentModal({
         // Save email for later use (resend result)
         localStorage.setItem('user_email', email);
 
+        // Save readingData to localStorage to avoid Stripe metadata limits
+        if (readingData) {
+            localStorage.setItem('pending_reading_data', JSON.stringify(readingData));
+        }
+
+        // Save current report data to avoid re-analysis of Phase 1-2
+        if (currentReport) {
+            localStorage.setItem('pending_report_data', JSON.stringify(currentReport));
+        }
+
         onPaymentStart?.();
 
         try {
@@ -42,7 +54,7 @@ export function PaymentModal({
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     productId: READING_PRODUCT.id,
-                    readingData,
+                    // readingData is too large for Stripe metadata, saved to localStorage instead
                     email // Pass email to API if needed for Stripe Customer creation
                 }),
             });

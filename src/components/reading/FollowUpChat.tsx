@@ -2,28 +2,33 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Script from 'next/script';
 import {
     ReadingSession,
     Message,
     useFollowUp,
     addAssistantMessage,
-    getRemainingQuestions
+    getRemainingQuestions,
+    addCredits
 } from '@/lib/session/reading-session';
-import { MessageCircle, Send, Loader2, Lock, Sparkles } from 'lucide-react';
+import { MessageCircle, Send, Loader2, Lock, Sparkles, Share2 } from 'lucide-react';
 
 interface FollowUpChatProps {
     session: ReadingSession;
     onSessionUpdate: (session: ReadingSession) => void;
     onPurchaseMore?: () => void;
+    shareUrl?: string;
 }
 
 export function FollowUpChat({
     session,
     onSessionUpdate,
-    onPurchaseMore
+    onPurchaseMore,
+    shareUrl
 }: FollowUpChatProps) {
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [shareStatus, setShareStatus] = useState<'idle' | 'sharing' | 'done'>('idle');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const remaining = getRemainingQuestions(session);
@@ -36,6 +41,68 @@ export function FollowUpChat({
     useEffect(() => {
         scrollToBottom();
     }, [session.followUpHistory]);
+
+    // 카카오톡 공유 핸들러
+    const handleKakaoShare = () => {
+        if (typeof window === 'undefined') return;
+
+        const kakao = (window as any).Kakao;
+
+        if (!kakao) {
+            alert('카카오톡을 열 수 없습니다. 잠시 후 다시 시도해주세요.');
+            return;
+        }
+
+        if (!kakao.isInitialized()) {
+            kakao.init(process.env.NEXT_PUBLIC_KAKAO_JS_KEY);
+        }
+
+        setShareStatus('sharing');
+
+        try {
+            kakao.Share.sendDefault({
+                objectType: 'feed',
+                content: {
+                    title: '✨ 나의 CosmicPath 운세 리딩 결과',
+                    description: '사주 + 점성술 + 타로 3원 통합 분석! 나의 운명을 확인해보세요 🌟',
+                    imageUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1200&h=630&fit=crop',
+                    imageWidth: 1200,
+                    imageHeight: 630,
+                    link: {
+                        mobileWebUrl: shareUrl || window.location.href,
+                        webUrl: shareUrl || window.location.href,
+                    },
+                },
+                buttons: [
+                    {
+                        title: '결과 보러가기',
+                        link: {
+                            mobileWebUrl: shareUrl || window.location.href,
+                            webUrl: shareUrl || window.location.href,
+                        },
+                    },
+                ],
+            });
+
+            // 공유 창이 열리면 크레딧 지급
+            setTimeout(() => {
+                const updated = addCredits(session, 1);
+                onSessionUpdate(updated);
+                setShareStatus('done');
+            }, 500);
+        } catch (error) {
+            console.error('Kakao share failed:', error);
+            setShareStatus('idle');
+            // 폴백: 링크 복사
+            const url = shareUrl || window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('링크가 복사되었습니다! 친구에게 공유해주세요.');
+                const updated = addCredits(session, 1);
+                onSessionUpdate(updated);
+                setShareStatus('done');
+            });
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -222,18 +289,39 @@ export function FollowUpChat({
                             <Lock size={16} />
                             <span className="text-sm">추가 질문을 모두 사용했습니다</span>
                         </div>
-                        {onPurchaseMore && (
+                        {/* Viral Share Unlock */}
+                        <div className="flex flex-col gap-3 items-center">
                             <button
-                                onClick={onPurchaseMore}
-                                className="px-6 py-2 rounded-full text-sm font-medium transition-all"
+                                onClick={handleKakaoShare}
+                                disabled={shareStatus === 'sharing'}
+                                className="group relative px-6 py-3 rounded-xl overflow-hidden transition-all hover:scale-105 active:scale-95 disabled:opacity-70 disabled:scale-100"
                                 style={{
-                                    background: 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)',
-                                    color: '#ffffff',
+                                    background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
+                                    boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)'
                                 }}
                             >
-                                추가 질문권 구매 ($2.99)
+                                <div className="absolute inset-0 bg-white/20 sm:translate-x-[-100%] sm:group-hover:translate-x-[100%] transition-transform duration-700 blur-md rounded-xl" />
+                                <div className="flex items-center gap-2 text-white font-bold relative z-10">
+                                    {shareStatus === 'sharing' ? (
+                                        <Loader2 size={18} className="animate-spin" />
+                                    ) : (
+                                        <Share2 size={18} />
+                                    )}
+                                    <span>
+                                        {shareStatus === 'sharing'
+                                            ? '공유 준비 중...'
+                                            : shareStatus === 'done'
+                                                ? '공유 완료!'
+                                                : '친구에게 공유하고 질문권 받기 (+1)'}
+                                    </span>
+                                </div>
                             </button>
-                        )}
+
+                            <p className="text-xs text-center leading-relaxed" style={{ color: 'rgba(255, 255, 255, 0.4)' }}>
+                                친구에게 결과를 공유하면<br />
+                                <span className="text-violet-400">무료 추가 질문</span>을 드립니다.
+                            </p>
+                        </div>
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} className="flex gap-3">
