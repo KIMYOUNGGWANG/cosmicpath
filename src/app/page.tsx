@@ -108,6 +108,31 @@ export default function Home() {
       } else {
         console.log('[Resume] No pending data found or payment not completed');
       }
+    } else {
+      // Handle "Back" navigation or cancelled payment (paid !== 'true')
+      const pendingData = localStorage.getItem('pending_reading_data');
+      const pendingReportJson = localStorage.getItem('pending_report_data');
+
+      // Only restore if we have BOTH input data and report data (meaning we were at the result screen)
+      if (pendingData && pendingReportJson) {
+        console.log('[Resume] Found cached session (User returned from payment)');
+        try {
+          const data = JSON.parse(pendingData);
+          const report = JSON.parse(pendingReportJson);
+
+          // Restore state but remain LOCKED (isPremium = false)
+          setReadingData(data);
+          setLanguage(data.language as 'ko' | 'en');
+          if (data.tarotCards) {
+            setSelectedCards(data.tarotCards);
+          }
+          setReportData(report);
+          setStep('result');
+          // intentionally NOT setting isPremium(true)
+        } catch (e) {
+          console.error("Failed to restore cached session:", e);
+        }
+      }
     }
   }, []);
 
@@ -229,10 +254,9 @@ export default function Home() {
           });
           const { id } = await response.json();
           if (id) {
-            const protocol = window.location.protocol;
-            const host = window.location.host;
+            const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
             const newUrl = `/share/${id}`;
-            setShareUrl(`${protocol}//${host}${newUrl}`);
+            setShareUrl(`${appUrl}${newUrl}`);
 
             // 브라우저 주소창 동기화 (새로고침 시 결과 유지)
             window.history.replaceState(

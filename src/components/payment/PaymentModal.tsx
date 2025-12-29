@@ -148,7 +148,6 @@ export function PaymentModal({
                                     {[
                                         '사주 + 점성술 + 타로 교차 검증',
                                         '신뢰도 점수 & 상세 근거 제공',
-                                        '추가 질문 3회 포함',
                                         '결과지 저장 & 공유 가능',
                                     ].map((feature, index) => (
                                         <li key={index} className="flex items-center gap-3">
