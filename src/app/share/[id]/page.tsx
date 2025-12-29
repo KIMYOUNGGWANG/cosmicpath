@@ -81,7 +81,7 @@ export default async function SharedPage({ params }: SharedPageProps) {
                     report={reportData}
                     metadata={metadata}
                     language={language}
-                // 읽기 전용 모드 플래그 전달이 필요할 수 있음 (SharePanel 제거 등)
+                    shareUrl={`${process.env.NEXT_PUBLIC_APP_URL || 'https://cosmicpath.vercel.app'}/share/${id}`}
                 />
             </div>
         </main>

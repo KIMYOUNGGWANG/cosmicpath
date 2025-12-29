@@ -40,8 +40,12 @@ export function SharePanel({
             kakao.init(process.env.NEXT_PUBLIC_KAKAO_JS_KEY);
         }
 
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
-        const finalUrl = shareUrl && !shareUrl.startsWith('http') ? `${appUrl}${shareUrl}` : (shareUrl || window.location.href);
+        const rawAppUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+        const appUrl = rawAppUrl.endsWith('/') ? rawAppUrl.slice(0, -1) : rawAppUrl;
+
+        const finalUrl = shareUrl
+            ? (shareUrl.startsWith('http') ? shareUrl : `${appUrl}${shareUrl.startsWith('/') ? '' : '/'}${shareUrl}`)
+            : (typeof window !== 'undefined' ? window.location.href : appUrl);
 
         kakao.Share.sendDefault({
             objectType: 'feed',

@@ -264,7 +264,8 @@ export default function Home() {
           });
           const { id } = await response.json();
           if (id) {
-            const appUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+            const rawAppUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
+            const appUrl = rawAppUrl.endsWith('/') ? rawAppUrl.slice(0, -1) : rawAppUrl;
             const newUrl = `/share/${id}`;
             setShareUrl(`${appUrl}${newUrl}`);
 
