@@ -262,6 +262,13 @@ export default function Home() {
               metadata: { ...metadata, language }
             })
           });
+
+          if (!response.ok) {
+            const errData = await response.json().catch(() => ({}));
+            console.error('Failed to save to database:', response.status, errData);
+            return;
+          }
+
           const { id } = await response.json();
           if (id) {
             const origin = window.location.origin;
