@@ -202,7 +202,9 @@ export default function Home() {
       // Determine phases to run
       // If resuming (initialReport exists), we might start from Phase 3
       const startPhase = startPhaseOverride || 1;
-      const maxPhase = (isPremium || isPremiumOverride) ? 5 : 2;
+      // Force premium access for debugging
+      const maxPhase = 5;
+      // const maxPhase = (isPremium || isPremiumOverride) ? 5 : 2;
 
       // If we are just starting fresh free reading, phases 1-2.
       // If we upgraded, we run 3-5 (assuming startPhase=3).
@@ -485,7 +487,11 @@ export default function Home() {
                         metadata={metadata}
                         language={language}
                         shareUrl={shareUrl}
-                        onUnlock={() => setIsPaymentModalOpen(true)}
+                        onUnlock={() => {
+                          // Temporarily disabled payment
+                          // setIsPaymentModalOpen(true)
+                          setIsPremium(true);
+                        }}
                       />
 
                       {/* Follow-up Chat (Temporarily Disabled by User Request) */}
@@ -533,13 +539,14 @@ export default function Home() {
         </AnimatePresence>
       </div>
 
-      {/* Payment Modal */}
+      {/* Payment Modal (Temporarily Disabled)
       <PaymentModal
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
         readingData={readingData ? { ...readingData, tarotCards: selectedCards } : undefined}
         currentReport={reportData}
       />
+      */}
 
       {/* Ambient Footer */}
       <footer className="w-full py-12 text-center relative z-10 px-6">
