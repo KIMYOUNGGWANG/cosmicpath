@@ -5,7 +5,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: Request) {
     try {
-        const { email, resultId, title } = await request.json();
+        const { email, resultId, title, birthInfo, sajuSummary, userContext } = await request.json();
 
         if (!email || !resultId) {
             return NextResponse.json(
@@ -15,10 +15,10 @@ export async function POST(request: Request) {
         }
 
         const resultUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/share/${resultId}`;
-        const subject = `✨ ${title || 'CosmicPath Reading Result'} is ready!`;
+        const subject = `✨ ${title || 'CosmicPath Reading Result'}이(가) 완성되었습니다!`;
 
         const { data, error } = await resend.emails.send({
-            from: 'CosmicPath <onboarding@resend.dev>', // Default Resend verified domain for testing
+            from: 'CosmicPath <onboarding@resend.dev>',
             to: [email],
             subject: subject,
             html: `
@@ -28,83 +28,79 @@ export async function POST(request: Request) {
                     <meta charset="utf-8">
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>${subject}</title>
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;700&display=swap');
+                    </style>
                 </head>
-                <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; background-color: #0a0a12;">
-                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #0a0a12;">
+                <body style="margin: 0; padding: 0; font-family: 'Inter', Arial, sans-serif; background-color: #030308; color: #ffffff;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #030308;">
                         <tr>
-                            <td align="center" style="padding: 40px 20px;">
-                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px;">
+                            <td align="center" style="padding: 40px 10px;">
+                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #0a0a1a; border-radius: 24px; overflow: hidden; border: 1px solid rgba(139, 92, 246, 0.2);">
                                     
-                                    <!-- Header with Gradient -->
+                                    <!-- Header -->
                                     <tr>
-                                        <td style="background: linear-gradient(135deg, #1e1e3f 0%, #0f0f1a 100%); border-radius: 16px 16px 0 0; padding: 40px 30px; text-align: center; border: 1px solid rgba(139, 92, 246, 0.3); border-bottom: none;">
-                                            <div style="font-size: 12px; letter-spacing: 4px; color: #8B5CF6; text-transform: uppercase; margin-bottom: 10px;">✧ Cosmic Reading Complete ✧</div>
-                                            <h1 style="margin: 0; font-size: 32px; font-weight: 700; background: linear-gradient(135deg, #8B5CF6, #FBBF24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">CosmicPath</h1>
+                                        <td style="background: linear-gradient(135deg, #0f0f2a 0%, #050510 100%); padding: 50px 30px; text-align: center; border-bottom: 1px solid rgba(139, 92, 246, 0.1);">
+                                            <div style="font-size: 14px; letter-spacing: 5px; color: #8B5CF6; text-transform: uppercase; margin-bottom: 15px; font-weight: 700;">✧ CosmicPath ✧</div>
+                                            <h1 style="margin: 0; font-family: 'Cinzel', serif; font-size: 36px; font-weight: 700; background: linear-gradient(135deg, #ffffff 0%, #8B5CF6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; color: #ffffff;">심화분석 완성!</h1>
+                                            <p style="color: #94A3B8; margin-top: 10px; font-size: 16px;">사주팔자 심화분석이 완료되었습니다</p>
                                         </td>
                                     </tr>
                                     
                                     <!-- Main Content -->
                                     <tr>
-                                        <td style="background: linear-gradient(180deg, #0f0f1a 0%, #1a1a2e 100%); padding: 40px 30px; border: 1px solid rgba(139, 92, 246, 0.2); border-top: none; border-bottom: none;">
+                                        <td style="padding: 40px 30px;">
+                                            <p style="font-size: 18px; color: #ffffff; text-align: center; margin-bottom: 30px;">안녕하세요, 회원님! 🌟</p>
+                                            <p style="font-size: 15px; color: #94A3B8; text-align: center; line-height: 1.6; margin-bottom: 40px;">
+                                                요청하신 <strong style="color: #FBBF24;">사주팔자 심화분석</strong>이 완성되었습니다.<br/>
+                                                오행분석부터 시작되는 심화분석 내용을 확인해보세요.
+                                            </p>
                                             
-                                            <!-- Greeting -->
-                                            <h2 style="color: #FBBF24; font-size: 22px; margin: 0 0 20px 0; text-align: center;">
-                                                🌟 Your Reading is Ready!
-                                            </h2>
-                                            
-                                            <!-- Reading Title Card -->
-                                            <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 12px; padding: 24px; margin-bottom: 30px;">
-                                                <h3 style="color: #ffffff; font-size: 18px; margin: 0 0 12px 0; text-align: center;">${title || 'Your Cosmic Reading'}</h3>
-                                                <p style="color: #94A3B8; font-size: 14px; line-height: 1.6; margin: 0; text-align: center;">
-                                                    Your personalized analysis integrating Saju, Astrology, and Tarot has been preserved in the cosmic archives.
-                                                </p>
-                                            </div>
-                                            
-                                            <!-- Trust Score Badge -->
-                                            <div style="text-align: center; margin-bottom: 30px;">
-                                                <span style="display: inline-block; background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(139, 92, 246, 0.2)); border: 1px solid rgba(251, 191, 36, 0.4); border-radius: 20px; padding: 8px 16px; color: #FBBF24; font-size: 12px; font-weight: 600;">
-                                                    ⭐⭐⭐⭐⭐ High Confidence Reading
-                                                </span>
+                                            <!-- Info Cards Container -->
+                                            <div style="background: rgba(139, 92, 246, 0.03); border: 1px solid rgba(139, 92, 246, 0.1); border-radius: 20px; padding: 30px;">
+                                                
+                                                <!-- Birth Info Card -->
+                                                <div style="margin-bottom: 25px;">
+                                                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                                                        <span style="font-size: 16px; margin-right: 8px;">📅</span>
+                                                        <span style="font-size: 14px; color: #94A3B8; font-weight: 600;">생년월일시</span>
+                                                    </div>
+                                                    <div style="color: #ffffff; font-size: 16px; margin-bottom: 10px;">${birthInfo || '정보 없음'}</div>
+                                                    <div style="background: rgba(251, 191, 36, 0.1); border-radius: 12px; padding: 12px 16px; border: 1px solid rgba(251, 191, 36, 0.2); color: #FBBF24; font-size: 14px; letter-spacing: 1px;">
+                                                        사주: ${sajuSummary || '분석 중...'}
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- User Context Card -->
+                                                <div style="padding-top: 25px; border-top: 1px solid rgba(139, 92, 246, 0.1);">
+                                                    <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                                                        <span style="font-size: 16px; margin-right: 8px;">💭</span>
+                                                        <span style="font-size: 14px; color: #94A3B8; font-weight: 600;">고민하신 내용</span>
+                                                    </div>
+                                                    <div style="color: #CBD5E1; font-size: 14px; line-height: 1.7; font-style: italic;">
+                                                        "${userContext || '종합 운세 분석을 요청하셨습니다.'}"
+                                                    </div>
+                                                </div>
                                             </div>
                                             
                                             <!-- CTA Button -->
-                                            <div style="text-align: center; margin: 30px 0;">
-                                                <a href="${resultUrl}" style="display: inline-block; background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%); color: #ffffff; padding: 16px 40px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 16px; box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);">
-                                                    ✨ View Full Reading
+                                            <div style="text-align: center; margin-top: 50px;">
+                                                <a href="${resultUrl}" style="display: inline-block; background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%); color: #ffffff; padding: 20px 45px; border-radius: 16px; text-decoration: none; font-weight: 700; font-size: 18px; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3); transition: all 0.3s ease;">
+                                                    💎 심화분석 결과 보러가기
                                                 </a>
                                             </div>
-                                            
-                                            <!-- What's Included -->
-                                            <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; margin-top: 24px;">
-                                                <p style="color: #64748B; font-size: 12px; text-align: center; margin: 0 0 16px 0; text-transform: uppercase; letter-spacing: 1px;">What's Inside</p>
-                                                <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                                                    <tr>
-                                                        <td width="33%" style="text-align: center; padding: 10px;">
-                                                            <div style="font-size: 24px; margin-bottom: 8px;">📜</div>
-                                                            <div style="color: #94A3B8; font-size: 11px;">Saju Analysis</div>
-                                                        </td>
-                                                        <td width="33%" style="text-align: center; padding: 10px;">
-                                                            <div style="font-size: 24px; margin-bottom: 8px;">🌌</div>
-                                                            <div style="color: #94A3B8; font-size: 11px;">Astrology</div>
-                                                        </td>
-                                                        <td width="33%" style="text-align: center; padding: 10px;">
-                                                            <div style="font-size: 24px; margin-bottom: 8px;">🔮</div>
-                                                            <div style="color: #94A3B8; font-size: 11px;">Tarot Reading</div>
-                                                        </td>
-                                                    </tr>
-                                                </table>
-                                            </div>
-                                            
                                         </td>
                                     </tr>
                                     
                                     <!-- Footer -->
                                     <tr>
-                                        <td style="background: #0a0a12; border-radius: 0 0 16px 16px; padding: 30px; text-align: center; border: 1px solid rgba(139, 92, 246, 0.2); border-top: none;">
-                                            <p style="color: #475569; font-size: 12px; margin: 0 0 10px 0;">
-                                                Or copy this link: <a href="${resultUrl}" style="color: #8B5CF6;">${resultUrl}</a>
+                                        <td style="padding: 40px 30px; text-align: center; background-color: #050510;">
+                                            <p style="color: #475569; font-size: 12px; margin: 0 0 15px 0;">
+                                                링크를 클릭해도 열리지 않는다면 아래 주소를 주소창에 붙여넣어 주세요:<br/>
+                                                <a href="${resultUrl}" style="color: #6366F1; text-decoration: none;">${resultUrl}</a>
                                             </p>
-                                            <p style="color: #334155; font-size: 11px; margin: 0;">
+                                            <div style="height: 1px; background: rgba(139, 92, 246, 0.1); width: 80px; margin: 25px auto;"></div>
+                                            <p style="color: #334155; font-size: 11px; margin: 0; letter-spacing: 2px; text-transform: uppercase;">
                                                 © ${new Date().getFullYear()} CosmicPath. Unveiling the Eternal Flow.
                                             </p>
                                         </td>

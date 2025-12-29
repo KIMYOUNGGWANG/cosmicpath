@@ -148,20 +148,20 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
             </div>
 
             {/* 컨텍스트 선택 */}
-            <div>
-                <label className="block text-sm text-gray-300 font-medium mb-3">
+            <div className="space-y-4">
+                <label className="block text-sm text-gray-300 font-medium text-center md:text-left">
                     {isEn ? 'Which area are you curious about?' : '어떤 영역이 궁금하신가요?'}
                 </label>
-                <div className="flex flex-wrap gap-2 w-full">
+                <div className="flex flex-wrap justify-center md:justify-start gap-3 w-full">
                     {contexts.map((ctx) => (
                         <button
                             key={ctx.value}
                             type="button"
                             onClick={() => setContext(ctx.value)}
-                            className={`context-btn whitespace-nowrap ${context === ctx.value ? 'active' : ''}`}
+                            className={`context-btn flex items-center gap-2 py-3 px-5 transition-all outline-none ${context === ctx.value ? 'active ring-2 ring-gold/30' : ''}`}
                         >
-                            <span className="mr-1">{ctx.icon}</span>
-                            {isEn ? ctx.labelEn : ctx.labelKo}
+                            <span className="text-xl">{ctx.icon}</span>
+                            <span className="font-medium">{isEn ? ctx.labelEn : ctx.labelKo}</span>
                         </button>
                     ))}
                 </div>
@@ -176,32 +176,38 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     placeholder={isEn ? "e.g., Is it a good idea to decide on a career change this month?" : "예: 이번 달 이직 결정을 해도 괜찮을까요?"}
-                    className="input-cosmic w-full h-24 resize-none"
+                    className="input-cosmic w-full h-24 resize-none text-sm"
                 />
             </div>
 
             {/* 제출 버튼 */}
-            <motion.button
-                type="submit"
-                disabled={!birthDate || isLoading}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                className={`btn-primary w-full py-4 text-lg mt-4 shadow-gold/20 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-                {isLoading ? (
-                    <span className="flex items-center justify-center gap-2">
-                        <span className="animate-spin text-black">✨</span>
-                        <span className="text-black font-bold">{isEn ? 'Interpreting cosmic signals...' : '우주의 신호를 해석하는 중...'}</span>
-                    </span>
-                ) : (
-                    <span className="flex items-center justify-center gap-2">
-                        <span className="text-black text-xl">🌌</span>
-                        <span className="text-black font-bold">
-                            {isEn ? 'Start Integrated Reading (Saju·Astrology·Tarot)' : '사주·점성·타로 통합 리딩 시작하기'}
+            <div className="pt-2">
+                <motion.button
+                    type="submit"
+                    disabled={!birthDate || isLoading}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    className={`btn-primary w-full py-5 text-lg shadow-gold/20 relative overflow-hidden flex items-center justify-center transition-all ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                    <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity" />
+
+                    {isLoading ? (
+                        <span className="flex items-center justify-center gap-3">
+                            <span className="animate-spin text-black text-xl">✨</span>
+                            <span className="text-black font-bold tracking-tight">{isEn ? 'Interpreting cosmic signals...' : '우주의 신호를 해석하는 중...'}</span>
                         </span>
-                    </span>
-                )}
-            </motion.button>
+                    ) : (
+                        <span className="flex items-center justify-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-black/10 flex items-center justify-center text-xl">
+                                🌌
+                            </div>
+                            <span className="text-black font-extrabold tracking-tight">
+                                {isEn ? 'Start Integrated Reading' : '사주·점성·타로 통합 리딩 시작하기'}
+                            </span>
+                        </span>
+                    )}
+                </motion.button>
+            </div>
         </motion.form>
     );
 }

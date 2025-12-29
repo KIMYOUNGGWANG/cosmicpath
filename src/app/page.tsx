@@ -264,8 +264,8 @@ export default function Home() {
           });
           const { id } = await response.json();
           if (id) {
-            const rawAppUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
-            const appUrl = rawAppUrl.endsWith('/') ? rawAppUrl.slice(0, -1) : rawAppUrl;
+            const origin = window.location.origin;
+            const appUrl = origin.endsWith('/') ? origin.slice(0, -1) : origin;
             const newUrl = `/share/${id}`;
             setShareUrl(`${appUrl}${newUrl}`);
 
@@ -279,13 +279,27 @@ export default function Home() {
             // Send Email if user email exists in localStorage (비회원 주문)
             const userEmail = localStorage.getItem('user_email');
             if (userEmail) {
+              const birthInfoStr = `${dataToUse.birthDate} ${dataToUse.birthTime}생`;
+              const sajuStr = (metadata as any)?.saju?.fullSaju || '';
+              const contextMap: Record<string, string> = {
+                career: '커리어/직업',
+                love: '연애/결혼',
+                money: '금전/재물',
+                health: '건강/웰빙',
+                general: '종합 운세'
+              };
+              const contextStr = dataToUse.question || contextMap[dataToUse.context] || '운세 리딩';
+
               fetch('/api/email/send-result', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   email: userEmail,
                   resultId: id,
-                  title: accumulatedReport.summary?.title
+                  title: accumulatedReport.summary?.title,
+                  birthInfo: birthInfoStr,
+                  sajuSummary: sajuStr,
+                  userContext: contextStr
                 })
               }).catch(console.error);
             }

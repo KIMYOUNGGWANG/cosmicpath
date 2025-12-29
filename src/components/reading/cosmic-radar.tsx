@@ -125,47 +125,41 @@ export function CosmicRadar({
                     animate={{ d: pathData }}
                     transition={{ type: "spring", stiffness: 60, damping: 15 }}
                 />
-
-                {/* 꼭짓점 아이콘 및 라벨 */}
-                {/* 사주 (Top) */}
-                <g
-                    transform={`translate(${maxSaju.x}, ${maxSaju.y - 25})`}
-                    className="cursor-pointer"
-                    onClick={() => setActiveTooltip('saju')}
-                >
-                    <circle cx="0" cy="25" r="4" fill="var(--saju-blue)" />
-                    <text x="0" y="10" textAnchor="middle" fill="var(--saju-blue)" fontSize="20">Logic</text>
-                    <text x="0" y="45" textAnchor="middle" fill="white" fontSize="12" opacity="0.6">
-                        {isEn ? 'Saju' : '사주'}
-                    </text>
-                </g>
-
-                {/* 타로 (Right) */}
-                <g
-                    transform={`translate(${maxTarot.x + 30}, ${maxTarot.y + 15})`}
-                    className="cursor-pointer"
-                    onClick={() => setActiveTooltip('tarot')}
-                >
-                    <circle cx="-30" cy="-15" r="4" fill="var(--tarot-purple)" />
-                    <text x="0" y="0" textAnchor="start" fill="var(--tarot-purple)" fontSize="18">Intuition</text>
-                    <text x="0" y="18" textAnchor="start" fill="white" fontSize="11" opacity="0.6">
-                        {isEn ? 'Tarot' : '타로'}
-                    </text>
-                </g>
-
-                {/* 점성술 (Left) */}
-                <g
-                    transform={`translate(${maxStar.x - 30}, ${maxStar.y + 15})`}
-                    className="cursor-pointer"
-                    onClick={() => setActiveTooltip('star')}
-                >
-                    <circle cx="30" cy="-15" r="4" fill="var(--star-yellow)" />
-                    <text x="0" y="0" textAnchor="end" fill="var(--star-yellow)" fontSize="18">Flow</text>
-                    <text x="0" y="18" textAnchor="end" fill="white" fontSize="11" opacity="0.6">
-                        {isEn ? 'Astrology' : '별자리'}
-                    </text>
-                </g>
             </svg>
+
+            {/* 꼭짓점 라벨 (Absolute Positioning for better spacing) */}
+            {/* 사주 (Top) */}
+            <div
+                className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-6 flex flex-col items-center cursor-pointer group"
+                onClick={() => setActiveTooltip('saju')}
+            >
+                <span className="text-xl font-bold tracking-tighter" style={{ color: 'var(--saju-blue)' }}>Logic</span>
+                <span className="text-[10px] font-medium text-white/50 -mt-1 group-hover:text-white/80 transition-colors uppercase tracking-widest">
+                    {isEn ? 'Saju' : '사주'}
+                </span>
+            </div>
+
+            {/* 타로 (Right Bottom) */}
+            <div
+                className="absolute bottom-8 right-0 translate-x-12 flex flex-col items-start cursor-pointer group"
+                onClick={() => setActiveTooltip('tarot')}
+            >
+                <span className="text-lg font-bold tracking-tighter" style={{ color: 'var(--tarot-purple)' }}>Intuition</span>
+                <span className="text-[10px] font-medium text-white/50 -mt-1 group-hover:text-white/80 transition-colors uppercase tracking-widest">
+                    {isEn ? 'Tarot' : '타로'}
+                </span>
+            </div>
+
+            {/* 점성술 (Left Bottom) */}
+            <div
+                className="absolute bottom-8 left-0 -translate-x-12 flex flex-col items-end cursor-pointer group"
+                onClick={() => setActiveTooltip('star')}
+            >
+                <span className="text-lg font-bold tracking-tighter" style={{ color: 'var(--star-yellow)' }}>Flow</span>
+                <span className="text-[10px] font-medium text-white/50 -mt-1 group-hover:text-white/80 transition-colors uppercase tracking-widest">
+                    {isEn ? 'Astrology' : '별자리'}
+                </span>
+            </div>
 
             {/* 중앙 텍스트 (신뢰도) */}
             {!isLoading && (

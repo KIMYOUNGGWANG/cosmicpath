@@ -76,7 +76,7 @@ export default async function SharedPage({ params }: SharedPageProps) {
                 </div>
             </header>
 
-            <div className="pt-28 pb-20">
+            <div className="pt-32 pb-20">
                 <PremiumReport
                     report={reportData}
                     metadata={metadata}

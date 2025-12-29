@@ -29,30 +29,49 @@ export function SharePanel({
     const handleKakaoShare = () => {
         if (typeof window === 'undefined') return;
 
-        const kakao = (window as any).Kakao;
+        const kakao = window.Kakao;
 
         if (!kakao) {
-            alert('카카오 SDK가 로드되지 않았습니다.');
+            alert(isEn ? 'Kakao SDK not loaded.' : '카카오 SDK가 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.');
+            return;
+        }
+
+        const jsKey = process.env.NEXT_PUBLIC_KAKAO_JS_KEY;
+        if (!jsKey) {
+            console.error('Kakao JS Key is missing');
             return;
         }
 
         if (!kakao.isInitialized()) {
-            kakao.init(process.env.NEXT_PUBLIC_KAKAO_JS_KEY);
+            try {
+                kakao.init(jsKey);
+            } catch (e) {
+                console.error('Kakao init error:', e);
+            }
         }
 
-        const rawAppUrl = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : '');
-        const appUrl = rawAppUrl.endsWith('/') ? rawAppUrl.slice(0, -1) : rawAppUrl;
+        // 현재 도메인 기반으로 URL 구성 (환경변수보다 현재 접속 도메인 우선)
+        const origin = window.location.origin;
+        const appUrl = origin.endsWith('/') ? origin.slice(0, -1) : origin;
 
-        const finalUrl = shareUrl
-            ? (shareUrl.startsWith('http') ? shareUrl : `${appUrl}${shareUrl.startsWith('/') ? '' : '/'}${shareUrl}`)
-            : (typeof window !== 'undefined' ? window.location.href : appUrl);
+        // shareUrl이 있으면 절대경로로 완성, 없으면 현재 페이지 URL 사용
+        let finalUrl = window.location.href;
+        if (shareUrl) {
+            finalUrl = shareUrl.startsWith('http') ? shareUrl : `${appUrl}${shareUrl.startsWith('/') ? '' : '/'}${shareUrl}`;
+        }
 
+        // 설명 글자수 제한 (카카오톡 권장 사항 준수)
+        const trimmedDescription = shareDescription.length > 80
+            ? shareDescription.substring(0, 80) + '...'
+            : shareDescription;
+
+        // 카카오톡 메시지 스타일 (Mystic Neon 분위기 반영)
         kakao.Share.sendDefault({
             objectType: 'feed',
             content: {
                 title: shareTitle,
-                description: shareDescription,
-                imageUrl: `${appUrl}/og-image.png`,
+                description: trimmedDescription,
+                imageUrl: `${appUrl}/og-image.png`, // 캐시 이슈 방지를 위해 쿼리 파라미터는 제거 (Kakao 서버 캐시 정책 대응)
                 imageWidth: 1200,
                 imageHeight: 630,
                 link: {
@@ -62,7 +81,7 @@ export function SharePanel({
             },
             buttons: [
                 {
-                    title: '결과 보기',
+                    title: isEn ? 'View Result' : '상세 결과 보기',
                     link: {
                         mobileWebUrl: finalUrl,
                         webUrl: finalUrl,
@@ -77,9 +96,34 @@ export function SharePanel({
         const url = shareUrl || window.location.href;
 
         try {
-            await navigator.clipboard.writeText(url);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
+            // Modern API
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(url);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+                return;
+            }
+
+            // Fallback for non-secure or restricted environments
+            const textArea = document.createElement("textarea");
+            textArea.value = url;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-9999px";
+            textArea.style.top = "0";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                document.execCommand('copy');
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            } catch (err) {
+                console.error('Fallback copy failed:', err);
+                alert(isEn ? 'Failed to copy link.' : '링크 복사에 실패했습니다. 주소를 직접 선택해 복사해 주세요.');
+            }
+
+            document.body.removeChild(textArea);
         } catch (error) {
             console.error('Failed to copy:', error);
         }
@@ -187,10 +231,13 @@ export function SharePanel({
             <Script
                 id="kakao-sdk"
                 src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
-                strategy="lazyOnload"
+                strategy="afterInteractive"
                 onLoad={() => {
                     if (window.Kakao && !window.Kakao.isInitialized()) {
-                        window.Kakao.init(process.env.NEXT_PUBLIC_KAKAO_JS_KEY);
+                        const jsKey = process.env.NEXT_PUBLIC_KAKAO_JS_KEY;
+                        if (jsKey) {
+                            window.Kakao.init(jsKey);
+                        }
                     }
                 }}
             />

@@ -122,7 +122,23 @@ export async function POST(request: NextRequest) {
                         success: true,
                         phase: phase,
                         report: phaseResult.data,
-                        isPremium: true
+                        isPremium: true,
+                        metadata: {
+                            confidence: guide.confidence,
+                            matching: guide.matching,
+                            keyThemes: guide.keyThemes,
+                            saju: {
+                                yearPillar: `${saju.yearPillar.stem}${saju.yearPillar.branch}`,
+                                dayMaster: saju.dayMaster,
+                                fullSaju: `${saju.yearPillar.stem}${saju.yearPillar.branch}년 ${saju.monthPillar.stem}${saju.monthPillar.branch}월 ${saju.dayPillar.stem}${saju.dayPillar.branch}일 ${saju.hourPillar.stem}${saju.hourPillar.branch}시`,
+                            },
+                            astrology: {
+                                sunSign: astrology.sunSign,
+                                moonSign: astrology.moonSign,
+                                ascendant: astrology.ascendant,
+                            },
+                            tarot: cards.map(c => ({ name: c.name, isReversed: c.isReversed })),
+                        }
                     });
                 }
 
@@ -141,6 +157,7 @@ export async function POST(request: NextRequest) {
                         saju: {
                             yearPillar: `${saju.yearPillar.stem}${saju.yearPillar.branch}`,
                             dayMaster: saju.dayMaster,
+                            fullSaju: `${saju.yearPillar.stem}${saju.yearPillar.branch}년 ${saju.monthPillar.stem}${saju.monthPillar.branch}월 ${saju.dayPillar.stem}${saju.dayPillar.branch}일 ${saju.hourPillar.stem}${saju.hourPillar.branch}시`,
                         },
                         astrology: {
                             sunSign: astrology.sunSign,
@@ -185,6 +202,7 @@ export async function POST(request: NextRequest) {
                     saju: {
                         yearPillar: `${saju.yearPillar.stem}${saju.yearPillar.branch}`,
                         dayMaster: saju.dayMaster,
+                        fullSaju: `${saju.yearPillar.stem}${saju.yearPillar.branch}년 ${saju.monthPillar.stem}${saju.monthPillar.branch}월 ${saju.dayPillar.stem}${saju.dayPillar.branch}일 ${saju.hourPillar.stem}${saju.hourPillar.branch}시`,
                     },
                     astrology: {
                         sunSign: astrology.sunSign,
