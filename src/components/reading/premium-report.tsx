@@ -8,6 +8,7 @@ import { CosmicRadar } from './cosmic-radar';
 import { DraftProposal } from './draft-proposal';
 import { EvidenceTooltip } from '../ui/confidence-badge';
 import { TarotDetailModal } from './tarot-detail-modal';
+import { SharePanel } from '../share/SharePanel';
 
 // 새로운 Premium Report 타입 (기존 CosmicReport 대체)
 interface PremiumReportData {
@@ -110,9 +111,10 @@ interface PremiumReportProps {
         }[];
     };
     language?: 'ko' | 'en';
+    shareUrl?: string;
 }
 
-export function PremiumReport({ report, metadata, language = 'ko' }: PremiumReportProps) {
+export function PremiumReport({ report, metadata, language = 'ko', shareUrl }: PremiumReportProps) {
     const isEn = language === 'en';
     const [selectedCardIdx, setSelectedCardIdx] = useState<number | null>(null);
 
@@ -186,6 +188,16 @@ export function PremiumReport({ report, metadata, language = 'ko' }: PremiumRepo
             {report.deep_dive && !report.saju_sections && (
                 <LegacyDeepDiveSection data={report.deep_dive} language={language} />
             )}
+
+            {/* Share Panel */}
+            <section className="mt-10 px-4 md:px-6">
+                <SharePanel
+                    language={language}
+                    shareUrl={shareUrl}
+                    shareTitle={report.summary?.title || (language === 'en' ? 'My CosmicPath Reading' : '나의 CosmicPath 리딩')}
+                    shareDescription={report.summary?.content?.slice(0, 100) + '...' || undefined}
+                />
+            </section>
 
             {/* Tarot Detail Modal */}
             {selectedCardIdx !== null && (

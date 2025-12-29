@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ReadingInput, ReadingData } from '@/components/reading/reading-input';
 import { TarotPicker } from '@/components/reading/tarot-picker';
 import { PremiumReport } from '@/components/reading/premium-report';
 import { DecisionGuard } from '@/components/reading/decision-guard';
+import { FollowUpChat } from '@/components/reading/FollowUpChat';
+import { ReadingSession, createSession, saveSession } from '@/lib/session/reading-session';
 
 export default function Home() {
   const [step, setStep] = useState<'input' | 'tarot' | 'result'>('input');
@@ -25,6 +27,12 @@ export default function Home() {
 
   // Decision Guard State
   const [isDecisionAccepted, setIsDecisionAccepted] = useState(false);
+
+  // Follow-up Chat Session State
+  const [session, setSession] = useState<ReadingSession | null>(null);
+
+  // Share URL State
+  const [shareUrl, setShareUrl] = useState<string | undefined>(undefined);
 
   const handleInputSubmit = (data: ReadingData) => {
     setReadingData(data);
@@ -115,6 +123,46 @@ export default function Home() {
       // Finalize
       setReportData(accumulatedReport);
 
+      // Save result to DB for sharing (Async)
+      (async () => {
+        try {
+          const response = await fetch('/api/reading/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              data: accumulatedReport,
+              metadata: { ...metadata, language }
+            })
+          });
+          const { id } = await response.json();
+          if (id) {
+            const protocol = window.location.protocol;
+            const host = window.location.host;
+            setShareUrl(`${protocol}//${host}/share/${id}`);
+
+            // Send Email if user email exists in localStorage (비회원 주문)
+            const userEmail = localStorage.getItem('user_email');
+            if (userEmail) {
+              fetch('/api/email/send-result', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  email: userEmail,
+                  resultId: id,
+                  title: accumulatedReport.summary?.title
+                })
+              }).catch(console.error);
+            }
+          }
+        } catch (err) {
+          console.error('Failed to save result:', err);
+        }
+      })();
+
+      // Create session for follow-up chat (무료 버전: 3회 추가 질문 제공)
+      const newSession = createSession('free_session', accumulatedReport, 3);
+      setSession(newSession);
+
     } catch (error) {
       console.error('Reading failed:', error);
       setStreamContent(language === 'en' ? "Failed to connect to the server. Please try again." : "서버 연결에 실패했습니다. 다시 시도해주세요.");
@@ -124,86 +172,96 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen relative overflow-hidden text-white selection:bg-gold selection:text-deep-navy">
-      {/* Dynamic Aurora Background */}
-      <div className="aurora-bg fixed inset-0 z-0 opacity-80" />
+    <main className="min-h-screen relative overflow-hidden text-foreground selection:bg-star-yellow selection:text-deep-navy font-outfit">
+      {/* Refined Cosmic Atmosphere */}
+      <div className="aurora-bg fixed inset-0 z-0" />
+      <div className="fixed inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20 pointer-events-none z-0" />
 
       {/* Main Container */}
-      <div className="container-cosmic relative z-10 pt-16 pb-12 md:py-20 safe-area-top">
+      <div className="container-cosmic relative z-10 pt-20 pb-16 md:py-24 safe-area-top">
 
         {/* Header: The Convergence Engine */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-16 relative"
+          transition={{ duration: 0.8 }}
+          className="text-center mb-10 md:mb-16 relative px-6"
         >
-          {/* Central Core Glow */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-white/5 blur-[80px] rounded-full -z-10" />
+          <div className="relative inline-block">
+            <h1 className="text-4xl sm:text-6xl md:text-8xl font-bold tracking-tight font-cinzel leading-tight mb-4 flex flex-wrap justify-center">
+              <span className="text-gradient block sm:inline">Cosmic</span>
+              <span className="text-white sm:ml-4">Path</span>
+            </h1>
+          </div>
 
-          {/* Title */}
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 tracking-tighter">
-            <span className="text-gradient">Cosmic</span>
-            <span className="text-white">Path</span>
-          </h1>
-          <p className="text-gray-400 text-lg md:text-xl font-light tracking-wide">
-            {isConverging ? (
-              <span className="text-gold animate-pulse">{language === 'en' ? 'Aligning Destinies...' : '운명을 정렬하는 중...'}</span>
-            ) : (
-              language === 'en' ? "Your Personal Destiny Map through Saju, Tarot, and Astrology" : "사주, 타로, 점성술로 완성하는 나만의 운명 지도"
-            )}
-          </p>
+          <div className="max-w-2xl mx-auto">
+            <p className="text-gray-200 text-base md:text-xl font-light tracking-wide leading-relaxed">
+              {isConverging ? (
+                <span className="text-star-yellow animate-pulse text-glow-yellow font-cinzel italic tracking-[0.1em]">
+                  {language === 'en' ? 'Aligning Celestial Bodies...' : '천체들을 정렬하는 중...'}
+                </span>
+              ) : (
+                <span className="opacity-100 italic">
+                  {language === 'en'
+                    ? "Your Sacred Narrative woven through Saju, Astrology, and Tarot"
+                    : "사주, 타로, 점성술로 수놓은 당신만의 신성한 서사"}
+                </span>
+              )}
+            </p>
+          </div>
 
           {/* Convergence Animation Layer */}
           <AnimatePresence>
             {isConverging && (
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none">
-                {/* Blue Stream (Logic) */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] pointer-events-none flex items-center justify-center">
+                {/* Orbital Rings - Refined for premium feel */}
+                {[0, 1, 2].map((i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scale: 2.5, rotate: i * 120 }}
+                    animate={{ opacity: [0, 0.4, 0], scale: 0, rotate: i * 120 + 360 }}
+                    transition={{ duration: 2.2, ease: "easeInOut", delay: i * 0.15 }}
+                    className={`absolute inset-0 border-[1px] rounded-full blur-[2px] ${i === 0 ? 'border-saju-blue' : i === 1 ? 'border-star-yellow' : 'border-tarot-purple'
+                      }`}
+                  />
+                ))}
+
+                {/* Central Nova Burst */}
                 <motion.div
-                  initial={{ opacity: 0, scale: 2, rotate: 0 }}
-                  animate={{ opacity: 1, scale: 0, rotate: 180 }}
-                  transition={{ duration: 2, ease: "easeInOut" }}
-                  className="absolute inset-0 border-2 border-saju-blue rounded-full opacity-30 blur-sm"
-                />
-                {/* Yellow Stream (Flow) */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 2, rotate: 120 }}
-                  animate={{ opacity: 1, scale: 0, rotate: 300 }}
-                  transition={{ duration: 2, ease: "easeInOut", delay: 0.1 }}
-                  className="absolute inset-0 border-2 border-star-yellow rounded-full opacity-30 blur-sm"
-                />
-                {/* Purple Stream (Intuition) */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 2, rotate: 240 }}
-                  animate={{ opacity: 1, scale: 0, rotate: 420 }}
-                  transition={{ duration: 2, ease: "easeInOut", delay: 0.2 }}
-                  className="absolute inset-0 border-2 border-tarot-purple rounded-full opacity-30 blur-sm"
-                />
-                {/* Central Core Burst */}
-                <motion.div
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: [0, 1.5, 0], opacity: [0, 1, 0] }}
+                  initial={{ scale: 0, opacity: 0, filter: 'blur(10px)' }}
+                  animate={{
+                    scale: [0, 2, 0],
+                    opacity: [0, 1, 0],
+                    filter: ['blur(10px)', 'blur(0px)', 'blur(20px)']
+                  }}
                   transition={{ duration: 2, times: [0, 0.5, 1] }}
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-white blur-xl rounded-full"
+                  className="w-32 h-32 bg-white rounded-full mix-blend-screen"
                 />
               </div>
             )}
           </AnimatePresence>
         </motion.div>
 
-        {/* Content Area */}
+        {/* Content Area - Using glassmorphism and asymmetrical balance */}
         <AnimatePresence mode="wait">
 
           {/* Step 1: Input */}
           {step === 'input' && (
             <motion.div
               key="input"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5 }}
-              className="max-w-md mx-auto"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.02, filter: 'blur(10px)' }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="max-w-xl mx-auto px-4"
             >
-              <ReadingInput onSubmit={handleInputSubmit} />
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-saju-blue/20 via-tarot-purple/20 to-star-yellow/20 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                <div className="relative glass-card border-white/5 shadow-2xl overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                  <ReadingInput onSubmit={handleInputSubmit} />
+                </div>
+              </div>
             </motion.div>
           )}
 
@@ -211,28 +269,32 @@ export default function Home() {
           {step === 'tarot' && (
             <motion.div
               key="tarot"
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="w-full max-w-4xl"
+              exit={{ opacity: 0, x: -40 }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              className="w-full max-w-5xl mx-auto"
             >
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-blue-200">
-                  {language === 'en' ? 'Select Your Destiny Cards' : '운명의 카드를 선택하세요'}
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold mb-4 font-cinzel text-glow-purple tracking-wide">
+                  {language === 'en' ? 'Select Your Sacred Major Arcana' : '운명의 대아르카나를 선택하세요'}
                 </h2>
-                <p className="text-white/60">
+                <div className="h-0.5 w-24 bg-gradient-to-r from-transparent via-tarot-purple/50 to-transparent mx-auto mb-6" />
+                <p className="text-white/70 text-lg font-light tracking-wide italic">
                   {language === 'en'
-                    ? <>Choose 3 cards that your intuition guides you to.<br /><span className="text-xs text-indigo-300">(Reading past / present / future flow)</span></>
-                    : <>당신의 무의식이 이끄는 카드 3장을 선택해주세요.<br /><span className="text-xs text-indigo-300">(과거 / 현재 / 미래의 흐름을 읽어냅니다)</span></>
+                    ? "Close your eyes, breathe, and let your spirit guide your hand."
+                    : "숨을 가다듬고, 당신의 영혼이 손을 이끌게 하세요."
                   }
                 </p>
               </div>
 
-              <TarotPicker
-                onSelect={handleTarotComplete}
-                maxCards={3} // 3장 리딩으로 변경
-                language={language}
-              />
+              <div className="relative px-4">
+                <TarotPicker
+                  onSelect={handleTarotComplete}
+                  maxCards={3}
+                  language={language}
+                />
+              </div>
             </motion.div>
           )}
 
@@ -242,50 +304,93 @@ export default function Home() {
               key="result"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: isConverging ? 1.5 : 0 }}
+              transition={{ duration: 1.2, delay: isConverging ? 1.5 : 0 }}
             >
               {isLoading ? (
-                <div className="flex flex-col items-center justify-center min-h-[400px] text-gray-400">
-                  <div className="w-16 h-16 border-4 border-gold/30 border-t-gold rounded-full animate-spin mb-6" />
+                <div className="flex flex-col items-center justify-center min-h-[500px] text-gray-400">
+                  {/* Premium Spinner */}
+                  <div className="relative w-24 h-24 mb-10">
+                    <div className="absolute inset-0 border-t-2 border-star-yellow rounded-full animate-[spin_1.5s_linear_infinite]" />
+                    <div className="absolute inset-2 border-r-2 border-saju-blue rounded-full animate-[spin_2s_linear_infinite]" />
+                    <div className="absolute inset-4 border-l-2 border-tarot-purple rounded-full animate-[spin_3s_linear_infinite]" />
+                    <div className="absolute inset-0 bg-white/5 blur-xl rounded-full animate-pulse" />
+                  </div>
 
-                  <div className="text-center space-y-2">
-                    <p className="text-lg font-medium text-white animate-pulse">
-                      {loadingPhase.label || (language === 'en' ? "Analyzing your destiny data..." : "운명의 데이터를 분석하고 있습니다...")}
+                  <div className="text-center space-y-4 max-w-sm px-6">
+                    <p className="text-2xl font-cinzel text-white tracking-[0.15em] animate-pulse drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+                      {loadingPhase.label || (language === 'en' ? "weaving tapestry..." : "운명의 실타래를 엮는 중...")}
                     </p>
+
                     {loadingPhase.phase > 0 && (
-                      <div className="w-64 h-1.5 bg-white/10 rounded-full overflow-hidden mt-2">
-                        <motion.div
-                          className="h-full bg-gold"
-                          initial={{ width: "0%" }}
-                          animate={{ width: `${(loadingPhase.phase / 5) * 100}%` }}
-                          transition={{ duration: 0.5 }}
-                        />
+                      <div className="space-y-2">
+                        <div className="w-64 h-[1px] bg-white/10 rounded-full overflow-hidden mx-auto">
+                          <motion.div
+                            className="h-full bg-gradient-to-r from-saju-blue via-star-yellow to-tarot-purple"
+                            initial={{ width: "0%" }}
+                            animate={{ width: `${(loadingPhase.phase / 5) * 100}%` }}
+                            transition={{ duration: 0.5 }}
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 uppercase tracking-widest font-medium">
+                          {language === 'en' ? `Phase ${loadingPhase.phase} of 5` : `심층 분석 ${loadingPhase.phase}단계`}
+                        </p>
                       </div>
                     )}
-                    <p className="text-sm text-gray-500">
-                      {loadingPhase.phase > 0
-                        ? (language === 'en' ? `Step ${loadingPhase.phase} of 5` : `5단계 정밀 분석 중 (${loadingPhase.phase}/5)`)
-                        : (language === 'en' ? "Initializing AI Engine..." : "AI 엔진 초기화 중...")}
-                    </p>
                   </div>
                 </div>
               ) : reportData && reportData.summary ? (
-                <>
+                <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000">
                   <DecisionGuard
                     isOpen={reportData.summary.trust_score <= 2 && !isDecisionAccepted}
                     onAccept={() => setIsDecisionAccepted(true)}
                     language={language}
                   />
                   {(reportData.summary.trust_score > 2 || isDecisionAccepted) && (
-                    <PremiumReport report={reportData} metadata={metadata} language={language} />
+                    <>
+                      <PremiumReport
+                        report={reportData}
+                        metadata={metadata}
+                        language={language}
+                        shareUrl={shareUrl}
+                      />
+
+                      {/* Follow-up Chat */}
+                      {session && (
+                        <div className="max-w-2xl mx-auto px-4 mt-8">
+                          <FollowUpChat
+                            session={session}
+                            onSessionUpdate={(updatedSession) => {
+                              setSession(updatedSession);
+                              saveSession(updatedSession);
+                            }}
+                          />
+                        </div>
+                      )}
+                    </>
                   )}
-                </>
-              ) : (
-                // Fallback Display or Error
-                <div className="text-center p-8 bg-white/5 rounded-xl border border-red-500/30">
-                  <p className="text-red-300 mb-2">{language === 'en' ? '⚠️ A problem occurred during analysis.' : '⚠️ 분석 중 문제가 발생했습니다.'}</p>
-                  <p className="text-sm text-gray-400">{streamContent || (language === 'en' ? "Incomplete data received." : "데이터가 불완전합니다.")}</p>
                 </div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-center p-12 glass-card border-red-500/20 max-w-lg mx-auto"
+                >
+                  <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span className="text-red-400 text-3xl italic font-cinzel">!</span>
+                  </div>
+                  <h3 className="text-xl font-cinzel mb-4 text-red-200">Analysis Interrupted</h3>
+                  <p className="text-sm text-gray-400 mb-6 font-light leading-relaxed">
+                    {streamContent || (language === 'en'
+                      ? "The cosmic alignment was too complex to process at this moment."
+                      : "우주의 기운이 너무 복잡하여 현재 처리할 수 없습니다.")}
+                  </p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="btn-secondary px-8 py-3 text-sm font-medium tracking-widest uppercase hover:bg-white/5 transition-all"
+                  >
+                    Realign Path
+                  </button>
+                </motion.div>
               )}
             </motion.div>
           )}
@@ -294,8 +399,11 @@ export default function Home() {
       </div>
 
       {/* Ambient Footer */}
-      <footer className="absolute bottom-0 w-full p-6 text-center text-white/20 text-xs">
-        © 2025 CosmicPath. All Destinies Aligned.
+      <footer className="w-full py-12 text-center relative z-10 px-6">
+        <div className="h-[1px] w-24 bg-white/20 mx-auto mb-6" />
+        <p className="text-white/50 text-[10px] tracking-[0.5em] uppercase font-bold">
+          © 2025 CosmicPath. Unveiling the Eternal Flow.
+        </p>
       </footer>
     </main>
   );
