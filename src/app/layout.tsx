@@ -15,6 +15,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   title: "CosmicPath | AI Driven Destiny Navigation",
   description: "Navigate your destiny with AI-powered Saju, Astrology, and Tarot analysis.",
   keywords: ["saju", "astrology", "tarot", "fortune telling", "destiny", "AI", "사주", "점성술", "타로"],
