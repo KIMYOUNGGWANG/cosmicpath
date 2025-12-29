@@ -269,7 +269,7 @@ export default function Home() {
                     </p>
                   </div>
                 </div>
-              ) : reportData ? (
+              ) : reportData && reportData.summary ? (
                 <>
                   <DecisionGuard
                     isOpen={reportData.summary.trust_score <= 2 && !isDecisionAccepted}
@@ -284,7 +284,7 @@ export default function Home() {
                 // Fallback Display or Error
                 <div className="text-center p-8 bg-white/5 rounded-xl border border-red-500/30">
                   <p className="text-red-300 mb-2">{language === 'en' ? '⚠️ A problem occurred during analysis.' : '⚠️ 분석 중 문제가 발생했습니다.'}</p>
-                  <p className="text-sm text-gray-400">{streamContent}</p>
+                  <p className="text-sm text-gray-400">{streamContent || (language === 'en' ? "Incomplete data received." : "데이터가 불완전합니다.")}</p>
                 </div>
               )}
             </motion.div>
