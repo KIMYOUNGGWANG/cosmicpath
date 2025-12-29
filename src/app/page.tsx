@@ -47,16 +47,17 @@ export default function Home() {
     const paid = urlParams.get('paid');
 
     if (paid === 'true') {
-      const pendingData = localStorage.getItem('pending_reading_data');
-      const paymentCompleted = localStorage.getItem('payment_completed');
+      // Use sessionStorage for temporary payment flow persistence
+      const pendingData = sessionStorage.getItem('pending_reading_data');
+      const paymentCompleted = sessionStorage.getItem('payment_completed');
 
       if (pendingData && paymentCompleted === 'true') {
         try {
           console.log('[Resume] Found pending data & payment completed');
 
           // Clear flags
-          localStorage.removeItem('pending_reading_data');
-          localStorage.removeItem('payment_completed');
+          sessionStorage.removeItem('pending_reading_data');
+          sessionStorage.removeItem('payment_completed');
 
           // Remove query param
           window.history.replaceState({}, '', window.location.pathname);
@@ -66,13 +67,13 @@ export default function Home() {
           console.log('[Resume] Restored data:', data);
 
           // Restore report if exists
-          const pendingReportJson = localStorage.getItem('pending_report_data');
+          const pendingReportJson = sessionStorage.getItem('pending_report_data');
           let pendingReport = null;
           if (pendingReportJson) {
             try {
               pendingReport = JSON.parse(pendingReportJson);
               console.log('[Resume] Restored existing report:', pendingReport);
-              localStorage.removeItem('pending_report_data');
+              sessionStorage.removeItem('pending_report_data');
 
               // Set initial report state so UI shows it immediately
               setReportData(pendingReport);
@@ -91,8 +92,6 @@ export default function Home() {
             setSelectedCards(data.tarotCards);
 
             // Resume specific logic:
-            // If we have a pending report (Phase 1-2 done), start from Phase 3.
-            // Otherwise, start from Phase 1 (full re-analysis fallback).
             const startPhase = pendingReport ? 3 : 1;
 
             // Slight delay to ensure state updates
@@ -110,8 +109,9 @@ export default function Home() {
       }
     } else {
       // Handle "Back" navigation or cancelled payment (paid !== 'true')
-      const pendingData = localStorage.getItem('pending_reading_data');
-      const pendingReportJson = localStorage.getItem('pending_report_data');
+      // Use sessionStorage here too
+      const pendingData = sessionStorage.getItem('pending_reading_data');
+      const pendingReportJson = sessionStorage.getItem('pending_report_data');
 
       // Only restore if we have BOTH input data and report data (meaning we were at the result screen)
       if (pendingData && pendingReportJson) {
@@ -131,6 +131,14 @@ export default function Home() {
           // intentionally NOT setting isPremium(true)
         } catch (e) {
           console.error("Failed to restore cached session:", e);
+        }
+      } else {
+        // !!! IMPORTANT FIX: Check and clear STUCK localStorage items from previous version !!!
+        if (localStorage.getItem('pending_reading_data')) {
+          console.log('[Cleanup] Removing stale localStorage data from previous version');
+          localStorage.removeItem('pending_reading_data');
+          localStorage.removeItem('pending_report_data');
+          localStorage.removeItem('payment_completed');
         }
       }
     }

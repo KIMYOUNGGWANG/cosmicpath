@@ -36,14 +36,14 @@ export function PaymentModal({
         // Save email for later use (resend result)
         localStorage.setItem('user_email', email);
 
-        // Save readingData to localStorage to avoid Stripe metadata limits
+        // Save readingData to sessionStorage (temporary for this tab)
         if (readingData) {
-            localStorage.setItem('pending_reading_data', JSON.stringify(readingData));
+            sessionStorage.setItem('pending_reading_data', JSON.stringify(readingData));
         }
 
         // Save current report data to avoid re-analysis of Phase 1-2
         if (currentReport) {
-            localStorage.setItem('pending_report_data', JSON.stringify(currentReport));
+            sessionStorage.setItem('pending_report_data', JSON.stringify(currentReport));
         }
 
         onPaymentStart?.();

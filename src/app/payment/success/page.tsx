@@ -26,13 +26,13 @@ function PaymentSuccessContent() {
                     // 결제 성공!
                     setStatus('success');
 
-                    // 로컬 스토리지에 결제 완료 상태 및 데이터 저장
+                    // 로컬 스토리지 -> 세션 스토리지로 변경 (브라우저 닫으면 세션 종료)
                     // page.tsx에서 이 데이터를 확인하여 리딩을 재개
                     if (data.metadata?.readingData) {
-                        localStorage.setItem('pending_reading_data', data.metadata.readingData);
+                        sessionStorage.setItem('pending_reading_data', data.metadata.readingData);
                     }
-                    localStorage.setItem('payment_completed', 'true');
-                    localStorage.setItem('last_payment_session', sessionId);
+                    sessionStorage.setItem('payment_completed', 'true');
+                    sessionStorage.setItem('last_payment_session', sessionId);
 
                     // 2초 후 홈으로 이동
                     setTimeout(() => {
