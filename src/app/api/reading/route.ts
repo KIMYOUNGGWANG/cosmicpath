@@ -19,7 +19,7 @@ import {
     ReadingContext
 } from '@/lib/ai/prompt-builder';
 import { generateStructuredReport, ModelTier } from '@/lib/ai/llm-client';
-import { generatePremiumReport } from '@/lib/ai/premium-reading-service';
+import { generatePremiumReport, generateSinglePhase } from '@/lib/ai/premium-reading-service';
 
 export const maxDuration = 60; // Vercel Function Timeout (Increased for multi-turn)
 export const dynamic = 'force-dynamic';
@@ -42,6 +42,8 @@ const ReadingRequestSchema = z.object({
     })).optional(),
     tier: z.enum(['free', 'basic', 'premium']).default('free'),
     language: z.enum(['ko', 'en']).optional().default('ko'),
+    phase: z.number().min(1).max(5).optional(), // for multi-step execution
+    previousReport: z.object({}).passthrough().optional(), // previous phase data
 });
 
 export async function POST(request: NextRequest) {
@@ -57,7 +59,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { name, gender, birthDate, birthTime, context, question, tarotCards, tier, language } = validationResult.data;
+        const { name, gender, birthDate, birthTime, context, question, tarotCards, tier, language, phase, previousReport } = validationResult.data;
 
         // 1. 사주 계산
         const birthDateTime = new Date(birthDate);
@@ -104,6 +106,27 @@ export async function POST(request: NextRequest) {
             };
 
             try {
+                // Check if this is a single phase request
+                if (phase) {
+                    console.log(`Executing Phase ${phase} for Premium Reading`);
+                    const phaseResult = await generateSinglePhase(phase, userData, previousReport || null, apiKey);
+
+                    if (!phaseResult.success) {
+                        return NextResponse.json(
+                            { error: phaseResult.error || 'Phase execution failed' },
+                            { status: 500 }
+                        );
+                    }
+
+                    return NextResponse.json({
+                        success: true,
+                        phase: phase,
+                        report: phaseResult.data,
+                        isPremium: true
+                    });
+                }
+
+                // Default: Run all phases (Risk of Timeout on Vercel Hobby)
                 const premiumResult = await generatePremiumReport(userData, apiKey);
 
                 return NextResponse.json({

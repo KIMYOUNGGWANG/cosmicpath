@@ -49,57 +49,71 @@ export default function Home() {
     if (!readingData) return;
 
     try {
-      // 로딩 시뮬레이터 시작
-      let currentPhase = 1;
-      setLoadingPhase({ phase: 1, label: "핵심 요약 분석 중... (1/5)" });
+      setIsLoading(true);
+      let accumulatedReport = {};
+      const totalPhases = 5;
 
-      const loadingInterval = setInterval(() => {
-        currentPhase++;
-        if (currentPhase <= 5) {
-          const labelsKo = [
-            "",
-            "핵심 요약 분석 중... (1/5)",
-            "사주 기본 분석 중... (2/5)",
-            "운의 흐름 분석 중... (3/5)",
-            "영역별 상세 분석 중... (4/5)",
-            "특수 분석 & 액션 플랜 생성 중... (5/5)"
-          ];
-          const labelsEn = [
-            "",
-            "Analyzing core summary... (1/5)",
-            "Analyzing Saju fundamentals... (2/5)",
-            "Analyzing fortune flow... (3/5)",
-            "Detailed area analysis... (4/5)",
-            "Generating action plan... (5/5)"
-          ];
-          const labels = language === 'en' ? labelsEn : labelsKo;
-          setLoadingPhase({ phase: currentPhase, label: labels[currentPhase] });
+      const labelsKo = [
+        "",
+        "핵심 요약 분석 중... (1/5)",
+        "사주 기본 분석 중... (2/5)",
+        "운의 흐름 분석 중... (3/5)",
+        "영역별 상세 분석 중... (4/5)",
+        "특수 분석 & 액션 플랜 생성 중... (5/5)"
+      ];
+      const labelsEn = [
+        "",
+        "Analyzing core summary... (1/5)",
+        "Analyzing Saju fundamentals... (2/5)",
+        "Analyzing fortune flow... (3/5)",
+        "Detailed area analysis... (4/5)",
+        "Generating action plan... (5/5)"
+      ];
+      const labels = language === 'en' ? labelsEn : labelsKo;
+
+      // Sequential Execution: Phase 1 -> 5
+      for (let phase = 1; phase <= totalPhases; phase++) {
+        setLoadingPhase({ phase, label: labels[phase] });
+
+        const response = await fetch('/api/reading', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...readingData,
+            tarotCards: cards,
+            tier: 'premium',
+            language,
+            phase, // Execute specific phase
+            previousReport: accumulatedReport, // Pass context
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Phase ${phase} failed: ${response.statusText}`);
         }
-      }, 10000); // 10초마다 단계 변경 (총 50초 예상)
 
-      const response = await fetch('/api/reading', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...readingData,
-          tarotCards: cards,
-          tier: 'premium',
-          language,
-        }),
-      });
+        const result = await response.json();
 
-      clearInterval(loadingInterval); // 응답 오면 타이머 중지
+        if (!result.success) {
+          throw new Error(result.error || `Phase ${phase} validation failed`);
+        }
 
-      const result = await response.json();
+        console.log(`Phase ${phase} complete:`, result.report);
 
-      if (!result.success) {
-        setStreamContent(result.fallbackMessage || (language === 'en' ? "An error occurred." : "오류가 발생했습니다."));
-        return;
+        // Merge results
+        accumulatedReport = { ...accumulatedReport, ...result.report };
+
+        // Update intermediate state (optional, if you want to show partial results)
+        // setReportData(accumulatedReport); 
+
+        // Metadata update (once is enough, usually from first phase or accumulated)
+        if (result.metadata) {
+          setMetadata(prev => ({ ...prev, ...result.metadata }));
+        }
       }
 
-      console.log('Deep Dive Report:', result.report);
-      setReportData(result.report); // JSON 데이터 저장
-      setMetadata(result.metadata);
+      // Finalize
+      setReportData(accumulatedReport);
 
     } catch (error) {
       console.error('Reading failed:', error);

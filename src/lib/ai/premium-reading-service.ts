@@ -17,25 +17,16 @@ import {
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 const MODEL_NAME = 'gemini-3-flash-preview'; // Correct model name found in llm-client.ts
 
-interface PhaseResult {
+
+
+export interface PhaseResult {
     phase: number;
     success: boolean;
     data: PremiumReportPartial | null;
     error?: string;
 }
 
-interface ProgressCallback {
-    (phase: number, label: string, icon: string): void;
-}
-
-interface PhaseResult {
-    phase: number;
-    success: boolean;
-    data: PremiumReportPartial | null;
-    error?: string;
-}
-
-interface ProgressCallback {
+export interface ProgressCallback {
     (phase: number, label: string, icon: string): void;
 }
 
@@ -53,31 +44,31 @@ export async function generatePremiumReport(
     try {
         // Phase 1: Summary + Traits + Core Analysis
         onProgress?.(1, PHASE_LABELS[0].label, PHASE_LABELS[0].icon);
-        const phase1 = await executePhase(1, userData, null, apiKey);
+        const phase1 = await generateSinglePhase(1, userData, null, apiKey);
         if (!phase1.success) throw new Error(`Phase 1 failed: ${phase1.error}`);
         Object.assign(results, phase1.data);
 
         // Phase 2: Saju Basics
         onProgress?.(2, PHASE_LABELS[1].label, PHASE_LABELS[1].icon);
-        const phase2 = await executePhase(2, userData, results, apiKey);
+        const phase2 = await generateSinglePhase(2, userData, results, apiKey);
         if (!phase2.success) throw new Error(`Phase 2 failed: ${phase2.error}`);
         Object.assign(results, phase2.data);
 
         // Phase 3: Fortune Flow
         onProgress?.(3, PHASE_LABELS[2].label, PHASE_LABELS[2].icon);
-        const phase3 = await executePhase(3, userData, results, apiKey);
+        const phase3 = await generateSinglePhase(3, userData, results, apiKey);
         if (!phase3.success) throw new Error(`Phase 3 failed: ${phase3.error}`);
         Object.assign(results, phase3.data);
 
         // Phase 4: Life Areas
         onProgress?.(4, PHASE_LABELS[3].label, PHASE_LABELS[3].icon);
-        const phase4 = await executePhase(4, userData, results, apiKey);
+        const phase4 = await generateSinglePhase(4, userData, results, apiKey);
         if (!phase4.success) throw new Error(`Phase 4 failed: ${phase4.error}`);
         Object.assign(results, phase4.data);
 
         // Phase 5: Special Analysis + Action Plan
         onProgress?.(5, PHASE_LABELS[4].label, PHASE_LABELS[4].icon);
-        const phase5 = await executePhase(5, userData, results, apiKey);
+        const phase5 = await generateSinglePhase(5, userData, results, apiKey);
         if (!phase5.success) throw new Error(`Phase 5 failed: ${phase5.error}`);
         Object.assign(results, phase5.data);
 
@@ -96,7 +87,7 @@ export async function generatePremiumReport(
 /**
  * Execute a single phase
  */
-async function executePhase(
+export async function generateSinglePhase(
     phaseNumber: number,
     userData: UserData,
     previousData: PremiumReportPartial | null,
