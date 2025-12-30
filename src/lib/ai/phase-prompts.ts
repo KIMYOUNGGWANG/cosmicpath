@@ -16,16 +16,9 @@ export interface AstroData {
 
 // 사용자 입력 데이터 타입
 export interface UserData {
-  name?: string;
-  gender?: string;
-  birthDate: string;
-  birthTime: string;
-  context: string;
-  question: string;
-  sajuData?: SajuResult;
-  astroData?: AstroData;
   tarotCards?: TarotCard[];
   language?: 'ko' | 'en';
+  currentDate?: string; // "YYYY-MM-DD"
 }
 
 // Phase별 부분 결과 타입
@@ -84,6 +77,7 @@ Birth Date: ${userData.birthDate}
 Birth Time: ${userData.birthTime}
 Context: ${userData.context}
 Question: ${userData.question || 'General Reading'}
+Today's Date: ${userData.currentDate || new Date().toISOString().split('T')[0]}
 </USER_INFO>
 
 ${userData.sajuData ? `<SAJU_DATA>\n${JSON.stringify(userData.sajuData, null, 2)}\n</SAJU_DATA>` : ''}
@@ -100,6 +94,7 @@ ${tarotContext ? tarotContext : (userData.tarotCards ? `<TAROT_CARDS>\n${JSON.st
 생시: ${userData.birthTime}
 관심 영역(Context): ${userData.context}
 질문(Query): ${userData.question || '종합 운세'}
+오늘의 날짜: ${userData.currentDate || new Date().toISOString().split('T')[0]} (현재 시점 기준의 운세를 정확히 판단할 것)
 </사용자_정보>
 
 ${userData.sajuData ? `<사주_원국>\n${JSON.stringify(userData.sajuData, null, 2)}\n</사주_원국>` : ''}

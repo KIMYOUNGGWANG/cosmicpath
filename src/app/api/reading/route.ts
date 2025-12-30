@@ -81,12 +81,12 @@ export async function POST(request: NextRequest) {
         // ===== Premium Mode: Multi-Turn API =====
         if (tier === 'premium') {
             const apiKey = process.env.GOOGLE_AI_API_KEY;
-            if (!apiKey) {
-                return NextResponse.json(
-                    { error: 'API key not configured' },
-                    { status: 500 }
-                );
-            }
+            const currentDate = new Date().toLocaleDateString('ko-KR', {
+                timeZone: 'Asia/Seoul',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            }).replace(/\. /g, '-').replace(/\./g, '');
 
             const userData = {
                 name,
@@ -103,6 +103,7 @@ export async function POST(request: NextRequest) {
                 },
                 tarotCards: cards,
                 language: language as 'ko' | 'en',
+                currentDate,
             };
 
             try {
@@ -172,7 +173,13 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // ===== Standard Mode: Single API Call =====
+        const currentDate = new Date().toLocaleDateString('ko-KR', {
+            timeZone: 'Asia/Seoul',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).replace(/\. /g, '-').replace(/\./g, '');
+
         const systemPrompt = buildStructuredSystemPrompt(language as 'ko' | 'en');
         const userPrompt = buildUserPrompt(
             guide,
@@ -181,7 +188,8 @@ export async function POST(request: NextRequest) {
             cards,
             context as ReadingContext,
             question,
-            language as 'ko' | 'en'
+            language as 'ko' | 'en',
+            currentDate
         );
 
         try {

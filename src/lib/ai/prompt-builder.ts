@@ -141,6 +141,9 @@ ${guide.prioritySource}
 
 ## Context
 
+### Reference Date (Today)
+${currentDate || new Date().toISOString().split('T')[0]}
+
 ### User Question
 ${question || 'General Flow'}
 
@@ -530,7 +533,7 @@ export function buildStructuredSystemPrompt(language: 'ko' | 'en' = 'ko'): strin
     ],
     "fortune_flow": {
       "major_luck": { "title": "🎯 대운(大運) 분석", "period": "Period", "content": "Min 600" },
-      "yearly_luck": { "title": "📅 2026년 세운 분석", "content": "Min 800" },
+      "yearly_luck": { "title": "📅 향후 1년 세운 분석", "content": "Min 800" },
       "monthly_highlights": [
         { "month": "Jan", "theme": "Theme", "advice": "Advice" }
       ]
