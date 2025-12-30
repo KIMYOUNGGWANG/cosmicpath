@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
                 // Check if this is a single phase request
                 if (phase) {
                     console.log(`Executing Phase ${phase} for Premium Reading`);
-                    const phaseResult = await generateSinglePhase(phase, userData, previousReport || null, apiKey);
+                    const phaseResult = await generateSinglePhase(phase, userData, previousReport || null, apiKey as string);
 
                     if (!phaseResult.success) {
                         return NextResponse.json(
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
                 }
 
                 // Default: Run all phases (Risk of Timeout on Vercel Hobby)
-                const premiumResult = await generatePremiumReport(userData, apiKey);
+                const premiumResult = await generatePremiumReport(userData, apiKey as string);
 
                 return NextResponse.json({
                     success: premiumResult.success,

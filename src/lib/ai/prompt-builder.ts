@@ -90,7 +90,8 @@ export function buildUserPrompt(
   tarotCards: TarotCard[],
   context: ReadingContext,
   question: string,
-  language: 'ko' | 'en' = 'ko'
+  language: 'ko' | 'en' = 'ko',
+  currentDate?: string
 ): string {
   const contextGuide = CONTEXT_GUIDELINES[context];
   const isEn = language === 'en';
@@ -202,6 +203,9 @@ ${guide.prioritySource === 'saju' ? '사주 (장기적 관점)' :
 ---
 
 ## 컨텍스트
+
+### 기준 날짜 (오늘)
+${currentDate || new Date().toISOString().split('T')[0]}
 
 ### 질문 영역
 ${context === 'career' ? '💼 커리어' :

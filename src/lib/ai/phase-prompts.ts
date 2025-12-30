@@ -16,6 +16,14 @@ export interface AstroData {
 
 // 사용자 입력 데이터 타입
 export interface UserData {
+  name?: string;
+  gender?: string;
+  birthDate: string;
+  birthTime: string;
+  context: string;
+  question: string;
+  sajuData?: SajuResult;
+  astroData?: AstroData;
   tarotCards?: TarotCard[];
   language?: 'ko' | 'en';
   currentDate?: string; // "YYYY-MM-DD"
