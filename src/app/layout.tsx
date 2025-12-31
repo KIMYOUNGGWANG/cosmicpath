@@ -73,7 +73,18 @@ export default function RootLayout({
       >
 
         {children}
+        <script
+          src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
+          crossOrigin="anonymous"
+          defer
+        ></script>
       </body>
     </html>
   );
+}
+
+declare global {
+  interface Window {
+    Kakao: any;
+  }
 }

@@ -81,7 +81,7 @@ export default async function SharedPage({ params }: SharedPageProps) {
                     report={reportData}
                     metadata={metadata}
                     language={language}
-                    shareUrl={`${process.env.NEXT_PUBLIC_APP_URL || 'https://cosmicpath.vercel.app'}/share/${id}`}
+                    shareUrl={`${process.env.NEXT_PUBLIC_APP_URL || 'https://cosmicpath.app'}/share/${id}`}
                 />
             </div>
         </main>

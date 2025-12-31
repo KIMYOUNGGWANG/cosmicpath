@@ -39,7 +39,7 @@ export default function Home() {
   const [shareUrl, setShareUrl] = useState<string | undefined>(undefined);
 
   // Payment State
-  const [isPremium, setIsPremium] = useState(true); // Force premium for testing
+  const [isPremium, setIsPremium] = useState(true); // Temporarily enabled for Free Mode (Production Preview)
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   // Resume Reading after Payment
@@ -110,20 +110,19 @@ export default function Home() {
       } else {
         console.log('[Resume] No pending data found or payment not completed');
       }
-    } else {
+    } else if (urlParams.get('canceled') === 'true' || sessionStorage.getItem('pending_reading_data')) {
       // Handle "Back" navigation or cancelled payment (paid !== 'true')
-      // Use sessionStorage here too
+      // Restore cached session if it exists so users don't lose progress
       const pendingData = sessionStorage.getItem('pending_reading_data');
       const pendingReportJson = sessionStorage.getItem('pending_report_data');
 
-      // Only restore if we have BOTH input data and report data (meaning we were at the result screen)
       if (pendingData && pendingReportJson) {
-        console.log('[Resume] Found cached session (User returned from payment)');
+        console.log('[Resume] Found cached session (User returned from payment or was reading)');
         try {
           const data = JSON.parse(pendingData);
           const report = JSON.parse(pendingReportJson);
 
-          // Restore state but remain LOCKED (isPremium = false)
+          // Restore state but remains locked if not paid
           setReadingData(data);
           setLanguage(data.language as 'ko' | 'en');
           if (data.tarotCards) {
@@ -131,19 +130,17 @@ export default function Home() {
           }
           setReportData(report);
           setStep('result');
-          // intentionally NOT setting isPremium(true)
+
+          // Clear query param
+          if (urlParams.get('canceled') === 'true') {
+            window.history.replaceState({}, '', window.location.pathname);
+          }
         } catch (e) {
           console.error("Failed to restore cached session:", e);
         }
-      } else {
-        // !!! IMPORTANT FIX: Check and clear STUCK localStorage items from previous version !!!
-        if (localStorage.getItem('pending_reading_data')) {
-          console.log('[Cleanup] Removing stale localStorage data from previous version');
-          localStorage.removeItem('pending_reading_data');
-          localStorage.removeItem('pending_report_data');
-          localStorage.removeItem('payment_completed');
-        }
       }
+    } else {
+      console.log('[Resume] Normal visit to /start - keeping clean state');
     }
   }, []);
 
@@ -192,6 +189,7 @@ export default function Home() {
 
       // If resuming, use existing report, otherwise start empty
       let accumulatedReport: any = initialReport || {};
+      let accumulatedMetadata: any = metadata || {};
       const totalPhases = 5;
 
       const labelsKo = [
@@ -255,7 +253,8 @@ export default function Home() {
 
         // Metadata update (once is enough, usually from first phase or accumulated)
         if (result.metadata) {
-          setMetadata(prev => ({ ...prev, ...result.metadata }));
+          accumulatedMetadata = { ...accumulatedMetadata, ...result.metadata };
+          setMetadata(accumulatedMetadata);
         }
       }
 
@@ -270,7 +269,7 @@ export default function Home() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               data: accumulatedReport,
-              metadata: { ...metadata, language }
+              metadata: { ...accumulatedMetadata, language }
             })
           });
 
@@ -507,8 +506,6 @@ export default function Home() {
         </p>
       </footer>
 
-      {/* PaymentModal Disabled Temporarily */}
-      {/* 
       <PaymentModal
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
@@ -518,20 +515,16 @@ export default function Home() {
         readingData={readingData ? { ...readingData, tarotCards: selectedCards, language } : undefined}
         currentReport={reportData}
       />
-      */}
 
       {/* Sticky CTA for Partial Result */}
-      {/* Sticky CTA Disabled Temporarily */}
-      {/* 
       {step === 'result' && !isPremium && (
         <StickyCTA
           price="$3.99"
-          originalPrice="$29.99"
+          originalPrice="$19.90"
           onUnlock={handleUpgrade}
           language={language}
         />
       )}
-      */}
     </main>
   );
 }

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Sparkles, AlertTriangle } from 'lucide-react';
+import { Sparkles, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BlindSpotTeaserProps {
@@ -7,25 +7,35 @@ interface BlindSpotTeaserProps {
     previewText: string;
     hiddenText: string;
     language: 'ko' | 'en';
+    isLocked?: boolean;
     onUnlock: () => void;
 }
 
-export function BlindSpotTeaser({ title, previewText, hiddenText, language }: BlindSpotTeaserProps) {
+export function BlindSpotTeaser({ title, previewText, hiddenText, language, isLocked = false, onUnlock }: BlindSpotTeaserProps) {
     const isEn = language === 'en';
 
     return (
         <div className="relative overflow-hidden rounded-xl border border-gold/30 bg-gold/5 mt-6 group transition-colors">
             {/* Header / Hook */}
-            <div className="flex items-center gap-3 p-4 border-b border-gold/10 bg-gold/5">
-                <div className="p-1.5 rounded-full bg-gold/10">
-                    <Sparkles size={16} className="text-gold" />
+            <div className="flex items-center justify-between p-4 border-b border-gold/10 bg-gold/5">
+                <div className="flex items-center gap-3">
+                    <div className="p-1.5 rounded-full bg-gold/10">
+                        <Sparkles size={16} className="text-gold" />
+                    </div>
+                    <h3 className="font-bold text-starlight text-sm md:text-base tracking-wide flex items-center gap-2">
+                        {title}
+                    </h3>
                 </div>
-                <h3 className="font-bold text-starlight text-sm md:text-base tracking-wide flex items-center gap-2">
-                    {title}
-                    <span className="text-[10px] bg-gold/20 text-gold px-2 py-0.5 rounded-full uppercase tracking-widest border border-gold/30">
-                        {isEn ? 'Unlocked' : '잠금 해제됨'}
-                    </span>
-                </h3>
+                <div className={cn(
+                    "text-[10px] px-2 py-0.5 rounded-full uppercase tracking-widest border font-bold h-fit transition-all duration-500",
+                    isLocked
+                        ? "bg-red-500/10 text-red-300 border-red-500/20"
+                        : "bg-gold/20 text-gold border-gold/30"
+                )}>
+                    {isEn
+                        ? (isLocked ? 'Locked' : 'Unlocked')
+                        : (isLocked ? '잠금됨' : '잠금 해제됨')}
+                </div>
             </div>
 
             {/* Content Area */}
@@ -35,11 +45,29 @@ export function BlindSpotTeaser({ title, previewText, hiddenText, language }: Bl
                     {previewText}
                 </p>
 
-                {/* Revealed Content */}
-                <div className="relative p-4 rounded-lg bg-white/5 border border-white/10 shadow-inner">
-                    <p className="text-starlight text-sm md:text-base leading-relaxed">
+                {/* Hidden Content Area */}
+                <div className="relative p-4 rounded-lg bg-white/5 border border-white/10 shadow-inner overflow-hidden min-h-[80px]">
+                    <p className={cn(
+                        "text-starlight text-sm md:text-base leading-relaxed transition-all duration-1000",
+                        isLocked && "blur-md select-none opacity-50"
+                    )}>
                         {hiddenText}
                     </p>
+
+                    {/* Lock Overlay */}
+                    {isLocked && (
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/5 backdrop-blur-[2px]">
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={onUnlock}
+                                className="flex items-center gap-2 bg-gradient-to-r from-gold to-yellow-600 text-black font-bold text-xs px-4 py-2 rounded-full shadow-lg hover:shadow-gold/20 transition-all"
+                            >
+                                <Lock size={12} fill="currentColor" />
+                                {isEn ? 'Unlock Deep Insight' : '숨겨진 깊은 통찰 읽기'}
+                            </motion.button>
+                        </div>
+                    )}
                 </div>
             </div>
 

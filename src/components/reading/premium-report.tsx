@@ -9,6 +9,8 @@ import { DraftProposal } from './draft-proposal';
 import { EvidenceTooltip } from '../ui/confidence-badge';
 import { TarotDetailModal } from './tarot-detail-modal';
 import { SharePanel } from '../share/SharePanel';
+import { BlindSpotTeaser } from './blind-spot-teaser';
+// import TossPaymentWidget from '../payment/TossPaymentWidget'; // Toss Payments (Commented out)
 
 // 새로운 Premium Report 타입 (기존 CosmicReport 대체)
 interface PremiumReportData {
@@ -120,37 +122,75 @@ interface PremiumReportProps {
     onUnlock?: () => void;
 }
 
-import { BlindSpotTeaser } from './blind-spot-teaser'; // Import
-
 // ... (existing helper)
 
 function CosmicRadarMemo({ report, metadata, language }: { report: PremiumReportData; metadata?: PremiumReportProps['metadata']; language: 'ko' | 'en' }) {
     const isEn = language === 'en';
 
     // Use dynamic scores from metadata if available, otherwise fallback to derived
-    const sajuScore = metadata?.radarScores?.saju || (report.summary.trust_score * 20 - 5);
-    const starScore = metadata?.radarScores?.astrology || (report.summary.trust_score * 20 - 15);
-    const tarotScore = metadata?.radarScores?.tarot || (report.summary.trust_score * 20 - 35);
+    const sajuScore = metadata?.radarScores?.saju || (report.summary.trust_score * 20 - (report.summary.trust_score > 3 ? 5 : 15));
+    const starScore = metadata?.radarScores?.astrology || (report.summary.trust_score * 20 - (report.summary.trust_score > 3 ? 15 : 25));
+    const tarotScore = metadata?.radarScores?.tarot || (report.summary.trust_score * 20 - (report.summary.trust_score > 3 ? 25 : 35));
+
+    // Analyze imbalance
+    const scores = {
+        saju: { score: sajuScore, label: isEn ? 'Logic' : '논리(사주)', icon: '📜' },
+        star: { score: starScore, label: isEn ? 'Flow' : '흐름(별자리)', icon: '🌌' },
+        tarot: { score: tarotScore, label: isEn ? 'Intuition' : '직관(타로)', icon: '🔮' }
+    };
+
+    const maxScore = Math.max(sajuScore, starScore, tarotScore);
+    const minScore = Math.min(sajuScore, starScore, tarotScore);
+    const diff = maxScore - minScore;
+
+    const highest = Object.values(scores).find(s => s.score === maxScore)!;
+    const lowest = Object.values(scores).find(s => s.score === minScore)!;
+
+    let badgeConfig;
+    if (diff < 15) {
+        badgeConfig = {
+            color: 'bg-green-500/10 border-green-500/50 text-green-200 shadow-[0_0_15px_rgba(34,197,94,0.3)]',
+            dot: 'bg-green-500',
+            ping: 'bg-green-400',
+            text: isEn ? "IDEAL BALANCE" : "완벽한 조화"
+        };
+    } else if (diff < 30) {
+        badgeConfig = {
+            color: 'bg-gold/10 border-gold/50 text-gold/90 shadow-[0_0_15px_rgba(255,215,0,0.2)]',
+            dot: 'bg-gold',
+            ping: 'bg-gold/60',
+            text: isEn ? "STABLE HARMONY" : "안정적 균형"
+        };
+    } else {
+        badgeConfig = {
+            color: 'bg-red-500/10 border-red-500/50 text-red-200 shadow-[0_0_15px_rgba(220,38,38,0.3)]',
+            dot: 'bg-red-500',
+            ping: 'bg-red-400',
+            text: isEn ? "DYNAMIC IMBALANCE" : "심각한 불균형"
+        };
+    }
+
+    const tooltipText = isEn
+        ? `Your '${highest.label}' is dominant, while '${lowest.label}' is currently recessed. This indicates a focus on ${maxScore > 80 ? 'strong' : 'developing'} external manifestations over internal ${minScore < 40 ? 'needs' : 'adjustments'}.`
+        : `회원님의 운세는 '${highest.label}'의 기운이 매우 강한 반면, '${lowest.label}'가 상대적으로 낮게 나타납니다. 이는 현재 상황에서 ${maxScore > 80 ? '강력한' : '뚜렷한'} 추진력을 발휘하고 있지만 ${minScore < 40 ? '세밀한' : '유연한'} 조율이 필요함을 암시합니다.`;
 
     return (
         <section className="mt-8 px-4 md:px-6 relative">
-            {/* Warning Badge with Explanation */}
+            {/* Dynamic Warning/Status Badge */}
             <div className="absolute -top-4 right-4 z-10 group cursor-help">
-                <div className="bg-red-500/10 border border-red-500/50 backdrop-blur-md text-red-200 text-xs px-3 py-1.5 rounded-full flex items-center gap-2 shadow-[0_0_15px_rgba(220,38,38,0.3)] animate-pulse-slow">
+                <div className={cn("backdrop-blur-md text-xs px-3 py-1.5 rounded-full flex items-center gap-2 transition-all duration-500", badgeConfig.color)}>
                     <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                        <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", badgeConfig.ping)}></span>
+                        <span className={cn("relative inline-flex rounded-full h-2 w-2", badgeConfig.dot)}></span>
                     </span>
-                    <span className="font-bold tracking-wide">{isEn ? "CRITICAL IMBALANCE" : "심각한 불균형"}</span>
+                    <span className="font-bold tracking-wide">{badgeConfig.text}</span>
                     <CircleHelp size={12} className="opacity-70" />
                 </div>
 
                 {/* Tooltip on Hover */}
-                <div className="absolute right-0 top-full mt-2 w-64 bg-black/90 border border-red-500/30 p-3 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20 shadow-xl">
-                    <p className="text-[11px] text-gray-300 leading-relaxed">
-                        {isEn
-                            ? "Your 'Logic(Saju)' is strong, but 'Intuition(Tarot)' is weak. This imbalance causes hesitation at crucial moments."
-                            : "회원님의 '논리(사주)'는 강하지만 '직관(타로)'이 약해 균형이 무너져 있습니다. 이는 중요한 결정 순간에 망설임을 유발하는 원인이 됩니다."}
+                <div className="absolute right-0 top-full mt-2 w-64 bg-black/90 border border-white/10 p-4 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-20 shadow-2xl scale-95 group-hover:scale-100 origin-top-right">
+                    <p className="text-[11px] text-gray-200 leading-relaxed font-light">
+                        {tooltipText}
                     </p>
                 </div>
             </div>
@@ -174,6 +214,11 @@ function CosmicRadarMemo({ report, metadata, language }: { report: PremiumReport
 export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock }: PremiumReportProps) {
     const isEn = language === 'en';
     const [selectedCardIdx, setSelectedCardIdx] = useState<number | null>(null);
+    const handleUnlock = () => {
+        if (onUnlock) {
+            onUnlock();
+        }
+    };
 
     // Dynamic Teaser Text Generator
     const getTeaserText = (section: string) => {
@@ -245,14 +290,14 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
             {report.life_areas ? (
                 <LifeAreasSection data={report.life_areas} language={language} />
             ) : (
-                <LockedSection title={isEn ? 'Detailed Analysis by Area' : '영역별 상세 분석'} icon={<Target size={18} className="text-gray-400" />} language={language} onUnlock={onUnlock} />
+                <LockedSection title={isEn ? 'Detailed Analysis by Area' : '영역별 상세 분석'} icon={<Target size={18} className="text-gray-400" />} language={language} onUnlock={handleUnlock} />
             )}
 
             {/* Special Analysis */}
             {report.special_analysis ? (
                 <SpecialAnalysisSection data={report.special_analysis} language={language} />
             ) : (
-                <LockedSection title={isEn ? 'Special Analysis' : '특수 분석'} icon={<Zap size={18} className="text-gray-400" />} language={language} onUnlock={onUnlock} />
+                <LockedSection title={isEn ? 'Special Analysis' : '특수 분석'} icon={<Zap size={18} className="text-gray-400" />} language={language} onUnlock={handleUnlock} />
             )}
 
             {/* Action Plan - BLIND SPOT TEASER 2 */}
@@ -312,6 +357,42 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     language={language}
                 />
             )}
+
+            {/* Stripe Payment Modal is handled by parent Component via onUnlock */}
+
+            {/* Toss Payment Modal (Commented out)
+            {isCheckoutOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 md:p-10">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsCheckoutOpen(false)}
+                        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                    />
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        className="relative w-full max-w-xl bg-deep-navy border border-white/10 rounded-3xl overflow-y-auto max-h-[90vh] shadow-[0_0_50px_rgba(161,132,255,0.2)]"
+                    >
+                        <div className="absolute top-4 right-4 z-10">
+                            <button
+                                onClick={() => setIsCheckoutOpen(false)}
+                                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                            >
+                                <Lock size={20} className="text-white/40" />
+                            </button>
+                        </div>
+                        <TossPaymentWidget
+                            onFail={(err) => {
+                                console.error('Payment Modal Error:', err);
+                                setIsCheckoutOpen(false);
+                            }}
+                        />
+                    </motion.div>
+                </div>
+            )}
+            */}
         </div>
     );
 }

@@ -10,6 +10,7 @@ interface StickyCTAProps {
 }
 
 export function StickyCTA({ price, originalPrice, onUnlock, language }: StickyCTAProps) {
+    return null; // Temporarily disabled for Free Mode
     const [isVisible, setIsVisible] = useState(false);
     const isEn = language === 'en';
 
