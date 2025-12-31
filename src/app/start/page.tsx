@@ -39,7 +39,7 @@ export default function Home() {
   const [shareUrl, setShareUrl] = useState<string | undefined>(undefined);
 
   // Payment State
-  const [isPremium, setIsPremium] = useState(false);
+  const [isPremium, setIsPremium] = useState(true); // Force premium for testing
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   // Resume Reading after Payment

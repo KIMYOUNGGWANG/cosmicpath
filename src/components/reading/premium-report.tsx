@@ -892,5 +892,32 @@ function ContentCard({ title, content }: { title: string; content: string }) {
 }
 
 function LockedSection({ title, icon, language, onUnlock }: { title: string; icon: React.ReactNode; language: 'ko' | 'en'; onUnlock?: () => void }) {
-    return null; // Temporarily disabled for payment removal
+    const isEn = language === 'en';
+    return (
+        <section className="mt-8 px-4 md:px-6 relative">
+            <div className="absolute inset-0 top-10 bg-deep-navy/40 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-xl border border-white/5">
+                <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mb-4">
+                    <Lock className="w-6 h-6 text-white/50" />
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2 text-center">
+                    {title} {isEn ? 'Analysis in Progress' : '분석 진행 중'}
+                </h3>
+                <p className="text-sm text-gray-400 mb-6 text-center max-w-xs">
+                    {isEn ? 'This section requires premium access (Currently bypassed for testing).' : '프리미엄 데이터가 필요합니다 (현재 테스트를 위해 개방됨).'}
+                </p>
+            </div>
+
+            {/* Fake Content Background */}
+            <div className="opacity-20 blur-[2px] pointer-events-none select-none" aria-hidden="true">
+                <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    {icon}
+                    {title}
+                </h2>
+                <div className="space-y-4">
+                    <div className="h-16 bg-white/10 rounded-lg w-full"></div>
+                    <div className="h-32 bg-white/10 rounded-lg w-full"></div>
+                </div>
+            </div>
+        </section>
+    );
 }
