@@ -507,18 +507,22 @@ export default function Home() {
         </p>
       </footer>
 
+      {/* PaymentModal Disabled Temporarily */}
+      {/* 
       <PaymentModal
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
         onPaymentStart={() => {
-          // Optional: Track payment start event
           console.log('Payment started');
         }}
         readingData={readingData ? { ...readingData, tarotCards: selectedCards, language } : undefined}
         currentReport={reportData}
       />
+      */}
 
       {/* Sticky CTA for Partial Result */}
+      {/* Sticky CTA Disabled Temporarily */}
+      {/* 
       {step === 'result' && !isPremium && (
         <StickyCTA
           price="$3.99"
@@ -527,6 +531,7 @@ export default function Home() {
           language={language}
         />
       )}
+      */}
     </main>
   );
 }

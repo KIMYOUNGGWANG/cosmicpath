@@ -892,40 +892,5 @@ function ContentCard({ title, content }: { title: string; content: string }) {
 }
 
 function LockedSection({ title, icon, language, onUnlock }: { title: string; icon: React.ReactNode; language: 'ko' | 'en'; onUnlock?: () => void }) {
-    const isEn = language === 'en';
-    return (
-        <section className="mt-8 px-4 md:px-6 relative">
-            <div className="absolute inset-0 top-10 bg-deep-navy/40 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-xl border border-white/5">
-                <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mb-4">
-                    <Lock className="w-6 h-6 text-white/50" />
-                </div>
-                <h3 className="text-lg font-bold text-white mb-2 text-center">
-                    {title} {isEn ? 'Locked' : '잠금됨'}
-                </h3>
-                <p className="text-sm text-gray-400 mb-6 text-center max-w-xs">
-                    {isEn ? 'Unlocking your full potential requires a complete analysis.' : '전체 분석을 통해 당신의 잠재력을 확인하세요.'}
-                </p>
-                <button
-                    onClick={onUnlock}
-                    className="px-8 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full text-white font-medium hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg hover:shadow-violet-500/25 flex items-center gap-2"
-                >
-                    <Sparkles size={16} />
-                    {isEn ? 'Unlock Full Report' : '전체 리포트 열기'}
-                </button>
-            </div>
-
-            {/* Fake Content Background */}
-            <div className="opacity-20 blur-[2px] pointer-events-none select-none" aria-hidden="true">
-                <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    {icon}
-                    {title}
-                </h2>
-                <div className="space-y-4">
-                    <div className="h-16 bg-white/10 rounded-lg w-full"></div>
-                    <div className="h-32 bg-white/10 rounded-lg w-full"></div>
-                    <div className="h-16 bg-white/10 rounded-lg w-full"></div>
-                </div>
-            </div>
-        </section>
-    );
+    return null; // Temporarily disabled for payment removal
 }
