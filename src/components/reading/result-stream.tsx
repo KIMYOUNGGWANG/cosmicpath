@@ -17,6 +17,11 @@ interface ResultStreamProps {
         matchingTags: string[];
         conflictingTags?: string[];
     };
+    radarScores?: {
+        saju: number;
+        astrology: number;
+        tarot: number;
+    };
     content: string;
     currentStep?: number;
 }
@@ -25,6 +30,7 @@ export function ResultStream({
     isLoading,
     confidence,
     matching,
+    radarScores,
     content,
     currentStep = 0,
 }: ResultStreamProps) {
@@ -183,9 +189,9 @@ export function ResultStream({
                         Cosmic Radar
                     </h3>
                     <CosmicRadar
-                        sajuScore={confidence ? 85 : 0}    // TODO: 실제 점수 매핑
-                        starScore={confidence ? 72 : 0}    // TODO: 실제 점수 매핑
-                        tarotScore={confidence ? 45 : 0}   // TODO: 실제 점수 매핑
+                        sajuScore={radarScores?.saju || 0}
+                        starScore={radarScores?.astrology || 0}
+                        tarotScore={radarScores?.tarot || 0}
                         isLoading={isLoading}
                     />
                     <div className="mt-6 text-center text-xs text-gray-500">

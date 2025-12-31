@@ -36,7 +36,7 @@ function PaymentSuccessContent() {
 
                     // 2초 후 홈으로 이동
                     setTimeout(() => {
-                        router.push('/?paid=true');
+                        router.push('/start?paid=true');
                     }, 2500);
                 } else {
                     setStatus('error');

@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * 리딩 입력 컴포넌트
+ * 리딩 입력 컴포넌트 - Ethereal Brutalism Style
  */
 
 import { useState } from 'react';
@@ -21,14 +21,16 @@ export interface ReadingData {
     context: ReadingContext;
     question: string;
     language: 'ko' | 'en';
+    calendarType: 'solar' | 'lunar';
+    unknownTime: boolean;
 }
 
-const contexts: { value: ReadingContext; labelKo: string; labelEn: string; icon: string }[] = [
-    { value: 'career', labelKo: '커리어', labelEn: 'Career', icon: '💼' },
-    { value: 'love', labelKo: '연애', labelEn: 'Love', icon: '❤️' },
-    { value: 'money', labelKo: '금전', labelEn: 'Money', icon: '💰' },
-    { value: 'health', labelKo: '건강', labelEn: 'Health', icon: '🏥' },
-    { value: 'general', labelKo: '전반적', labelEn: 'General', icon: '🔮' },
+const contexts: { value: ReadingContext; labelKo: string; labelEn: string }[] = [
+    { value: 'career', labelKo: '커리어 / 직업', labelEn: 'Career / Job' },
+    { value: 'love', labelKo: '연애 / 관계', labelEn: 'Love / Relationship' },
+    { value: 'money', labelKo: '재물 / 금전', labelEn: 'Wealth / Money' },
+    { value: 'health', labelKo: '건강 / 신체', labelEn: 'Health / Body' },
+    { value: 'general', labelKo: '운세 / 종합', labelEn: 'Destiny / General' },
 ];
 
 export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps) {
@@ -36,6 +38,8 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
     const [gender, setGender] = useState<'male' | 'female'>('male');
     const [birthDate, setBirthDate] = useState('');
     const [birthTime, setBirthTime] = useState('12:00');
+    const [calendarType, setCalendarType] = useState<'solar' | 'lunar'>('solar');
+    const [unknownTime, setUnknownTime] = useState(false);
     const [context, setContext] = useState<ReadingContext>('general');
     const [question, setQuestion] = useState('');
     const [language, setLanguage] = useState<'ko' | 'en'>('ko');
@@ -44,170 +48,191 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSubmit({ name, gender, birthDate, birthTime, context, question, language });
+        onSubmit({ name, gender, birthDate, birthTime, context, question, language, calendarType, unknownTime });
     };
 
     return (
         <motion.form
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             onSubmit={handleSubmit}
-            className="glass-card p-6 space-y-6"
+            className="w-full max-w-2xl mx-auto space-y-12"
         >
-            {/* 언어 선택 (Language Selection) */}
-            <div className="flex justify-center mb-2">
-                <div className="flex bg-white/5 p-1 rounded-full border border-white/10">
+            {/* Header / Language */}
+            <div className="flex justify-between items-center border-b border-white/5 pb-6">
+                <span className="text-xs font-mono text-dim tracking-widest uppercase">
+                    Protocol: Initialization
+                </span>
+                <div className="flex gap-4 text-xs font-mono">
                     <button
                         type="button"
                         onClick={() => setLanguage('ko')}
-                        className={`px-4 py-1.5 rounded-full text-xs transition-all ${language === 'ko' ? 'bg-gold text-black font-bold' : 'text-gray-400 hover:text-white'}`}
+                        className={`transition-colors ${language === 'ko' ? 'text-acc-gold' : 'text-dim hover:text-white'}`}
                     >
-                        한국어
+                        KR
                     </button>
+                    <span className="text-dim">/</span>
                     <button
                         type="button"
                         onClick={() => setLanguage('en')}
-                        className={`px-4 py-1.5 rounded-full text-xs transition-all ${language === 'en' ? 'bg-gold text-black font-bold' : 'text-gray-400 hover:text-white'}`}
+                        className={`transition-colors ${language === 'en' ? 'text-acc-gold' : 'text-dim hover:text-white'}`}
                     >
-                        English
+                        EN
                     </button>
                 </div>
             </div>
 
-            {/* 이름 & 성별 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label className="block text-sm text-gray-300 font-medium mb-2">
-                        {isEn ? 'Name / Nickname' : '이름 / 닉네임'} <span className="text-gray-500 text-xs">{isEn ? '(Optional)' : '(선택)'}</span>
+            {/* Input Grid */}
+            <div className="space-y-12">
+
+                {/* 1. Identity */}
+                <div className="relative group">
+                    <label className="block text-xs text-acc-gold tracking-widest uppercase mb-4">
+                        {isEn ? '01. Subject Identity' : '01. Subject Identity (신원 정보)'}
                     </label>
-                    <input
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder={isEn ? "Anonymous if blank" : "미입력시 익명"}
-                        className="input-cosmic w-full"
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm text-gray-300 font-medium mb-2">
-                        {isEn ? 'Gender' : '성별'} <span className="text-red-400">*</span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setGender('male')}
-                            className={`py-2.5 rounded-lg border transition-all ${gender === 'male'
-                                ? 'bg-blue-500/20 border-blue-500 text-blue-300'
-                                : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
-                                }`}
-                        >
-                            {isEn ? 'Male' : '남성'}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setGender('female')}
-                            className={`py-2.5 rounded-lg border transition-all ${gender === 'female'
-                                ? 'bg-pink-500/20 border-pink-500 text-pink-300'
-                                : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
-                                }`}
-                        >
-                            {isEn ? 'Female' : '여성'}
-                        </button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder={isEn ? "NAME (OPTIONAL)" : "이름 / 닉네임 (선택)"}
+                                className="w-full bg-transparent border-b border-white/10 py-3 text-lg text-starlight focus:outline-none focus:border-acc-gold transition-colors placeholder:text-white/10 font-cinzel"
+                            />
+                        </div>
+                        <div className="flex gap-8 items-end pb-3">
+                            <button
+                                type="button"
+                                onClick={() => setGender('male')}
+                                className={`text-sm tracking-widest uppercase transition-colors ${gender === 'male' ? 'text-starlight border-b border-starlight' : 'text-dim hover:text-moonlight border-b border-transparent'}`}
+                            >
+                                {isEn ? 'Male' : '남성'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setGender('female')}
+                                className={`text-sm tracking-widest uppercase transition-colors ${gender === 'female' ? 'text-starlight border-b border-starlight' : 'text-dim hover:text-moonlight border-b border-transparent'}`}
+                            >
+                                {isEn ? 'Female' : '여성'}
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* 생년월일 & 생시 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label className="block text-sm text-gray-300 font-medium mb-2">
-                        {isEn ? 'Birth Date' : '생년월일'} <span className="text-red-400">*</span>
+                {/* 2. Temporal Coordinates */}
+                <div className="relative group">
+                    <label className="block text-xs text-acc-gold tracking-widest uppercase mb-4">
+                        {isEn ? '02. Temporal Coordinates' : '02. Temporal Coordinates (생년월일시)'}
                     </label>
-                    <input
-                        type="date"
-                        value={birthDate}
-                        onChange={(e) => setBirthDate(e.target.value)}
-                        className="input-cosmic w-full"
-                        required
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            {/* Calendar Type Toggle (Styled like Gender tabs) */}
+                            <div className="flex gap-6 mb-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setCalendarType('solar')}
+                                    className={`text-xs tracking-widest uppercase transition-colors pb-1 ${calendarType === 'solar' ? 'text-starlight border-b border-starlight' : 'text-dim hover:text-moonlight border-b border-transparent'}`}
+                                >
+                                    {isEn ? 'Solar' : '양력'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setCalendarType('lunar')}
+                                    className={`text-xs tracking-widest uppercase transition-colors pb-1 ${calendarType === 'lunar' ? 'text-starlight border-b border-starlight' : 'text-dim hover:text-moonlight border-b border-transparent'}`}
+                                >
+                                    {isEn ? 'Lunar' : '음력'}
+                                </button>
+                            </div>
+
+                            <input
+                                type="date"
+                                value={birthDate}
+                                onChange={(e) => setBirthDate(e.target.value)}
+                                className="w-full bg-transparent border-b border-white/10 py-3 text-lg text-starlight focus:outline-none focus:border-acc-gold transition-colors font-mono uppercase"
+                                required
+                            />
+                            <p className="mt-2 text-[10px] text-dim font-mono">YYYY-MM-DD</p>
+                        </div>
+                        <div>
+                            <input
+                                type="time"
+                                value={birthTime}
+                                onChange={(e) => setBirthTime(e.target.value)}
+                                disabled={unknownTime}
+                                className={`w-full bg-transparent border-b border-white/10 py-3 text-lg text-starlight focus:outline-none focus:border-acc-gold transition-colors font-mono ${unknownTime ? 'opacity-30 cursor-not-allowed' : ''}`}
+                            />
+                            <p className="mt-2 text-[10px] text-dim font-mono mb-4">{isEn ? 'HH:MM (Local Time)' : 'HH:MM (태어난 시간)'}</p>
+
+                            {/* Custom Styled Checkbox */}
+                            <div className="flex items-start gap-3 group/check cursor-pointer" onClick={() => {
+                                const newState = !unknownTime;
+                                setUnknownTime(newState);
+                                if (newState) setBirthTime('12:00');
+                            }}>
+                                <div className={`mt-0.5 w-4 h-4 border transition-colors flex items-center justify-center ${unknownTime ? 'border-acc-gold bg-acc-gold/10' : 'border-white/20 group-hover/check:border-white/40'}`}>
+                                    {unknownTime && (
+                                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M1 4L3.5 6.5L9 1" stroke="#E2E8F0" strokeWidth="1.5" strokeLinecap="square" />
+                                        </svg>
+                                    )}
+                                </div>
+                                <label className="text-[10px] text-dim cursor-pointer leading-tight pt-0.5 group-hover/check:text-moonlight transition-colors select-none">
+                                    {isEn
+                                        ? "Unknown Time (Assume 12:00 PM - Accuracy may decrease)"
+                                        : "시간 모름 (낮 12:00 기준으로 분석하며, 정확도가 다소 떨어질 수 있습니다)"}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 3. Inquiry Vector */}
+                <div className="relative group">
+                    <label className="block text-xs text-acc-gold tracking-widest uppercase mb-4">
+                        {isEn ? '03. Inquiry Vector' : '03. Inquiry Vector (고민 영역)'}
+                    </label>
+                    <div className="flex flex-wrap gap-3 mb-6">
+                        {contexts.map((ctx) => (
+                            <button
+                                key={ctx.value}
+                                type="button"
+                                onClick={() => setContext(ctx.value)}
+                                className={`px-4 py-2 text-xs border transition-all uppercase tracking-wider ${context === ctx.value
+                                    ? 'border-acc-gold text-bg-void bg-acc-gold font-bold'
+                                    : 'border-white/10 text-dim hover:border-white/30 hover:text-moonlight bg-transparent'
+                                    }`}
+                            >
+                                {isEn ? ctx.labelEn : ctx.labelKo}
+                            </button>
+                        ))}
+                    </div>
+                    <textarea
+                        value={question}
+                        onChange={(e) => setQuestion(e.target.value)}
+                        placeholder={isEn ? "Describe your anxiety or question specifically..." : "구체적인 고민이나 질문을 입력하세요..."}
+                        className="w-full bg-white/5 border border-white/20 p-4 text-sm text-starlight focus:outline-none focus:border-acc-gold/80 focus:bg-white/10 transition-colors h-32 resize-none leading-relaxed placeholder:text-white/30"
                     />
                 </div>
-                <div>
-                    <label className="block text-sm text-gray-300 font-medium mb-2">
-                        {isEn ? 'Birth Time (Optional)' : '생시 (선택)'}
-                    </label>
-                    <input
-                        type="time"
-                        value={birthTime}
-                        onChange={(e) => setBirthTime(e.target.value)}
-                        className="input-cosmic w-full"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                        {isEn ? "Defaults to noon (12:00) if unknown" : "모르면 정오(12:00)로 설정됩니다"}
-                    </p>
-                </div>
+
             </div>
 
-            {/* 컨텍스트 선택 */}
-            <div className="space-y-4">
-                <label className="block text-sm text-gray-300 font-medium text-center md:text-left">
-                    {isEn ? 'Which area are you curious about?' : '어떤 영역이 궁금하신가요?'}
-                </label>
-                <div className="flex flex-wrap justify-center md:justify-start gap-3 w-full">
-                    {contexts.map((ctx) => (
-                        <button
-                            key={ctx.value}
-                            type="button"
-                            onClick={() => setContext(ctx.value)}
-                            className={`context-btn flex items-center gap-2 py-3 px-5 transition-all outline-none ${context === ctx.value ? 'active ring-2 ring-gold/30' : ''}`}
-                        >
-                            <span className="text-xl">{ctx.icon}</span>
-                            <span className="font-medium">{isEn ? ctx.labelEn : ctx.labelKo}</span>
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* 질문 입력 */}
-            <div>
-                <label className="block text-sm text-gray-300 font-medium mb-2">
-                    {isEn ? 'Specific Question (Optional)' : '구체적인 질문 (선택)'}
-                </label>
-                <textarea
-                    value={question}
-                    onChange={(e) => setQuestion(e.target.value)}
-                    placeholder={isEn ? "e.g., Is it a good idea to decide on a career change this month?" : "예: 이번 달 이직 결정을 해도 괜찮을까요?"}
-                    className="input-cosmic w-full h-24 resize-none text-sm"
-                />
-            </div>
-
-            {/* 제출 버튼 */}
-            <div className="pt-2">
-                <motion.button
+            {/* Action */}
+            <div className="pt-12 flex justify-center">
+                <button
                     type="submit"
                     disabled={!birthDate || isLoading}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    className={`btn-primary w-full py-5 text-lg shadow-gold/20 relative overflow-hidden flex items-center justify-center transition-all ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`group relative px-12 py-4 bg-transparent border border-white/20 overflow-hidden transition-all hover:border-acc-gold/50 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                    <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity" />
+                    <span className={`relative z-10 font-cinzel font-bold text-sm tracking-[0.3em] uppercase transition-colors ${isLoading ? 'text-dim' : 'text-starlight group-hover:text-acc-gold'}`}>
+                        {isLoading ? (isEn ? 'CALCULATING...' : 'CALCULATING...') : (isEn ? 'INITIATE SEQUENCE' : '운명 분석 시작')}
+                    </span>
 
-                    {isLoading ? (
-                        <span className="flex items-center justify-center gap-3">
-                            <span className="animate-spin text-black text-xl">✨</span>
-                            <span className="text-black font-bold tracking-tight">{isEn ? 'Interpreting cosmic signals...' : '우주의 신호를 해석하는 중...'}</span>
-                        </span>
-                    ) : (
-                        <span className="flex items-center justify-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-black/10 flex items-center justify-center text-xl">
-                                🌌
-                            </div>
-                            <span className="text-black font-extrabold tracking-tight">
-                                {isEn ? 'Start Integrated Reading' : '사주·점성·타로 통합 리딩 시작하기'}
-                            </span>
-                        </span>
-                    )}
-                </motion.button>
+                    {/* Hover Effect */}
+                    <div className="absolute inset-0 bg-acc-gold/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-in-out" />
+                </button>
             </div>
+
         </motion.form>
     );
 }

@@ -27,6 +27,11 @@ export interface ConfidenceResult {
 export interface InterpretationGuide {
     matching: MatchingResult;
     confidence: ConfidenceResult;
+    radarScores: {
+        saju: number;
+        astrology: number;
+        tarot: number;
+    };
     prioritySource: 'saju' | 'astrology' | 'tarot';
     tone: 'confident' | 'balanced' | 'exploratory';
     keyThemes: string[];
@@ -171,6 +176,34 @@ export function calculateMatchingScore(tagResult: TagExtractionResult): Matching
 }
 
 /**
+ * 개별 소스별 점수 계산 (Radar Chart용)
+ */
+export function calculateRadarScores(tagResult: TagExtractionResult, matching: MatchingResult) {
+    const { sajuTags, astrologyTags, tarotTags } = tagResult;
+    const matchingSet = new Set(matching.matchingTags);
+    const conflictSet = new Set(matching.conflictingTags);
+
+    const calculateSourceScore = (tags: Tag[]) => {
+        if (tags.length === 0) return 50;
+
+        const matches = tags.filter(t => matchingSet.has(t.value)).length;
+        const conflicts = tags.filter(t => conflictSet.has(t.value)).length;
+
+        // 기본 60점 + (매칭 비율 * 40) - (충돌 패널티)
+        const matchRatio = matches / tags.length;
+        const score = 60 + (matchRatio * 40) - (conflicts * 5);
+
+        return Math.max(20, Math.min(95, Math.round(score)));
+    };
+
+    return {
+        saju: calculateSourceScore(sajuTags),
+        astrology: calculateSourceScore(astrologyTags),
+        tarot: calculateSourceScore(tarotTags),
+    };
+}
+
+/**
  * 신뢰도 점수 계산
  * Confidence Score = (Tag Overlap × 0.6) + (Historical Accuracy × 0.3) + (User Feedback × 0.1)
  * MVP에서는 Tag Overlap만 사용
@@ -244,6 +277,9 @@ export function generateInterpretationGuide(
     // 매칭 분석
     const matching = calculateMatchingScore(tagResult);
 
+    // 레이더 차트 점수
+    const radarScores = calculateRadarScores(tagResult, matching);
+
     // 신뢰도 계산
     const confidence = calculateConfidence(matching);
 
@@ -287,6 +323,7 @@ export function generateInterpretationGuide(
     return {
         matching,
         confidence,
+        radarScores,
         prioritySource,
         tone,
         keyThemes,

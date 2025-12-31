@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { ChevronDown, Sparkles, Star, Shield, TrendingUp, Calendar, Briefcase, DollarSign, Heart, Activity, Target, Zap, RotateCcw, Lock } from 'lucide-react';
+import { ChevronDown, Sparkles, Star, Shield, TrendingUp, Calendar, Target, Zap, Lock, CircleHelp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CosmicRadar } from './cosmic-radar';
 import { DraftProposal } from './draft-proposal';
@@ -109,15 +109,84 @@ interface PremiumReportProps {
             name: string;
             isReversed: boolean;
         }[];
+        radarScores?: {
+            saju: number;
+            astrology: number;
+            tarot: number;
+        };
     };
     language?: 'ko' | 'en';
     shareUrl?: string;
     onUnlock?: () => void;
 }
 
+import { BlindSpotTeaser } from './blind-spot-teaser'; // Import
+
+// ... (existing helper)
+
+function CosmicRadarMemo({ report, metadata, language }: { report: PremiumReportData; metadata?: PremiumReportProps['metadata']; language: 'ko' | 'en' }) {
+    const isEn = language === 'en';
+
+    // Use dynamic scores from metadata if available, otherwise fallback to derived
+    const sajuScore = metadata?.radarScores?.saju || (report.summary.trust_score * 20 - 5);
+    const starScore = metadata?.radarScores?.astrology || (report.summary.trust_score * 20 - 15);
+    const tarotScore = metadata?.radarScores?.tarot || (report.summary.trust_score * 20 - 35);
+
+    return (
+        <section className="mt-8 px-4 md:px-6 relative">
+            {/* Warning Badge with Explanation */}
+            <div className="absolute -top-4 right-4 z-10 group cursor-help">
+                <div className="bg-red-500/10 border border-red-500/50 backdrop-blur-md text-red-200 text-xs px-3 py-1.5 rounded-full flex items-center gap-2 shadow-[0_0_15px_rgba(220,38,38,0.3)] animate-pulse-slow">
+                    <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    </span>
+                    <span className="font-bold tracking-wide">{isEn ? "CRITICAL IMBALANCE" : "심각한 불균형"}</span>
+                    <CircleHelp size={12} className="opacity-70" />
+                </div>
+
+                {/* Tooltip on Hover */}
+                <div className="absolute right-0 top-full mt-2 w-64 bg-black/90 border border-red-500/30 p-3 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-20 shadow-xl">
+                    <p className="text-[11px] text-gray-300 leading-relaxed">
+                        {isEn
+                            ? "Your 'Logic(Saju)' is strong, but 'Intuition(Tarot)' is weak. This imbalance causes hesitation at crucial moments."
+                            : "회원님의 '논리(사주)'는 강하지만 '직관(타로)'이 약해 균형이 무너져 있습니다. 이는 중요한 결정 순간에 망설임을 유발하는 원인이 됩니다."}
+                    </p>
+                </div>
+            </div>
+
+            <CosmicRadar
+                sajuScore={sajuScore}
+                starScore={starScore}
+                tarotScore={tarotScore}
+                isLoading={false}
+                language={language}
+                details={{
+                    saju: isEn ? "Logic is at its peak." : "논리적 판단력이 정점에 달해 있습니다.",
+                    tarot: isEn ? "Intuition is dangerously low." : "직관력이 매우 약해져 있어 경고가 필요합니다.",
+                    star: isEn ? "Cosmic flow is stable." : "우주의 흐름은 평이한 상태입니다."
+                }}
+            />
+        </section>
+    );
+}
+
 export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock }: PremiumReportProps) {
     const isEn = language === 'en';
     const [selectedCardIdx, setSelectedCardIdx] = useState<number | null>(null);
+
+    // Dynamic Teaser Text Generator
+    const getTeaserText = (section: string) => {
+        const month = new Date().getMonth() + 2; // Next month
+        if (isEn) {
+            return section === 'flow'
+                ? `In ${month > 12 ? 1 : month}th month, a significant turning point approaches...`
+                : `A hidden obstacle in your ${section} sector requires immediate attention...`;
+        }
+        return section === 'flow'
+            ? `${month > 12 ? 1 : month}월, 당신의 운명에 결정적인 전환점이 찾아옵니다...`
+            : `당신의 ${section} 영역에 숨겨진 치명적인 장애물이 있습니다...`;
+    };
 
     if (!report) return null;
 
@@ -129,16 +198,9 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
             <HeaderSection summary={report.summary} language={language} />
 
             {/* Cosmic Radar Section (New) */}
-            <section className="mt-8 px-4 md:px-6">
-                <CosmicRadar
-                    sajuScore={report.summary.trust_score * 20 - (Math.random() * 5)}
-                    starScore={report.summary.trust_score * 20 - (Math.random() * 10)}
-                    tarotScore={report.summary.trust_score * 20 - (Math.random() * 15)}
-                    language={language}
-                />
-            </section>
+            <CosmicRadarMemo report={report} metadata={metadata} language={language} />
 
-            {/* Tarot Spread Section (New) */}
+            {/* Tarot Spread Section */}
             {tarotCards.length > 0 && (
                 <TarotSpreadSection cards={tarotCards} onCardClick={setSelectedCardIdx} language={language} />
             )}
@@ -161,11 +223,22 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 />
             )}
 
-            {/* Fortune Flow */}
+            {/* Fortune Flow - BLIND SPOT TEASER */}
             {report.fortune_flow ? (
                 <FortuneFlowSection data={report.fortune_flow} language={language} />
             ) : (
-                <LockedSection title={isEn ? 'Fortune Flow' : '운의 흐름'} icon={<TrendingUp size={18} className="text-gray-400" />} language={language} onUnlock={onUnlock} />
+                <div className="px-4 md:px-6 mt-8">
+                    <BlindSpotTeaser
+                        title={isEn ? "⚠️ UPCOMING FATE ALERT" : "⚠️ 다가오는 운명의 경고"}
+                        previewText={getTeaserText('flow')}
+                        hiddenText={isEn
+                            ? "This period brings a rare alignment of Jupiter and Saturn, signaling a massive shift in your career path. Without preparation, you may miss this 12-year cycle opportunity."
+                            : "이 시기에는 목성과 토성이 드물게 정렬하며, 당신의 커리어에 거대한 지각 변동을 예고합니다. 준비하지 않으면 12년 만에 오는 이 기회를 영영 놓칠 수 있습니다."
+                        }
+                        language={language}
+                        onUnlock={onUnlock || (() => { })}
+                    />
+                </div>
             )}
 
             {/* Life Areas */}
@@ -182,7 +255,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 <LockedSection title={isEn ? 'Special Analysis' : '특수 분석'} icon={<Zap size={18} className="text-gray-400" />} language={language} onUnlock={onUnlock} />
             )}
 
-            {/* Action Plan */}
+            {/* Action Plan - BLIND SPOT TEASER 2 */}
             {report.action_plan ? (
                 <ActionPlanSection
                     actionPlan={report.action_plan}
@@ -190,7 +263,18 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     language={language}
                 />
             ) : (
-                <LockedSection title={isEn ? 'Action Plan (Super Days)' : '액션 플랜 (Super Days)'} icon={<Calendar size={18} className="text-gray-400" />} language={language} onUnlock={onUnlock} />
+                <div className="px-4 md:px-6 mt-6">
+                    <BlindSpotTeaser
+                        title={isEn ? "🎯 CRITICAL ACTION REQUIRED" : "🎯 긴급 행동 지침"}
+                        previewText={isEn ? "To avoid the approaching crisis, you must act on..." : "다가오는 위기를 피하기 위해, 반드시 실행해야 할 행동은..."}
+                        hiddenText={isEn
+                            ? "On the 15th, avoid signing any contracts. Instead, focus on reconnecting with a past ally who holds the key to your next breakthrough."
+                            : "15일에는 어떤 계약도 피하십시오. 대신, 당신의 다음 돌파구를 쥐고 있는 과거의 귀인과 다시 연결되는 데 집중해야 합니다."
+                        }
+                        language={language}
+                        onUnlock={onUnlock || (() => { })}
+                    />
+                </div>
             )}
 
             {/* Legacy Support - Deep Dive */}
@@ -346,6 +430,14 @@ function TraitsSection({ traits, language }: { traits: PremiumReportData['traits
         }
     };
 
+    const [scrollProgress, setScrollProgress] = useState(0);
+
+    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        const { scrollLeft, scrollWidth, clientWidth } = e.currentTarget;
+        const totalScroll = scrollWidth - clientWidth;
+        setScrollProgress(scrollLeft / totalScroll);
+    };
+
     return (
         <motion.section
             initial={{ opacity: 0, x: 20 }}
@@ -353,11 +445,15 @@ function TraitsSection({ traits, language }: { traits: PremiumReportData['traits
             transition={{ delay: 0.2 }}
             className="mt-6 md:mt-8 pl-4 md:pl-6"
         >
-            <div className="flex gap-3 md:gap-4 overflow-x-auto pb-6 pr-4 md:pr-6 snap-x">
+            {/* Scrollable Container */}
+            <div
+                className="flex gap-4 overflow-x-auto pb-8 pr-4 md:pr-6 snap-x scrollbar-hide"
+                onScroll={handleScroll}
+            >
                 {traits.map((trait, idx) => (
                     <div
                         key={idx}
-                        className="snap-center shrink-0 w-[85vw] md:w-[320px] bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-xl p-5 md:p-6 flex flex-col gap-3 hover:border-gold/30 transition-colors group shadow-lg"
+                        className="snap-center shrink-0 w-[78vw] md:w-[320px] bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-xl p-5 md:p-6 flex flex-col gap-3 hover:border-gold/30 transition-colors group shadow-lg relative"
                     >
                         <div className="flex justify-between items-start">
                             <EvidenceTooltip
@@ -379,7 +475,31 @@ function TraitsSection({ traits, language }: { traits: PremiumReportData['traits
                                 {trait.description}
                             </p>
                         </div>
+
+                        {/* Mobile Swipe Hint (First Card Only) */}
+                        {idx === 0 && (
+                            <div className="md:hidden absolute bottom-3 right-3 text-[10px] text-gray-500 animate-pulse flex items-center gap-1">
+                                <span>Swipe</span>
+                                <span>→</span>
+                            </div>
+                        )}
                     </div>
+                ))}
+            </div>
+
+            {/* Scroll Indicator (Mobile Only) */}
+            <div className="flex justify-center md:hidden gap-1.5 mt-[-1rem] mb-6">
+                {traits.map((_, i) => (
+                    <div
+                        key={i}
+                        className={cn(
+                            "h-1 rounded-full transition-all duration-300",
+                            // Simple heuristic for active dot based on scroll progress
+                            Math.round(scrollProgress * (traits.length - 1)) === i
+                                ? "w-6 bg-gold"
+                                : "w-1 bg-white/20"
+                        )}
+                    />
                 ))}
             </div>
         </motion.section>

@@ -5,7 +5,7 @@ export const READING_PRODUCT = {
     id: 'cosmicpath_reading_v1',
     name: 'CosmicPath 3원 통합 리딩',
     description: '사주 + 점성술 + 타로 통합 분석',
-    price: 499, // cents ($4.99)
+    price: 399, // cents ($3.99)
     currency: 'usd',
     followUpQuestions: 0,
 } as const;
