@@ -44,6 +44,7 @@ export function PaymentModal({
             if (isDecisionAccepted) {
                 sessionStorage.setItem('decision_accepted', 'true');
             }
+            sessionStorage.setItem('is_session_active', 'true');
             if (email) {
                 localStorage.setItem('user_email', email);
             }
