@@ -11,7 +11,9 @@ import { ReadingSession, createSession } from '@/lib/session/reading-session';
 import { PaymentModal } from '@/components/payment/PaymentModal';
 import { StickyCTA } from '@/components/common/sticky-cta';
 
-export default function Home() {
+import { Suspense } from 'react';
+
+function CosmicPathContent() {
   const [step, setStep] = useState<'input' | 'mirror' | 'tarot' | 'result'>('input');
   const [readingData, setReadingData] = useState<ReadingData | null>(null);
   const [selectedCards, setSelectedCards] = useState<{ name: string; isReversed: boolean }[]>([]);
@@ -510,5 +512,18 @@ export default function Home() {
         />
       )}
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-screen relative z-20 bg-slate-950">
+        <div className="w-12 h-12 border-4 border-accent-gold border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-white/60 text-sm animate-pulse tracking-widest font-cinzel">LOADING...</p>
+      </div>
+    }>
+      <CosmicPathContent />
+    </Suspense>
   );
 }
