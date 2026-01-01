@@ -82,10 +82,17 @@ function CosmicPathContent() {
 
             if (data.tarotCards) {
               setSelectedCards(data.tarotCards);
+
+              // Restore decision state BEFORE removing
+              if (sessionStorage.getItem('decision_accepted') === 'true') {
+                setIsDecisionAccepted(true);
+              }
+
               // Clear flags after ensuring we have data
               sessionStorage.removeItem('pending_reading_data');
               sessionStorage.removeItem('payment_completed');
               sessionStorage.removeItem('pending_report_data');
+              sessionStorage.removeItem('decision_accepted');
 
               // Remove query param
               window.history.replaceState({}, '', window.location.pathname);
@@ -101,6 +108,7 @@ function CosmicPathContent() {
         // Restore functionality for back button/cancel
         const pendingData = sessionStorage.getItem('pending_reading_data');
         const pendingReportJson = sessionStorage.getItem('pending_report_data');
+        const decisionAccepted = sessionStorage.getItem('decision_accepted');
 
         if (pendingData && pendingReportJson) {
           const data = JSON.parse(pendingData);
@@ -110,6 +118,12 @@ function CosmicPathContent() {
           if (data.tarotCards) setSelectedCards(data.tarotCards);
           setReportData(report);
           setStep('result');
+
+          // Restore decision state
+          if (sessionStorage.getItem('decision_accepted') === 'true') {
+            setIsDecisionAccepted(true);
+          }
+
           if (canceled === 'true') {
             window.history.replaceState({}, '', window.location.pathname);
           }
@@ -443,7 +457,10 @@ function CosmicPathContent() {
                 <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 py-12">
                   <DecisionGuard
                     isOpen={reportData.summary.trust_score <= 2 && !isDecisionAccepted}
-                    onAccept={() => setIsDecisionAccepted(true)}
+                    onAccept={() => {
+                      setIsDecisionAccepted(true);
+                      sessionStorage.setItem('decision_accepted', 'true');
+                    }}
                     language={language}
                   />
                   {(reportData.summary.trust_score > 2 || isDecisionAccepted) && (
