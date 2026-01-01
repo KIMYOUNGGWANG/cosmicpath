@@ -48,6 +48,25 @@ function CosmicPathContent() {
   const searchParams = useSearchParams();
   const [hasCheckedResume, setHasCheckedResume] = useState(false);
 
+  // Dynamic Price State
+  const [dynamicPrice, setDynamicPrice] = useState<string>('$3.99');
+
+  // Fetch dynamic price on mount
+  useEffect(() => {
+    const fetchPrice = async () => {
+      try {
+        const response = await fetch('/api/payment/price');
+        const data = await response.json();
+        if (data.formattedPrice) {
+          setDynamicPrice(data.formattedPrice);
+        }
+      } catch (error) {
+        console.error('Failed to fetch dynamic price:', error);
+      }
+    };
+    fetchPrice();
+  }, []);
+
   // Resume Reading after Payment
   useEffect(() => {
     const checkResume = async () => {
@@ -533,7 +552,7 @@ function CosmicPathContent() {
       {/* Sticky CTA for Partial Result */}
       {step === 'result' && !isPremium && (
         <StickyCTA
-          price="$3.99"
+          price={dynamicPrice}
           originalPrice="$19.90"
           onUnlock={handleUpgrade}
           language={language}

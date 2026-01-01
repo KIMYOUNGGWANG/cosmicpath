@@ -55,7 +55,7 @@ export function PaymentModal({
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    productId: READING_PRODUCT.id,
+                    productId: READING_PRODUCT.productId,
                     email
                 }),
             });
