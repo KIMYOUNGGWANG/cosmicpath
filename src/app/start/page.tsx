@@ -130,46 +130,6 @@ function CosmicPathContent() {
             console.error("Failed to resume reading:", e);
           }
         }
-      } else if (canceled === 'true') {
-        // Restore functionality ONLY when returning from cancel
-        const pendingData = sessionStorage.getItem('pending_reading_data');
-        const pendingReportJson = sessionStorage.getItem('pending_report_data');
-        const pendingMetadataJson = sessionStorage.getItem('pending_metadata');
-
-        console.log('[Resume] Flag "canceled" detected. Data in session:', {
-          hasData: !!pendingData,
-          hasReport: !!pendingReportJson
-        });
-
-        if (pendingData) {
-          try {
-            console.log('[Resume] Restoring after cancel');
-            const data = JSON.parse(pendingData);
-            if (pendingReportJson && pendingReportJson !== 'null') {
-              setReportData(JSON.parse(pendingReportJson));
-            }
-
-            setReadingData(data);
-            setLanguage(data.language as 'ko' | 'en');
-            if (data.tarotCards) setSelectedCards(data.tarotCards);
-            console.log('[Resume] Navigation forced to result step');
-            setStep('result');
-
-            if (pendingMetadataJson && pendingMetadataJson !== 'null') {
-              setMetadata(JSON.parse(pendingMetadataJson));
-            }
-
-            // Restore decision state
-            if (sessionStorage.getItem('decision_accepted') === 'true') {
-              setIsDecisionAccepted(true);
-            }
-
-            // Remove query param
-            window.history.replaceState({}, '', window.location.pathname);
-          } catch (e) {
-            console.error("Failed to restore data:", e);
-          }
-        }
       }
 
       setHasCheckedResume(true);
