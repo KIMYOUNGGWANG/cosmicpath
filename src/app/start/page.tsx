@@ -91,32 +91,38 @@ function CosmicPathContent() {
 
             // Restore report if exists
             const pendingReportJson = sessionStorage.getItem('pending_report_data');
+            const pendingMetadataJson = sessionStorage.getItem('pending_metadata');
+
             if (pendingReportJson) {
-              const report = JSON.parse(pendingReportJson);
-              setReportData(report);
+              setReportData(JSON.parse(pendingReportJson));
+            }
+            if (pendingMetadataJson) {
+              setMetadata(JSON.parse(pendingMetadataJson));
             }
 
             setStep('result');
             setIsPremium(true);
 
+            // Restore decision state 
+            if (sessionStorage.getItem('decision_accepted') === 'true') {
+              setIsDecisionAccepted(true);
+            }
+
             if (data.tarotCards) {
               setSelectedCards(data.tarotCards);
-
-              // Restore decision state BEFORE removing
-              if (sessionStorage.getItem('decision_accepted') === 'true') {
-                setIsDecisionAccepted(true);
-              }
 
               // Clear flags after ensuring we have data
               sessionStorage.removeItem('pending_reading_data');
               sessionStorage.removeItem('payment_completed');
               sessionStorage.removeItem('pending_report_data');
+              sessionStorage.removeItem('pending_metadata');
               sessionStorage.removeItem('decision_accepted');
 
               // Remove query param
               window.history.replaceState({}, '', window.location.pathname);
 
               const startPhase = pendingReportJson ? 3 : 1;
+              console.log(`[Resume] Starting reading from phase ${startPhase}`);
               startReading(data.tarotCards, true, data, pendingReportJson ? JSON.parse(pendingReportJson) : undefined, startPhase);
             }
           } catch (e) {
