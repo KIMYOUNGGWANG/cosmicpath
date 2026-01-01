@@ -108,24 +108,33 @@ function CosmicPathContent() {
         // Restore functionality for back button/cancel
         const pendingData = sessionStorage.getItem('pending_reading_data');
         const pendingReportJson = sessionStorage.getItem('pending_report_data');
-        const decisionAccepted = sessionStorage.getItem('decision_accepted');
+        const pendingMetadataJson = sessionStorage.getItem('pending_metadata');
 
         if (pendingData && pendingReportJson) {
-          const data = JSON.parse(pendingData);
-          const report = JSON.parse(pendingReportJson);
-          setReadingData(data);
-          setLanguage(data.language as 'ko' | 'en');
-          if (data.tarotCards) setSelectedCards(data.tarotCards);
-          setReportData(report);
-          setStep('result');
+          try {
+            const data = JSON.parse(pendingData);
+            const report = JSON.parse(pendingReportJson);
 
-          // Restore decision state
-          if (sessionStorage.getItem('decision_accepted') === 'true') {
-            setIsDecisionAccepted(true);
-          }
+            setReadingData(data);
+            setLanguage(data.language as 'ko' | 'en');
+            if (data.tarotCards) setSelectedCards(data.tarotCards);
+            setReportData(report);
+            setStep('result');
 
-          if (canceled === 'true') {
-            window.history.replaceState({}, '', window.location.pathname);
+            if (pendingMetadataJson) {
+              setMetadata(JSON.parse(pendingMetadataJson));
+            }
+
+            // Restore decision state
+            if (sessionStorage.getItem('decision_accepted') === 'true') {
+              setIsDecisionAccepted(true);
+            }
+
+            if (canceled === 'true') {
+              window.history.replaceState({}, '', window.location.pathname);
+            }
+          } catch (e) {
+            console.error("Failed to restore data:", e);
           }
         }
       }
@@ -517,13 +526,15 @@ function CosmicPathContent() {
         }}
         readingData={readingData ? { ...readingData, tarotCards: selectedCards, language } : undefined}
         currentReport={reportData}
+        metadata={metadata}
+        isDecisionAccepted={isDecisionAccepted}
       />
 
       {/* Sticky CTA for Partial Result */}
       {step === 'result' && !isPremium && (
         <StickyCTA
-          price="$3.99"
-          originalPrice="$19.90"
+          price={language === 'en' ? "$3.99" : "3,900원"}
+          originalPrice={language === 'en' ? "$19.90" : "19,900원"}
           onUnlock={handleUpgrade}
           language={language}
         />
