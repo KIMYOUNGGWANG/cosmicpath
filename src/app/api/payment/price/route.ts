@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
             );
         }
 
-        const priceData = await getProductPrice(productId);
+        const priceData = await getProductPrice(productId, READING_PRODUCT.currency);
 
         return NextResponse.json(priceData);
     } catch (error: any) {

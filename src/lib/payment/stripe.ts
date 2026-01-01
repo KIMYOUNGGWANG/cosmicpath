@@ -17,18 +17,40 @@ function getStripe(): Stripe {
 const stripe = getStripe();
 
 /**
- * 상품 ID로 현재 활성화된 기본 가격 정보를 가져옵니다.
+ * 상품 ID로 현재 활성화된 가격 정보를 가져옵니다.
+ * 특정 통화(currency)를 우선적으로 찾습니다.
  */
-export async function getProductPrice(productId: string) {
+export async function getProductPrice(productId: string, targetCurrency: string = 'USD') {
     try {
+        // 1. 상품 정보 가져오기 (기본 가격 확인용)
         const product = await stripe.products.retrieve(productId, {
             expand: ['default_price']
         });
-        const price = product.default_price as Stripe.Price;
 
-        if (!price || !price.id) {
-            throw new Error('No default price found for this product');
+        // 2. 해당 상품의 모든 활성 가격 목록 가져오기
+        const prices = await stripe.prices.list({
+            product: productId,
+            active: true,
+            limit: 10
+        });
+
+        // 3. 목표 통화(예: USD)와 일치하는 가격 찾기
+        // 우선순위: 1) 목표 통화이면서 기본 가격인 것, 2) 목표 통화인 것, 3) 기본 가격인 것, 4) 아무거나 첫 번째
+        const defaultPriceId = typeof product.default_price === 'string'
+            ? product.default_price
+            : product.default_price?.id;
+
+        const price =
+            prices.data.find(p => p.currency.toUpperCase() === targetCurrency.toUpperCase() && p.id === defaultPriceId) ||
+            prices.data.find(p => p.currency.toUpperCase() === targetCurrency.toUpperCase()) ||
+            prices.data.find(p => p.id === defaultPriceId) ||
+            prices.data[0];
+
+        if (!price) {
+            throw new Error('No active price found for this product');
         }
+
+        console.log(`[Stripe] Resolved price: ${price.unit_amount} ${price.currency} for product ${productId}`);
 
         return {
             productId: product.id,
@@ -36,7 +58,10 @@ export async function getProductPrice(productId: string) {
             amount: price.unit_amount ? price.unit_amount / 100 : 0,
             currency: price.currency.toUpperCase(),
             formattedPrice: price.unit_amount
-                ? new Intl.NumberFormat('en-US', { style: 'currency', currency: price.currency }).format(price.unit_amount / 100)
+                ? new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: price.currency
+                }).format(price.unit_amount / 100)
                 : 'Free'
         };
     } catch (error) {
