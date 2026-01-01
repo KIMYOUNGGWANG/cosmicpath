@@ -357,6 +357,18 @@ Users are most curious about "When will it get better?". Do not be vague saying 
         "theme": "Keyword",
         "advice": "Key Advice"
       }
+    ],
+    "timeline_scores": [
+      { "year": 2026, "score": 85, "type": "opportunity", "summary": "Great start" },
+      { "year": 2027, "score": 60, "type": "neutral", "summary": "Stable period" },
+      { "year": 2028, "score": 40, "type": "warning", "summary": "Watch your health" },
+      { "year": 2029, "score": 90, "type": "opportunity", "summary": "Career peak" },
+      { "year": 2030, "score": 75, "type": "neutral", "summary": " steady growth" },
+      { "year": 2031, "score": 50, "type": "warning", "summary": "Conflict warning" },
+      { "year": 2032, "score": 88, "type": "opportunity", "summary": "Wealth luck" },
+      { "year": 2033, "score": 70, "type": "neutral", "summary": "Maintenance" },
+      { "year": 2034, "score": 65, "type": "neutral", "summary": "Preparation" },
+      { "year": 2035, "score": 95, "type": "opportunity", "summary": "Golden era" }
     ]
   }
 }`;
@@ -395,6 +407,18 @@ Users are most curious about "When will it get better?". Do not be vague saying 
         "theme": "키워드",
         "advice": "핵심 조언"
       }
+    ],
+    "timeline_scores": [
+      { "year": 2026, "score": 85, "type": "opportunity", "summary": "새로운 시작이 좋은 해" },
+      { "year": 2027, "score": 60, "type": "neutral", "summary": "안정적인 흐름" },
+      { "year": 2028, "score": 40, "type": "warning", "summary": "건강 관리 유의" },
+      { "year": 2029, "score": 90, "type": "opportunity", "summary": "커리어의 정점" },
+      { "year": 2030, "score": 75, "type": "neutral", "summary": "꾸준한 성장" },
+      { "year": 2031, "score": 50, "type": "warning", "summary": "대인관계 갈등 주의" },
+      { "year": 2032, "score": 88, "type": "opportunity", "summary": "재물운 대폭발" },
+      { "year": 2033, "score": 70, "type": "neutral", "summary": "현상 유지의 시기" },
+      { "year": 2034, "score": 65, "type": "neutral", "summary": "다음 단계를 위한 준비" },
+      { "year": 2035, "score": 95, "type": "opportunity", "summary": "인생의 황금기" }
     ]
   }
 }`;
@@ -442,6 +466,13 @@ No abstract well-wishing. Give **Hyper-Specific Advice** like "Stocks are better
       "title": "🌿 Balance of Body and Mind (Health)",
       "subsections": ["Vulnerable Parts", "Recommended Exercise/Diet", "Mental Care"],
       "content": "Warn of vulnerabilities from elemental imbalance (e.g., Too much Earth = Stomach issues). Care for mental health like depression/insomnia too. (150+ words)"
+    },
+    "soulmate": {
+      "ideal_traits": ["Trait 1", "Trait 2", "Trait 3"],
+      "meeting_period": "Q3 2026",
+      "compatibility_score": 85,
+      "description": "Detailed description of the soulmate connection.",
+      "warnings": "Potential friction point."
     }
   }
 }
@@ -483,6 +514,13 @@ No abstract well-wishing. Give **Hyper-Specific Advice** like "Stocks are better
       "title": "🌿 몸과 마음의 균형 (건강운)",
       "subsections": ["취약한 신체 부위", "추천 운동/식습관", "멘탈 관리법"],
       "content": "오행의 불균형에서 오는 취약점을 경고하십시오. (예: 토(土)가 많으면 위장병 주의). 우울감, 불면증 등 정신 건강까지 케어하십시오. (600자 이상)"
+    },
+    "soulmate": {
+      "ideal_traits": ["특징 1", "특징 2", "특징 3"],
+      "meeting_period": "2026년 하반기",
+      "compatibility_score": 85,
+      "description": "운명의 상대를 만났을 때의 느낌을 상세히 묘사하십시오.",
+      "warnings": "주의해야 할 갈등 요소를 조언하십시오."
     }
   }
 }
@@ -524,6 +562,11 @@ Reveal special singularities found in Astrology or constellations as 'Hidden Car
       "content": "Analyze recurring problem patterns (Punishment, Clash) in life and teach wisdom to avoid or resolve them. (130+ words)"
     }
   },
+  "lucky_assets": {
+    "colors": [{ "name": "Royal Blue", "hex": "#4169E1", "reason": "Enhances focus" }],
+    "foods": [{ "name": "Spicy Chicken", "emoji": "🍗", "benefit": "Boosts Fire energy" }],
+    "places": [{ "name": "Library", "description": "Quiet place for metal energy" }]
+  },
   "action_plan": [
     {
       "date": "YYYY-MM-DD",
@@ -543,12 +586,21 @@ Reveal special singularities found in Astrology or constellations as 'Hidden Car
       "description": "Day to reap rewards for what you sowed. Recover investments or ask for incentives.",
       "type": "opportunity"
     }
+  ],
+  "glossary": [
+    {
+      "term": "Ten Gods (Sip-seong)",
+      "hanja": "十星",
+      "definition": "Concepts representing social relationships in Saju.",
+      "context": "In your chart, 'Direct Officer' is dominant, meaning..."
+    }
   ]
 }
 
 ## Writing Rules
 1. Pick specific auspicious/ominous dates in 2026.
 2. Describe noble people vividly like movie characters.
+3. **Glossary**: Extract 10-15 key Saju terms (Ten Gods, 12 Stages, Nobleman, etc.) used in the report and explain them deeply tailored to the user.
 3. **Language**: Write ALL content in English.`;
   } else {
     system = `## 페르소나
@@ -573,6 +625,11 @@ Reveal special singularities found in Astrology or constellations as 'Hidden Car
       "content": "인생에서 반복되는 문제 패턴(형살, 충 등)을 분석하고, 이것을 피하거나 해소할 수 있는 지혜를 전수하십시오. (500자 이상)"
     }
   },
+  "lucky_assets": {
+    "colors": [{ "name": "로얄 블루", "hex": "#4169E1", "reason": "집중력을 높여줍니다" }],
+    "foods": [{ "name": "매운 닭갈비", "emoji": "🍗", "benefit": "부족한 화(Fire) 기운을 보충합니다" }],
+    "places": [{ "name": "도서관", "description": "금(Metal) 기운을 채울 수 있는 정적인 공간" }]
+  },
   "action_plan": [
     {
       "date": "YYYY-MM-DD",
@@ -592,12 +649,21 @@ Reveal special singularities found in Astrology or constellations as 'Hidden Car
       "description": "씨앗을 뿌린 것에 대한 보상이 들어오는 날입니다. 투자금을 회수하거나 인센티브를 요구해보세요.",
       "type": "opportunity"
     }
+  ],
+  "glossary": [
+    {
+      "term": "편관 (Pyeon-gwan)",
+      "hanja": "偏官",
+      "definition": "나를 강하게 제어하고 규율하는 가혹한 힘입니다.",
+      "context": "사용자님의 사주에 편관이 강해, 타고난 카리스마와 리더십으로 발현됩니다."
+    }
   ]
 }
 
 ## 작성 규칙
 1. 날짜는 2026년 기준으로 구체적인 길일/흉일을 택일하십시오.
-2. 귀인 묘사는 영화 캐릭터처럼 생생하게 하십시오.`;
+2. 귀인 묘사는 영화 캐릭터처럼 생생하게 하십시오.
+3. **용어집(Glossary)**: 리포트에서 언급된 중요 용어(십성, 신살, 일주 등)를 10~15개 선정하여, 사전적 의미와 함께 **이 사용자의 삶에서 어떤 의미인지** 친절하게 과외하듯 설명하십시오.`;
   }
 
   const user = buildUserContext(userData);

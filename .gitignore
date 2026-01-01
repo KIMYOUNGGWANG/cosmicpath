@@ -43,3 +43,10 @@ next-env.d.ts
 .env.local
 cosmicpath_prd_v3
 /src/generated/prisma
+
+# documentation (except README)
+*.md
+!README.md
+
+# dev utility scripts
+check-env*.js

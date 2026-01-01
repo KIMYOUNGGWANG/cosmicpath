@@ -88,6 +88,12 @@ export interface PremiumReport {
         major_luck: AnalysisSection;       // 대운 분석
         yearly_luck: AnalysisSection;      // 세운 분석
         monthly_luck: AnalysisSection;     // 월운 분석
+        timeline_scores?: {                // 10년 대운 차트 데이터
+            year: number;
+            score: number;
+            type: 'opportunity' | 'warning' | 'neutral';
+            summary: string;
+        }[];
     };
 
     // 영역별 상세 분석
@@ -105,8 +111,32 @@ export interface PremiumReport {
         conflicts: AnalysisSection;        // 합충형해파
     };
 
+    // 운명의 상대 (Soulmate)
+    soulmate?: {
+        ideal_traits: string[];
+        meeting_period: string;
+        compatibility_score: number;
+        description: string;
+        warnings?: string;
+    };
+
+    // 럭키 에셋
+    lucky_assets?: {
+        colors: { name: string; hex: string; reason: string }[];
+        foods: { name: string; emoji: string; benefit: string }[];
+        places: { name: string; description: string }[];
+    };
+
     // 액션 플랜
     action_plan: TimelineEvent[];
+
+    // 용어집
+    glossary?: {
+        term: string;
+        hanja: string;
+        definition: string;
+        context: string;
+    }[];
 }
 
 // API 응답 타입
