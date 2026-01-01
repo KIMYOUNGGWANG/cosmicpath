@@ -78,10 +78,10 @@ function CosmicPathContent() {
       const isSessionActive = sessionStorage.getItem('is_session_active') === 'true';
 
       if (paid === 'true' || canceled === 'true' || isSessionActive) {
-        const pendingData = sessionStorage.getItem('pending_reading_data');
-        const paymentCompleted = sessionStorage.getItem('payment_completed');
+        const pendingReportJson = sessionStorage.getItem('pending_report_data');
+        const pendingMetadataJson = sessionStorage.getItem('pending_metadata');
 
-        if (pendingData && paymentCompleted === 'true') {
+        if (pendingData) {
           try {
             console.log('[Resume] Found pending data & payment completed');
 
@@ -112,31 +112,29 @@ function CosmicPathContent() {
             if (data.tarotCards) {
               setSelectedCards(data.tarotCards);
 
-              // Clear flags after ensuring we have data
-              sessionStorage.removeItem('pending_reading_data');
-              sessionStorage.removeItem('payment_completed');
-              sessionStorage.removeItem('pending_report_data');
-              sessionStorage.removeItem('pending_metadata');
-              sessionStorage.removeItem('decision_accepted');
+              // Persistence: Always return to results if we have data
+              setStep('result');
 
-              // Remove query param
-              window.history.replaceState({}, '', window.location.pathname);
+              if (paid === 'true') {
+                setIsPremium(true);
+                const startPhase = pendingReportJson ? 3 : 1;
+                startReading(data.tarotCards, true, data, pendingReportJson ? JSON.parse(pendingReportJson) : undefined, startPhase);
+              }
 
-              const startPhase = pendingReportJson ? 3 : 1;
-              console.log(`[Resume] Starting reading from phase ${startPhase}`);
-              startReading(data.tarotCards, true, data, pendingReportJson ? JSON.parse(pendingReportJson) : undefined, startPhase);
+              if (paid === 'true' || canceled === 'true') {
+                window.history.replaceState({}, '', window.location.pathname);
+              }
+            } catch (e) {
+              console.error("[Resume] Failure during restoration:", e);
             }
-          } catch (e) {
-            console.error("Failed to resume reading:", e);
           }
-        }
       }
 
-      setHasCheckedResume(true);
-    };
+        setHasCheckedResume(true);
+      };
 
-    checkResume();
-  }, [searchParams]);
+      checkResume();
+    }, [searchParams]);
 
   // Step 1: Birthdate Submission -> Go to Tarot
   const handleInputSubmit = (data: ReadingData) => {
