@@ -123,14 +123,15 @@ function CosmicPathContent() {
             console.error("Failed to resume reading:", e);
           }
         }
-      } else if (canceled === 'true' || sessionStorage.getItem('pending_reading_data')) {
-        // Restore functionality for back button/cancel
+      } else if (canceled === 'true') {
+        // Restore functionality ONLY when returning from cancel
         const pendingData = sessionStorage.getItem('pending_reading_data');
         const pendingReportJson = sessionStorage.getItem('pending_report_data');
         const pendingMetadataJson = sessionStorage.getItem('pending_metadata');
 
         if (pendingData && pendingReportJson) {
           try {
+            console.log('[Resume] Restoring after cancel');
             const data = JSON.parse(pendingData);
             const report = JSON.parse(pendingReportJson);
 
@@ -149,9 +150,8 @@ function CosmicPathContent() {
               setIsDecisionAccepted(true);
             }
 
-            if (canceled === 'true') {
-              window.history.replaceState({}, '', window.location.pathname);
-            }
+            // Remove query param
+            window.history.replaceState({}, '', window.location.pathname);
           } catch (e) {
             console.error("Failed to restore data:", e);
           }
