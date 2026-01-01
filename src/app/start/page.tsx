@@ -533,8 +533,8 @@ function CosmicPathContent() {
       {/* Sticky CTA for Partial Result */}
       {step === 'result' && !isPremium && (
         <StickyCTA
-          price={language === 'en' ? "$3.99" : "3,900원"}
-          originalPrice={language === 'en' ? "$19.90" : "19,900원"}
+          price="$3.99"
+          originalPrice="$19.90"
           onUnlock={handleUpgrade}
           language={language}
         />
