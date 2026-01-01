@@ -3,7 +3,7 @@
 import React, { forwardRef } from 'react';
 import { PremiumReportData } from './premium-report';
 import { cn } from '@/lib/utils';
-import { Star, Zap, Target, Book, TrendingUp, Sparkles, Shield, Calendar } from 'lucide-react';
+import { Star, Zap, Target, TrendingUp, Sparkles, Shield, Calendar } from 'lucide-react';
 import { FortuneTimelineChart } from './FortuneTimelineChart';
 import { LuckyAssetsGrid } from './LuckyAssetsGrid';
 import { GlossarySection } from './GlossarySection';
@@ -294,7 +294,7 @@ function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }
     return (
         <div className="flex items-center gap-3 mb-8 border-b border-white/10 pb-4">
             <div className="p-2 rounded-lg bg-white/5 border border-white/10">
-                {React.cloneElement(icon as React.ReactElement, { size: 24 })}
+                {React.cloneElement(icon as React.ReactElement<{ size: number }>, { size: 24 })}
             </div>
             <h2 className="text-3xl font-bold text-white">{title}</h2>
         </div>
