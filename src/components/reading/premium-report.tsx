@@ -1,19 +1,26 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState } from 'react';
-import { ChevronDown, Sparkles, Star, Shield, TrendingUp, Calendar, Target, Zap, Lock, CircleHelp } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { useReactToPrint } from 'react-to-print';
+import { ChevronDown, Sparkles, Star, Shield, TrendingUp, Calendar, Target, Zap, Lock, CircleHelp, Download, Printer } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PrintLayout } from './PrintLayout';
 import { CosmicRadar } from './cosmic-radar';
 import { DraftProposal } from './draft-proposal';
 import { EvidenceTooltip } from '../ui/confidence-badge';
 import { TarotDetailModal } from './tarot-detail-modal';
 import { SharePanel } from '../share/SharePanel';
 import { BlindSpotTeaser } from './blind-spot-teaser';
+import { FortuneTimelineChart, TimelineScore } from './FortuneTimelineChart';
+import { SoulmateSection, SoulmateData } from './SoulmateSection';
+import { LuckyAssetsGrid, LuckyAssetsData } from './LuckyAssetsGrid';
+import { GlossarySection } from './GlossarySection';
+import { PaymentModal } from '../payment/PaymentModal';
 // import TossPaymentWidget from '../payment/TossPaymentWidget'; // Toss Payments (Commented out)
 
 // 새로운 Premium Report 타입 (기존 CosmicReport 대체)
-interface PremiumReportData {
+export interface PremiumReportData {
     summary: {
         title: string;
         content: string;
@@ -58,6 +65,7 @@ interface PremiumReportData {
             theme: string;
             advice: string;
         }[];
+        timeline_scores?: TimelineScore[];
     };
     life_areas?: {
         career?: {
@@ -89,11 +97,19 @@ interface PremiumReportData {
         charm?: { title: string; content: string };
         conflicts?: { title: string; content: string };
     };
+    soulmate?: SoulmateData;
+    lucky_assets?: LuckyAssetsData;
     action_plan?: {
         date: string;
         title: string;
         description: string;
         type: string;
+    }[];
+    glossary?: {
+        term: string;
+        hanja: string;
+        definition: string;
+        context: string;
     }[];
     // Legacy support for old schema
     // Legacy support for old schema
@@ -214,9 +230,20 @@ function CosmicRadarMemo({ report, metadata, language }: { report: PremiumReport
 export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock }: PremiumReportProps) {
     const isEn = language === 'en';
     const [selectedCardIdx, setSelectedCardIdx] = useState<number | null>(null);
+    const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+
+    // PDF Printing Logic
+    const printRef = useRef<HTMLDivElement>(null);
+    const handlePrint = useReactToPrint({
+        contentRef: printRef,
+        documentTitle: `CosmicPath_Report_${report.summary.title.replace(/\s+/g, '_')}`,
+    });
+
     const handleUnlock = () => {
         if (onUnlock) {
             onUnlock();
+        } else {
+            setIsCheckoutOpen(true);
         }
     };
 
@@ -240,7 +267,21 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
     return (
         <div className="w-full max-w-2xl mx-auto pb-24 md:pb-32">
             {/* Header */}
-            <HeaderSection summary={report.summary} language={language} />
+            {/* Header */}
+            <HeaderSection
+                summary={report.summary}
+                language={language}
+            />
+
+            {/* Hidden Print Layout */}
+            <div className="hidden">
+                <PrintLayout
+                    ref={printRef}
+                    data={report}
+                    language={language}
+                    userData={{ name: report.summary.title.split(' ')[0] }} // Simplified user name extraction or pass from props
+                />
+            </div>
 
             {/* Cosmic Radar Section (New) */}
             <CosmicRadarMemo report={report} metadata={metadata} language={language} />
@@ -253,87 +294,139 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
             {/* Traits */}
             <TraitsSection traits={report.traits} language={language} />
 
-            {/* Core Analysis (Rainbow Cards) */}
-            {report.core_analysis && (
-                <CoreAnalysisSection data={report.core_analysis} language={language} />
-            )}
+            {/* Categorized Analysis - LINEAR LAYOUT */}
+            <div className="space-y-12 md:space-y-16 mt-8 md:mt-12">
 
-            {/* Saju Sections (Accordions) */}
-            {report.saju_sections && (
-                <AccordionSection
-                    title={isEn ? "📜 Saju (Four Pillars) Analysis" : "📜 사주 기본 분석"}
-                    items={report.saju_sections}
-                    source="saju"
-                    language={language}
-                />
-            )}
+                {/* 1. Basic Analysis - ALWAYS VISIBLE */}
+                <section>
+                    {report.core_analysis && <CoreAnalysisSection data={report.core_analysis} language={language} />}
+                    {report.saju_sections && (
+                        <AccordionSection
+                            title={isEn ? "📜 Saju (Four Pillars) Analysis" : "📜 사주 기본 분석"}
+                            items={report.saju_sections}
+                            source="saju"
+                            language={language}
+                        />
+                    )}
+                </section>
 
-            {/* Fortune Flow - BLIND SPOT TEASER */}
-            {report.fortune_flow ? (
-                <FortuneFlowSection data={report.fortune_flow} language={language} />
-            ) : (
-                <div className="px-4 md:px-6 mt-8">
-                    <BlindSpotTeaser
-                        title={isEn ? "⚠️ UPCOMING FATE ALERT" : "⚠️ 다가오는 운명의 경고"}
-                        previewText={getTeaserText('flow')}
-                        hiddenText={isEn
-                            ? "This period brings a rare alignment of Jupiter and Saturn, signaling a massive shift in your career path. Without preparation, you may miss this 12-year cycle opportunity."
-                            : "이 시기에는 목성과 토성이 드물게 정렬하며, 당신의 커리어에 거대한 지각 변동을 예고합니다. 준비하지 않으면 12년 만에 오는 이 기회를 영영 놓칠 수 있습니다."
-                        }
-                        language={language}
-                        onUnlock={onUnlock || (() => { })}
-                    />
-                </div>
-            )}
+                {/* 2. Destiny Flow - PAYWALL */}
+                <section>
+                    {report.fortune_flow ? (
+                        <FortuneFlowSection data={report.fortune_flow} language={language} />
+                    ) : (
+                        <div className="px-4 md:px-6">
+                            <BlindSpotTeaser
+                                title={isEn ? "⚠️ UPCOMING FATE ALERT" : "⚠️ 다가오는 운명의 경고"}
+                                previewText={getTeaserText('flow')}
+                                hiddenText={isEn
+                                    ? "This period brings a rare alignment of Jupiter and Saturn, signaling a massive shift in your career path. Without preparation, you may miss this 12-year cycle opportunity."
+                                    : "이 시기에는 목성과 토성이 드물게 정렬하며, 당신의 커리어에 거대한 지각 변동을 예고합니다. 준비하지 않으면 12년 만에 오는 이 기회를 영영 놓칠 수 있습니다."
+                                }
+                                language={language}
+                                isLocked={true}
+                                onUnlock={handleUnlock}
+                            />
+                        </div>
+                    )}
+                </section>
 
-            {/* Life Areas */}
-            {report.life_areas ? (
-                <LifeAreasSection data={report.life_areas} language={language} />
-            ) : (
-                <LockedSection title={isEn ? 'Detailed Analysis by Area' : '영역별 상세 분석'} icon={<Target size={18} className="text-gray-400" />} language={language} onUnlock={handleUnlock} />
-            )}
+                {/* 3. Life Areas & Soulmate - PAYWALL */}
+                <section>
+                    {report.life_areas ? (
+                        <>
+                            <LifeAreasSection data={report.life_areas} language={language} />
+                            {report.soulmate && <SoulmateSection data={report.soulmate} language={language} />}
+                        </>
+                    ) : (
+                        <div className="px-4 md:px-6">
+                            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                <Target size={18} className="text-gold" />
+                                {isEn ? 'Life Areas & Soulmate' : '인생 영역 & 소울메이트'}
+                            </h2>
+                            <BlindSpotTeaser
+                                title={isEn ? "🔒 DETAILED LIFE ANALYSIS" : "🔒 영역별 정밀 분석"}
+                                previewText={getTeaserText('life')}
+                                hiddenText={isEn
+                                    ? "Your wealth luck flows strongly in the northeast direction this year. A crucial romantic encounter is waiting in late autumn."
+                                    : "올해 북동쪽 방향에서 재물운이 강력하게 들어오고 있습니다. 늦가을에는 인생을 바꿀 중요한 인연이 기다리고 있습니다."
+                                }
+                                language={language}
+                                isLocked={true}
+                                onUnlock={handleUnlock}
+                            />
+                        </div>
+                    )}
+                </section>
 
-            {/* Special Analysis */}
-            {report.special_analysis ? (
-                <SpecialAnalysisSection data={report.special_analysis} language={language} />
-            ) : (
-                <LockedSection title={isEn ? 'Special Analysis' : '특수 분석'} icon={<Zap size={18} className="text-gray-400" />} language={language} onUnlock={handleUnlock} />
-            )}
+                {/* 4. Special Analysis & Lucky Assets - PAYWALL */}
+                <section>
+                    {report.special_analysis ? (
+                        <>
+                            <SpecialAnalysisSection data={report.special_analysis} language={language} />
+                            {report.lucky_assets && <LuckyAssetsGrid data={report.lucky_assets} language={language} />}
+                            {/* Legacy Support - Deep Dive */}
+                            {report.deep_dive && !report.saju_sections && (
+                                <LegacyDeepDiveSection data={report.deep_dive} language={language} />
+                            )}
+                        </>
+                    ) : (
+                        <div className="px-4 md:px-6">
+                            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                <Zap size={18} className="text-gold" />
+                                {isEn ? 'Special Analysis' : '특수/심화 분석'}
+                            </h2>
+                            <LockedSection
+                                title={isEn ? 'Special Analysis' : '특수 분석'}
+                                icon={<Zap size={18} className="text-gray-400" />}
+                                language={language}
+                                onUnlock={handleUnlock}
+                            />
+                        </div>
+                    )}
+                </section>
 
-            {/* Action Plan - BLIND SPOT TEASER 2 */}
-            {report.action_plan ? (
-                <ActionPlanSection
-                    actionPlan={report.action_plan}
-                    trustScore={report.summary.trust_score}
-                    language={language}
-                />
-            ) : (
-                <div className="px-4 md:px-6 mt-6">
-                    <BlindSpotTeaser
-                        title={isEn ? "🎯 CRITICAL ACTION REQUIRED" : "🎯 긴급 행동 지침"}
-                        previewText={isEn ? "To avoid the approaching crisis, you must act on..." : "다가오는 위기를 피하기 위해, 반드시 실행해야 할 행동은..."}
-                        hiddenText={isEn
-                            ? "On the 15th, avoid signing any contracts. Instead, focus on reconnecting with a past ally who holds the key to your next breakthrough."
-                            : "15일에는 어떤 계약도 피하십시오. 대신, 당신의 다음 돌파구를 쥐고 있는 과거의 귀인과 다시 연결되는 데 집중해야 합니다."
-                        }
-                        language={language}
-                        onUnlock={onUnlock || (() => { })}
-                    />
-                </div>
-            )}
+                {/* 5. Action Plan - PAYWALL */}
+                <section>
+                    {report.action_plan ? (
+                        <ActionPlanSection
+                            actionPlan={report.action_plan}
+                            trustScore={report.summary.trust_score}
+                            language={language}
+                        />
+                    ) : (
+                        <div className="px-4 md:px-6">
+                            <BlindSpotTeaser
+                                title={isEn ? "🎯 CRITICAL ACTION REQUIRED" : "🎯 긴급 행동 지침"}
+                                previewText={isEn ? "To avoid the approaching crisis, you must act on..." : "다가오는 위기를 피하기 위해, 반드시 실행해야 할 행동은..."}
+                                hiddenText={isEn
+                                    ? "On the 15th, avoid signing any contracts. Instead, focus on reconnecting with a past ally who holds the key to your next breakthrough."
+                                    : "15일에는 어떤 계약도 피하십시오. 대신, 당신의 다음 돌파구를 쥐고 있는 과거의 귀인과 다시 연결되는 데 집중해야 합니다."
+                                }
+                                language={language}
+                                isLocked={true}
+                                onUnlock={handleUnlock}
+                            />
+                        </div>
+                    )}
+                </section>
 
-            {/* Legacy Support - Deep Dive */}
-            {report.deep_dive && !report.saju_sections && (
-                <LegacyDeepDiveSection data={report.deep_dive} language={language} />
-            )}
+                {/* 6. Glossary - PAYWALL (Bonus) */}
+                <section>
+                    {report.glossary && <GlossarySection data={report.glossary} language={language} />}
+                </section>
+
+            </div>
 
             {/* Share Panel */}
-            <section className="mt-10 px-4 md:px-6">
+            <section className="mt-16 px-4 md:px-6 text-center">
+                <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent mb-10" />
                 <SharePanel
                     language={language}
                     shareUrl={shareUrl}
                     shareTitle={report.summary?.title || (language === 'en' ? 'My CosmicPath Reading' : '나의 CosmicPath 리딩')}
                     shareDescription={report.summary?.content?.slice(0, 100) + '...' || undefined}
+                    onPrint={() => handlePrint()}
                 />
             </section>
 
@@ -358,7 +451,12 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 />
             )}
 
-            {/* Stripe Payment Modal is handled by parent Component via onUnlock */}
+            {/* Stripe Payment Modal */}
+            <PaymentModal
+                isOpen={isCheckoutOpen}
+                onClose={() => setIsCheckoutOpen(false)}
+                currentReport={report}
+            />
 
             {/* Toss Payment Modal (Commented out)
             {isCheckoutOpen && (
@@ -717,6 +815,25 @@ function FortuneFlowSection({ data, language }: { data: NonNullable<PremiumRepor
                 <TrendingUp size={18} className="text-gold" />
                 {isEn ? 'Fortune Flow' : '운의 흐름'}
             </h2>
+
+            {/* Timeline Chart */}
+            {data.timeline_scores && data.timeline_scores.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-6 p-4 bg-white/5 rounded-xl border border-white/10"
+                >
+                    <h3 className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+                        <span className="text-gold">📈</span>
+                        {isEn ? '10-Year Major Luck Timeline' : '10년 대운 타임라인'}
+                    </h3>
+                    <FortuneTimelineChart
+                        scores={data.timeline_scores}
+                        language={language}
+                    />
+                </motion.div>
+            )}
+
             <div className="space-y-3">
                 {items.map((item) => (
                     <div key={item.id} className={cn("accordion-item", openItems.has(item.id) && "open")}>

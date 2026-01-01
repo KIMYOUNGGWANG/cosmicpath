@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Share2, MessageCircle, Link2, Check, X } from 'lucide-react';
+import { Share2, MessageCircle, Link2, Check, X, Download } from 'lucide-react';
 
 interface SharePanelProps {
     resultRef?: React.RefObject<HTMLElement | null>;
@@ -10,6 +10,7 @@ interface SharePanelProps {
     shareTitle?: string;
     shareDescription?: string;
     language?: 'ko' | 'en';
+    onPrint?: () => void;
 }
 
 export function SharePanel({
@@ -17,6 +18,7 @@ export function SharePanel({
     shareTitle = 'CosmicPath 리딩 결과',
     shareDescription = '사주 + 점성술 + 타로 3원 통합 분석 결과를 확인해보세요',
     language = 'ko',
+    onPrint,
 }: SharePanelProps) {
     const isEn = language === 'en';
     const [isOpen, setIsOpen] = useState(false);
@@ -192,6 +194,32 @@ export function SharePanel({
                                     </p>
                                 </div>
                             </button>
+
+                            {/* PDF 저장 */}
+                            {onPrint && (
+                                <button
+                                    onClick={() => {
+                                        onPrint();
+                                        setIsOpen(false);
+                                    }}
+                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-white/5"
+                                >
+                                    <div
+                                        className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
+                                        style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                                    >
+                                        <Download size={20} style={{ color: '#ffffff' }} />
+                                    </div>
+                                    <div className="text-left">
+                                        <p className="font-medium" style={{ color: '#ffffff' }}>
+                                            {isEn ? 'Save as PDF' : 'PDF 소장본 저장'}
+                                        </p>
+                                        <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                                            {isEn ? 'High-quality booklet format' : '고퀄리티 책자 형태로 저장'}
+                                        </p>
+                                    </div>
+                                </button>
+                            )}
 
                             {/* 링크 복사 */}
                             <button

@@ -46,6 +46,7 @@ const ReadingRequestSchema = z.object({
     previousReport: z.object({}).passthrough().optional(), // previous phase data
     calendarType: z.enum(['solar', 'lunar']).default('solar'),
     unknownTime: z.boolean().default(false),
+    isPaid: z.boolean().default(false),
 });
 
 export async function POST(request: NextRequest) {
@@ -158,6 +159,7 @@ export async function POST(request: NextRequest) {
                     isPremium: true,
                     metadata: {
                         confidence: guide.confidence,
+                        // ... metadata
                         matching: guide.matching,
                         radarScores: guide.radarScores,
                         keyThemes: guide.keyThemes,
@@ -169,6 +171,7 @@ export async function POST(request: NextRequest) {
                         astrology: {
                             sunSign: astrology.sunSign,
                             moonSign: astrology.moonSign,
+                            ascendant: astrology.ascendant,
                         },
                         tarot: cards.map(c => ({ name: c.name, isReversed: c.isReversed })),
                     }

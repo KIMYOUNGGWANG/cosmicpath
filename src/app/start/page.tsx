@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ReadingInput, ReadingData } from '@/components/reading/reading-input';
 import { TarotPicker } from '@/components/reading/tarot-picker';
@@ -39,110 +40,85 @@ export default function Home() {
   const [shareUrl, setShareUrl] = useState<string | undefined>(undefined);
 
   // Payment State
-  const [isPremium, setIsPremium] = useState(true); // Temporarily enabled for Free Mode (Production Preview)
+  const [isPremium, setIsPremium] = useState(false); // Paywall Enabled
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+
+  const searchParams = useSearchParams();
+  const [hasCheckedResume, setHasCheckedResume] = useState(false);
 
   // Resume Reading after Payment
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    const checkResume = async () => {
+      // Small delay to ensure sessionStorage is populated/available if coming from redirect
+      await new Promise(resolve => setTimeout(resolve, 100));
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const paid = urlParams.get('paid');
+      const paid = searchParams.get('paid');
+      const canceled = searchParams.get('canceled');
 
-    if (paid === 'true') {
-      // Use sessionStorage for temporary payment flow persistence
-      const pendingData = sessionStorage.getItem('pending_reading_data');
-      const paymentCompleted = sessionStorage.getItem('payment_completed');
+      if (paid === 'true') {
+        const pendingData = sessionStorage.getItem('pending_reading_data');
+        const paymentCompleted = sessionStorage.getItem('payment_completed');
 
-      if (pendingData && paymentCompleted === 'true') {
-        try {
-          console.log('[Resume] Found pending data & payment completed');
+        if (pendingData && paymentCompleted === 'true') {
+          try {
+            console.log('[Resume] Found pending data & payment completed');
 
-          // Clear flags
-          sessionStorage.removeItem('pending_reading_data');
-          sessionStorage.removeItem('payment_completed');
+            // Restore data
+            const data = JSON.parse(pendingData);
+            setReadingData(data);
+            setLanguage(data.language as 'ko' | 'en');
 
-          // Remove query param
-          window.history.replaceState({}, '', window.location.pathname);
+            // Restore report if exists
+            const pendingReportJson = sessionStorage.getItem('pending_report_data');
+            if (pendingReportJson) {
+              const report = JSON.parse(pendingReportJson);
+              setReportData(report);
+            }
 
-          // Restore data
-          const data = JSON.parse(pendingData);
-          console.log('[Resume] Restored data:', data);
+            setStep('result');
+            setIsPremium(true);
 
-          // Restore report if exists
-          const pendingReportJson = sessionStorage.getItem('pending_report_data');
-          let pendingReport = null;
-          if (pendingReportJson) {
-            try {
-              pendingReport = JSON.parse(pendingReportJson);
-              console.log('[Resume] Restored existing report:', pendingReport);
+            if (data.tarotCards) {
+              setSelectedCards(data.tarotCards);
+              // Clear flags after ensuring we have data
+              sessionStorage.removeItem('pending_reading_data');
+              sessionStorage.removeItem('payment_completed');
               sessionStorage.removeItem('pending_report_data');
 
-              // Set initial report state so UI shows it immediately
-              setReportData(pendingReport);
-            } catch (e) {
-              console.error('Failed to parse pending report:', e);
+              // Remove query param
+              window.history.replaceState({}, '', window.location.pathname);
+
+              const startPhase = pendingReportJson ? 3 : 1;
+              startReading(data.tarotCards, true, data, pendingReportJson ? JSON.parse(pendingReportJson) : undefined, startPhase);
             }
+          } catch (e) {
+            console.error("Failed to resume reading:", e);
           }
-
-          setReadingData(data);
-          setLanguage(data.language as 'ko' | 'en');
-          setStep('result');
-          setIsPremium(true);
-
-          if (data.tarotCards) {
-            console.log('[Resume] Starting reading with restored cards:', data.tarotCards);
-            setSelectedCards(data.tarotCards);
-
-            // Resume specific logic:
-            const startPhase = pendingReport ? 3 : 1;
-
-            // Slight delay to ensure state updates
-            setTimeout(() => startReading(data.tarotCards, true, data, pendingReport, startPhase), 500);
-          } else {
-            console.error('[Resume] Missing tarotCards in pending data');
-            setStreamContent('Error: Could not restore session data (Missing Tarot Cards)');
-          }
-        } catch (e) {
-          console.error("Failed to resume reading:", e);
-          setStreamContent(`Error: Failed to resume session (${e})`);
         }
-      } else {
-        console.log('[Resume] No pending data found or payment not completed');
-      }
-    } else if (urlParams.get('canceled') === 'true' || sessionStorage.getItem('pending_reading_data')) {
-      // Handle "Back" navigation or cancelled payment (paid !== 'true')
-      // Restore cached session if it exists so users don't lose progress
-      const pendingData = sessionStorage.getItem('pending_reading_data');
-      const pendingReportJson = sessionStorage.getItem('pending_report_data');
+      } else if (canceled === 'true' || sessionStorage.getItem('pending_reading_data')) {
+        // Restore functionality for back button/cancel
+        const pendingData = sessionStorage.getItem('pending_reading_data');
+        const pendingReportJson = sessionStorage.getItem('pending_report_data');
 
-      if (pendingData && pendingReportJson) {
-        console.log('[Resume] Found cached session (User returned from payment or was reading)');
-        try {
+        if (pendingData && pendingReportJson) {
           const data = JSON.parse(pendingData);
           const report = JSON.parse(pendingReportJson);
-
-          // Restore state but remains locked if not paid
           setReadingData(data);
           setLanguage(data.language as 'ko' | 'en');
-          if (data.tarotCards) {
-            setSelectedCards(data.tarotCards);
-          }
+          if (data.tarotCards) setSelectedCards(data.tarotCards);
           setReportData(report);
           setStep('result');
-
-          // Clear query param
-          if (urlParams.get('canceled') === 'true') {
+          if (canceled === 'true') {
             window.history.replaceState({}, '', window.location.pathname);
           }
-        } catch (e) {
-          console.error("Failed to restore cached session:", e);
         }
       }
-    } else {
-      console.log('[Resume] Normal visit to /start - keeping clean state');
-    }
-  }, []);
+
+      setHasCheckedResume(true);
+    };
+
+    checkResume();
+  }, [searchParams]);
 
   // Step 1: Birthdate Submission -> Go to Tarot
   const handleInputSubmit = (data: ReadingData) => {
@@ -344,11 +320,19 @@ export default function Home() {
       <div className="aurora-bg fixed inset-0 z-0" />
       <div className="noise-overlay" />
 
+      {/* Step 0: Initial Loading/Resume Check */}
+      {!hasCheckedResume && (
+        <div className="flex flex-col items-center justify-center min-h-screen relative z-20">
+          <div className="w-12 h-12 border-4 border-accent-gold border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-white/60 text-sm animate-pulse tracking-widest font-cinzel">CALIBRATING...</p>
+        </div>
+      )}
+
       {/* Main Container */}
       <div className="container-cosmic relative z-10 safe-area-top">
         <AnimatePresence mode="wait">
           {/* Step 1: Input (The Ritual) */}
-          {step === 'input' && (
+          {hasCheckedResume && step === 'input' && (
             <motion.div
               key="input"
               initial={{ opacity: 0 }}

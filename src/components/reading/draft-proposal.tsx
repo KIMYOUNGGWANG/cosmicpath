@@ -66,7 +66,14 @@ export function DraftProposal({
                     <div className="text-xs text-gold mb-1 flex items-center gap-2">
                         <span>{isEn ? '✨ AI Proposal' : '✨ AI 제안'}</span>
                         <span className="opacity-50">|</span>
-                        <span>{isEn ? 'Confidence' : '신뢰도'} {confidence}%</span>
+                        <div className="flex items-center gap-1">
+                            <span>{isEn ? 'Potential Impact' : '예상 파급력'}</span>
+                            <div className="flex">
+                                {[...Array(5)].map((_, i) => (
+                                    <span key={i} className={i < Math.round(confidence / 20) ? "text-gold" : "text-gray-600"}>★</span>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                     <h3 className="font-semibold text-lg">{initialTitle}</h3>
                     <p className="text-sm text-gray-400 mt-1">
