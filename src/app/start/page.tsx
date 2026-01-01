@@ -135,7 +135,12 @@ function CosmicPathContent() {
         const pendingReportJson = sessionStorage.getItem('pending_report_data');
         const pendingMetadataJson = sessionStorage.getItem('pending_metadata');
 
-        if (pendingData && pendingReportJson) {
+        console.log('[Resume] Flag "canceled" detected. Data in session:', {
+          hasData: !!pendingData,
+          hasReport: !!pendingReportJson
+        });
+
+        if (pendingData) {
           try {
             console.log('[Resume] Restoring after cancel');
             const data = JSON.parse(pendingData);
