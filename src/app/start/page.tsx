@@ -70,13 +70,14 @@ function CosmicPathContent() {
   // Resume Reading after Payment
   useEffect(() => {
     const checkResume = async () => {
-      // Small delay to ensure sessionStorage is populated/available if coming from redirect
+      // Small delay to ensure sessionStorage is populated
       await new Promise(resolve => setTimeout(resolve, 100));
 
       const paid = searchParams.get('paid');
       const canceled = searchParams.get('canceled');
+      const isSessionActive = sessionStorage.getItem('is_session_active') === 'true';
 
-      if (paid === 'true') {
+      if (paid === 'true' || canceled === 'true' || isSessionActive) {
         const pendingData = sessionStorage.getItem('pending_reading_data');
         const paymentCompleted = sessionStorage.getItem('payment_completed');
 
