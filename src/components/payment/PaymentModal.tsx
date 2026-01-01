@@ -12,6 +12,8 @@ interface PaymentModalProps {
     onPaymentStart?: () => void;
     readingData?: Record<string, unknown>;
     currentReport?: any; // To persist Phase 1-2 results
+    metadata?: any;
+    isDecisionAccepted?: boolean;
 }
 
 export function PaymentModal({
@@ -19,7 +21,9 @@ export function PaymentModal({
     onClose,
     onPaymentStart,
     readingData,
-    currentReport
+    currentReport,
+    metadata,
+    isDecisionAccepted
 }: PaymentModalProps) {
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -33,6 +37,12 @@ export function PaymentModal({
             }
             if (currentReport) {
                 sessionStorage.setItem('pending_report_data', JSON.stringify(currentReport));
+            }
+            if (metadata) {
+                sessionStorage.setItem('pending_metadata', JSON.stringify(metadata));
+            }
+            if (isDecisionAccepted) {
+                sessionStorage.setItem('decision_accepted', 'true');
             }
             if (email) {
                 localStorage.setItem('user_email', email);
