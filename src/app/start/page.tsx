@@ -152,7 +152,7 @@ function CosmicPathContent() {
             setReportData(report);
             setStep('result');
 
-            if (pendingMetadataJson) {
+            if (pendingMetadataJson && pendingMetadataJson !== 'null') {
               setMetadata(JSON.parse(pendingMetadataJson));
             }
 
