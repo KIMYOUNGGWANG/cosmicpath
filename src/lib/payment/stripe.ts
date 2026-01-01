@@ -21,18 +21,17 @@ const stripe = getStripe();
  */
 export async function getProductPrice(productId: string) {
     try {
-        const product = await stripe.products.retrieve(productId);
-        const priceId = typeof product.default_price === 'string'
-            ? product.default_price
-            : product.default_price?.id;
+        const product = await stripe.products.retrieve(productId, {
+            expand: ['default_price']
+        });
+        const price = product.default_price as Stripe.Price;
 
-        if (!priceId) {
+        if (!price || !price.id) {
             throw new Error('No default price found for this product');
         }
 
-        const price = await stripe.prices.retrieve(priceId);
-
         return {
+            productId: product.id,
             priceId: price.id,
             amount: price.unit_amount ? price.unit_amount / 100 : 0,
             currency: price.currency.toUpperCase(),
@@ -67,10 +66,12 @@ export async function createCheckoutSession({
 }: CheckoutSessionOptions) {
     try {
         // Find the product and its default price
-        const stripeProduct = await stripe.products.retrieve(productId);
-        const priceId = typeof stripeProduct.default_price === 'string'
-            ? stripeProduct.default_price
-            : stripeProduct.default_price?.id;
+        const stripeProduct = await stripe.products.retrieve(productId, {
+            expand: ['default_price']
+        });
+
+        const price = stripeProduct.default_price as Stripe.Price;
+        const priceId = price?.id;
 
         if (!priceId) {
             throw new Error('Default price not found for product');
