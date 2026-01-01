@@ -31,7 +31,7 @@ export default function TossPaymentWidget({
                 // 2. 결제 UI 렌더링
                 const paymentMethodsWidget = paymentWidget.renderPaymentMethods(
                     '#payment-method',
-                    { value: product.price },
+                    { value: product.displayPrice },
                     { variantKey: 'DEFAULT' }
                 );
 
@@ -55,7 +55,7 @@ export default function TossPaymentWidget({
         };
 
         fetchPaymentWidget();
-    }, [product.price, onFail]);
+    }, [product.displayPrice, onFail]);
 
     const handlePaymentRequest = async () => {
         const paymentWidget = paymentWidgetRef.current;
@@ -87,7 +87,7 @@ export default function TossPaymentWidget({
                 <h3 className="text-xl font-bold text-white mb-2">{product.name}</h3>
                 <p className="text-white/60 text-sm">{product.description}</p>
                 <div className="mt-4 text-3xl font-black text-[#A184FF]">
-                    {product.price.toLocaleString()}원
+                    {product.displayPrice.toLocaleString()}원
                 </div>
             </div>
 
