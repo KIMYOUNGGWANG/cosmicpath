@@ -131,6 +131,13 @@ function CosmicPathContent() {
 
   // Step 1: Birthdate Submission -> Go to Tarot
   const handleInputSubmit = (data: ReadingData) => {
+    // Clear old session when starting a truly new reading
+    sessionStorage.removeItem('is_session_active');
+    sessionStorage.removeItem('pending_reading_data');
+    sessionStorage.removeItem('pending_report_data');
+    sessionStorage.removeItem('pending_metadata');
+    sessionStorage.removeItem('decision_accepted');
+
     setReadingData(data);
     setLanguage(data.language);
     setStep('tarot');
