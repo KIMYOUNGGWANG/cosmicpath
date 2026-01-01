@@ -5,7 +5,7 @@ export const READING_PRODUCT = {
     id: 'cosmicpath_reading_v1',
     name: 'CosmicPath 통합 운명 리포트',
     description: '사주 + 점성술 + 타로 통합 분석 프리미엄 결과지',
-    priceId: 'price_1Sktbb0RiEHwZwUJPItKYxpl', // Stripe Dashboard의 Price ID
+    priceId: 'price_1SkEXn0RiEHwZwUJLRMkpUEZ', // Stripe Dashboard의 Price ID
     displayPrice: 399, // UI 표시용 ($3.99)
     currency: 'USD',
     followUpQuestions: 0,
