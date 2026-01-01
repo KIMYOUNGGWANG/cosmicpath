@@ -2,13 +2,15 @@
 
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { ChevronDown, Sparkles, Star, Shield, TrendingUp, Calendar, Briefcase, DollarSign, Heart, Activity, Target, Zap, RotateCcw, Lock } from 'lucide-react';
+import { ChevronDown, Sparkles, Star, Shield, TrendingUp, Calendar, Target, Zap, Lock, CircleHelp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CosmicRadar } from './cosmic-radar';
 import { DraftProposal } from './draft-proposal';
 import { EvidenceTooltip } from '../ui/confidence-badge';
 import { TarotDetailModal } from './tarot-detail-modal';
 import { SharePanel } from '../share/SharePanel';
+import { BlindSpotTeaser } from './blind-spot-teaser';
+// import TossPaymentWidget from '../payment/TossPaymentWidget'; // Toss Payments (Commented out)
 
 // 새로운 Premium Report 타입 (기존 CosmicReport 대체)
 interface PremiumReportData {
@@ -109,15 +111,127 @@ interface PremiumReportProps {
             name: string;
             isReversed: boolean;
         }[];
+        radarScores?: {
+            saju: number;
+            astrology: number;
+            tarot: number;
+        };
     };
     language?: 'ko' | 'en';
     shareUrl?: string;
     onUnlock?: () => void;
 }
 
+// ... (existing helper)
+
+function CosmicRadarMemo({ report, metadata, language }: { report: PremiumReportData; metadata?: PremiumReportProps['metadata']; language: 'ko' | 'en' }) {
+    const isEn = language === 'en';
+
+    // Use dynamic scores from metadata if available, otherwise fallback to derived
+    const sajuScore = metadata?.radarScores?.saju || (report.summary.trust_score * 20 - (report.summary.trust_score > 3 ? 5 : 15));
+    const starScore = metadata?.radarScores?.astrology || (report.summary.trust_score * 20 - (report.summary.trust_score > 3 ? 15 : 25));
+    const tarotScore = metadata?.radarScores?.tarot || (report.summary.trust_score * 20 - (report.summary.trust_score > 3 ? 25 : 35));
+
+    // Analyze imbalance
+    const scores = {
+        saju: { score: sajuScore, label: isEn ? 'Logic' : '논리(사주)', icon: '📜' },
+        star: { score: starScore, label: isEn ? 'Flow' : '흐름(별자리)', icon: '🌌' },
+        tarot: { score: tarotScore, label: isEn ? 'Intuition' : '직관(타로)', icon: '🔮' }
+    };
+
+    const maxScore = Math.max(sajuScore, starScore, tarotScore);
+    const minScore = Math.min(sajuScore, starScore, tarotScore);
+    const diff = maxScore - minScore;
+
+    const highest = Object.values(scores).find(s => s.score === maxScore)!;
+    const lowest = Object.values(scores).find(s => s.score === minScore)!;
+
+    let badgeConfig;
+    if (diff < 15) {
+        badgeConfig = {
+            color: 'bg-green-500/10 border-green-500/50 text-green-200 shadow-[0_0_15px_rgba(34,197,94,0.3)]',
+            dot: 'bg-green-500',
+            ping: 'bg-green-400',
+            text: isEn ? "IDEAL BALANCE" : "완벽한 조화"
+        };
+    } else if (diff < 30) {
+        badgeConfig = {
+            color: 'bg-gold/10 border-gold/50 text-gold/90 shadow-[0_0_15px_rgba(255,215,0,0.2)]',
+            dot: 'bg-gold',
+            ping: 'bg-gold/60',
+            text: isEn ? "STABLE HARMONY" : "안정적 균형"
+        };
+    } else {
+        badgeConfig = {
+            color: 'bg-red-500/10 border-red-500/50 text-red-200 shadow-[0_0_15px_rgba(220,38,38,0.3)]',
+            dot: 'bg-red-500',
+            ping: 'bg-red-400',
+            text: isEn ? "DYNAMIC IMBALANCE" : "심각한 불균형"
+        };
+    }
+
+    const tooltipText = isEn
+        ? `Your '${highest.label}' is dominant, while '${lowest.label}' is currently recessed. This indicates a focus on ${maxScore > 80 ? 'strong' : 'developing'} external manifestations over internal ${minScore < 40 ? 'needs' : 'adjustments'}.`
+        : `회원님의 운세는 '${highest.label}'의 기운이 매우 강한 반면, '${lowest.label}'가 상대적으로 낮게 나타납니다. 이는 현재 상황에서 ${maxScore > 80 ? '강력한' : '뚜렷한'} 추진력을 발휘하고 있지만 ${minScore < 40 ? '세밀한' : '유연한'} 조율이 필요함을 암시합니다.`;
+
+    return (
+        <section className="mt-8 px-4 md:px-6 relative">
+            {/* Dynamic Warning/Status Badge */}
+            <div className="absolute -top-4 right-4 z-10 group cursor-help">
+                <div className={cn("backdrop-blur-md text-xs px-3 py-1.5 rounded-full flex items-center gap-2 transition-all duration-500", badgeConfig.color)}>
+                    <span className="relative flex h-2 w-2">
+                        <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", badgeConfig.ping)}></span>
+                        <span className={cn("relative inline-flex rounded-full h-2 w-2", badgeConfig.dot)}></span>
+                    </span>
+                    <span className="font-bold tracking-wide">{badgeConfig.text}</span>
+                    <CircleHelp size={12} className="opacity-70" />
+                </div>
+
+                {/* Tooltip on Hover */}
+                <div className="absolute right-0 top-full mt-2 w-64 bg-black/90 border border-white/10 p-4 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-20 shadow-2xl scale-95 group-hover:scale-100 origin-top-right">
+                    <p className="text-[11px] text-gray-200 leading-relaxed font-light">
+                        {tooltipText}
+                    </p>
+                </div>
+            </div>
+
+            <CosmicRadar
+                sajuScore={sajuScore}
+                starScore={starScore}
+                tarotScore={tarotScore}
+                isLoading={false}
+                language={language}
+                details={{
+                    saju: isEn ? "Logic is at its peak." : "논리적 판단력이 정점에 달해 있습니다.",
+                    tarot: isEn ? "Intuition is dangerously low." : "직관력이 매우 약해져 있어 경고가 필요합니다.",
+                    star: isEn ? "Cosmic flow is stable." : "우주의 흐름은 평이한 상태입니다."
+                }}
+            />
+        </section>
+    );
+}
+
 export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock }: PremiumReportProps) {
     const isEn = language === 'en';
     const [selectedCardIdx, setSelectedCardIdx] = useState<number | null>(null);
+    const handleUnlock = () => {
+        if (onUnlock) {
+            onUnlock();
+        }
+    };
+
+    // Dynamic Teaser Text Generator
+    const getTeaserText = (section: string) => {
+        const month = new Date().getMonth() + 2; // Next month
+        if (isEn) {
+            return section === 'flow'
+                ? `In ${month > 12 ? 1 : month}th month, a significant turning point approaches...`
+                : `A hidden obstacle in your ${section} sector requires immediate attention...`;
+        }
+        return section === 'flow'
+            ? `${month > 12 ? 1 : month}월, 당신의 운명에 결정적인 전환점이 찾아옵니다...`
+            : `당신의 ${section} 영역에 숨겨진 치명적인 장애물이 있습니다...`;
+    };
 
     if (!report) return null;
 
@@ -129,16 +243,9 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
             <HeaderSection summary={report.summary} language={language} />
 
             {/* Cosmic Radar Section (New) */}
-            <section className="mt-8 px-4 md:px-6">
-                <CosmicRadar
-                    sajuScore={report.summary.trust_score * 20 - (Math.random() * 5)}
-                    starScore={report.summary.trust_score * 20 - (Math.random() * 10)}
-                    tarotScore={report.summary.trust_score * 20 - (Math.random() * 15)}
-                    language={language}
-                />
-            </section>
+            <CosmicRadarMemo report={report} metadata={metadata} language={language} />
 
-            {/* Tarot Spread Section (New) */}
+            {/* Tarot Spread Section */}
             {tarotCards.length > 0 && (
                 <TarotSpreadSection cards={tarotCards} onCardClick={setSelectedCardIdx} language={language} />
             )}
@@ -161,28 +268,39 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 />
             )}
 
-            {/* Fortune Flow */}
+            {/* Fortune Flow - BLIND SPOT TEASER */}
             {report.fortune_flow ? (
                 <FortuneFlowSection data={report.fortune_flow} language={language} />
             ) : (
-                <LockedSection title={isEn ? 'Fortune Flow' : '운의 흐름'} icon={<TrendingUp size={18} className="text-gray-400" />} language={language} onUnlock={onUnlock} />
+                <div className="px-4 md:px-6 mt-8">
+                    <BlindSpotTeaser
+                        title={isEn ? "⚠️ UPCOMING FATE ALERT" : "⚠️ 다가오는 운명의 경고"}
+                        previewText={getTeaserText('flow')}
+                        hiddenText={isEn
+                            ? "This period brings a rare alignment of Jupiter and Saturn, signaling a massive shift in your career path. Without preparation, you may miss this 12-year cycle opportunity."
+                            : "이 시기에는 목성과 토성이 드물게 정렬하며, 당신의 커리어에 거대한 지각 변동을 예고합니다. 준비하지 않으면 12년 만에 오는 이 기회를 영영 놓칠 수 있습니다."
+                        }
+                        language={language}
+                        onUnlock={onUnlock || (() => { })}
+                    />
+                </div>
             )}
 
             {/* Life Areas */}
             {report.life_areas ? (
                 <LifeAreasSection data={report.life_areas} language={language} />
             ) : (
-                <LockedSection title={isEn ? 'Detailed Analysis by Area' : '영역별 상세 분석'} icon={<Target size={18} className="text-gray-400" />} language={language} onUnlock={onUnlock} />
+                <LockedSection title={isEn ? 'Detailed Analysis by Area' : '영역별 상세 분석'} icon={<Target size={18} className="text-gray-400" />} language={language} onUnlock={handleUnlock} />
             )}
 
             {/* Special Analysis */}
             {report.special_analysis ? (
                 <SpecialAnalysisSection data={report.special_analysis} language={language} />
             ) : (
-                <LockedSection title={isEn ? 'Special Analysis' : '특수 분석'} icon={<Zap size={18} className="text-gray-400" />} language={language} onUnlock={onUnlock} />
+                <LockedSection title={isEn ? 'Special Analysis' : '특수 분석'} icon={<Zap size={18} className="text-gray-400" />} language={language} onUnlock={handleUnlock} />
             )}
 
-            {/* Action Plan */}
+            {/* Action Plan - BLIND SPOT TEASER 2 */}
             {report.action_plan ? (
                 <ActionPlanSection
                     actionPlan={report.action_plan}
@@ -190,7 +308,18 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     language={language}
                 />
             ) : (
-                <LockedSection title={isEn ? 'Action Plan (Super Days)' : '액션 플랜 (Super Days)'} icon={<Calendar size={18} className="text-gray-400" />} language={language} onUnlock={onUnlock} />
+                <div className="px-4 md:px-6 mt-6">
+                    <BlindSpotTeaser
+                        title={isEn ? "🎯 CRITICAL ACTION REQUIRED" : "🎯 긴급 행동 지침"}
+                        previewText={isEn ? "To avoid the approaching crisis, you must act on..." : "다가오는 위기를 피하기 위해, 반드시 실행해야 할 행동은..."}
+                        hiddenText={isEn
+                            ? "On the 15th, avoid signing any contracts. Instead, focus on reconnecting with a past ally who holds the key to your next breakthrough."
+                            : "15일에는 어떤 계약도 피하십시오. 대신, 당신의 다음 돌파구를 쥐고 있는 과거의 귀인과 다시 연결되는 데 집중해야 합니다."
+                        }
+                        language={language}
+                        onUnlock={onUnlock || (() => { })}
+                    />
+                </div>
             )}
 
             {/* Legacy Support - Deep Dive */}
@@ -228,6 +357,42 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     language={language}
                 />
             )}
+
+            {/* Stripe Payment Modal is handled by parent Component via onUnlock */}
+
+            {/* Toss Payment Modal (Commented out)
+            {isCheckoutOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 md:p-10">
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsCheckoutOpen(false)}
+                        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                    />
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        className="relative w-full max-w-xl bg-deep-navy border border-white/10 rounded-3xl overflow-y-auto max-h-[90vh] shadow-[0_0_50px_rgba(161,132,255,0.2)]"
+                    >
+                        <div className="absolute top-4 right-4 z-10">
+                            <button
+                                onClick={() => setIsCheckoutOpen(false)}
+                                className="p-2 hover:bg-white/10 rounded-full transition-colors"
+                            >
+                                <Lock size={20} className="text-white/40" />
+                            </button>
+                        </div>
+                        <TossPaymentWidget
+                            onFail={(err) => {
+                                console.error('Payment Modal Error:', err);
+                                setIsCheckoutOpen(false);
+                            }}
+                        />
+                    </motion.div>
+                </div>
+            )}
+            */}
         </div>
     );
 }
@@ -346,6 +511,14 @@ function TraitsSection({ traits, language }: { traits: PremiumReportData['traits
         }
     };
 
+    const [scrollProgress, setScrollProgress] = useState(0);
+
+    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        const { scrollLeft, scrollWidth, clientWidth } = e.currentTarget;
+        const totalScroll = scrollWidth - clientWidth;
+        setScrollProgress(scrollLeft / totalScroll);
+    };
+
     return (
         <motion.section
             initial={{ opacity: 0, x: 20 }}
@@ -353,11 +526,15 @@ function TraitsSection({ traits, language }: { traits: PremiumReportData['traits
             transition={{ delay: 0.2 }}
             className="mt-6 md:mt-8 pl-4 md:pl-6"
         >
-            <div className="flex gap-3 md:gap-4 overflow-x-auto pb-6 pr-4 md:pr-6 snap-x">
+            {/* Scrollable Container */}
+            <div
+                className="flex gap-4 overflow-x-auto pb-8 pr-4 md:pr-6 snap-x scrollbar-hide"
+                onScroll={handleScroll}
+            >
                 {traits.map((trait, idx) => (
                     <div
                         key={idx}
-                        className="snap-center shrink-0 w-[85vw] md:w-[320px] bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-xl p-5 md:p-6 flex flex-col gap-3 hover:border-gold/30 transition-colors group shadow-lg"
+                        className="snap-center shrink-0 w-[78vw] md:w-[320px] bg-gradient-to-br from-white/10 to-white/5 border border-white/10 rounded-xl p-5 md:p-6 flex flex-col gap-3 hover:border-gold/30 transition-colors group shadow-lg relative"
                     >
                         <div className="flex justify-between items-start">
                             <EvidenceTooltip
@@ -379,7 +556,31 @@ function TraitsSection({ traits, language }: { traits: PremiumReportData['traits
                                 {trait.description}
                             </p>
                         </div>
+
+                        {/* Mobile Swipe Hint (First Card Only) */}
+                        {idx === 0 && (
+                            <div className="md:hidden absolute bottom-3 right-3 text-[10px] text-gray-500 animate-pulse flex items-center gap-1">
+                                <span>Swipe</span>
+                                <span>→</span>
+                            </div>
+                        )}
                     </div>
+                ))}
+            </div>
+
+            {/* Scroll Indicator (Mobile Only) */}
+            <div className="flex justify-center md:hidden gap-1.5 mt-[-1rem] mb-6">
+                {traits.map((_, i) => (
+                    <div
+                        key={i}
+                        className={cn(
+                            "h-1 rounded-full transition-all duration-300",
+                            // Simple heuristic for active dot based on scroll progress
+                            Math.round(scrollProgress * (traits.length - 1)) === i
+                                ? "w-6 bg-gold"
+                                : "w-1 bg-white/20"
+                        )}
+                    />
                 ))}
             </div>
         </motion.section>
@@ -780,18 +981,11 @@ function LockedSection({ title, icon, language, onUnlock }: { title: string; ico
                     <Lock className="w-6 h-6 text-white/50" />
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2 text-center">
-                    {title} {isEn ? 'Locked' : '잠금됨'}
+                    {title} {isEn ? 'Analysis in Progress' : '분석 진행 중'}
                 </h3>
                 <p className="text-sm text-gray-400 mb-6 text-center max-w-xs">
-                    {isEn ? 'Unlocking your full potential requires a complete analysis.' : '전체 분석을 통해 당신의 잠재력을 확인하세요.'}
+                    {isEn ? 'This section requires premium access (Currently bypassed for testing).' : '프리미엄 데이터가 필요합니다 (현재 테스트를 위해 개방됨).'}
                 </p>
-                <button
-                    onClick={onUnlock}
-                    className="px-8 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-full text-white font-medium hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg hover:shadow-violet-500/25 flex items-center gap-2"
-                >
-                    <Sparkles size={16} />
-                    {isEn ? 'Unlock Full Report' : '전체 리포트 열기'}
-                </button>
             </div>
 
             {/* Fake Content Background */}
@@ -803,7 +997,6 @@ function LockedSection({ title, icon, language, onUnlock }: { title: string; ico
                 <div className="space-y-4">
                     <div className="h-16 bg-white/10 rounded-lg w-full"></div>
                     <div className="h-32 bg-white/10 rounded-lg w-full"></div>
-                    <div className="h-16 bg-white/10 rounded-lg w-full"></div>
                 </div>
             </div>
         </section>

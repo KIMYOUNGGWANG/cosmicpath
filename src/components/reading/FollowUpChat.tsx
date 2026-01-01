@@ -49,15 +49,35 @@ export function FollowUpChat({
         const kakao = (window as any).Kakao;
 
         if (!kakao) {
-            alert('카카오톡을 열 수 없습니다. 잠시 후 다시 시도해주세요.');
+            alert('카카오톡 SDK가 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.');
             return;
         }
 
         if (!kakao.isInitialized()) {
-            kakao.init(process.env.NEXT_PUBLIC_KAKAO_JS_KEY);
+            const jsKey = process.env.NEXT_PUBLIC_KAKAO_JS_KEY;
+            if (jsKey) {
+                try {
+                    kakao.init(jsKey);
+                } catch (e) {
+                    console.error('Kakao init error:', e);
+                }
+            } else {
+                console.error('Kakao JS Key is missing');
+                return;
+            }
         }
 
         setShareStatus('sharing');
+
+        // 현재 도메인 기반으로 URL 구성
+        const origin = window.location.origin;
+        const appUrl = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+
+        // shareUrl이 있으면 절대경로로 완성, 없으면 현재 페이지 URL 사용
+        let finalUrl = window.location.href;
+        if (shareUrl) {
+            finalUrl = shareUrl.startsWith('http') ? shareUrl : `${appUrl}${shareUrl.startsWith('/') ? '' : '/'}${shareUrl}`;
+        }
 
         try {
             kakao.Share.sendDefault({
@@ -65,20 +85,20 @@ export function FollowUpChat({
                 content: {
                     title: '✨ 나의 CosmicPath 운세 리딩 결과',
                     description: '사주 + 점성술 + 타로 3원 통합 분석! 나의 운명을 확인해보세요 🌟',
-                    imageUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=1200&h=630&fit=crop',
+                    imageUrl: 'https://cosmicpath.app/og-image.png',
                     imageWidth: 1200,
                     imageHeight: 630,
                     link: {
-                        mobileWebUrl: shareUrl || window.location.href,
-                        webUrl: shareUrl || window.location.href,
+                        mobileWebUrl: finalUrl,
+                        webUrl: finalUrl,
                     },
                 },
                 buttons: [
                     {
                         title: '결과 보러가기',
                         link: {
-                            mobileWebUrl: shareUrl || window.location.href,
-                            webUrl: shareUrl || window.location.href,
+                            mobileWebUrl: finalUrl,
+                            webUrl: finalUrl,
                         },
                     },
                 ],
@@ -89,21 +109,19 @@ export function FollowUpChat({
                 const updated = addCredits(session, 1);
                 onSessionUpdate(updated);
                 setShareStatus('done');
-            }, 500);
+            }, 1000);
         } catch (error) {
             console.error('Kakao share failed:', error);
             setShareStatus('idle');
             // 폴백: 링크 복사
-            const url = shareUrl || window.location.href;
-            navigator.clipboard.writeText(url).then(() => {
-                alert('링크가 복사되었습니다! 친구에게 공유해주세요.');
+            navigator.clipboard.writeText(finalUrl).then(() => {
+                alert('카카오톡 공유 중 오류가 발생하여 링크가 복사되었습니다! 친구에게 직접 공유해주세요.');
                 const updated = addCredits(session, 1);
                 onSessionUpdate(updated);
                 setShareStatus('done');
             });
         }
     };
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim() || isLoading || isExhausted) return;

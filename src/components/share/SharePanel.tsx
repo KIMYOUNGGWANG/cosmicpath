@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import Script from 'next/script';
 import { Share2, MessageCircle, Link2, Check, X } from 'lucide-react';
 
 interface SharePanelProps {
@@ -14,7 +13,6 @@ interface SharePanelProps {
 }
 
 export function SharePanel({
-    resultRef,
     shareUrl,
     shareTitle = 'CosmicPath 리딩 결과',
     shareDescription = '사주 + 점성술 + 타로 3원 통합 분석 결과를 확인해보세요',
@@ -22,14 +20,13 @@ export function SharePanel({
 }: SharePanelProps) {
     const isEn = language === 'en';
     const [isOpen, setIsOpen] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
     const [copied, setCopied] = useState(false);
 
     // 카카오톡 공유
     const handleKakaoShare = () => {
         if (typeof window === 'undefined') return;
 
-        const kakao = window.Kakao;
+        const kakao = (window as any).Kakao;
 
         if (!kakao) {
             alert(isEn ? 'Kakao SDK not loaded.' : '카카오 SDK가 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.');
@@ -50,7 +47,7 @@ export function SharePanel({
             }
         }
 
-        // 현재 도메인 기반으로 URL 구성 (환경변수보다 현재 접속 도메인 우선)
+        // 도메인 구성을 위한 origin 확인
         const origin = window.location.origin;
         const appUrl = origin.endsWith('/') ? origin.slice(0, -1) : origin;
 
@@ -60,18 +57,18 @@ export function SharePanel({
             finalUrl = shareUrl.startsWith('http') ? shareUrl : `${appUrl}${shareUrl.startsWith('/') ? '' : '/'}${shareUrl}`;
         }
 
-        // 설명 글자수 제한 (카카오톡 권장 사항 준수)
-        const trimmedDescription = shareDescription.length > 80
-            ? shareDescription.substring(0, 80) + '...'
+        // 설명 글자수 제한
+        const trimmedDescription = shareDescription.length > 120
+            ? shareDescription.substring(0, 120) + '...'
             : shareDescription;
 
-        // 카카오톡 메시지 스타일 (Mystic Neon 분위기 반영)
+        // 카카오톡 메시지 전송 (고정된 프로덕션 이미지 사용으로 안정적인 로드 보장)
         kakao.Share.sendDefault({
             objectType: 'feed',
             content: {
                 title: shareTitle,
                 description: trimmedDescription,
-                imageUrl: `${appUrl}/og-image.png`, // 캐시 이슈 방지를 위해 쿼리 파라미터는 제거 (Kakao 서버 캐시 정책 대응)
+                imageUrl: 'https://cosmicpath.app/og-image.png', // 프로덕션 이미지 고정
                 imageWidth: 1200,
                 imageHeight: 630,
                 link: {
@@ -96,7 +93,6 @@ export function SharePanel({
         const url = shareUrl || window.location.href;
 
         try {
-            // Modern API
             if (navigator.clipboard && window.isSecureContext) {
                 await navigator.clipboard.writeText(url);
                 setCopied(true);
@@ -104,7 +100,6 @@ export function SharePanel({
                 return;
             }
 
-            // Fallback for non-secure or restricted environments
             const textArea = document.createElement("textarea");
             textArea.value = url;
             textArea.style.position = "fixed";
@@ -120,7 +115,7 @@ export function SharePanel({
                 setTimeout(() => setCopied(false), 2000);
             } catch (err) {
                 console.error('Fallback copy failed:', err);
-                alert(isEn ? 'Failed to copy link.' : '링크 복사에 실패했습니다. 주소를 직접 선택해 복사해 주세요.');
+                alert(isEn ? 'Failed to copy link.' : '링크 복사에 실패했습니다.');
             }
 
             document.body.removeChild(textArea);
@@ -152,7 +147,7 @@ export function SharePanel({
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute right-0 mt-2 w-64 rounded-2xl overflow-hidden z-50"
+                        className="absolute right-0 mt-2 w-64 rounded-2xl overflow-hidden z-50 transition-all duration-300"
                         style={{
                             background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
                             border: '1px solid rgba(139, 92, 246, 0.3)',
@@ -183,7 +178,7 @@ export function SharePanel({
                                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-white/5"
                             >
                                 <div
-                                    className="w-10 h-10 rounded-full flex items-center justify-center"
+                                    className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
                                     style={{ backgroundColor: '#FEE500' }}
                                 >
                                     <MessageCircle size={20} style={{ color: '#3C1E1E' }} />
@@ -198,14 +193,13 @@ export function SharePanel({
                                 </div>
                             </button>
 
-
                             {/* 링크 복사 */}
                             <button
                                 onClick={handleCopyLink}
                                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-white/5"
                             >
                                 <div
-                                    className="w-10 h-10 rounded-full flex items-center justify-center"
+                                    className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
                                     style={{ backgroundColor: 'rgba(59, 130, 246, 0.2)' }}
                                 >
                                     {copied ? (
@@ -227,26 +221,6 @@ export function SharePanel({
                     </motion.div>
                 )}
             </AnimatePresence>
-
-            <Script
-                id="kakao-sdk"
-                src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
-                strategy="afterInteractive"
-                onLoad={() => {
-                    if (window.Kakao && !window.Kakao.isInitialized()) {
-                        const jsKey = process.env.NEXT_PUBLIC_KAKAO_JS_KEY;
-                        if (jsKey) {
-                            window.Kakao.init(jsKey);
-                        }
-                    }
-                }}
-            />
         </div>
     );
-}
-
-declare global {
-    interface Window {
-        Kakao: any;
-    }
 }

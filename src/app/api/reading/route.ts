@@ -44,6 +44,8 @@ const ReadingRequestSchema = z.object({
     language: z.enum(['ko', 'en']).optional().default('ko'),
     phase: z.number().min(1).max(5).optional(), // for multi-step execution
     previousReport: z.object({}).passthrough().optional(), // previous phase data
+    calendarType: z.enum(['solar', 'lunar']).default('solar'),
+    unknownTime: z.boolean().default(false),
 });
 
 export async function POST(request: NextRequest) {
@@ -59,12 +61,14 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { name, gender, birthDate, birthTime, context, question, tarotCards, tier, language, phase, previousReport } = validationResult.data;
+        const { name, gender, birthDate, birthTime, context, question, tarotCards, tier, language, phase, previousReport, calendarType } = validationResult.data;
 
         // 1. 사주 계산
         const birthDateTime = new Date(birthDate);
         const [hours] = birthTime.split(':').map(Number);
-        const saju = calculateSaju(birthDateTime, hours);
+
+        // Pass isLunar flag based on calendarType
+        const saju = calculateSaju(birthDateTime, hours, calendarType === 'lunar');
 
         // 2. 점성술 계산
         const astrology = calculateAstrology(birthDateTime, birthTime);
@@ -127,6 +131,7 @@ export async function POST(request: NextRequest) {
                         metadata: {
                             confidence: guide.confidence,
                             matching: guide.matching,
+                            radarScores: guide.radarScores,
                             keyThemes: guide.keyThemes,
                             saju: {
                                 yearPillar: `${saju.yearPillar.stem}${saju.yearPillar.branch}`,
@@ -154,6 +159,7 @@ export async function POST(request: NextRequest) {
                     metadata: {
                         confidence: guide.confidence,
                         matching: guide.matching,
+                        radarScores: guide.radarScores,
                         keyThemes: guide.keyThemes,
                         saju: {
                             yearPillar: `${saju.yearPillar.stem}${saju.yearPillar.branch}`,
@@ -206,6 +212,7 @@ export async function POST(request: NextRequest) {
                 metadata: {
                     confidence: guide.confidence,
                     matching: guide.matching,
+                    radarScores: guide.radarScores,
                     keyThemes: guide.keyThemes,
                     saju: {
                         yearPillar: `${saju.yearPillar.stem}${saju.yearPillar.branch}`,
