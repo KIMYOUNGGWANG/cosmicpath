@@ -78,63 +78,56 @@ function CosmicPathContent() {
       const isSessionActive = sessionStorage.getItem('is_session_active') === 'true';
 
       if (paid === 'true' || canceled === 'true' || isSessionActive) {
+        const pendingData = sessionStorage.getItem('pending_reading_data');
         const pendingReportJson = sessionStorage.getItem('pending_report_data');
         const pendingMetadataJson = sessionStorage.getItem('pending_metadata');
 
         if (pendingData) {
           try {
-            console.log('[Resume] Found pending data & payment completed');
-
-            // Restore data
+            console.log('[Resume] Restoring session state...', { paid, canceled, isSessionActive });
             const data = JSON.parse(pendingData);
             setReadingData(data);
             setLanguage(data.language as 'ko' | 'en');
 
-            // Restore report if exists
-            const pendingReportJson = sessionStorage.getItem('pending_report_data');
-            const pendingMetadataJson = sessionStorage.getItem('pending_metadata');
+            if (data.tarotCards) {
+              setSelectedCards(data.tarotCards);
+            }
 
-            if (pendingReportJson) {
+            if (pendingReportJson && pendingReportJson !== 'null') {
               setReportData(JSON.parse(pendingReportJson));
             }
-            if (pendingMetadataJson) {
+            if (pendingMetadataJson && pendingMetadataJson !== 'null') {
               setMetadata(JSON.parse(pendingMetadataJson));
             }
-
-            setStep('result');
-            setIsPremium(true);
-
-            // Restore decision state 
             if (sessionStorage.getItem('decision_accepted') === 'true') {
               setIsDecisionAccepted(true);
             }
 
-            if (data.tarotCards) {
-              setSelectedCards(data.tarotCards);
+            // Persistence: Always go to result if we have data
+            setStep('result');
 
-              // Persistence: Always return to results if we have data
-              setStep('result');
-
-              if (paid === 'true') {
-                setIsPremium(true);
-                const startPhase = pendingReportJson ? 3 : 1;
-                startReading(data.tarotCards, true, data, pendingReportJson ? JSON.parse(pendingReportJson) : undefined, startPhase);
-              }
-
-              if (paid === 'true' || canceled === 'true') {
-                window.history.replaceState({}, '', window.location.pathname);
-              }
-            } catch (e) {
-              console.error("[Resume] Failure during restoration:", e);
+            // Success Flow: If explicitly paid, trigger premium logic
+            if (paid === 'true') {
+              setIsPremium(true);
+              const startPhase = pendingReportJson ? 3 : 1;
+              startReading(data.tarotCards || [], true, data, pendingReportJson ? JSON.parse(pendingReportJson) : undefined, startPhase);
             }
+
+            // Cleanup query params ONLY, keeping sessionStorage for refresh-resilience
+            if (paid === 'true' || canceled === 'true') {
+              window.history.replaceState({}, '', window.location.pathname);
+            }
+          } catch (e) {
+            console.error("[Resume] Failure during restoration:", e);
           }
+        }
       }
 
-        setHasCheckedResume(true);
-      };
+      setHasCheckedResume(true);
+    };
 
-      checkResume();
-    }, [searchParams]);
+    checkResume();
+  }, [searchParams]);
 
   // Step 1: Birthdate Submission -> Go to Tarot
   const handleInputSubmit = (data: ReadingData) => {
