@@ -144,12 +144,14 @@ function CosmicPathContent() {
           try {
             console.log('[Resume] Restoring after cancel');
             const data = JSON.parse(pendingData);
-            const report = JSON.parse(pendingReportJson);
+            if (pendingReportJson && pendingReportJson !== 'null') {
+              setReportData(JSON.parse(pendingReportJson));
+            }
 
             setReadingData(data);
             setLanguage(data.language as 'ko' | 'en');
             if (data.tarotCards) setSelectedCards(data.tarotCards);
-            setReportData(report);
+            console.log('[Resume] Navigation forced to result step');
             setStep('result');
 
             if (pendingMetadataJson && pendingMetadataJson !== 'null') {
