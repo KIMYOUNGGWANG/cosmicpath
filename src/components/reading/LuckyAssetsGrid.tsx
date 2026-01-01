@@ -27,6 +27,15 @@ interface LuckyAssetsGridProps {
     language?: 'ko' | 'en';
 }
 
+interface SelectedItem {
+    type: 'color' | 'food' | 'place';
+    title: string;
+    subTitle?: string;
+    description: string;
+    color?: string;
+    emoji?: string;
+}
+
 // Duplicate imports removed
 // Duplicate interface removed
 
