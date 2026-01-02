@@ -1,7 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { READING_PRODUCT } from '@/lib/payment/payment-config';
 
 // Pre-generate star data once at module load time
 // Pre-generate star data statically to avoid hydration mismatch
@@ -29,6 +31,28 @@ const STAR_DATA = [
 ];
 
 export function CrossroadsSection() {
+    const [dynamicPrice, setDynamicPrice] = useState<string>('$3.99');
+    const [originalPrice, setOriginalPrice] = useState<string>('$29.99');
+
+    useEffect(() => {
+        const fetchPrice = async () => {
+            try {
+                const response = await fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.formattedPrice) {
+                        setDynamicPrice(data.formattedPrice);
+                    }
+                    if (data.metadata?.compare_at_price) {
+                        setOriginalPrice(data.metadata.compare_at_price);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch dynamic price:', error);
+            }
+        };
+        fetchPrice();
+    }, []);
     return (
         <section className="relative h-screen flex items-center justify-center bg-void overflow-hidden">
 
@@ -92,8 +116,8 @@ export function CrossroadsSection() {
                             </div>
 
                             <span className="text-sm font-medium mt-1 text-gray-500 group-hover:text-deep-navy/80 transition-colors">
-                                <span className="line-through opacity-50 mr-2">$29.99</span>
-                                <span className="font-bold text-red-500 text-lg">$3.99</span>
+                                <span className="line-through opacity-50 mr-2">{originalPrice}</span>
+                                <span className="font-bold text-red-500 text-lg">{dynamicPrice}</span>
                             </span>
                         </Link>
                     </div>

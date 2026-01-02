@@ -62,7 +62,8 @@ export async function getProductPrice(productId: string, targetCurrency: string 
                     style: 'currency',
                     currency: price.currency
                 }).format(price.unit_amount / 100)
-                : 'Free'
+                : 'Free',
+            metadata: product.metadata
         };
     } catch (error) {
         console.error('Error fetching product price:', error);
