@@ -501,10 +501,10 @@ function CosmicPathContent() {
                       : "우주의 기운이 너무 복잡하여 현재 처리할 수 없습니다.")}
                   </p>
                   <button
-                    onClick={() => window.location.reload()}
+                    onClick={() => window.location.href = '/start?reset=true'}
                     className="btn-secondary px-8 py-3 text-sm font-medium tracking-widest uppercase hover:bg-white/5 transition-all"
                   >
-                    Realign Path
+                    Start New Journey
                   </button>
                 </motion.div>
               )}
