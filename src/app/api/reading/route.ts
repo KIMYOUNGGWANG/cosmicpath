@@ -64,15 +64,19 @@ export async function POST(request: NextRequest) {
 
         const { name, gender, birthDate, birthTime, context, question, tarotCards, tier, language, phase, previousReport, calendarType } = validationResult.data;
 
-        // 1. 사주 계산
-        const birthDateTime = new Date(birthDate);
-        const [hours] = birthTime.split(':').map(Number);
+        // 1. 사주/점성술용 날짜 파싱 (타임존 이슈 방지: YYYY, MM, DD 직접 추출)
+        const [yearPart, monthPart, dayPart] = birthDate.split('-').map(Number);
+        const birthDateTime = new Date(yearPart, monthPart - 1, dayPart, 12, 0, 0); // 기본 12시 세팅
+        const [hours, minutes] = birthTime.split(':').map(Number);
 
-        // Pass isLunar flag based on calendarType
-        const saju = calculateSaju(birthDateTime, hours, calendarType === 'lunar');
+        // 실제 생시 반영된 Date 객체
+        const exactBirthDateTime = new Date(yearPart, monthPart - 1, dayPart, hours, minutes || 0, 0);
+
+        // 사주 계산 (Solar Term 기반 + 30분 보정 및 조자시 반영)
+        const saju = calculateSaju(exactBirthDateTime, hours, minutes || 0, calendarType === 'lunar');
 
         // 2. 점성술 계산
-        const astrology = calculateAstrology(birthDateTime, birthTime);
+        const astrology = calculateAstrology(exactBirthDateTime, birthTime);
 
         // 3. 타로 카드 (전달받거나 자동 선택)
         const cards = (tarotCards || drawCards(1)) as TarotCard[];
@@ -135,9 +139,9 @@ export async function POST(request: NextRequest) {
                             radarScores: guide.radarScores,
                             keyThemes: guide.keyThemes,
                             saju: {
-                                yearPillar: `${saju.yearPillar.stem}${saju.yearPillar.branch}`,
+                                yeonPillar: `${saju.yeonPillar.stem}${saju.yeonPillar.branch}`,
                                 dayMaster: saju.dayMaster,
-                                fullSaju: `${saju.yearPillar.stem}${saju.yearPillar.branch}년 ${saju.monthPillar.stem}${saju.monthPillar.branch}월 ${saju.dayPillar.stem}${saju.dayPillar.branch}일 ${saju.hourPillar.stem}${saju.hourPillar.branch}시`,
+                                fullSaju: `${saju.yeonPillar.stem}${saju.yeonPillar.branch}년 ${saju.monthPillar.stem}${saju.monthPillar.branch}월 ${saju.dayPillar.stem}${saju.dayPillar.branch}일 ${saju.hourPillar.stem}${saju.hourPillar.branch}시`,
                             },
                             astrology: {
                                 sunSign: astrology.sunSign,
@@ -164,9 +168,9 @@ export async function POST(request: NextRequest) {
                         radarScores: guide.radarScores,
                         keyThemes: guide.keyThemes,
                         saju: {
-                            yearPillar: `${saju.yearPillar.stem}${saju.yearPillar.branch}`,
+                            yeonPillar: `${saju.yeonPillar.stem}${saju.yeonPillar.branch}`,
                             dayMaster: saju.dayMaster,
-                            fullSaju: `${saju.yearPillar.stem}${saju.yearPillar.branch}년 ${saju.monthPillar.stem}${saju.monthPillar.branch}월 ${saju.dayPillar.stem}${saju.dayPillar.branch}일 ${saju.hourPillar.stem}${saju.hourPillar.branch}시`,
+                            fullSaju: `${saju.yeonPillar.stem}${saju.yeonPillar.branch}년 ${saju.monthPillar.stem}${saju.monthPillar.branch}월 ${saju.dayPillar.stem}${saju.dayPillar.branch}일 ${saju.hourPillar.stem}${saju.hourPillar.branch}시`,
                         },
                         astrology: {
                             sunSign: astrology.sunSign,
@@ -218,9 +222,9 @@ export async function POST(request: NextRequest) {
                     radarScores: guide.radarScores,
                     keyThemes: guide.keyThemes,
                     saju: {
-                        yearPillar: `${saju.yearPillar.stem}${saju.yearPillar.branch}`,
+                        yeonPillar: `${saju.yeonPillar.stem}${saju.yeonPillar.branch}`,
                         dayMaster: saju.dayMaster,
-                        fullSaju: `${saju.yearPillar.stem}${saju.yearPillar.branch}년 ${saju.monthPillar.stem}${saju.monthPillar.branch}월 ${saju.dayPillar.stem}${saju.dayPillar.branch}일 ${saju.hourPillar.stem}${saju.hourPillar.branch}시`,
+                        fullSaju: `${saju.yeonPillar.stem}${saju.yeonPillar.branch}년 ${saju.monthPillar.stem}${saju.monthPillar.branch}월 ${saju.dayPillar.stem}${saju.dayPillar.branch}일 ${saju.hourPillar.stem}${saju.hourPillar.branch}시`,
                     },
                     astrology: {
                         sunSign: astrology.sunSign,

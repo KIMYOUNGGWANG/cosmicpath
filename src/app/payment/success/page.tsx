@@ -33,7 +33,7 @@ function PaymentSuccessContent() {
                     sessionStorage.setItem('payment_completed', 'true');
 
                     setTimeout(() => {
-                        router.push(`/start?paid=true${readingId ? `&reading_id=${readingId}` : ''}`);
+                        router.replace(`/start?paid=true${readingId ? `&reading_id=${readingId}` : ''}`);
                     }, 1000);
                 } else {
                     setStatus('error');
@@ -76,7 +76,7 @@ function PaymentSuccessContent() {
                         </p>
                     </div>
                     <button
-                        onClick={() => router.push(`/start?paid=true${readingId ? `&reading_id=${readingId}` : ''}`)}
+                        onClick={() => router.replace(`/start?paid=true${readingId ? `&reading_id=${readingId}` : ''}`)}
                         className="w-full py-4 bg-[#A184FF] text-white font-bold rounded-2xl flex items-center justify-center gap-2"
                     >
                         결과 확인하기 <ArrowRight size={18} />
@@ -97,7 +97,7 @@ function PaymentSuccessContent() {
                     </div>
                     <div className="flex flex-col gap-3">
                         <button
-                            onClick={() => router.push(`/start${readingId ? `?reading_id=${readingId}` : ''}`)}
+                            onClick={() => router.replace(`/start${readingId ? `?reading_id=${readingId}` : ''}`)}
                             className="w-full py-4 bg-[#A184FF] text-white font-bold rounded-2xl flex items-center justify-center gap-2"
                         >
                             <RefreshCw size={18} /> 결과로 돌아가기

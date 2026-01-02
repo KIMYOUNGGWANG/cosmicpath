@@ -13,6 +13,7 @@ import { StickyCTA } from '@/components/common/sticky-cta';
 
 import { Suspense } from 'react';
 import { Footer } from '@/components/landing/Footer';
+import { GlobalHeader } from '@/components/common/GlobalHeader';
 
 function CosmicPathContent() {
   const [step, setStep] = useState<'input' | 'mirror' | 'tarot' | 'result'>('input');
@@ -165,8 +166,25 @@ function CosmicPathContent() {
             // Success Flow: If explicitly paid, trigger premium logic
             if (paid === 'true') {
               setIsPremium(true);
-              const startPhase = pendingReportJson ? 3 : 1;
-              startReading(data.tarotCards || [], true, data, pendingReportJson ? JSON.parse(pendingReportJson) : undefined, startPhase);
+              const report = pendingReportJson ? JSON.parse(pendingReportJson) : null;
+
+              const determineNextPhase = (r: any) => {
+                if (!r || !r.summary) return 1;
+                if (!r.saju_sections) return 2;
+                if (!r.fortune_flow) return 3;
+                if (!r.life_areas) return 4;
+                if (!r.special_analysis) return 5;
+                return 6; // All complete
+              };
+
+              const nextPhase = determineNextPhase(report);
+
+              if (nextPhase <= 5) {
+                console.log(`[Resume] Resuming analysis from phase ${nextPhase}`);
+                startReading(data.tarotCards || [], true, data, report || undefined, nextPhase);
+              } else {
+                console.log('[Resume] Analysis already complete. Skipping resumption.');
+              }
             }
 
             // Cleanup query params ONLY, keeping sessionStorage for refresh-resilience
@@ -424,6 +442,8 @@ function CosmicPathContent() {
         </div>
       )}
 
+      <GlobalHeader language={language} showBackButton={step === 'input' || step === 'result'} />
+
       {/* Main Container */}
       <div className="container-cosmic relative z-10 safe-area-top">
         <AnimatePresence mode="wait">
@@ -534,7 +554,7 @@ function CosmicPathContent() {
                   </div>
                 </div>
               ) : reportData && reportData.summary ? (
-                <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 py-12">
+                <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 py-12 pt-32">
                   <DecisionGuard
                     isOpen={reportData.summary.trust_score <= 2 && !isDecisionAccepted}
                     onAccept={() => {
@@ -597,7 +617,7 @@ function CosmicPathContent() {
         isDecisionAccepted={isDecisionAccepted}
       />
 
-    </main>
+    </main >
   );
 }
 

@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { Metadata } from 'next';
+import { GlobalHeader } from '@/components/common/GlobalHeader';
 
 interface SharedPageProps {
     params: Promise<{
@@ -65,18 +66,7 @@ export default async function SharedPage({ params }: SharedPageProps) {
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-deep-navy/20 rounded-full blur-[60px]" />
             </div>
 
-            {/* Header */}
-            <header className="fixed top-0 w-full z-50 px-6 py-4 glass-panel border-b border-white/5">
-                <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-2 text-white/50 hover:text-white transition-colors">
-                        <ChevronLeft size={20} />
-                        <span className="font-cinzel text-lg">CosmicPath</span>
-                    </Link>
-                    <Link href="/" className="px-4 py-2 bg-purple-600/20 text-purple-400 rounded-full text-sm font-medium hover:bg-purple-600/30 transition-all border border-purple-500/30">
-                        {language === 'en' ? 'Get Your Reading' : '내 운세 보기'}
-                    </Link>
-                </div>
-            </header>
+            <GlobalHeader language={language} />
 
             <div className="pt-32 pb-20">
                 <PremiumReport

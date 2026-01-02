@@ -58,7 +58,7 @@ export const TEN_GODS = {
 
 // 사주 결과 타입
 export interface SajuResult {
-  yearPillar: { stem: string; branch: string; };
+  yeonPillar: { stem: string; branch: string; };
   monthPillar: { stem: string; branch: string; };
   dayPillar: { stem: string; branch: string; };
   hourPillar: { stem: string; branch: string; };
@@ -119,6 +119,37 @@ function calculateHourPillar(
 }
 
 /**
+ * 율리우스 날짜 및 태양 황경 계산 (Saju용)
+ */
+function getSunLongitude(birthDate: Date): number {
+  const year = birthDate.getFullYear();
+  const month = birthDate.getMonth() + 1;
+  const day = birthDate.getDate() + (birthDate.getHours() + birthDate.getMinutes() / 60) / 24;
+
+  let y = year;
+  let m = month;
+  if (m <= 2) { y -= 1; m += 12; }
+
+  const A = Math.floor(y / 100);
+  const B = 2 - A + Math.floor(A / 4);
+  const jd = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + B - 1524.5;
+
+  const T = (jd - 2451545.0) / 36525;
+  let L0 = 280.46646 + 36000.76983 * T + 0.0003032 * T * T;
+  L0 = L0 % 360;
+  if (L0 < 0) L0 += 360;
+
+  let M = 357.52911 + 35999.05029 * T - 0.0001537 * T * T;
+  M = M * Math.PI / 180;
+  const C = (1.914602 - 0.004817 * T) * Math.sin(M) + (0.019993 - 0.000101 * T) * Math.sin(2 * M) + 0.000289 * Math.sin(3 * M);
+
+  let sunLongitude = L0 + C;
+  sunLongitude = sunLongitude % 360;
+  if (sunLongitude < 0) sunLongitude += 360;
+  return sunLongitude;
+}
+
+/**
  * 십신 계산
  * 일간(日干)을 기준으로 다른 천간과의 관계를 분석
  */
@@ -141,19 +172,14 @@ function calculateTenGods(dayMaster: string, stems: string[]): Record<string, st
     let godName: string;
 
     if (diff === 0) {
-      // 같은 오행
       godName = sameYinYang ? TEN_GODS.bijian : TEN_GODS.gepcae;
     } else if (diff === 1) {
-      // 내가 생하는 오행
       godName = sameYinYang ? TEN_GODS.sikshin : TEN_GODS.sanggwan;
     } else if (diff === 2) {
-      // 내가 극하는 오행
       godName = sameYinYang ? TEN_GODS.pyeonjae : TEN_GODS.jeongjae;
     } else if (diff === 3) {
-      // 나를 극하는 오행
       godName = sameYinYang ? TEN_GODS.pyeongwan : TEN_GODS.jeonggwan;
     } else {
-      // 나를 생하는 오행
       godName = sameYinYang ? TEN_GODS.pyeonin : TEN_GODS.jeongin;
     }
 
@@ -171,11 +197,30 @@ function calculateTenGods(dayMaster: string, stems: string[]): Record<string, st
 export function calculateSaju(
   birthDate: Date,
   birthHour: number = 12,
+  birthMinute: number = 0,
   isLunar: boolean = false
 ): SajuResult {
-  const year = birthDate.getFullYear();
-  const month = birthDate.getMonth() + 1;
-  const day = birthDate.getDate();
+  // 1. 한국 표준시(KST) 30분 보정 (동경 135도 -> 127.5도)
+  // 실제 태양시 기준으로 만세력을 산출하기 위함
+  const adjDate = new Date(birthDate);
+  adjDate.setHours(birthHour, birthMinute);
+  adjDate.setMinutes(adjDate.getMinutes() - 30);
+
+  const year = adjDate.getFullYear();
+  const month = adjDate.getMonth() + 1;
+  const day = adjDate.getDate();
+  const hour = adjDate.getHours();
+
+  // 2. 조자시(朝子時) 처리: 밤 23시(보정 전 23:30)부터는 다음 날의 일진을 사용
+  const isAfterZi = hour >= 23;
+  const calendarDate = new Date(adjDate);
+  if (isAfterZi) {
+    calendarDate.setDate(calendarDate.getDate() + 1);
+  }
+
+  const calYear = calendarDate.getFullYear();
+  const calMonth = calendarDate.getMonth() + 1;
+  const calDay = calendarDate.getDate();
 
   // korean-lunar-calendar 인스턴스 생성
   const calendar = new KoreanLunarCalendar();
@@ -183,11 +228,11 @@ export function calculateSaju(
   let isValid = false;
 
   if (isLunar) {
-    // 음력 -> 양력 변환 (윤달 여부는 false로 가정 - UI에서 입력받지 않음)
-    isValid = calendar.setLunarDate(year, month, day, false);
+    // 음력 -> 양력 변환
+    isValid = calendar.setLunarDate(calYear, calMonth, calDay, false);
   } else {
     // 양력 날짜 설정
-    isValid = calendar.setSolarDate(year, month, day);
+    isValid = calendar.setSolarDate(calYear, calMonth, calDay);
   }
 
   if (!isValid) {
@@ -196,34 +241,63 @@ export function calculateSaju(
     return calculateSajuFallback(birthDate, birthHour);
   }
 
-  // 한국식 간지(GapJa) 가져오기
+  // 한국식 간지(GapJa) 가져오기 - 일주 계산용으로 주로 사용
   const koreanGapja = calendar.getKoreanGapja();
 
-  // 간지 문자열 파싱
-  const yearPillar = parseGapja(koreanGapja.year);
-  const monthPillar = parseGapja(koreanGapja.month);
+  // 태양 황경 기반 연주/월주 계산 (절기력 반영)
+  const sunLong = getSunLongitude(adjDate);
+
+  // 1. 연주 계산 (입춘 기준)
+  let sajuYear = year;
+  // 1월이나 2월인데 태양이 아직 입춘(315도)에 도달하지 않았으면 작년으로 침
+  if (month <= 2 && sunLong < 315 && sunLong > 200) {
+    sajuYear = year - 1;
+  }
+  const yearStemIdx = (sajuYear - 4) % 10;
+  const yearBranchIdx = (sajuYear - 4) % 12;
+  const yeonPillar = {
+    stem: HEAVENLY_STEMS[(yearStemIdx + 10) % 10],
+    branch: EARTHLY_BRANCHES[(yearBranchIdx + 12) % 12],
+  };
+
+  // 2. 월주 계산 (절기 기준)
+  // 315도(입춘)부터가 인(寅)월
+  const monthBranchMap = ['인', '묘', '진', '사', '오', '미', '신', '유', '술', '해', '자', '축'];
+  const shiftedLong = (sunLong - 315 + 360) % 360;
+  const monthIdx = Math.floor(shiftedLong / 30);
+  const monthBranch = monthBranchMap[monthIdx];
+
+  // 월간 계산 (연주 천간 기반)
+  const yStemIdx = (HEAVENLY_STEMS as readonly string[]).indexOf(yeonPillar.stem);
+  const monthStemIdx = (yStemIdx * 2 + 2 + monthIdx) % 10;
+  const monthPillar = {
+    stem: HEAVENLY_STEMS[monthStemIdx],
+    branch: monthBranch,
+  };
+
+  // 3. 일주 계산 (라이브러리 결과 사용 + 조자시 반영됨)
   const dayPillar = parseGapja(koreanGapja.day);
 
-  // 시주는 일간 기반으로 계산 (라이브러리에서 제공하지 않음)
-  const hourPillar = calculateHourPillar(birthHour, dayPillar.stem);
+  // 시주는 보정된 시간(adjDate) 기반으로 계산
+  const hourPillar = calculateHourPillar(hour, dayPillar.stem);
 
   // 일간 (Day Master)
   const dayMaster = dayPillar.stem;
 
   // 각 주의 오행
   const elements = [
-    yearPillar, monthPillar, dayPillar, hourPillar
+    yeonPillar, monthPillar, dayPillar, hourPillar
   ].map(pillar => ({
     stem: STEM_ELEMENTS[pillar.stem],
     branch: BRANCH_ELEMENTS[pillar.branch],
   }));
 
   // 십신 계산
-  const stems = [yearPillar.stem, monthPillar.stem, dayPillar.stem, hourPillar.stem];
+  const stems = [yeonPillar.stem, monthPillar.stem, dayPillar.stem, hourPillar.stem];
   const tenGods = calculateTenGods(dayMaster, stems);
 
   return {
-    yearPillar,
+    yeonPillar,
     monthPillar,
     dayPillar,
     hourPillar,
@@ -231,8 +305,8 @@ export function calculateSaju(
     elements,
     tenGods,
     rawGapja: {
-      year: koreanGapja.year,
-      month: koreanGapja.month,
+      year: `${yeonPillar.stem}${yeonPillar.branch}년`,
+      month: `${monthPillar.stem}${monthPillar.branch}월`,
       day: koreanGapja.day,
     }
   };
@@ -244,18 +318,34 @@ export function calculateSaju(
  */
 function calculateSajuFallback(
   birthDate: Date,
-  birthHour: number
+  birthHour: number = 12,
+  birthMinute: number = 0
 ): SajuResult {
-  const year = birthDate.getFullYear();
-  const month = birthDate.getMonth() + 1;
-  const day = birthDate.getDate();
+  // 1. 한국 표준시(KST) 30분 보정
+  const adjDate = new Date(birthDate);
+  adjDate.setHours(birthHour, birthMinute);
+  adjDate.setMinutes(adjDate.getMinutes() - 30);
 
-  // 년주 (기존 알고리즘)
-  const stemIndex = (year - 4) % 10;
-  const branchIndex = (year - 4) % 12;
-  const yearPillar = {
-    stem: HEAVENLY_STEMS[(stemIndex + 10) % 10],
-    branch: EARTHLY_BRANCHES[(branchIndex + 12) % 12],
+  const year = adjDate.getFullYear();
+  const month = adjDate.getMonth() + 1;
+  const day = adjDate.getDate();
+  const hour = adjDate.getHours();
+
+  // 2. 조자시 처리
+  const isAfterZi = hour >= 23;
+  const targetDate = new Date(adjDate);
+  if (isAfterZi) targetDate.setDate(targetDate.getDate() + 1);
+
+  const sajuYear = targetDate.getFullYear();
+  const sajuMonth = targetDate.getMonth() + 1;
+  const sajuDay = targetDate.getDate();
+
+  // 년주
+  const yearStemIdx = (sajuYear - 4) % 10;
+  const yearBranchIdx = (sajuYear - 4) % 12;
+  const yeonPillar = {
+    stem: HEAVENLY_STEMS[(yearStemIdx + 10) % 10],
+    branch: EARTHLY_BRANCHES[(yearBranchIdx + 12) % 12],
   };
 
   // 월주 (간략화)
@@ -264,22 +354,22 @@ function calculateSajuFallback(
     '미', '신', '유', '술', '해', '자'
   ];
   const adjustedMonth = month - 1;
-  const yearStemIndex = (HEAVENLY_STEMS as readonly string[]).indexOf(yearPillar.stem);
+  const yeonStemIndex = (HEAVENLY_STEMS as readonly string[]).indexOf(yeonPillar.stem);
   const monthStemStartMap: Record<number, number> = {
     0: 2, 5: 2, 1: 4, 6: 4, 2: 6, 7: 6, 3: 8, 8: 8, 4: 0, 9: 0,
   };
-  const startStem = monthStemStartMap[yearStemIndex] || 0;
+  const startStem = monthStemStartMap[yeonStemIndex] || 0;
   const monthStemIndex = (startStem + adjustedMonth) % 10;
   const monthPillar = {
     stem: HEAVENLY_STEMS[monthStemIndex],
     branch: monthBranchMap[adjustedMonth],
   };
 
-  // 일주 (율리우스일 기반)
-  const a = Math.floor((14 - month) / 12);
-  const y = year + 4800 - a;
-  const m = month + 12 * a - 3;
-  const julianDay = day + Math.floor((153 * m + 2) / 5) + 365 * y +
+  // 3. 일주 (율리우스일 기반 - 보정된 날짜 사용)
+  const a = Math.floor((14 - sajuMonth) / 12);
+  const y = sajuYear + 4800 - a;
+  const m = sajuMonth + 12 * a - 3;
+  const julianDay = sajuDay + Math.floor((153 * m + 2) / 5) + 365 * y +
     Math.floor(y / 4) - Math.floor(y / 100) +
     Math.floor(y / 400) - 32045;
   const baseJulianDay = 2415021;
@@ -291,21 +381,21 @@ function calculateSajuFallback(
     branch: EARTHLY_BRANCHES[dayBranchIdx],
   };
 
-  const hourPillar = calculateHourPillar(birthHour, dayPillar.stem);
+  const hourPillar = calculateHourPillar(hour, dayPillar.stem);
   const dayMaster = dayPillar.stem;
 
   const elements = [
-    yearPillar, monthPillar, dayPillar, hourPillar
+    yeonPillar, monthPillar, dayPillar, hourPillar
   ].map(pillar => ({
     stem: STEM_ELEMENTS[pillar.stem],
     branch: BRANCH_ELEMENTS[pillar.branch],
   }));
 
-  const stems = [yearPillar.stem, monthPillar.stem, dayPillar.stem, hourPillar.stem];
+  const stems = [yeonPillar.stem, monthPillar.stem, dayPillar.stem, hourPillar.stem];
   const tenGods = calculateTenGods(dayMaster, stems);
 
   return {
-    yearPillar,
+    yeonPillar,
     monthPillar,
     dayPillar,
     hourPillar,
@@ -319,6 +409,6 @@ function calculateSajuFallback(
  * 사주를 읽기 쉬운 문자열로 변환
  */
 export function formatSaju(saju: SajuResult): string {
-  const { yearPillar, monthPillar, dayPillar, hourPillar } = saju;
-  return `${yearPillar.stem}${yearPillar.branch}년 ${monthPillar.stem}${monthPillar.branch}월 ${dayPillar.stem}${dayPillar.branch}일 ${hourPillar.stem}${hourPillar.branch}시`;
+  const { yeonPillar, monthPillar, dayPillar, hourPillar } = saju;
+  return `${yeonPillar.stem}${yeonPillar.branch}년 ${monthPillar.stem}${monthPillar.branch}월 ${dayPillar.stem}${dayPillar.branch}일 ${hourPillar.stem}${hourPillar.branch}시`;
 }
