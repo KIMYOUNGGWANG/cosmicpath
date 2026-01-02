@@ -3,7 +3,7 @@
  */
 export const READING_PRODUCT = {
     id: 'cosmicpath_reading_v1',
-    productId: 'prod_ThdoB65NmPU37y', // Stripe Dashboard의 Product ID
+    productId: 'prod_TiKGKB72vWXaVr', // Stripe Dashboard의 Product ID (Test Mode)
     name: 'CosmicPath 통합 운명 리포트',
     description: '사주 + 점성술 + 타로 통합 분석 프리미엄 결과지',
     currency: 'USD',
