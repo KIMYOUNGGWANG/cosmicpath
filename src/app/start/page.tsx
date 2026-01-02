@@ -75,7 +75,15 @@ function CosmicPathContent() {
 
       const paid = searchParams.get('paid');
       const canceled = searchParams.get('canceled');
+      const reset = searchParams.get('reset') === 'true';
       const isSessionActive = sessionStorage.getItem('is_session_active') === 'true';
+
+      if (reset) {
+        console.log('[Resume] Reset flag detected. Clearing session.');
+        sessionStorage.clear(); // Or clear specific items
+        setHasCheckedResume(true);
+        return;
+      }
 
       if (paid === 'true' || canceled === 'true' || isSessionActive) {
         const pendingData = sessionStorage.getItem('pending_reading_data');
@@ -132,11 +140,8 @@ function CosmicPathContent() {
   // Step 1: Birthdate Submission -> Go to Tarot
   const handleInputSubmit = (data: ReadingData) => {
     // Clear old session when starting a truly new reading
-    sessionStorage.removeItem('is_session_active');
-    sessionStorage.removeItem('pending_reading_data');
-    sessionStorage.removeItem('pending_report_data');
-    sessionStorage.removeItem('pending_metadata');
-    sessionStorage.removeItem('decision_accepted');
+    sessionStorage.clear();
+    sessionStorage.setItem('is_session_active', 'false'); // Explicitly false until results are ready
 
     setReadingData(data);
     setLanguage(data.language);
@@ -148,6 +153,13 @@ function CosmicPathContent() {
   // Step 2: Tarot Completion -> Start Partial Reading
   const handleTarotComplete = async (cards: { name: string; isReversed: boolean }[]) => {
     setSelectedCards(cards);
+
+    // Mark session as active and persist data once we reach results
+    sessionStorage.setItem('is_session_active', 'true');
+    if (readingData) {
+      sessionStorage.setItem('pending_reading_data', JSON.stringify({ ...readingData, tarotCards: cards }));
+    }
+
     setStep('result');
     setIsLoading(true);
     setIsConverging(true);
