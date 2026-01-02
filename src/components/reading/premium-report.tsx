@@ -1,9 +1,9 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { ChevronDown, Sparkles, Star, Shield, TrendingUp, Calendar, Target, Zap, Lock, CircleHelp, Download, Printer } from 'lucide-react';
+import { ChevronDown, Sparkles, Star, Shield, TrendingUp, Calendar, Target, Zap, Lock, CircleHelp, Download, Printer, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PrintLayout } from './PrintLayout';
 import { CosmicRadar } from './cosmic-radar';
@@ -12,6 +12,7 @@ import { EvidenceTooltip } from '../ui/confidence-badge';
 import { TarotDetailModal } from './tarot-detail-modal';
 import { SharePanel } from '../share/SharePanel';
 import { BlindSpotTeaser } from './blind-spot-teaser';
+import { StickyCTA } from '../common/sticky-cta';
 import { FortuneTimelineChart, TimelineScore } from './FortuneTimelineChart';
 import { SoulmateSection, SoulmateData } from './SoulmateSection';
 import { LuckyAssetsGrid, LuckyAssetsData } from './LuckyAssetsGrid';
@@ -136,6 +137,12 @@ interface PremiumReportProps {
     language?: 'ko' | 'en';
     shareUrl?: string;
     onUnlock?: () => void;
+    isPremium?: boolean;
+}
+
+interface MetadataWithReadingData extends NonNullable<PremiumReportProps['metadata']> {
+    readingData?: any;
+    tarotCards?: any[];
 }
 
 // ... (existing helper)
@@ -227,7 +234,7 @@ function CosmicRadarMemo({ report, metadata, language }: { report: PremiumReport
     );
 }
 
-export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock }: PremiumReportProps) {
+export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock, isPremium }: PremiumReportProps) {
     const isEn = language === 'en';
     const [selectedCardIdx, setSelectedCardIdx] = useState<number | null>(null);
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -239,6 +246,9 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
         documentTitle: `CosmicPath_Report_${report.summary.title.replace(/\s+/g, '_')}`,
     });
 
+    // State for dynamic price in case we are on static page
+    const [dynamicPrice, setDynamicPrice] = useState<string>('$3.99');
+
     const handleUnlock = () => {
         if (onUnlock) {
             onUnlock();
@@ -246,6 +256,24 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
             setIsCheckoutOpen(true);
         }
     };
+
+    // Fetch dynamic price if not provided
+    useEffect(() => {
+        if (!onUnlock) {
+            const fetchPrice = async () => {
+                try {
+                    const response = await fetch('/api/payment/price');
+                    const data = await response.json();
+                    if (data.formattedPrice) {
+                        setDynamicPrice(data.formattedPrice);
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch dynamic price:', error);
+                }
+            };
+            fetchPrice();
+        }
+    }, [onUnlock]);
 
     // Dynamic Teaser Text Generator
     const getTeaserText = (section: string) => {
@@ -314,6 +342,13 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 <section>
                     {report.fortune_flow ? (
                         <FortuneFlowSection data={report.fortune_flow} language={language} />
+                    ) : isPremium ? (
+                        <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 mx-4 md:px-6">
+                            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-acc-gold/50" />
+                            <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
+                                {isEn ? "Syncing Cosmic Flow..." : "심층 운세 동기화 중..."}
+                            </p>
+                        </div>
                     ) : (
                         <div className="px-4 md:px-6">
                             <BlindSpotTeaser
@@ -338,6 +373,13 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                             <LifeAreasSection data={report.life_areas} language={language} />
                             {report.soulmate && <SoulmateSection data={report.soulmate} language={language} />}
                         </>
+                    ) : isPremium ? (
+                        <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 mx-4 md:px-6">
+                            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-star-yellow/50" />
+                            <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
+                                {isEn ? "Unveiling Life Secrets..." : "영역별 상세 분석 조율 중..."}
+                            </p>
+                        </div>
                     ) : (
                         <div className="px-4 md:px-6">
                             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -370,6 +412,13 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                 <LegacyDeepDiveSection data={report.deep_dive} language={language} />
                             )}
                         </>
+                    ) : isPremium ? (
+                        <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 mx-4 md:px-6">
+                            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-purple-400/50" />
+                            <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
+                                {isEn ? "Finalizing Action Plan..." : "특수 비책 및 솔루션 도출 중..."}
+                            </p>
+                        </div>
                     ) : (
                         <div className="px-4 md:px-6">
                             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -456,7 +505,19 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 isOpen={isCheckoutOpen}
                 onClose={() => setIsCheckoutOpen(false)}
                 currentReport={report}
+                metadata={metadata}
+                readingData={(metadata as MetadataWithReadingData)?.readingData}
             />
+
+            {/* Sticky CTA for Partial Result (Show if we can unlock) */}
+            {!report.fortune_flow && !isPremium && (
+                <StickyCTA
+                    price={dynamicPrice}
+                    originalPrice="$19.90"
+                    onUnlock={handleUnlock}
+                    language={language}
+                />
+            )}
 
             {/* Toss Payment Modal (Commented out)
             {isCheckoutOpen && (
@@ -1098,11 +1159,17 @@ function LockedSection({ title, icon, language, onUnlock }: { title: string; ico
                     <Lock className="w-6 h-6 text-white/50" />
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2 text-center">
-                    {title} {isEn ? 'Analysis in Progress' : '분석 진행 중'}
+                    {title} {isEn ? 'Locked' : '잠금됨'}
                 </h3>
                 <p className="text-sm text-gray-400 mb-6 text-center max-w-xs">
-                    {isEn ? 'This section requires premium access (Currently bypassed for testing).' : '프리미엄 데이터가 필요합니다 (현재 테스트를 위해 개방됨).'}
+                    {isEn ? 'Full analysis requires premium access.' : '전체 분석을 위해 프리미엄 결제가 필요합니다.'}
                 </p>
+                <button
+                    onClick={onUnlock}
+                    className="px-6 py-2 bg-acc-gold text-black font-bold rounded-full text-sm hover:scale-105 transition-transform"
+                >
+                    {isEn ? 'Unlock' : '잠금 해제'}
+                </button>
             </div>
 
             {/* Fake Content Background */}

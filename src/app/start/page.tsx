@@ -70,11 +70,14 @@ function CosmicPathContent() {
   // Resume Reading after Payment
   useEffect(() => {
     const checkResume = async () => {
-      // Small delay to ensure sessionStorage is populated
-      await new Promise(resolve => setTimeout(resolve, 100));
-
       const paid = searchParams.get('paid');
       const canceled = searchParams.get('canceled');
+      const readingIdFromUrl = searchParams.get('reading_id');
+
+      // Small delay ONLY if we don't have explicit URL flags (relying on sessionStorage only)
+      if (!paid && !canceled && !readingIdFromUrl) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
       const reset = searchParams.get('reset') === 'true';
       const isSessionActive = sessionStorage.getItem('is_session_active') === 'true';
 
@@ -85,12 +88,44 @@ function CosmicPathContent() {
         return;
       }
 
-      if (paid === 'true' || canceled === 'true' || isSessionActive) {
-        const pendingData = sessionStorage.getItem('pending_reading_data');
-        const pendingReportJson = sessionStorage.getItem('pending_report_data');
-        const pendingMetadataJson = sessionStorage.getItem('pending_metadata');
+      const readingId = readingIdFromUrl || sessionStorage.getItem('pending_reading_id');
 
-        if (pendingData) {
+      if (readingId || paid === 'true' || canceled === 'true' || isSessionActive) {
+        if (readingId && !sessionStorage.getItem('pending_reading_id')) {
+          sessionStorage.setItem('pending_reading_id', readingId);
+        }
+
+        let pendingData = sessionStorage.getItem('pending_reading_data');
+        let pendingReportJson = sessionStorage.getItem('pending_report_data');
+        let pendingMetadataJson = sessionStorage.getItem('pending_metadata');
+
+        if (readingId && (!pendingData || pendingData === 'null')) {
+          try {
+            console.log('[Resume] Fetching reading from DB:', readingId);
+            const response = await fetch(`/api/reading/save?id=${readingId}`);
+            if (response.ok) {
+              const saved = await response.json();
+              if (saved.success) {
+                const rData = saved.metadata?.readingData || null;
+                const rReport = saved.data || null;
+                const rMeta = saved.metadata || null;
+
+                pendingData = JSON.stringify(rData);
+                pendingReportJson = JSON.stringify(rReport);
+                pendingMetadataJson = JSON.stringify(rMeta);
+
+                // Persist back to sessionStorage for future refreshes
+                if (rData) sessionStorage.setItem('pending_reading_data', pendingData);
+                if (rReport) sessionStorage.setItem('pending_report_data', pendingReportJson);
+                if (rMeta) sessionStorage.setItem('pending_metadata', pendingMetadataJson);
+              }
+            }
+          } catch (err) {
+            console.error('[Resume] DB fetch failed:', err);
+          }
+        }
+
+        if (pendingData && pendingData !== 'null') {
           try {
             console.log('[Resume] Restoring session state...', { paid, canceled, isSessionActive });
             const data = JSON.parse(pendingData);
@@ -105,14 +140,26 @@ function CosmicPathContent() {
               setReportData(JSON.parse(pendingReportJson));
             }
             if (pendingMetadataJson && pendingMetadataJson !== 'null') {
-              setMetadata(JSON.parse(pendingMetadataJson));
+              const meta = JSON.parse(pendingMetadataJson);
+              setMetadata(meta);
+              if (meta.language) setLanguage(meta.language as 'ko' | 'en');
+              if (meta.isPremium) setIsPremium(true);
             }
             if (sessionStorage.getItem('decision_accepted') === 'true') {
               setIsDecisionAccepted(true);
             }
+            if (sessionStorage.getItem('is_premium_user') === 'true') {
+              setIsPremium(true);
+            }
 
             // Persistence: Always go to result if we have data
             setStep('result');
+
+            // If we have a saved ID, sync the URL
+            const pendingId = sessionStorage.getItem('pending_reading_id');
+            if (pendingId) {
+              window.history.replaceState({ readingId: pendingId }, '', `/share/${pendingId}${window.location.search}`);
+            }
 
             // Success Flow: If explicitly paid, trigger premium logic
             if (paid === 'true') {
@@ -139,8 +186,15 @@ function CosmicPathContent() {
 
   // Step 1: Birthdate Submission -> Go to Tarot
   const handleInputSubmit = (data: ReadingData) => {
-    // Clear old session when starting a truly new reading
-    sessionStorage.clear();
+    const keysToClear = [
+      'pending_reading_data',
+      'pending_report_data',
+      'pending_metadata',
+      'pending_reading_id',
+      'payment_completed',
+      'decision_accepted'
+    ];
+    keysToClear.forEach(key => sessionStorage.removeItem(key));
     sessionStorage.setItem('is_session_active', 'false'); // Explicitly false until results are ready
 
     setReadingData(data);
@@ -252,28 +306,40 @@ function CosmicPathContent() {
         // Merge results
         accumulatedReport = { ...accumulatedReport, ...result.report };
 
-        // Update intermediate state (optional, if you want to show partial results)
-        // setReportData(accumulatedReport); 
+        // Update UI immediately for each phase
+        setReportData({ ...accumulatedReport });
+        sessionStorage.setItem('pending_report_data', JSON.stringify(accumulatedReport));
 
         // Metadata update (once is enough, usually from first phase or accumulated)
         if (result.metadata) {
           accumulatedMetadata = { ...accumulatedMetadata, ...result.metadata };
-          setMetadata(accumulatedMetadata);
+          setMetadata({ ...accumulatedMetadata });
+          sessionStorage.setItem('pending_metadata', JSON.stringify(accumulatedMetadata));
         }
       }
 
-      // Finalize
-      setReportData(accumulatedReport);
-
-      // Save result to DB for sharing (Async)
+      // Save result to DB for sharing (Async) - Final save
+      const isComplete = maxPhase === 5;
+      if (isComplete) {
+        setIsPremium(true);
+        sessionStorage.setItem('is_premium_user', 'true');
+      }
       (async () => {
         try {
+          const existingId = sessionStorage.getItem('pending_reading_id');
           const response = await fetch('/api/reading/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+              id: existingId || undefined,
               data: accumulatedReport,
-              metadata: { ...accumulatedMetadata, language }
+              metadata: {
+                ...accumulatedMetadata,
+                isPremium: isComplete,
+                readingData: dataToUse,
+                tarotCards: cards,
+                language
+              }
             })
           });
 
@@ -285,23 +351,20 @@ function CosmicPathContent() {
 
           const { id } = await response.json();
           if (id) {
+            sessionStorage.setItem('pending_reading_id', id);
             const origin = window.location.origin;
             const appUrl = origin.endsWith('/') ? origin.slice(0, -1) : origin;
             const newUrl = `/share/${id}`;
             setShareUrl(`${appUrl}${newUrl}`);
 
             // 브라우저 주소창 동기화 (새로고침 시 결과 유지)
-            window.history.replaceState(
-              { readingId: id },
-              '',
-              newUrl
-            );
+            window.history.replaceState({ readingId: id }, '', newUrl);
 
-            // Send Email if user email exists in localStorage (비회원 주문)
+            // Send Email ONLY if this is a completed premium reading
             const userEmail = localStorage.getItem('user_email');
-            if (userEmail) {
+            if (userEmail && isComplete) {
               const birthInfoStr = `${dataToUse.birthDate} ${dataToUse.birthTime}생`;
-              const sajuStr = (metadata as any)?.saju?.fullSaju || '';
+              const sajuStr = (accumulatedMetadata as any)?.saju?.fullSaju || '';
               const contextMap: Record<string, string> = {
                 career: '커리어/직업',
                 love: '연애/결혼',
@@ -352,7 +415,11 @@ function CosmicPathContent() {
       {!hasCheckedResume && (
         <div className="flex flex-col items-center justify-center min-h-screen relative z-20">
           <div className="w-12 h-12 border-4 border-accent-gold border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-white/60 text-sm animate-pulse tracking-widest font-cinzel">CALIBRATING...</p>
+          <p className="text-white/60 text-sm animate-pulse tracking-widest font-cinzel">
+            {searchParams.get('paid') === 'true'
+              ? (language === 'en' ? 'PAYMENT VERIFIED! PREPARING PREMIUM REPORT...' : '결제 확인 완료! 프리미엄 리포트를 준비 중입니다...')
+              : 'CALIBRATING...'}
+          </p>
         </div>
       )}
 
@@ -482,6 +549,7 @@ function CosmicPathContent() {
                       language={language}
                       shareUrl={shareUrl}
                       onUnlock={handleUpgrade}
+                      isPremium={isPremium}
                     />
                   )}
                 </div>
@@ -533,15 +601,6 @@ function CosmicPathContent() {
         isDecisionAccepted={isDecisionAccepted}
       />
 
-      {/* Sticky CTA for Partial Result */}
-      {step === 'result' && !isPremium && (
-        <StickyCTA
-          price={dynamicPrice}
-          originalPrice="$19.90"
-          onUnlock={handleUpgrade}
-          language={language}
-        />
-      )}
     </main>
   );
 }
