@@ -87,7 +87,7 @@ export function HeroSection() {
                     className="mt-12"
                 >
                     <Link
-                        href="/start"
+                        href="/start?reset=true"
                         className="group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-acc-gold via-amber-300 to-acc-gold bg-[length:200%_auto] animate-shimmer text-deep-navy font-bold text-lg tracking-widest rounded-full shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:shadow-[0_0_40px_rgba(212,175,55,0.6)] hover:scale-105 transition-all duration-300"
                     >
                         <span className="relative z-10 flex items-center gap-2">
