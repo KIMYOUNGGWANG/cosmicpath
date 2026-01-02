@@ -18,6 +18,7 @@ import { SoulmateSection, SoulmateData } from './SoulmateSection';
 import { LuckyAssetsGrid, LuckyAssetsData } from './LuckyAssetsGrid';
 import { GlossarySection } from './GlossarySection';
 import { PaymentModal } from '../payment/PaymentModal';
+import { READING_PRODUCT } from '@/lib/payment/payment-config';
 // import TossPaymentWidget from '../payment/TossPaymentWidget'; // Toss Payments (Commented out)
 
 // 새로운 Premium Report 타입 (기존 CosmicReport 대체)
@@ -248,6 +249,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
 
     // State for dynamic price in case we are on static page
     const [dynamicPrice, setDynamicPrice] = useState<string>('$3.99');
+    const [originalPrice, setOriginalPrice] = useState<string>('$19.90');
 
     const handleUnlock = () => {
         if (onUnlock) {
@@ -257,23 +259,25 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
         }
     };
 
-    // Fetch dynamic price if not provided
+    // Fetch dynamic price
     useEffect(() => {
-        if (!onUnlock) {
-            const fetchPrice = async () => {
-                try {
-                    const response = await fetch('/api/payment/price');
-                    const data = await response.json();
-                    if (data.formattedPrice) {
-                        setDynamicPrice(data.formattedPrice);
-                    }
-                } catch (error) {
-                    console.error('Failed to fetch dynamic price:', error);
+        const fetchPrice = async () => {
+            try {
+                // Pass productId explicitly for clarity
+                const response = await fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`);
+                const data = await response.json();
+                if (data.formattedPrice) {
+                    setDynamicPrice(data.formattedPrice);
                 }
-            };
-            fetchPrice();
-        }
-    }, [onUnlock]);
+                if (data.metadata?.compare_at_price) {
+                    setOriginalPrice(data.metadata.compare_at_price);
+                }
+            } catch (error) {
+                console.error('Failed to fetch dynamic price:', error);
+            }
+        };
+        fetchPrice();
+    }, []);
 
     // Dynamic Teaser Text Generator
     const getTeaserText = (section: string) => {
@@ -513,7 +517,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
             {!report.fortune_flow && !isPremium && (
                 <StickyCTA
                     price={dynamicPrice}
-                    originalPrice="$19.90"
+                    originalPrice={originalPrice}
                     onUnlock={handleUnlock}
                     language={language}
                 />
