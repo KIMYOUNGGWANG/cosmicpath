@@ -78,7 +78,7 @@ export function CrossroadsSection() {
                     {/* Magnetic Button Area */}
                     <div className="relative group inline-block">
                         <Link
-                            href="/start"
+                            href="/start?reset=true"
                             className="relative z-10 flex flex-col items-center justify-center px-16 py-6 bg-white text-deep-navy rounded-xl hover:scale-105 transition-all duration-300 shadow-[0_0_40px_rgba(255,255,255,0.4)] group-hover:shadow-[0_0_60px_rgba(255,255,255,0.6)]"
                         >
                             <div className="flex items-center gap-3">

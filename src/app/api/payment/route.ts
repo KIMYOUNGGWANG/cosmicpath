@@ -8,15 +8,18 @@ import { READING_PRODUCT } from '@/lib/payment/payment-config';
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { productId, email } = body;
+        const { productId, email, readingId } = body;
 
         const origin = request.headers.get('origin') || 'http://localhost:3000';
 
         const session = await createCheckoutSession({
             productId: productId || READING_PRODUCT.id,
-            successUrl: `${origin}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+            successUrl: `${origin}/payment/success?session_id={CHECKOUT_SESSION_ID}&reading_id=${readingId || ''}`,
             cancelUrl: `${origin}/start?canceled=true`,
-            metadata: { email: email || '' },
+            metadata: {
+                email: email || '',
+                readingId: readingId || ''
+            },
         });
 
         if (!session.url) {

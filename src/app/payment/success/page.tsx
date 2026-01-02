@@ -12,6 +12,7 @@ function PaymentSuccessContent() {
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     const sessionId = searchParams.get('session_id');
+    const readingId = searchParams.get('reading_id');
 
     useEffect(() => {
         const verifyPayment = async () => {
@@ -32,8 +33,8 @@ function PaymentSuccessContent() {
                     sessionStorage.setItem('payment_completed', 'true');
 
                     setTimeout(() => {
-                        router.push('/start?paid=true');
-                    }, 2000);
+                        router.push(`/start?paid=true${readingId ? `&reading_id=${readingId}` : ''}`);
+                    }, 1000);
                 } else {
                     setStatus('error');
                     setErrorMsg('결제가 완료되지 않았습니다.');
@@ -75,7 +76,7 @@ function PaymentSuccessContent() {
                         </p>
                     </div>
                     <button
-                        onClick={() => router.push('/')}
+                        onClick={() => router.push(`/start?paid=true${readingId ? `&reading_id=${readingId}` : ''}`)}
                         className="w-full py-4 bg-[#A184FF] text-white font-bold rounded-2xl flex items-center justify-center gap-2"
                     >
                         결과 확인하기 <ArrowRight size={18} />
@@ -96,7 +97,7 @@ function PaymentSuccessContent() {
                     </div>
                     <div className="flex flex-col gap-3">
                         <button
-                            onClick={() => router.push('/start')}
+                            onClick={() => router.push(`/start${readingId ? `?reading_id=${readingId}` : ''}`)}
                             className="w-full py-4 bg-[#A184FF] text-white font-bold rounded-2xl flex items-center justify-center gap-2"
                         >
                             <RefreshCw size={18} /> 결과로 돌아가기

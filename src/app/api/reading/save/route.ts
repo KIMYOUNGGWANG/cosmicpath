@@ -16,7 +16,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
         }
 
-        const { data, metadata } = body;
+        const { data, metadata, id } = body;
 
         if (!data) {
             return NextResponse.json({ error: 'Missing data' }, { status: 400 });
@@ -41,12 +41,20 @@ export async function POST(request: Request) {
             hasMetadata: !!metaStr
         });
 
-        const result = await prisma.readingResult.create({
-            data: {
-                data: dataStr,
-                metadata: metaStr,
-            },
-        });
+        const result = id
+            ? await prisma.readingResult.update({
+                where: { id },
+                data: {
+                    data: dataStr,
+                    metadata: metaStr,
+                },
+            })
+            : await prisma.readingResult.create({
+                data: {
+                    data: dataStr,
+                    metadata: metaStr,
+                },
+            });
 
         console.log('Save API: Success!', result.id);
         return NextResponse.json({ id: result.id, success: true });
@@ -66,8 +74,29 @@ export async function POST(request: Request) {
     }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get('id');
+
+        if (id) {
+            const result = await prisma.readingResult.findUnique({
+                where: { id },
+            });
+
+            if (!result) {
+                return NextResponse.json({ error: 'Not found' }, { status: 404 });
+            }
+
+            return NextResponse.json({
+                success: true,
+                id: result.id,
+                data: JSON.parse(result.data),
+                metadata: result.metadata ? JSON.parse(result.metadata) : null,
+                createdAt: result.createdAt,
+            });
+        }
+
         const count = await prisma.readingResult.count();
         return NextResponse.json({ status: 'ok', count });
     } catch (error: any) {

@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { PremiumReport } from '@/components/reading/premium-report';
+import { SharedPageRedirect } from '@/components/reading/shared-page-redirect';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
@@ -54,6 +55,7 @@ export default async function SharedPage({ params }: SharedPageProps) {
 
     return (
         <main className="min-h-screen relative overflow-hidden text-foreground selection:bg-star-yellow selection:text-deep-navy font-outfit">
+            <SharedPageRedirect id={id} />
 
 
             {/* Refined Cosmic Atmosphere - Background Effects */}
@@ -81,6 +83,7 @@ export default async function SharedPage({ params }: SharedPageProps) {
                     report={reportData}
                     metadata={metadata}
                     language={language}
+                    isPremium={metadata?.isPremium}
                     shareUrl={`${process.env.NEXT_PUBLIC_APP_URL || 'https://cosmicpath.app'}/share/${id}`}
                 />
             </div>

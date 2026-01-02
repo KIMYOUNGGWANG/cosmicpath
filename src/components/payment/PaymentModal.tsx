@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { READING_PRODUCT } from '@/lib/payment/payment-config';
@@ -27,6 +27,25 @@ export function PaymentModal({
 }: PaymentModalProps) {
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [dynamicPrice, setDynamicPrice] = useState<string>('$3.99');
+
+    // Fetch dynamic price on mount or when product ID changes
+    useEffect(() => {
+        const fetchPrice = async () => {
+            try {
+                const response = await fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.formattedPrice) {
+                        setDynamicPrice(data.formattedPrice);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch dynamic price:', error);
+            }
+        };
+        fetchPrice();
+    }, []);
 
     const handlePayment = async () => {
         setIsLoading(true);
@@ -52,12 +71,14 @@ export function PaymentModal({
             onPaymentStart?.();
 
             // 2. Stripe 결제 세션 생성 요청
+            const readingId = sessionStorage.getItem('pending_reading_id');
             const response = await fetch('/api/payment', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     productId: READING_PRODUCT.productId,
-                    email
+                    email,
+                    readingId: readingId || undefined
                 }),
             });
 
@@ -109,7 +130,7 @@ export function PaymentModal({
                                     전체 분석 결과와 솔루션을 확인하세요.
                                 </p>
                                 <div className="mt-6 inline-block px-4 py-2 bg-[#A184FF]/10 rounded-full border border-[#A184FF]/20">
-                                    <span className="text-[#A184FF] font-bold text-xl">$3.99</span>
+                                    <span className="text-[#A184FF] font-bold text-xl">{dynamicPrice}</span>
                                 </div>
                             </div>
 
