@@ -40,7 +40,7 @@ export function Navigation() {
                 {/* Actions */}
                 <div className="flex items-center gap-8">
                     <Link
-                        href="/start"
+                        href="/start?reset=true"
                         className="px-5 py-2 bg-white/10 border border-white/20 text-xs font-bold tracking-[0.1em] text-starlight hover:bg-acc-gold hover:text-deep-navy hover:border-acc-gold transition-all duration-300 uppercase backdrop-blur-sm rounded-full"
                     >
                         Start Analysis
