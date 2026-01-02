@@ -12,6 +12,7 @@ import { PaymentModal } from '@/components/payment/PaymentModal';
 import { StickyCTA } from '@/components/common/sticky-cta';
 
 import { Suspense } from 'react';
+import { Footer } from '@/components/landing/Footer';
 
 function CosmicPathContent() {
   const [step, setStep] = useState<'input' | 'mirror' | 'tarot' | 'result'>('input');
@@ -582,12 +583,7 @@ function CosmicPathContent() {
       </div>
 
       {/* Ambient Footer */}
-      <footer className="w-full py-12 text-center relative z-10 px-6">
-        <div className="h-[1px] w-24 bg-white/20 mx-auto mb-6" />
-        <p className="text-white/50 text-[10px] tracking-[0.5em] uppercase font-bold">
-          © 2025 CosmicPath. Unveiling the Eternal Flow.
-        </p>
-      </footer>
+      <Footer />
 
       <PaymentModal
         isOpen={isPaymentModalOpen}

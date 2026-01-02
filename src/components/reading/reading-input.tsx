@@ -149,6 +149,13 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                                 type="date"
                                 value={birthDate}
                                 onChange={(e) => setBirthDate(e.target.value)}
+                                max="9999-12-31"
+                                style={{ colorScheme: 'dark' }}
+                                onClick={(e) => {
+                                    try {
+                                        if (e.currentTarget.showPicker) e.currentTarget.showPicker();
+                                    } catch (err) { }
+                                }}
                                 className="w-full bg-transparent border-b border-white/10 py-3 text-lg text-starlight focus:outline-none focus:border-acc-gold transition-colors font-mono uppercase"
                                 required
                             />
@@ -160,6 +167,12 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                                 value={birthTime}
                                 onChange={(e) => setBirthTime(e.target.value)}
                                 disabled={unknownTime}
+                                style={{ colorScheme: 'dark' }}
+                                onClick={(e) => {
+                                    try {
+                                        if (e.currentTarget.showPicker) e.currentTarget.showPicker();
+                                    } catch (err) { }
+                                }}
                                 className={`w-full bg-transparent border-b border-white/10 py-3 text-lg text-starlight focus:outline-none focus:border-acc-gold transition-colors font-mono ${unknownTime ? 'opacity-30 cursor-not-allowed' : ''}`}
                             />
                             <p className="mt-2 text-[10px] text-dim font-mono mb-4">{isEn ? 'HH:MM (Local Time)' : 'HH:MM (태어난 시간)'}</p>

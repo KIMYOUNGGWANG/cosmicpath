@@ -89,7 +89,7 @@ export function FortuneTimelineChart({ scores, language = 'ko' }: FortuneTimelin
             pathLength: 1,
             opacity: 1,
             transition: {
-                duration: 1.5,
+                duration: 2.5,
                 ease: "easeInOut"
             }
         },

@@ -4,7 +4,10 @@
 export const READING_PRODUCT = {
     id: 'cosmicpath_reading_v1',
     // Live 모드 전환 시 .env 에 NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID 를 설정해주세요.
-    productId: process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID || 'prod_ThdoB65NmPU37y',
+    // 개발 모드에서는 테스트용 ID를 우선 사용합니다.
+    productId: process.env.NODE_ENV === 'development'
+        ? (process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID_TEST || 'prod_TgwKnGfpJBusty')
+        : (process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID || 'prod_ThdoB65NmPU37y'),
     name: 'CosmicPath 통합 운명 리포트',
     description: '사주 + 점성술 + 타로 통합 분석 프리미엄 결과지',
     currency: 'USD',

@@ -179,7 +179,7 @@ export function CosmicRadar({
                 <motion.div
                     initial={{ opacity: 0, y: 10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    className="absolute -bottom-4 left-0 right-0 bg-white/10 backdrop-blur-xl p-4 rounded-2xl border border-white/20 text-xs shadow-2xl z-20"
+                    className="absolute -bottom-4 left-0 right-0 mx-4 md:mx-0 bg-white/10 backdrop-blur-xl p-4 rounded-2xl border border-white/20 text-xs shadow-2xl z-20"
                     onClick={() => setActiveTooltip(null)}
                 >
                     <div className="flex items-center gap-2 mb-2">

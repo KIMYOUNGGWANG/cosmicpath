@@ -1,6 +1,6 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { useRef, useState, useEffect } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { ChevronDown, Sparkles, Star, Shield, TrendingUp, Calendar, Target, Zap, Lock, CircleHelp, Download, Printer, RefreshCw } from 'lucide-react';
@@ -235,6 +235,16 @@ function CosmicRadarMemo({ report, metadata, language }: { report: PremiumReport
     );
 }
 
+// Animation Variants
+const fadeInUp: Variants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.6, ease: "easeOut" }
+    }
+};
+
 export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock, isPremium }: PremiumReportProps) {
     const isEn = language === 'en';
     const [selectedCardIdx, setSelectedCardIdx] = useState<number | null>(null);
@@ -330,7 +340,12 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
             <div className="space-y-12 md:space-y-16 mt-8 md:mt-12">
 
                 {/* 1. Basic Analysis - ALWAYS VISIBLE */}
-                <section>
+                <motion.section
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: "-100px" }}
+                    variants={fadeInUp}
+                >
                     {report.core_analysis && <CoreAnalysisSection data={report.core_analysis} language={language} />}
                     {report.saju_sections && (
                         <AccordionSection
@@ -340,10 +355,15 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                             language={language}
                         />
                     )}
-                </section>
+                </motion.section>
 
                 {/* 2. Destiny Flow - PAYWALL */}
-                <section>
+                <motion.section
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: "-100px" }}
+                    variants={fadeInUp}
+                >
                     {report.fortune_flow ? (
                         <FortuneFlowSection data={report.fortune_flow} language={language} />
                     ) : isPremium ? (
@@ -368,10 +388,15 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                             />
                         </div>
                     )}
-                </section>
+                </motion.section>
 
                 {/* 3. Life Areas & Soulmate - PAYWALL */}
-                <section>
+                <motion.section
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: "-100px" }}
+                    variants={fadeInUp}
+                >
                     {report.life_areas ? (
                         <>
                             <LifeAreasSection data={report.life_areas} language={language} />
@@ -403,10 +428,15 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                             />
                         </div>
                     )}
-                </section>
+                </motion.section>
 
                 {/* 4. Special Analysis & Lucky Assets - PAYWALL */}
-                <section>
+                <motion.section
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: "-100px" }}
+                    variants={fadeInUp}
+                >
                     {report.special_analysis ? (
                         <>
                             <SpecialAnalysisSection data={report.special_analysis} language={language} />
@@ -437,10 +467,15 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                             />
                         </div>
                     )}
-                </section>
+                </motion.section>
 
                 {/* 5. Action Plan - PAYWALL */}
-                <section>
+                <motion.section
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: "-100px" }}
+                    variants={fadeInUp}
+                >
                     {report.action_plan ? (
                         <ActionPlanSection
                             actionPlan={report.action_plan}
@@ -462,12 +497,17 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                             />
                         </div>
                     )}
-                </section>
+                </motion.section>
 
                 {/* 6. Glossary - PAYWALL (Bonus) */}
-                <section>
+                <motion.section
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: "-100px" }}
+                    variants={fadeInUp}
+                >
                     {report.glossary && <GlossarySection data={report.glossary} language={language} />}
-                </section>
+                </motion.section>
 
             </div>
 
