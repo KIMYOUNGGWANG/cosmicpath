@@ -46,9 +46,6 @@ export const metadata: Metadata = {
   authors: [{ name: "CosmicPath Team" }],
   creator: "CosmicPath",
   publisher: "CosmicPath",
-  icons: {
-    icon: "/favicon.ico",
-  },
   openGraph: {
     type: "website",
     locale: "en_US",
