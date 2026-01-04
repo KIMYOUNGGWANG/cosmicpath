@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Cinzel, Outfit, JetBrains_Mono, Gowun_Batang, Noto_Sans_KR } from "next/font/google"; // Premium fonts
 import "./globals.css";
+import JsonLd from "@/components/seo/json-ld";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -35,14 +36,25 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
-  title: "CosmicPath | AI Driven Destiny Navigation",
-  description: "Navigate your destiny with AI-powered Saju, Astrology, and Tarot analysis.",
-  keywords: ["saju", "astrology", "tarot", "fortune telling", "destiny", "AI", "사주", "점성술", "타로"],
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://cosmicpath.app"),
+  title: {
+    default: "CosmicPath | AI Driven Destiny Navigation",
+    template: "%s | CosmicPath",
+  },
+  description: "Navigate your destiny with AI-powered Saju, Astrology, and Tarot analysis. Discover your cosmic blueprint.",
+  keywords: ["saju", "astrology", "tarot", "fortune telling", "destiny", "AI", "사주", "점성술", "타로", "운세", "궁합"],
+  authors: [{ name: "CosmicPath Team" }],
+  creator: "CosmicPath",
+  publisher: "CosmicPath",
+  icons: {
+    icon: "/favicon.ico",
+  },
   openGraph: {
     type: "website",
+    locale: "en_US",
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://cosmicpath.app",
     title: "CosmicPath | AI Driven Destiny Navigation",
-    description: "Your Sacred Narrative woven through Saju, Astrology, and Tarot",
+    description: "Your Sacred Narrative woven through Saju, Astrology, and Tarot. Experience the next generation of destiny analysis.",
     siteName: "CosmicPath",
     images: [
       {
@@ -56,8 +68,20 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "CosmicPath | AI Driven Destiny Navigation",
-    description: "Your Sacred Narrative woven through Saju, Astrology, and Tarot",
+    description: "Your Sacred Narrative woven through Saju, Astrology, and Tarot.",
     images: ["/og-image.png"],
+    creator: "@cosmicpath", // Placeholder
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 
@@ -72,6 +96,7 @@ export default function RootLayout({
         className={`${cinzel.variable} ${outfit.variable} ${gowunBatang.variable} ${notosanskr.variable} ${jetbrainsMono.variable} antialiased`}
       >
 
+        <JsonLd />
         {children}
         <script
           src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
