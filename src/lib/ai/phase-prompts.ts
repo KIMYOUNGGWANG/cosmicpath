@@ -5,6 +5,7 @@
 
 import type { SajuResult } from '../engines/saju';
 import type { TarotCard } from '../engines/tarot';
+import { calculateLifePathNumber, getLifePathKeyword } from '../engines/numerology';
 
 // Astro data 타입 정의
 export interface AstroData {
@@ -114,6 +115,12 @@ ${tarotContext ? tarotContext : (userData.tarotCards ? `<타로_카드>\n${JSON.
 // Phase 1: Summary + Traits + Core Analysis
 export function buildPhase1Prompt(userData: UserData): { system: string; user: string } {
   const lang = userData.language || 'ko';
+
+  // Calculate Numerology Data
+  const birthDateObj = new Date(userData.birthDate);
+  const lifePathNumber = calculateLifePathNumber(birthDateObj);
+  const lifePathKeyword = getLifePathKeyword(lifePathNumber, lang);
+
   let system = '';
 
   if (lang === 'en') {
@@ -153,7 +160,7 @@ Do not explain Saju, Astrology, and Tarot data separately, but connect them into
       "grade": "B"
     }
   ],
-  "core_analysis": {
+    "core_analysis": {
     "lacking_elements": {
       "elements": "Lacking Elements",
       "remedy": "Specific Remedy (Lucky color, number, direction, food)",
@@ -163,7 +170,71 @@ Do not explain Saju, Astrology, and Tarot data separately, but connect them into
       "elements": "Abundant Elements",
       "usage": "Energy Sublimation Method",
       "description": "Warning of dangers caused by excess energy and positive usage methods."
+    },
+    "element_scores": {
+      "wood": 0-100,
+      "fire": 0-100,
+      "earth": 0-100,
+      "metal": 0-100,
+      "water": 0-100
     }
+  },
+  "astro_deep": {
+    "sun_moon_dynamic": {
+      "title": "☀️🌙 Sun-Moon Dynamic",
+      "content": "Analyze the harmony or conflict between Sun (Outer Self) and Moon (Inner Emotion). *Must explicitly explain: 'While your core identity (Sun) is [Sun Sign], your emotional nature (Moon) is [Moon Sign]...'* (250+ words)"
+    },
+    "ascendant_influence": {
+      "title": "⬆️ Rising Sign (First Impression)",
+      "content": "Analyze your Ascendant (Rising Sign). *Crucial: Explicitly state that this is your 'Social Mask' or 'First Impression', distinct from your Sun Sign.* Explain: 'People might first perceive you as [Rising Sign], even though your true self is [Sun Sign].' (200+ words)"
+    },
+    "dominant_element": {
+      "title": "🔥💧 Dominant Element",
+      "content": "Analyze the strongest element in your chart and its effect on personality. (200+ words)"
+    },
+    "planetary_warning": {
+      "title": "⚠️ Planetary Alert",
+      "content": "Warn about retrograde planets or tense aspects. If none, explain favorable alignments. (150+ words)"
+    }
+  },
+  "tarot_details": [
+    {
+      "position": "Past / Card 1",
+      "card_name": "Card Name",
+      "is_reversed": true/false,
+      "keywords": ["Keyword1", "Keyword2"],
+      "interpretation": "Personalized interpretation connecting this card to your past and Saju. (200+ words)",
+      "saju_connection": "Connection with Saju element/deity",
+      "advice": "Personalized advice (100+ words)"
+    },
+    {
+      "position": "Present / Card 2",
+      "card_name": "Card Name",
+      "is_reversed": true/false,
+      "keywords": ["Keyword1", "Keyword2"],
+      "interpretation": "Interpretation for current situation + Saju cross-check (200+ words)",
+      "saju_connection": "Saju connection",
+      "advice": "Advice"
+    },
+    {
+      "position": "Future / Card 3",
+      "card_name": "Card Name",
+      "is_reversed": true/false,
+      "keywords": ["Keyword1", "Keyword2"],
+      "interpretation": "Interpretation for future potential + Saju cross-check (200+ words)",
+      "saju_connection": "Saju connection",
+      "advice": "Advice"
+    }
+  ],
+  "numerology": {
+    "life_path": {
+      "number": ${lifePathNumber},
+      "title": "🔢 Life Path Number: ${lifePathNumber} - ${lifePathKeyword}",
+      "meaning": "Explain your soul's purpose and life journey through Numerology. (150+ words)",
+      "saju_connection": "Connect this number's traits with a Saju element or deity. (e.g., 'The analytical nature of Number 7 resonates with the Indirect Seal in your chart.')"
+    },
+    "lucky_numbers": [0, 0, 0],
+    "lucky_day_advice": "Specific advice on dates/times using your lucky numbers (e.g., 'The 3rd and 12th of every month are favorable for you.')"
   }
 }
 
@@ -298,7 +369,71 @@ Do not explain Saju, Astrology, and Tarot data separately, but connect them into
       "elements": "과다한 오행",
       "usage": "에너지 승화법",
       "description": "**어떤 글자의 조합(예: 비겁 과다)** 때문에 과잉인지 분석하고, 위험 경고 및 긍정적 활용법 제시."
+    },
+    "element_scores": {
+      "wood": 0-100 (사주 원국에서 木 기운의 비율, 없으면 0),
+      "fire": 0-100 (사주 원국에서 火 기운의 비율, 없으면 0),
+      "earth": 0-100 (사주 원국에서 土 기운의 비율),
+      "metal": 0-100 (사주 원국에서 金 기운의 비율),
+      "water": 0-100 (사주 원국에서 水 기운의 비율)
     }
+  },
+  "astro_deep": {
+    "sun_moon_dynamic": {
+      "title": "☀️🌙 태양-달 역학 (Sun-Moon Dynamic)",
+      "content": "태양 별자리(외적 자아)와 달 별자리(내면의 감정)의 **조화 또는 갈등**을 분석하십시오. 같은 원소인지, 충돌하는 원소인지(예: 불-물)에 따라 내면 갈등 여부를 진단. (250자 이상)"
+    },
+    "ascendant_influence": {
+      "title": "⬆️ 상승궁의 영향력 (Rising Sign Power)",
+      "content": "상승궁이 사회적 첫인상과 타인이 보는 나의 이미지에 어떤 영향을 주는지 분석하십시오. 태양 별자리와의 차이점도 설명. (200자 이상)"
+    },
+    "dominant_element": {
+      "title": "🔥💧 지배 원소 분석 (Dominant Element)",
+      "content": "출생 차트에서 가장 강한 원소(불/흙/공기/물)를 분석하고, 이것이 성격과 행동 패턴에 어떻게 영향을 미치는지 설명하십시오. (200자 이상)"
+    },
+    "planetary_warning": {
+      "title": "⚠️ 행성 경고 (Planetary Alert)",
+      "content": "현재 **역행 중인 행성**(수성, 금성 등)이나 **긴장 각도(스퀘어, 오포지션)**가 있다면 주의 사항을 경고하십시오. 없다면 현재 유리한 행성 배치를 설명. (150자 이상)"
+    }
+  },
+  "tarot_details": [
+    {
+      "position": "과거 (Past) / 1번 카드",
+      "card_name": "뽑힌 카드 이름",
+      "is_reversed": true/false,
+      "keywords": ["키워드1", "키워드2", "키워드3"],
+      "interpretation": "이 카드가 사용자의 과거에 어떤 의미인지 **사주와 연결**하여 해석. 단순 카드 설명이 아닌 개인화된 메시지로. (200자 이상)",
+      "saju_connection": "이 카드가 사주의 어떤 요소(글자, 십성)와 연결되는지. 예: '월지 子의 수(水) 기운이 이 카드의 감정적 깊이와 공명합니다.'",
+      "advice": "이 카드가 주는 개인화된 조언 (100자 이상)"
+    },
+    {
+      "position": "현재 (Present) / 2번 카드",
+      "card_name": "카드 이름",
+      "is_reversed": true/false,
+      "keywords": ["키워드1", "키워드2"],
+      "interpretation": "현재 상황에 대한 해석 + 사주 교차 (200자 이상)",
+      "saju_connection": "사주와의 연결점",
+      "advice": "조언"
+    },
+    {
+      "position": "미래 (Future) / 3번 카드",
+      "card_name": "카드 이름",
+      "is_reversed": true/false,
+      "keywords": ["키워드1", "키워드2"],
+      "interpretation": "미래 가능성에 대한 해석 + 사주 교차 (200자 이상)",
+      "saju_connection": "사주와의 연결점",
+      "advice": "조언"
+    }
+  ],
+  "numerology": {
+    "life_path": {
+      "number": ${lifePathNumber},
+      "title": "🔢 Life Path Number: ${lifePathNumber} - ${lifePathKeyword}",
+      "meaning": "숫자학으로 본 당신의 영혼의 목적과 삶의 여정을 설명하십시오. (150자 이상)",
+      "saju_connection": "이 숫자의 특성이 사주의 어떤 글자(오행, 십성)와 공명하는지 연결하여 해석. (예: '숫자 7의 분석적인 성향은 사주의 편인(偏印)과 일맥상통합니다.')"
+    },
+    "lucky_numbers": [0, 0, 0],
+    "lucky_day_advice": "당신의 행운의 숫자들을 활용할 수 있는 구체적인 날짜나 시간대 조언 (예: '매월 3일, 12일은 당신에게 유리한 날입니다.')"
   }
 }
 
@@ -484,22 +619,27 @@ Users are most curious about "When will it get better?". Do not be vague saying 
       "title": "📅 2026 Fortune Forecast (Yearly Analysis)",
       "content": "Analyze as if you peeked into the calendar of the upcoming year. Divide into quarters (Q1-Q4) and specifically forecast when to seize opportunities and when to lay low. (300+ words)"
     },
-    "monthly_highlights": [
+    "monthly_luck": [
       {
         "month": "January",
-        "theme": "Keyword (e.g., Patience)",
-        "advice": "Specific situation to be careful about this month (Contract, Slip of tongue, etc.)"
+        "theme": "Keyword (e.g., Fresh Start)",
+        "element": "Dominant element (e.g., Wood)",
+        "opportunity": "Opportunity point",
+        "warning": "What to avoid",
+        "advice": "Specific action guide with Saju basis",
+        "score": 1-100
       },
-      {
-        "month": "February",
-        "theme": "Keyword (e.g., Leap)",
-        "advice": "Action guide to seize opportunity"
-      },
-      {
-        "month": "March",
-        "theme": "Keyword",
-        "advice": "Key Advice"
-      }
+      { "month": "February", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
+      { "month": "March", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
+      { "month": "April", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
+      { "month": "May", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
+      { "month": "June", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
+      { "month": "July", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
+      { "month": "August", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
+      { "month": "September", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
+      { "month": "October", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
+      { "month": "November", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
+      { "month": "December", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 }
     ],
     "timeline_scores": [
       { "year": 2026, "score": 85, "type": "opportunity", "summary": "Great start" },
@@ -608,22 +748,27 @@ Users are most curious about "When will it get better?". Do not be vague saying 
       "title": "📅 2026년 운세 예보 (세운 분석)",
       "content": "올해 세운(병오년 등)이 원국의 어느 글자와 충/합하는지 분석하고, 분기별(Q1~Q4)로 나누어 언제 기회를 잡고 언제 몸을 사려야 하는지 구체적으로 예보하십시오. (1200자 이상)"
     },
-    "monthly_highlights": [
+    "monthly_luck": [
       {
-        "month": "구체적 달 (예: 5월)",
-        "theme": "키워드 (예: 격변)",
-        "advice": "왜 이 달이 중요한지 **사주 글자 관계로 설명**하고 구체적 행동 지침 제시"
+        "month": "1월",
+        "theme": "키워드 (예: 새로운 시작)",
+        "element": "이 달의 지배 오행 (예: 목(木))",
+        "opportunity": "기회 포인트 (어떤 일에 유리한지)",
+        "warning": "주의 사항 (피해야 할 일)",
+        "advice": "사주 근거와 함께 구체적 행동 지침",
+        "score": 1-100
       },
-      {
-        "month": "구체적 달",
-        "theme": "키워드",
-        "advice": "사주 근거와 함께 조언"
-      },
-      {
-        "month": "구체적 달",
-        "theme": "키워드",
-        "advice": "사주 근거와 함께 조언"
-      }
+      { "month": "2월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
+      { "month": "3월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
+      { "month": "4월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
+      { "month": "5월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
+      { "month": "6월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
+      { "month": "7월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
+      { "month": "8월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
+      { "month": "9월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
+      { "month": "10월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
+      { "month": "11월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
+      { "month": "12월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 }
     ],
     "timeline_scores": [
       { "year": 2026, "score": 1-100, "type": "opportunity|neutral|warning", "summary": "원국과의 충/합 관계에 기반한 요약" },
@@ -696,6 +841,23 @@ No abstract well-wishing. Give **Hyper-Specific Advice** like "Stocks are better
       "compatibility_score": 85,
       "description": "Detailed description of the soulmate connection.",
       "warnings": "Potential friction point."
+    },
+    "compatibility": {
+      "boss": {
+        "ideal_type": "Ideal Boss Type (Zodiac, Element)",
+        "avoid_type": "Boss Type to Avoid",
+        "strategy": "Communication Strategy"
+      },
+      "colleague": {
+        "ideal_type": "Best Work Partner",
+        "avoid_type": "Conflict-Prone Colleague",
+        "strategy": "Teamwork Strategy"
+      },
+      "friend": {
+        "ideal_type": "Lifelong Friend Type",
+        "avoid_type": "Toxic Friend Type",
+        "advice": "Friendship Advice"
+      }
     }
   }
 }
@@ -819,6 +981,23 @@ No abstract well-wishing. Give **Hyper-Specific Advice** like "Stocks are better
       "compatibility_score": 1-100,
       "description": "**궁합 원리**(삼합, 육합 등)에 기반한 추천 파트너 유형.",
       "warnings": "**상충/형 관계**에 기반한 주의 파트너 유형."
+    },
+    "compatibility": {
+      "boss": {
+        "ideal_type": "이상적인 상사 유형 (띠, 오행, 성격)",
+        "avoid_type": "피해야 할 상사 유형",
+        "strategy": "상사와 소통하는 전략"
+      },
+      "colleague": {
+        "ideal_type": "협업하기 좋은 동료",
+        "avoid_type": "갈등 위험 동료",
+        "strategy": "팀워크 향상 전략"
+      },
+      "friend": {
+        "ideal_type": "평생 가는 친구 유형",
+        "avoid_type": "거리두기 필요한 유형",
+        "advice": "우정 유지 비결"
+      }
     }
   }
 }
@@ -886,6 +1065,20 @@ Reveal special singularities found in Astrology or constellations as 'Hidden Car
       "type": "opportunity"
     }
   ],
+  "past_life": {
+    "theme": {
+      "title": "🌀 Past Life Theme",
+      "content": "Infer past life themes from Saju Nobleman/Artistic Star and Tarot Major Arcana. (200+ words)"
+    },
+    "karma": {
+      "title": "⚖️ Karma to Resolve",
+      "content": "Recurring patterns in this life connected to past life. Solution methods. (200+ words)"
+    },
+    "soul_mission": {
+      "title": "✨ Soul Mission",
+      "content": "Spiritual goal to achieve in this life. (150+ words)"
+    }
+  },
   "glossary": [
     {
       "term": "Ten Gods (Sip-seong)",
@@ -973,6 +1166,74 @@ Reveal special singularities found in Astrology or constellations as 'Hidden Car
       "type": "opportunity"
     }
   ],
+  "date_selection": {
+    "auspicious": [
+      { 
+        "date": "YYYY-MM-DD", 
+        "purpose": "계약/서명", 
+        "reason": "일지 합의 영향으로 모든 약속이 순탄하게 이루어지는 날입니다."
+      },
+      { 
+        "date": "YYYY-MM-DD", 
+        "purpose": "면접/미팅", 
+        "reason": "천을귀인이 발동하여 중요한 사람을 만나기 좋은 날입니다."
+      },
+      { 
+        "date": "YYYY-MM-DD", 
+        "purpose": "이사/입주", 
+        "reason": "가정궁의 기운이 안정되어 터를 옮기기 적합합니다."
+      },
+      { 
+        "date": "YYYY-MM-DD", 
+        "purpose": "데이트/소개팅", 
+        "reason": "도화살이 발현되어 매력이 빛나는 날입니다."
+      },
+      { 
+        "date": "YYYY-MM-DD", 
+        "purpose": "투자/재테크", 
+        "reason": "재성에 생조가 들어오는 시기입니다."
+      }
+    ],
+    "inauspicious": [
+      { 
+        "date": "YYYY-MM-DD", 
+        "purpose": "중요 결정", 
+        "reason": "자오충(子午冲)이 발생하여 판단력이 흐려지기 쉽습니다."
+      },
+      { 
+        "date": "YYYY-MM-DD", 
+        "purpose": "계약/거래", 
+        "reason": "겁재가 강해지는 날로 금전 손실 위험이 있습니다."
+      },
+      { 
+        "date": "YYYY-MM-DD", 
+        "purpose": "다툼/대화", 
+        "reason": "관살이 충돌하여 언쟁이 생기기 쉬운 날입니다."
+      }
+    ]
+  },
+  "past_life": {
+    "theme": {
+      "title": "🌀 전생의 테마",
+      "content": "사주 신살(천을귀인, 화개살 등)과 타로 Major Arcana를 분석하여 전생의 테마를 유추. (200자 이상)"
+    },
+    "sun_moon_dynamic": {
+      "title": "☀️🌙 태양과 달의 조화",
+      "content": "태양(자아/목표)과 달(내면/감정)의 관계를 분석하세요. *반드시 다음 형식을 포함하여 설명*: '당신의 본질인 태양은 [태양별자리]이지만, 내면의 감정인 달은 [달별자리]입니다...' (250자 이상)"
+    },
+    "ascendant_influence": {
+      "title": "⬆️ 상승궁 (사회적 가면)",
+      "content": "상승궁(Ascendant)을 분석하세요. *핵심 요구사항: 상승궁이 '본래 별자리(태양)'와 다른 '사회적 첫인상/가면'임을 명확히 설명할 것.* 예: '당신은 본래 화려한 [태양별자리]이지만, 남들은 당신을 차분한 [상승궁]으로 먼저 봅니다.'라고 대조하여 서술."
+    },
+    "karma": {
+      "title": "⚖️ 해소해야 할 카르마",
+      "content": "현생에서 반복되는 패턴과 전생의 연결점. 해소 방법 제시. (200자 이상)"
+    },
+    "soul_mission": {
+      "title": "✨ 이번 생의 영혼 미션",
+      "content": "이번 생에서 달성해야 할 영적 목표. (150자 이상)"
+    }
+  },
   "glossary": [
     {
       "term": "용어(한글)",

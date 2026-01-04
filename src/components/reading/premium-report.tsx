@@ -19,6 +19,8 @@ import { LuckyAssetsGrid, LuckyAssetsData } from './LuckyAssetsGrid';
 import { GlossarySection } from './GlossarySection';
 import { PaymentModal } from '../payment/PaymentModal';
 import { READING_PRODUCT } from '@/lib/payment/payment-config';
+import { ElementHarmony } from './ElementHarmony';
+import { ActionChecklist } from './ActionChecklist';
 // import TossPaymentWidget from '../payment/TossPaymentWidget'; // Toss Payments (Commented out)
 
 // 새로운 Premium Report 타입 (기존 CosmicReport 대체)
@@ -46,6 +48,19 @@ export interface PremiumReportData {
             usage: string;
             description: string;
         };
+        element_scores?: {
+            wood: number;
+            fire: number;
+            earth: number;
+            metal: number;
+            water: number;
+        };
+    };
+    astro_deep?: {
+        sun_moon_dynamic?: { title: string; content: string };
+        ascendant_influence?: { title: string; content: string };
+        dominant_element?: { title: string; content: string };
+        planetary_warning?: { title: string; content: string };
     };
     saju_sections?: {
         id: string;
@@ -66,6 +81,15 @@ export interface PremiumReportData {
             month: string;
             theme: string;
             advice: string;
+        }[];
+        monthly_luck?: {
+            month: string;
+            theme: string;
+            element?: string;
+            opportunity?: string;
+            warning?: string;
+            advice: string;
+            score?: number;
         }[];
         timeline_scores?: TimelineScore[];
     };
@@ -93,12 +117,26 @@ export interface PremiumReportData {
             subsections?: string[];
             content: string;
         };
+        compatibility?: {
+            boss: { ideal_type: string; avoid_type: string; strategy: string };
+            colleague: { ideal_type: string; avoid_type: string; strategy: string };
+            friend: { ideal_type: string; avoid_type: string; advice: string };
+        };
     };
     special_analysis?: {
         noble_person?: { title: string; content: string };
         charm?: { title: string; content: string };
         conflicts?: { title: string; content: string };
     };
+    tarot_details?: {
+        position: string;
+        card_name: string;
+        is_reversed?: boolean;
+        keywords?: string[];
+        interpretation: string;
+        saju_connection?: string;
+        advice?: string;
+    }[];
     soulmate?: SoulmateData;
     lucky_assets?: LuckyAssetsData;
     action_plan?: {
@@ -113,6 +151,33 @@ export interface PremiumReportData {
         definition: string;
         context: string;
     }[];
+    date_selection?: {
+        auspicious?: {
+            date: string;
+            purpose: string;
+            reason: string;
+        }[];
+        inauspicious?: {
+            date: string;
+            purpose: string;
+            reason: string;
+        }[];
+    };
+    numerology?: {
+        life_path: {
+            number: number;
+            title: string;
+            meaning: string;
+            saju_connection: string;
+        };
+        lucky_numbers: number[];
+        lucky_day_advice: string;
+    };
+    past_life?: {
+        theme: { title: string; content: string };
+        karma: { title: string; content: string };
+        soul_mission: { title: string; content: string };
+    };
     // Legacy support for old schema
     // Legacy support for old schema
     deep_dive?: {
@@ -346,7 +411,14 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     viewport={{ once: true, margin: "-100px" }}
                     variants={fadeInUp}
                 >
-                    {report.core_analysis && <CoreAnalysisSection data={report.core_analysis} language={language} />}
+                    {report.core_analysis && <CoreAnalysisSection data={report.core_analysis} sajuData={(metadata as any)?.sajuResult} language={language} />}
+
+                    {/* 🌌 Astro Deep Dive (NEW) */}
+                    {report.astro_deep && <AstroDeepSection data={report.astro_deep} language={language} />}
+
+                    {/* 🔢 Numerology (NEW) */}
+                    {report.numerology && <NumerologySection data={report.numerology} language={language} />}
+
                     {report.saju_sections && (
                         <AccordionSection
                             title={isEn ? "📜 Saju (Four Pillars) Analysis" : "📜 사주 기본 분석"}
@@ -441,6 +513,8 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                         <>
                             <SpecialAnalysisSection data={report.special_analysis} language={language} />
                             {report.lucky_assets && <LuckyAssetsGrid data={report.lucky_assets} language={language} />}
+                            {/* 🌀 Past Life Analysis (NEW - P2-1) */}
+                            {report.past_life && <PastLifeSection data={report.past_life} language={language} />}
                             {/* Legacy Support - Deep Dive */}
                             {report.deep_dive && !report.saju_sections && (
                                 <LegacyDeepDiveSection data={report.deep_dive} language={language} />
@@ -477,11 +551,17 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     variants={fadeInUp}
                 >
                     {report.action_plan ? (
-                        <ActionPlanSection
-                            actionPlan={report.action_plan}
-                            trustScore={report.summary.trust_score}
-                            language={language}
-                        />
+                        <>
+                            <ActionPlanSection
+                                actionPlan={report.action_plan}
+                                trustScore={report.summary.trust_score}
+                                language={language}
+                            />
+                            {/* 📅 Date Selection (NEW - P1-3) */}
+                            {report.date_selection && (
+                                <DateSelectionSection data={report.date_selection} language={language} />
+                            )}
+                        </>
                     ) : (
                         <div className="px-4 md:px-6">
                             <BlindSpotTeaser
@@ -524,25 +604,34 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
             </section>
 
             {/* Tarot Detail Modal */}
-            {selectedCardIdx !== null && (
-                <TarotDetailModal
-                    isOpen={selectedCardIdx !== null}
-                    onClose={() => setSelectedCardIdx(null)}
-                    cardName={tarotCards[selectedCardIdx]?.name || (isEn ? "Assigned Card" : "배정된 카드")}
-                    role={isEn ? ["Current Situation", "Challenge/Obstacle", "Solution/Outcome"][selectedCardIdx] : ["현재 상황", "장애물/과제", "해결책/결과"][selectedCardIdx]}
-                    isReversed={tarotCards[selectedCardIdx]?.isReversed}
-                    convergenceData={isEn ? {
-                        sajuConnection: "The current flow of your Saju luck strongly resonates with the transformative energy symbolized by this card.",
-                        astroConnection: "The driving force shown by the planetary alignment further strengthens the determination contained in the card.",
-                        insight: "This card represents the direction your intuition is currently pointing. Both Saju and Astrology strongly suggest that now is the time to act."
-                    } : {
-                        sajuConnection: "현재 사주의 운 흐름과 이 카드가 상징하는 변화의 에너지가 강하게 공명하고 있습니다.",
-                        astroConnection: "행성의 정렬 상태가 보여주는 추진력이 카드에 담긴 결단력을 더욱 강화합니다.",
-                        insight: "이 카드는 현재 당신의 직관이 가리키는 방향을 나타냅니다. 사주와 점성술 모두 지금은 행동해야 할 때임을 강력하게 시사하고 있습니다."
-                    }}
-                    language={language}
-                />
-            )}
+            {selectedCardIdx !== null && (() => {
+                const detail = report.tarot_details?.[selectedCardIdx];
+                const hasDetail = !!detail;
+
+                return (
+                    <TarotDetailModal
+                        isOpen={selectedCardIdx !== null}
+                        onClose={() => setSelectedCardIdx(null)}
+                        cardName={hasDetail ? detail.card_name : (tarotCards[selectedCardIdx]?.name || (isEn ? "Assigned Card" : "배정된 카드"))}
+                        role={hasDetail ? detail.position : (isEn ? ["Current Situation", "Challenge/Obstacle", "Solution/Outcome"][selectedCardIdx] : ["현재 상황", "장애물/과제", "해결책/결과"][selectedCardIdx])}
+                        isReversed={hasDetail ? detail.is_reversed : tarotCards[selectedCardIdx]?.isReversed}
+                        convergenceData={hasDetail ? {
+                            sajuConnection: detail.saju_connection || (isEn ? "Deep connection with your Saju chart." : "사주와 깊은 연결이 있습니다."),
+                            astroConnection: detail.interpretation,
+                            insight: detail.advice || (isEn ? "Trust your intuition." : "직관을 믿으세요."),
+                        } : (isEn ? {
+                            sajuConnection: "The current flow of your Saju luck strongly resonates with the transformative energy symbolized by this card.",
+                            astroConnection: "The driving force shown by the planetary alignment further strengthens the determination contained in the card.",
+                            insight: "This card represents the direction your intuition is currently pointing. Both Saju and Astrology strongly suggest that now is the time to act."
+                        } : {
+                            sajuConnection: "현재 사주의 운 흐름과 이 카드가 상징하는 변화의 에너지가 강하게 공명하고 있습니다.",
+                            astroConnection: "행성의 정렬 상태가 보여주는 추진력이 카드에 담긴 결단력을 더욱 강화합니다.",
+                            insight: "이 카드는 현재 당신의 직관이 가리키는 방향을 나타냅니다. 사주와 점성술 모두 지금은 행동해야 할 때임을 강력하게 시사하고 있습니다."
+                        })}
+                        language={language}
+                    />
+                );
+            })()}
 
             {/* Stripe Payment Modal */}
             <PaymentModal
@@ -790,7 +879,7 @@ function TraitsSection({ traits, language }: { traits: PremiumReportData['traits
     );
 }
 
-function CoreAnalysisSection({ data, language }: { data: NonNullable<PremiumReportData['core_analysis']>, language: 'ko' | 'en' }) {
+function CoreAnalysisSection({ data, sajuData, language }: { data: NonNullable<PremiumReportData['core_analysis']>, sajuData?: any, language: 'ko' | 'en' }) {
     const isEn = language === 'en';
     return (
         <section className="mt-6 px-4 md:px-6">
@@ -798,6 +887,11 @@ function CoreAnalysisSection({ data, language }: { data: NonNullable<PremiumRepo
                 <Sparkles size={18} className="text-gold" />
                 {isEn ? 'Core Saju Summary' : '내 사주 핵심 정리'}
             </h2>
+
+            {/* Five Elements Harmony Chart */}
+            <div className="mb-8">
+                <ElementHarmony sajuData={sajuData} scores={data.element_scores} language={language} />
+            </div>
 
             <div className="space-y-4">
                 {/* Lacking Elements - Rainbow Border */}
@@ -899,6 +993,7 @@ function AccordionSection({ title, items, source, language }: { title: string; i
 function FortuneFlowSection({ data, language }: { data: NonNullable<PremiumReportData['fortune_flow']>, language: 'ko' | 'en' }) {
     const isEn = language === 'en';
     const [openItems, setOpenItems] = useState<Set<string>>(new Set(['major_luck']));
+    const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
 
     const toggleItem = (id: string) => {
         setOpenItems(prev => {
@@ -913,6 +1008,18 @@ function FortuneFlowSection({ data, language }: { data: NonNullable<PremiumRepor
         { id: 'major_luck', ...data.major_luck },
         { id: 'yearly_luck', ...data.yearly_luck },
     ];
+
+    // 현재 월 (0-indexed)
+    const currentMonth = new Date().getMonth();
+
+    // monthly_luck 또는 monthly_highlights 사용 (후방 호환성)
+    const monthlyData = data.monthly_luck || data.monthly_highlights?.map(m => ({
+        ...m,
+        element: undefined,
+        opportunity: undefined,
+        warning: undefined,
+        score: 50
+    }));
 
     return (
         <section className="mt-6 px-4 md:px-6">
@@ -936,6 +1043,117 @@ function FortuneFlowSection({ data, language }: { data: NonNullable<PremiumRepor
                         scores={data.timeline_scores}
                         language={language}
                     />
+                </motion.div>
+            )}
+
+            {/* 🗓️ 12개월 월운 그리드 (NEW) */}
+            {monthlyData && monthlyData.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mb-6"
+                >
+                    <h3 className="text-sm font-medium text-gray-300 mb-3 flex items-center gap-2">
+                        <span className="text-gold">🗓️</span>
+                        {isEn ? '12-Month Fortune Map' : '12개월 월운 지도'}
+                        <span className="ml-2 text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-full border border-emerald-500/30">
+                            NEW
+                        </span>
+                    </h3>
+
+                    {/* 월별 그리드 */}
+                    <div className="grid grid-cols-4 md:grid-cols-6 gap-2 mb-4">
+                        {monthlyData.map((month, idx) => {
+                            const score = month.score || 50;
+                            const isCurrentMonth = idx === currentMonth;
+                            const isSelected = selectedMonth === idx;
+
+                            // 점수에 따른 색상
+                            const getScoreColor = (s: number) => {
+                                if (s >= 70) return 'from-emerald-500/30 to-emerald-600/20 border-emerald-500/40';
+                                if (s >= 50) return 'from-amber-500/30 to-amber-600/20 border-amber-500/40';
+                                return 'from-red-500/30 to-red-600/20 border-red-500/40';
+                            };
+
+                            return (
+                                <button
+                                    key={idx}
+                                    onClick={() => setSelectedMonth(isSelected ? null : idx)}
+                                    className={cn(
+                                        "relative p-3 rounded-xl border transition-all duration-300 text-center",
+                                        isSelected
+                                            ? "bg-gradient-to-br " + getScoreColor(score) + " scale-105 shadow-lg"
+                                            : isCurrentMonth
+                                                ? "bg-gradient-to-br from-gold/20 to-gold/10 border-gold/50"
+                                                : "bg-white/5 border-white/10 hover:border-white/30"
+                                    )}
+                                >
+                                    {isCurrentMonth && (
+                                        <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-gold rounded-full animate-pulse" />
+                                    )}
+                                    <p className="text-xs text-gray-400">{month.month}</p>
+                                    <p className="text-sm font-bold text-white mt-1">{month.theme}</p>
+                                    {month.score != null && (
+                                        <div className="mt-2 text-xs">
+                                            <span className={cn(
+                                                "px-1.5 py-0.5 rounded-full",
+                                                score >= 70 ? "bg-emerald-500/20 text-emerald-300" :
+                                                    score >= 50 ? "bg-amber-500/20 text-amber-300" :
+                                                        "bg-red-500/20 text-red-300"
+                                            )}>
+                                                {score}점
+                                            </span>
+                                        </div>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* 선택된 월 상세 */}
+                    {selectedMonth !== null && monthlyData[selectedMonth] && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="p-4 bg-white/5 rounded-xl border border-white/10"
+                        >
+                            <div className="flex items-center gap-2 mb-3">
+                                <span className="text-lg">{monthlyData[selectedMonth].element || '🌟'}</span>
+                                <h4 className="font-bold text-white">
+                                    {monthlyData[selectedMonth].month} - {monthlyData[selectedMonth].theme}
+                                </h4>
+                            </div>
+
+                            <div className="space-y-3 text-sm">
+                                {monthlyData[selectedMonth].opportunity && (
+                                    <div className="flex gap-2">
+                                        <span className="text-emerald-400">✅</span>
+                                        <div>
+                                            <p className="text-emerald-300 font-medium">{isEn ? 'Opportunity' : '기회'}</p>
+                                            <p className="text-gray-300">{monthlyData[selectedMonth].opportunity}</p>
+                                        </div>
+                                    </div>
+                                )}
+                                {monthlyData[selectedMonth].warning && (
+                                    <div className="flex gap-2">
+                                        <span className="text-red-400">⚠️</span>
+                                        <div>
+                                            <p className="text-red-300 font-medium">{isEn ? 'Warning' : '주의'}</p>
+                                            <p className="text-gray-300">{monthlyData[selectedMonth].warning}</p>
+                                        </div>
+                                    </div>
+                                )}
+                                <div className="flex gap-2">
+                                    <span className="text-blue-400">💡</span>
+                                    <div>
+                                        <p className="text-blue-300 font-medium">{isEn ? 'Advice' : '조언'}</p>
+                                        <p className="text-gray-300">{monthlyData[selectedMonth].advice}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
                 </motion.div>
             )}
 
@@ -1039,6 +1257,9 @@ function LifeAreasSection({ data, language }: { data: NonNullable<PremiumReportD
                     </div>
                 ))}
             </div>
+
+            {/* 🤝 Compatibility (NEW - P2-2) */}
+            {data.compatibility && <CompatibilitySection data={data.compatibility} language={language} />}
         </section>
     );
 }
@@ -1130,6 +1351,9 @@ function ActionPlanSection({ actionPlan, trustScore, language }: {
                     />
                 ))}
             </div>
+
+            {/* Interactive Checklist */}
+            <ActionChecklist items={actionPlan} language={language} />
         </section>
     );
 }
@@ -1228,5 +1452,463 @@ function LockedSection({ title, icon, language, onUnlock }: { title: string; ico
                 </div>
             </div>
         </section>
+    );
+}
+
+// 🌌 Astro Deep Dive Section (NEW)
+function AstroDeepSection({ data, language }: { data: NonNullable<PremiumReportData['astro_deep']>, language: 'ko' | 'en' }) {
+    const isEn = language === 'en';
+    const [openItems, setOpenItems] = useState<string[]>(['sun_moon_dynamic']);
+
+    const toggleItem = (id: string) => {
+        setOpenItems(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        );
+    };
+
+    const sections = [
+        { id: 'sun_moon_dynamic', data: data.sun_moon_dynamic, icon: '☀️🌙' },
+        { id: 'ascendant_influence', data: data.ascendant_influence, icon: '⬆️' },
+        { id: 'dominant_element', data: data.dominant_element, icon: '🔥' },
+        { id: 'planetary_warning', data: data.planetary_warning, icon: '⚠️' },
+    ].filter(s => s.data);
+
+    if (sections.length === 0) return null;
+
+    return (
+        <section className="mt-8 px-4 md:px-6">
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <span className="text-2xl">🌌</span>
+                {isEn ? 'Astro Deep Dive' : '점성술 심층 분석'}
+                <span className="ml-2 text-xs px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded-full border border-purple-500/30">
+                    NEW
+                </span>
+            </h2>
+
+            <div className="space-y-3">
+                {sections.map(({ id, data: sectionData, icon }) => {
+                    if (!sectionData) return null;
+                    const isOpen = openItems.includes(id);
+
+                    return (
+                        <div
+                            key={id}
+                            className={cn(
+                                "rounded-2xl border transition-all duration-300 overflow-hidden",
+                                isOpen
+                                    ? "bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border-purple-500/30"
+                                    : "bg-white/5 border-white/10 hover:border-white/20"
+                            )}
+                        >
+                            <button
+                                onClick={() => toggleItem(id)}
+                                className="w-full flex items-center justify-between p-4 text-left"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <span className="text-xl">{icon}</span>
+                                    <span className="text-white font-medium text-sm md:text-base">
+                                        {sectionData.title}
+                                    </span>
+                                </div>
+                                <ChevronDown
+                                    size={20}
+                                    className={cn(
+                                        "text-gray-400 transition-transform duration-300",
+                                        isOpen && "rotate-180"
+                                    )}
+                                />
+                            </button>
+
+                            {isOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="px-4 pb-4"
+                                >
+                                    <div className="pl-9">
+                                        <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">
+                                            {sectionData.content}
+                                        </p>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Astrology Source Badge */}
+            <div className="mt-4 flex justify-end">
+                <span className="text-[10px] text-gray-500 flex items-center gap-1">
+                    <span>✨</span>
+                    {isEn ? 'Based on birth chart analysis' : '출생 차트 기반 분석'}
+                </span>
+            </div>
+        </section>
+    );
+}
+
+// 📅 Date Selection Section (NEW - P1-3)
+function DateSelectionSection({ data, language }: { data: NonNullable<PremiumReportData['date_selection']>, language: 'ko' | 'en' }) {
+    const isEn = language === 'en';
+    const [activeTab, setActiveTab] = useState<'auspicious' | 'inauspicious'>('auspicious');
+
+    const auspiciousDates = data.auspicious || [];
+    const inauspiciousDates = data.inauspicious || [];
+
+    if (auspiciousDates.length === 0 && inauspiciousDates.length === 0) return null;
+
+    const formatDate = (dateStr: string) => {
+        try {
+            const date = new Date(dateStr);
+            if (isNaN(date.getTime())) return dateStr;
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const weekday = isEn
+                ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()]
+                : ['일', '월', '화', '수', '목', '금', '토'][date.getDay()];
+            return isEn ? `${month}/${day} (${weekday})` : `${month}월 ${day}일 (${weekday})`;
+        } catch {
+            return dateStr;
+        }
+    };
+
+    return (
+        <section className="mt-8 px-4 md:px-6">
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <span className="text-2xl">📅</span>
+                {isEn ? 'Date Selection Guide' : '택일 가이드'}
+                <span className="ml-2 text-xs px-2 py-0.5 bg-amber-500/20 text-amber-300 rounded-full border border-amber-500/30">
+                    NEW
+                </span>
+            </h2>
+
+            {/* Tab Buttons */}
+            <div className="flex gap-2 mb-4">
+                <button
+                    onClick={() => setActiveTab('auspicious')}
+                    className={cn(
+                        "flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all",
+                        activeTab === 'auspicious'
+                            ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                            : "bg-white/5 text-gray-400 border border-white/10 hover:border-white/20"
+                    )}
+                >
+                    ✅ {isEn ? 'Lucky Days' : '길일'} ({auspiciousDates.length})
+                </button>
+                <button
+                    onClick={() => setActiveTab('inauspicious')}
+                    className={cn(
+                        "flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all",
+                        activeTab === 'inauspicious'
+                            ? "bg-red-500/20 text-red-300 border border-red-500/40"
+                            : "bg-white/5 text-gray-400 border border-white/10 hover:border-white/20"
+                    )}
+                >
+                    ⚠️ {isEn ? 'Avoid' : '흉일'} ({inauspiciousDates.length})
+                </button>
+            </div>
+
+            {/* Date Cards */}
+            <div className="space-y-3">
+                {(activeTab === 'auspicious' ? auspiciousDates : inauspiciousDates).map((item, idx) => (
+                    <motion.div
+                        key={idx}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className={cn(
+                            "p-4 rounded-xl border",
+                            activeTab === 'auspicious'
+                                ? "bg-emerald-500/10 border-emerald-500/30"
+                                : "bg-red-500/10 border-red-500/30"
+                        )}
+                    >
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <span className={cn(
+                                        "text-lg font-bold",
+                                        activeTab === 'auspicious' ? "text-emerald-300" : "text-red-300"
+                                    )}>
+                                        {formatDate(item.date)}
+                                    </span>
+                                    <span className={cn(
+                                        "text-xs px-2 py-0.5 rounded-full",
+                                        activeTab === 'auspicious'
+                                            ? "bg-emerald-500/20 text-emerald-200"
+                                            : "bg-red-500/20 text-red-200"
+                                    )}>
+                                        {item.purpose}
+                                    </span>
+                                </div>
+                                <p className="text-sm text-gray-300">{item.reason}</p>
+                            </div>
+                            <span className="text-2xl">
+                                {activeTab === 'auspicious' ? '🍀' : '🚫'}
+                            </span>
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+
+            {/* Source Badge */}
+            <div className="mt-4 flex justify-end">
+                <span className="text-[10px] text-gray-500 flex items-center gap-1">
+                    <span>📜</span>
+                    {isEn ? 'Based on Saju date analysis' : '사주 기반 택일 분석'}
+                </span>
+            </div>
+        </section>
+    );
+}
+
+// 🔢 Numerology Section (NEW - P2-3)
+function NumerologySection({ data, language }: { data: NonNullable<PremiumReportData['numerology']>, language: 'ko' | 'en' }) {
+    const isEn = language === 'en';
+    const { life_path, lucky_numbers, lucky_day_advice } = data;
+
+    return (
+        <section className="mt-6 px-4 md:px-6">
+            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <span className="text-xl">🔢</span>
+                {isEn ? 'Numerology Insight' : '수비학(Numerology) 분석'}
+                <span className="ml-2 text-xs px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/30">
+                    NEW
+                </span>
+            </h2>
+
+            <div className="bg-gradient-to-br from-indigo-900/30 to-purple-900/30 rounded-2xl border border-indigo-500/20 p-5 relative overflow-hidden">
+                {/* Background Decor */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+
+                <div className="flex flex-col md:flex-row gap-6 items-center">
+                    {/* Life Path Number Badge */}
+                    <div className="flex-shrink-0 flex flex-col items-center">
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-white/10 to-white/5 border border-white/20 flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.3)] relative">
+                            <span className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-white to-indigo-300">
+                                {life_path.number}
+                            </span>
+                            <div className="absolute -bottom-3 px-3 py-1 bg-indigo-600 rounded-full text-[10px] font-bold text-white shadow-lg uppercase tracking-wider">
+                                Life Path
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 space-y-3 text-center md:text-left">
+                        <div>
+                            <h3 className="text-lg font-bold text-white mb-1">{life_path.title}</h3>
+                            <p className="text-sm text-indigo-100 leading-relaxed">
+                                {life_path.meaning}
+                            </p>
+                        </div>
+
+                        {/* Saju Connection */}
+                        <div className="bg-black/30 rounded-lg p-3 border border-white/5">
+                            <div className="flex items-center gap-2 mb-1 justify-center md:justify-start">
+                                <span className="text-xs font-bold text-gold">🔗 {isEn ? 'Saju Connection' : '사주 연결 고리'}</span>
+                            </div>
+                            <p className="text-xs text-gray-300">
+                                {life_path.saju_connection}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-5 pt-4 border-t border-white/10 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Lucky Numbers */}
+                    <div>
+                        <div className="text-xs font-medium text-gray-400 mb-2 flex items-center gap-1">
+                            <span>🍀</span> {isEn ? 'Lucky Numbers' : '행운의 숫자'}
+                        </div>
+                        <div className="flex gap-2">
+                            {lucky_numbers.map((num, i) => (
+                                <div key={i} className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-sm font-bold text-white border border-white/10">
+                                    {num}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Lucky Advice */}
+                    <div>
+                        <div className="text-xs font-medium text-gray-400 mb-2 flex items-center gap-1">
+                            <span>💡</span> {isEn ? 'Action Tip' : '활용 팁'}
+                        </div>
+                        <p className="text-xs text-gray-300 leading-relaxed">
+                            {lucky_day_advice}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Source Badge */}
+            <div className="mt-4 flex justify-end">
+                <span className="text-[10px] text-gray-500 flex items-center gap-1">
+                    <span>📐</span>
+                    {isEn ? 'Calculated via Pythagorean Numerology' : '피타고라스 수비학 기반 계산'}
+                </span>
+            </div>
+        </section>
+    );
+}
+
+// 🌀 Past Life Section (NEW - P2-1)
+function PastLifeSection({ data, language }: { data: NonNullable<PremiumReportData['past_life']>, language: 'ko' | 'en' }) {
+    const isEn = language === 'en';
+    const { theme, karma, soul_mission } = data;
+
+    return (
+        <div className="mt-8 px-4 md:px-0">
+            <h3 className="text-sm font-bold text-purple-300 mb-3 flex items-center gap-2 uppercase tracking-wider">
+                <span className="text-lg">🌀</span>
+                {isEn ? 'Past Life & Karma' : '전생과 카르마'}
+            </h3>
+
+            <div className="space-y-4">
+                {/* 1. Theme */}
+                <div className="bg-purple-900/20 rounded-xl p-4 border border-purple-500/20">
+                    <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-lg flex-shrink-0">
+                            🕰️
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-white text-sm mb-1">{theme.title}</h4>
+                            <p className="text-sm text-purple-100 leading-relaxed opacity-90">
+                                {theme.content}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 2. Karma */}
+                <div className="bg-purple-900/20 rounded-xl p-4 border border-purple-500/20">
+                    <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-lg flex-shrink-0">
+                            ⚖️
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-white text-sm mb-1">{karma.title}</h4>
+                            <p className="text-sm text-purple-100 leading-relaxed opacity-90">
+                                {karma.content}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 3. Soul Mission */}
+                <div className="bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-xl p-4 border border-purple-500/30 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+                    <div className="flex items-start gap-3 relative z-10">
+                        <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-lg flex-shrink-0">
+                            ✨
+                        </div>
+                        <div>
+                            <h4 className="font-bold text-purple-200 text-sm mb-1">{soul_mission.title}</h4>
+                            <p className="text-sm text-purple-100 leading-relaxed">
+                                {soul_mission.content}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// 🤝 Compatibility Section (NEW - P2-2)
+function CompatibilitySection({ data, language }: { data: NonNullable<NonNullable<PremiumReportData['life_areas']>['compatibility']>, language: 'ko' | 'en' }) {
+    const isEn = language === 'en';
+    const [activeTab, setActiveTab] = useState<'boss' | 'colleague' | 'friend'>('boss');
+
+    const content = data[activeTab];
+
+    return (
+        <div className="mt-8 border-t border-white/10 pt-6">
+            <h3 className="text-sm font-bold text-pink-300 mb-4 flex items-center gap-2 uppercase tracking-wider">
+                <span className="text-lg">🤝</span>
+                {isEn ? 'Social Compatibility' : '사회적 궁합 분석'}
+                <span className="ml-2 text-xs px-2 py-0.5 bg-pink-500/20 text-pink-300 rounded-full border border-pink-500/30">
+                    NEW
+                </span>
+            </h3>
+
+            {/* Tabs */}
+            <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
+                <button
+                    onClick={() => setActiveTab('boss')}
+                    className={cn(
+                        "flex-1 min-w-[100px] py-2 px-3 rounded-lg text-xs font-medium transition-all whitespace-nowrap",
+                        activeTab === 'boss'
+                            ? "bg-pink-500/20 text-pink-300 border border-pink-500/40"
+                            : "bg-white/5 text-gray-400 border border-white/10 hover:border-white/20"
+                    )}
+                >
+                    {isEn ? 'Boss/Leader' : '상사/리더'}
+                </button>
+                <button
+                    onClick={() => setActiveTab('colleague')}
+                    className={cn(
+                        "flex-1 min-w-[100px] py-2 px-3 rounded-lg text-xs font-medium transition-all whitespace-nowrap",
+                        activeTab === 'colleague'
+                            ? "bg-pink-500/20 text-pink-300 border border-pink-500/40"
+                            : "bg-white/5 text-gray-400 border border-white/10 hover:border-white/20"
+                    )}
+                >
+                    {isEn ? 'Colleague' : '동료/파트너'}
+                </button>
+                <button
+                    onClick={() => setActiveTab('friend')}
+                    className={cn(
+                        "flex-1 min-w-[100px] py-2 px-3 rounded-lg text-xs font-medium transition-all whitespace-nowrap",
+                        activeTab === 'friend'
+                            ? "bg-pink-500/20 text-pink-300 border border-pink-500/40"
+                            : "bg-white/5 text-gray-400 border border-white/10 hover:border-white/20"
+                    )}
+                >
+                    {isEn ? 'Friend' : '친구/지인'}
+                </button>
+            </div>
+
+            {/* Content Card */}
+            <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+                className="bg-pink-900/10 rounded-xl p-5 border border-pink-500/20"
+            >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <div className="flex items-center gap-2 mb-2 text-pink-200 font-bold text-sm">
+                            <span>👍</span> {isEn ? 'Ideal Type' : '잘 맞는 유형'}
+                        </div>
+                        <p className="text-sm text-gray-300 leading-relaxed bg-black/20 p-3 rounded-lg border border-white/5">
+                            {content.ideal_type}
+                        </p>
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2 mb-2 text-red-200 font-bold text-sm">
+                            <span>👎</span> {isEn ? 'Avoid Type' : '주의할 유형'}
+                        </div>
+                        <p className="text-sm text-gray-300 leading-relaxed bg-black/20 p-3 rounded-lg border border-white/5">
+                            {content.avoid_type}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-white/10">
+                    <div className="flex items-center gap-2 mb-2 text-gold font-bold text-sm">
+                        <span>💡</span> {isEn ? 'Winning Strategy' : (activeTab === 'friend' ? '우정 관리 팁' : '처세술/전략')}
+                    </div>
+                    <p className="text-sm text-gray-300 leading-relaxed">
+                        {'strategy' in content ? content.strategy : content.advice}
+                    </p>
+                </div>
+            </motion.div>
+        </div>
     );
 }

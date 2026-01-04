@@ -179,17 +179,26 @@ export function FollowUpChat({
             >
                 <div className="flex items-center gap-3">
                     <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: 'rgba(139, 92, 246, 0.2)' }}
+                        className="w-12 h-12 rounded-full flex items-center justify-center relative"
+                        style={{
+                            background: 'radial-gradient(circle, rgba(212, 175, 55, 0.3) 0%, rgba(139, 92, 246, 0.2) 100%)',
+                            boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)'
+                        }}
                     >
-                        <MessageCircle size={20} style={{ color: '#a855f7' }} />
+                        <span className="text-2xl">🔮</span>
+                        {/* Pulsing ring */}
+                        <motion.div
+                            animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className="absolute inset-0 rounded-full border border-gold/30"
+                        />
                     </div>
                     <div>
-                        <h3 className="font-semibold" style={{ color: '#ffffff' }}>
-                            추가 질문
+                        <h3 className="font-cinzel font-semibold tracking-wide" style={{ color: '#D4AF37' }}>
+                            Cosmic Oracle
                         </h3>
-                        <p className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                            리딩 결과에 대해 더 궁금한 점을 물어보세요
+                        <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                            운명에 대해 물어보세요. 신탁이 답합니다.
                         </p>
                     </div>
                 </div>

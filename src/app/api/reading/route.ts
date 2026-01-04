@@ -143,6 +143,7 @@ export async function POST(request: NextRequest) {
                                 dayMaster: saju.dayMaster,
                                 fullSaju: `${saju.yeonPillar.stem}${saju.yeonPillar.branch}년 ${saju.monthPillar.stem}${saju.monthPillar.branch}월 ${saju.dayPillar.stem}${saju.dayPillar.branch}일 ${saju.hourPillar.stem}${saju.hourPillar.branch}시`,
                             },
+                            sajuResult: saju,
                             astrology: {
                                 sunSign: astrology.sunSign,
                                 moonSign: astrology.moonSign,
@@ -172,6 +173,7 @@ export async function POST(request: NextRequest) {
                             dayMaster: saju.dayMaster,
                             fullSaju: `${saju.yeonPillar.stem}${saju.yeonPillar.branch}년 ${saju.monthPillar.stem}${saju.monthPillar.branch}월 ${saju.dayPillar.stem}${saju.dayPillar.branch}일 ${saju.hourPillar.stem}${saju.hourPillar.branch}시`,
                         },
+                        sajuResult: saju,
                         astrology: {
                             sunSign: astrology.sunSign,
                             moonSign: astrology.moonSign,
@@ -226,6 +228,7 @@ export async function POST(request: NextRequest) {
                         dayMaster: saju.dayMaster,
                         fullSaju: `${saju.yeonPillar.stem}${saju.yeonPillar.branch}년 ${saju.monthPillar.stem}${saju.monthPillar.branch}월 ${saju.dayPillar.stem}${saju.dayPillar.branch}일 ${saju.hourPillar.stem}${saju.hourPillar.branch}시`,
                     },
+                    sajuResult: saju,
                     astrology: {
                         sunSign: astrology.sunSign,
                         moonSign: astrology.moonSign,

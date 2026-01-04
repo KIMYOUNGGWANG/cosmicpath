@@ -245,6 +245,32 @@ export function SharePanel({
                                     </p>
                                 </div>
                             </button>
+
+                            {/* 궁합 공유 (Compatibility) */}
+                            <button
+                                onClick={() => {
+                                    const compatUrl = shareUrl ? `${shareUrl}?match=invite` : `${window.location.href}?match=invite`;
+                                    navigator.clipboard?.writeText(compatUrl);
+                                    alert(isEn ? 'Compatibility link copied! Share with your partner.' : '궁합 링크가 복사되었습니다! 상대방에게 공유하세요.');
+                                    setIsOpen(false);
+                                }}
+                                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-white/5"
+                            >
+                                <div
+                                    className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
+                                    style={{ backgroundColor: 'rgba(236, 72, 153, 0.2)' }}
+                                >
+                                    <span className="text-lg">💕</span>
+                                </div>
+                                <div className="text-left">
+                                    <p className="font-medium" style={{ color: '#ffffff' }}>
+                                        {isEn ? 'Check Compatibility' : '궁합 보기'}
+                                    </p>
+                                    <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                                        {isEn ? 'Compare elements with partner' : '상대방과 오행 비교하기'}
+                                    </p>
+                                </div>
+                            </button>
                         </div>
                     </motion.div>
                 )}

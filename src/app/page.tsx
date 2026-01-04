@@ -9,6 +9,7 @@ import { RitualSection } from '@/components/landing/RitualSection';
 import { DiagnosisSection } from '@/components/landing/DiagnosisSection';
 import { GapSection } from '@/components/landing/GapSection';
 import { BlueprintSection } from '@/components/landing/BlueprintSection';
+import { EngineSection } from '@/components/landing/EngineSection';
 import { VerdictSection } from '@/components/landing/VerdictSection';
 import { CrossroadsSection } from '@/components/landing/CrossroadsSection';
 import { Footer } from '@/components/landing/Footer';
@@ -45,6 +46,7 @@ export default function Home() {
             <DiagnosisSection />
             <GapSection />
             <BlueprintSection />
+            <EngineSection />
             <VerdictSection />
             <CrossroadsSection />
 

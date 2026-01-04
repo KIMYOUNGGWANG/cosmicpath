@@ -14,6 +14,8 @@ import { StickyCTA } from '@/components/common/sticky-cta';
 import { Suspense } from 'react';
 import { Footer } from '@/components/landing/Footer';
 import { GlobalHeader } from '@/components/common/GlobalHeader';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { Skeleton } from '@/components/ui/skeleton';
 
 function CosmicPathContent() {
   const [step, setStep] = useState<'input' | 'mirror' | 'tarot' | 'result'>('input');
@@ -67,6 +69,12 @@ function CosmicPathContent() {
       }
     };
     fetchPrice();
+
+    // P3-3: Language Persistence
+    const savedLang = localStorage.getItem('user_language');
+    if (savedLang === 'ko' || savedLang === 'en') {
+      setLanguage(savedLang);
+    }
   }, []);
 
   // Resume Reading after Payment
@@ -217,7 +225,9 @@ function CosmicPathContent() {
     sessionStorage.setItem('is_session_active', 'false'); // Explicitly false until results are ready
 
     setReadingData(data);
+    setReadingData(data);
     setLanguage(data.language);
+    localStorage.setItem('user_language', data.language);
     setStep('tarot');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -564,14 +574,16 @@ function CosmicPathContent() {
                     language={language}
                   />
                   {(reportData.summary.trust_score > 2 || isDecisionAccepted) && (
-                    <PremiumReport
-                      report={reportData}
-                      metadata={metadata}
-                      language={language}
-                      shareUrl={shareUrl}
-                      onUnlock={handleUpgrade}
-                      isPremium={isPremium}
-                    />
+                    <ErrorBoundary>
+                      <PremiumReport
+                        report={reportData}
+                        metadata={metadata}
+                        language={language}
+                        shareUrl={shareUrl}
+                        onUnlock={handleUpgrade}
+                        isPremium={isPremium}
+                      />
+                    </ErrorBoundary>
                   )}
                 </div>
               ) : (
@@ -624,9 +636,20 @@ function CosmicPathContent() {
 export default function Home() {
   return (
     <Suspense fallback={
-      <div className="flex flex-col items-center justify-center min-h-screen relative z-20 bg-slate-950">
-        <div className="w-12 h-12 border-4 border-accent-gold border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-white/60 text-sm animate-pulse tracking-widest font-cinzel">LOADING...</p>
+      <div className="flex flex-col gap-4 max-w-2xl mx-auto pt-20 px-6 min-h-screen">
+        <div className="flex items-center gap-4 mb-8">
+          <Skeleton className="h-12 w-12 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-[200px]" />
+            <Skeleton className="h-4 w-[150px]" />
+          </div>
+        </div>
+        <Skeleton className="h-[200px] w-full rounded-xl" />
+        <div className="space-y-4">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-[90%]" />
+          <Skeleton className="h-4 w-[80%]" />
+        </div>
       </div>
     }>
       <CosmicPathContent />
