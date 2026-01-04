@@ -19,7 +19,7 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
         <motion.header
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="fixed top-0 left-0 right-0 z-50 px-6 py-4"
+            className="fixed top-0 left-0 right-0 z-50 px-6 py-4 pt-[calc(1rem+env(safe-area-inset-top,0px))]"
         >
             {/* Glass Background */}
             <div className="absolute inset-0 backdrop-blur-md bg-black/40 border-b border-white/5 noise-overlay" />

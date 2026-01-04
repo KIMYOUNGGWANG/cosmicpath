@@ -32,7 +32,7 @@ export function RitualSection() {
             onMouseMove={handleMouseMove}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className="relative py-48 w-full overflow-hidden bg-void flex flex-col items-center justify-center cursor-crosshair"
+            className="relative py-24 md:py-48 w-full overflow-hidden bg-void flex flex-col items-center justify-center cursor-crosshair"
         >
 
             {/* Ambient Background: Deepening the Void */}
@@ -52,7 +52,7 @@ export function RitualSection() {
                     initial={{ opacity: 0, y: 10 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 1.5 }}
-                    className="font-cinzel text-5xl md:text-7xl text-starlight mb-10 tracking-[0.3em]"
+                    className="font-cinzel text-3xl md:text-7xl text-starlight mb-10 tracking-[0.2em] md:tracking-[0.3em]"
                 >
                     THE RITUAL
                 </motion.h2>
@@ -61,7 +61,7 @@ export function RitualSection() {
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     transition={{ duration: 1, delay: 0.3 }}
-                    className="text-moonlight text-xs md:text-sm mb-20 font-light tracking-[0.2em] max-w-lg mx-auto leading-relaxed border-l border-r border-white/10 px-8"
+                    className="text-moonlight text-xs md:text-sm mb-12 md:mb-20 font-light tracking-[0.2em] max-w-lg mx-auto leading-relaxed border-l border-r border-white/10 px-8"
                 >
                     {language === 'ko'
                         ? "운명의 좌표가 정밀하게 조율되었습니다. 황금빛 구심점을 통해 당신의 미래를 해독하십시오."

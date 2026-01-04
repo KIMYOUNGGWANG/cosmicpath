@@ -156,10 +156,10 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                                         if (e.currentTarget.showPicker) e.currentTarget.showPicker();
                                     } catch (err) { }
                                 }}
-                                className="w-full bg-transparent border-b border-white/10 py-3 text-lg text-starlight focus:outline-none focus:border-acc-gold transition-colors font-mono uppercase"
+                                className="w-full bg-transparent border-b border-white/20 py-4 text-lg text-starlight focus:outline-none focus:border-acc-gold transition-colors font-mono uppercase min-h-[50px] block"
                                 required
                             />
-                            <p className="mt-2 text-[10px] text-dim font-mono">YYYY-MM-DD</p>
+                            <p className="mt-2 text-[10px] text-dim font-mono tracking-widest">YYYY-MM-DD</p>
                         </div>
                         <div>
                             <input
@@ -173,9 +173,9 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                                         if (e.currentTarget.showPicker) e.currentTarget.showPicker();
                                     } catch (err) { }
                                 }}
-                                className={`w-full bg-transparent border-b border-white/10 py-3 text-lg text-starlight focus:outline-none focus:border-acc-gold transition-colors font-mono ${unknownTime ? 'opacity-30 cursor-not-allowed' : ''}`}
+                                className={`w-full bg-transparent border-b border-white/20 py-4 text-lg text-starlight focus:outline-none focus:border-acc-gold transition-colors font-mono min-h-[50px] block ${unknownTime ? 'opacity-30 cursor-not-allowed' : ''}`}
                             />
-                            <p className="mt-2 text-[10px] text-dim font-mono mb-4">{isEn ? 'HH:MM (Local Time)' : 'HH:MM (태어난 시간)'}</p>
+                            <p className="mt-2 text-[10px] text-dim font-mono tracking-widest mb-4">{isEn ? 'HH:MM (LOCAL TIME)' : 'HH:MM (태어난 시간)'}</p>
 
                             {/* Custom Styled Checkbox */}
                             <div className="flex items-start gap-3 group/check cursor-pointer" onClick={() => {

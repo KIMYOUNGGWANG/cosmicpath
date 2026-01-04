@@ -67,7 +67,7 @@ export function EngineSection() {
     return (
         <section
             ref={containerRef}
-            className="relative py-32 md:py-48 overflow-hidden bg-void"
+            className="relative py-20 md:py-48 overflow-hidden bg-void"
         >
             {/* Background Grid */}
             <div className="absolute inset-0 opacity-10">
@@ -95,7 +95,7 @@ export function EngineSection() {
                     <span className="text-acc-logic text-xs font-bold tracking-[0.3em] uppercase block mb-4">
                         Cosmic Intelligence
                     </span>
-                    <h2 className="font-cinzel text-3xl md:text-5xl text-starlight mb-6 leading-tight">
+                    <h2 className="font-cinzel text-2xl md:text-5xl text-starlight mb-6 leading-tight">
                         모호한 운세는 그만.<br className="md:hidden" />
                         <span className="text-acc-gold">데이터</span>로 증명합니다.
                     </h2>

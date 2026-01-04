@@ -18,11 +18,11 @@ export function DiagnosisSection() {
                     <span className="text-acc-nebula text-xs font-bold tracking-widest uppercase mb-4 block">
                         The Diagnosis
                     </span>
-                    <h2 className="font-cinzel text-3xl md:text-4xl text-starlight mb-8 leading-tight">
+                    <h2 className="font-cinzel text-2xl md:text-4xl text-starlight mb-6 md:mb-8 leading-tight">
                         겉으로는 <span className="text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">차분한 호수</span> 같지만,<br />
                         수면 아래에는 <span className="text-acc-nebula drop-shadow-[0_0_15px_rgba(255,59,48,0.4)]">화산</span>이 끓고 있습니다.
                     </h2>
-                    <div className="space-y-6 text-moonlight font-light leading-relaxed">
+                    <div className="space-y-4 md:space-y-6 text-moonlight font-light leading-relaxed text-sm md:text-base">
                         <p>
                             남들은 당신을 &#39;안정적인 사람&#39;이라 생각합니다.
                             하지만 당신은 알고 있습니다. 지금 자신이 인생의 거대한 변곡점에 서 있다는 것을.
@@ -35,7 +35,7 @@ export function DiagnosisSection() {
                 </motion.div>
 
                 {/* Right: Abstract Visualization */}
-                <div className="flex-1 w-full relative h-[400px]">
+                <div className="flex-1 w-full relative h-[300px] md:h-[400px]">
                     <motion.div
                         initial={{ scale: 0.8, opacity: 0 }}
                         whileInView={{ scale: 1, opacity: 1 }}

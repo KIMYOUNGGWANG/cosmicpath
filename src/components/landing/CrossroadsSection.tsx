@@ -54,7 +54,7 @@ export function CrossroadsSection() {
         fetchPrice();
     }, []);
     return (
-        <section className="relative h-screen flex items-center justify-center bg-void overflow-hidden">
+        <section className="relative min-h-screen py-20 flex items-center justify-center bg-void overflow-hidden">
 
             {/* Background Vignette */}
             <div className="absolute inset-0 bg-radial-gradient from-transparent via-void/50 to-void pointer-events-none" />
@@ -91,10 +91,10 @@ export function CrossroadsSection() {
                     viewport={{ once: true }}
                     transition={{ duration: 1 }}
                 >
-                    <h2 className="font-cinzel text-4xl md:text-6xl text-starlight mb-8 leading-tight">
+                    <h2 className="font-cinzel text-3xl md:text-6xl text-starlight mb-8 leading-tight">
                         당신의 궤도를 <br /> <span className="text-acc-gold drop-shadow-[0_0_20px_rgba(212,175,55,0.5)]">수정하세요.</span>
                     </h2>
-                    <p className="text-moonlight text-lg mb-12 max-w-xl mx-auto font-light">
+                    <p className="text-moonlight text-base md:text-lg mb-10 md:mb-12 max-w-xl mx-auto font-light">
                         인생의 정답지를 미리 볼 수 있다면, <br />
                         당신은 그 기회에 얼마의 가치를 매기시겠습니까?
                     </p>
@@ -106,7 +106,7 @@ export function CrossroadsSection() {
                             className="relative z-10 flex flex-col items-center justify-center px-16 py-6 bg-white text-deep-navy rounded-xl hover:scale-105 transition-all duration-300 shadow-[0_0_40px_rgba(255,255,255,0.4)] group-hover:shadow-[0_0_60px_rgba(255,255,255,0.6)]"
                         >
                             <div className="flex items-center gap-3">
-                                <span className="font-bold tracking-widest text-xl md:text-2xl">내 운명 확인하기</span>
+                                <span className="font-bold tracking-widest text-lg md:text-2xl">내 운명 확인하기</span>
                                 <span className="animate-pulse">✨</span>
                             </div>
 

@@ -18,7 +18,7 @@ const binaryRows = [
 
 export function BlueprintSection() {
     return (
-        <section className="relative py-20 md:py-40 overflow-hidden bg-surface">
+        <section className="relative py-16 md:py-40 overflow-hidden bg-surface">
             <div className="container-cosmic relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-20 items-center">
 
                 {/* Left: Copy */}
@@ -26,7 +26,7 @@ export function BlueprintSection() {
                     <span className="text-acc-gold text-xs font-bold tracking-widest uppercase mb-4 block">
                         The Product
                     </span>
-                    <h2 className="font-cinzel text-4xl md:text-5xl text-starlight mb-8">
+                    <h2 className="font-cinzel text-3xl md:text-5xl text-starlight mb-6 md:mb-8 leading-tight">
                         단순 운세가 아닌, <br />
                         <span className="text-acc-gold">인생 설계도</span>입니다.
                     </h2>
@@ -58,7 +58,7 @@ export function BlueprintSection() {
                 </div>
 
                 {/* Right: Visual Stack (PDF Preview) */}
-                <div className="relative h-[500px] w-full flex items-center justify-center perspective-[1000px]">
+                <div className="relative h-[400px] md:h-[500px] w-full flex items-center justify-center perspective-[1000px]">
                     {/* Decorative Background Numbers */}
                     <div className="absolute inset-0 overflow-hidden opacity-5 font-mono text-[10px] leading-none pointer-events-none select-none">
                         {binaryRows.map((row, i) => (
