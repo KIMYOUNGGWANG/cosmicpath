@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { Metadata } from 'next';
 import { GlobalHeader } from '@/components/common/GlobalHeader';
+import { ChatInterface } from '@/components/oracle-chat/ChatInterface';
 
 interface SharedPageProps {
     params: Promise<{
@@ -68,6 +69,7 @@ export default async function SharedPage({ params }: SharedPageProps) {
 
             <GlobalHeader language={language} />
 
+
             <div className="pt-32 pb-20">
                 <PremiumReport
                     report={reportData}
@@ -76,7 +78,13 @@ export default async function SharedPage({ params }: SharedPageProps) {
                     isPremium={metadata?.isPremium}
                     shareUrl={`${process.env.NEXT_PUBLIC_APP_URL || 'https://cosmicpath.app'}/share/${id}`}
                 />
+
+                {/* Oracle Chat Integration */}
+                <div className="container mx-auto px-4 mt-12 mb-20">
+                    <ChatInterface readingId={id} />
+                </div>
             </div>
         </main>
     );
 }
+

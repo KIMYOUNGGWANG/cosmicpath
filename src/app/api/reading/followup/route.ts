@@ -1,38 +1,160 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { buildChatSystemPrompt } from '@/lib/ai/prompt-builder';
+import { generateCompletion } from '@/lib/ai/llm-client';
 
 /**
- * POST /api/reading/followup - 추가 질문 처리
+ * POST /api/reading/followup
+ * 상담권(Chat) 기능: 추가 질문 처리
  */
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { question, context, history } = body;
+        const { readingId, question } = body;
 
-        // TODO: 실제 AI 서비스 연동
-        // 현재는 임시 응답 반환
+        if (!readingId || !question) {
+            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        }
 
-        const mockAnswer = generateMockAnswer(question, context);
+        // 1. 리딩 결과 조회 (컨텍스트용)
+        const reading = await prisma.readingResult.findUnique({
+            where: { id: readingId },
+        });
 
+        if (!reading) {
+            return NextResponse.json({ error: 'Reading not found' }, { status: 404 });
+        }
+
+        // 2. 채팅 세션 확인 및 생성 (없으면 무료 1회 생성)
+        let session = await prisma.chatSession.findUnique({
+            where: { readingResultId: readingId },
+            include: { messages: true },
+        });
+
+        if (!session) {
+            session = await prisma.chatSession.create({
+                data: {
+                    readingResultId: readingId,
+                    credits: 1, // 무료 1회
+                },
+                include: { messages: true }, // 빈 배열
+            });
+        }
+
+        // 3. 크레딧 확인
+        if (session.credits <= 0) {
+            return NextResponse.json(
+                { error: 'Not enough credits', code: 'PAYMENT_REQUIRED' },
+                { status: 402 } // Payment Required
+            );
+        }
+
+        // 4. AI 답변 생성
+        // 저장된 리딩 데이터 파싱
+        const readingData = JSON.parse(reading.data);
+        const systemPrompt = buildChatSystemPrompt(readingData);
+
+        // 이전 대화 내역 포맷팅 (최근 3개만 참조하여 컨텍스트 유지)
+        const historyText = session.messages.slice(-6).map((m: { role: string; content: string }) =>
+            `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`
+        ).join('\n');
+
+        const fullUserPrompt = historyText
+            ? `Previous Conversation:\n${historyText}\n\nCurrent Question: ${question}`
+            : question;
+
+        const aiResponse = await generateCompletion(systemPrompt, fullUserPrompt, 'free');
+
+        // 5. DB 저장 (User & Assistant) - 트랜잭션 추천
+        // Note: 크레딧 차감은 답변 성공 시에만
+
+        await prisma.$transaction([
+            // 사용자 질문 저장
+            prisma.chatMessage.create({
+                data: {
+                    chatSessionId: session.id,
+                    role: 'user',
+                    content: question,
+                }
+            }),
+            // AI 답변 저장
+            prisma.chatMessage.create({
+                data: {
+                    chatSessionId: session.id,
+                    role: 'assistant',
+                    content: aiResponse.content,
+                }
+            }),
+            // 크레딧 차감
+            prisma.chatSession.update({
+                where: { id: session.id },
+                data: { credits: { decrement: 1 } },
+            })
+        ]);
+
+
+        // 6. 응답 반환
         return NextResponse.json({
-            answer: mockAnswer,
+            answer: aiResponse.content,
+            creditsLeft: session.credits - 1,
             success: true,
         });
-    } catch (error) {
+
+    } catch (error: any) {
         console.error('Follow-up question failed:', error);
         return NextResponse.json(
-            { error: 'Failed to process follow-up question' },
+            { error: 'Failed to process follow-up question', details: error.message },
             { status: 500 }
         );
     }
 }
 
-function generateMockAnswer(question: string, context: any): string {
-    // 임시 응답 생성 (실제 AI 연동 전)
-    const responses = [
-        `좋은 질문이에요. "${question}"에 대해 말씀드리자면, 당신의 3원 통합 분석 결과를 바탕으로 볼 때, 현재 시기는 신중함이 필요한 때입니다. 특히 내면의 목소리에 귀 기울이시길 권합니다.`,
-        `"${question}"에 대한 답을 드리자면, 사주와 점성술 모두 이 시점에서 새로운 시작보다는 기존의 것들을 정리하는 데 집중하라고 조언합니다. 타로의 메시지도 비슷한 방향을 가리키고 있어요.`,
-        `흥미로운 질문이네요. "${question}"을 보면, 당신이 현재 많은 생각을 하고 계신 것 같습니다. 3원 분석에 따르면, 이 고민은 조만간 해결의 실마리가 보일 것입니다. 조급해하지 마세요.`,
-    ];
+/**
+ * GET /api/reading/followup?readingId=...
+ * 채팅 상태 조회 (크레딧, 내역)
+ */
+export async function GET(request: NextRequest) {
+    try {
+        const { searchParams } = new URL(request.url);
+        const readingId = searchParams.get('readingId');
 
-    return responses[Math.floor(Math.random() * responses.length)];
+        if (!readingId) {
+            return NextResponse.json({ error: 'Missing readingId' }, { status: 400 });
+        }
+
+        const session = await prisma.chatSession.findUnique({
+            where: { readingResultId: readingId },
+            include: {
+                messages: {
+                    orderBy: { createdAt: 'asc' }
+                }
+            },
+        });
+
+        if (!session) {
+            // 세션이 없으면 기본 상태 반환 (1 크레딧, 메시지 없음)
+            return NextResponse.json({
+                credits: 1,
+                messages: [],
+                hasSession: false
+            });
+        }
+
+        return NextResponse.json({
+            credits: session.credits,
+            messages: session.messages.map((m: { id: string; role: string; content: string; createdAt: Date }) => ({
+                id: m.id,
+                role: m.role,
+                content: m.content,
+                createdAt: m.createdAt
+            })),
+            hasSession: true
+        });
+
+    } catch (error: any) {
+        return NextResponse.json(
+            { error: 'Failed to fetch chat status', details: error.message },
+            { status: 500 }
+        );
+    }
 }
