@@ -50,9 +50,20 @@ export async function POST(request: NextRequest) {
         }
 
         // 4. AI 답변 생성
-        // 저장된 리딩 데이터 파싱
-        const readingData = JSON.parse(reading.data);
-        const systemPrompt = buildChatSystemPrompt(readingData);
+        // 저장된 리딩 데이터 및 메타데이터 파싱
+        const reportData = JSON.parse(reading.data);
+        const metadata = reading.metadata ? JSON.parse(reading.metadata) : null;
+
+        // buildChatSystemPrompt가 기대하는 구조: { saju, astrology, tarot }
+        // metadata에서 원본 saju 데이터를 추출하거나, report에서 요약 정보 추출
+        const chatContext = {
+            saju: metadata?.saju || reportData.saju_sections?.overview || '사주 정보 없음',
+            astrology: metadata?.astrology || reportData.summary?.astro_anchor || '점성술 정보 없음',
+            tarot: metadata?.tarotCards || metadata?.tarot || [],
+            name: metadata?.readingData?.name
+        };
+
+        const systemPrompt = buildChatSystemPrompt(chatContext);
 
         // 이전 대화 내역 포맷팅 (최근 3개만 참조하여 컨텍스트 유지)
         const historyText = session.messages.slice(-6).map((m: { role: string; content: string }) =>

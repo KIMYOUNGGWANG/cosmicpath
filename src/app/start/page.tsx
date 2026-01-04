@@ -10,6 +10,7 @@ import { DecisionGuard } from '@/components/reading/decision-guard';
 import { ReadingSession, createSession } from '@/lib/session/reading-session';
 import { PaymentModal } from '@/components/payment/PaymentModal';
 import { StickyCTA } from '@/components/common/sticky-cta';
+import { ChatInterface } from '@/components/oracle-chat/ChatInterface';
 
 import { Suspense } from 'react';
 import { Footer } from '@/components/landing/Footer';
@@ -583,6 +584,12 @@ function CosmicPathContent() {
                         onUnlock={handleUpgrade}
                         isPremium={isPremium}
                       />
+                      {/* Oracle Chat Integration - Only show if readingId exists (saved) */}
+                      {shareUrl && (
+                        <div className="container mx-auto px-4 mt-12 mb-20 relative z-10">
+                          <ChatInterface readingId={shareUrl.split('/').pop()!} />
+                        </div>
+                      )}
                     </ErrorBoundary>
                   )}
                 </div>
