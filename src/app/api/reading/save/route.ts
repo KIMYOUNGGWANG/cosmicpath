@@ -1,18 +1,19 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { devLog } from '@/lib/dev-logger';
 
 export async function POST(request: Request) {
     try {
         // DB 연결 상태 확인
         if (!process.env.DATABASE_URL) {
-            console.error('Save API: DATABASE_URL is missing');
+            devLog.error('Save API: DATABASE_URL is missing');
             return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
         }
 
         const body = await request.json().catch(() => null);
 
         if (!body) {
-            console.error('Save API: Empty or invalid JSON body');
+            devLog.error('Save API: Empty or invalid JSON body');
             return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
         }
 
@@ -29,14 +30,14 @@ export async function POST(request: Request) {
             dataStr = typeof data === 'string' ? data : JSON.stringify(data);
             metaStr = metadata ? (typeof metadata === 'string' ? metadata : JSON.stringify(metadata)) : null;
         } catch (stringifyError: any) {
-            console.error('Save API: JSON stringify failed:', stringifyError);
+            devLog.error('Save API: JSON stringify failed:', stringifyError);
             return NextResponse.json({
                 error: 'JSON Serialization Failed',
                 details: stringifyError.message
             }, { status: 400 });
         }
 
-        console.log('Save API: Saving to database...', {
+        devLog.log('Save API: Saving to database...', {
             dataLength: dataStr.length,
             hasMetadata: !!metaStr
         });
@@ -56,10 +57,10 @@ export async function POST(request: Request) {
                 },
             });
 
-        console.log('Save API: Success!', result.id);
+        devLog.log('Save API: Success!', result.id);
         return NextResponse.json({ id: result.id, success: true });
     } catch (error: any) {
-        console.error('Save API: Database error:', error);
+        devLog.error('Save API: Database error:', error);
 
         // Prisma 에러인 경우 더 구체적인 정보 전달
         return NextResponse.json(

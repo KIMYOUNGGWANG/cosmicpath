@@ -12,7 +12,7 @@ export function SharedPageRedirect({ id }: { id: string }) {
         const canceled = searchParams.get('canceled');
 
         if (paid === 'true' || canceled === 'true') {
-            console.log('[SharedPage] Paid/Canceled detected. Redirecting to interactive app...');
+            // Redirect to interactive app for payment flow
             router.replace(`/start?${searchParams.toString()}&reading_id=${id}`);
         }
     }, [id, router, searchParams]);

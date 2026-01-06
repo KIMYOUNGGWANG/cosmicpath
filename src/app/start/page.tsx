@@ -169,6 +169,9 @@ function CosmicPathContent() {
             // If we have a saved ID, sync the URL
             const pendingId = sessionStorage.getItem('pending_reading_id');
             if (pendingId) {
+              const origin = window.location.origin;
+              const appUrl = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+              setShareUrl(`${appUrl}/share/${pendingId}`);
               window.history.replaceState({ readingId: pendingId }, '', `/share/${pendingId}${window.location.search}`);
             }
 

@@ -21,6 +21,7 @@ import { PaymentModal } from '../payment/PaymentModal';
 import { READING_PRODUCT } from '@/lib/payment/payment-config';
 import { ElementHarmony } from './ElementHarmony';
 import { ActionChecklist } from './ActionChecklist';
+import { FinalVerdictCard } from './FinalVerdictCard';
 // import TossPaymentWidget from '../payment/TossPaymentWidget'; // Toss Payments (Commented out)
 
 // 새로운 Premium Report 타입 (기존 CosmicReport 대체)
@@ -151,6 +152,15 @@ export interface PremiumReportData {
         definition: string;
         context: string;
     }[];
+    final_verdict?: {
+        title: string;
+        core_message: string;
+        saju_foundation: string;
+        astro_support: string;
+        tarot_insight: string;
+        action_priorities: string[];
+        closing_words: string;
+    };
     date_selection?: {
         auspicious?: {
             date: string;
@@ -575,6 +585,20 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                 isLocked={true}
                                 onUnlock={handleUnlock}
                             />
+                        </div>
+                    )}
+                </motion.section>
+
+                {/* 5.5 Final Verdict - The Grand Conclusion */}
+                <motion.section
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true, margin: "-100px" }}
+                    variants={fadeInUp}
+                >
+                    {report.final_verdict && (
+                        <div className="px-4 md:px-0">
+                            <FinalVerdictCard data={report.final_verdict} />
                         </div>
                     )}
                 </motion.section>

@@ -20,6 +20,7 @@ model ChatSession {
   readingResultId String        @unique
   readingResult   ReadingResult @relation(fields: [readingResultId], references: [id])
   credits         Int           @default(1) // Default 1 free question
+  shareRewardClaimed Boolean    @default(false) // Track if share reward was given
   messages        ChatMessage[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt

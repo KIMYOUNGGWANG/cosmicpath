@@ -245,7 +245,7 @@ function secureShuffle<T>(array: T[]): T[] {
 }
 
 /**
- * 타로 카드 뽑기
+ * 타로 카드 뽑기 (랜덤)
  */
 export function drawCards(
     count: number = 1,

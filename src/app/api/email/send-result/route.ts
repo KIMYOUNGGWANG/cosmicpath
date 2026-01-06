@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { devLog } from '@/lib/dev-logger';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -116,13 +117,13 @@ export async function POST(request: Request) {
         });
 
         if (error) {
-            console.error('Resend Error:', error);
+            devLog.error('Resend Error:', error);
             return NextResponse.json({ error: error.message }, { status: 500 });
         }
 
         return NextResponse.json({ success: true, data });
     } catch (error) {
-        console.error('Failed to send email:', error);
+        devLog.error('Failed to send email:', error);
         return NextResponse.json(
             { error: 'Internal Server Error' },
             { status: 500 }

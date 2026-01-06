@@ -619,10 +619,13 @@ function calculateAllPlanetPositions(jd: number): { sign: number; degree: number
 /**
  * 점성술 결과를 읽기 쉬운 문자열로 변환
  */
-export function formatAstrology(result: AstrologyResult): string {
-    const sunSignName = ZODIAC_SIGNS[result.sunSign].name;
-    const moonSignName = ZODIAC_SIGNS[result.moonSign].name;
-    const ascName = ZODIAC_SIGNS[result.ascendant].name;
+export function formatAstrology(result: AstrologyResult | string | null | undefined): string {
+    if (!result) return '점성술 정보 없음';
+    if (typeof result === 'string') return result;
+
+    const sunSignName = ZODIAC_SIGNS[result.sunSign]?.name || 'Unknown';
+    const moonSignName = ZODIAC_SIGNS[result.moonSign]?.name || 'Unknown';
+    const ascName = ZODIAC_SIGNS[result.ascendant]?.name || 'Unknown';
 
     return `태양: ${sunSignName}, 달: ${moonSignName}, 상승궁: ${ascName}`;
 }

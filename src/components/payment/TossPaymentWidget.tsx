@@ -40,7 +40,6 @@ export default function TossPaymentWidget({
 
                 // 4. 위젯 렌더링 완료 이벤트 리스너 추가
                 paymentMethodsWidget.on('ready', () => {
-                    console.log('Toss Payment Widget is ready');
                     setIsWidgetReady(true);
                     setIsLoading(false);
                 });

@@ -24,6 +24,46 @@ export function SharePanel({
     const [isOpen, setIsOpen] = useState(false);
     const [copied, setCopied] = useState(false);
 
+    const claimReward = async () => {
+        // 클라이언트 사이드 체크 (이미 받았으면 요청 안 함)
+        const hasClaimed = sessionStorage.getItem('share_reward_claimed');
+        if (hasClaimed) return;
+
+        try {
+            // shareUrl에서 readingResultId 추출 (마지막 경로 세그먼트)
+            console.log('[SharePanel] shareUrl:', shareUrl);
+            const readingId = shareUrl?.split('/').pop();
+            console.log('[SharePanel] Extracted readingId:', readingId);
+
+            if (!readingId) {
+                console.error('[SharePanel] Failed to extract readingId');
+                return;
+            }
+
+            const res = await fetch('/api/reading/claim-share-reward', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ readingId })
+            });
+
+            const data = await res.json();
+            console.log('[SharePanel] API Response:', data);
+
+            if (res.ok && data.success) {
+                // 성공 시 무조건 알림 (메시지 내용 무관)
+                alert(isEn ? '🎁 Share Reward: +1 Free Question Credit!' : '🎁 공유 보상: 추가 질문권 1개가 지급되었습니다!');
+                sessionStorage.setItem('share_reward_claimed', 'true');
+
+                // ChatInterface 등에 크레딧 갱신 알림
+                window.dispatchEvent(new Event('credit-updated'));
+            } else {
+                console.warn('[SharePanel] Reward claim failed:', data.message);
+            }
+        } catch (error) {
+            console.error('Failed to claim reward:', error);
+        }
+    };
+
     // 카카오톡 공유
     const handleKakaoShare = () => {
         if (typeof window === 'undefined') return;
@@ -88,6 +128,9 @@ export function SharePanel({
                 },
             ],
         });
+
+        // 공유 시도 시 보상 청구
+        claimReward();
     };
 
     // 링크 복사
@@ -98,6 +141,7 @@ export function SharePanel({
             if (navigator.clipboard && window.isSecureContext) {
                 await navigator.clipboard.writeText(url);
                 setCopied(true);
+                claimReward(); // 보상 청구
                 setTimeout(() => setCopied(false), 2000);
                 return;
             }
@@ -114,6 +158,7 @@ export function SharePanel({
             try {
                 document.execCommand('copy');
                 setCopied(true);
+                claimReward(); // 보상 청구
                 setTimeout(() => setCopied(false), 2000);
             } catch (err) {
                 console.error('Fallback copy failed:', err);
@@ -126,20 +171,25 @@ export function SharePanel({
         }
     };
 
+    // ... (중략)
+
     return (
         <div className="relative">
             {/* 공유 버튼 */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all"
+                className="relative flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all hover:bg-violet-500/10"
                 style={{
                     backgroundColor: 'rgba(139, 92, 246, 0.2)',
                     color: '#a855f7',
                     border: '1px solid rgba(139, 92, 246, 0.3)',
                 }}
             >
+                <div className="absolute -top-3 -right-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg animate-bounce">
+                    🎁 +1 Credit
+                </div>
                 <Share2 size={18} />
-                {isEn ? 'Share' : '공유하기'}
+                {isEn ? 'Share & Get Reward' : '공유하고 선물받기'}
             </button>
 
             {/* 공유 패널 */}
@@ -149,7 +199,7 @@ export function SharePanel({
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute right-0 mt-2 w-64 rounded-2xl overflow-hidden z-50 transition-all duration-300"
+                        className="absolute right-0 mt-2 w-72 rounded-2xl overflow-hidden z-50 transition-all duration-300"
                         style={{
                             background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
                             border: '1px solid rgba(139, 92, 246, 0.3)',
@@ -161,9 +211,14 @@ export function SharePanel({
                             className="px-4 py-3 flex items-center justify-between"
                             style={{ borderBottom: '1px solid rgba(139, 92, 246, 0.2)' }}
                         >
-                            <span className="font-medium" style={{ color: '#ffffff' }}>
-                                {isEn ? 'Share Result' : '결과 공유하기'}
-                            </span>
+                            <div className="flex flex-col">
+                                <span className="font-medium text-white">
+                                    {isEn ? 'Share Result' : '결과 공유하기'}
+                                </span>
+                                <span className="text-xs text-pink-400 font-medium mt-0.5">
+                                    {isEn ? '✨ Get 1 Free Question Credit!' : '✨ 공유하면 질문권 1개 무료!'}
+                                </span>
+                            </div>
                             <button
                                 onClick={() => setIsOpen(false)}
                                 style={{ color: 'rgba(255, 255, 255, 0.5)' }}

@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { rateLimit } from '@/lib/rate-limiter';
 import { calculateSaju } from '@/lib/engines/saju';
 import { calculateAstrology, ZODIAC_SIGNS } from '@/lib/engines/astrology';
 import { drawCards, TarotCard } from '@/lib/engines/tarot';
@@ -50,6 +51,10 @@ const ReadingRequestSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+    // 0. Rate Limiting
+    const limitResult = await rateLimit(request);
+    if (limitResult) return limitResult;
+
     try {
         const body = await request.json();
 

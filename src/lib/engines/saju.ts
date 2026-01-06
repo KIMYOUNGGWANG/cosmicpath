@@ -1,21 +1,74 @@
 /**
  * 사주(四柱) 계산 엔진
  * korean-lunar-calendar 라이브러리 기반 정확한 만세력 산출 (KARI 표준)
+ * 
+ * 📚 데이터 기준: 사주명리학 시스템 지침 v1.0.3
  */
 
 import KoreanLunarCalendar from 'korean-lunar-calendar';
 
-// 천간 (天干) - 10개
-export const HEAVENLY_STEMS = [
-  '갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'
-] as const;
+// =====================================
+// 천간 (天干) - 10개 완전 정규화 테이블
+// =====================================
+export interface StemData {
+  index: number;
+  hanja: string;
+  hangul: string;
+  english: string;
+  element: keyof typeof FIVE_ELEMENTS;
+  yinYang: '양' | '음';
+}
 
-// 지지 (地支) - 12개
-export const EARTHLY_BRANCHES = [
-  '자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'
-] as const;
+export const HEAVENLY_STEMS_DATA: StemData[] = [
+  { index: 0, hanja: '甲', hangul: '갑', english: 'Jia', element: 'wood', yinYang: '양' },
+  { index: 1, hanja: '乙', hangul: '을', english: 'Yi', element: 'wood', yinYang: '음' },
+  { index: 2, hanja: '丙', hangul: '병', english: 'Bing', element: 'fire', yinYang: '양' },
+  { index: 3, hanja: '丁', hangul: '정', english: 'Ding', element: 'fire', yinYang: '음' },
+  { index: 4, hanja: '戊', hangul: '무', english: 'Wu', element: 'earth', yinYang: '양' },
+  { index: 5, hanja: '己', hangul: '기', english: 'Ji', element: 'earth', yinYang: '음' },
+  { index: 6, hanja: '庚', hangul: '경', english: 'Geng', element: 'metal', yinYang: '양' },
+  { index: 7, hanja: '辛', hangul: '신', english: 'Xin', element: 'metal', yinYang: '음' },
+  { index: 8, hanja: '壬', hangul: '임', english: 'Ren', element: 'water', yinYang: '양' },
+  { index: 9, hanja: '癸', hangul: '계', english: 'Gui', element: 'water', yinYang: '음' },
+];
 
-// 오행 (五行)
+// 기존 호환성 유지
+export const HEAVENLY_STEMS = HEAVENLY_STEMS_DATA.map(s => s.hangul) as unknown as readonly ['갑', '을', '병', '정', '무', '기', '경', '신', '임', '계'];
+
+// =====================================
+// 지지 (地支) - 12개 완전 정규화 테이블
+// =====================================
+export interface BranchData {
+  index: number;
+  hanja: string;
+  hangul: string;
+  english: string;
+  element: keyof typeof FIVE_ELEMENTS;
+  animal: string;
+  animalEn: string;
+}
+
+export const EARTHLY_BRANCHES_DATA: BranchData[] = [
+  { index: 0, hanja: '子', hangul: '자', english: 'Zi', element: 'water', animal: '쥐', animalEn: 'Rat' },
+  { index: 1, hanja: '丑', hangul: '축', english: 'Chou', element: 'earth', animal: '소', animalEn: 'Ox' },
+  { index: 2, hanja: '寅', hangul: '인', english: 'Yin', element: 'wood', animal: '호랑이', animalEn: 'Tiger' },
+  { index: 3, hanja: '卯', hangul: '묘', english: 'Mao', element: 'wood', animal: '토끼', animalEn: 'Rabbit' },
+  { index: 4, hanja: '辰', hangul: '진', english: 'Chen', element: 'earth', animal: '용', animalEn: 'Dragon' },
+  { index: 5, hanja: '巳', hangul: '사', english: 'Si', element: 'fire', animal: '뱀', animalEn: 'Snake' },
+  { index: 6, hanja: '午', hangul: '오', english: 'Wu', element: 'fire', animal: '말', animalEn: 'Horse' },
+  { index: 7, hanja: '未', hangul: '미', english: 'Wei', element: 'earth', animal: '양', animalEn: 'Goat' },
+  { index: 8, hanja: '申', hangul: '신', english: 'Shen', element: 'metal', animal: '원숭이', animalEn: 'Monkey' },
+  { index: 9, hanja: '酉', hangul: '유', english: 'You', element: 'metal', animal: '닭', animalEn: 'Rooster' },
+  { index: 10, hanja: '戌', hangul: '술', english: 'Xu', element: 'earth', animal: '개', animalEn: 'Dog' },
+  { index: 11, hanja: '亥', hangul: '해', english: 'Hai', element: 'water', animal: '돼지', animalEn: 'Pig' },
+];
+
+// 기존 호환성 유지
+export const EARTHLY_BRANCHES = EARTHLY_BRANCHES_DATA.map(b => b.hangul) as unknown as readonly ['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'];
+
+// =====================================
+// 오행 (五行) 확장
+// =====================================
 export const FIVE_ELEMENTS = {
   wood: '목',
   fire: '화',
@@ -24,7 +77,21 @@ export const FIVE_ELEMENTS = {
   water: '수',
 } as const;
 
-// 천간별 오행
+export const FIVE_ELEMENTS_HANJA: Record<keyof typeof FIVE_ELEMENTS, string> = {
+  wood: '木',
+  fire: '火',
+  earth: '土',
+  metal: '金',
+  water: '水',
+};
+
+// 상생/상극 관계
+export const ELEMENT_RELATIONS = {
+  generates: { wood: 'fire', fire: 'earth', earth: 'metal', metal: 'water', water: 'wood' },
+  overcomes: { wood: 'earth', fire: 'metal', earth: 'water', metal: 'wood', water: 'fire' },
+} as const;
+
+// 천간별 오행 (기존 호환성)
 const STEM_ELEMENTS: Record<string, keyof typeof FIVE_ELEMENTS> = {
   '갑': 'wood', '을': 'wood',
   '병': 'fire', '정': 'fire',
@@ -33,7 +100,7 @@ const STEM_ELEMENTS: Record<string, keyof typeof FIVE_ELEMENTS> = {
   '임': 'water', '계': 'water',
 };
 
-// 지지별 오행
+// 지지별 오행 (기존 호환성)
 const BRANCH_ELEMENTS: Record<string, keyof typeof FIVE_ELEMENTS> = {
   '인': 'wood', '묘': 'wood',
   '사': 'fire', '오': 'fire',
@@ -408,7 +475,118 @@ function calculateSajuFallback(
 /**
  * 사주를 읽기 쉬운 문자열로 변환
  */
-export function formatSaju(saju: SajuResult): string {
+export function formatSaju(saju: SajuResult | string | null | undefined): string {
+  if (!saju) return '사주 정보 없음';
+  if (typeof saju === 'string') return saju;
+
   const { yeonPillar, monthPillar, dayPillar, hourPillar } = saju;
+
+  if (!yeonPillar || !monthPillar || !dayPillar || !hourPillar) {
+    return '사주 데이터 불완전';
+  }
+
   return `${yeonPillar.stem}${yeonPillar.branch}년 ${monthPillar.stem}${monthPillar.branch}월 ${dayPillar.stem}${dayPillar.branch}일 ${hourPillar.stem}${hourPillar.branch}시`;
+}
+
+// =====================================
+// 용신 (用神) 추천 로직 - 기본판
+// =====================================
+
+/**
+ * 일간(일주의 천간)을 기준으로 기본 용신을 추천
+ * 실제 명리학에서는 월령, 전체 오행 분포 등을 종합하지만
+ * 이 버전은 간략화된 "조후용신" 개념에 기반합니다.
+ */
+export function getYongsinRecommendation(dayMaster: string, birthMonth: number): {
+  yongsin: keyof typeof FIVE_ELEMENTS;
+  reason: string;
+  reasonEn: string;
+} {
+  const dayElement = STEM_ELEMENTS[dayMaster];
+
+  // 조후용신: 계절에 따른 필요 오행
+  // 겨울(11,12,1월): 火 필요 (추위 조절)
+  // 여름(5,6,7월): 水 필요 (더위 조절)
+  // 봄/가을: 일간에 따라 다름
+
+  const isWinter = birthMonth >= 11 || birthMonth <= 1;
+  const isSummer = birthMonth >= 5 && birthMonth <= 7;
+
+  if (isWinter) {
+    return {
+      yongsin: 'fire',
+      reason: `겨울에 태어나 조후(調候)상 火(화)가 필요합니다. 따뜻함이 삶에 활력을 줍니다.`,
+      reasonEn: `Born in winter, Fire is needed for warmth and vitality.`,
+    };
+  }
+
+  if (isSummer) {
+    return {
+      yongsin: 'water',
+      reason: `여름에 태어나 조후(調候)상 水(수)가 필요합니다. 시원함이 마음을 안정시킵니다.`,
+      reasonEn: `Born in summer, Water is needed for cooling and calmness.`,
+    };
+  }
+
+  // 기본: 일간을 생해주는 오행이 용신
+  const generatingElement = Object.entries(ELEMENT_RELATIONS.generates)
+    .find(([_, generated]) => generated === dayElement)?.[0] as keyof typeof FIVE_ELEMENTS | undefined;
+
+  return {
+    yongsin: generatingElement || 'wood',
+    reason: `일간 ${dayMaster}(${FIVE_ELEMENTS[dayElement]})을 생해주는 ${generatingElement ? FIVE_ELEMENTS[generatingElement] : '목'}이 용신입니다.`,
+    reasonEn: `The element that generates your Day Master is your Yongsin.`,
+  };
+}
+
+/**
+ * 오행 분포 분석
+ */
+export function analyzeElementDistribution(saju: SajuResult): Record<keyof typeof FIVE_ELEMENTS, number> {
+  const distribution: Record<keyof typeof FIVE_ELEMENTS, number> = {
+    wood: 0, fire: 0, earth: 0, metal: 0, water: 0
+  };
+
+  // 천간 4개
+  [saju.yeonPillar.stem, saju.monthPillar.stem, saju.dayPillar.stem, saju.hourPillar.stem]
+    .forEach(stem => {
+      const element = STEM_ELEMENTS[stem];
+      if (element) distribution[element]++;
+    });
+
+  // 지지 4개
+  [saju.yeonPillar.branch, saju.monthPillar.branch, saju.dayPillar.branch, saju.hourPillar.branch]
+    .forEach(branch => {
+      const element = BRANCH_ELEMENTS[branch];
+      if (element) distribution[element]++;
+    });
+
+  return distribution;
+}
+
+/**
+ * 오행 과다/부족 진단
+ */
+export function diagnoseElementBalance(saju: SajuResult): {
+  excessive: (keyof typeof FIVE_ELEMENTS)[];
+  lacking: (keyof typeof FIVE_ELEMENTS)[];
+  balanced: boolean;
+} {
+  const distribution = analyzeElementDistribution(saju);
+  const values = Object.values(distribution);
+  const avg = values.reduce((a, b) => a + b, 0) / values.length;
+
+  const excessive = (Object.entries(distribution) as [keyof typeof FIVE_ELEMENTS, number][])
+    .filter(([_, count]) => count >= 3)
+    .map(([element]) => element);
+
+  const lacking = (Object.entries(distribution) as [keyof typeof FIVE_ELEMENTS, number][])
+    .filter(([_, count]) => count === 0)
+    .map(([element]) => element);
+
+  return {
+    excessive,
+    lacking,
+    balanced: excessive.length === 0 && lacking.length === 0,
+  };
 }

@@ -16,11 +16,13 @@ export const READING_PRODUCT = {
 
 export const FOLLOW_UP_PRODUCT = {
     id: 'cosmicpath_followup_v1',
-    productId: '', // TODO: 여기에 Stripe Dashboard의 Product ID를 입력해주세요.
-    name: '운명의 가이드 추가 질문권',
-    description: 'AI 설계자에게 물어보는 추가 질문 3회권',
+    productId: process.env.NODE_ENV === 'development'
+        ? (process.env.NEXT_PUBLIC_STRIPE_FOLLOWUP_PRODUCT_ID_TEST || 'prod_TestFollowUpId')
+        : (process.env.NEXT_PUBLIC_STRIPE_FOLLOWUP_PRODUCT_ID || 'prod_LiveFollowUpId'),
+    name: 'Oracle Chat Additional Credit',
+    description: '1 Additional Question for Oracle Chat',
     currency: 'USD',
-    followUpQuestions: 3,
+    followUpQuestions: 1,
 } as const;
 
 export type ProductType = typeof READING_PRODUCT | typeof FOLLOW_UP_PRODUCT;

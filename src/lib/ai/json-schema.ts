@@ -130,13 +130,23 @@ export interface PremiumReport {
     // 액션 플랜
     action_plan: TimelineEvent[];
 
-    // 용어집
     glossary?: {
         term: string;
         hanja: string;
         definition: string;
         context: string;
     }[];
+
+    // 최종 결론 (사주/점성술 기반)
+    final_verdict?: {
+        title: string;                    // 📌 운명의 설계자가 내린 최종 결론
+        core_message: string;             // 사주/점성술 기반 핵심 메시지 (3-4문장)
+        saju_foundation: string;          // 사주적 근거 (일간, 용신, 대운 등)
+        astro_support: string;            // 점성술 보완 설명
+        tarot_insight: string;            // 타로 현재 에너지 (보조 참고)
+        action_priorities: string[];      // 우선순위 행동 목록
+        closing_words: string;            // 마무리 격려 멘트
+    };
 }
 
 // API 응답 타입

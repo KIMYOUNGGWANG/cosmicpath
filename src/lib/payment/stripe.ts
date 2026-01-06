@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { READING_PRODUCT, FOLLOW_UP_PRODUCT } from './payment-config';
+import { devLog } from '@/lib/dev-logger';
 
 // Lazy initialization to avoid build-time errors
 let stripeInstance: Stripe | null = null;
@@ -16,11 +16,22 @@ function getStripe(): Stripe {
 
 const stripe = getStripe();
 
+// Simple in-memory cache for pricing
+const priceCache = new Map<string, { data: any, timestamp: number }>();
+const CACHE_TTL = 3600 * 1000; // 1 hour
+
 /**
  * 상품 ID로 현재 활성화된 가격 정보를 가져옵니다.
  * 특정 통화(currency)를 우선적으로 찾습니다.
  */
 export async function getProductPrice(productId: string, targetCurrency: string = 'USD') {
+    // 0. Cache Check
+    const cacheKey = `${productId}-${targetCurrency}`;
+    const cached = priceCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+        return cached.data;
+    }
+
     try {
         // 1. 상품 정보 가져오기 (기본 가격 확인용)
         const product = await stripe.products.retrieve(productId, {
@@ -50,9 +61,9 @@ export async function getProductPrice(productId: string, targetCurrency: string 
             throw new Error('No active price found for this product');
         }
 
-        console.log(`[Stripe] Resolved price: ${price.unit_amount} ${price.currency} for product ${productId}`);
+        devLog.log(`[Stripe] Resolved price: ${price.unit_amount} ${price.currency} for product ${productId}`);
 
-        return {
+        const result = {
             productId: product.id,
             priceId: price.id,
             amount: price.unit_amount ? price.unit_amount / 100 : 0,
@@ -65,8 +76,13 @@ export async function getProductPrice(productId: string, targetCurrency: string 
                 : 'Free',
             metadata: product.metadata
         };
+
+        // Update Cache
+        priceCache.set(cacheKey, { data: result, timestamp: Date.now() });
+
+        return result;
     } catch (error) {
-        console.error('Error fetching product price:', error);
+        devLog.error('Error fetching product price:', error);
         throw error;
     }
 }
@@ -119,7 +135,7 @@ export async function createCheckoutSession({
 
         return { url: session.url };
     } catch (error) {
-        console.error('Error creating checkout session:', error);
+        devLog.error('Error creating checkout session:', error);
         throw error;
     }
 }

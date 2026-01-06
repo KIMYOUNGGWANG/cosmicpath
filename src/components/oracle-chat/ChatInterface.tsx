@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, Sparkles, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 interface Message {
     id?: string;
@@ -20,37 +21,91 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
     const [credits, setCredits] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isThinking, setIsThinking] = useState(false);
+    const [hasInteracted, setHasInteracted] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
+
+    const fetchStatus = useCallback(async () => {
+        try {
+            const res = await fetch(`/api/reading/followup?readingId=${readingId}`);
+            if (res.ok) {
+                const data = await res.json();
+                setCredits(data.credits);
+                setMessages(data.messages || []);
+            }
+        } catch (error) {
+            console.error('Failed to load chat status:', error);
+        }
+    }, [readingId]);
 
     // 초기 상태 로드
     useEffect(() => {
-        const fetchStatus = async () => {
-            try {
-                const res = await fetch(`/api/reading/followup?readingId=${readingId}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    setCredits(data.credits);
-                    setMessages(data.messages || []);
-                }
-            } catch (error) {
-                console.error('Failed to load chat status:', error);
-            }
-        };
         fetchStatus();
-    }, [readingId]);
+    }, [fetchStatus]);
 
-    // 스크롤 자동 이동
+    // 결제 성공 처리
+    useEffect(() => {
+        if (searchParams.get('payment') === 'success') {
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, '', newUrl);
+
+            // [DEV ONLY] 웹훅 설정 없이도 개발 환경에서 테스트 가능하도록 강제 지급
+            if (process.env.NODE_ENV === 'development') {
+                fetch('/api/debug/force-credit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ readingId })
+                }).then(() => console.log('[Dev] Forced credit update'));
+            }
+
+            setTimeout(() => {
+                fetchStatus();
+                alert('결제가 완료되었습니다! 추가 질문권이 지급되었습니다.');
+            }, 1000);
+        }
+    }, [searchParams, fetchStatus, readingId]);
+
+    // 공유 보상 실시간 반영 (SharePanel에서 발생시키는 이벤트 수신)
+    useEffect(() => {
+        const handleCreditUpdate = () => {
+            console.log('[ChatInterface] Credit update event received, refreshing...');
+            fetchStatus();
+        };
+
+        window.addEventListener('credit-updated', handleCreditUpdate);
+        return () => window.removeEventListener('credit-updated', handleCreditUpdate);
+    }, [fetchStatus]);
+
+    // 스크롤 자동 이동 - 사용자가 상호작용한 후에만
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
     useEffect(() => {
-        scrollToBottom();
-    }, [messages, isThinking]);
+        if (hasInteracted) {
+            scrollToBottom();
+        }
+    }, [messages, isThinking, hasInteracted]);
+
+    // 모바일 키보드 대응: 뷰포트 크기 변경 시 스크롤 조정
+    useEffect(() => {
+        if (!hasInteracted) return;
+
+        const handleResize = () => {
+            // 약간의 딜레이를 주어 키보드 애니메이션 완료 후 스크롤
+            setTimeout(scrollToBottom, 100);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, [hasInteracted]);
 
     const handleSend = async () => {
         if (!input.trim() || !credits || credits <= 0 || isLoading) return;
 
+        setHasInteracted(true);
         const userMessage = input.trim();
         setInput('');
         setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
@@ -86,10 +141,31 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
         }
     };
 
-    // 결제 핸들러 (임시)
-    const handlePayment = () => {
-        if (confirm('질문권을 충전하시겠습니까? ($1.00)')) {
-            alert('결제 시스템 연동 준비 중입니다.');
+    // 결제 핸들러
+    const handlePayment = async () => {
+        try {
+            if (!confirm('질문권을 충전하시겠습니까? ($1.00)')) return;
+
+            setIsLoading(true);
+            const res = await fetch('/api/payment/chat-credit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    readingId,
+                    returnUrl: window.location.href
+                }),
+            });
+
+            if (!res.ok) throw new Error('Payment initialization failed');
+
+            const { url } = await res.json();
+            if (url) {
+                window.location.href = url;
+            }
+        } catch (error) {
+            console.error(error);
+            alert('결제 시스템 연결에 실패했습니다.');
+            setIsLoading(false);
         }
     };
 
@@ -126,8 +202,8 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
                         className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                         <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${msg.role === 'user'
-                                ? 'bg-star-yellow/20 text-star-yellow rounded-tr-none'
-                                : 'bg-white/10 text-gray-200 rounded-tl-none'
+                            ? 'bg-star-yellow/20 text-star-yellow rounded-tr-none'
+                            : 'bg-white/10 text-gray-200 rounded-tl-none'
                             }`}>
                             <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                         </div>
