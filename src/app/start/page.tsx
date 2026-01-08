@@ -87,18 +87,38 @@ function CosmicPathContent() {
     const isPaid = searchParams.get('paid') === 'true' || sessionStorage.getItem('payment_completed') === 'true';
     const hasReviewed = localStorage.getItem('review_submitted') === 'true';
     const isPromoUser = sessionStorage.getItem('promo_user') === 'true';
-    const isPremium = sessionStorage.getItem('is_premium_user') === 'true';
+    const isPremiumStatus = sessionStorage.getItem('is_premium_user') === 'true'; // renamed to avoid conflict
 
-    console.log('[Review Modal Check]', { isPaid, isPromoUser, isPremium, hasReviewed, step, hasReportData: !!reportData });
+    console.log('[Review Modal Check]', {
+      isPaid,
+      isPromoUser,
+      isPremium: isPremiumStatus,
+      hasReviewed,
+      step,
+      hasReportData: !!reportData,
+      isLoading,
+      isDecisionAccepted
+    });
 
-    const shouldShow = (isPaid || isPromoUser || isPremium) && !hasReviewed && step === 'result' && reportData;
+    // Check decision guard logic:
+    // If trust_score > 2, guard is not shown, so condition is true.
+    // If trust_score <= 2, guard is shown, so we wait for isDecisionAccepted.
+    const isGuardPassed = reportData?.summary ? (reportData.summary.trust_score > 2 || isDecisionAccepted) : false;
+
+    const shouldShow =
+      (isPaid || isPromoUser || isPremiumStatus) &&
+      !hasReviewed &&
+      step === 'result' &&
+      reportData &&
+      !isLoading &&
+      isGuardPassed;
 
     if (shouldShow) {
       console.log('[Review Modal] Setting up scroll listener...');
 
       const handleScroll = () => {
         const scrollPercent = (window.scrollY + window.innerHeight) / document.documentElement.scrollHeight;
-        console.log('[Review Modal] Scroll:', Math.round(scrollPercent * 100) + '%');
+        // console.log('[Review Modal] Scroll:', Math.round(scrollPercent * 100) + '%');
 
         if (scrollPercent >= 0.7) {
           console.log('[Review Modal] Showing modal!');
@@ -117,7 +137,7 @@ function CosmicPathContent() {
         window.removeEventListener('scroll', handleScroll);
       };
     }
-  }, [step, searchParams, reportData]);
+  }, [step, searchParams, reportData, isLoading, isDecisionAccepted]);
 
   // Resume Reading after Payment
   useEffect(() => {
