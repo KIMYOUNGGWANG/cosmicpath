@@ -49,14 +49,108 @@ export const HOUSES = [
     { number: 12, name: '무의식궁', meaning: '영성, 숨겨진 것' },
 ] as const;
 
-// 각도 (Aspects)
+// 각도 (Aspects) - Major + Minor
 export const ASPECTS = {
-    conjunction: { angle: 0, orb: 8, name: '합', meaning: '융합, 강화' },
-    opposition: { angle: 180, orb: 8, name: '충', meaning: '긴장, 균형 필요' },
-    trine: { angle: 120, orb: 8, name: '삼합', meaning: '조화, 행운' },
-    square: { angle: 90, orb: 8, name: '사각', meaning: '도전, 성장' },
-    sextile: { angle: 60, orb: 6, name: '육합', meaning: '기회, 협력' },
+    // Major Aspects (주요 각도)
+    conjunction: { angle: 0, orb: 10, name: '합', nameEn: 'Conjunction', meaning: '융합, 강화', type: 'major', harmony: 'neutral' },
+    opposition: { angle: 180, orb: 10, name: '충', nameEn: 'Opposition', meaning: '긴장, 균형 필요', type: 'major', harmony: 'hard' },
+    trine: { angle: 120, orb: 8, name: '삼합', nameEn: 'Trine', meaning: '조화, 행운', type: 'major', harmony: 'soft' },
+    square: { angle: 90, orb: 8, name: '사각', nameEn: 'Square', meaning: '도전, 성장', type: 'major', harmony: 'hard' },
+    sextile: { angle: 60, orb: 6, name: '육합', nameEn: 'Sextile', meaning: '기회, 협력', type: 'major', harmony: 'soft' },
+    // Minor Aspects (보조 각도)
+    semisextile: { angle: 30, orb: 3, name: '반육합', nameEn: 'Semi-sextile', meaning: '미세 조정', type: 'minor', harmony: 'soft' },
+    semisquare: { angle: 45, orb: 3, name: '반사각', nameEn: 'Semi-square', meaning: '내적 긴장', type: 'minor', harmony: 'hard' },
+    sesquiquadrate: { angle: 135, orb: 3, name: '세스퀴사각', nameEn: 'Sesquiquadrate', meaning: '좌절, 돌파', type: 'minor', harmony: 'hard' },
+    quincunx: { angle: 150, orb: 3, name: '퀸컨스', nameEn: 'Quincunx', meaning: '조정 필요, 건강', type: 'minor', harmony: 'hard' },
+    quintile: { angle: 72, orb: 2, name: '퀸타일', nameEn: 'Quintile', meaning: '재능, 창의성', type: 'minor', harmony: 'soft' },
+    biquintile: { angle: 144, orb: 2, name: '바이퀸타일', nameEn: 'Bi-quintile', meaning: '숙련된 재능', type: 'minor', harmony: 'soft' },
 } as const;
+
+// 행성 품위 (Dignities)
+export interface DignityInfo {
+    domicile: string[];   // Rulership (+5)
+    exaltation: string[]; // (+4)
+    detriment: string[];  // (-5)
+    fall: string[];       // (-4)
+}
+
+// 각 행성별 품위 테이블 (Modern + Traditional mix)
+export const PLANET_DIGNITIES: Record<string, DignityInfo> = {
+    sun: {
+        domicile: ['사자자리'],
+        exaltation: ['양자리'],
+        detriment: ['물병자리'],
+        fall: ['천칭자리']
+    },
+    moon: {
+        domicile: ['게자리'],
+        exaltation: ['황소자리'],
+        detriment: ['염소자리'],
+        fall: ['전갈자리']
+    },
+    mercury: {
+        domicile: ['쌍둥이자리', '처녀자리'],
+        exaltation: ['처녀자리'], // 처녀자리는 룰러십이자 고양
+        detriment: ['궁수자리', '물고기자리'],
+        fall: ['물고기자리']
+    },
+    venus: {
+        domicile: ['황소자리', '천칭자리'],
+        exaltation: ['물고기자리'],
+        detriment: ['전갈자리', '양자리'],
+        fall: ['처녀자리']
+    },
+    mars: {
+        domicile: ['양자리', '전갈자리'], // 전갈자리는 현대에서 명왕성이지만 고전은 화성
+        exaltation: ['염소자리'],
+        detriment: ['천칭자리', '황소자리'],
+        fall: ['게자리']
+    },
+    jupiter: {
+        domicile: ['궁수자리', '물고기자리'], // 물고기자리는 현대에서 해왕성이지만 고전은 목성
+        exaltation: ['게자리'],
+        detriment: ['쌍둥이자리', '처녀자리'],
+        fall: ['염소자리']
+    },
+    saturn: {
+        domicile: ['염소자리', '물병자리'], // 물병자리는 현대에서 천왕성이지만 고전은 토성
+        exaltation: ['천칭자리'],
+        detriment: ['게자리', '사자자리'],
+        fall: ['양자리']
+    },
+    uranus: {
+        domicile: ['물병자리'],
+        exaltation: ['전갈자리'],
+        detriment: ['사자자리'],
+        fall: ['황소자리']
+    },
+    neptune: {
+        domicile: ['물고기자리'],
+        exaltation: ['게자리'], // 논란 있음, 흔히 게자리/사자자리
+        detriment: ['처녀자리'],
+        fall: ['염소자리']
+    },
+    pluto: {
+        domicile: ['전갈자리'],
+        exaltation: ['사자자리'], // 논란 있음, 흔히 사자자리/양자리
+        detriment: ['황소자리'],
+        fall: ['물병자리']
+    }
+};
+
+// 행성별 오브 조정 (태양/달은 넓게, 외행성은 좁게)
+export const PLANET_ORB_MODIFIERS: Record<string, number> = {
+    sun: 1.2,      // +20%
+    moon: 1.2,     // +20%
+    mercury: 1.0,
+    venus: 1.0,
+    mars: 1.0,
+    jupiter: 0.9,
+    saturn: 0.9,
+    uranus: 0.8,   // -20%
+    neptune: 0.8,  // -20%
+    pluto: 0.7,    // -30%
+};
 
 // 결과 타입
 export interface PlanetPosition {
@@ -64,8 +158,39 @@ export interface PlanetPosition {
     sign: number; // 0-11
     degree: number; // 0-29.99
     house: number; // 1-12
+    longitude?: number; // 0-359.99 (전체 황경)
 }
 
+// 강화된 Aspect 결과
+export interface EnhancedAspectResult {
+    planet1: keyof typeof PLANETS;
+    planet2: keyof typeof PLANETS;
+    aspect: keyof typeof ASPECTS;
+    orb: number;
+    exactness: number;        // 0-100 (100 = 정확한 각도)
+    applying: boolean;        // 접근 중 (더 강함) vs 분리 중
+    strength: 'strong' | 'medium' | 'weak';
+    harmony: 'soft' | 'hard' | 'neutral';
+}
+
+// 품위 결과
+export interface PlanetDignityResult {
+    planet: keyof typeof PLANETS;
+    dignity: 'domicile' | 'exaltation' | 'detriment' | 'fall' | 'peregrine'; // peregrine = 일반
+    score: number;
+    description: string;
+}
+
+// 차트 패턴
+export interface ChartPattern {
+    name: string;
+    nameEn: string;
+    planets: (keyof typeof PLANETS)[];
+    description: string;
+    score: number;
+}
+
+// 기존 호환용
 export interface AspectResult {
     planet1: keyof typeof PLANETS;
     planet2: keyof typeof PLANETS;
@@ -79,6 +204,12 @@ export interface AstrologyResult {
     ascendant: number;
     planets: PlanetPosition[];
     aspects: AspectResult[];
+    // Phase 1: 강화된 Aspect
+    enhancedAspects?: EnhancedAspectResult[];
+    // Phase 2: 행성 품위
+    dignities?: Record<string, PlanetDignityResult>;
+    // Phase 3: 차트 패턴
+    patterns?: ChartPattern[];
 }
 
 /**
@@ -216,8 +347,9 @@ function calculateAspects(planets: PlanetPosition[]): AspectResult[] {
             let diff = Math.abs(long1 - long2);
             if (diff > 180) diff = 360 - diff;
 
-            // 각 Aspect 확인
+            // 각 Aspect 확인 (Major만)
             for (const [aspectKey, aspectDef] of Object.entries(ASPECTS)) {
+                if (aspectDef.type !== 'major') continue; // 호환성: major만
                 const orb = Math.abs(diff - aspectDef.angle);
                 if (orb <= aspectDef.orb) {
                     aspects.push({
@@ -232,6 +364,315 @@ function calculateAspects(planets: PlanetPosition[]): AspectResult[] {
     }
 
     return aspects;
+}
+
+/**
+ * 강화된 Aspect 계산 (Phase 1)
+ * - 행성별 오브 조정
+ * - 정확도 점수화
+ * - Applying/Separating 구분
+ */
+export function calculateEnhancedAspects(planets: PlanetPosition[]): EnhancedAspectResult[] {
+    const aspects: EnhancedAspectResult[] = [];
+    const planetKeys = Object.keys(PLANETS) as (keyof typeof PLANETS)[];
+
+    for (let i = 0; i < planets.length; i++) {
+        for (let j = i + 1; j < planets.length; j++) {
+            const p1 = planets[i];
+            const p2 = planets[j];
+
+            const long1 = p1.sign * 30 + p1.degree;
+            const long2 = p2.sign * 30 + p2.degree;
+
+            let diff = long1 - long2;
+            // 정규화
+            if (diff > 180) diff -= 360;
+            if (diff < -180) diff += 360;
+            const absDiff = Math.abs(diff);
+
+            // 행성별 오브 조정
+            const orb1 = PLANET_ORB_MODIFIERS[p1.planet] || 1.0;
+            const orb2 = PLANET_ORB_MODIFIERS[p2.planet] || 1.0;
+            const orbModifier = (orb1 + orb2) / 2;
+
+            // 각 Aspect 확인
+            for (const [aspectKey, aspectDef] of Object.entries(ASPECTS)) {
+                const adjustedOrb = aspectDef.orb * orbModifier;
+                const orbDistance = Math.abs(absDiff - aspectDef.angle);
+
+                if (orbDistance <= adjustedOrb) {
+                    // 정확도 계산 (0-100, 100 = 정확한 각도)
+                    const exactness = Math.round((1 - orbDistance / adjustedOrb) * 100);
+
+                    // Applying vs Separating (단순화: diff 부호로 판단)
+                    // 실제로는 행성 속도 비교 필요하지만 근사치
+                    const applying = diff > 0; // planet1이 앞서있고 다가가는 중
+
+                    // 강도 결정
+                    let strength: 'strong' | 'medium' | 'weak';
+                    if (exactness >= 80 && aspectDef.type === 'major') {
+                        strength = 'strong';
+                    } else if (exactness >= 50 || aspectDef.type === 'major') {
+                        strength = 'medium';
+                    } else {
+                        strength = 'weak';
+                    }
+
+                    aspects.push({
+                        planet1: planetKeys[i],
+                        planet2: planetKeys[j],
+                        aspect: aspectKey as keyof typeof ASPECTS,
+                        orb: orbDistance,
+                        exactness,
+                        applying,
+                        strength,
+                        harmony: aspectDef.harmony as 'soft' | 'hard' | 'neutral',
+                    });
+                }
+            }
+        }
+    }
+
+    // 강도순 정렬 (strong > medium > weak, 같으면 exactness)
+    aspects.sort((a, b) => {
+        const strengthOrder = { strong: 0, medium: 1, weak: 2 };
+        if (strengthOrder[a.strength] !== strengthOrder[b.strength]) {
+            return strengthOrder[a.strength] - strengthOrder[b.strength];
+        }
+        return b.exactness - a.exactness;
+    });
+
+    return aspects;
+}
+
+/**
+ * Aspect 요약 생성
+ */
+export function getAspectSummary(aspects: EnhancedAspectResult[]): {
+    totalCount: number;
+    majorCount: number;
+    minorCount: number;
+    softCount: number;
+    hardCount: number;
+    strongAspects: string[];
+} {
+    const majorAspects = ['conjunction', 'opposition', 'trine', 'square', 'sextile'];
+
+    const majorCount = aspects.filter(a => majorAspects.includes(a.aspect)).length;
+    const minorCount = aspects.length - majorCount;
+    const softCount = aspects.filter(a => a.harmony === 'soft').length;
+    const hardCount = aspects.filter(a => a.harmony === 'hard').length;
+
+    const strongAspects = aspects
+        .filter(a => a.strength === 'strong')
+        .map(a => {
+            const def = ASPECTS[a.aspect];
+            return `${PLANETS[a.planet1].name}${def.name}${PLANETS[a.planet2].name}`;
+        });
+
+    return {
+        totalCount: aspects.length,
+        majorCount,
+        minorCount,
+        softCount,
+        hardCount,
+        strongAspects,
+    };
+}
+
+/**
+ * 차트 패턴 감지 (Phase 3)
+ */
+export function detectChartPatterns(
+    planets: PlanetPosition[],
+    aspects: EnhancedAspectResult[]
+): ChartPattern[] {
+    const patterns: ChartPattern[] = [];
+
+    // Grand Trine (대삼합): 3개 행성이 120도씩 3개의 Trine
+    const trines = aspects.filter(a => a.aspect === 'trine');
+    if (trines.length >= 3) {
+        // 모든 3개 조합 확인
+        for (let i = 0; i < trines.length; i++) {
+            for (let j = i + 1; j < trines.length; j++) {
+                for (let k = j + 1; k < trines.length; k++) {
+                    const t1 = trines[i];
+                    const t2 = trines[j];
+                    const t3 = trines[k];
+
+                    // 3개 행성 추출
+                    const planetsInvolved = new Set([
+                        t1.planet1, t1.planet2,
+                        t2.planet1, t2.planet2,
+                        t3.planet1, t3.planet2
+                    ]);
+
+                    if (planetsInvolved.size === 3) {
+                        patterns.push({
+                            name: '대삼합',
+                            nameEn: 'Grand Trine',
+                            planets: Array.from(planetsInvolved) as (keyof typeof PLANETS)[],
+                            description: '강력한 조화와 행운의 흐름. 재능이 자연스럽게 발휘됨',
+                            score: 10
+                        });
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // T-Square: 2개의 Square + 1개의 Opposition
+    const squares = aspects.filter(a => a.aspect === 'square');
+    const oppositions = aspects.filter(a => a.aspect === 'opposition');
+
+    if (squares.length >= 2 && oppositions.length >= 1) {
+        for (const opp of oppositions) {
+            for (const sq1 of squares) {
+                for (const sq2 of squares) {
+                    if (sq1 === sq2) continue;
+
+                    const planetsInvolved = new Set([
+                        opp.planet1, opp.planet2,
+                        sq1.planet1, sq1.planet2,
+                        sq2.planet1, sq2.planet2
+                    ]);
+
+                    if (planetsInvolved.size === 3) {
+                        patterns.push({
+                            name: 'T스퀘어',
+                            nameEn: 'T-Square',
+                            planets: Array.from(planetsInvolved) as (keyof typeof PLANETS)[],
+                            description: '강한 내적 긴장과 동기부여. 도전을 통한 성장',
+                            score: -3
+                        });
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // Grand Cross (대십자): 4개 행성이 2개의 Opposition + 4개의 Square
+    if (oppositions.length >= 2 && squares.length >= 4) {
+        for (let i = 0; i < oppositions.length; i++) {
+            for (let j = i + 1; j < oppositions.length; j++) {
+                const planetsInvolved = new Set([
+                    oppositions[i].planet1, oppositions[i].planet2,
+                    oppositions[j].planet1, oppositions[j].planet2
+                ]);
+
+                if (planetsInvolved.size === 4) {
+                    patterns.push({
+                        name: '대십자',
+                        nameEn: 'Grand Cross',
+                        planets: Array.from(planetsInvolved) as (keyof typeof PLANETS)[],
+                        description: '극도의 긴장과 위기. 강한 의지력과 인내 필요',
+                        score: -8
+                    });
+                    break;
+                }
+            }
+        }
+    }
+
+    // Stellium (스텔리움): 같은 별자리에 3개 이상의 행성
+    const signGroups: Record<number, (keyof typeof PLANETS)[]> = {};
+    planets.forEach(p => {
+        if (!signGroups[p.sign]) signGroups[p.sign] = [];
+        signGroups[p.sign].push(p.planet);
+    });
+
+    Object.entries(signGroups).forEach(([sign, planetsInSign]) => {
+        if (planetsInSign.length >= 3) {
+            patterns.push({
+                name: '스텔리움',
+                nameEn: 'Stellium',
+                planets: planetsInSign as (keyof typeof PLANETS)[],
+                description: `${ZODIAC_SIGNS[parseInt(sign)].name}에 에너지 집중. 강력하지만 편향될 수 있음`,
+                score: 5
+            });
+        }
+    });
+
+    // Yod (요드/핑거 오브 갓): 2개의 Quincunx + 1개의 Sextile
+    const quincunxes = aspects.filter(a => a.aspect === 'quincunx');
+    const sextiles = aspects.filter(a => a.aspect === 'sextile');
+
+    if (quincunxes.length >= 2 && sextiles.length >= 1) {
+        for (const sextile of sextiles) {
+            for (const q1 of quincunxes) {
+                for (const q2 of quincunxes) {
+                    if (q1 === q2) continue;
+
+                    const planetsInvolved = new Set([
+                        sextile.planet1, sextile.planet2,
+                        q1.planet1, q1.planet2,
+                        q2.planet1, q2.planet2
+                    ]);
+
+                    if (planetsInvolved.size === 3) {
+                        patterns.push({
+                            name: '요드',
+                            nameEn: 'Yod',
+                            planets: Array.from(planetsInvolved) as (keyof typeof PLANETS)[],
+                            description: '운명의 손가락. 특별한 사명이나 조정이 필요한 영역',
+                            score: 3
+                        });
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    return patterns;
+}
+
+/**
+ * 행성 품위 계산 (Phase 2)
+ */
+export function calculateDignities(planets: PlanetPosition[]): Record<string, PlanetDignityResult> {
+    const results: Record<string, PlanetDignityResult> = {};
+
+    planets.forEach(pos => {
+        const signName = ZODIAC_SIGNS[pos.sign].name;
+        const planetKey = pos.planet;
+        const dignityInfo = PLANET_DIGNITIES[planetKey];
+
+        if (!dignityInfo) return; // 10행성 외 (노드 등) 제외
+
+        let dignity: PlanetDignityResult['dignity'] = 'peregrine';
+        let score = 0;
+        let description = '일반적인 상태';
+
+        if (dignityInfo.domicile.includes(signName)) {
+            dignity = 'domicile';
+            score = 5;
+            description = '본거지 (Rulership): 행성의 힘이 가장 강력하고 자연스럽게 발휘됨';
+        } else if (dignityInfo.exaltation.includes(signName)) {
+            dignity = 'exaltation';
+            score = 4;
+            description = '고양 (Exaltation): 행성의 힘이 명예롭게 드러나고 존중받음';
+        } else if (dignityInfo.detriment.includes(signName)) {
+            dignity = 'detriment';
+            score = -5;
+            description = '불리 (Detriment): 본거지 반대편, 행성의 힘이 약화되거나 왜곡됨';
+        } else if (dignityInfo.fall.includes(signName)) {
+            dignity = 'fall';
+            score = -4;
+            description = '추락 (Fall): 고양 반대편, 행성의 힘을 쓰기 어렵고 불편함';
+        }
+
+        results[planetKey] = {
+            planet: planetKey,
+            dignity,
+            score,
+            description
+        };
+    });
+
+    return results;
 }
 
 /**
@@ -280,12 +721,24 @@ export function calculateAstrology(
     // Aspect 계산
     const aspects = calculateAspects(planets);
 
+    // Phase 1: 강화된 Aspect 계산
+    const enhancedAspects = calculateEnhancedAspects(planets);
+
+    // Phase 2: 행성 품위 계산
+    const dignities = calculateDignities(planets);
+
+    // Phase 3: 차트 패턴 감지
+    const patterns = detectChartPatterns(planets, enhancedAspects);
+
     return {
         sunSign: sunPos.sign,
         moonSign: moonPos.sign,
         ascendant,
         planets,
         aspects,
+        enhancedAspects,
+        dignities,
+        patterns,
     };
 }
 
