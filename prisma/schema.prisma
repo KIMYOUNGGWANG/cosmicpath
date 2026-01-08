@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model ReadingResult {
@@ -33,4 +34,37 @@ model ChatMessage {
   role          String      // 'user' | 'assistant'
   content       String
   createdAt     DateTime    @default(now())
+}
+
+model PromotionCode {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  description String?
+  discount    Int      @default(100)
+  maxUses     Int      @default(50)
+  usedCount   Int      @default(0)
+  expiresAt   DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  redemptions PromoRedemption[]
+}
+
+model PromoRedemption {
+  id          String        @id @default(uuid())
+  promoCodeId String
+  promoCode   PromotionCode @relation(fields: [promoCodeId], references: [id])
+  readingId   String?
+  userAgent   String?
+  createdAt   DateTime      @default(now())
+}
+
+model Review {
+  id          String   @id @default(uuid())
+  readingId   String?
+  nickname    String
+  rating      Int
+  content     String
+  isApproved  Boolean  @default(false)
+  isPromoUser Boolean  @default(false)
+  createdAt   DateTime @default(now())
 }

@@ -9,6 +9,7 @@ import { PremiumReport } from '@/components/reading/premium-report';
 import { DecisionGuard } from '@/components/reading/decision-guard';
 import { ReadingSession, createSession } from '@/lib/session/reading-session';
 import { PaymentModal } from '@/components/payment/PaymentModal';
+import { ReviewModal } from '@/components/review/ReviewModal';
 import { StickyCTA } from '@/components/common/sticky-cta';
 import { ChatInterface } from '@/components/oracle-chat/ChatInterface';
 
@@ -56,6 +57,9 @@ function CosmicPathContent() {
   // Dynamic Price State
   const [dynamicPrice, setDynamicPrice] = useState<string>('$3.99');
 
+  // Review Modal State
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+
   // Fetch dynamic price on mount
   useEffect(() => {
     const fetchPrice = async () => {
@@ -77,6 +81,43 @@ function CosmicPathContent() {
       setLanguage(savedLang);
     }
   }, []);
+
+  // Review Modal Trigger - Scroll-based
+  useEffect(() => {
+    const isPaid = searchParams.get('paid') === 'true' || sessionStorage.getItem('payment_completed') === 'true';
+    const hasReviewed = localStorage.getItem('review_submitted') === 'true';
+    const isPromoUser = sessionStorage.getItem('promo_user') === 'true';
+    const isPremium = sessionStorage.getItem('is_premium_user') === 'true';
+
+    console.log('[Review Modal Check]', { isPaid, isPromoUser, isPremium, hasReviewed, step, hasReportData: !!reportData });
+
+    const shouldShow = (isPaid || isPromoUser || isPremium) && !hasReviewed && step === 'result' && reportData;
+
+    if (shouldShow) {
+      console.log('[Review Modal] Setting up scroll listener...');
+
+      const handleScroll = () => {
+        const scrollPercent = (window.scrollY + window.innerHeight) / document.documentElement.scrollHeight;
+        console.log('[Review Modal] Scroll:', Math.round(scrollPercent * 100) + '%');
+
+        if (scrollPercent >= 0.7) {
+          console.log('[Review Modal] Showing modal!');
+          setIsReviewOpen(true);
+          window.removeEventListener('scroll', handleScroll);
+        }
+      };
+
+      // Check immediately if already scrolled
+      handleScroll();
+
+      // Also add scroll listener
+      window.addEventListener('scroll', handleScroll);
+
+      return () => {
+        window.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, [step, searchParams, reportData]);
 
   // Resume Reading after Payment
   useEffect(() => {
@@ -637,6 +678,12 @@ function CosmicPathContent() {
         currentReport={reportData}
         metadata={metadata}
         isDecisionAccepted={isDecisionAccepted}
+      />
+
+      <ReviewModal
+        isOpen={isReviewOpen}
+        onClose={() => setIsReviewOpen(false)}
+        readingId={shareUrl?.split('/').pop()}
       />
 
     </main >

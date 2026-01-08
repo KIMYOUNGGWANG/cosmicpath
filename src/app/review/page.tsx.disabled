@@ -1,0 +1,177 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Star, Check, X, Trash2, RefreshCw } from 'lucide-react';
+
+interface Review {
+    id: string;
+    nickname: string;
+    rating: number;
+    content: string;
+    isApproved: boolean;
+    isPromoUser: boolean;
+    createdAt: string;
+}
+
+export default function ReviewAdminPage() {
+    const [reviews, setReviews] = useState<Review[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [filter, setFilter] = useState<'all' | 'pending' | 'approved'>('all');
+
+    const fetchReviews = async () => {
+        setIsLoading(true);
+        try {
+            const response = await fetch('/api/review/admin');
+            const data = await response.json();
+            setReviews(data.reviews || []);
+        } catch (error) {
+            console.error('Failed to fetch reviews:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchReviews();
+    }, []);
+
+    const handleApprove = async (id: string, approve: boolean) => {
+        try {
+            await fetch('/api/review/admin', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, isApproved: approve }),
+            });
+            fetchReviews();
+        } catch (error) {
+            console.error('Failed to update review:', error);
+        }
+    };
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('정말 삭제하시겠습니까?')) return;
+        try {
+            await fetch('/api/review/admin', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id }),
+            });
+            fetchReviews();
+        } catch (error) {
+            console.error('Failed to delete review:', error);
+        }
+    };
+
+    const filteredReviews = reviews.filter(r => {
+        if (filter === 'pending') return !r.isApproved;
+        if (filter === 'approved') return r.isApproved;
+        return true;
+    });
+
+    return (
+        <main className="min-h-screen bg-black text-white p-8">
+            <div className="max-w-4xl mx-auto">
+                <div className="flex items-center justify-between mb-8">
+                    <h1 className="text-3xl font-bold">후기 관리</h1>
+                    <button
+                        onClick={fetchReviews}
+                        className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+                    >
+                        <RefreshCw size={18} /> 새로고침
+                    </button>
+                </div>
+
+                {/* Filter Tabs */}
+                <div className="flex gap-2 mb-6">
+                    {(['all', 'pending', 'approved'] as const).map(tab => (
+                        <button
+                            key={tab}
+                            onClick={() => setFilter(tab)}
+                            className={`px-4 py-2 rounded-lg transition-colors ${filter === tab ? 'bg-[#A184FF] text-white' : 'bg-white/10 hover:bg-white/20'
+                                }`}
+                        >
+                            {tab === 'all' ? '전체' : tab === 'pending' ? '대기중' : '승인됨'}
+                            <span className="ml-2 text-xs opacity-70">
+                                ({reviews.filter(r =>
+                                    tab === 'all' ? true :
+                                        tab === 'pending' ? !r.isApproved : r.isApproved
+                                ).length})
+                            </span>
+                        </button>
+                    ))}
+                </div>
+
+                {/* Reviews List */}
+                {isLoading ? (
+                    <div className="text-center py-20 text-white/60">로딩 중...</div>
+                ) : filteredReviews.length === 0 ? (
+                    <div className="text-center py-20 text-white/60">후기가 없습니다.</div>
+                ) : (
+                    <div className="space-y-4">
+                        {filteredReviews.map(review => (
+                            <motion.div
+                                key={review.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className={`p-6 rounded-2xl border ${review.isApproved ? 'bg-green-500/5 border-green-500/20' : 'bg-white/5 border-white/10'
+                                    }`}
+                            >
+                                <div className="flex items-start justify-between mb-3">
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="font-bold">{review.nickname}</span>
+                                            {review.isPromoUser && (
+                                                <span className="text-xs px-2 py-0.5 bg-[#A184FF]/20 text-[#A184FF] rounded-full">
+                                                    프로모션
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="flex gap-0.5">
+                                            {[1, 2, 3, 4, 5].map(star => (
+                                                <Star
+                                                    key={star}
+                                                    size={14}
+                                                    className={star <= review.rating ? 'text-yellow-400 fill-yellow-400' : 'text-white/20'}
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <span className="text-xs text-white/40">
+                                        {new Date(review.createdAt).toLocaleDateString('ko-KR')}
+                                    </span>
+                                </div>
+
+                                <p className="text-white/80 mb-4">{review.content}</p>
+
+                                <div className="flex gap-2">
+                                    {!review.isApproved ? (
+                                        <button
+                                            onClick={() => handleApprove(review.id, true)}
+                                            className="flex items-center gap-1 px-3 py-1.5 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 text-sm"
+                                        >
+                                            <Check size={14} /> 승인
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => handleApprove(review.id, false)}
+                                            className="flex items-center gap-1 px-3 py-1.5 bg-orange-500/20 text-orange-400 rounded-lg hover:bg-orange-500/30 text-sm"
+                                        >
+                                            <X size={14} /> 승인 취소
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => handleDelete(review.id)}
+                                        className="flex items-center gap-1 px-3 py-1.5 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 text-sm"
+                                    >
+                                        <Trash2 size={14} /> 삭제
+                                    </button>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </main>
+    );
+}

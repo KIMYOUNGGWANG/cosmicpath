@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { READING_PRODUCT } from '@/lib/payment/payment-config';
+import { PromoCodeInput } from './PromoCodeInput';
+import { useRouter } from 'next/navigation';
 // import TossPaymentWidget from './TossPaymentWidget'; // Toss Payments (Commented out)
 
 interface PaymentModalProps {
@@ -25,9 +27,14 @@ export function PaymentModal({
     metadata,
     isDecisionAccepted
 }: PaymentModalProps) {
+    const router = useRouter();
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [dynamicPrice, setDynamicPrice] = useState<string>('$3.99');
+
+    // Promo Code State
+    const [promoCodeId, setPromoCodeId] = useState<string | null>(null);
+    const [discount, setDiscount] = useState<number>(0);
 
     // Fetch dynamic price on mount or when product ID changes
     useEffect(() => {
@@ -70,8 +77,39 @@ export function PaymentModal({
 
             onPaymentStart?.();
 
-            // 2. Stripe 결제 세션 생성 요청
+            onPaymentStart?.();
+
             const readingId = sessionStorage.getItem('pending_reading_id');
+
+            // 2. 프로모션 코드 (무료) 처리
+            if (discount === 100 && promoCodeId) {
+                const redeemResponse = await fetch('/api/promo/redeem', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        codeId: promoCodeId,
+                        readingId: readingId || undefined,
+                        userAgent: navigator.userAgent
+                    }),
+                });
+
+                if (!redeemResponse.ok) {
+                    const errorData = await redeemResponse.json();
+                    throw new Error(errorData.message || '쿠폰 사용에 실패했습니다.');
+                }
+
+                // 성공 처리
+                sessionStorage.setItem('payment_completed', 'true');
+                sessionStorage.setItem('promo_user', 'true');
+                sessionStorage.setItem('is_premium_user', 'true');
+
+                // 모달 닫고 페이지 이동 (window.location 사용으로 확실한 리로드)
+                onClose();
+                window.location.href = `/start?paid=true${readingId ? `&reading_id=${readingId}` : ''}`;
+                return;
+            }
+
+            // 3. Stripe 결제 세션 생성 요청
             const response = await fetch('/api/payment', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -135,9 +173,9 @@ export function PaymentModal({
                             </div>
 
                             {/* Email Input */}
-                            <div className="mb-8">
+                            <div className="mb-6">
                                 <label className="block text-xs font-semibold text-[#A184FF] mb-3 ml-1 uppercase tracking-widest">
-                                    결과를 받아볼 이보다 더 나은
+                                    결과를 받아볼 이메일
                                 </label>
                                 <input
                                     type="email"
@@ -146,17 +184,29 @@ export function PaymentModal({
                                     placeholder="name@example.com"
                                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-[#A184FF]/50 transition-all font-light"
                                 />
-                                <p className="mt-2 ml-1 text-[10px] text-white/40 italic">
-                                    * 입력 시 결제 완료 후 이메일로 분석 결과 링크가 발송됩니다.
-                                </p>
+                            </div>
+
+                            {/* Promo Code Input */}
+                            <div className="mb-8">
+                                <PromoCodeInput
+                                    onApply={(id, discount) => {
+                                        setPromoCodeId(id);
+                                        setDiscount(discount);
+                                    }}
+                                    disabled={isLoading}
+                                />
                             </div>
 
                             <button
                                 onClick={handlePayment}
                                 disabled={isLoading}
-                                className="w-full py-4 bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] text-white font-bold rounded-2xl hover:opacity-90 disabled:opacity-50 transition-all shadow-[0_4px_20px_rgba(139,92,246,0.3)]"
+                                className={`w-full py-4 font-bold rounded-2xl hover:opacity-90 disabled:opacity-50 transition-all shadow-lg
+                                    ${discount === 100
+                                        ? 'bg-gradient-to-r from-emerald-500 to-green-500 shadow-emerald-500/30'
+                                        : 'bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] shadow-[#8B5CF6]/30'
+                                    } text-white`}
                             >
-                                {isLoading ? '처리 중...' : '결제하고 전체 읽기'}
+                                {isLoading ? '처리 중...' : (discount === 100 ? '무료로 결과 확인하기' : '결제하고 전체 읽기')}
                             </button>
 
                             {/* 
