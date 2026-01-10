@@ -81,6 +81,13 @@ export function PaymentModal({
     }, [onClose]);
 
     const handlePayment = async () => {
+        // 이메일 유효성 검사
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailRegex.test(email)) {
+            alert('결과를 받아보실 유효한 이메일 주소를 입력해주세요.');
+            return;
+        }
+
         setIsLoading(true);
         try {
             // 1. 사전 처리 (데이터 저장)
