@@ -58,6 +58,28 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
 
     const isEn = language === 'en';
 
+    // 포맷팅 헬퍼 함수
+    const handleDateChange = (val: string, setter: (v: string) => void) => {
+        const numbers = val.replace(/\D/g, '');
+        let formatted = numbers;
+        if (numbers.length > 4) {
+            formatted = `${numbers.slice(0, 4)}-${numbers.slice(4)}`;
+        }
+        if (numbers.length > 6) {
+            formatted = `${numbers.slice(0, 4)}-${numbers.slice(4, 6)}-${numbers.slice(6, 8)}`;
+        }
+        setter(formatted);
+    };
+
+    const handleTimeChange = (val: string, setter: (v: string) => void) => {
+        const numbers = val.replace(/\D/g, '');
+        let formatted = numbers;
+        if (numbers.length > 2) {
+            formatted = `${numbers.slice(0, 2)}:${numbers.slice(2, 4)}`;
+        }
+        setter(formatted);
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSubmit({
@@ -167,16 +189,12 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                             </div>
 
                             <input
-                                type="date"
+                                type="text"
+                                inputMode="numeric"
                                 value={birthDate}
-                                onChange={(e) => setBirthDate(e.target.value)}
-                                max="9999-12-31"
-                                style={{ colorScheme: 'dark' }}
-                                onClick={(e) => {
-                                    try {
-                                        if (e.currentTarget.showPicker) e.currentTarget.showPicker();
-                                    } catch (err) { }
-                                }}
+                                onChange={(e) => handleDateChange(e.target.value, setBirthDate)}
+                                placeholder="YYYY-MM-DD"
+                                maxLength={10}
                                 className="w-full bg-transparent border-b border-white/20 py-4 text-lg text-starlight focus:outline-none focus:border-acc-gold transition-colors font-mono uppercase min-h-[50px] block"
                                 required
                             />
@@ -184,16 +202,13 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                         </div>
                         <div>
                             <input
-                                type="time"
+                                type="text"
+                                inputMode="numeric"
                                 value={birthTime}
-                                onChange={(e) => setBirthTime(e.target.value)}
+                                onChange={(e) => handleTimeChange(e.target.value, setBirthTime)}
+                                placeholder="HH:MM"
+                                maxLength={5}
                                 disabled={unknownTime}
-                                style={{ colorScheme: 'dark' }}
-                                onClick={(e) => {
-                                    try {
-                                        if (e.currentTarget.showPicker) e.currentTarget.showPicker();
-                                    } catch (err) { }
-                                }}
                                 className={`w-full bg-transparent border-b border-white/20 py-4 text-lg text-starlight focus:outline-none focus:border-acc-gold transition-colors font-mono min-h-[50px] block ${unknownTime ? 'opacity-30 cursor-not-allowed' : ''}`}
                             />
                             <p className="mt-2 text-[10px] text-dim font-mono tracking-widest mb-4">{isEn ? 'HH:MM (LOCAL TIME)' : 'HH:MM (태어난 시간)'}</p>
@@ -314,16 +329,12 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                                     {/* Partner Birth Date */}
                                     <div>
                                         <input
-                                            type="date"
+                                            type="text"
+                                            inputMode="numeric"
                                             value={partnerBirthDate}
-                                            onChange={(e) => setPartnerBirthDate(e.target.value)}
-                                            max="9999-12-31"
-                                            style={{ colorScheme: 'dark' }}
-                                            onClick={(e) => {
-                                                try {
-                                                    if (e.currentTarget.showPicker) e.currentTarget.showPicker();
-                                                } catch (err) { }
-                                            }}
+                                            onChange={(e) => handleDateChange(e.target.value, setPartnerBirthDate)}
+                                            placeholder="YYYY-MM-DD"
+                                            maxLength={10}
                                             className="w-full bg-transparent border-b border-white/20 py-3 text-sm text-starlight focus:outline-none focus:border-acc-gold transition-colors font-mono"
                                         />
                                         <p className="mt-2 text-[10px] text-dim font-mono tracking-widest">
@@ -334,15 +345,12 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                                     {/* Partner Birth Time */}
                                     <div>
                                         <input
-                                            type="time"
+                                            type="text"
+                                            inputMode="numeric"
                                             value={partnerBirthTime}
-                                            onChange={(e) => setPartnerBirthTime(e.target.value)}
-                                            style={{ colorScheme: 'dark' }}
-                                            onClick={(e) => {
-                                                try {
-                                                    if (e.currentTarget.showPicker) e.currentTarget.showPicker();
-                                                } catch (err) { }
-                                            }}
+                                            onChange={(e) => handleTimeChange(e.target.value, setPartnerBirthTime)}
+                                            placeholder="HH:MM"
+                                            maxLength={5}
                                             className="w-full bg-transparent border-b border-white/20 py-3 text-sm text-starlight focus:outline-none focus:border-acc-gold transition-colors font-mono"
                                         />
                                         <p className="mt-2 text-[10px] text-dim font-mono tracking-widest">
