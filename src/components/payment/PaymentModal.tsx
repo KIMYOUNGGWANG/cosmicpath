@@ -81,9 +81,11 @@ export function PaymentModal({
     }, [onClose]);
 
     const handlePayment = async () => {
-        // 이메일 유효성 검사
+        // 이메일 유효성 검사 (프로모션 100% 할인이 아닐 때만 필수)
+        const isFreePromo = discount === 100 && promoCodeId;
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!email || !emailRegex.test(email)) {
+
+        if (!isFreePromo && (!email || !emailRegex.test(email))) {
             alert('결과를 받아보실 유효한 이메일 주소를 입력해주세요.');
             return;
         }
