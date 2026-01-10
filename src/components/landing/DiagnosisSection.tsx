@@ -13,7 +13,7 @@ export function DiagnosisSection() {
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true, margin: "-100px" }}
                     transition={{ duration: 0.8 }}
-                    className="flex-1 md:pr-12"
+                    className="flex-1 md:pr-12 relative z-20"
                 >
                     <span className="text-acc-nebula text-xs font-bold tracking-widest uppercase mb-4 block">
                         The Diagnosis
@@ -35,7 +35,7 @@ export function DiagnosisSection() {
                 </motion.div>
 
                 {/* Right: Abstract Visualization */}
-                <div className="flex-1 w-full relative h-[300px] md:h-[400px]">
+                <div className="flex-1 w-full relative h-[300px] md:h-[400px] z-10">
                     <motion.div
                         initial={{ scale: 0.8, opacity: 0 }}
                         whileInView={{ scale: 1, opacity: 1 }}
