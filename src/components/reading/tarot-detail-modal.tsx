@@ -33,6 +33,9 @@ export function TarotDetailModal({
     useEffect(() => {
         if (!isOpen) return;
 
+        // Prevent body scrolling
+        document.body.style.overflow = 'hidden';
+
         // Push a history state when modal opens
         const modalState = { modalType: 'tarot-detail', modalOpen: true };
         window.history.pushState(modalState, '');
@@ -47,6 +50,7 @@ export function TarotDetailModal({
         window.addEventListener('popstate', handlePopState);
 
         return () => {
+            document.body.style.overflow = ''; // Restore scrolling
             window.removeEventListener('popstate', handlePopState);
         };
     }, [isOpen, onClose]);
@@ -77,7 +81,7 @@ export function TarotDetailModal({
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="relative w-full max-w-lg bg-[#1a1c23] border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+                        className="relative w-full max-w-lg bg-[#1a1c23] border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto scrollbar-hide"
                     >
                         {/* Header */}
                         <div className="bg-gradient-to-r from-tarot-purple/20 to-cosmic-purple p-6 border-b border-white/5 relative">

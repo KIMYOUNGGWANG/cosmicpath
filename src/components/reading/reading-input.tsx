@@ -141,7 +141,7 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder={isEn ? "NAME (OPTIONAL)" : "이름 / 닉네임 (선택)"}
-                                className="w-full bg-transparent border-b border-white/10 py-3 text-lg text-starlight focus:outline-none focus:border-acc-gold transition-colors placeholder:text-white/10 font-cinzel"
+                                className="w-full bg-transparent border-b border-white/10 py-3 text-base md:text-lg text-starlight focus:outline-none focus:border-acc-gold transition-colors placeholder:text-white/10 font-cinzel"
                             />
                         </div>
                         <div className="flex gap-8 items-end pb-3">
@@ -266,7 +266,7 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                         value={question}
                         onChange={(e) => setQuestion(e.target.value)}
                         placeholder={isEn ? "Describe your anxiety or question specifically..." : "구체적인 고민이나 질문을 입력하세요..."}
-                        className="w-full bg-white/5 border border-white/20 p-4 text-sm text-starlight focus:outline-none focus:border-acc-gold/80 focus:bg-white/10 transition-colors h-32 resize-none leading-relaxed placeholder:text-white/30"
+                        className="w-full bg-white/5 border border-white/20 p-4 text-base md:text-sm text-starlight focus:outline-none focus:border-acc-gold/80 focus:bg-white/10 transition-colors h-32 resize-none leading-relaxed placeholder:text-white/30"
                     />
                 </div>
 
@@ -302,7 +302,7 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                                             value={partnerName}
                                             onChange={(e) => setPartnerName(e.target.value)}
                                             placeholder={isEn ? "Partner's Name (Optional)" : "상대방 이름 (선택)"}
-                                            className="w-full bg-transparent border-b border-white/10 py-3 text-sm text-starlight focus:outline-none focus:border-acc-gold transition-colors placeholder:text-white/20"
+                                            className="w-full bg-transparent border-b border-white/10 py-3 text-base md:text-sm text-starlight focus:outline-none focus:border-acc-gold transition-colors placeholder:text-white/20"
                                         />
                                     </div>
 
