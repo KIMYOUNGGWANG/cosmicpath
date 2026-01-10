@@ -87,9 +87,10 @@ export function TarotDetailModal({
                         <div className="bg-gradient-to-r from-tarot-purple/20 to-cosmic-purple p-6 border-b border-white/5 relative">
                             <button
                                 onClick={handleClose}
-                                className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
+                                className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-50 p-2 rounded-full hover:bg-white/10"
+                                aria-label="Close modal"
                             >
-                                <X size={20} />
+                                <X size={24} />
                             </button>
                             <div className="flex items-center gap-4 mb-2">
                                 <div className="w-12 h-16 bg-white/5 rounded border border-white/10 flex items-center justify-center text-xl">
