@@ -37,7 +37,7 @@ export function CrossroadsSection() {
     useEffect(() => {
         const fetchPrice = async () => {
             try {
-                const response = await fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`);
+                const response = await fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`, { cache: 'no-store' });
                 if (response.ok) {
                     const data = await response.json();
                     if (data.formattedPrice) {
