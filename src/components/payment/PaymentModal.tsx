@@ -40,7 +40,9 @@ export function PaymentModal({
     useEffect(() => {
         const fetchPrice = async () => {
             try {
-                const response = await fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`);
+                const response = await fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`, {
+                    cache: 'no-store'
+                });
                 if (response.ok) {
                     const data = await response.json();
                     if (data.formattedPrice) {
@@ -228,8 +230,8 @@ export function PaymentModal({
                                     }}
                                     placeholder="name@example.com"
                                     className={`w-full bg-white/5 border rounded-2xl px-5 py-4 text-white placeholder:text-gray-600 focus:outline-none transition-all font-light ${emailError
-                                            ? 'border-red-500 focus:border-red-500'
-                                            : 'border-white/10 focus:border-[#A184FF]/50'
+                                        ? 'border-red-500 focus:border-red-500'
+                                        : 'border-white/10 focus:border-[#A184FF]/50'
                                         }`}
                                 />
                                 {emailError && (
