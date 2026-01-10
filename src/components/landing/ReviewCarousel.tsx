@@ -42,17 +42,18 @@ export function ReviewCarousel({ language = 'ko' }: { language?: string }) {
         fetchReviews();
     }, []);
 
-    const maskNickname = (name: string) => {
-        if (!name) return 'Anonymous';
-        if (name.length <= 2) return name[0] + '*';
-        if (name.includes(' ')) return name.split(' ')[0] + ' **';
-        return name[0] + '*'.repeat(Math.max(1, name.length - 2)) + name[name.length - 1];
-    };
+    if (isLoading) {
+        return (
+            <section className="py-20 relative overflow-hidden bg-gradient-to-b from-[#030308] to-[#050510] min-h-[500px]">
+                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-soft-light" />
+            </section>
+        );
+    }
 
-    if (isLoading || reviews.length === 0) return null;
+    if (reviews.length === 0) return null;
 
     return (
-        <section className="py-20 relative overflow-hidden bg-gradient-to-b from-[#030308] to-[#050510]">
+        <section className="py-20 relative overflow-hidden bg-gradient-to-b from-[#030308] to-[#050510] min-h-[500px]">
             {/* Background Elements */}
             <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-soft-light pointer-events-none" />
             <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-900/30 to-transparent" />
@@ -127,7 +128,7 @@ export function ReviewCarousel({ language = 'ko' }: { language?: string }) {
                                         <div className="flex flex-col">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-white font-medium text-xs font-outfit">
-                                                    {maskNickname(review.nickname)}
+                                                    {review.nickname}
                                                 </span>
                                                 {review.rating >= 4 && (
                                                     <span className="text-[10px] text-green-400/80 bg-green-500/5 px-1.5 rounded-full border border-green-500/10">

@@ -13,16 +13,29 @@ const createReviewSchema = z.object({
 
 export async function GET(request: NextRequest) {
     try {
-        const reviews = await prisma.review.findMany({
+        const rawReviews = await prisma.review.findMany({
             where: { isApproved: true },
             orderBy: { createdAt: 'desc' },
             take: 20
         });
 
+        // 서버 사이드 마스킹 (개인정보 보호)
+        const reviews = rawReviews.map(review => ({
+            ...review,
+            nickname: maskNickname(review.nickname)
+        }));
+
         return NextResponse.json({ reviews });
     } catch (error) {
         return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 });
     }
+}
+
+function maskNickname(name: string) {
+    if (!name) return 'Anonymous';
+    if (name.length <= 2) return name[0] + '*';
+    if (name.includes(' ')) return name.split(' ')[0] + ' **';
+    return name[0] + '*'.repeat(Math.max(1, name.length - 2)) + name[name.length - 1];
 }
 
 export async function POST(request: NextRequest) {
