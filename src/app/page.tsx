@@ -45,11 +45,11 @@ export default function Home() {
             <HeroSection />
             <RitualSection />
             <DiagnosisSection />
+            <ReviewCarousel />
             <GapSection />
             <BlueprintSection />
             <EngineSection />
             <VerdictSection />
-            <ReviewCarousel />
             <CrossroadsSection />
 
             <Footer />
