@@ -425,7 +425,346 @@ export const TEN_GOD_ENGLISH: Record<string, string> = {
   '정인': 'Direct Seal (Jeongin)',
 };
 
+// =====================================
+// 대운 (大運) 계산 시스템
+// 만세력 기준 정확한 대운 산출
+// =====================================
+
+// 24절기 태양 황경 테이블 (절입 기준)
+export const SOLAR_TERMS: { name: string; longitude: number }[] = [
+  { name: '입춘', longitude: 315 },   // 인월 시작
+  { name: '우수', longitude: 330 },
+  { name: '경칩', longitude: 345 },   // 묘월 시작
+  { name: '춘분', longitude: 0 },
+  { name: '청명', longitude: 15 },    // 진월 시작
+  { name: '곡우', longitude: 30 },
+  { name: '입하', longitude: 45 },    // 사월 시작
+  { name: '소만', longitude: 60 },
+  { name: '망종', longitude: 75 },    // 오월 시작
+  { name: '하지', longitude: 90 },
+  { name: '소서', longitude: 105 },   // 미월 시작
+  { name: '대서', longitude: 120 },
+  { name: '입추', longitude: 135 },   // 신월 시작
+  { name: '처서', longitude: 150 },
+  { name: '백로', longitude: 165 },   // 유월 시작
+  { name: '추분', longitude: 180 },
+  { name: '한로', longitude: 195 },   // 술월 시작
+  { name: '상강', longitude: 210 },
+  { name: '입동', longitude: 225 },   // 해월 시작
+  { name: '소설', longitude: 240 },
+  { name: '대설', longitude: 255 },   // 자월 시작
+  { name: '동지', longitude: 270 },
+  { name: '소한', longitude: 285 },   // 축월 시작
+  { name: '대한', longitude: 300 },
+];
+
+// 절입 절기 (월 시작 기준, 짝수 인덱스)
+export const MONTH_START_TERMS = [
+  { name: '입춘', longitude: 315, monthBranch: '인' },
+  { name: '경칩', longitude: 345, monthBranch: '묘' },
+  { name: '청명', longitude: 15, monthBranch: '진' },
+  { name: '입하', longitude: 45, monthBranch: '사' },
+  { name: '망종', longitude: 75, monthBranch: '오' },
+  { name: '소서', longitude: 105, monthBranch: '미' },
+  { name: '입추', longitude: 135, monthBranch: '신' },
+  { name: '백로', longitude: 165, monthBranch: '유' },
+  { name: '한로', longitude: 195, monthBranch: '술' },
+  { name: '입동', longitude: 225, monthBranch: '해' },
+  { name: '대설', longitude: 255, monthBranch: '자' },
+  { name: '소한', longitude: 285, monthBranch: '축' },
+];
+
+// 대운 하나의 간지 정보
+export interface DaeunPillar {
+  stem: string;      // 천간
+  branch: string;    // 지지
+  startAge: number;  // 시작 나이
+  endAge: number;    // 종료 나이
+  tenGod?: string;   // 일간 기준 십신
+}
+
+// 대운 계산 결과
+export interface DaeunResult {
+  direction: '순행' | '역행';        // 대운 방향
+  startAge: number;                  // 대운 시작 나이 (소수점 포함)
+  sequence: DaeunPillar[];           // 대운 시퀀스 (10개)
+  currentDaeun?: DaeunPillar;        // 현재 대운 (나이 기준)
+  basis: string;                     // 판정 근거
+}
+
+/**
+ * 순행/역행 판정
+ * 성별과 연간의 음양으로 대운 방향 결정
+ */
+export function determineDaeunDirection(
+  gender: 'male' | 'female',
+  yearStem: string
+): '순행' | '역행' {
+  // 양간: 갑(甲), 병(丙), 무(戊), 경(庚), 임(壬) - 짝수 인덱스
+  const stemIdx = (HEAVENLY_STEMS as readonly string[]).indexOf(yearStem);
+  const isYangStem = stemIdx % 2 === 0;
+
+  // 남자+양간 또는 여자+음간 = 순행
+  // 남자+음간 또는 여자+양간 = 역행
+  if (gender === 'male') {
+    return isYangStem ? '순행' : '역행';
+  } else {
+    return isYangStem ? '역행' : '순행';
+  }
+}
+
+/**
+ * 특정 태양 황경에 도달하는 날짜 계산
+ * 이분법을 사용하여 정확한 절기 시점 산출
+ */
+function findDateForSunLongitude(targetLong: number, startDate: Date, direction: 1 | -1): Date {
+  // 시작점에서 direction 방향으로 탐색
+  let currentDate = new Date(startDate);
+  let previousDate = new Date(startDate);
+
+  // 최대 400일 탐색 (1년 + 여유)
+  for (let i = 0; i < 400; i++) {
+    currentDate.setDate(currentDate.getDate() + direction);
+    const sunLong = getSunLongitudeForDaeun(currentDate);
+
+    // 목표 황경 통과 확인 (방향에 따라 다름)
+    const prevLong = getSunLongitudeForDaeun(previousDate);
+
+    // 360도 경계 처리
+    let passed = false;
+    if (direction === 1) {
+      // 순행: 증가 방향
+      if (targetLong >= 315 && targetLong <= 360) {
+        // 입춘 등 315~360 범위
+        passed = (prevLong < targetLong && sunLong >= targetLong) ||
+          (prevLong > 300 && sunLong < 60); // 360도 넘어감
+      } else if (targetLong >= 0 && targetLong < 60) {
+        // 0~60도 범위
+        passed = (prevLong > 300 && sunLong >= targetLong && sunLong < 100) ||
+          (prevLong < targetLong && sunLong >= targetLong);
+      } else {
+        passed = prevLong < targetLong && sunLong >= targetLong;
+      }
+    } else {
+      // 역행: 감소 방향
+      if (targetLong >= 315 && targetLong <= 360) {
+        passed = (prevLong > targetLong && sunLong <= targetLong) ||
+          (prevLong < 60 && sunLong > 300);
+      } else if (targetLong >= 0 && targetLong < 60) {
+        passed = (prevLong < 60 && prevLong >= targetLong && sunLong < targetLong) ||
+          (prevLong > 300 && sunLong <= targetLong);
+      } else {
+        passed = prevLong > targetLong && sunLong <= targetLong;
+      }
+    }
+
+    if (passed) {
+      return currentDate;
+    }
+
+    previousDate = new Date(currentDate);
+  }
+
+  return currentDate;
+}
+
+/**
+ * 대운용 태양 황경 계산 (getSunLongitude와 동일하지만 export용)
+ */
+function getSunLongitudeForDaeun(date: Date): number {
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate() + (date.getHours() + date.getMinutes() / 60) / 24;
+
+  let y = year;
+  let m = month;
+  if (m <= 2) { y -= 1; m += 12; }
+
+  const A = Math.floor(y / 100);
+  const B = 2 - A + Math.floor(A / 4);
+  const jd = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + B - 1524.5;
+
+  const T = (jd - 2451545.0) / 36525;
+  let L0 = 280.46646 + 36000.76983 * T + 0.0003032 * T * T;
+  L0 = L0 % 360;
+  if (L0 < 0) L0 += 360;
+
+  let M = 357.52911 + 35999.05029 * T - 0.0001537 * T * T;
+  M = M * Math.PI / 180;
+  const C = (1.914602 - 0.004817 * T) * Math.sin(M) + (0.019993 - 0.000101 * T) * Math.sin(2 * M) + 0.000289 * Math.sin(3 * M);
+
+  let sunLongitude = L0 + C;
+  sunLongitude = sunLongitude % 360;
+  if (sunLongitude < 0) sunLongitude += 360;
+  return sunLongitude;
+}
+
+/**
+ * 생일로부터 다음/이전 절기까지 일수 계산
+ * 대운 시작 나이 = 일수 / 3
+ */
+export function calculateDaeunStartAge(
+  birthDate: Date,
+  birthHour: number,
+  direction: '순행' | '역행',
+  monthBranch: string
+): number {
+  const fullBirthDate = new Date(birthDate);
+  fullBirthDate.setHours(birthHour);
+
+  // 현재 월지에 해당하는 절기 찾기
+  const currentTermIdx = MONTH_START_TERMS.findIndex(t => t.monthBranch === monthBranch);
+  if (currentTermIdx === -1) {
+    console.warn(`Unknown month branch: ${monthBranch}`);
+    return 3; // 기본값
+  }
+
+  // 다음/이전 절기 결정
+  let targetTermIdx: number;
+  if (direction === '순행') {
+    targetTermIdx = (currentTermIdx + 1) % 12;
+  } else {
+    targetTermIdx = (currentTermIdx - 1 + 12) % 12;
+  }
+
+  const targetLongitude = MONTH_START_TERMS[targetTermIdx].longitude;
+
+  // 절기 날짜 찾기
+  const searchDirection = direction === '순행' ? 1 : -1;
+  const termDate = findDateForSunLongitude(targetLongitude, fullBirthDate, searchDirection as 1 | -1);
+
+  // 일수 계산
+  const diffMs = Math.abs(termDate.getTime() - fullBirthDate.getTime());
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+  // 3일 = 1년, 1일 = 4개월, 1시간 = 5일
+  const startAge = diffDays / 3;
+
+  return Math.round(startAge * 10) / 10; // 소수점 1자리
+}
+
+/**
+ * 대운 간지 시퀀스 생성
+ * 월주를 기준으로 순행/역행에 따라 10년 단위로 산출
+ */
+export function generateDaeunSequence(
+  monthStem: string,
+  monthBranch: string,
+  direction: '순행' | '역행',
+  startAge: number,
+  dayMaster: string,
+  count: number = 10
+): DaeunPillar[] {
+  const sequence: DaeunPillar[] = [];
+
+  let stemIdx = (HEAVENLY_STEMS as readonly string[]).indexOf(monthStem);
+  let branchIdx = (EARTHLY_BRANCHES as readonly string[]).indexOf(monthBranch);
+
+  if (stemIdx === -1 || branchIdx === -1) {
+    console.warn(`Invalid month pillar: ${monthStem}${monthBranch}`);
+    return sequence;
+  }
+
+  for (let i = 0; i < count; i++) {
+    // 방향에 따라 인덱스 이동
+    if (direction === '순행') {
+      stemIdx = (stemIdx + 1) % 10;
+      branchIdx = (branchIdx + 1) % 12;
+    } else {
+      stemIdx = (stemIdx - 1 + 10) % 10;
+      branchIdx = (branchIdx - 1 + 12) % 12;
+    }
+
+    const stem = HEAVENLY_STEMS[stemIdx];
+    const branch = EARTHLY_BRANCHES[branchIdx];
+    const pillarStartAge = Math.round(startAge) + (i * 10);
+    const pillarEndAge = pillarStartAge + 9;
+
+    // 일간 기준 십신 계산
+    const tenGod = TEN_GOD_MATRIX[dayMaster]?.[stem] || '알수없음';
+
+    sequence.push({
+      stem,
+      branch,
+      startAge: pillarStartAge,
+      endAge: pillarEndAge,
+      tenGod
+    });
+  }
+
+  return sequence;
+}
+
+/**
+ * 현재 나이에 해당하는 대운 찾기
+ */
+export function findCurrentDaeun(
+  sequence: DaeunPillar[],
+  currentAge: number
+): DaeunPillar | undefined {
+  return sequence.find(d => currentAge >= d.startAge && currentAge <= d.endAge);
+}
+
+/**
+ * 대운 계산 메인 함수
+ */
+export function calculateDaeun(
+  birthDate: Date,
+  birthHour: number,
+  gender: 'male' | 'female',
+  yearStem: string,
+  monthStem: string,
+  monthBranch: string,
+  dayMaster: string,
+  currentAge?: number
+): DaeunResult {
+  // 1. 순행/역행 판정
+  const direction = determineDaeunDirection(gender, yearStem);
+
+  // 2. 대운 시작 나이 계산
+  const startAge = calculateDaeunStartAge(birthDate, birthHour, direction, monthBranch);
+
+  // 3. 대운 시퀀스 생성 (10개)
+  const sequence = generateDaeunSequence(monthStem, monthBranch, direction, startAge, dayMaster);
+
+  // 4. 현재 대운 찾기
+  const currentDaeun = currentAge !== undefined ? findCurrentDaeun(sequence, currentAge) : undefined;
+
+  // 5. 판정 근거
+  const stemIdx = (HEAVENLY_STEMS as readonly string[]).indexOf(yearStem);
+  const yinYangStr = stemIdx % 2 === 0 ? '양간' : '음간';
+  const genderStr = gender === 'male' ? '남자' : '여자';
+
+  return {
+    direction,
+    startAge,
+    sequence,
+    currentDaeun,
+    basis: `${genderStr} + ${yearStem}(${yinYangStr}) = ${direction}`
+  };
+}
+
+/**
+ * 대운 정보를 문자열로 포맷
+ */
+export function formatDaeun(daeun: DaeunResult): string {
+  if (!daeun || !daeun.sequence.length) return '대운 정보 없음';
+
+  const lines: string[] = [];
+  lines.push(`대운 방향: ${daeun.direction} (${daeun.basis})`);
+  lines.push(`대운 시작: ${daeun.startAge}세`);
+  lines.push(`대운 흐름:`);
+
+  daeun.sequence.forEach(d => {
+    const current = daeun.currentDaeun === d ? ' ◀ 현재' : '';
+    lines.push(`  ${d.startAge}~${d.endAge}세: ${d.stem}${d.branch} (${d.tenGod})${current}`);
+  });
+
+  return lines.join('\n');
+}
+
 // 사주 결과 타입
+
 export interface SajuResult {
   yeonPillar: { stem: string; branch: string; };
   monthPillar: { stem: string; branch: string; };
@@ -474,6 +813,8 @@ export interface SajuResult {
     month: string;
     day: string;
   };
+  // Phase 7: 대운 추가
+  daeun?: DaeunResult;
 }
 
 // =====================================
@@ -1803,7 +2144,8 @@ export function calculateSaju(
   birthDate: Date,
   birthHour: number = 12,
   birthMinute: number = 0,
-  isLunar: boolean = false
+  isLunar: boolean = false,
+  gender: 'male' | 'female' = 'male'
 ): SajuResult {
   // 1. 한국 표준시(KST) 30분 보정 (동경 135도 -> 127.5도)
   // 실제 태양시 기준으로 만세력을 산출하기 위함
@@ -1933,6 +2275,21 @@ export function calculateSaju(
   // Phase 6: 신살 판정
   const shinSal = detectShinSal(dayMaster, yeonPillar.branch, dayPillar.branch, branchList);
 
+  // Phase 7: 대운 계산
+  const currentYear = new Date().getFullYear();
+  const birthYear = birthDate.getFullYear();
+  const currentAge = currentYear - birthYear + 1; // 한국식 나이
+  const daeun = calculateDaeun(
+    birthDate,
+    birthHour,
+    gender,
+    yeonPillar.stem,
+    monthPillar.stem,
+    monthPillar.branch,
+    dayMaster,
+    currentAge
+  );
+
   return {
     yeonPillar,
     monthPillar,
@@ -1951,7 +2308,8 @@ export function calculateSaju(
       year: `${yeonPillar.stem}${yeonPillar.branch}년`,
       month: `${monthPillar.stem}${monthPillar.branch}월`,
       day: koreanGapja.day,
-    }
+    },
+    daeun
   };
 }
 

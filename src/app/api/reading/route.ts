@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
         const exactBirthDateTime = new Date(yearPart, monthPart - 1, dayPart, hours, minutes || 0, 0);
 
         // 사주 계산 (Solar Term 기반 + 30분 보정 및 조자시 반영)
-        const saju = calculateSaju(exactBirthDateTime, hours, minutes || 0, calendarType === 'lunar');
+        const saju = calculateSaju(exactBirthDateTime, hours, minutes || 0, calendarType === 'lunar', gender);
 
         // 2. 점성술 계산
         const astrology = calculateAstrology(exactBirthDateTime, birthTime);
