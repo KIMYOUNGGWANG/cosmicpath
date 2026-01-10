@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cinzel, Outfit, JetBrains_Mono, Gowun_Batang, Noto_Sans_KR } from "next/font/google"; // Premium fonts
 import "./globals.css";
 import JsonLd from "@/components/seo/json-ld";
+import { Analytics } from '@vercel/analytics/react';
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -103,6 +104,7 @@ export default function RootLayout({
 
         <JsonLd />
         {children}
+        <Analytics />
         <script
           src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
           crossOrigin="anonymous"
