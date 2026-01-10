@@ -11,6 +11,7 @@ import { GapSection } from '@/components/landing/GapSection';
 import { BlueprintSection } from '@/components/landing/BlueprintSection';
 import { EngineSection } from '@/components/landing/EngineSection';
 import { VerdictSection } from '@/components/landing/VerdictSection';
+import { ReviewCarousel } from '@/components/landing/ReviewCarousel';
 import { CrossroadsSection } from '@/components/landing/CrossroadsSection';
 import { Footer } from '@/components/landing/Footer';
 
@@ -48,6 +49,7 @@ export default function Home() {
             <BlueprintSection />
             <EngineSection />
             <VerdictSection />
+            <ReviewCarousel />
             <CrossroadsSection />
 
             <Footer />
