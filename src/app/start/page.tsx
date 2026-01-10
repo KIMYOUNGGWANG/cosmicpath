@@ -510,7 +510,9 @@ function CosmicPathContent() {
 
             // Send Email ONLY if this is a completed premium reading
             const userEmail = localStorage.getItem('user_email');
-            if (userEmail && isComplete) {
+            const isValidEmail = userEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail);
+
+            if (isValidEmail && isComplete) {
               const birthInfoStr = `${dataToUse.birthDate} ${dataToUse.birthTime}생`;
               const sajuStr = (accumulatedMetadata as any)?.saju?.fullSaju || '';
               const contextMap: Record<string, string> = {

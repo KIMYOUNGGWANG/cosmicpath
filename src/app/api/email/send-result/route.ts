@@ -15,6 +15,16 @@ export async function POST(request: Request) {
             );
         }
 
+        // 이메일 형식 검증 (Resend 422 에러 방지)
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            devLog.warn('Invalid email format provided:', email);
+            return NextResponse.json(
+                { error: 'Invalid email format' },
+                { status: 400 }
+            );
+        }
+
         const resultUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/share/${resultId}`;
         const subject = `✨ ${title || 'CosmicPath Reading Result'}이(가) 완성되었습니다!`;
 
