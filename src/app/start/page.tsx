@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ReadingInput, ReadingData } from '@/components/reading/reading-input';
@@ -164,11 +164,21 @@ function CosmicPathContent() {
   }, [step, searchParams, reportData, isLoading, isDecisionAccepted]);
 
   // Resume Reading after Payment
+  const isProcessingResume = useRef(false);
+
   useEffect(() => {
     const checkResume = async () => {
+      // Prevent double-execution (React Strict Mode or rapid updates)
+      if (isProcessingResume.current) return;
+
       const paid = searchParams.get('paid');
       const canceled = searchParams.get('canceled');
       const readingIdFromUrl = searchParams.get('reading_id');
+
+      // Lock only if we are actually intentionally resuming a paid/canceled flow
+      if (paid === 'true' || canceled === 'true' || readingIdFromUrl) {
+        isProcessingResume.current = true;
+      }
 
       // Small delay ONLY if we don't have explicit URL flags (relying on sessionStorage only)
       if (!paid && !canceled && !readingIdFromUrl) {
