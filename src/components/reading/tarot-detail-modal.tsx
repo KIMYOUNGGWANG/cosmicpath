@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Shield, Zap, X } from 'lucide-react';
 
@@ -27,6 +28,39 @@ export function TarotDetailModal({
     language = 'ko'
 }: TarotDetailModalProps) {
     const isEn = language === 'en';
+
+    // Handle browser back button - close modal instead of navigating away
+    useEffect(() => {
+        if (!isOpen) return;
+
+        // Push a history state when modal opens
+        const modalState = { modalType: 'tarot-detail', modalOpen: true };
+        window.history.pushState(modalState, '');
+
+        const handlePopState = (event: PopStateEvent) => {
+            // When back button is pressed, close the modal
+            if (isOpen) {
+                onClose();
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+        };
+    }, [isOpen, onClose]);
+
+    // Handle X button click - need to also go back in history
+    const handleClose = useCallback(() => {
+        // Go back to remove the modal state from history
+        if (window.history.state?.modalType === 'tarot-detail') {
+            window.history.back();
+        } else {
+            onClose();
+        }
+    }, [onClose]);
+
     return (
         <AnimatePresence>
             {isOpen && (
@@ -35,7 +69,7 @@ export function TarotDetailModal({
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        onClick={onClose}
+                        onClick={handleClose}
                         className="absolute inset-0 bg-black/80 backdrop-blur-md"
                     />
 
@@ -48,7 +82,7 @@ export function TarotDetailModal({
                         {/* Header */}
                         <div className="bg-gradient-to-r from-tarot-purple/20 to-cosmic-purple p-6 border-b border-white/5 relative">
                             <button
-                                onClick={onClose}
+                                onClick={handleClose}
                                 className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
                             >
                                 <X size={20} />

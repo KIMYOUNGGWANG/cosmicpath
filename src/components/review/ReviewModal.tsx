@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, X } from 'lucide-react';
 
@@ -17,6 +17,32 @@ export function ReviewModal({ isOpen, onClose, readingId }: ReviewModalProps) {
     const [content, setContent] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
+
+    // Handle browser back button - close modal instead of navigating away
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const modalState = { modalType: 'review', modalOpen: true };
+        window.history.pushState(modalState, '');
+
+        const handlePopState = () => {
+            if (isOpen) {
+                onClose();
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [isOpen, onClose]);
+
+    // Handle close with history cleanup
+    const handleClose = useCallback(() => {
+        if (window.history.state?.modalType === 'review') {
+            window.history.back();
+        } else {
+            onClose();
+        }
+    }, [onClose]);
 
     const handleSubmit = async () => {
         if (!content.trim() || !nickname.trim()) return;
@@ -59,7 +85,7 @@ export function ReviewModal({ isOpen, onClose, readingId }: ReviewModalProps) {
             >
                 <div className="p-6 relative">
                     <button
-                        onClick={onClose}
+                        onClick={handleClose}
                         className="absolute right-4 top-4 text-white/40 hover:text-white transition-colors"
                     >
                         <X size={20} />

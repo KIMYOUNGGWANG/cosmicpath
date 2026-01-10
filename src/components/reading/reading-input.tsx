@@ -23,6 +23,11 @@ export interface ReadingData {
     language: 'ko' | 'en';
     calendarType: 'solar' | 'lunar';
     unknownTime: boolean;
+    // 상대방 정보 (궁합/재회 분석용 - optional)
+    partnerName?: string;
+    partnerBirthDate?: string;
+    partnerBirthTime?: string;
+    partnerGender?: 'male' | 'female';
 }
 
 const contexts: { value: ReadingContext; labelKo: string; labelEn: string }[] = [
@@ -44,11 +49,27 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
     const [question, setQuestion] = useState('');
     const [language, setLanguage] = useState<'ko' | 'en'>('ko');
 
+    // 상대방 정보 state (궁합/재회 분석용)
+    const [showPartnerInfo, setShowPartnerInfo] = useState(false);
+    const [partnerName, setPartnerName] = useState('');
+    const [partnerBirthDate, setPartnerBirthDate] = useState('');
+    const [partnerBirthTime, setPartnerBirthTime] = useState('12:00');
+    const [partnerGender, setPartnerGender] = useState<'male' | 'female'>('male');
+
     const isEn = language === 'en';
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSubmit({ name, gender, birthDate, birthTime, context, question, language, calendarType, unknownTime });
+        onSubmit({
+            name, gender, birthDate, birthTime, context, question, language, calendarType, unknownTime,
+            // 상대방 정보 (입력된 경우에만 포함)
+            ...(showPartnerInfo && partnerBirthDate ? {
+                partnerName: partnerName || undefined,
+                partnerBirthDate,
+                partnerBirthTime,
+                partnerGender
+            } : {})
+        });
     };
 
     return (
@@ -210,7 +231,13 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                             <button
                                 key={ctx.value}
                                 type="button"
-                                onClick={() => setContext(ctx.value)}
+                                onClick={() => {
+                                    setContext(ctx.value);
+                                    // love 선택 시 상대방 정보 섹션 자동 표시
+                                    if (ctx.value === 'love') {
+                                        setShowPartnerInfo(true);
+                                    }
+                                }}
                                 className={`px-4 py-2 text-xs border transition-all uppercase tracking-wider ${context === ctx.value
                                     ? 'border-acc-gold text-bg-void bg-acc-gold font-bold'
                                     : 'border-white/10 text-dim hover:border-white/30 hover:text-moonlight bg-transparent'
@@ -227,6 +254,106 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                         className="w-full bg-white/5 border border-white/20 p-4 text-sm text-starlight focus:outline-none focus:border-acc-gold/80 focus:bg-white/10 transition-colors h-32 resize-none leading-relaxed placeholder:text-white/30"
                     />
                 </div>
+
+                {/* 4. Partner Info (Love/Relationship Only) */}
+                {context === 'love' && (
+                    <div className="relative group">
+                        <div className="flex items-center justify-between mb-4">
+                            <label className="block text-xs text-acc-gold tracking-widest uppercase">
+                                {isEn ? '04. Partner Information (Optional)' : '04. 상대방 정보 (선택사항)'}
+                            </label>
+                            <button
+                                type="button"
+                                onClick={() => setShowPartnerInfo(!showPartnerInfo)}
+                                className={`text-xs tracking-widest uppercase transition-colors ${showPartnerInfo ? 'text-acc-gold' : 'text-dim hover:text-moonlight'}`}
+                            >
+                                {showPartnerInfo ? (isEn ? 'HIDE' : '접기') : (isEn ? 'EXPAND' : '펼치기')}
+                            </button>
+                        </div>
+
+                        {showPartnerInfo && (
+                            <div className="space-y-6 p-4 border border-white/10 bg-white/5">
+                                <p className="text-xs text-dim mb-4">
+                                    {isEn
+                                        ? "Enter partner's birth info for accurate compatibility analysis. Without this, AI cannot calculate partner's Saju accurately."
+                                        : "상대방 생년월일을 입력하면 정확한 궁합/재회 분석이 가능합니다. 미입력 시 AI가 상대방 사주를 정확히 계산할 수 없습니다."}
+                                </p>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Partner Name */}
+                                    <div>
+                                        <input
+                                            type="text"
+                                            value={partnerName}
+                                            onChange={(e) => setPartnerName(e.target.value)}
+                                            placeholder={isEn ? "Partner's Name (Optional)" : "상대방 이름 (선택)"}
+                                            className="w-full bg-transparent border-b border-white/10 py-3 text-sm text-starlight focus:outline-none focus:border-acc-gold transition-colors placeholder:text-white/20"
+                                        />
+                                    </div>
+
+                                    {/* Partner Gender */}
+                                    <div className="flex gap-6 items-end pb-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setPartnerGender('male')}
+                                            className={`text-xs tracking-widest uppercase transition-colors ${partnerGender === 'male' ? 'text-starlight border-b border-starlight' : 'text-dim hover:text-moonlight border-b border-transparent'}`}
+                                        >
+                                            {isEn ? 'Male' : '남성'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setPartnerGender('female')}
+                                            className={`text-xs tracking-widest uppercase transition-colors ${partnerGender === 'female' ? 'text-starlight border-b border-starlight' : 'text-dim hover:text-moonlight border-b border-transparent'}`}
+                                        >
+                                            {isEn ? 'Female' : '여성'}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Partner Birth Date */}
+                                    <div>
+                                        <input
+                                            type="date"
+                                            value={partnerBirthDate}
+                                            onChange={(e) => setPartnerBirthDate(e.target.value)}
+                                            max="9999-12-31"
+                                            style={{ colorScheme: 'dark' }}
+                                            onClick={(e) => {
+                                                try {
+                                                    if (e.currentTarget.showPicker) e.currentTarget.showPicker();
+                                                } catch (err) { }
+                                            }}
+                                            className="w-full bg-transparent border-b border-white/20 py-3 text-sm text-starlight focus:outline-none focus:border-acc-gold transition-colors font-mono"
+                                        />
+                                        <p className="mt-2 text-[10px] text-dim font-mono tracking-widest">
+                                            {isEn ? "PARTNER'S BIRTH DATE" : "상대방 생년월일"}
+                                        </p>
+                                    </div>
+
+                                    {/* Partner Birth Time */}
+                                    <div>
+                                        <input
+                                            type="time"
+                                            value={partnerBirthTime}
+                                            onChange={(e) => setPartnerBirthTime(e.target.value)}
+                                            style={{ colorScheme: 'dark' }}
+                                            onClick={(e) => {
+                                                try {
+                                                    if (e.currentTarget.showPicker) e.currentTarget.showPicker();
+                                                } catch (err) { }
+                                            }}
+                                            className="w-full bg-transparent border-b border-white/20 py-3 text-sm text-starlight focus:outline-none focus:border-acc-gold transition-colors font-mono"
+                                        />
+                                        <p className="mt-2 text-[10px] text-dim font-mono tracking-widest">
+                                            {isEn ? "PARTNER'S BIRTH TIME (Optional)" : "상대방 생시 (선택)"}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
 
             </div>
 

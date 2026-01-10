@@ -61,6 +61,30 @@ function CosmicPathContent() {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
 
   // Fetch dynamic price on mount
+  // --- Persistence Helper ---
+  const saveToSessionAndBackup = (key: string, value: string) => {
+    try {
+      sessionStorage.setItem(key, value);
+      localStorage.setItem(key, value);
+      localStorage.setItem('backup_timestamp', Date.now().toString());
+    } catch (e) {
+      console.error('Storage quota exceeded or error:', e);
+    }
+  };
+
+  const clearSessionAndBackup = () => {
+    const keys = [
+      'pending_reading_data', 'pending_report_data', 'pending_metadata',
+      'pending_reading_id', 'payment_completed', 'decision_accepted',
+      'is_session_active'
+    ];
+    keys.forEach(key => {
+      sessionStorage.removeItem(key);
+      localStorage.removeItem(key);
+    });
+    localStorage.removeItem('backup_timestamp');
+  };
+
   useEffect(() => {
     const fetchPrice = async () => {
       try {
@@ -167,9 +191,45 @@ function CosmicPathContent() {
           sessionStorage.setItem('pending_reading_id', readingId);
         }
 
+        // 2. Check SessionStorage (Active session)
         let pendingData = sessionStorage.getItem('pending_reading_data');
         let pendingReportJson = sessionStorage.getItem('pending_report_data');
         let pendingMetadataJson = sessionStorage.getItem('pending_metadata');
+        let isSessionActive = sessionStorage.getItem('is_session_active') === 'true';
+        let pendingReadingId = sessionStorage.getItem('pending_reading_id');
+
+        // 3. Fallback to LocalStorage (Backup for accidental close/refresh)
+        // Only use if sessionStorage is empty
+        if (!pendingData) {
+          const localTimestamp = localStorage.getItem('backup_timestamp');
+          const now = Date.now();
+          const ONE_DAY = 24 * 60 * 60 * 1000;
+
+          if (localTimestamp && (now - parseInt(localTimestamp) < ONE_DAY)) {
+            console.log('[Resume] Recovering session from LocalStorage backup...');
+            pendingData = localStorage.getItem('pending_reading_data');
+            pendingReportJson = localStorage.getItem('pending_report_data');
+            pendingMetadataJson = localStorage.getItem('pending_metadata');
+            isSessionActive = localStorage.getItem('is_session_active') === 'true';
+
+            if (!pendingReadingId) {
+              const backupId = localStorage.getItem('pending_reading_id');
+              if (backupId) {
+                pendingReadingId = backupId;
+                sessionStorage.setItem('pending_reading_id', backupId);
+              }
+            }
+
+            // Restore to sessionStorage to keep them in sync
+            if (pendingData) sessionStorage.setItem('pending_reading_data', pendingData);
+            if (pendingReportJson) sessionStorage.setItem('pending_report_data', pendingReportJson);
+            if (pendingMetadataJson) sessionStorage.setItem('pending_metadata', pendingMetadataJson);
+            if (isSessionActive) sessionStorage.setItem('is_session_active', 'true');
+          } else {
+            // Clear expired backup
+            clearSessionAndBackup();
+          }
+        }
 
         if (readingId && (!pendingData || pendingData === 'null')) {
           try {
@@ -190,6 +250,7 @@ function CosmicPathContent() {
                 if (rData) sessionStorage.setItem('pending_reading_data', pendingData);
                 if (rReport) sessionStorage.setItem('pending_report_data', pendingReportJson);
                 if (rMeta) sessionStorage.setItem('pending_metadata', pendingMetadataJson);
+                sessionStorage.setItem('backup_timestamp', Date.now().toString()); // Update timestamp
               }
             }
           } catch (err) {
@@ -278,16 +339,8 @@ function CosmicPathContent() {
 
   // Step 1: Birthdate Submission -> Go to Tarot
   const handleInputSubmit = (data: ReadingData) => {
-    const keysToClear = [
-      'pending_reading_data',
-      'pending_report_data',
-      'pending_metadata',
-      'pending_reading_id',
-      'payment_completed',
-      'decision_accepted'
-    ];
-    keysToClear.forEach(key => sessionStorage.removeItem(key));
-    sessionStorage.setItem('is_session_active', 'false'); // Explicitly false until results are ready
+    clearSessionAndBackup(); // Clear previous session data
+    saveToSessionAndBackup('is_session_active', 'false'); // Explicitly false until results are ready
 
     setReadingData(data);
     setReadingData(data);
@@ -303,9 +356,10 @@ function CosmicPathContent() {
     setSelectedCards(cards);
 
     // Mark session as active and persist data once we reach results
-    sessionStorage.setItem('is_session_active', 'true');
+    // Mark session as active and persist data once we reach results
+    saveToSessionAndBackup('is_session_active', 'true');
     if (readingData) {
-      sessionStorage.setItem('pending_reading_data', JSON.stringify({ ...readingData, tarotCards: cards }));
+      saveToSessionAndBackup('pending_reading_data', JSON.stringify({ ...readingData, tarotCards: cards }));
     }
 
     setStep('result');
@@ -402,13 +456,13 @@ function CosmicPathContent() {
 
         // Update UI immediately for each phase
         setReportData({ ...accumulatedReport });
-        sessionStorage.setItem('pending_report_data', JSON.stringify(accumulatedReport));
+        saveToSessionAndBackup('pending_report_data', JSON.stringify(accumulatedReport));
 
         // Metadata update (once is enough, usually from first phase or accumulated)
         if (result.metadata) {
           accumulatedMetadata = { ...accumulatedMetadata, ...result.metadata };
           setMetadata({ ...accumulatedMetadata });
-          sessionStorage.setItem('pending_metadata', JSON.stringify(accumulatedMetadata));
+          saveToSessionAndBackup('pending_metadata', JSON.stringify(accumulatedMetadata));
         }
       }
 
@@ -416,7 +470,7 @@ function CosmicPathContent() {
       const isComplete = maxPhase === 5;
       if (isComplete) {
         setIsPremium(true);
-        sessionStorage.setItem('is_premium_user', 'true');
+        saveToSessionAndBackup('is_premium_user', 'true');
       }
       (async () => {
         try {
@@ -445,7 +499,7 @@ function CosmicPathContent() {
 
           const { id } = await response.json();
           if (id) {
-            sessionStorage.setItem('pending_reading_id', id);
+            saveToSessionAndBackup('pending_reading_id', id);
             const origin = window.location.origin;
             const appUrl = origin.endsWith('/') ? origin.slice(0, -1) : origin;
             const newUrl = `/share/${id}`;

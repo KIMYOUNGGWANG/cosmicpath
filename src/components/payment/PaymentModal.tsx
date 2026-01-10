@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { READING_PRODUCT } from '@/lib/payment/payment-config';
@@ -53,6 +53,32 @@ export function PaymentModal({
         };
         fetchPrice();
     }, []);
+
+    // Handle browser back button - close modal instead of navigating away
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const modalState = { modalType: 'payment', modalOpen: true };
+        window.history.pushState(modalState, '');
+
+        const handlePopState = () => {
+            if (isOpen) {
+                onClose();
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [isOpen, onClose]);
+
+    // Handle close with history cleanup
+    const handleClose = useCallback(() => {
+        if (window.history.state?.modalType === 'payment') {
+            window.history.back();
+        } else {
+            onClose();
+        }
+    }, [onClose]);
 
     const handlePayment = async () => {
         setIsLoading(true);
@@ -143,7 +169,7 @@ export function PaymentModal({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-                    onClick={onClose}
+                    onClick={handleClose}
                 >
                     <motion.div
                         initial={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -154,7 +180,7 @@ export function PaymentModal({
                     >
                         {/* Close button */}
                         <button
-                            onClick={onClose}
+                            onClick={handleClose}
                             className="absolute right-6 top-6 z-10 p-2 hover:bg-white/10 rounded-full transition-colors"
                         >
                             <X size={20} className="text-white/40" />

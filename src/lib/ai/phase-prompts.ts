@@ -28,6 +28,11 @@ export interface UserData {
   tarotCards?: TarotCard[];
   language?: 'ko' | 'en';
   currentDate?: string; // "YYYY-MM-DD"
+  // 상대방 정보 (궁합/재회 분석용 - optional)
+  partnerName?: string;
+  partnerBirthDate?: string;
+  partnerBirthTime?: string;
+  partnerSajuData?: SajuResult;
 }
 
 // Phase별 부분 결과 타입
@@ -109,6 +114,19 @@ ${tarotContext ? tarotContext : (userData.tarotCards ? `<TAROT_CARDS>\n${JSON.st
 ${userData.sajuData ? `<사주_원국>\n${JSON.stringify(userData.sajuData, null, 2)}\n</사주_원국>` : ''}
 ${userData.astroData ? `<점성술_데이터>\n${JSON.stringify(userData.astroData, null, 2)}\n</점성술_데이터>` : ''}
 ${tarotContext ? tarotContext : (userData.tarotCards ? `<타로_카드>\n${JSON.stringify(userData.tarotCards, null, 2)}\n</타로_카드>` : '')}
+${userData.partnerSajuData ? `
+<상대방_정보>
+이름: ${userData.partnerName || '상대방'}
+생년월일: ${userData.partnerBirthDate}
+생시: ${userData.partnerBirthTime || '미상'}
+</상대방_정보>
+<상대방_사주_원국>
+${JSON.stringify(userData.partnerSajuData, null, 2)}
+</상대방_사주_원국>
+
+**중요**: 위의 상대방 사주 데이터는 서버에서 정확히 계산된 것입니다. 이 데이터를 기준으로 궁합/재회 분석을 진행하십시오.
+질문 텍스트에 적힌 상대방 생년월일은 무시하고, 위 <상대방_사주_원국> 데이터만 사용하십시오.
+` : ''}
 `;
 }
 

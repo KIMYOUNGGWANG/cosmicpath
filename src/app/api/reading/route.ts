@@ -33,6 +33,11 @@ const ReadingRequestSchema = z.object({
     birthTime: z.string().default('12:00'),
     context: z.enum(['career', 'love', 'money', 'health', 'general']).default('general'),
     question: z.string().max(500).optional().default(''),
+    // 상대방 정보 (궁합/재회 분석용 - optional)
+    partnerBirthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    partnerBirthTime: z.string().optional(),
+    partnerGender: z.enum(['male', 'female']).optional(),
+    partnerName: z.string().optional(),
     tarotCards: z.array(z.object({
         id: z.number(),
         name: z.string(),
@@ -67,7 +72,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { name, gender, birthDate, birthTime, context, question, tarotCards, tier, language, phase, previousReport, calendarType } = validationResult.data;
+        const { name, gender, birthDate, birthTime, context, question, tarotCards, tier, language, phase, previousReport, calendarType, partnerBirthDate, partnerBirthTime, partnerGender, partnerName } = validationResult.data;
 
         // 1. 사주/점성술용 날짜 파싱 (타임존 이슈 방지: YYYY, MM, DD 직접 추출)
         const [yearPart, monthPart, dayPart] = birthDate.split('-').map(Number);
@@ -79,6 +84,15 @@ export async function POST(request: NextRequest) {
 
         // 사주 계산 (Solar Term 기반 + 30분 보정 및 조자시 반영)
         const saju = calculateSaju(exactBirthDateTime, hours, minutes || 0, calendarType === 'lunar', gender);
+
+        // 상대방 사주 계산 (궁합/재회 분석용 - optional)
+        let partnerSaju = null;
+        if (partnerBirthDate) {
+            const [pYear, pMonth, pDay] = partnerBirthDate.split('-').map(Number);
+            const [pHours, pMinutes] = partnerBirthTime ? partnerBirthTime.split(':').map(Number) : [12, 0];
+            const partnerDateTime = new Date(pYear, pMonth - 1, pDay, pHours, pMinutes || 0, 0);
+            partnerSaju = calculateSaju(partnerDateTime, pHours, pMinutes || 0, false, partnerGender || 'male');
+        }
 
         // 2. 점성술 계산
         const astrology = calculateAstrology(exactBirthDateTime, birthTime);
@@ -118,6 +132,11 @@ export async function POST(request: NextRequest) {
                 tarotCards: cards,
                 language: language as 'ko' | 'en',
                 currentDate,
+                // 상대방 정보 (궁합/재회 분석용)
+                partnerName: partnerName || undefined,
+                partnerBirthDate: partnerBirthDate || undefined,
+                partnerBirthTime: partnerBirthTime || undefined,
+                partnerSajuData: partnerSaju || undefined,
             };
 
             try {
