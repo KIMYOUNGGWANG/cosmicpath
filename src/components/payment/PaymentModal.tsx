@@ -6,7 +6,6 @@ import { X } from 'lucide-react';
 import { READING_PRODUCT } from '@/lib/payment/payment-config';
 import { PromoCodeInput } from './PromoCodeInput';
 import { useRouter } from 'next/navigation';
-// import TossPaymentWidget from './TossPaymentWidget'; // Toss Payments (Commented out)
 
 interface PaymentModalProps {
     isOpen: boolean;
@@ -29,6 +28,7 @@ export function PaymentModal({
 }: PaymentModalProps) {
     const router = useRouter();
     const [email, setEmail] = useState('');
+    const [emailError, setEmailError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [dynamicPrice, setDynamicPrice] = useState<string>('$3.99');
 
@@ -85,9 +85,15 @@ export function PaymentModal({
         const isFreePromo = discount === 100 && promoCodeId;
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-        if (!isFreePromo && (!email || !emailRegex.test(email))) {
-            alert('결과를 받아보실 유효한 이메일 주소를 입력해주세요.');
-            return;
+        if (!isFreePromo) {
+            if (!email) {
+                setEmailError('이메일 주소를 입력해주세요.');
+                return;
+            }
+            if (!emailRegex.test(email)) {
+                setEmailError('올바른 이메일 형식이 아닙니다.');
+                return;
+            }
         }
 
         setIsLoading(true);
@@ -109,8 +115,6 @@ export function PaymentModal({
             if (email) {
                 localStorage.setItem('user_email', email);
             }
-
-            onPaymentStart?.();
 
             onPaymentStart?.();
 
@@ -138,7 +142,7 @@ export function PaymentModal({
                 sessionStorage.setItem('promo_user', 'true');
                 sessionStorage.setItem('is_premium_user', 'true');
 
-                // 모달 닫고 페이지 이동 (window.location 사용으로 확실한 리로드)
+                // 모달 닫고 페이지 이동
                 onClose();
                 window.location.href = `/start?paid=true${readingId ? `&reading_id=${readingId}` : ''}`;
                 return;
@@ -169,6 +173,8 @@ export function PaymentModal({
             setIsLoading(false);
         }
     };
+
+    const isFreePromo = discount === 100 && promoCodeId;
 
     return (
         <AnimatePresence>
@@ -211,14 +217,26 @@ export function PaymentModal({
                             <div className="mb-6">
                                 <label className="block text-xs font-semibold text-[#A184FF] mb-3 ml-1 uppercase tracking-widest">
                                     결과를 받아볼 이메일
+                                    {!isFreePromo && <span className="text-red-400 ml-1">*</span>}
                                 </label>
                                 <input
                                     type="email"
                                     value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    onChange={(e) => {
+                                        setEmail(e.target.value);
+                                        if (emailError) setEmailError(null);
+                                    }}
                                     placeholder="name@example.com"
-                                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-[#A184FF]/50 transition-all font-light"
+                                    className={`w-full bg-white/5 border rounded-2xl px-5 py-4 text-white placeholder:text-gray-600 focus:outline-none transition-all font-light ${emailError
+                                            ? 'border-red-500 focus:border-red-500'
+                                            : 'border-white/10 focus:border-[#A184FF]/50'
+                                        }`}
                                 />
+                                {emailError && (
+                                    <p className="text-red-400 text-xs mt-2 ml-1 animate-pulse">
+                                        {emailError}
+                                    </p>
+                                )}
                             </div>
 
                             {/* Promo Code Input */}
@@ -227,6 +245,8 @@ export function PaymentModal({
                                     onApply={(id, discount) => {
                                         setPromoCodeId(id);
                                         setDiscount(discount);
+                                        // 무료 쿠폰 적용 시 에러 클리어
+                                        if (discount === 100) setEmailError(null);
                                     }}
                                     disabled={isLoading}
                                 />
@@ -236,22 +256,13 @@ export function PaymentModal({
                                 onClick={handlePayment}
                                 disabled={isLoading}
                                 className={`w-full py-4 font-bold rounded-2xl hover:opacity-90 disabled:opacity-50 transition-all shadow-lg
-                                    ${discount === 100
+                                    ${Number(discount) === 100
                                         ? 'bg-gradient-to-r from-emerald-500 to-green-500 shadow-emerald-500/30'
                                         : 'bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] shadow-[#8B5CF6]/30'
                                     } text-white`}
                             >
-                                {isLoading ? '처리 중...' : (discount === 100 ? '무료로 결과 확인하기' : '결제하고 전체 읽기')}
+                                {isLoading ? '처리 중...' : (Number(discount) === 100 ? '무료로 결과 확인하기' : '결제하고 전체 읽기')}
                             </button>
-
-                            {/* 
-                            <TossPaymentWidget
-                                product={READING_PRODUCT}
-                                onFail={(err) => {
-                                    console.error('Toss widget failed in modal:', err);
-                                }}
-                            /> 
-                            */}
                         </div>
                     </motion.div>
                 </motion.div>
