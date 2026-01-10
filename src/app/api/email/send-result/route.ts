@@ -19,7 +19,7 @@ export async function POST(request: Request) {
         const subject = `✨ ${title || 'CosmicPath Reading Result'}이(가) 완성되었습니다!`;
 
         const { data, error } = await resend.emails.send({
-            from: 'CosmicPath <onboarding@resend.dev>',
+            from: 'CosmicPath <noreply@cosmicpath.app>',
             to: [email],
             subject: subject,
             html: `
