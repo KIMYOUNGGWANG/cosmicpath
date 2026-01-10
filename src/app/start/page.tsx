@@ -485,6 +485,20 @@ function CosmicPathContent() {
       (async () => {
         try {
           const existingId = sessionStorage.getItem('pending_reading_id');
+
+          // Prepare Email Metadata
+          const userEmail = localStorage.getItem('user_email');
+          const birthInfoStr = `${dataToUse.birthDate} ${dataToUse.birthTime}생`;
+          const sajuStr = (accumulatedMetadata as any)?.saju?.fullSaju || '';
+          const contextMap: Record<string, string> = {
+            career: '커리어/직업',
+            love: '연애/결혼',
+            money: '금전/재물',
+            health: '건강/웰빙',
+            general: '종합 운세'
+          };
+          const contextStr = dataToUse.question || contextMap[dataToUse.context] || '운세 리딩';
+
           const response = await fetch('/api/reading/save', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -496,7 +510,12 @@ function CosmicPathContent() {
                 isPremium: isComplete,
                 readingData: dataToUse,
                 tarotCards: cards,
-                language
+                language,
+                // Email Trigger Data
+                email: userEmail,
+                birthInfo: birthInfoStr,
+                sajuSummary: sajuStr,
+                userContext: contextStr
               }
             })
           });
@@ -518,35 +537,7 @@ function CosmicPathContent() {
             // 브라우저 주소창 동기화 (새로고침 시 결과 유지)
             window.history.replaceState({ readingId: id }, '', newUrl);
 
-            // Send Email ONLY if this is a completed premium reading
-            const userEmail = localStorage.getItem('user_email');
-            const isValidEmail = userEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userEmail);
-
-            if (isValidEmail && isComplete) {
-              const birthInfoStr = `${dataToUse.birthDate} ${dataToUse.birthTime}생`;
-              const sajuStr = (accumulatedMetadata as any)?.saju?.fullSaju || '';
-              const contextMap: Record<string, string> = {
-                career: '커리어/직업',
-                love: '연애/결혼',
-                money: '금전/재물',
-                health: '건강/웰빙',
-                general: '종합 운세'
-              };
-              const contextStr = dataToUse.question || contextMap[dataToUse.context] || '운세 리딩';
-
-              fetch('/api/email/send-result', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  email: userEmail,
-                  resultId: id,
-                  title: accumulatedReport.summary?.title,
-                  birthInfo: birthInfoStr,
-                  sajuSummary: sajuStr,
-                  userContext: contextStr
-                })
-              }).catch(console.error);
-            }
+            // Client-side email trigger REMOVED (Moved to Server-side in /api/reading/save)
           }
         } catch (err) {
           console.error('Failed to save result:', err);
