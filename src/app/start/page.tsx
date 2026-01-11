@@ -505,6 +505,7 @@ function CosmicPathContent() {
             body: JSON.stringify({
               id: existingId || undefined,
               data: accumulatedReport,
+
               metadata: {
                 ...accumulatedMetadata,
                 isPremium: isComplete,
@@ -515,10 +516,13 @@ function CosmicPathContent() {
                 email: userEmail,
                 birthInfo: birthInfoStr,
                 sajuSummary: sajuStr,
-                userContext: contextStr
+                userContext: contextStr,
+                // Payment Source Tracking (To prevent double emails)
+                paymentSource: sessionStorage.getItem('promo_user') === 'true' ? 'promo' : 'stripe'
               }
             })
           });
+
 
           if (!response.ok) {
             const errData = await response.json().catch(() => ({}));

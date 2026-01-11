@@ -62,8 +62,9 @@ export async function POST(request: Request) {
 
         // [New] 서버사이드 이메일 발송 트리거
         // 프리미엄 리딩이고, 이메일이 있으며, 아직 발송되지 않은 경우
+        // [MODIFIED] 중복 발송 방지: 'promo' 유저인 경우에만 여기서 발송 (Stripe는 Webhook이 담당)
         const savedMeta = result.metadata ? JSON.parse(result.metadata) : {};
-        if (savedMeta.isPremium && savedMeta.email && !savedMeta.emailSent) {
+        if (savedMeta.isPremium && savedMeta.email && !savedMeta.emailSent && savedMeta.paymentSource === 'promo') {
             devLog.log('Save API: Triggering server-side email for', savedMeta.email);
 
             // 직접 함수 호출 (HTTP 요청 오버헤드 및 URL 문제 제거)

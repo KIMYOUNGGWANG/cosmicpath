@@ -32,7 +32,10 @@ export async function sendResultEmail({
         (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
     const resultUrl = `${appUrl}/share/${resultId}`;
-    const subject = `✨ ${title || 'CosmicPath Reading Result'}이(가) 완성되었습니다!`;
+    // 제목에 줄바꿈이 있으면 Resend API에서 에러 발생 (validation_error)
+    // 줄바꿈을 공백으로 치환하고 앞뒤 공백 제거
+    const cleanTitle = (title || 'CosmicPath Reading Result').replace(/[\r\n]+/g, ' ').trim();
+    const subject = `✨ ${cleanTitle}이(가) 완성되었습니다!`;
 
     try {
         const { data, error } = await resend.emails.send({
