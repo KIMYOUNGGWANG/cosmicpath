@@ -1069,7 +1069,213 @@ export function formatSewoon(sewoon: SewoonResult): string {
   return lines.join('\n');
 }
 
+// =====================================
+// 월운 (月運) 계산 시스템
+// 월별 운세 흐름 산출
+// =====================================
+
+/**
+ * 월운 결과 인터페이스
+ */
+export interface WolwoonResult {
+  year: number;
+  month: number;           // 1-12
+  stem: string;            // 천간
+  branch: string;          // 지지
+  tenGod: string;          // 월운 천간의 십신
+  twelveStage: TwelveStageType;
+  score: number;           // -5 ~ +5 점수
+  grade: '대길' | '길' | '중립' | '소흉' | '흉';
+  clashWithSewoon: boolean; // 세운과 충
+  summary: string;
+}
+
+/**
+ * 월 → 월지 변환
+ * 절입 기준 음력 월지
+ */
+const MONTH_TO_BRANCH: string[] = [
+  '축',  // 1월 (대한~입춘 전) - 축월
+  '인',  // 2월 (입춘~경칩 전) - 인월
+  '묘',  // 3월 (경칩~청명 전) - 묘월
+  '진',  // 4월 (청명~입하 전) - 진월
+  '사',  // 5월 (입하~망종 전) - 사월
+  '오',  // 6월 (망종~소서 전) - 오월
+  '미',  // 7월 (소서~입추 전) - 미월
+  '신',  // 8월 (입추~백로 전) - 신월
+  '유',  // 9월 (백로~한로 전) - 유월
+  '술',  // 10월 (한로~입동 전) - 술월
+  '해',  // 11월 (입동~대설 전) - 해월
+  '자',  // 12월 (대설~소한 전) - 자월
+];
+
+/**
+ * 연간 + 월 → 월간 변환 (연상기월법)
+ */
+function getMonthStem(yearStem: string, monthIdx: number): string {
+  // 연상기월법: 연간에 따라 정월(인월)의 천간이 정해짐
+  // 갑기년 → 병인월 시작 (병=2)
+  // 을경년 → 무인월 시작 (무=4)
+  // 병신년 → 경인월 시작 (경=6)
+  // 정임년 → 임인월 시작 (임=8)
+  // 무계년 → 갑인월 시작 (갑=0)
+
+  const yearStemStartMap: Record<string, number> = {
+    '갑': 2, '기': 2,  // 갑기 → 병(2)
+    '을': 4, '경': 4,  // 을경 → 무(4)
+    '병': 6, '신': 6,  // 병신 → 경(6)
+    '정': 8, '임': 8,  // 정임 → 임(8)
+    '무': 0, '계': 0,  // 무계 → 갑(0)
+  };
+
+  const startStemIdx = yearStemStartMap[yearStem] ?? 0;
+  // monthIdx: 0=1월(축), 1=2월(인)...
+  // 인월(2월, idx=1)이 시작점
+  const offset = (monthIdx + 11) % 12; // 인월 기준으로 조정
+  const stemIdx = (startStemIdx + offset) % 10;
+
+  return HEAVENLY_STEMS[stemIdx];
+}
+
+/**
+ * 월운 점수 계산
+ */
+function calculateWolwoonScore(
+  tenGod: string,
+  twelveStage: TwelveStageType,
+  bodyStrength: '신강' | '신약' | '중화',
+  clashWithSewoon: boolean
+): number {
+  const strengthKey = bodyStrength === '신강' ? 'STRONG' : bodyStrength === '신약' ? 'WEAK' : 'BALANCED';
+
+  let score = 0;
+
+  // 십신 점수 (세운의 절반 정도 영향)
+  const tenGodScore = TEN_GOD_SCORE[tenGod]?.[strengthKey] ?? 0;
+  score += Math.round(tenGodScore * 0.5);
+
+  // 12운성 점수 (세운의 절반 정도 영향)
+  const stageScore = TWELVE_STAGE_SCORE[twelveStage]?.[strengthKey] ?? 0;
+  score += Math.round(stageScore * 0.5);
+
+  // 세운과 충 시 감점
+  if (clashWithSewoon) {
+    score -= 2;
+  }
+
+  return Math.max(-5, Math.min(5, score));
+}
+
+/**
+ * 월운 등급 결정
+ */
+function getWolwoonGrade(score: number): '대길' | '길' | '중립' | '소흉' | '흉' {
+  if (score >= 4) return '대길';
+  if (score >= 2) return '길';
+  if (score >= -1) return '중립';
+  if (score >= -3) return '소흉';
+  return '흉';
+}
+
+/**
+ * 단일 월운 계산
+ */
+export function calculateWolwoon(
+  year: number,
+  month: number,
+  dayMaster: string,
+  bodyStrength: '신강' | '신약' | '중화',
+  sewoonBranch: string
+): WolwoonResult {
+  // 연도 간지
+  const { stem: yearStem } = yearToGanji(year);
+
+  // 월 간지
+  const monthIdx = month - 1; // 0-indexed
+  const branch = MONTH_TO_BRANCH[monthIdx];
+  const stem = getMonthStem(yearStem, monthIdx);
+
+  // 십신 계산
+  const tenGod = TEN_GOD_MATRIX[dayMaster]?.[stem] || '비견';
+
+  // 12운성 계산
+  const twelveStage = calculateTwelveStage(dayMaster, branch);
+
+  // 세운과 충 확인
+  const clashWithSewoon = BRANCH_CLASHES.some(
+    ([a, b]) => (a === branch && b === sewoonBranch) || (b === branch && a === sewoonBranch)
+  );
+
+  // 점수 계산
+  const score = calculateWolwoonScore(tenGod, twelveStage, bodyStrength, clashWithSewoon);
+  const grade = getWolwoonGrade(score);
+
+  // 요약 생성
+  const monthNames = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+  let summary = `${monthNames[monthIdx]} (${stem}${branch}): ${tenGod}운, ${twelveStage}`;
+  if (clashWithSewoon) {
+    summary += ' ⚠️세운충';
+  }
+
+  return {
+    year,
+    month,
+    stem,
+    branch,
+    tenGod,
+    twelveStage,
+    score,
+    grade,
+    clashWithSewoon,
+    summary
+  };
+}
+
+/**
+ * 연간 12개월 월운 계산
+ */
+export function calculateYearlyWolwoon(
+  year: number,
+  dayMaster: string,
+  bodyStrength: '신강' | '신약' | '중화'
+): WolwoonResult[] {
+  const { branch: sewoonBranch } = yearToGanji(year);
+
+  const results: WolwoonResult[] = [];
+  for (let month = 1; month <= 12; month++) {
+    results.push(calculateWolwoon(year, month, dayMaster, bodyStrength, sewoonBranch));
+  }
+  return results;
+}
+
+/**
+ * 월운 하이라이트 추출 (길/흉 상위 3개월)
+ */
+export function getWolwoonHighlights(wolwoons: WolwoonResult[]): {
+  bestMonths: WolwoonResult[];
+  worstMonths: WolwoonResult[];
+} {
+  const sorted = [...wolwoons].sort((a, b) => b.score - a.score);
+
+  return {
+    bestMonths: sorted.slice(0, 3),
+    worstMonths: sorted.slice(-3).reverse()
+  };
+}
+
+/**
+ * 월운 포맷 (한 줄 요약)
+ */
+export function formatWolwoon(wolwoon: WolwoonResult): string {
+  const icon = wolwoon.grade === '대길' ? '🌟' :
+    wolwoon.grade === '길' ? '✨' :
+      wolwoon.grade === '흉' ? '⚠️' :
+        wolwoon.grade === '소흉' ? '⚡' : '○';
+  return `${icon} ${wolwoon.month}월: ${wolwoon.tenGod} (${wolwoon.grade})`;
+}
+
 // 사주 결과 타입
+
 
 export interface SajuResult {
   yeonPillar: { stem: string; branch: string; };
@@ -1124,6 +1330,8 @@ export interface SajuResult {
   // Phase 8: 세운 추가
   sewoon?: SewoonResult;       // 올해 세운
   sewoonMultiYear?: SewoonResult[];  // 다년 세운 (향후 5년 등)
+  // Phase 9: 월운 추가
+  wolwoon?: WolwoonResult[];   // 올해 12개월 월운
 }
 
 // =====================================
@@ -2680,6 +2888,9 @@ export function calculateSaju(
     natalBranchList
   );
 
+  // 올해 12개월 월운
+  const wolwoon = calculateYearlyWolwoon(currentYear, dayMaster, bodyStrength);
+
   return {
     yeonPillar,
     monthPillar,
@@ -2701,7 +2912,8 @@ export function calculateSaju(
     },
     daeun,
     sewoon,
-    sewoonMultiYear
+    sewoonMultiYear,
+    wolwoon
   };
 }
 

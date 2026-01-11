@@ -351,6 +351,31 @@ ${saju.sewoonMultiYear.map(s => `  ${s.year}년: ${s.stem}${s.branch} (${s.tenGo
 ` : ''}
 </SEWOON_YEARLY_FORTUNE_GUIDE>
 
+<WOLWOON_MONTHLY_FORTUNE_GUIDE>
+**월운(月運) 해석 필수 지침:**
+${saju.wolwoon && saju.wolwoon.length > 0 ? `
+📅 ${new Date().getFullYear()}년 12개월 월운:
+${saju.wolwoon.map(w => {
+            const icon = w.grade === '대길' ? '🌟' : w.grade === '길' ? '✨' : w.grade === '흉' ? '⚠️' : w.grade === '소흉' ? '⚡' : '○';
+            return `  ${icon} ${w.month}월 (${w.stem}${w.branch}): ${w.tenGod} - ${w.grade}${w.clashWithSewoon ? ' [세운충]' : ''}`;
+        }).join('\n')}
+
+${(() => {
+                    if (!saju.wolwoon) return '';
+                    const best = saju.wolwoon.filter(w => w.grade === '대길' || w.grade === '길');
+                    const worst = saju.wolwoon.filter(w => w.grade === '흉' || w.grade === '소흉');
+                    let result = '';
+                    if (best.length > 0) {
+                        result += `✨ 좋은 달: ${best.map(w => w.month + '월').join(', ')} → 중요한 결정/시작에 적합\n`;
+                    }
+                    if (worst.length > 0) {
+                        result += `⚠️ 주의 달: ${worst.map(w => w.month + '월').join(', ')} → 신중히 행동, 큰 결정 자제\n`;
+                    }
+                    return result;
+                })()}
+` : '- 월운 정보 없음'}
+</WOLWOON_MONTHLY_FORTUNE_GUIDE>
+
 <TIMING_PREDICTION_GUIDE>
 **구체적 시기 예측 지침:**
 
