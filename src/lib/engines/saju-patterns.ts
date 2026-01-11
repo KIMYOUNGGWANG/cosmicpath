@@ -295,6 +295,374 @@ function detectWeakBody(bodyScore: number): PatternMatch | null {
 }
 
 // =====================================
+// 추가 핵심 패턴 (v2.0)
+// =====================================
+
+/**
+ * 재다신약 (財多身弱) 패턴 - 흉격
+ * 재성이 많은데 일간이 약함
+ */
+function detectJaedaSinyak(
+    tenGods: Record<string, string>,
+    bodyStrength?: string
+): PatternMatch | null {
+    const values = Object.values(tenGods);
+    const wealthCount = values.filter(v => v === '정재' || v === '편재').length;
+
+    if (wealthCount >= 2 && bodyStrength === '신약') {
+        return {
+            id: 'jaeda_sinyak',
+            name: '재다신약',
+            nameEn: 'Wealth Heavy Body Weak',
+            category: 'negative',
+            score: -6,
+            description: '재물이 많으나 일간이 약해 감당하기 어렵습니다. 재물 때문에 오히려 고생하기 쉽습니다.',
+            descriptionEn: 'Heavy wealth but weak body makes it hard to handle. May struggle because of money.',
+            trigger: `재성 ${wealthCount}개 + 신약`,
+            advice: '비겁/인수로 일간을 보강하고, 과도한 투자나 보증을 피하세요.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 인다신약 (印多身弱) 패턴 - 흉격 (의존적 성향)
+ * 인성이 과다하여 의존적 성격
+ */
+function detectIndaSinyak(
+    tenGods: Record<string, string>,
+    bodyStrength?: string
+): PatternMatch | null {
+    const values = Object.values(tenGods);
+    const resourceCount = values.filter(v => v === '정인' || v === '편인').length;
+
+    if (resourceCount >= 2 && bodyStrength === '신약') {
+        return {
+            id: 'inda_sinyak',
+            name: '인다신약',
+            nameEn: 'Resource Heavy Body Weak',
+            category: 'negative',
+            score: -4,
+            description: '인수가 과다하여 의존적 성격이 되기 쉽습니다. 결단력이 부족할 수 있습니다.',
+            descriptionEn: 'Excessive resources may lead to dependent personality and lack of decisiveness.',
+            trigger: `인성 ${resourceCount}개 + 신약`,
+            advice: '재성으로 인수를 제어하거나 식상으로 설기하세요. 독립심을 기르세요.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 효신탈식 (梟神奪食) 패턴 - 흉격
+ * 편인이 식신을 극함
+ */
+function detectHyosinTalsik(tenGods: Record<string, string>): PatternMatch | null {
+    const values = Object.values(tenGods);
+    const hasOwl = values.includes('편인');
+    const hasFood = values.includes('식신');
+
+    if (hasOwl && hasFood) {
+        return {
+            id: 'hyosin_talsik',
+            name: '효신탈식',
+            nameEn: 'Owl Robs Food God',
+            category: 'negative',
+            score: -7,
+            description: '편인(효신)이 식신의 복록을 빼앗습니다. 일자리 손실이나 자녀와의 인연이 약해질 수 있습니다.',
+            descriptionEn: 'Indirect seal (owl) robs the food god. May lose job or have weak bond with children.',
+            trigger: '편인 + 식신 동시 존재',
+            advice: '재성(정재/편재)으로 편인을 제어하세요.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 식상제살 (食傷制殺) 패턴 - 길격
+ * 식상이 편관(칠살)을 제어
+ */
+function detectSiksangJesal(tenGods: Record<string, string>): PatternMatch | null {
+    const values = Object.values(tenGods);
+    const outputCount = values.filter(v => v === '식신' || v === '상관').length;
+    const hasKill = values.includes('편관');
+
+    if (outputCount >= 1 && hasKill) {
+        return {
+            id: 'siksang_jesal',
+            name: '식상제살',
+            nameEn: 'Output Controls Kill',
+            category: 'positive',
+            score: 6,
+            description: '식상이 편관(칠살)을 제어하여 권력을 재능으로 승화시킵니다.',
+            descriptionEn: 'Output element controls the Seven Kill, transforming power into talent.',
+            trigger: '식상 + 편관',
+            advice: '강한 추진력을 창의력으로 발휘하세요.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 양인가살 (羊刃駕殺) 패턴 - 위험+기회
+ * 양인(제왕 지지) + 편관
+ */
+function detectYanginGasal(
+    tenGods: Record<string, string>,
+    twelveStages?: { year: string; month: string; day: string; hour: string }
+): PatternMatch | null {
+    const values = Object.values(tenGods);
+    const hasKill = values.includes('편관');
+
+    // 양인 = 일간이 제왕에 해당하는 지지
+    const hasYangin = twelveStages &&
+        (twelveStages.year === '제왕' || twelveStages.month === '제왕' ||
+            twelveStages.day === '제왕' || twelveStages.hour === '제왕');
+
+    if (hasYangin && hasKill) {
+        return {
+            id: 'yangin_gasal',
+            name: '양인가살',
+            nameEn: 'Yang Blade Driving Kill',
+            category: 'neutral', // 위험하지만 제어되면 대성
+            score: -2,
+            description: '양인과 칠살이 만나 강렬한 에너지를 가집니다. 제어되면 큰 권력, 그렇지 않으면 위험합니다.',
+            descriptionEn: 'Yang Blade meets Seven Kill - intense energy. Great power if controlled, risky if not.',
+            trigger: '양인(제왕 지지) + 편관',
+            advice: '무관/체육/외과의사 등 칼을 다루는 직업에 적합. 감정 조절이 중요합니다.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 신강무제 (身强無制) 패턴 - 경고
+ * 신강인데 제어할 관성/재성/식상이 부족
+ */
+function detectSingangMuje(
+    tenGods: Record<string, string>,
+    bodyStrength?: string
+): PatternMatch | null {
+    const values = Object.values(tenGods);
+    const powerCount = values.filter(v => v === '정관' || v === '편관').length;
+    const wealthCount = values.filter(v => v === '정재' || v === '편재').length;
+    const outputCount = values.filter(v => v === '식신' || v === '상관').length;
+
+    if (bodyStrength === '신강' && powerCount === 0 && wealthCount === 0 && outputCount === 0) {
+        return {
+            id: 'singang_muje',
+            name: '신강무제',
+            nameEn: 'Strong Body No Control',
+            category: 'negative',
+            score: -4,
+            description: '일간이 강한데 제어할 요소(관/재/식상)가 없어 독단적이 되기 쉽습니다.',
+            descriptionEn: 'Strong day master without controlling elements may become domineering.',
+            trigger: '신강 + 관재식상 부재',
+            advice: '겸손을 기르고 타인의 의견을 경청하세요.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 신약무부 (身弱無扶) 패턴 - 경고
+ * 신약인데 보조할 비겁/인성이 부족
+ */
+function detectSinyakMubu(
+    tenGods: Record<string, string>,
+    bodyStrength?: string
+): PatternMatch | null {
+    const values = Object.values(tenGods);
+    const companionCount = values.filter(v => v === '비견' || v === '겁재').length;
+    const resourceCount = values.filter(v => v === '정인' || v === '편인').length;
+
+    if (bodyStrength === '신약' && companionCount === 0 && resourceCount === 0) {
+        return {
+            id: 'sinyak_mubu',
+            name: '신약무부',
+            nameEn: 'Weak Body No Support',
+            category: 'negative',
+            score: -5,
+            description: '일간이 약한데 보조할 요소(비겁/인성)가 없어 자립이 어렵습니다.',
+            descriptionEn: 'Weak day master without supporting elements may struggle with independence.',
+            trigger: '신약 + 비겁인성 부재',
+            advice: '무리하지 말고 조력자를 찾으세요. 건강 관리가 중요합니다.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 식상과다 (食傷過多) 패턴 - 경고
+ * 식상이 과다하여 에너지 소모가 큼
+ */
+function detectSiksangGwada(tenGods: Record<string, string>): PatternMatch | null {
+    const values = Object.values(tenGods);
+    const outputCount = values.filter(v => v === '식신' || v === '상관').length;
+
+    if (outputCount >= 3) {
+        return {
+            id: 'siksang_gwada',
+            name: '식상과다',
+            nameEn: 'Excessive Output',
+            category: 'negative',
+            score: -3,
+            description: '식상이 과다하여 일간의 에너지를 과도하게 누설합니다. 체력 관리가 필요합니다.',
+            descriptionEn: 'Excessive output drains day master energy. Health management needed.',
+            trigger: `식상 ${outputCount}개`,
+            advice: '활동을 적절히 조절하고 휴식을 충분히 취하세요.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 비겁과다 (比劫過多) 패턴 - 경고
+ * 비겁이 과다하여 자아가 너무 강함
+ */
+function detectBigeobGwada(tenGods: Record<string, string>): PatternMatch | null {
+    const values = Object.values(tenGods);
+    const companionCount = values.filter(v => v === '비견' || v === '겁재').length;
+
+    if (companionCount >= 3) {
+        return {
+            id: 'bigeob_gwada',
+            name: '비겁과다',
+            nameEn: 'Excessive Companions',
+            category: 'negative',
+            score: -3,
+            description: '비겁이 과다하여 자아가 강하고 경쟁적입니다. 재물 분산 주의가 필요합니다.',
+            descriptionEn: 'Excessive companions make strong ego and competitive nature. Watch for wealth dispersion.',
+            trigger: `비겁 ${companionCount}개`,
+            advice: '협력보다 독자적 활동이 유리합니다. 재물 관리에 신경 쓰세요.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 관다신약 (官多身弱) 패턴 - 흉격
+ * 관성이 강한데 일간이 약함
+ */
+function detectGwandaSinyak(
+    tenGods: Record<string, string>,
+    bodyStrength?: string
+): PatternMatch | null {
+    const values = Object.values(tenGods);
+    const powerCount = values.filter(v => v === '정관' || v === '편관').length;
+
+    if (powerCount >= 2 && bodyStrength === '신약') {
+        return {
+            id: 'gwanda_sinyak',
+            name: '관다신약',
+            nameEn: 'Officer Heavy Body Weak',
+            category: 'negative',
+            score: -5,
+            description: '관성이 강한데 일간이 약해 직장/규범의 압박을 크게 받습니다.',
+            descriptionEn: 'Strong officers with weak body means heavy pressure from work and rules.',
+            trigger: `관성 ${powerCount}개 + 신약`,
+            advice: '인수로 관성을 통관하세요. 스트레스 관리가 중요합니다.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 상관배인 (傷官配印) 패턴 - 길격
+ * 상관을 인성이 제어
+ */
+function detectSanggwanBaein(tenGods: Record<string, string>): PatternMatch | null {
+    const values = Object.values(tenGods);
+    const hasSanggwan = values.includes('상관');
+    const hasIn = values.includes('정인') || values.includes('편인');
+
+    if (hasSanggwan && hasIn) {
+        return {
+            id: 'sanggwan_baein',
+            name: '상관배인',
+            nameEn: 'Hurting Officer with Seal',
+            category: 'positive',
+            score: 5,
+            description: '인성이 상관을 제어하여 재능을 지혜롭게 발휘합니다.',
+            descriptionEn: 'Seal controls Hurting Officer, channeling talent wisely.',
+            trigger: '상관 + 인성',
+            advice: '학문과 예술을 겸비한 분야에서 성공할 수 있습니다.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 재생관 (財生官) 패턴 - 길격
+ * 재성이 관성을 생함
+ */
+function detectJaeSaengGwan(tenGods: Record<string, string>): PatternMatch | null {
+    const values = Object.values(tenGods);
+    const hasJae = values.includes('정재') || values.includes('편재');
+    const hasGwan = values.includes('정관');
+
+    if (hasJae && hasGwan && !values.includes('편관')) {
+        return {
+            id: 'jae_saeng_gwan',
+            name: '재생관',
+            nameEn: 'Wealth Generates Officer',
+            category: 'positive',
+            score: 6,
+            description: '재성이 정관을 생하여 재물로 명예를 얻습니다.',
+            descriptionEn: 'Wealth generates Officer, gaining honor through money.',
+            trigger: '재성 → 정관 (편관 없음)',
+            advice: '재물을 통해 사회적 지위를 얻을 수 있습니다.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 공망다 (空亡多) 패턴 - 경고
+ * 공망이 2개 이상
+ */
+function detectVoidExcess(interactions: SajuResult['interactions']): PatternMatch | null {
+    if (!interactions) return null;
+
+    if (interactions.voids.length >= 2) {
+        return {
+            id: 'void_excess',
+            name: '공망다',
+            nameEn: 'Multiple Voids',
+            category: 'neutral',
+            score: -2,
+            description: '공망이 많아 허무함이나 공허함을 느끼기 쉽습니다. 반면 영적 성장에 유리합니다.',
+            descriptionEn: 'Multiple voids may bring emptiness, but favorable for spiritual growth.',
+            trigger: `공망 ${interactions.voids.length}개`,
+            advice: '물질보다 정신적 가치를 추구하면 오히려 성취가 있습니다.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 형다 (刑多) 패턴 - 흉격
+ * 형이 2개 이상
+ */
+function detectPunishmentExcess(interactions: SajuResult['interactions']): PatternMatch | null {
+    if (!interactions) return null;
+
+    if (interactions.punishments.length >= 2) {
+        return {
+            id: 'punishment_excess',
+            name: '형다',
+            nameEn: 'Multiple Punishments',
+            category: 'negative',
+            score: -4,
+            description: '형이 많아 인간관계나 건강에서 어려움이 있을 수 있습니다.',
+            descriptionEn: 'Multiple punishments may bring difficulties in relationships or health.',
+            trigger: `형 ${interactions.punishments.length}개`,
+            advice: '법률 문제와 건강에 특히 주의하세요.'
+        };
+    }
+    return null;
+}
+
+// =====================================
 // 메인 패턴 분석 함수
 // =====================================
 
@@ -338,6 +706,65 @@ export function analyzePatterns(saju: SajuResult): PatternAnalysisResult {
         const p11 = detectWeakBody(saju.enhancedYongsin.bodyScore);
         if (p11) patterns.push(p11);
     }
+
+    // v2.0 추가 패턴들
+    const bodyStrength = saju.enhancedYongsin?.bodyStrength;
+
+    // 재다신약
+    const pa1 = detectJaedaSinyak(saju.tenGods, bodyStrength);
+    if (pa1) patterns.push(pa1);
+
+    // 인다신약
+    const pa2 = detectIndaSinyak(saju.tenGods, bodyStrength);
+    if (pa2) patterns.push(pa2);
+
+    // 효신탈식
+    const pa3 = detectHyosinTalsik(saju.tenGods);
+    if (pa3) patterns.push(pa3);
+
+    // 식상제살
+    const pa4 = detectSiksangJesal(saju.tenGods);
+    if (pa4) patterns.push(pa4);
+
+    // 양인가살
+    const pa5 = detectYanginGasal(saju.tenGods, saju.twelveStages);
+    if (pa5) patterns.push(pa5);
+
+    // 신강무제
+    const pa6 = detectSingangMuje(saju.tenGods, bodyStrength);
+    if (pa6) patterns.push(pa6);
+
+    // 신약무부
+    const pa7 = detectSinyakMubu(saju.tenGods, bodyStrength);
+    if (pa7) patterns.push(pa7);
+
+    // 식상과다
+    const pa8 = detectSiksangGwada(saju.tenGods);
+    if (pa8) patterns.push(pa8);
+
+    // 비겁과다
+    const pa9 = detectBigeobGwada(saju.tenGods);
+    if (pa9) patterns.push(pa9);
+
+    // 관다신약
+    const pa10 = detectGwandaSinyak(saju.tenGods, bodyStrength);
+    if (pa10) patterns.push(pa10);
+
+    // 상관배인
+    const pa11 = detectSanggwanBaein(saju.tenGods);
+    if (pa11) patterns.push(pa11);
+
+    // 재생관
+    const pa12 = detectJaeSaengGwan(saju.tenGods);
+    if (pa12) patterns.push(pa12);
+
+    // 공망다
+    const pa13 = detectVoidExcess(saju.interactions);
+    if (pa13) patterns.push(pa13);
+
+    // 형다
+    const pa14 = detectPunishmentExcess(saju.interactions);
+    if (pa14) patterns.push(pa14);
 
     // 종합 점수 계산
     let totalScore = 50; // 기본
