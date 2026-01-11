@@ -2116,14 +2116,49 @@ export const YANGIN: Record<string, string> = {
   '계': '축',
 };
 
+// 천덕귀인(天德貴人) - 월지별
+export const CHEONDEOK_GUIIN: Record<string, string> = {
+  '인': '정',  // 인월 → 정
+  '묘': '신',  // 묘월 → 신
+  '진': '임',  // 진월 → 임
+  '사': '신',  // 사월 → 신
+  '오': '해',  // 오월 → 해
+  '미': '갑',  // 미월 → 갑
+  '신': '계',  // 신월 → 계
+  '유': '인',  // 유월 → 인
+  '술': '병',  // 술월 → 병
+  '해': '을',  // 해월 → 을
+  '자': '사',  // 자월 → 사
+  '축': '경',  // 축월 → 경
+};
+
+// 월덕귀인(月德貴人) - 월지별
+export const WOLDEOK_GUIIN: Record<string, string> = {
+  '인': '병',  // 인오술 → 병
+  '오': '병',
+  '술': '병',
+  '사': '경',  // 사유축 → 경
+  '유': '경',
+  '축': '경',
+  '신': '임',  // 신자진 → 임
+  '자': '임',
+  '진': '임',
+  '해': '갑',  // 해묘미 → 갑
+  '묘': '갑',
+  '미': '갑',
+};
+
+
 /**
  * 신살 12종 판정
  */
 export function detectShinSal(
   dayMaster: string,
   yearBranch: string,
+  monthBranch: string,  // 월지 추가 (천덕/월덕 귀인용)
   dayBranch: string,
-  branches: string[]
+  branches: string[],
+  stems: string[] = []  // 천간 리스트 (천덕 귀인용)
 ): ShinSalResult {
   const positive: ShinSalResult['positive'] = [];
   const negative: ShinSalResult['negative'] = [];
@@ -2173,7 +2208,27 @@ export function detectShinSal(
     });
   }
 
-  // 5. 화개
+  // 5. 천덕귀인
+  const cheondeok = CHEONDEOK_GUIIN[monthBranch];
+  if (cheondeok && stems.includes(cheondeok)) {
+    positive.push({
+      name: '천덕귀인',
+      branch: monthBranch,
+      description: '재앙 해소, 흉액 소멸'
+    });
+  }
+
+  // 6. 월덕귀인
+  const woldeok = WOLDEOK_GUIIN[monthBranch];
+  if (woldeok && stems.includes(woldeok)) {
+    positive.push({
+      name: '월덕귀인',
+      branch: monthBranch,
+      description: '재앙 구제, 복록 증가'
+    });
+  }
+
+  // 7. 화개
   const hwagae = HWAGAE[yearBranch];
   if (hwagae && branches.includes(hwagae)) {
     neutral.push({
@@ -2582,7 +2637,7 @@ export function calculateSaju(
   );
 
   // Phase 6: 신살 판정
-  const shinSal = detectShinSal(dayMaster, yeonPillar.branch, dayPillar.branch, branchList);
+  const shinSal = detectShinSal(dayMaster, yeonPillar.branch, monthPillar.branch, dayPillar.branch, branchList, stems);
 
   // Phase 7: 대운 계산
   const currentYear = new Date().getFullYear();
