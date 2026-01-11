@@ -249,6 +249,39 @@ export function formatSajuForPrompt(saju: SajuResult, lang: 'ko' | 'en' = 'ko'):
         });
     }
 
+    // 9. 대운 정보 (10년 주기 운세)
+    if (saju.daeun) {
+        lines.push('');
+        lines.push(lang === 'ko' ? '【대운 (10년 주기 운세)】' : '【Daewoon (10-Year Fortune Cycle)】');
+        lines.push(`${lang === 'ko' ? '방향' : 'Direction'}: ${saju.daeun.direction} (${saju.daeun.basis})`);
+        lines.push(`${lang === 'ko' ? '대운 시작 나이' : 'Start Age'}: ${saju.daeun.startAge}${lang === 'ko' ? '세' : ' years old'}`);
+
+        if (saju.daeun.currentDaeun) {
+            const current = saju.daeun.currentDaeun;
+            lines.push(`${lang === 'ko' ? '★ 현재 대운' : '★ Current Daewoon'}: ${current.stem}${current.branch} (${current.startAge}~${current.endAge}${lang === 'ko' ? '세' : 'yo'}) - ${current.tenGod}`);
+        }
+
+        // 다음 대운 정보 (있는 경우)
+        if (saju.daeun.currentDaeun) {
+            const currentIdx = saju.daeun.sequence.findIndex(d =>
+                d.stem === saju.daeun!.currentDaeun!.stem &&
+                d.branch === saju.daeun!.currentDaeun!.branch
+            );
+            if (currentIdx >= 0 && currentIdx < saju.daeun.sequence.length - 1) {
+                const nextDaeun = saju.daeun.sequence[currentIdx + 1];
+                lines.push(`${lang === 'ko' ? '→ 다음 대운' : '→ Next Daewoon'}: ${nextDaeun.stem}${nextDaeun.branch} (${nextDaeun.startAge}${lang === 'ko' ? '세부터' : 'yo~'}) - ${nextDaeun.tenGod}`);
+            }
+        }
+
+        // 대운 흐름 요약 (처음 5개)
+        lines.push('');
+        lines.push(lang === 'ko' ? '대운 흐름 (앞으로 50년):' : 'Daewoon Flow (Next 50 years):');
+        saju.daeun.sequence.slice(0, 5).forEach((d, i) => {
+            const marker = saju.daeun?.currentDaeun?.stem === d.stem && saju.daeun?.currentDaeun?.branch === d.branch ? '◀' : '';
+            lines.push(`  ${d.startAge}~${d.endAge}${lang === 'ko' ? '세' : 'yo'}: ${d.stem}${d.branch} (${d.tenGod}) ${marker}`);
+        });
+    }
+
     return lines.join('\n');
 }
 
@@ -257,6 +290,20 @@ export function formatSajuForPrompt(saju: SajuResult, lang: 'ko' | 'en' = 'ko'):
  */
 export function getSajuInterpretationDirective(saju: SajuResult, lang: 'ko' | 'en' = 'ko'): string {
     const sajuContext = formatSajuForPrompt(saju, lang);
+
+    // 현재 대운 및 다음 대운 정보
+    const currentDaeun = saju.daeun?.currentDaeun;
+    const nextDaeunInfo = (() => {
+        if (!saju.daeun?.currentDaeun) return null;
+        const currentIdx = saju.daeun.sequence.findIndex(d =>
+            d.stem === saju.daeun!.currentDaeun!.stem &&
+            d.branch === saju.daeun!.currentDaeun!.branch
+        );
+        if (currentIdx >= 0 && currentIdx < saju.daeun.sequence.length - 1) {
+            return saju.daeun.sequence[currentIdx + 1];
+        }
+        return null;
+    })();
 
     if (lang === 'ko') {
         return `
@@ -272,6 +319,37 @@ ${sajuContext}
 5. 신살(길신/흉살)을 참조하되, 과장 없이 균형 있게 언급하세요.
 6. 사주는 타고난 성향(50% 가중치)이므로, 점성술/타로와 교차 검증하세요.
 </SAJU_INTERPRETATION_RULES>
+
+<DAEWOON_INTERPRETATION_GUIDE>
+**대운(大運) 해석 필수 지침:**
+${currentDaeun ? `
+- 현재 대운: ${currentDaeun.stem}${currentDaeun.branch} (${currentDaeun.startAge}~${currentDaeun.endAge}세)
+- 대운 천간 십신: ${currentDaeun.tenGod} → 이 십신이 현재 삶에 미치는 영향을 분석하세요.
+- 대운 지지와 원국 상호작용: 대운 지지 "${currentDaeun.branch}"가 원국의 지지들과 충/합/형 관계인지 확인하세요.
+` : '- 대운 정보 없음'}
+${nextDaeunInfo ? `
+- 다음 대운 전환: ${nextDaeunInfo.startAge}세부터 ${nextDaeunInfo.stem}${nextDaeunInfo.branch} (${nextDaeunInfo.tenGod})
+- 전환 대비: "XX세에 대운이 바뀌므로, 지금부터 준비하세요"와 같은 조언을 포함하세요.
+` : ''}
+</DAEWOON_INTERPRETATION_GUIDE>
+
+<TIMING_PREDICTION_GUIDE>
+**구체적 시기 예측 지침:**
+
+월별 기운 참고:
+- 1~2월 (축/인월): 겨울→봄 전환기, 새로운 시작 에너지
+- 3~4월 (묘/진월): 봄 성장기, 확장과 도전의 시기
+- 5~6월 (사/오월): 여름 시작, 활동력 최고조
+- 7~8월 (미/신월): 결실 준비, 중간 점검 시기
+- 9~10월 (유/술월): 가을 수확기, 성과 정리
+- 11~12월 (해/자월): 겨울 휴식기, 내면 성찰
+
+**예측 표현 예시:**
+- ✓ "올해 5월(사월) 전후로 중요한 전환점이 예상됩니다."
+- ✓ "2027년 봄(묘월)이 새로운 도전에 최적입니다."
+- ✓ "대운 전환 시점인 ${nextDaeunInfo ? nextDaeunInfo.startAge + '세' : 'XX세'}까지 현재 기조를 유지하세요."
+- ✗ (나쁜 예) "곧 좋은 일이 있을 것입니다." ← 이렇게 막연하게 쓰지 마세요.
+</TIMING_PREDICTION_GUIDE>
 `;
     } else {
         return `
@@ -287,6 +365,37 @@ ${sajuContext}
 5. Reference divine stars (positive/negative) with balance, without exaggeration.
 6. Saju represents innate tendencies (50% weight), so cross-validate with Astrology/Tarot.
 </SAJU_INTERPRETATION_RULES>
+
+<DAEWOON_INTERPRETATION_GUIDE>
+**Daewoon (10-Year Cycle) Interpretation Guide:**
+${currentDaeun ? `
+- Current Daewoon: ${currentDaeun.stem}${currentDaeun.branch} (Age ${currentDaeun.startAge}~${currentDaeun.endAge})
+- Daewoon Heaven Stem: ${currentDaeun.tenGod} → Analyze how this TenGod affects current life.
+- Daewoon Branch Interaction: Check if "${currentDaeun.branch}" clashes/combines with natal chart branches.
+` : '- No Daewoon data available'}
+${nextDaeunInfo ? `
+- Next Daewoon Transition: Age ${nextDaeunInfo.startAge} → ${nextDaeunInfo.stem}${nextDaeunInfo.branch} (${nextDaeunInfo.tenGod})
+- Preparation Advice: Include advice like "Prepare now for the Daewoon change at age XX."
+` : ''}
+</DAEWOON_INTERPRETATION_GUIDE>
+
+<TIMING_PREDICTION_GUIDE>
+**Specific Timing Prediction Guide:**
+
+Monthly Energy Reference:
+- Jan~Feb: Winter→Spring transition, new beginnings
+- Mar~Apr: Spring growth, expansion energy
+- May~Jun: Summer start, peak activity
+- Jul~Aug: Harvest preparation, mid-year review
+- Sep~Oct: Autumn harvest, consolidation
+- Nov~Dec: Winter rest, introspection
+
+**Good prediction examples:**
+- ✓ "Around May of this year, expect a significant turning point."
+- ✓ "Spring 2027 is optimal for new ventures."
+- ✓ "Maintain current momentum until your Daewoon transitions at age ${nextDaeunInfo ? nextDaeunInfo.startAge : 'XX'}."
+- ✗ (Bad) "Good things will happen soon." ← Too vague, avoid this.
+</TIMING_PREDICTION_GUIDE>
 `;
     }
 }
