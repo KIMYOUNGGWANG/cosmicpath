@@ -309,7 +309,7 @@ function detectJaedaSinyak(
     const values = Object.values(tenGods);
     const wealthCount = values.filter(v => v === '정재' || v === '편재').length;
 
-    if (wealthCount >= 2 && bodyStrength === '신약') {
+    if (wealthCount >= 2 && (bodyStrength === '신약' || bodyStrength === '중화신약')) {
         return {
             id: 'jaeda_sinyak',
             name: '재다신약',
@@ -336,7 +336,7 @@ function detectIndaSinyak(
     const values = Object.values(tenGods);
     const resourceCount = values.filter(v => v === '정인' || v === '편인').length;
 
-    if (resourceCount >= 2 && bodyStrength === '신약') {
+    if (resourceCount >= 2 && (bodyStrength === '신약' || bodyStrength === '중화신약')) {
         return {
             id: 'inda_sinyak',
             name: '인다신약',
@@ -447,7 +447,7 @@ function detectSingangMuje(
     const wealthCount = values.filter(v => v === '정재' || v === '편재').length;
     const outputCount = values.filter(v => v === '식신' || v === '상관').length;
 
-    if (bodyStrength === '신강' && powerCount === 0 && wealthCount === 0 && outputCount === 0) {
+    if ((bodyStrength === '신강' || bodyStrength === '중화신강') && powerCount === 0 && wealthCount === 0 && outputCount === 0) {
         return {
             id: 'singang_muje',
             name: '신강무제',
@@ -475,7 +475,7 @@ function detectSinyakMubu(
     const companionCount = values.filter(v => v === '비견' || v === '겁재').length;
     const resourceCount = values.filter(v => v === '정인' || v === '편인').length;
 
-    if (bodyStrength === '신약' && companionCount === 0 && resourceCount === 0) {
+    if ((bodyStrength === '신약' || bodyStrength === '중화신약') && companionCount === 0 && resourceCount === 0) {
         return {
             id: 'sinyak_mubu',
             name: '신약무부',
@@ -550,7 +550,7 @@ function detectGwandaSinyak(
     const values = Object.values(tenGods);
     const powerCount = values.filter(v => v === '정관' || v === '편관').length;
 
-    if (powerCount >= 2 && bodyStrength === '신약') {
+    if (powerCount >= 2 && (bodyStrength === '신약' || bodyStrength === '중화신약')) {
         return {
             id: 'gwanda_sinyak',
             name: '관다신약',

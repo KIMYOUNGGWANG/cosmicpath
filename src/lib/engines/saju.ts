@@ -92,7 +92,7 @@ export const ELEMENT_RELATIONS = {
 } as const;
 
 // 천간별 오행 (기존 호환성)
-const STEM_ELEMENTS: Record<string, keyof typeof FIVE_ELEMENTS> = {
+export const STEM_ELEMENTS: Record<string, keyof typeof FIVE_ELEMENTS> = {
   '갑': 'wood', '을': 'wood',
   '병': 'fire', '정': 'fire',
   '무': 'earth', '기': 'earth',
@@ -101,7 +101,7 @@ const STEM_ELEMENTS: Record<string, keyof typeof FIVE_ELEMENTS> = {
 };
 
 // 지지별 오행 (기존 호환성)
-const BRANCH_ELEMENTS: Record<string, keyof typeof FIVE_ELEMENTS> = {
+export const BRANCH_ELEMENTS: Record<string, keyof typeof FIVE_ELEMENTS> = {
   '인': 'wood', '묘': 'wood',
   '사': 'fire', '오': 'fire',
   '진': 'earth', '술': 'earth', '축': 'earth', '미': 'earth',
@@ -915,12 +915,14 @@ function calculateSewoonScore(
   tenGod: string,
   twelveStage: TwelveStageType,
   interactions: SewoonInteractions,
-  bodyStrength: '신강' | '신약' | '중화'
+  bodyStrength: BodyStrength
 ): number {
   let score = 0;
 
   // 1. 십신 점수
-  const strengthKey = bodyStrength === '신강' ? 'STRONG' : bodyStrength === '신약' ? 'WEAK' : 'BALANCED';
+  const strengthKey =
+    (bodyStrength === '신강' || bodyStrength === '중화신강') ? 'STRONG' :
+      (bodyStrength === '신약' || bodyStrength === '중화신약') ? 'WEAK' : 'BALANCED';
   const tenGodScore = TEN_GOD_SCORE[tenGod];
   if (tenGodScore) {
     score += tenGodScore[strengthKey];
@@ -1002,7 +1004,7 @@ export function calculateSewoon(
   year: number,
   dayMaster: string,
   dayBranch: string,
-  bodyStrength: '신강' | '신약' | '중화',
+  bodyStrength: BodyStrength,
   daewoonBranch?: string,
   natalBranches?: string[]
 ): SewoonResult {
@@ -1046,7 +1048,7 @@ export function calculateMultiYearSewoon(
   endYear: number,
   dayMaster: string,
   dayBranch: string,
-  bodyStrength: '신강' | '신약' | '중화',
+  bodyStrength: BodyStrength,
   daewoonBranch?: string,
   natalBranches?: string[]
 ): SewoonResult[] {
@@ -1143,10 +1145,12 @@ function getMonthStem(yearStem: string, monthIdx: number): string {
 function calculateWolwoonScore(
   tenGod: string,
   twelveStage: TwelveStageType,
-  bodyStrength: '신강' | '신약' | '중화',
+  bodyStrength: BodyStrength,
   clashWithSewoon: boolean
 ): number {
-  const strengthKey = bodyStrength === '신강' ? 'STRONG' : bodyStrength === '신약' ? 'WEAK' : 'BALANCED';
+  const strengthKey =
+    (bodyStrength === '신강' || bodyStrength === '중화신강') ? 'STRONG' :
+      (bodyStrength === '신약' || bodyStrength === '중화신약') ? 'WEAK' : 'BALANCED';
 
   let score = 0;
 
@@ -1184,7 +1188,7 @@ export function calculateWolwoon(
   year: number,
   month: number,
   dayMaster: string,
-  bodyStrength: '신강' | '신약' | '중화',
+  bodyStrength: BodyStrength,
   sewoonBranch: string
 ): WolwoonResult {
   // 연도 간지
@@ -1237,7 +1241,7 @@ export function calculateWolwoon(
 export function calculateYearlyWolwoon(
   year: number,
   dayMaster: string,
-  bodyStrength: '신강' | '신약' | '중화'
+  bodyStrength: BodyStrength
 ): WolwoonResult[] {
   const { branch: sewoonBranch } = yearToGanji(year);
 
@@ -1897,8 +1901,8 @@ export function getGyeokgukDescription(result: GyeokgukResult): string {
 // 사주명리학 시스템 지침 v1.0.3 기준
 // =====================================
 
-// 신강/신약 판정 결과
-export type BodyStrength = '신강' | '신약' | '중화';
+// 신강/신약 판정 결과 (중화신강/중화신약 세분화)
+export type BodyStrength = '신강' | '신약' | '중화' | '중화신강' | '중화신약';
 
 // 용신 결과
 export interface EnhancedYongsinResult {
@@ -1930,8 +1934,8 @@ export const JOHU_TABLE: Record<string, { cold: number; hot: number; dry: number
 };
 
 /**
- * 신강/신약 판정
- * 일간의 강약을 점수로 산출 (0-100)
+ * 신강/신약 판정 (프스텔러 기준 4요소 분석)
+ * 득령(得令) / 득지(得地) / 득시(得時) / 득세(得勢)
  */
 export function calculateBodyStrength(
   dayMaster: string,
@@ -1939,59 +1943,80 @@ export function calculateBodyStrength(
   twelveStages: { year: TwelveStageType; month: TwelveStageType; day: TwelveStageType; hour: TwelveStageType },
   tenGodGroups: Record<keyof typeof TEN_GOD_GROUPS, number>,
   elementDistribution: Record<keyof typeof FIVE_ELEMENTS, number>
-): { strength: BodyStrength; score: number } {
-  let score = 50; // 기본 중립
-
-  // 1. 득령 (월지에서의 12운성)
-  const monthStage = twelveStages.month;
-  const strongStages: TwelveStageType[] = ['장생', '관대', '건록', '제왕'];
-  const weakStages: TwelveStageType[] = ['병', '사', '묘', '절'];
-
-  if (strongStages.includes(monthStage)) {
-    score += 15; // 득령
-  } else if (weakStages.includes(monthStage)) {
-    score -= 10; // 실령
-  }
-
-  // 2. 득지 (지지 전체에서의 통근)
+): { strength: BodyStrength; score: number; factors: { deukryung: boolean; deukji: boolean; deuksi: boolean; deukse: boolean } } {
   const dayElement = STEM_ELEMENTS[dayMaster];
-  const sameElementCount = elementDistribution[dayElement] || 0;
-  score += sameElementCount * 5;
 
-  // 3. 득세 (비겁/인성 세력)
+  // 1. 득령 (得令): 월지 정기가 일간과 동일 오행이거나 일간을 생해주는가?
+  // 즉, 월지 정기 = 비겁 또는 인성 관계
+  const monthJeonggi = HIDDEN_STEMS[monthBranch]?.jeonggi;
+  const monthJeonggiElement = monthJeonggi ? STEM_ELEMENTS[monthJeonggi] : null;
+
+  // 오행 생극 관계: A가 B를 생한다 (A → B)
+  const generatesMap: Record<string, string> = {
+    'wood': 'fire', 'fire': 'earth', 'earth': 'metal', 'metal': 'water', 'water': 'wood'
+  };
+
+  // 득령: 월지정기가 일간과 같거나(비겁), 일간을 생해주는(인성) 경우
+  const isSameElement = monthJeonggiElement === dayElement;
+  const generatesDay = generatesMap[monthJeonggiElement as string] === dayElement;
+  const deukryung = isSameElement || generatesDay;
+
+  // 2. 득지 (得地): 일지에서 12운성이 왕성한가? (건록, 제왕, 관대, 장생)
+  const strongStages: TwelveStageType[] = ['장생', '관대', '건록', '제왕'];
+  const deukji = strongStages.includes(twelveStages.day);
+
+  // 3. 득시 (得時): 시주에서 12운성이 왕성한가? (장생/관대/건록/제왕)
+  // 시주 12운성으로만 판단 (비겁/인성 개수는 득세에서 처리)
+  const deuksi = strongStages.includes(twelveStages.hour);
+
+  // 4. 득세 (得勢): 전체적으로 비겁+인성이 식상+재성+관성보다 많은가?
   const supportCount = tenGodGroups.companion + tenGodGroups.resource;
   const drainCount = tenGodGroups.output + tenGodGroups.wealth + tenGodGroups.power;
+  const deukse = supportCount >= drainCount;
 
-  score += supportCount * 8;
-  score -= drainCount * 5;
+  // 점수 계산
+  let score = 50;
+  if (deukryung) score += 12;
+  else score -= 8;
 
-  // 4. 각 주의 12운성 평균
-  const stagePower: Record<TwelveStageType, number> = {
-    '장생': 8, '목욕': 5, '관대': 10, '건록': 12, '제왕': 15,
-    '쇠': 3, '병': -3, '사': -6, '묘': -8, '절': -10, '태': 0, '양': 2
-  };
-  const avgStagePower = (
-    stagePower[twelveStages.year] +
-    stagePower[twelveStages.month] +
-    stagePower[twelveStages.day] +
-    stagePower[twelveStages.hour]
-  ) / 4;
-  score += avgStagePower;
+  if (deukji) score += 10;
+  else score -= 5;
+
+  if (deuksi) score += 5;
+  else score -= 3;
+
+  if (deukse) score += 8;
+  else score -= 6;
+
+  // 동일 오행 통근 보너스
+  const sameElementCount = elementDistribution[dayElement] || 0;
+  score += sameElementCount * 3;
 
   // 점수 범위 제한
   score = Math.max(0, Math.min(100, Math.round(score)));
 
-  // 강약 판정
+  // 요소 개수로 강약 판정 (프스텔러 스타일)
+  const factorCount = [deukryung, deukji, deuksi, deukse].filter(Boolean).length;
+
   let strength: BodyStrength;
-  if (score >= 60) {
+  if (factorCount >= 3) {
     strength = '신강';
-  } else if (score <= 40) {
+  } else if (factorCount <= 1) {
     strength = '신약';
   } else {
-    strength = '중화';
+    // 2개일 때: 득령 여부로 세분화
+    if (deukryung) {
+      strength = '중화신강';
+    } else {
+      strength = '중화신약';
+    }
   }
 
-  return { strength, score };
+  return {
+    strength,
+    score,
+    factors: { deukryung, deukji, deuksi, deukse }
+  };
 }
 
 /**
@@ -2065,12 +2090,15 @@ export function determineEnhancedYongsin(
   let reasoning = '';
   let reasoning_en = '';
 
-  if (bodyStrength === '신약') {
-    // 신약: 일간 강화 필요
-    scores[dayElement] += 3;           // 동일 오행 (비겁)
+  // 억부용신 우선 (프스텔러 스타일)
+  if (bodyStrength === '신약' || bodyStrength === '중화신약') {
+    // 신약/중화신약: 일간 강화 필요 (억부용신)
+    scores[dayElement] += 4;              // 동일 오행 (비겁) - 우선순위
     scores[generatedBy[dayElement]] += 2; // 생해주는 오행 (인성)
-    reasoning = `신약(${bodyScore}점)으로 비겁/인성이 필요합니다.`;
-    reasoning_en = `Body is weak (${bodyScore}). Companion/Resource elements are needed.`;
+    reasoning = bodyStrength === '중화신약'
+      ? `중화신약으로 비겁(${FIVE_ELEMENTS[dayElement]})이 필요합니다. (억부용신)`
+      : `신약(${bodyScore}점)으로 비겁/인성이 필요합니다.`;
+    reasoning_en = `Body is ${bodyStrength}. Companion/Resource elements are needed.`;
   } else if (bodyStrength === '신강') {
     // 신강: 설기 필요
     scores[generates[dayElement]] += 3;     // 설기 (식상)
@@ -2078,6 +2106,13 @@ export function determineEnhancedYongsin(
     scores[overcomedBy[dayElement]] += 1;   // 극당하는 오행 (관성)
     reasoning = `신강(${bodyScore}점)으로 식상/재관 설기가 필요합니다.`;
     reasoning_en = `Body is strong (${bodyScore}). Output/Wealth/Power elements are needed for balance.`;
+  } else if (bodyStrength === '중화신강') {
+    // 중화신강: 격국 보전 우선, 약간의 설기
+    basis = '격국';
+    scores[generates[dayElement]] += 2;   // 식상
+    scores[overcomes[dayElement]] += 1;   // 재성
+    reasoning = `중화신강으로 격국(${gyeokguk.type}) 보전이 중요합니다.`;
+    reasoning_en = `Body is balanced-strong. Focus on preserving structure.`;
   } else {
     // 중화: 격국 보전
     basis = '격국';
@@ -2711,19 +2746,22 @@ export function countTenGodGroups(tenGods: Record<string, string>): Record<keyof
 /**
  * 메인 사주 계산 함수
  * korean-lunar-calendar 라이브러리를 사용하여 KARI 표준 기반 정확한 간지 계산
+ * @param longitude - 출생지 경도 (기본값: 서울 126.9780)
  */
 export function calculateSaju(
   birthDate: Date,
   birthHour: number = 12,
   birthMinute: number = 0,
   isLunar: boolean = false,
-  gender: 'male' | 'female' = 'male'
+  gender: 'male' | 'female' = 'male',
+  longitude: number = 126.9780  // 서울 기본값
 ): SajuResult {
-  // 1. 한국 표준시(KST) 30분 보정 (동경 135도 -> 127.5도)
-  // 실제 태양시 기준으로 만세력을 산출하기 위함
+  // 1. 경도 기반 시간 보정 (지역시 → 진태양시)
+  // KST는 동경 135도 기준, 출생지 경도와의 차이 × 4분/도
+  const timeCorrectionMinutes = Math.round((135 - longitude) * 4);
   const adjDate = new Date(birthDate);
   adjDate.setHours(birthHour, birthMinute);
-  adjDate.setMinutes(adjDate.getMinutes() - 30);
+  adjDate.setMinutes(adjDate.getMinutes() - timeCorrectionMinutes);
 
   const year = adjDate.getFullYear();
   const month = adjDate.getMonth() + 1;
