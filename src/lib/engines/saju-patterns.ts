@@ -663,8 +663,264 @@ function detectPunishmentExcess(interactions: SajuResult['interactions']): Patte
 }
 
 // =====================================
+// 신살 기반 패턴 (v2.1)
+// =====================================
+
+/**
+ * 천을귀인 패턴 - 길격
+ * 어려울 때 귀인의 도움
+ */
+function detectCheoneuiGuin(shinSal?: SajuResult['shinSal']): PatternMatch | null {
+    if (!shinSal) return null;
+
+    if (shinSal.positive.some(s => s.name === '천을귀인')) {
+        return {
+            id: 'cheonui_guin',
+            name: '천을귀인',
+            nameEn: 'Heavenly Noble Star',
+            category: 'positive',
+            score: 5,
+            description: '천을귀인이 있어 어려울 때 귀인의 도움을 받습니다. 위기를 기회로 바꿉니다.',
+            descriptionEn: 'Heavenly Noble Star brings help in difficult times, turning crises into opportunities.',
+            trigger: '천을귀인 발동',
+            advice: '인맥을 소중히 하고 겸손하면 귀인을 만납니다.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 도화살 패턴 - 중립 (길/흉 양면)
+ * 매력과 낭만, 주색 주의
+ */
+function detectDohwasal(shinSal?: SajuResult['shinSal']): PatternMatch | null {
+    if (!shinSal) return null;
+
+    if (shinSal.negative.some(s => s.name === '도화살')) {
+        return {
+            id: 'dohwa_sal',
+            name: '도화살',
+            nameEn: 'Peach Blossom Star',
+            category: 'neutral',
+            score: 0,
+            description: '도화살이 있어 매력적이고 이성운이 좋습니다. 단, 주색(酒色)에 주의가 필요합니다.',
+            descriptionEn: 'Peach Blossom brings charm and romantic luck. Beware of excessive indulgence.',
+            trigger: '도화살 발동',
+            advice: '예술/연예 분야에 유리. 감정 절제가 필요합니다.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 역마살 패턴 - 중립 (활동성)
+ * 이동, 변화, 해외운
+ */
+function detectYeokmasal(shinSal?: SajuResult['shinSal']): PatternMatch | null {
+    if (!shinSal) return null;
+
+    if (shinSal.negative.some(s => s.name === '역마살')) {
+        return {
+            id: 'yeokma_sal',
+            name: '역마살',
+            nameEn: 'Traveling Horse Star',
+            category: 'neutral',
+            score: 1,
+            description: '역마살이 있어 이동이 많고 변화가 잦습니다. 해외운이나 무역에 유리합니다.',
+            descriptionEn: 'Traveling Horse brings frequent movement and changes. Good for overseas or trade.',
+            trigger: '역마살 발동',
+            advice: '가만히 있기보다 움직여야 발전합니다. 해외 기회를 살피세요.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 화개살 패턴 - 중립 (영적/예술적)
+ * 종교, 예술, 고독
+ */
+function detectHwagaesal(shinSal?: SajuResult['shinSal']): PatternMatch | null {
+    if (!shinSal) return null;
+
+    if (shinSal.negative.some(s => s.name === '화개살')) {
+        return {
+            id: 'hwagae_sal',
+            name: '화개살',
+            nameEn: 'Flower Canopy Star',
+            category: 'neutral',
+            score: 0,
+            description: '화개살이 있어 예술적 감각과 영적 감수성이 뛰어납니다. 고독을 즐기는 면이 있습니다.',
+            descriptionEn: 'Flower Canopy brings artistic talent and spiritual sensitivity. May enjoy solitude.',
+            trigger: '화개살 발동',
+            advice: '종교, 철학, 예술 분야에서 성취할 수 있습니다.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 문창귀인 패턴 - 길격
+ * 학문, 문서, 시험운
+ */
+function detectMunchangGuin(shinSal?: SajuResult['shinSal']): PatternMatch | null {
+    if (!shinSal) return null;
+
+    if (shinSal.positive.some(s => s.name === '문창귀인')) {
+        return {
+            id: 'munchang_guin',
+            name: '문창귀인',
+            nameEn: 'Literary Star',
+            category: 'positive',
+            score: 4,
+            description: '문창귀인이 있어 학문과 글재주가 뛰어납니다. 시험운이 좋습니다.',
+            descriptionEn: 'Literary Star brings academic talent and writing skills. Good for exams.',
+            trigger: '문창귀인 발동',
+            advice: '공부, 자격증, 글쓰기 분야에서 성과가 기대됩니다.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 암록 패턴 - 길격
+ * 숨은 재물복
+ */
+function detectAmrok(tenGods: Record<string, string>, hiddenStems?: SajuResult['hiddenStems']): PatternMatch | null {
+    if (!hiddenStems) return null;
+
+    // 지장간에 정재가 숨어있는 경우
+    const hiddenStemsArr = [
+        hiddenStems.year.jeonggi,
+        hiddenStems.month.jeonggi,
+        hiddenStems.day.jeonggi,
+        hiddenStems.hour.jeonggi
+    ];
+
+    const values = Object.values(tenGods);
+    const hasNoWealth = !values.includes('정재') && !values.includes('편재');
+    const hasHiddenWealth = hiddenStemsArr.some(stem => {
+        // 간략화된 검사 - 실제로는 더 정밀해야 함
+        return stem === '정' || stem === '무' || stem === '기';
+    });
+
+    if (hasNoWealth && hasHiddenWealth) {
+        return {
+            id: 'am_rok',
+            name: '암록',
+            nameEn: 'Hidden Fortune',
+            category: 'positive',
+            score: 3,
+            description: '겉으로 드러나지 않는 재물복이 있습니다. 숨은 수입원이 생깁니다.',
+            descriptionEn: 'Hidden fortune exists beneath the surface. Unexpected income sources may appear.',
+            trigger: '지장간에 재성 잠재',
+            advice: '티 내지 않고 꾸준히 모으면 부를 축적합니다.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 인성과다 (잉여 인성)
+ * 인성이 너무 많아 자기 결정 어려움
+ */
+function detectInseongGwada(tenGods: Record<string, string>): PatternMatch | null {
+    const values = Object.values(tenGods);
+    const resourceCount = values.filter(v => v === '정인' || v === '편인').length;
+
+    if (resourceCount >= 3) {
+        return {
+            id: 'inseong_gwada',
+            name: '인성과다',
+            nameEn: 'Excessive Resources',
+            category: 'negative',
+            score: -3,
+            description: '인성이 과다하여 의존적이고 결단력이 부족할 수 있습니다.',
+            descriptionEn: 'Too many resources may cause dependency and indecisiveness.',
+            trigger: `인성 ${resourceCount}개`,
+            advice: '스스로 결정하는 연습을 하세요. 재성으로 균형을 잡으세요.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 재성과다 (돈에 집착)
+ * 재성이 너무 많음
+ */
+function detectJaeseongGwada(tenGods: Record<string, string>): PatternMatch | null {
+    const values = Object.values(tenGods);
+    const wealthCount = values.filter(v => v === '정재' || v === '편재').length;
+
+    if (wealthCount >= 3) {
+        return {
+            id: 'jaeseong_gwada',
+            name: '재성과다',
+            nameEn: 'Excessive Wealth Elements',
+            category: 'neutral',
+            score: -1,
+            description: '재성이 과다하여 돈에 대한 집착이 있을 수 있습니다. 건강 관리 필요.',
+            descriptionEn: 'Too many wealth elements may cause over-focus on money. Health management needed.',
+            trigger: `재성 ${wealthCount}개`,
+            advice: '돈보다 건강을 먼저 챙기세요. 인성으로 마음의 여유를 가지세요.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 관성과다 (압박과 스트레스)
+ * 관성이 너무 많음
+ */
+function detectGwanseongGwada(tenGods: Record<string, string>): PatternMatch | null {
+    const values = Object.values(tenGods);
+    const powerCount = values.filter(v => v === '정관' || v === '편관').length;
+
+    if (powerCount >= 3) {
+        return {
+            id: 'gwanseong_gwada',
+            name: '관성과다',
+            nameEn: 'Excessive Officers',
+            category: 'negative',
+            score: -4,
+            description: '관성이 과다하여 규범과 압박에 시달리기 쉽습니다.',
+            descriptionEn: 'Too many officers bring excessive rules and pressure.',
+            trigger: `관성 ${powerCount}개`,
+            advice: '완벽주의를 내려놓고, 식상으로 스트레스를 해소하세요.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 편인적격 (전문성)
+ * 편인이 용신으로 작용
+ */
+function detectPyeoninJeokgyeok(
+    tenGods: Record<string, string>,
+    gyeokguk?: SajuResult['gyeokguk']
+): PatternMatch | null {
+    if (!gyeokguk) return null;
+
+    if (gyeokguk.type === '편인격') {
+        return {
+            id: 'pyeonin_jeokgyeok',
+            name: '편인적격',
+            nameEn: 'Indirect Seal True Pattern',
+            category: 'positive',
+            score: 4,
+            description: '편인이 격을 성립하여 비정통적 분야에서 전문성을 발휘합니다.',
+            descriptionEn: 'Indirect Seal establishes pattern, excelling in unconventional fields.',
+            trigger: '편인격 성립',
+            advice: 'IT, 의료, 연구, 종교 등 특수 분야에서 성공할 수 있습니다.'
+        };
+    }
+    return null;
+}
+
+// =====================================
 // 메인 패턴 분석 함수
 // =====================================
+
 
 export function analyzePatterns(saju: SajuResult): PatternAnalysisResult {
     const patterns: PatternMatch[] = [];
@@ -765,6 +1021,37 @@ export function analyzePatterns(saju: SajuResult): PatternAnalysisResult {
     // 형다
     const pa14 = detectPunishmentExcess(saju.interactions);
     if (pa14) patterns.push(pa14);
+
+    // v2.1 신살 기반 패턴
+    const pb1 = detectCheoneuiGuin(saju.shinSal);
+    if (pb1) patterns.push(pb1);
+
+    const pb2 = detectDohwasal(saju.shinSal);
+    if (pb2) patterns.push(pb2);
+
+    const pb3 = detectYeokmasal(saju.shinSal);
+    if (pb3) patterns.push(pb3);
+
+    const pb4 = detectHwagaesal(saju.shinSal);
+    if (pb4) patterns.push(pb4);
+
+    const pb5 = detectMunchangGuin(saju.shinSal);
+    if (pb5) patterns.push(pb5);
+
+    const pb6 = detectAmrok(saju.tenGods, saju.hiddenStems);
+    if (pb6) patterns.push(pb6);
+
+    const pb7 = detectInseongGwada(saju.tenGods);
+    if (pb7) patterns.push(pb7);
+
+    const pb8 = detectJaeseongGwada(saju.tenGods);
+    if (pb8) patterns.push(pb8);
+
+    const pb9 = detectGwanseongGwada(saju.tenGods);
+    if (pb9) patterns.push(pb9);
+
+    const pb10 = detectPyeoninJeokgyeok(saju.tenGods, saju.gyeokguk);
+    if (pb10) patterns.push(pb10);
 
     // 종합 점수 계산
     let totalScore = 50; // 기본
