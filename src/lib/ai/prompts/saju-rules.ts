@@ -333,6 +333,24 @@ ${nextDaeunInfo ? `
 ` : ''}
 </DAEWOON_INTERPRETATION_GUIDE>
 
+<SEWOON_YEARLY_FORTUNE_GUIDE>
+**세운(歲運) 해석 필수 지침:**
+${saju.sewoon ? `
+★ ${saju.sewoon.year}년 세운: ${saju.sewoon.stem}${saju.sewoon.branch}
+- 세운 십신: ${saju.sewoon.tenGod} → 올해의 주요 에너지
+- 세운 12운성: ${saju.sewoon.twelveStage}
+- 길흉 판정: ${saju.sewoon.grade} (${saju.sewoon.score > 0 ? '+' : ''}${saju.sewoon.score}점)
+- ${saju.sewoon.summary}
+${saju.sewoon.interactions.clashWithDaewoon ? '⚠️ 운충운(運沖運): 대운과 세운이 충돌 - 매우 주의 필요' : ''}
+${saju.sewoon.interactions.clashWithDayBranch ? '⚠️ 일지충: 배우자/거주지 변동 가능성' : ''}
+` : '- 세운 정보 없음'}
+
+${saju.sewoonMultiYear && saju.sewoonMultiYear.length > 0 ? `
+📅 향후 5년 세운 흐름:
+${saju.sewoonMultiYear.map(s => `  ${s.year}년: ${s.stem}${s.branch} (${s.tenGod}) - ${s.grade}`).join('\n')}
+` : ''}
+</SEWOON_YEARLY_FORTUNE_GUIDE>
+
 <TIMING_PREDICTION_GUIDE>
 **구체적 시기 예측 지침:**
 

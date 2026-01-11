@@ -769,6 +769,306 @@ export function formatDaeun(daeun: DaeunResult): string {
   return lines.join('\n');
 }
 
+// =====================================
+// 세운 (歲運) 계산 시스템
+// 1년 단위 운세 흐름 산출
+// =====================================
+
+/**
+ * 세운 결과 인터페이스
+ */
+export interface SewoonResult {
+  year: number;           // 연도 (2026 등)
+  stem: string;           // 천간
+  branch: string;         // 지지
+  tenGod: string;         // 세운 천간의 십신
+  twelveStage: TwelveStageType; // 세운 지지의 12운성
+  interactions: SewoonInteractions;
+  score: number;          // -10 ~ +10 점수
+  grade: '대길' | '길' | '중립' | '소흉' | '흉';
+  summary: string;        // 한글 요약
+}
+
+/**
+ * 세운 상호작용 결과
+ */
+export interface SewoonInteractions {
+  clashWithDayBranch: boolean;      // 일지와 충
+  clashWithDaewoon: boolean;        // 대운과 충 (운충운)
+  combineWithDayBranch: boolean;    // 일지와 육합
+  threeHarmony?: { formed: boolean; element: string };  // 삼합 성립
+  punishmentPresent: boolean;       // 형 성립
+  harmPresent: boolean;             // 해 성립
+}
+
+/**
+ * 십신별 길흉 점수 (신강/신약에 따라 다름)
+ */
+const TEN_GOD_SCORE: Record<string, { STRONG: number; WEAK: number; BALANCED: number }> = {
+  '비견': { STRONG: -1, WEAK: 2, BALANCED: 0 },
+  '겁재': { STRONG: -3, WEAK: -2, BALANCED: -2 },
+  '식신': { STRONG: 3, WEAK: 1, BALANCED: 2 },
+  '상관': { STRONG: 1, WEAK: -1, BALANCED: 0 },
+  '편재': { STRONG: 2, WEAK: -1, BALANCED: 1 },
+  '정재': { STRONG: 2, WEAK: 0, BALANCED: 1 },
+  '편관': { STRONG: 1, WEAK: -3, BALANCED: -1 },
+  '정관': { STRONG: 2, WEAK: -1, BALANCED: 1 },
+  '편인': { STRONG: -2, WEAK: -1, BALANCED: -1 },
+  '정인': { STRONG: -1, WEAK: 2, BALANCED: 1 },
+};
+
+/**
+ * 12운성별 점수 (신강/신약에 따라 다름)
+ */
+const TWELVE_STAGE_SCORE: Record<TwelveStageType, { STRONG: number; WEAK: number; BALANCED: number }> = {
+  '장생': { STRONG: 1, WEAK: 2, BALANCED: 1 },
+  '목욕': { STRONG: 0, WEAK: 0, BALANCED: 0 },
+  '관대': { STRONG: 1, WEAK: 2, BALANCED: 1 },
+  '건록': { STRONG: 0, WEAK: 3, BALANCED: 2 },
+  '제왕': { STRONG: -2, WEAK: 3, BALANCED: 1 },
+  '쇠': { STRONG: 1, WEAK: -1, BALANCED: 0 },
+  '병': { STRONG: 2, WEAK: -2, BALANCED: -1 },
+  '사': { STRONG: 2, WEAK: -3, BALANCED: -1 },
+  '묘': { STRONG: 2, WEAK: -3, BALANCED: -2 },
+  '절': { STRONG: 2, WEAK: -4, BALANCED: -2 },
+  '태': { STRONG: 0, WEAK: 0, BALANCED: 0 },
+  '양': { STRONG: 0, WEAK: 1, BALANCED: 0 },
+};
+
+/**
+ * 연도 → 간지 변환
+ */
+export function yearToGanji(year: number): { stem: string; branch: string } {
+  const diff = year - 1984; // 1984년 = 갑자년
+  const stemIdx = ((diff % 10) + 10) % 10;
+  const branchIdx = ((diff % 12) + 12) % 12;
+  return {
+    stem: HEAVENLY_STEMS[stemIdx],
+    branch: EARTHLY_BRANCHES[branchIdx]
+  };
+}
+
+/**
+ * 세운과 원국/대운의 상호작용 체크
+ */
+function checkSewoonInteractions(
+  sewoonBranch: string,
+  dayBranch: string,
+  daewoonBranch?: string,
+  natalBranches?: string[]
+): SewoonInteractions {
+  // 충 체크
+  const clashWithDayBranch = BRANCH_CLASHES.some(
+    ([a, b]) => (a === sewoonBranch && b === dayBranch) || (b === sewoonBranch && a === dayBranch)
+  );
+
+  const clashWithDaewoon = daewoonBranch
+    ? BRANCH_CLASHES.some(
+      ([a, b]) => (a === sewoonBranch && b === daewoonBranch) || (b === sewoonBranch && a === daewoonBranch)
+    )
+    : false;
+
+  // 육합 체크
+  const combineWithDayBranch = BRANCH_COMBINES.some(
+    c => (c.pair[0] === sewoonBranch && c.pair[1] === dayBranch) ||
+      (c.pair[1] === sewoonBranch && c.pair[0] === dayBranch)
+  );
+
+  // 삼합 체크 (원국 + 세운)
+  let threeHarmony: { formed: boolean; element: string } | undefined;
+  if (natalBranches) {
+    const allBranches = [...natalBranches, sewoonBranch];
+    for (const th of BRANCH_THREE_HARMONIES) {
+      const matches = th.trio.filter(t => allBranches.includes(t));
+      if (matches.length === 3) {
+        threeHarmony = { formed: true, element: th.element };
+        break;
+      }
+    }
+  }
+
+  // 형 체크
+  const punishmentPresent = BRANCH_PUNISHMENTS.some(set => {
+    const branches = [sewoonBranch, dayBranch];
+    return set.members.every(m => branches.includes(m));
+  });
+
+  // 해 체크
+  const harmPresent = BRANCH_HARMS.some(
+    ([a, b]) => (a === sewoonBranch && b === dayBranch) || (b === sewoonBranch && a === dayBranch)
+  );
+
+  return {
+    clashWithDayBranch,
+    clashWithDaewoon,
+    combineWithDayBranch,
+    threeHarmony,
+    punishmentPresent,
+    harmPresent
+  };
+}
+
+/**
+ * 세운 길흉 스코어 계산
+ */
+function calculateSewoonScore(
+  tenGod: string,
+  twelveStage: TwelveStageType,
+  interactions: SewoonInteractions,
+  bodyStrength: '신강' | '신약' | '중화'
+): number {
+  let score = 0;
+
+  // 1. 십신 점수
+  const strengthKey = bodyStrength === '신강' ? 'STRONG' : bodyStrength === '신약' ? 'WEAK' : 'BALANCED';
+  const tenGodScore = TEN_GOD_SCORE[tenGod];
+  if (tenGodScore) {
+    score += tenGodScore[strengthKey];
+  }
+
+  // 2. 12운성 점수
+  const stageScore = TWELVE_STAGE_SCORE[twelveStage];
+  if (stageScore) {
+    score += stageScore[strengthKey];
+  }
+
+  // 3. 상호작용 점수
+  if (interactions.clashWithDayBranch) score -= 4;  // 일지충 = 변동/사고
+  if (interactions.clashWithDaewoon) score -= 5;    // 운충운 = 극흉
+  if (interactions.combineWithDayBranch) score += 2; // 육합 = 길
+  if (interactions.threeHarmony?.formed) score += 2; // 삼합 = 길
+  if (interactions.punishmentPresent) score -= 2;   // 형 = 흉
+  if (interactions.harmPresent) score -= 1;         // 해 = 소흉
+
+  // 점수 범위 제한
+  return Math.max(-10, Math.min(10, score));
+}
+
+/**
+ * 점수 → 등급 변환
+ */
+function getGradeFromScore(score: number): '대길' | '길' | '중립' | '소흉' | '흉' {
+  if (score >= 5) return '대길';
+  if (score >= 2) return '길';
+  if (score >= -1) return '중립';
+  if (score >= -4) return '소흉';
+  return '흉';
+}
+
+/**
+ * 세운 요약 문장 생성
+ */
+function generateSewoonSummary(
+  year: number,
+  tenGod: string,
+  interactions: SewoonInteractions,
+  grade: '대길' | '길' | '중립' | '소흉' | '흉'
+): string {
+  const parts: string[] = [];
+
+  // 기본 십신 설명
+  const tenGodDescriptions: Record<string, string> = {
+    '비견': '자립심과 경쟁심이 강해지는 해',
+    '겁재': '경쟁과 재물 변동에 주의가 필요한 해',
+    '식신': '표현력과 복록이 늘어나는 해',
+    '상관': '재능 발휘와 언변에 신경 써야 할 해',
+    '편재': '사업과 투자 기회가 생기는 해',
+    '정재': '안정적인 재물 관리가 중요한 해',
+    '편관': '압박과 도전이 있는 해',
+    '정관': '명예와 승진 운이 있는 해',
+    '편인': '비정통적 학문과 변화의 해',
+    '정인': '학업과 자격 취득에 좋은 해',
+  };
+  parts.push(tenGodDescriptions[tenGod] || `${tenGod}의 영향을 받는 해`);
+
+  // 특별 상호작용 경고
+  if (interactions.clashWithDaewoon) {
+    parts.push('⚠️ 운충운(運沖運): 대운과 세운이 충돌하여 특히 주의가 필요');
+  }
+  if (interactions.clashWithDayBranch) {
+    parts.push('⚠️ 일지충: 배우자/거주지 변동 가능성');
+  }
+  if (interactions.combineWithDayBranch) {
+    parts.push('✨ 일지와 합: 협력과 조화의 기운');
+  }
+
+  return `${year}년 (${grade}): ${parts.join('. ')}.`;
+}
+
+/**
+ * 세운 계산 메인 함수
+ */
+export function calculateSewoon(
+  year: number,
+  dayMaster: string,
+  dayBranch: string,
+  bodyStrength: '신강' | '신약' | '중화',
+  daewoonBranch?: string,
+  natalBranches?: string[]
+): SewoonResult {
+  // 1. 연도 → 간지 변환
+  const { stem, branch } = yearToGanji(year);
+
+  // 2. 일간 기준 십신 계산
+  const tenGod = TEN_GOD_MATRIX[dayMaster]?.[stem] || '비견';
+
+  // 3. 일간 기준 12운성 계산
+  const twelveStage = calculateTwelveStage(dayMaster, branch);
+
+  // 4. 원국/대운과 상호작용 체크
+  const interactions = checkSewoonInteractions(branch, dayBranch, daewoonBranch, natalBranches);
+
+  // 5. 길흉 스코어 계산
+  const score = calculateSewoonScore(tenGod, twelveStage, interactions, bodyStrength);
+  const grade = getGradeFromScore(score);
+
+  // 6. 요약 생성
+  const summary = generateSewoonSummary(year, tenGod, interactions, grade);
+
+  return {
+    year,
+    stem,
+    branch,
+    tenGod,
+    twelveStage,
+    interactions,
+    score,
+    grade,
+    summary
+  };
+}
+
+/**
+ * 다중 연도 세운 계산 (예: 2026~2030년)
+ */
+export function calculateMultiYearSewoon(
+  startYear: number,
+  endYear: number,
+  dayMaster: string,
+  dayBranch: string,
+  bodyStrength: '신강' | '신약' | '중화',
+  daewoonBranch?: string,
+  natalBranches?: string[]
+): SewoonResult[] {
+  const results: SewoonResult[] = [];
+  for (let year = startYear; year <= endYear; year++) {
+    results.push(calculateSewoon(year, dayMaster, dayBranch, bodyStrength, daewoonBranch, natalBranches));
+  }
+  return results;
+}
+
+/**
+ * 세운 정보를 문자열로 포맷
+ */
+export function formatSewoon(sewoon: SewoonResult): string {
+  const lines: string[] = [];
+  lines.push(`${sewoon.year}년 세운: ${sewoon.stem}${sewoon.branch}`);
+  lines.push(`십신: ${sewoon.tenGod} | 12운성: ${sewoon.twelveStage}`);
+  lines.push(`길흉: ${sewoon.grade} (${sewoon.score > 0 ? '+' : ''}${sewoon.score}점)`);
+  lines.push(sewoon.summary);
+  return lines.join('\n');
+}
+
 // 사주 결과 타입
 
 export interface SajuResult {
@@ -821,6 +1121,9 @@ export interface SajuResult {
   };
   // Phase 7: 대운 추가
   daeun?: DaeunResult;
+  // Phase 8: 세운 추가
+  sewoon?: SewoonResult;       // 올해 세운
+  sewoonMultiYear?: SewoonResult[];  // 다년 세운 (향후 5년 등)
 }
 
 // =====================================
@@ -2296,6 +2599,32 @@ export function calculateSaju(
     currentAge
   );
 
+  // Phase 8: 세운 계산
+  const bodyStrength = enhancedYongsin?.bodyStrength || '중화';
+  const daewoonBranch = daeun?.currentDaeun?.branch;
+  const natalBranchList = [yeonPillar.branch, monthPillar.branch, dayPillar.branch, hourPillar.branch];
+
+  // 올해 세운
+  const sewoon = calculateSewoon(
+    currentYear,
+    dayMaster,
+    dayPillar.branch,
+    bodyStrength,
+    daewoonBranch,
+    natalBranchList
+  );
+
+  // 향후 5년 세운
+  const sewoonMultiYear = calculateMultiYearSewoon(
+    currentYear,
+    currentYear + 4,
+    dayMaster,
+    dayPillar.branch,
+    bodyStrength,
+    daewoonBranch,
+    natalBranchList
+  );
+
   return {
     yeonPillar,
     monthPillar,
@@ -2315,7 +2644,9 @@ export function calculateSaju(
       month: `${monthPillar.stem}${monthPillar.branch}월`,
       day: koreanGapja.day,
     },
-    daeun
+    daeun,
+    sewoon,
+    sewoonMultiYear
   };
 }
 
