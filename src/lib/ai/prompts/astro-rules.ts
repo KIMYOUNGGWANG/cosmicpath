@@ -159,6 +159,18 @@ export function getAstrologyInterpretationDirective(astro: AstrologyResult, lang
     const ascSign = ZODIAC_SIGNS[astro.ascendant].name;
 
     if (lang === 'ko') {
+        // 원소 분석
+        const sunElement = ZODIAC_SIGNS[astro.sunSign].element;
+        const moonElement = ZODIAC_SIGNS[astro.moonSign].element;
+        const ascElement = ZODIAC_SIGNS[astro.ascendant].element;
+
+        // 원소 카운트 (Big 3 기준)
+        const elementCount: Record<string, number> = { fire: 0, earth: 0, air: 0, water: 0 };
+        [sunElement, moonElement, ascElement].forEach(e => { elementCount[e]++; });
+
+        const dominant = Object.entries(elementCount).filter(([_, c]) => c >= 2).map(([e]) => e);
+        const lacking = Object.entries(elementCount).filter(([_, c]) => c === 0).map(([e]) => e);
+
         return `
 <ASTROLOGY_ANALYSIS>
 ${astroContext}
@@ -172,6 +184,72 @@ ${astroContext}
 5. 차트 패턴(Grand Trine, T-Square 등)은 전체적인 삶의 구조를 나타냅니다.
 6. 점성술은 성향/관계(30% 가중치)이므로, 사주/타로와 교차 검증하세요.
 </ASTROLOGY_INTERPRETATION_RULES>
+
+<SUN_MOON_DYNAMIC_GUIDE>
+**태양-달 조합 해석 필수 지침:**
+
+태양: ${sunSign} (${sunElement === 'fire' ? '불' : sunElement === 'earth' ? '흙' : sunElement === 'air' ? '바람' : '물'} 원소)
+달: ${moonSign} (${moonElement === 'fire' ? '불' : moonElement === 'earth' ? '흙' : moonElement === 'air' ? '바람' : '물'} 원소)
+
+${sunElement === moonElement ? `
+✦ **조화로운 조합**: 외적 자아(태양)와 내면(달)이 같은 원소로, 일관성 있는 성격입니다.
+- 표현: "당신은 겉과 속이 일치하는 사람입니다. ${sunSign}의 에너지가 내면까지 스며들어..."
+` : `
+⚠ **이중성 조합**: 외적 자아(태양 ${sunSign})와 내면(달 ${moonSign})이 다른 원소입니다.
+- 표현: "겉으로는 ${sunSign}의 ${sunElement === 'fire' ? '열정적이고 추진력 있는' : sunElement === 'earth' ? '현실적이고 안정적인' : sunElement === 'air' ? '논리적이고 사교적인' : '감성적이고 직관적인'} 모습을 보이지만, 내면에서는 ${moonSign}의 ${moonElement === 'fire' ? '뜨거운 열망' : moonElement === 'earth' ? '실질적인 안정감' : moonElement === 'air' ? '지적 호기심' : '깊은 감정의 파도'}이 흐릅니다..."
+`}
+</SUN_MOON_DYNAMIC_GUIDE>
+
+<ELEMENT_BALANCE_ANALYSIS>
+**원소 균형 분석:**
+
+Big 3 원소 분포: 불(Fire)=${elementCount.fire}, 흙(Earth)=${elementCount.earth}, 바람(Air)=${elementCount.air}, 물(Water)=${elementCount.water}
+
+${dominant.length > 0 ? `
+✦ **지배적 원소**: ${dominant.map(e => e === 'fire' ? '불(Fire)' : e === 'earth' ? '흙(Earth)' : e === 'air' ? '바람(Air)' : '물(Water)').join(', ')}
+- 불 지배: 열정적이고 자기표현이 강함. 충동적일 수 있음.
+- 흙 지배: 실용적이고 끈기 있음. 변화에 느릴 수 있음.
+- 바람 지배: 소통 능력 뛰어남. 감정 표현이 약할 수 있음.
+- 물 지배: 공감 능력 우수. 감정에 휩쓸릴 수 있음.
+` : ''}
+
+${lacking.length > 0 ? `
+⚠ **부족한 원소**: ${lacking.map(e => e === 'fire' ? '불(Fire)' : e === 'earth' ? '흙(Earth)' : e === 'air' ? '바람(Air)' : '물(Water)').join(', ')}
+- 불 부족 → 추진력 보완 필요. 사주의 화(火) 기운으로 상쇄 가능성 확인.
+- 흙 부족 → 현실감각 보완 필요. 사주의 토(土) 기운으로 상쇄 가능성 확인.
+- 바람 부족 → 소통 능력 보완 필요. 사주의 금(金) 기운으로 상쇄 가능성 확인.
+- 물 부족 → 감정 표현 보완 필요. 사주의 수(水) 기운으로 상쇄 가능성 확인.
+` : ''}
+</ELEMENT_BALANCE_ANALYSIS>
+
+<ASPECT_PRIORITY_GUIDE>
+**Aspect 해석 우선순위:**
+
+1. **태양/달 관련 Aspect** (가장 중요) - 핵심 정체성과 감정
+2. **상승궁 주인(Ruler) 관련 Aspect** - 삶의 방향
+3. **Hard Aspects (충/사각)** - 도전과 성장 포인트
+4. **Soft Aspects (삼합/육합)** - 타고난 재능과 행운
+
+**Aspect 표현 예시:**
+- ✓ "태양과 달이 삼합(Trine)을 이루어, 의식과 무의식이 조화롭게 협력합니다."
+- ✓ "화성과 토성의 사각(Square)은 행동의 제약을 경험하게 하지만, 이를 통해 인내심이 길러집니다."
+- ✗ (나쁜 예) "트라인이 있어서 좋습니다." ← 이렇게 막연하게 쓰지 마세요.
+</ASPECT_PRIORITY_GUIDE>
+
+<SAJU_INTEGRATION_GUIDE>
+**사주-점성술 통합 해석 지침:**
+
+점성술 원소 ↔ 사주 오행 대응:
+- Fire (불) ↔ 화(火): 열정, 표현력, 리더십
+- Earth (흙) ↔ 토(土): 안정, 신뢰, 중재
+- Air (바람) ↔ 금(金): 논리, 결단, 소통
+- Water (물) ↔ 수(水): 감정, 직관, 유연성
+※ 목(木)은 점성술에 직접 대응 없음 - 성장/확장 에너지로 해석
+
+**통합 해석 예시:**
+- "점성술에서 물 원소가 부족하지만, 사주에서 수(水) 기운이 강해 감정적 균형이 보완됩니다."
+- "태양이 사자자리(Fire)이고 일간이 화(火) 오행이라, 이중으로 불꽃 같은 리더십이 강조됩니다."
+</SAJU_INTEGRATION_GUIDE>
 `;
     } else {
         return `
