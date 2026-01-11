@@ -602,6 +602,9 @@ function getSunLongitudeForDaeun(date: Date): number {
 /**
  * 생일로부터 다음/이전 절기까지 일수 계산
  * 대운 시작 나이 = 일수 / 3
+ * 
+ * 순행: 생일 → 다음 절기까지의 일수
+ * 역행: 생일 → 현재 월이 시작된 절기(이미 지난 절기)까지의 일수
  */
 export function calculateDaeunStartAge(
   birthDate: Date,
@@ -619,12 +622,15 @@ export function calculateDaeunStartAge(
     return 3; // 기본값
   }
 
-  // 다음/이전 절기 결정
+  // 목표 절기 결정
   let targetTermIdx: number;
   if (direction === '순행') {
+    // 순행: 다음 월의 절입 절기까지
     targetTermIdx = (currentTermIdx + 1) % 12;
   } else {
-    targetTermIdx = (currentTermIdx - 1 + 12) % 12;
+    // 역행: 현재 월의 절입 절기까지 (이미 지난 절기)
+    // 예: 미월(7월)이면 소서(미월 시작 절기)까지의 거리
+    targetTermIdx = currentTermIdx;
   }
 
   const targetLongitude = MONTH_START_TERMS[targetTermIdx].longitude;
