@@ -107,61 +107,43 @@ function CosmicPathContent() {
   }, []);
 
   // Review Modal Trigger - Scroll-based
+  const hasReportSummary = !!reportData?.summary;
   useEffect(() => {
-    const isPaid = searchParams.get('paid') === 'true' || sessionStorage.getItem('payment_completed') === 'true';
+    const isPaidSession = searchParams.get('paid') === 'true' || sessionStorage.getItem('payment_completed') === 'true';
     const hasReviewed = localStorage.getItem('review_submitted') === 'true';
     const isPromoUser = sessionStorage.getItem('promo_user') === 'true';
-    const isPremiumStatus = sessionStorage.getItem('is_premium_user') === 'true'; // renamed to avoid conflict
+    const isPremiumStatus = sessionStorage.getItem('is_premium_user') === 'true';
 
-    console.log('[Review Modal Check]', {
-      isPaid,
-      isPromoUser,
-      isPremium: isPremiumStatus,
-      hasReviewed,
-      step,
-      hasReportData: !!reportData,
-      isLoading,
-      isDecisionAccepted
-    });
+    if (!hasReportSummary) return;
 
-    // Check decision guard logic:
-    // If trust_score > 2, guard is not shown, so condition is true.
-    // If trust_score <= 2, guard is shown, so we wait for isDecisionAccepted.
-    const isGuardPassed = reportData?.summary ? (reportData.summary.trust_score > 2 || isDecisionAccepted) : false;
+    const trustScore = reportData?.summary?.trust_score ?? 3;
+    const isGuardPassed = trustScore > 2 || isDecisionAccepted;
 
     const shouldShow =
-      (isPaid || isPromoUser || isPremiumStatus) &&
+      (isPaidSession || isPromoUser || isPremiumStatus) &&
       !hasReviewed &&
       step === 'result' &&
-      reportData &&
       !isLoading &&
       isGuardPassed;
 
     if (shouldShow) {
-      console.log('[Review Modal] Setting up scroll listener...');
-
       const handleScroll = () => {
         const scrollPercent = (window.scrollY + window.innerHeight) / document.documentElement.scrollHeight;
-        // console.log('[Review Modal] Scroll:', Math.round(scrollPercent * 100) + '%');
 
         if (scrollPercent >= 0.7) {
-          console.log('[Review Modal] Showing modal!');
           setIsReviewOpen(true);
           window.removeEventListener('scroll', handleScroll);
         }
       };
 
-      // Check immediately if already scrolled
       handleScroll();
-
-      // Also add scroll listener
       window.addEventListener('scroll', handleScroll);
 
       return () => {
         window.removeEventListener('scroll', handleScroll);
       };
     }
-  }, [step, searchParams, reportData, isLoading, isDecisionAccepted]);
+  }, [step, isLoading, isDecisionAccepted, hasReportSummary]);
 
   // Resume Reading after Payment
   const isProcessingResume = useRef(false);
@@ -428,11 +410,11 @@ function CosmicPathContent() {
       const labels = language === 'en' ? labelsEn : labelsKo;
 
       const startPhase = startPhaseOverride || 1;
-      // If we are not premium, only show Phase 1-2 (Summary & Traits)
-      const maxPhase = (isPremium || isPremiumOverride) ? totalPhases : 2;
+      // If we are not premium, only show Phase 1 (Summary + Traits + Core) - 비용 절감
+      const maxPhase = (isPremium || isPremiumOverride) ? totalPhases : 1;
 
-      // If we are just starting fresh free reading, phases 1-2.
-      // If we upgraded, we run 3-5 (assuming startPhase=3).
+      // If we are just starting fresh free reading, phase 1 only.
+      // If we upgraded, we run 2-5 (assuming startPhase=2).
 
       for (let phase = startPhase; phase <= maxPhase; phase++) {
         setLoadingPhase({ phase, label: labels[phase] });
@@ -446,6 +428,7 @@ function CosmicPathContent() {
             tier: 'premium',
             phase, // Execute specific phase
             previousReport: accumulatedReport, // Pass context
+            isPaid: isPremium || isPremiumOverride, // 🔒 결제 여부 전달
           }),
         });
 
@@ -708,6 +691,7 @@ function CosmicPathContent() {
                         shareUrl={shareUrl}
                         onUnlock={handleUpgrade}
                         isPremium={isPremium}
+                        price={dynamicPrice}
                       />
                       {/* Oracle Chat Integration - Only show if readingId exists (saved) */}
                       {shareUrl && (
@@ -759,6 +743,7 @@ function CosmicPathContent() {
         currentReport={reportData}
         metadata={metadata}
         isDecisionAccepted={isDecisionAccepted}
+        price={dynamicPrice}
       />
 
       <ReviewModal

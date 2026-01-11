@@ -15,6 +15,7 @@ interface PaymentModalProps {
     currentReport?: any; // To persist Phase 1-2 results
     metadata?: any;
     isDecisionAccepted?: boolean;
+    price?: string;
 }
 
 export function PaymentModal({
@@ -24,37 +25,20 @@ export function PaymentModal({
     readingData,
     currentReport,
     metadata,
-    isDecisionAccepted
+    isDecisionAccepted,
+    price
 }: PaymentModalProps) {
     const router = useRouter();
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [dynamicPrice, setDynamicPrice] = useState<string>('$3.99');
+
+    // Use price from prop, fallback to default
+    const dynamicPrice = price || '$3.99';
 
     // Promo Code State
     const [promoCodeId, setPromoCodeId] = useState<string | null>(null);
     const [discount, setDiscount] = useState<number>(0);
-
-    // Fetch dynamic price on mount or when product ID changes
-    useEffect(() => {
-        const fetchPrice = async () => {
-            try {
-                const response = await fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`, {
-                    cache: 'no-store'
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.formattedPrice) {
-                        setDynamicPrice(data.formattedPrice);
-                    }
-                }
-            } catch (error) {
-                console.error('Failed to fetch dynamic price:', error);
-            }
-        };
-        fetchPrice();
-    }, []);
 
     // Handle browser back button - close modal instead of navigating away
     useEffect(() => {

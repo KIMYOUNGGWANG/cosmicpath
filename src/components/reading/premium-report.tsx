@@ -214,6 +214,7 @@ interface PremiumReportProps {
     shareUrl?: string;
     onUnlock?: () => void;
     isPremium?: boolean;
+    price?: string;
 }
 
 interface MetadataWithReadingData extends NonNullable<PremiumReportProps['metadata']> {
@@ -320,7 +321,7 @@ const fadeInUp: Variants = {
     }
 };
 
-export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock, isPremium }: PremiumReportProps) {
+export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock, isPremium, price }: PremiumReportProps) {
     const isEn = language === 'en';
     const [selectedCardIdx, setSelectedCardIdx] = useState<number | null>(null);
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -332,9 +333,9 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
         documentTitle: `CosmicPath_Report_${report.summary.title.replace(/\s+/g, '_')}`,
     });
 
-    // State for dynamic price in case we are on static page
-    const [dynamicPrice, setDynamicPrice] = useState<string>('$3.99');
-    const [originalPrice, setOriginalPrice] = useState<string>('$19.90');
+    // Use price from prop, fallback to default
+    const dynamicPrice = price || '$3.99';
+    const originalPrice = '$19.90';
 
     const handleUnlock = () => {
         if (onUnlock) {
@@ -343,26 +344,6 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
             setIsCheckoutOpen(true);
         }
     };
-
-    // Fetch dynamic price
-    useEffect(() => {
-        const fetchPrice = async () => {
-            try {
-                // Pass productId explicitly for clarity
-                const response = await fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`);
-                const data = await response.json();
-                if (data.formattedPrice) {
-                    setDynamicPrice(data.formattedPrice);
-                }
-                if (data.metadata?.compare_at_price) {
-                    setOriginalPrice(data.metadata.compare_at_price);
-                }
-            } catch (error) {
-                console.error('Failed to fetch dynamic price:', error);
-            }
-        };
-        fetchPrice();
-    }, []);
 
     // Dynamic Teaser Text Generator
     const getTeaserText = (section: string) => {
@@ -414,28 +395,46 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
             {/* Categorized Analysis - LINEAR LAYOUT */}
             <div className="space-y-12 md:space-y-16 mt-8 md:mt-12">
 
-                {/* 1. Basic Analysis - ALWAYS VISIBLE */}
+                {/* 1. Basic Analysis - FREE: summary + traits only, PREMIUM: all */}
                 <motion.section
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true, margin: "-100px" }}
                     variants={fadeInUp}
                 >
-                    {report.core_analysis && <CoreAnalysisSection data={report.core_analysis} sajuData={(metadata as any)?.sajuResult} language={language} />}
+                    {/* Core Analysis */}
+                    {isPremium ? (
+                        report.core_analysis && <CoreAnalysisSection data={report.core_analysis} sajuData={(metadata as any)?.sajuResult} language={language} />
+                    ) : (
+                        <LockedContent title={isEn ? "Core Energy Analysis" : "핵심 에너지 분석"} type="chart" onClick={handleUnlock} language={language} />
+                    )}
 
-                    {/* 🌌 Astro Deep Dive (NEW) */}
-                    {report.astro_deep && <AstroDeepSection data={report.astro_deep} language={language} />}
+                    {/* 🌌 Astro Deep Dive */}
+                    {isPremium ? (
+                        report.astro_deep && <AstroDeepSection data={report.astro_deep} language={language} />
+                    ) : (
+                        <LockedContent title={isEn ? "Deep Astrological Insight" : "점성술 심층 분석"} type="text" onClick={handleUnlock} language={language} />
+                    )}
 
-                    {/* 🔢 Numerology (NEW) */}
-                    {report.numerology && <NumerologySection data={report.numerology} language={language} />}
+                    {/* 🔢 Numerology */}
+                    {isPremium ? (
+                        report.numerology && <NumerologySection data={report.numerology} language={language} />
+                    ) : (
+                        <LockedContent title={isEn ? "Soul Code (Numerology)" : "영혼의 코드 (수비학)"} type="text" onClick={handleUnlock} language={language} />
+                    )}
 
-                    {report.saju_sections && (
-                        <AccordionSection
-                            title={isEn ? "📜 Saju (Four Pillars) Analysis" : "📜 사주 기본 분석"}
-                            items={report.saju_sections}
-                            source="saju"
-                            language={language}
-                        />
+                    {/* Saju Sections */}
+                    {isPremium ? (
+                        report.saju_sections && (
+                            <AccordionSection
+                                title={isEn ? "📜 Saju (Four Pillars) Analysis" : "📜 사주 기본 분석"}
+                                items={report.saju_sections}
+                                source="saju"
+                                language={language}
+                            />
+                        )
+                    ) : (
+                        <LockedContent title={isEn ? "Saju (Destiny Pillars)" : "사주 원국 정밀 분석"} type="list" onClick={handleUnlock} language={language} />
                     )}
                 </motion.section>
 
@@ -715,7 +714,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
 
 // ... (Sub Components)
 
-function TarotSpreadSection({ cards, onCardClick, language }: { cards: { name: string; isReversed: boolean }[], onCardClick: (idx: number) => void, language: 'ko' | 'en' }) {
+function TarotSpreadSection({ cards, onCardClick, language }: { cards: { name: string; isReversed: boolean; image?: string }[], onCardClick: (idx: number) => void, language: 'ko' | 'en' }) {
     const isEn = language === 'en';
     const roles = isEn ? ["Current Situation", "Challenge/Obstacle", "Solution/Outcome"] : ["현재 상황", "장애물/과제", "해결책/결과"];
 
@@ -735,8 +734,18 @@ function TarotSpreadSection({ cards, onCardClick, language }: { cards: { name: s
                     <div key={idx} className="flex flex-col items-center">
                         <div
                             onClick={() => onCardClick(idx)}
-                            className="w-full aspect-[2/3] bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-lg border border-white/10 relative overflow-hidden group cursor-pointer hover:border-tarot-purple/50 transition-all hover:shadow-[0_0_15px_rgba(139,92,246,0.2)]"
+                            className="w-full aspect-[2/3] rounded-lg border border-white/10 relative overflow-hidden group cursor-pointer hover:border-tarot-purple/50 transition-all hover:shadow-[0_0_15px_rgba(139,92,246,0.2)]"
                         >
+                            {card.image ? (
+                                <img
+                                    src={card.image}
+                                    alt={card.name}
+                                    className={cn("w-full h-full object-cover", card.isReversed && "rotate-180")}
+                                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                />
+                            ) : (
+                                <div className={cn("w-full h-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20", card.isReversed && "rotate-180")} />
+                            )}
                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center p-2 text-center group-hover:bg-black/20 transition-all">
                                 <span className={cn(
                                     "text-[10px] md:text-sm font-bold text-white/90",
@@ -756,7 +765,77 @@ function TarotSpreadSection({ cards, onCardClick, language }: { cards: { name: s
     );
 }
 
-// --- Sub Components ---
+// --- Locked Content Component for Free Tier ---
+function LockedContent({ title, type, onClick, language }: { title: string, type: 'text' | 'chart' | 'list', onClick: () => void, language: 'ko' | 'en' }) {
+    const isEn = language === 'en';
+
+    return (
+        <div className="relative mt-8 rounded-2xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer group" onClick={onClick}>
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-white/5">
+                <h3 className="font-cinzel text-lg text-white/50">{title}</h3>
+                <Lock className="w-4 h-4 text-white/40" />
+            </div>
+
+            {/* Blurred Body */}
+            <div className="p-6 relative">
+                <div className="absolute inset-0 z-10 backdrop-blur-[6px] bg-void/40 flex flex-col items-center justify-center p-6 text-center transition-all group-hover:backdrop-blur-[4px]">
+                    <div className="w-12 h-12 rounded-full bg-acc-gold/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+                        <Lock className="w-5 h-5 text-acc-gold" />
+                    </div>
+                    <p className="font-cinzel text-white text-lg mb-1">
+                        {isEn ? "Analysis Complete" : "분석 완료"}
+                    </p>
+                    <p className="text-white/60 text-sm font-light mb-4">
+                        {isEn ? "Unlock to reveal your detailed destiny data." : "결제 후 전체 데이터를 즉시 확인하세요."}
+                    </p>
+                    <span className="text-xs font-bold text-acc-gold border border-acc-gold/30 px-3 py-1 rounded-full uppercase tracking-widest bg-acc-gold/5 group-hover:bg-acc-gold/10 transition-colors">
+                        {isEn ? "View Report" : "리포트 보기"}
+                    </span>
+                </div>
+
+                {/* Fake Content Background */}
+                <div className="opacity-30 select-none pointer-events-none grayscale">
+                    {type === 'text' && (
+                        <div className="space-y-3">
+                            <div className="h-4 bg-white/40 rounded w-3/4" />
+                            <div className="h-4 bg-white/40 rounded w-full" />
+                            <div className="h-4 bg-white/40 rounded w-5/6" />
+                            <div className="h-4 bg-white/40 rounded w-4/5" />
+                        </div>
+                    )}
+                    {type === 'chart' && (
+                        <div className="flex items-end gap-2 h-32 justify-center px-10">
+                            <div className="w-full bg-white/40 rounded-t h-[40%]" />
+                            <div className="w-full bg-white/40 rounded-t h-[70%]" />
+                            <div className="w-full bg-white/40 rounded-t h-[50%]" />
+                            <div className="w-full bg-white/40 rounded-t h-[80%]" />
+                            <div className="w-full bg-white/40 rounded-t h-[30%]" />
+                        </div>
+                    )}
+                    {type === 'list' && (
+                        <div className="space-y-4">
+                            <div className="flex gap-4">
+                                <div className="w-16 h-16 rounded bg-white/40" />
+                                <div className="flex-1 space-y-2">
+                                    <div className="h-4 bg-white/40 rounded w-1/3" />
+                                    <div className="h-4 bg-white/40 rounded w-full" />
+                                </div>
+                            </div>
+                            <div className="flex gap-4">
+                                <div className="w-16 h-16 rounded bg-white/40" />
+                                <div className="flex-1 space-y-2">
+                                    <div className="h-4 bg-white/40 rounded w-1/3" />
+                                    <div className="h-4 bg-white/40 rounded w-full" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
 
 function HeaderSection({ summary, language }: { summary: PremiumReportData['summary'], language: 'ko' | 'en' }) {
     const isEn = language === 'en';

@@ -96,11 +96,13 @@ export function TarotPicker({ onSelect, maxCards = 1, language = 'ko' }: TarotPi
                                 {/* 앞면 (카드 정보) */}
                                 <div className="tarot-card-back w-full h-full bg-slate-900 rounded-lg overflow-hidden relative">
                                     {/* 실제 이미지 */}
-                                    <img
-                                        src={card.image}
-                                        alt={isEn ? card.nameEn : card.name}
-                                        className="w-full h-full object-cover opacity-90"
-                                    />
+                                    {card.image && (
+                                        <img
+                                            src={card.image}
+                                            alt={isEn ? card.nameEn : card.name}
+                                            className="w-full h-full object-cover opacity-90"
+                                        />
+                                    )}
                                     {/* 텍스트 오버레이 */}
                                     <div className="absolute bottom-0 w-full bg-black/60 p-1 text-center backdrop-blur-sm">
                                         <span className="text-[10px] font-bold text-white">
@@ -133,7 +135,7 @@ export function TarotPicker({ onSelect, maxCards = 1, language = 'ko' }: TarotPi
                                     className="flex items-center gap-3 bg-white/5 pr-4 rounded-lg overflow-hidden border border-white/10"
                                 >
                                     <div className={`w-12 h-16 bg-gray-800 shrink-0 ${card.isReversed ? 'rotate-180' : ''}`}>
-                                        <img src={card.image} alt={isEn ? card.nameEn : card.name} className="w-full h-full object-cover" />
+                                        {card.image && <img src={card.image} alt={isEn ? card.nameEn : card.name} className="w-full h-full object-cover" />}
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-gold">

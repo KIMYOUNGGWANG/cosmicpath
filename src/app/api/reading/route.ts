@@ -108,6 +108,14 @@ export async function POST(request: NextRequest) {
 
         // ===== Premium Mode: Multi-Turn API =====
         if (tier === 'premium') {
+            // 🔒 결제 검증: Phase 2 이상은 isPaid 필수 (Phase 1만 무료)
+            const currentPhase = validationResult.data.phase || 1;
+            if (currentPhase >= 2 && !validationResult.data.isPaid) {
+                return NextResponse.json(
+                    { error: '결제가 필요합니다. 심층 분석을 이용하려면 먼저 결제를 완료해주세요.', code: 'PAYMENT_REQUIRED' },
+                    { status: 402 }
+                );
+            }
             const apiKey = process.env.GOOGLE_AI_API_KEY;
             const currentDate = new Date().toLocaleDateString('ko-KR', {
                 timeZone: 'Asia/Seoul',
