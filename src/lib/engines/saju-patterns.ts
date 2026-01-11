@@ -917,9 +917,118 @@ function detectPyeoninJeokgyeok(
     return null;
 }
 
+/**
+ * 일록격 (日祿格) 패턴 - 길격
+ * 월지에 건록이 있음
+ */
+function detectIlrokGyeok(
+    twelveStages?: { year: string; month: string; day: string; hour: string }
+): PatternMatch | null {
+    if (!twelveStages) return null;
+
+    if (twelveStages.month === '건록') {
+        return {
+            id: 'ilrok_gyeok',
+            name: '일록격',
+            nameEn: 'Day Salary Pattern',
+            category: 'positive',
+            score: 5,
+            description: '월지가 일간의 건록지로, 자립심과 능력이 뛰어납니다.',
+            descriptionEn: 'Month branch is day master\'s prosperity, showing strong independence and capability.',
+            trigger: '월지 건록',
+            advice: '취직보다 창업/프리랜서가 유리할 수 있습니다.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 귀인다 (貴人多) 패턴 - 길격
+ * 천을귀인이 2개 이상
+ */
+function detectGuiinDa(shinSal?: SajuResult['shinSal']): PatternMatch | null {
+    if (!shinSal) return null;
+
+    const guiinCount = shinSal.positive.filter(s =>
+        s.name === '천을귀인' || s.name === '천덕귀인' || s.name === '월덕귀인'
+    ).length;
+
+    if (guiinCount >= 2) {
+        return {
+            id: 'guiin_da',
+            name: '귀인다',
+            nameEn: 'Multiple Noble Stars',
+            category: 'positive',
+            score: 4,
+            description: '귀인이 많아 어려울 때마다 도움을 받습니다.',
+            descriptionEn: 'Multiple noble stars bring help in difficult times.',
+            trigger: `귀인 ${guiinCount}개`,
+            advice: '인복이 좋으니 인맥 관리를 잘하세요.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 삼형살 (三刑煞) 패턴 - 흉격
+ * 자묘/인사신/축술미 삼형
+ */
+function detectSamhyeongsal(interactions: SajuResult['interactions']): PatternMatch | null {
+    if (!interactions) return null;
+
+    // 삼형 패턴 체크 (3개 지지가 모두 존재)
+    const samhyeongSets = [
+        ['인', '사', '신'],  // 인사신 삼형
+        ['축', '술', '미'],  // 축술미 삼형
+    ];
+
+    // punishments에서 3개 이상이 연관된 경우
+    if (interactions.punishments.length >= 2) {
+        return {
+            id: 'samhyeong_sal',
+            name: '삼형살',
+            nameEn: 'Triple Punishment',
+            category: 'negative',
+            score: -6,
+            description: '삼형이 성립하여 인간관계와 건강에 주의가 필요합니다.',
+            descriptionEn: 'Triple punishment formed, requiring caution in relationships and health.',
+            trigger: '삼형 성립',
+            advice: '법적 분쟁, 수술, 사고에 주의하세요.'
+        };
+    }
+    return null;
+}
+
+/**
+ * 자형 (自刑) 패턴 - 중립/경고
+ * 같은 지지가 2개 이상 (진진, 오오, 유유, 해해)
+ */
+function detectJahyeong(branches: string[]): PatternMatch | null {
+    const selfPunish = ['진', '오', '유', '해'];
+
+    for (const branch of selfPunish) {
+        const count = branches.filter(b => b === branch).length;
+        if (count >= 2) {
+            return {
+                id: 'jahyeong',
+                name: '자형',
+                nameEn: 'Self-Punishment',
+                category: 'neutral',
+                score: -2,
+                description: `같은 지지(${branch})가 겹쳐 자해/자책 경향이 있습니다.`,
+                descriptionEn: `Same branch (${branch}) repeats, showing self-critical tendencies.`,
+                trigger: `${branch}${branch} 자형`,
+                advice: '스스로를 너무 몰아세우지 마세요. 자기 관리가 중요합니다.'
+            };
+        }
+    }
+    return null;
+}
+
 // =====================================
 // 메인 패턴 분석 함수
 // =====================================
+
 
 
 export function analyzePatterns(saju: SajuResult): PatternAnalysisResult {
@@ -1052,6 +1161,26 @@ export function analyzePatterns(saju: SajuResult): PatternAnalysisResult {
 
     const pb10 = detectPyeoninJeokgyeok(saju.tenGods, saju.gyeokguk);
     if (pb10) patterns.push(pb10);
+
+    // 40종 완성용 추가 패턴
+    const pc1 = detectIlrokGyeok(saju.twelveStages);
+    if (pc1) patterns.push(pc1);
+
+    const pc2 = detectGuiinDa(saju.shinSal);
+    if (pc2) patterns.push(pc2);
+
+    const pc3 = detectSamhyeongsal(saju.interactions);
+    if (pc3) patterns.push(pc3);
+
+    // 지지 배열 추출
+    const branches = [
+        saju.yeonPillar.branch,
+        saju.monthPillar.branch,
+        saju.dayPillar.branch,
+        saju.hourPillar.branch
+    ];
+    const pc4 = detectJahyeong(branches);
+    if (pc4) patterns.push(pc4);
 
     // 종합 점수 계산
     let totalScore = 50; // 기본
