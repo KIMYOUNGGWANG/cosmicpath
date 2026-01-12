@@ -70,8 +70,10 @@ export function CosmicRadar({
     const maxTarot = getCoordinates(100, 120);
     const maxStar = getCoordinates(100, 240);
 
-    // 다각형 경로
-    const pathData = `M ${sajuPos.x} ${sajuPos.y} L ${tarotPos.x} ${tarotPos.y} L ${starPos.x} ${starPos.y} Z`;
+    // 다각형 경로 (undefined 방지)
+    const pathData = (isNaN(sajuPos.x) || isNaN(sajuPos.y) || isNaN(tarotPos.x) || isNaN(tarotPos.y) || isNaN(starPos.x) || isNaN(starPos.y))
+        ? 'M 100 100 L 100 100 L 100 100 Z'  // 기본값: 중심점
+        : `M ${sajuPos.x} ${sajuPos.y} L ${tarotPos.x} ${tarotPos.y} L ${starPos.x} ${starPos.y} Z`;
 
     return (
         <div className="relative w-full max-w-[320px] mx-auto aspect-square">
@@ -116,6 +118,7 @@ export function CosmicRadar({
 
                 {/* 실제 데이터 다각형 */}
                 <motion.path
+                    initial={{ d: 'M 100 30 L 160.62 135 L 39.38 135 Z' }}
                     d={pathData}
                     fill="url(#radarGradient)"
                     fillOpacity="0.5"

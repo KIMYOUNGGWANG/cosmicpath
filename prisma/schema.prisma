@@ -5,7 +5,6 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
 }
 
 model ReadingResult {
@@ -55,7 +54,10 @@ model PromoRedemption {
   promoCode   PromotionCode @relation(fields: [promoCodeId], references: [id])
   readingId   String?
   userAgent   String?
+  email       String?
   createdAt   DateTime      @default(now())
+
+  @@unique([promoCodeId, email])
 }
 
 model Review {

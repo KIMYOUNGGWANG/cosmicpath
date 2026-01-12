@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 const redeemSchema = z.object({
     codeId: z.string(),
+    email: z.string().email(), // Required for duplicate prevention
     readingId: z.string().optional(),
     userAgent: z.string().optional(),
 });
@@ -12,7 +13,7 @@ const redeemSchema = z.object({
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { codeId, readingId, userAgent } = redeemSchema.parse(body);
+        const { codeId, email, readingId, userAgent } = redeemSchema.parse(body);
 
         const result = await prisma.$transaction(async (tx) => {
             const promoCode = await tx.promotionCode.findUnique({
@@ -20,11 +21,23 @@ export async function POST(request: NextRequest) {
             });
 
             if (!promoCode || !promoCode.isActive) {
-                throw new Error('Invalid code');
+                throw new Error('유효하지 않은 코드입니다.');
             }
 
             if (promoCode.usedCount >= promoCode.maxUses) {
-                throw new Error('Limit exceeded');
+                throw new Error('선착순 마감된 코드입니다.');
+            }
+
+            // Check if email already used this code
+            const existingRedemption = await tx.promoRedemption.findFirst({
+                where: {
+                    promoCodeId: codeId,
+                    email: email
+                }
+            });
+
+            if (existingRedemption) {
+                throw new Error('이미 이 프로모션 코드를 사용하셨습니다.');
             }
 
             // Increment usage
@@ -33,10 +46,11 @@ export async function POST(request: NextRequest) {
                 data: { usedCount: { increment: 1 } }
             });
 
-            // Record redemption
+            // Record redemption with email
             const redemption = await tx.promoRedemption.create({
                 data: {
                     promoCodeId: codeId,
+                    email,
                     readingId,
                     userAgent
                 }
@@ -50,7 +64,7 @@ export async function POST(request: NextRequest) {
     } catch (error: any) {
         console.error('Redemption error:', error);
         return NextResponse.json(
-            { success: false, message: error.message || 'Failed to redeem' },
+            { success: false, message: error.message || '프로모션 코드 사용에 실패했습니다.' },
             { status: 400 }
         );
     }

@@ -151,16 +151,18 @@ function CosmicPathContent() {
   useEffect(() => {
     const checkResume = async () => {
       // Prevent double-execution (React Strict Mode or rapid updates)
-      if (isProcessingResume.current) return;
+      if (isProcessingResume.current) {
+        console.log('[Resume] Already processing, skipping...');
+        return;
+      }
+      // Lock immediately to prevent any duplicate calls
+      isProcessingResume.current = true;
 
       const paid = searchParams.get('paid');
       const canceled = searchParams.get('canceled');
       const readingIdFromUrl = searchParams.get('reading_id');
 
-      // Lock only if we are actually intentionally resuming a paid/canceled flow
-      if (paid === 'true' || canceled === 'true' || readingIdFromUrl) {
-        isProcessingResume.current = true;
-      }
+      console.log('[Resume] Starting checkResume...', { paid, canceled, readingIdFromUrl });
 
       // Small delay ONLY if we don't have explicit URL flags (relying on sessionStorage only)
       if (!paid && !canceled && !readingIdFromUrl) {
@@ -170,15 +172,28 @@ function CosmicPathContent() {
       const isSessionActive = sessionStorage.getItem('is_session_active') === 'true';
 
       if (reset) {
-        console.log('[Resume] Reset flag detected. Clearing session.');
-        sessionStorage.clear(); // Or clear specific items
+        console.log('[Resume] Reset flag detected. Clearing session and backup.');
+        sessionStorage.clear();
+        // Also clear localStorage backup to prevent restoration
+        localStorage.removeItem('backup_reading_data');
+        localStorage.removeItem('backup_report_data');
+        localStorage.removeItem('backup_metadata');
+        localStorage.removeItem('backup_reading_id');
+        localStorage.removeItem('backup_timestamp');
         setHasCheckedResume(true);
         return;
       }
 
       const readingId = readingIdFromUrl || sessionStorage.getItem('pending_reading_id');
+      const hasPendingReport = sessionStorage.getItem('pending_report_data') && sessionStorage.getItem('pending_report_data') !== 'null';
 
-      if (readingId || paid === 'true' || canceled === 'true' || isSessionActive) {
+      // Only enter restore mode if:
+      // 1. There's a readingId in URL, OR
+      // 2. Payment just completed, OR
+      // 3. Payment was canceled, OR
+      // 4. Session is active AND there's actual pending report (not just form input)
+      if (readingId || paid === 'true' || canceled === 'true' || (isSessionActive && hasPendingReport)) {
+        console.log('[Resume] Entering restore mode...', { readingId, paid, canceled, isSessionActive, hasPendingReport });
         if (readingId && !sessionStorage.getItem('pending_reading_id')) {
           sessionStorage.setItem('pending_reading_id', readingId);
         }
@@ -187,7 +202,7 @@ function CosmicPathContent() {
         let pendingData = sessionStorage.getItem('pending_reading_data');
         let pendingReportJson = sessionStorage.getItem('pending_report_data');
         let pendingMetadataJson = sessionStorage.getItem('pending_metadata');
-        let isSessionActive = sessionStorage.getItem('is_session_active') === 'true';
+        // isSessionActive already declared at line 175
         let pendingReadingId = sessionStorage.getItem('pending_reading_id');
 
         // 3. Fallback to LocalStorage (Backup for accidental close/refresh)
@@ -202,7 +217,7 @@ function CosmicPathContent() {
             pendingData = localStorage.getItem('pending_reading_data');
             pendingReportJson = localStorage.getItem('pending_report_data');
             pendingMetadataJson = localStorage.getItem('pending_metadata');
-            isSessionActive = localStorage.getItem('is_session_active') === 'true';
+            // isSessionActive is already determined at line 175, no need to override
 
             if (!pendingReadingId) {
               const backupId = localStorage.getItem('pending_reading_id');

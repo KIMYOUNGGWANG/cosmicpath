@@ -53,12 +53,16 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
                             {isEn ? 'Start Analysis' : '분석 시작하기'}
                         </Link>
                     ) : (
-                        <Link
+                        <a
                             href="/start?reset=true"
-                            className="inline-flex items-center justify-center pt-[10px] pb-[6px] px-5 bg-white/5 border border-white/10 text-[10px] md:text-xs font-bold tracking-[0.1em] text-white/50 hover:bg-white/10 hover:text-white transition-all duration-300 uppercase backdrop-blur-sm rounded-full leading-none"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                window.location.href = '/start?reset=true';
+                            }}
+                            className="inline-flex items-center justify-center pt-[10px] pb-[6px] px-5 bg-white/5 border border-white/10 text-[10px] md:text-xs font-bold tracking-[0.1em] text-white/50 hover:bg-white/10 hover:text-white transition-all duration-300 uppercase backdrop-blur-sm rounded-full leading-none cursor-pointer"
                         >
                             {isEn ? 'New Journey' : '다시 시작하기'}
-                        </Link>
+                        </a>
                     )}
                 </div>
             </div>

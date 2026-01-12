@@ -113,6 +113,7 @@ export function PaymentModal({
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         codeId: promoCodeId,
+                        email: email || localStorage.getItem('user_email') || '',
                         readingId: readingId || undefined,
                         userAgent: navigator.userAgent
                     }),
@@ -228,6 +229,7 @@ export function PaymentModal({
                             {/* Promo Code Input */}
                             <div className="mb-8">
                                 <PromoCodeInput
+                                    email={email}
                                     onApply={(id, discount) => {
                                         setPromoCodeId(id);
                                         setDiscount(discount);

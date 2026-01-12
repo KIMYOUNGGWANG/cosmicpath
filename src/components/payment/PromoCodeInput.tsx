@@ -8,9 +8,10 @@ import { Tag, Check, X, Loader2 } from 'lucide-react';
 interface PromoCodeInputProps {
     onApply: (codeId: string, discount: number) => void;
     disabled?: boolean;
+    email?: string; // Email for duplicate checking
 }
 
-export function PromoCodeInput({ onApply, disabled }: PromoCodeInputProps) {
+export function PromoCodeInput({ onApply, disabled, email }: PromoCodeInputProps) {
     const [code, setCode] = useState('');
     const [status, setStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>('idle');
     const [message, setMessage] = useState('');
@@ -25,7 +26,10 @@ export function PromoCodeInput({ onApply, disabled }: PromoCodeInputProps) {
             const response = await fetch('/api/promo/validate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code: code.trim() }),
+                body: JSON.stringify({
+                    code: code.trim(),
+                    email: email || undefined // Pass email if available
+                }),
             });
 
             const data = await response.json();

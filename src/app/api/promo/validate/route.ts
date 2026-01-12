@@ -5,12 +5,13 @@ import { z } from 'zod';
 
 const validateSchema = z.object({
     code: z.string().min(1),
+    email: z.string().email().optional(), // Optional for initial check, required for redemption
 });
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { code } = validateSchema.parse(body);
+        const { code, email } = validateSchema.parse(body);
 
         const promoCode = await prisma.promotionCode.findUnique({
             where: { code },
@@ -37,6 +38,26 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ valid: false, message: '선착순 마감된 코드입니다.' });
         }
 
+        // Check if this email already used this promo code
+        if (email) {
+            const existingRedemption = await prisma.promoRedemption.findUnique({
+                where: {
+                    promoCodeId_email: {
+                        promoCodeId: promoCode.id,
+                        email: email
+                    }
+                }
+            });
+
+            if (existingRedemption) {
+                return NextResponse.json({
+                    valid: false,
+                    message: '이미 이 프로모션 코드를 사용하셨습니다.',
+                    alreadyUsed: true
+                });
+            }
+        }
+
         return NextResponse.json({
             valid: true,
             discount: promoCode.discount,
@@ -45,6 +66,7 @@ export async function POST(request: NextRequest) {
         });
 
     } catch (error) {
+        console.error('Promo validate error:', error);
         return NextResponse.json({ valid: false, message: '오류가 발생했습니다.' }, { status: 400 });
     }
 }
