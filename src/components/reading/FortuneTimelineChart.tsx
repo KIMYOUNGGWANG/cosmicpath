@@ -18,6 +18,7 @@ interface FortuneTimelineChartProps {
 
 export function FortuneTimelineChart({ scores, language = 'ko' }: FortuneTimelineChartProps) {
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+    const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
     const chartId = useId();
     const isEn = language === 'en';
 
@@ -209,6 +210,7 @@ export function FortuneTimelineChart({ scores, language = 'ko' }: FortuneTimelin
                                     onMouseEnter={() => setHoveredIndex(i)}
                                     onMouseLeave={() => setHoveredIndex(null)}
                                     onTouchStart={() => setHoveredIndex(i)}
+                                    onClick={() => setSelectedIndex(selectedIndex === i ? null : i)}
                                 />
 
                                 {/* Visible Point */}
@@ -288,6 +290,30 @@ export function FortuneTimelineChart({ scores, language = 'ko' }: FortuneTimelin
                         <span className="text-gray-300">{isEn ? 'Neutral' : '평이'}</span>
                     </span>
                 </div>
+
+                {/* Selected Year Detail Panel */}
+                {selectedIndex !== null && scores[selectedIndex] && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="mt-4 p-4 bg-white/5 rounded-xl border border-white/10 backdrop-blur-sm"
+                    >
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-gold font-bold text-lg">
+                                {scores[selectedIndex].year}{isEn ? '' : '년'} • {scores[selectedIndex].score}{isEn ? 'pts' : '점'}
+                            </span>
+                            <button
+                                onClick={() => setSelectedIndex(null)}
+                                className="text-white/40 hover:text-white text-sm"
+                            >
+                                ✕
+                            </button>
+                        </div>
+                        <p className="text-gray-300 text-sm leading-relaxed">
+                            {scores[selectedIndex].summary}
+                        </p>
+                    </motion.div>
+                )}
 
                 {/* Key Insights */}
                 <div className="flex flex-col gap-2">
