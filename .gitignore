@@ -50,3 +50,4 @@ cosmicpath_prd_v3
 
 # dev utility scripts
 check-env*.js
+docs/marketing/*.md

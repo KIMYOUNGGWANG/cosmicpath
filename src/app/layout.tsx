@@ -38,12 +38,15 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://cosmicpath.app"),
+  alternates: {
+    canonical: './',
+  },
   title: {
-    default: "CosmicPath | AI Driven Destiny Navigation",
+    default: "CosmicPath | 2026 AI New Year Fortune & Saju",
     template: "%s | CosmicPath",
   },
-  description: "Navigate your destiny with AI-powered Saju, Astrology, and Tarot analysis. Discover your cosmic blueprint.",
-  keywords: ["saju", "astrology", "tarot", "fortune telling", "destiny", "AI", "사주", "점성술", "타로", "운세", "궁합"],
+  description: "Navigate your destiny with AI-powered Saju, Astrology, and Tarot analysis. Discover your cosmic blueprint for 2026.",
+  keywords: ["saju", "astrology", "tarot", "fortune telling", "destiny", "AI", "사주", "점성술", "타로", "운세", "궁합", "2026년 운세", "신년운세", "무료사주"],
   authors: [{ name: "CosmicPath Team" }],
   creator: "CosmicPath",
   publisher: "CosmicPath",
@@ -68,7 +71,7 @@ export const metadata: Metadata = {
     title: "CosmicPath | AI Driven Destiny Navigation",
     description: "Your Sacred Narrative woven through Saju, Astrology, and Tarot.",
     images: ["/og-image.png"],
-    creator: "@cosmicpath", // Placeholder
+    creator: "@cosmicpath",
   },
   robots: {
     index: true,

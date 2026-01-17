@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { rateLimit } from '@/lib/rate-limiter';
 
 const validateSchema = z.object({
     code: z.string().min(1),
@@ -9,6 +10,12 @@ const validateSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+    // Rate limit: IP당 1분에 5회 제한 (무차별 대입 공격 방지)
+    const rateLimitResponse = await rateLimit(request, { limit: 5, windowMs: 60000 });
+    if (rateLimitResponse) {
+        return rateLimitResponse; // 429 응답 반환
+    }
+
     try {
         const body = await request.json();
         const { code, email } = validateSchema.parse(body);

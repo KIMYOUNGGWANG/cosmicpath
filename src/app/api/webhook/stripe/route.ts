@@ -34,6 +34,27 @@ export async function POST(req: NextRequest) {
         const session = event.data.object as Stripe.Checkout.Session;
         const { type, readingId, credits, email } = session.metadata || {};
 
+        // 0. Payment 테이블에 기록 저장
+        try {
+            await prisma.payment.create({
+                data: {
+                    orderId: session.id,
+                    amount: session.amount_total || 0,
+                    currency: session.currency || 'usd',
+                    status: 'DONE',
+                    method: 'STRIPE',
+                    receiptUrl: session.url, // 참고: session.url은 결제창 URL일 수 있음, 영수증 URL은 아님. 필요시 수정.
+                    customerEmail: email || session.customer_details?.email || '',
+                    readingId: readingId || null,
+                    metadata: JSON.stringify(session.metadata),
+                },
+            });
+            devLog.log(`[Webhook] Payment record created for session ${session.id}`);
+        } catch (dbError) {
+            devLog.error(`[Webhook] Failed to create payment record: ${dbError}`);
+            // 결제 기록 실패가 전체 로직을 막지 않도록 continue
+        }
+
         // 1. 채팅 크레딧 결제 처리
         if (type === 'chat_credit' && readingId) {
             try {
@@ -113,6 +134,28 @@ export async function POST(req: NextRequest) {
                 }
             } else {
                 devLog.warn(`[Webhook] Missing email or readingId for premium reading. Email: ${customerEmail}, ReadingID: ${readingId}`);
+            }
+        }
+
+        // 3. Match Compatibility Unlock 처리
+        const { productType, matchSessionId } = session.metadata || {};
+        if (productType === 'match' && matchSessionId) {
+            try {
+                devLog.log(`[Webhook] Match unlock payment completed. SessionID: ${matchSessionId}`);
+
+                await prisma.matchSession.update({
+                    where: { id: matchSessionId },
+                    data: {
+                        isUnlocked: true,
+                        unlockedAt: new Date(),
+                        paymentId: session.id,
+                    },
+                });
+
+                devLog.log(`[Webhook] Match session ${matchSessionId} unlocked successfully`);
+            } catch (matchError: any) {
+                devLog.error(`[Webhook] Failed to unlock match session: ${matchError.message}`);
+                return NextResponse.json({ error: 'Match unlock failed' }, { status: 500 });
             }
         }
     }

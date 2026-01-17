@@ -38,7 +38,13 @@ export function Navigation() {
                 </Link>
 
                 {/* Actions */}
-                <div className="flex items-center gap-8">
+                <div className="flex items-center gap-4">
+                    <Link
+                        href="/match/new"
+                        className="text-sm font-medium text-starlight hover:text-acc-gold transition-colors font-cinzel tracking-wider"
+                    >
+                        COMPATIBILITY
+                    </Link>
                     <Link
                         href="/start?reset=true"
                         className="px-5 py-2 bg-white/10 border border-white/20 text-xs font-bold tracking-[0.1em] text-starlight hover:bg-acc-gold hover:text-deep-navy hover:border-acc-gold transition-all duration-300 uppercase backdrop-blur-sm rounded-full"

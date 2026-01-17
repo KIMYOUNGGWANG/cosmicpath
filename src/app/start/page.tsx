@@ -2,22 +2,32 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ReadingInput, ReadingData } from '@/components/reading/reading-input';
-import { TarotPicker } from '@/components/reading/tarot-picker';
-import { PremiumReport } from '@/components/reading/premium-report';
-import { DecisionGuard } from '@/components/reading/decision-guard';
 import { ReadingSession, createSession } from '@/lib/session/reading-session';
-import { PaymentModal } from '@/components/payment/PaymentModal';
-import { ReviewModal } from '@/components/review/ReviewModal';
 import { StickyCTA } from '@/components/common/sticky-cta';
-import { ChatInterface } from '@/components/oracle-chat/ChatInterface';
 
 import { Suspense } from 'react';
 import { Footer } from '@/components/landing/Footer';
 import { GlobalHeader } from '@/components/common/GlobalHeader';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { Skeleton } from '@/components/ui/skeleton';
+
+// 🚀 Dynamic Imports - 초기 번들 크기 최적화
+// 이 컴포넌트들은 사용자가 해당 단계에 도달할 때만 로드됩니다
+const TarotPicker = dynamic(() => import('@/components/reading/tarot-picker').then(mod => mod.TarotPicker), {
+  loading: () => <div className="flex justify-center py-20"><Skeleton className="h-64 w-full max-w-2xl" /></div>
+});
+const PremiumReport = dynamic(() => import('@/components/reading/premium-report').then(mod => mod.PremiumReport), {
+  loading: () => <div className="flex justify-center py-20"><Skeleton className="h-96 w-full" /></div>
+});
+const DecisionGuard = dynamic(() => import('@/components/reading/decision-guard').then(mod => mod.DecisionGuard));
+const PaymentModal = dynamic(() => import('@/components/payment/PaymentModal').then(mod => mod.PaymentModal));
+const ReviewModal = dynamic(() => import('@/components/review/ReviewModal').then(mod => mod.ReviewModal));
+const ChatInterface = dynamic(() => import('@/components/oracle-chat/ChatInterface').then(mod => mod.ChatInterface), {
+  loading: () => <Skeleton className="h-48 w-full" />
+});
 
 function CosmicPathContent() {
   const [step, setStep] = useState<'input' | 'mirror' | 'tarot' | 'result'>('input');
@@ -105,6 +115,21 @@ function CosmicPathContent() {
       setLanguage(savedLang);
     }
   }, []);
+
+  // 🚨 beforeunload: 로딩 중 창 닫기 방지
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isLoading) {
+        e.preventDefault();
+        // 최신 브라우저에서는 커스텀 메시지가 표시되지 않지만,
+        // 기본 경고 다이얼로그가 표시됨
+        return '분석 중입니다. 정말 닫으시겠습니까? 결과가 손실될 수 있습니다.';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isLoading]);
 
   // Review Modal Trigger - Scroll-based
   const hasReportSummary = !!reportData?.summary;

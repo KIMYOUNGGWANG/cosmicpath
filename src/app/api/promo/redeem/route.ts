@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { rateLimit } from '@/lib/rate-limiter';
 
 const redeemSchema = z.object({
     codeId: z.string(),
@@ -11,6 +12,10 @@ const redeemSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
+    // Rate limit: IP당 1분에 5회 제한
+    const rateLimitResponse = await rateLimit(request, { limit: 5, windowMs: 60000 });
+    if (rateLimitResponse) return rateLimitResponse;
+
     try {
         const body = await request.json();
         const { codeId, email, readingId, userAgent } = redeemSchema.parse(body);

@@ -8,6 +8,8 @@ import { Metadata } from 'next';
 import { GlobalHeader } from '@/components/common/GlobalHeader';
 import { ChatInterface } from '@/components/oracle-chat/ChatInterface';
 
+// ... (previous imports)
+
 interface SharedPageProps {
     params: Promise<{
         id: string;
@@ -20,23 +22,47 @@ export async function generateMetadata({ params }: SharedPageProps): Promise<Met
         where: { id },
     });
 
-    if (!result) return { title: 'Not Found' };
+    const isKo = result?.metadata && JSON.parse(result.metadata).language === 'ko';
 
-    const reportData = JSON.parse(result.data);
-    const title = reportData.summary?.title || 'CosmicPath Reading Result';
+    // Default fallback
+    let title = 'CosmicPath Reading Result';
+    let description = 'Your Sacred Narrative woven through Saju, Astrology, and Tarot';
+
+    if (result) {
+        const reportData = JSON.parse(result.data);
+        title = reportData.summary?.title || title;
+        // Truncate description for URL safety and display
+        description = reportData.summary?.content?.slice(0, 100) + '...' || description;
+    }
+
+    // Construct Dynamic OG Image URL
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cosmicpath.app';
+    const ogImageUrl = new URL('/api/og', baseUrl);
+    ogImageUrl.searchParams.set('title', title);
+    ogImageUrl.searchParams.set('desc', description);
 
     return {
         title: `${title} | CosmicPath`,
-        description: 'Shared reading result from CosmicPath AI.',
+        description: description,
+        alternates: {
+            canonical: `${baseUrl}/share/${id}`,
+        },
         openGraph: {
             title: `${title} | CosmicPath`,
-            description: 'Your Sacred Narrative woven through Saju, Astrology, and Tarot',
-            images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+            description: description,
+            url: `${baseUrl}/share/${id}`,
+            images: [{
+                url: ogImageUrl.toString(),
+                width: 1200,
+                height: 630,
+                alt: title
+            }],
         },
         twitter: {
             card: 'summary_large_image',
             title: `${title} | CosmicPath`,
-            images: ['/og-image.png'],
+            description: description,
+            images: [ogImageUrl.toString()],
         },
     };
 }

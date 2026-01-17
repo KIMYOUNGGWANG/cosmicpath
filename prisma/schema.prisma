@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model ReadingResult {
@@ -69,4 +70,37 @@ model Review {
   isApproved  Boolean  @default(false)
   isPromoUser Boolean  @default(false)
   createdAt   DateTime @default(now())
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  orderId       String   @unique // Stripe Session ID or Toss Order ID
+  amount        Int
+  currency      String
+  status        String   // 'DONE', 'CANCELED', 'WAITING_FOR_DEPOSIT'
+  method        String   // 'STRIPE', 'TOSS'
+  receiptUrl    String?
+  customerEmail String?
+  readingId     String?
+  metadata      String?  // JSON string for extra data
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model MatchSession {
+  id           String   @id @default(uuid())
+  hostName     String
+  hostBirth    DateTime
+  hostTimezone String   @default("Asia/Seoul")
+  guestName    String?
+  guestBirth   DateTime?
+  guestTimezone String?
+  score        Int?     // Calculated after guest joins
+  isUnlocked   Boolean  @default(false)
+  unlockedAt   DateTime?
+  paymentId    String?  // Link to Payment if paid
+  metadata     String?  // JSON for extra data (e.g., detailed scores)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { rateLimit } from '@/lib/rate-limiter';
 
 const createReviewSchema = z.object({
     readingId: z.string().optional(),
@@ -39,6 +40,10 @@ function maskNickname(name: string) {
 }
 
 export async function POST(request: NextRequest) {
+    // Rate limit: IP당 1분에 3회 제한 (스팸 리뷰 방지)
+    const rateLimitResponse = await rateLimit(request, { limit: 3, windowMs: 60000 });
+    if (rateLimitResponse) return rateLimitResponse;
+
     try {
         const body = await request.json();
         const data = createReviewSchema.parse(body);

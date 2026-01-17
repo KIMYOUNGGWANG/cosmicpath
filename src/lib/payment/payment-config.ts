@@ -25,4 +25,15 @@ export const FOLLOW_UP_PRODUCT = {
     followUpQuestions: 1,
 } as const;
 
-export type ProductType = typeof READING_PRODUCT | typeof FOLLOW_UP_PRODUCT;
+export const MATCH_PRODUCT = {
+    id: 'cosmicpath_match_v1',
+    productId: process.env.NODE_ENV === 'development'
+        ? (process.env.NEXT_PUBLIC_STRIPE_MATCH_PRODUCT_ID_TEST || 'prod_TestMatchId')
+        : (process.env.NEXT_PUBLIC_STRIPE_MATCH_PRODUCT_ID || 'prod_LiveMatchId'),
+    name: 'Cosmic Compatibility Full Report',
+    description: '사주 + 점성술 기반 상세 궁합 분석 리포트',
+    currency: 'USD',
+    price: 299, // $2.99 in cents
+} as const;
+
+export type ProductType = typeof READING_PRODUCT | typeof FOLLOW_UP_PRODUCT | typeof MATCH_PRODUCT;
