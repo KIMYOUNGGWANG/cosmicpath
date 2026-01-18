@@ -148,3 +148,58 @@ export async function sendResultEmail({
         throw error;
     }
 }
+
+interface SendVerificationEmailParams {
+    email: string;
+    token: string;
+}
+
+export async function sendVerificationEmail({ email, token }: SendVerificationEmailParams) {
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+        throw new Error('Invalid email format');
+    }
+
+    try {
+        const { data, error } = await resend.emails.send({
+            from: 'CosmicPath <noreply@cosmicpath.app>',
+            to: [email],
+            subject: '🔒 [CosmicPath] 로그인 인증번호',
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8">
+                    <title>인증번호</title>
+                </head>
+                <body style="font-family: sans-serif; padding: 20px; background-color: #f4f4f5;">
+                    <div style="max-width: 480px; margin: 0 auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <h2 style="margin: 0 0 20px; color: #18181b; font-size: 20px; font-weight: 700; text-align: center;">인증번호 확인</h2>
+                        <p style="margin: 0 0 24px; color: #52525b; font-size: 16px; line-height: 1.5; text-align: center;">
+                            아래 6자리 인증번호를 입력하여 로그인을 완료해주세요.<br>
+                            이 번호는 10분간 유효합니다.
+                        </p>
+                        <div style="background: #f4f4f5; padding: 24px; border-radius: 8px; text-align: center; margin-bottom: 24px;">
+                            <span style="font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #18181b;">${token}</span>
+                        </div>
+                        <p style="margin: 0; color: #a1a1aa; font-size: 14px; text-align: center;">
+                            본인이 요청하지 않았다면 이 이메일을 무시해주세요.
+                        </p>
+                    </div>
+                </body>
+                </html>
+            `
+        });
+
+        if (error) {
+            devLog.error('Resend Error:', error);
+            throw new Error(error.message);
+        }
+
+        return data;
+    } catch (error) {
+        devLog.error('Failed to send verification email:', error);
+        throw error;
+    }
+}

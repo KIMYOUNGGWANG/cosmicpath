@@ -212,13 +212,11 @@ export interface AstrologyResult {
     patterns?: ChartPattern[];
 }
 
-/**
- * 율리우스 날짜 계산
- */
+// 율리우스 날짜 계산 (UTC 기준)
 function toJulianDate(date: Date): number {
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate() + (date.getHours() + date.getMinutes() / 60) / 24;
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth() + 1;
+    const day = date.getUTCDate() + (date.getUTCHours() + date.getUTCMinutes() / 60) / 24;
 
     let y = year;
     let m = month;
@@ -682,15 +680,19 @@ export function calculateAstrology(
     birthDate: Date,
     birthTime: string = '12:00',
     latitude: number = 37.5665, // 서울 기본값
-    longitude: number = 126.9780
+    longitude: number = 126.9780,
+    timezoneOffset: number = 9 // Timezone Offset (시간), 기본값 KST (+9)
 ): AstrologyResult {
     // 시간 파싱
     const [hourStr, minuteStr] = birthTime.split(':');
-    const birthDateTime = new Date(birthDate);
-    birthDateTime.setHours(parseInt(hourStr), parseInt(minuteStr));
 
-    const jd = toJulianDate(birthDateTime);
+    // UTC 시간으로 변환하여 Date 객체 생성
+    // 입력된 시간(Local) - TimezoneOffset = UTC 시간
+    // 예: 15:10 KST -> 15 - 9 = 06 UTC
+    const utcDate = new Date(birthDate);
+    utcDate.setUTCHours(parseInt(hourStr) - timezoneOffset, parseInt(minuteStr), 0, 0);
 
+    const jd = toJulianDate(utcDate);
     // 태양, 달 위치 계산
     const sunPos = calculateSunPosition(jd);
     const moonPos = calculateMoonPosition(jd);

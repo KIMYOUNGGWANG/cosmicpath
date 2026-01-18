@@ -3,11 +3,13 @@
 import { useState } from 'react';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import Link from 'next/link';
+import { OrderLookupModal } from '@/components/orders/OrderLookupModal';
 
 export function Navigation() {
     const { scrollY } = useScroll();
     const [hidden, setHidden] = useState(false);
     const [prevScroll, setPrevScroll] = useState(0);
+    const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
 
     useMotionValueEvent(scrollY, "change", (latest) => {
         const previous = prevScroll;
@@ -40,6 +42,12 @@ export function Navigation() {
                 {/* Actions */}
                 <div className="flex items-center gap-4">
                     <Link
+                        href="/orders"
+                        className="text-sm font-medium text-starlight hover:text-acc-gold transition-colors font-cinzel tracking-wider uppercase"
+                    >
+                        FIND ORDERS
+                    </Link>
+                    <Link
                         href="/match/new"
                         className="text-sm font-medium text-starlight hover:text-acc-gold transition-colors font-cinzel tracking-wider"
                     >
@@ -53,6 +61,10 @@ export function Navigation() {
                     </Link>
                 </div>
             </div>
+            <OrderLookupModal
+                isOpen={isOrderModalOpen}
+                onClose={() => setIsOrderModalOpen(false)}
+            />
         </motion.nav>
     );
 }
