@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion';
+import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import Link from 'next/link';
-import { Menu, X, Search, Sparkles, Heart } from 'lucide-react';
+import { Menu, Search, Sparkles, Heart } from 'lucide-react';
 import { OrderLookupModal } from '@/components/orders/OrderLookupModal';
+import { MobileMenu } from '@/components/common/MobileMenu';
 
 export function Navigation() {
     const { scrollY } = useScroll();
@@ -103,99 +104,37 @@ export function Navigation() {
                 </div>
             </motion.nav>
 
-            {/* Mobile Menu Overlay */}
-            <AnimatePresence>
-                {isMobileMenuOpen && (
-                    <>
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998] md:hidden"
-                        />
-                        <motion.div
-                            initial={{ x: '100%' }}
-                            animate={{ x: 0 }}
-                            exit={{ x: '100%' }}
-                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className="fixed top-0 right-0 h-full w-[280px] bg-[#0f0f15] border-l border-white/10 shadow-2xl z-[9999] md:hidden flex flex-col"
-                        >
-                            {/* Menu Header */}
-                            <div className="flex items-center justify-between p-6 border-b border-white/5">
-                                <span className="font-cinzel font-bold text-lg text-white">MENU</span>
-                                <button
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className="p-2 text-gray-400 hover:text-white rounded-full hover:bg-white/10"
-                                >
-                                    <X size={24} />
-                                </button>
-                            </div>
-
-                            {/* Menu Items */}
-                            <div className="flex-1 py-8 px-6 flex flex-col gap-6">
-                                <button
-                                    onClick={toggleOrderModal}
-                                    className="flex items-center gap-4 text-left group"
-                                >
-                                    <div className="p-3 rounded-xl bg-white/5 group-hover:bg-purple-500/20 text-gray-400 group-hover:text-purple-300 transition-colors">
-                                        <Search size={20} />
-                                    </div>
-                                    <div>
-                                        <div className="text-base font-medium text-white group-hover:text-purple-300 transition-colors">
-                                            FIND ORDERS
-                                        </div>
-                                        <div className="text-xs text-gray-500 mt-1">
-                                            Lookup past readings
-                                        </div>
-                                    </div>
-                                </button>
-
-                                <Link
-                                    href="/match/new"
-                                    className="flex items-center gap-4 text-left group"
-                                >
-                                    <div className="p-3 rounded-xl bg-white/5 group-hover:bg-pink-500/20 text-gray-400 group-hover:text-pink-300 transition-colors">
-                                        <Heart size={20} />
-                                    </div>
-                                    <div>
-                                        <div className="text-base font-medium text-white group-hover:text-pink-300 transition-colors">
-                                            COMPATIBILITY
-                                        </div>
-                                        <div className="text-xs text-gray-500 mt-1">
-                                            Check relationship compatibility
-                                        </div>
-                                    </div>
-                                </Link>
-
-                                <Link
-                                    href="/start?reset=true"
-                                    className="flex items-center gap-4 text-left group"
-                                >
-                                    <div className="p-3 rounded-xl bg-white/5 group-hover:bg-gold/20 text-gray-400 group-hover:text-gold transition-colors">
-                                        <Sparkles size={20} />
-                                    </div>
-                                    <div>
-                                        <div className="text-base font-medium text-white group-hover:text-gold transition-colors">
-                                            START ANALYSIS
-                                        </div>
-                                        <div className="text-xs text-gray-500 mt-1">
-                                            Begin your cosmic journey
-                                        </div>
-                                    </div>
-                                </Link>
-                            </div>
-
-                            {/* Menu Footer */}
-                            <div className="p-6 border-t border-white/5 bg-black/20">
-                                <p className="text-[10px] text-gray-600 text-center font-cinzel">
-                                    © 2026 COSMIC PATH
-                                </p>
-                            </div>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
+            {/* Mobile Menu */}
+            <MobileMenu
+                isOpen={isMobileMenuOpen}
+                onClose={() => setIsMobileMenuOpen(false)}
+                menuItems={[
+                    {
+                        type: 'button',
+                        icon: Search,
+                        iconColorClass: 'group-hover:bg-purple-500/20 group-hover:text-purple-300',
+                        label: 'FIND ORDERS',
+                        subLabel: 'Lookup past readings',
+                        onClick: () => setIsOrderModalOpen(true),
+                    },
+                    {
+                        type: 'link',
+                        icon: Heart,
+                        iconColorClass: 'group-hover:bg-pink-500/20 group-hover:text-pink-300',
+                        label: 'COMPATIBILITY',
+                        subLabel: 'Check relationship compatibility',
+                        href: '/match/new',
+                    },
+                    {
+                        type: 'link',
+                        icon: Sparkles,
+                        iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
+                        label: 'START ANALYSIS',
+                        subLabel: 'Begin your cosmic journey',
+                        href: '/start?reset=true',
+                    },
+                ]}
+            />
 
             <OrderLookupModal
                 isOpen={isOrderModalOpen}

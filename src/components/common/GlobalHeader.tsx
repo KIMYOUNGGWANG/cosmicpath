@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronLeft, Menu, X, Search, Sparkles } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, Menu, Search, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { OrderLookupModal } from '@/components/orders/OrderLookupModal';
+import { MobileMenu, MenuItem } from '@/components/common/MobileMenu';
 
 interface GlobalHeaderProps {
     language?: 'ko' | 'en';
@@ -108,82 +109,29 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
                 </div>
             </motion.header>
 
-            {/* Mobile Menu Overlay */}
-            <AnimatePresence>
-                {isMobileMenuOpen && (
-                    <>
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998] md:hidden"
-                        />
-                        <motion.div
-                            initial={{ x: '100%' }}
-                            animate={{ x: 0 }}
-                            exit={{ x: '100%' }}
-                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className="fixed top-0 right-0 h-full w-[280px] bg-[#0f0f15] border-l border-white/10 shadow-2xl z-[9999] md:hidden flex flex-col"
-                        >
-                            {/* Menu Header */}
-                            <div className="flex items-center justify-between p-6 border-b border-white/5">
-                                <span className="font-cinzel font-bold text-lg text-white">MENU</span>
-                                <button
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className="p-2 text-gray-400 hover:text-white rounded-full hover:bg-white/10"
-                                >
-                                    <X size={24} />
-                                </button>
-                            </div>
-
-                            {/* Menu Items */}
-                            <div className="flex-1 py-8 px-6 flex flex-col gap-6">
-                                <button
-                                    onClick={toggleOrderModal}
-                                    className="flex items-center gap-4 text-left group"
-                                >
-                                    <div className="p-3 rounded-xl bg-white/5 group-hover:bg-purple-500/20 text-gray-400 group-hover:text-purple-300 transition-colors">
-                                        <Search size={20} />
-                                    </div>
-                                    <div>
-                                        <div className="text-base font-medium text-white group-hover:text-purple-300 transition-colors">
-                                            {isEn ? 'Find My Orders' : '내 결과 찾기'}
-                                        </div>
-                                        <div className="text-xs text-gray-500 mt-1">
-                                            {isEn ? 'Lookup past readings' : '지난 점사 기록 조회'}
-                                        </div>
-                                    </div>
-                                </button>
-
-                                <Link
-                                    href="/start?reset=true"
-                                    className="flex items-center gap-4 text-left group"
-                                >
-                                    <div className="p-3 rounded-xl bg-white/5 group-hover:bg-gold/20 text-gray-400 group-hover:text-gold transition-colors">
-                                        <Sparkles size={20} />
-                                    </div>
-                                    <div>
-                                        <div className="text-base font-medium text-white group-hover:text-gold transition-colors">
-                                            {isEn ? 'New Journey' : '운세 다시보기'}
-                                        </div>
-                                        <div className="text-xs text-gray-500 mt-1">
-                                            {isEn ? 'Start a new analysis' : '새로운 운세 분석 시작'}
-                                        </div>
-                                    </div>
-                                </Link>
-                            </div>
-
-                            {/* Menu Footer */}
-                            <div className="p-6 border-t border-white/5 bg-black/20">
-                                <p className="text-[10px] text-gray-600 text-center font-cinzel">
-                                    © 2026 COSMIC PATH
-                                </p>
-                            </div>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
+            {/* Mobile Menu */}
+            <MobileMenu
+                isOpen={isMobileMenuOpen}
+                onClose={() => setIsMobileMenuOpen(false)}
+                menuItems={[
+                    {
+                        type: 'button',
+                        icon: Search,
+                        iconColorClass: 'group-hover:bg-purple-500/20 group-hover:text-purple-300',
+                        label: isEn ? 'Find My Orders' : '내 결과 찾기',
+                        subLabel: isEn ? 'Lookup past readings' : '지난 점사 기록 조회',
+                        onClick: () => setIsOrderModalOpen(true),
+                    },
+                    {
+                        type: 'link',
+                        icon: Sparkles,
+                        iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
+                        label: isEn ? 'New Journey' : '운세 다시보기',
+                        subLabel: isEn ? 'Start a new analysis' : '새로운 운세 분석 시작',
+                        href: '/start?reset=true',
+                    },
+                ]}
+            />
 
             {/* Order Lookup Modal */}
             <OrderLookupModal
