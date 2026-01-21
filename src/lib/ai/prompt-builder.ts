@@ -140,34 +140,36 @@ const FEW_SHOT_EXAMPLES = {
 ## Example 1: Career
 **Input**: "When should I change jobs?"
 **Output**:
-"Your Day Master 甲木 (Wood) enters Fire season in March 2026. Your creativity (Wood) gets recognition (Fire).
+"Mars enters your 10th House (March 15 - April 20, 2026), boosting career momentum. This is your optimal window for interviews and negotiations.
 
-**Astrology**: Mars transits 10H (3/15-4/20) → Career momentum peaks
+**Astrology**: Jupiter trine your natal Sun → Expansion energy supports bold moves
 **Tarot**: The Chariot (Upright) → Strong will toward goals
+**Soul Element (Eastern Insight)**: Your Wood nature thrives in spring. March aligns perfectly.
 
 **Action Plan**:
 - By 3/10: Update resume
 - 3/15-22: Optimal interview window
-- After April: Favorable for negotiation
+- After April: Favorable for salary negotiation
 
-**Caution**: Saturn retrograde starts May → Adjustment period needed"
+**Caution**: Saturn retrograde starts May → New job adjustment period needed"
 
 ---
 
 ## Example 2: Love
 **Input**: "Love fortune this year?"
 **Output**:
-"Peach Blossom in Hour Pillar → Natural charm. But adjacent to 劫財 → Beware competition.
+"Venus enters your 7th House (April-May), opening the door for meaningful connections. Your chart shows strong romantic potential but with a caution flag.
 
-**Astrology**: Venus enters 7H (Apr-May) → Meeting potential ↑
-**Tarot**: Two of Cups (Reversed) → Focus on self-growth now
+**Astrology**: Venus-Mars trine → Magnetic attraction energy
+**Tarot**: Two of Cups (Reversed) → Focus on self-growth before committing
+**Soul Element**: Fire-dominant nature means passion runs hot—balance with patience.
 
 **Advice**:
-- April: Natural meetings via new hobbies
-- Avoid: Friend setups (劫財 risk)
-- Enhance: Personal branding (leverage charm)
+- April: Natural meetings via new hobbies/social groups
+- Avoid: Rushing into commitments (Mars square suggests impatience)
+- Enhance: Personal branding, let your natural charm shine
 
-Attraction is strong. Timing matters."
+Your attraction power is strong. Timing and patience are key."
 `
 };
 
