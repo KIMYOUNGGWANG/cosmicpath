@@ -423,18 +423,18 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                         <LockedContent title={isEn ? "Soul Code (Numerology)" : "영혼의 코드 (수비학)"} type="text" onClick={handleUnlock} language={language} />
                     )}
 
-                    {/* Saju Sections */}
+                    {/* Saju Sections (Renamed for EN: Elemental Blueprint) */}
                     {isPremium ? (
                         report.saju_sections && (
                             <AccordionSection
-                                title={isEn ? "📜 Saju (Four Pillars) Analysis" : "📜 사주 기본 분석"}
+                                title={isEn ? "🌏 Elemental Blueprint (Eastern Insight)" : "📜 사주 기본 분석"}
                                 items={report.saju_sections}
                                 source="saju"
                                 language={language}
                             />
                         )
                     ) : (
-                        <LockedContent title={isEn ? "Saju (Destiny Pillars)" : "사주 원국 정밀 분석"} type="list" onClick={handleUnlock} language={language} />
+                        <LockedContent title={isEn ? "Elemental Blueprint" : "사주 원국 정밀 분석"} type="list" onClick={handleUnlock} language={language} />
                     )}
                 </motion.section>
 
