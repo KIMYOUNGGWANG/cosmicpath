@@ -747,10 +747,13 @@ function TarotSpreadSection({ cards, onCardClick, language }: { cards: { name: s
                                 <div className={cn("w-full h-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20", card.isReversed && "rotate-180")} />
                             )}
                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center p-2 text-center group-hover:bg-black/20 transition-all">
-                                <span className={cn(
-                                    "text-[10px] md:text-sm font-bold text-white/90",
-                                    card.isReversed && "text-red-300"
-                                )}>
+                                <span
+                                    className={cn(
+                                        "text-[10px] md:text-sm font-bold text-white/90 notranslate",
+                                        card.isReversed && "text-red-300"
+                                    )}
+                                    translate="no"
+                                >
                                     {card.name}
                                     {card.isReversed && (isEn ? " (Rev)" : " (역)")}
                                 </span>

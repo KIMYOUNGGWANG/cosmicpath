@@ -105,7 +105,10 @@ export function TarotPicker({ onSelect, maxCards = 1, language = 'ko' }: TarotPi
                                     )}
                                     {/* 텍스트 오버레이 */}
                                     <div className="absolute bottom-0 w-full bg-black/60 p-1 text-center backdrop-blur-sm">
-                                        <span className="text-[10px] font-bold text-white">
+                                        <span
+                                            className="text-[10px] font-bold text-white notranslate"
+                                            translate="no"
+                                        >
                                             {isEn ? card.nameEn : card.name}
                                         </span>
                                     </div>
@@ -138,7 +141,10 @@ export function TarotPicker({ onSelect, maxCards = 1, language = 'ko' }: TarotPi
                                         {card.image && <img src={card.image} alt={isEn ? card.nameEn : card.name} className="w-full h-full object-cover" />}
                                     </div>
                                     <div>
-                                        <p className="text-sm font-medium text-gold">
+                                        <p
+                                            className="text-sm font-medium text-gold notranslate"
+                                            translate="no"
+                                        >
                                             {isEn ? card.nameEn : card.name}
                                         </p>
                                         <p className="text-xs text-gray-400">

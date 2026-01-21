@@ -98,7 +98,7 @@ export function TarotDetailModal({
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                        {cardName}
+                                        <span className="notranslate" translate="no">{cardName}</span>
                                         {isReversed && <span className="text-red-400 text-xs">{isEn ? '(Reversed)' : '(역방향)'}</span>}
                                     </h2>
                                     <p className="text-sm text-gold font-medium">{role}</p>
