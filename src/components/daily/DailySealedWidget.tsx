@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { calculateDailyForecast, calculateDayMaster, DailyForecast, DayMaster } from '@/lib/daily-forecast';
+import { BirthDateInput } from '@/components/common/BirthDateInput';
 import { useRouter } from 'next/navigation';
 
 export function DailySealedWidget() {
@@ -72,34 +73,13 @@ export function DailySealedWidget() {
                     Enter your birth date to reveal your personalized daily cosmic seal.
                 </p>
 
-                <form onSubmit={handleQuickSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-xs uppercase tracking-wider text-starlight/50 mb-1">Birth Date</label>
-                        <input
-                            type="date"
-                            required
-                            value={inputDate}
-                            onChange={(e) => setInputDate(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-starlight focus:border-acc-gold outline-none transition-colors"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs uppercase tracking-wider text-starlight/50 mb-1">Birth Time (Optional)</label>
-                        <input
-                            type="time"
-                            value={inputTime}
-                            onChange={(e) => setInputTime(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-starlight focus:border-acc-gold outline-none transition-colors"
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="w-full py-3 bg-acc-gold text-bg-void font-bold rounded hover:bg-white transition-colors mt-2"
-                    >
-                        Reveal My Day
-                    </button>
-                </form>
+                <BirthDateInput
+                    date={inputDate}
+                    time={inputTime}
+                    onDateChange={setInputDate}
+                    onTimeChange={setInputTime}
+                    onSubmit={handleQuickSubmit}
+                />
 
                 <p className="text-[10px] text-starlight/30 text-center mt-4">
                     * Your data is saved locally on your device.
