@@ -1,7 +1,39 @@
-// Assuming we have access to shared types or logic if needed, or we implement minimal logic here.
-// Note: In a real implementation, we would import shared types. For now, I will define what's needed for the daily logic.
+import KoreanLunarCalendar from 'korean-lunar-calendar';
 
-// --- Types ---
+// ... (Types)
+
+// --- Helper for Day Master ---
+export function calculateDayMaster(dateStr: string): DayMaster {
+    const calendar = new KoreanLunarCalendar();
+    const date = new Date(dateStr);
+
+    // Set solar date
+    calendar.setSolarDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
+
+    // Get Gan-Zhi (Sexagenary Cycle)
+    // KoreanLunarCalendar returns { day: 'GapJa', ... } roughly? 
+    // Actually it returns Korean string usually, let's verify or use the getChineseCalendar method if available.
+    // The library usually returns { day: '갑자' } in Korean.
+
+    const gapja = calendar.getKoreanGapja();
+    const dayGanZhi = gapja.day; // e.g., '갑자'
+
+    // Extract first character (Stem)
+    const stemChar = dayGanZhi.charAt(0); // '갑'
+
+    // Map Korean Stem to English DayMaster type
+    const STEM_MAP: Record<string, DayMaster> = {
+        '갑': 'jia', '을': 'yi',
+        '병': 'bing', '정': 'ding',
+        '무': 'wu', '기': 'ji',
+        '경': 'geng', '신': 'xin',
+        '임': 'ren', '계': 'gui'
+    };
+
+    return STEM_MAP[stemChar] || 'jia'; // Fallback
+}
+
+// ... (Existing calculateDailyForecast)
 
 export type DayMaster = 'jia' | 'yi' | 'bing' | 'ding' | 'wu' | 'ji' | 'geng' | 'xin' | 'ren' | 'gui';
 

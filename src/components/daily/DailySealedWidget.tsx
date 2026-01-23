@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
-import { calculateDailyForecast, DailyForecast, DayMaster } from '@/lib/daily-forecast';
+import { calculateDailyForecast, calculateDayMaster, DailyForecast, DayMaster } from '@/lib/daily-forecast';
 import { useRouter } from 'next/navigation';
 
 export function DailySealedWidget() {
@@ -10,50 +11,99 @@ export function DailySealedWidget() {
     const [isRevealed, setIsRevealed] = useState(false);
     const [userData, setUserData] = useState<any>(null);
 
+    // Quick Input State
+    const [inputDate, setInputDate] = useState('');
+    const [inputTime, setInputTime] = useState('');
+
     useEffect(() => {
         // 1. Check LocalStorage
         const storedData = localStorage.getItem('cosmic_user_data');
-        if (!storedData) {
-            // No data, redirect or show setup
-            return;
-        }
-
-        try {
-            const parsed = JSON.parse(storedData);
-            setUserData(parsed);
-
-            // 2. Calculate Forecast
-            // We need to extract Day Master from the stored data.
-            // Assuming storedData has 'saju' object or similar from the onboarding flow.
-            // If the stored data structure doesn't directly have 'dayMaster', we might need to recalculate it 
-            // or assume it was saved. For now, let's look for it.
-
-            // Mocking extraction for MVP if complex parsing is needed. 
-            // In reality, we should save the Day Master explicitly or derive it.
-            // Let's assume parsed.saju.dayMaster exists or we derive from birthDate.
-
-            // Fallback DayMaster for testing if not found (should be improved)
-            const dm: DayMaster = parsed.saju?.dayMaster || 'jia';
-
-            const today = new Date().toISOString().split('T')[0];
-            const result = calculateDailyForecast(dm, today);
-            setForecast(result);
-
-        } catch (e) {
-            console.error('Failed to parse user data', e);
+        if (storedData) {
+            try {
+                const parsed = JSON.parse(storedData);
+                setUserData(parsed);
+                generateForecast(parsed);
+            } catch (e) {
+                console.error('Failed to parse user data', e);
+            }
         }
     }, []);
 
+    const generateForecast = (data: any) => {
+        // Fallback DayMaster logic
+        let dm: DayMaster = 'jia';
+
+        if (data.saju?.dayMaster) {
+            dm = data.saju.dayMaster;
+        } else if (data.birthDate) {
+            // Calculate on the fly if only date exists
+            dm = calculateDayMaster(data.birthDate);
+        }
+
+        const today = new Date().toISOString().split('T')[0];
+        const result = calculateDailyForecast(dm, today);
+        setForecast(result);
+    };
+
+    const handleQuickSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!inputDate) return;
+
+        // Calculate Day Master
+        const dm = calculateDayMaster(inputDate);
+
+        // Save to LocalStorage (Minimal)
+        const newUserData = {
+            birthDate: inputDate,
+            birthTime: inputTime,
+            saju: { dayMaster: dm } // Cache it
+        };
+
+        localStorage.setItem('cosmic_user_data', JSON.stringify(newUserData));
+        setUserData(newUserData);
+        generateForecast(newUserData);
+    };
+
     if (!userData) {
         return (
-            <div className="flex flex-col items-center justify-center p-8 text-center">
-                <h2 className="text-xl font-serif text-starlight mb-4">You need to connect your energy first.</h2>
-                <button
-                    onClick={() => router.push('/')}
-                    className="px-6 py-2 bg-acc-gold text-bg-void font-bold rounded-full hover:bg-white transition-colors"
-                >
-                    Get My Reading
-                </button>
+            <div className="w-full max-w-sm mx-auto bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-xl animate-fade-in-up">
+                <h2 className="text-xl font-serif text-starlight mb-2 text-center">Unlock Your Daily Energy</h2>
+                <p className="text-starlight/60 text-sm text-center mb-6">
+                    Enter your birth date to reveal your personalized daily cosmic seal.
+                </p>
+
+                <form onSubmit={handleQuickSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-xs uppercase tracking-wider text-starlight/50 mb-1">Birth Date</label>
+                        <input
+                            type="date"
+                            required
+                            value={inputDate}
+                            onChange={(e) => setInputDate(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-starlight focus:border-acc-gold outline-none transition-colors"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs uppercase tracking-wider text-starlight/50 mb-1">Birth Time (Optional)</label>
+                        <input
+                            type="time"
+                            value={inputTime}
+                            onChange={(e) => setInputTime(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-starlight focus:border-acc-gold outline-none transition-colors"
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="w-full py-3 bg-acc-gold text-bg-void font-bold rounded hover:bg-white transition-colors mt-2"
+                    >
+                        Reveal My Day
+                    </button>
+                </form>
+
+                <p className="text-[10px] text-starlight/30 text-center mt-4">
+                    * Your data is saved locally on your device.
+                </p>
             </div>
         );
     }
