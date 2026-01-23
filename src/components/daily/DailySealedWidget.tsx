@@ -111,52 +111,73 @@ export function DailySealedWidget() {
     if (!forecast) return <div>Loading Cosmic Energy...</div>;
 
     return (
-        <div className="w-full max-w-md mx-auto min-h-[400px] flex items-center justify-center relative perspective-1000">
+        <div className="w-full max-w-md mx-auto min-h-[440px] flex items-center justify-center relative perspective-1000">
 
             {/* Sealed Envelope State */}
             {!isRevealed ? (
                 <div
                     onClick={() => setIsRevealed(true)}
-                    className="cursor-pointer group relative w-64 h-48 bg-[#1a1a2e] border-2 border-acc-gold/30 rounded-lg shadow-2xl flex flex-col items-center justify-center transform transition-all hover:scale-105 hover:rotate-1"
+                    className="cursor-pointer group relative w-72 h-52 bg-[#1a1a2e] border border-white/10 rounded-lg shadow-2xl flex flex-col items-center justify-center transform transition-all hover:scale-105 hover:rotate-1"
+                    style={{
+                        backgroundImage: 'radial-gradient(circle at center, #2d2d44 0%, #1a1a2e 100%)',
+                        boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.5)'
+                    }}
                 >
                     {/* Wax Seal */}
-                    <div className="w-16 h-16 rounded-full bg-red-800 border-4 border-red-900 flex items-center justify-center shadow-inner mb-4 relative z-10 group-hover:bg-red-700 transition-colors">
-                        <span className="text-2xl">⚡️</span>
+                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-800 to-red-900 border-4 border-red-950/50 flex items-center justify-center shadow-lg mb-4 relative z-10 group-hover:scale-110 transition-transform duration-300">
+                        <span className="text-3xl filter drop-shadow-md">⚡️</span>
+                        <div className="absolute inset-0 rounded-full border border-white/10" />
                     </div>
-                    <p className="font-serif text-acc-gold tracking-widest text-sm text-center">
-                        DAILY FORECAST<br />
-                        <span className="text-xs text-starlight/50 opacity-0 group-hover:opacity-100 transition-opacity">Click to Open</span>
+                    <p className="font-cinzel text-acc-gold tracking-[0.2em] text-sm text-center font-bold">
+                        DAILY SEAL<br />
+                        <span className="text-[10px] text-starlight/40 font-sans tracking-normal opacity-0 group-hover:opacity-100 transition-opacity mt-1 block">터치하여 봉인 해제</span>
                     </p>
 
                     {/* Envelope Flap Effect (Pseudo) */}
-                    <div className="absolute top-0 left-0 w-full h-full border-2 border-acc-gold/10 rounded-lg pointer-events-none" />
+                    <div className="absolute top-0 left-0 w-full h-full border border-white/5 rounded-lg pointer-events-none" />
                 </div>
             ) : (
                 /* Revealed Card State */
-                <div className="w-full bg-white/5 backdrop-blur-md border border-white/10 p-8 rounded-xl shadow-2xl animate-fade-in-up">
-                    <div className="text-center mb-6">
-                        <p className="text-starlight/60 text-sm uppercase tracking-widest mb-1">{forecast.date}</p>
-                        <h2 className="text-3xl font-serif text-acc-gold mb-2">{forecast.keyword}</h2>
-                        <div className="flex items-center justify-center gap-2">
-                            <span className="text-xs px-2 py-1 rounded bg-white/10 text-starlight/80">{forecast.tenGod}</span>
-                            <span className="text-xs px-2 py-1 rounded bg-acc-gold/20 text-acc-gold">Score: {forecast.score}</span>
-                        </div>
-                    </div>
+                <div className="w-full bg-[#0a0a0c]/80 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-2xl animate-fade-in-up relative overflow-hidden">
+                    {/* Background Noise/Gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-acc-gold/5 to-transparent pointer-events-none" />
 
-                    <div className="bg-[#0f0f1a] p-6 rounded-lg border border-white/5 mb-6 text-center">
-                        <p className="text-lg leading-relaxed text-starlight/90 font-medium">
-                            "{forecast.advice}"
-                        </p>
-                    </div>
+                    <div className="text-center mb-8 relative z-10">
+                        <p className="text-starlight/40 text-xs uppercase tracking-[0.2em] mb-2">{forecast.date}</p>
+                        <h2 className="text-3xl md:text-4xl font-gowun-batang text-white mb-3 text-glow-gold">{forecast.keyword}</h2>
 
-                    <div className="grid grid-cols-2 gap-4 text-center text-sm">
-                        <div className="p-3 bg-white/5 rounded">
-                            <span className="block text-starlight/50 mb-1">Lucky Color</span>
-                            <span className="text-acc-gold font-medium">{forecast.luckyColor}</span>
+                        <div className="flex items-center justify-center gap-2 mb-6">
+                            <span className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-starlight/70 font-medium">{forecast.tenGod}</span>
+                            <span className="text-xs px-2.5 py-1 rounded-full bg-acc-gold/10 border border-acc-gold/20 text-acc-gold font-bold">에너지 {forecast.score}점</span>
                         </div>
-                        <div className="p-3 bg-white/5 rounded">
-                            <span className="block text-starlight/50 mb-1">Direction</span>
-                            <span className="text-acc-gold font-medium">{forecast.luckyDirection}</span>
+
+                        <div className="bg-white/[0.03] p-6 rounded-xl border border-white/5 mb-6 text-center">
+                            <p className="text-lg leading-relaxed text-starlight/90 font-medium font-gowun-batang break-keep">
+                                "{forecast.advice}"
+                            </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 text-center text-sm mb-8">
+                            <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                <span className="block text-starlight/40 text-xs mb-1">행운의 컬러</span>
+                                <span className="text-white font-medium">{forecast.luckyColor}</span>
+                            </div>
+                            <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                <span className="block text-starlight/40 text-xs mb-1">길한 방향</span>
+                                <span className="text-white font-medium">{forecast.luckyDirection}</span>
+                            </div>
+                        </div>
+
+                        {/* Upsell CTA */}
+                        <div className="pt-6 border-t border-white/10">
+                            <p className="text-starlight/50 text-xs mb-3">더 깊은 운명의 흐름이 궁금하신가요?</p>
+                            <button
+                                onClick={() => router.push('/start')}
+                                className="w-full py-4 bg-gradient-to-r from-acc-gold to-amber-600 text-white font-bold rounded-xl shadow-lg hover:shadow-acc-gold/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                            >
+                                <span>프리미엄 정밀 분석 보기</span>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                            </button>
                         </div>
                     </div>
                 </div>

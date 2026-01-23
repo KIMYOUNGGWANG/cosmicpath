@@ -51,44 +51,84 @@ export interface DailyForecast {
 
 const TEN_GODS_MAP: Record<string, { keyword: string; advice: string[] }> = {
     'Friend': {
-        keyword: 'Competition',
-        advice: ['Trust your own judgment today.', 'A good day to network with peers.', 'Stand your ground firmly today.']
+        keyword: '어깨를 나란히 (비견)',
+        advice: [
+            '내 주관을 확실히 밀고 나가야 하는 날입니다.',
+            '동료나 친구와의 협력이 의외의 성과를 냅니다.',
+            '누구의 말보다 당신의 직감을 믿으세요.'
+        ]
     },
     'Rob Wealth': {
-        keyword: 'Caution',
-        advice: ['Watch your wallet and spending.', 'Avoid risky investments today.', 'Someone might try to take credit for your work.']
+        keyword: '빼앗길 위기 (겁재)',
+        advice: [
+            '지갑을 조심하세요. 충동적인 지출은 금물입니다.',
+            '나의 공을 가로채려는 사람이 있을 수 있습니다.',
+            '무리한 투자는 절대 피해야 하는 하루입니다.'
+        ]
     },
     'Eating God': {
-        keyword: 'Creativity',
-        advice: ['Express your ideas freely.', 'Indulge in good food and relaxation.', 'A perfect day for brainstorming.']
+        keyword: '표현과 즐거움 (식신)',
+        advice: [
+            '당신의 아이디어가 빛을 발합니다. 마음껏 표현하세요.',
+            '맛있는 음식을 먹으면 운이 트입니다.',
+            '창조적인 활동에 최적화된 하루입니다.'
+        ]
     },
     'Hurting Officer': {
-        keyword: 'Rebellion',
-        advice: ['Watch your words to avoid conflict.', 'Channel your energy into innovation.', 'Don\'t be afraid to break the norm sensibly.']
+        keyword: '파격과 혁신 (상관)',
+        advice: [
+            '말실수를 조심해야 합니다. 한 번 더 생각하고 말하세요.',
+            '기존의 틀을 깨는 새로운 시도가 오히려 좋습니다.',
+            '남들이 보지 못하는 허점을 당신은 발견합니다.'
+        ]
     },
     'Direct Wealth': {
-        keyword: 'Stable Wealth',
-        advice: ['A steady approach leads to financial gain.', 'Good for planning long-term savings.', 'Hard work pays off directly today.']
+        keyword: '안전한 수확 (정재)',
+        advice: [
+            '성실함이 곧 돈이 되는 날입니다.',
+            '꼼꼼하게 계획한 일들이 순조롭게 풀립니다.',
+            '작지만 확실한 행복이 찾아옵니다.'
+        ]
     },
     'Indirect Wealth': {
-        keyword: 'Opportunity',
-        advice: ['Keep an eye out for unexpected bonuses.', 'A little risk might yield high rewards.', 'Business luck is on your side.']
+        keyword: '뜻밖의 횡재 (편재)',
+        advice: [
+            '생각지 못한 곳에서 기회가 옵니다. 시야를 넓힙니다.',
+            '사업적인 감각이 예리해지는 날입니다.',
+            '큰 그림을 그리고 대범하게 움직이세요.'
+        ]
     },
     'Direct Officer': {
-        keyword: 'Authority',
-        advice: ['Follow the rules and procedures.', 'A good day for official meetings.', 'your reputation is enhanced by discipline.']
+        keyword: '명예와 승진 (정관)',
+        advice: [
+            '원칙을 지키면 인정받는 하루입니다.',
+            '중요한 면접이나 미팅에 아주 좋습니다.',
+            '당신의 품격이 자연스럽게 드러납니다.'
+        ]
     },
     'Seven Killings': {
-        keyword: 'Pressure',
-        advice: ['Take on the challenge bravely.', 'Stress is high, but so is the potential for breakthrough.', 'Stay calm under pressure.']
+        keyword: '압박과 돌파 (편관)',
+        advice: [
+            '호랑이 등에 탄 격입니다. 정신을 바짝 차려야 합니다.',
+            '스트레스가 많지만, 이겨내면 큰 성과가 있습니다.',
+            '피하지 말고 정면으로 돌파하면 길이 열립니다.'
+        ]
     },
     'Direct Resource': {
-        keyword: 'Support',
-        advice: ['Seek mentorship or study.', 'Contracts and documents are favored.', 'Listen to your intuition.']
+        keyword: '후원과 문서 (정인)',
+        advice: [
+            '윗사람의 도움을 받을 수 있는 날입니다.',
+            '계약이나 문서 작성에 유리합니다.',
+            '차분히 공부하거나 깊이 생각하기 좋습니다.'
+        ]
     },
     'Indirect Resource': {
-        keyword: 'Insight',
-        advice: ['Unconventional ideas provide the solution.', 'trust your unique perspective.', 'A good day for research and mystery.']
+        keyword: '직관과 신비 (편인)',
+        advice: [
+            '남다른 센스가 발휘됩니다. 독특한 해결책을 찾으세요.',
+            '외로움을 즐기면 오히려 영감을 얻습니다.',
+            '비현실적인 상상이 현실이 될 수 있습니다.'
+        ]
     },
 };
 
@@ -250,16 +290,25 @@ function getBaseScore(tenGod: string): number {
 
 function getLuckyColor(element: string): string {
     const map: Record<string, string> = {
-        'Wood': 'Green',
-        'Fire': 'Red',
-        'Earth': 'Yellow',
-        'Metal': 'White',
-        'Water': 'Black/Blue'
+        'Wood': '초록 (Green)',
+        'Fire': '빨강 (Red)',
+        'Earth': '노랑 (Yellow)',
+        'Metal': '흰색 (White)',
+        'Water': '검정 (Black)'
     };
-    return map[element] || 'White';
+    return map[element] || '흰색 (White)';
 }
 
 function getLuckyDirection(stem: string): string {
-    // Simple mapping
-    return 'East'; // Placeholder
+    // Simple mapping based on element roughly
+    // This could be more elaborate
+    const stemMap: Record<string, string> = {
+        'Jia': '동쪽', 'Yi': '동쪽',
+        'Bing': '남쪽', 'Ding': '남쪽',
+        'Wu': '중앙', 'Ji': '중앙',
+        'Geng': '서쪽', 'Xin': '서쪽',
+        'Ren': '북쪽', 'Gui': '북쪽'
+    };
+
+    return stemMap[stem] || '동쪽';
 }
