@@ -93,6 +93,7 @@
   background-position: 0 0, 25px 25px;
   animation: floatParticle 80s linear infinite;
   opacity: 0.3;
+  will-change: transform;
 }
 
 body {

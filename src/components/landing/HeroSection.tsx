@@ -21,7 +21,7 @@ export function HeroSection() {
             {/* Background: Shader/Nebula Effect */}
             <div className="absolute inset-0 z-0 opacity-40">
                 <ShaderGradientCanvas
-                    pixelDensity={1}
+                    pixelDensity={0.6}
                     fov={45}
                 >
                     <ShaderGradient

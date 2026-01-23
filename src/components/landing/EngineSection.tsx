@@ -30,18 +30,24 @@ export function EngineSection() {
     const rotate = useTransform(scrollYProgress, [0, 1], [0, 30]);
     const scale = useTransform(scrollYProgress, [0, 0.5, 1], [0.9, 1, 0.95]);
 
-    // Animated counter for "214 Analysis Points"
-    const [points, setPoints] = useState(0);
+    // Optimized Counter Animation (No Re-renders)
+    const pointsRef = useRef<HTMLDivElement>(null);
     const targetPoints = 214;
 
     useEffect(() => {
         let start = 0;
         const duration = 2000; // ms
+
         const step = (timestamp: number) => {
             if (!start) start = timestamp;
             const progress = Math.min((timestamp - start) / duration, 1);
             const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
-            setPoints(Math.floor(eased * targetPoints));
+
+            // Direct DOM update
+            if (pointsRef.current) {
+                pointsRef.current.textContent = String(Math.floor(eased * targetPoints));
+            }
+
             if (progress < 1) {
                 requestAnimationFrame(step);
             }
@@ -189,8 +195,8 @@ export function EngineSection() {
                 >
                     {/* Stat 1 */}
                     <div className="flex flex-col items-center p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-gold/30 transition-colors">
-                        <div className="text-4xl md:text-5xl font-bold text-acc-gold mb-2 font-cinzel">
-                            {points}
+                        <div ref={pointsRef} className="text-4xl md:text-5xl font-bold text-acc-gold mb-2 font-cinzel">
+                            0
                         </div>
                         <div className="text-sm font-bold text-white mb-1">판독 포인트</div>
                         <div className="text-xs text-dim text-center">당신의 사주와 별자리를<br />214가지 관점에서 정밀 분석</div>
