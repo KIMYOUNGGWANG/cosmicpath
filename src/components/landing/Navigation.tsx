@@ -75,6 +75,12 @@ export function Navigation() {
                             COMPATIBILITY
                         </Link>
                         <Link
+                            href="/daily"
+                            className="text-sm font-medium text-starlight hover:text-acc-gold transition-colors font-cinzel tracking-wider uppercase"
+                        >
+                            DAILY
+                        </Link>
+                        <Link
                             href="/start?reset=true"
                             className="inline-flex items-center justify-center px-5 py-2 font-cinzel font-bold text-xs text-white border border-white/20 rounded-full transition-all duration-300 hover:border-acc-gold hover:text-acc-gold bg-white/5 backdrop-blur-sm tracking-widest uppercase gap-2"
                         >
@@ -124,6 +130,14 @@ export function Navigation() {
                         label: 'COMPATIBILITY',
                         subLabel: 'Check relationship compatibility',
                         href: '/match/new',
+                    },
+                    {
+                        type: 'link',
+                        icon: Sparkles,
+                        iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
+                        label: 'DAILY FORECAST',
+                        subLabel: 'Your daily cosmic energy',
+                        href: '/daily',
                     },
                     {
                         type: 'link',
