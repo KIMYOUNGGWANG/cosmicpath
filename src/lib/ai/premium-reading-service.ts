@@ -1,6 +1,7 @@
 /**
  * Premium Reading Service
- * Orchestrates 5-phase multi-turn API calls for rich content generation
+ * Orchestrates 6-phase multi-turn API calls for rich content generation
+ * Phase 5 is split into 5A (action) and 5B (conclusion) for stability
  */
 
 import {
@@ -8,14 +9,15 @@ import {
     buildPhase2Prompt,
     buildPhase3Prompt,
     buildPhase4Prompt,
-    buildPhase5Prompt,
+    buildPhase5APrompt,
+    buildPhase5BPrompt,
     PHASE_LABELS,
     type UserData,
     type PremiumReportPartial
 } from './phase-prompts';
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
-const MODEL_NAME = 'gemini-3-flash-preview'; // Correct model name found in llm-client.ts
+const MODEL_NAME = 'gemini-3-flash-preview';
 
 
 
@@ -66,11 +68,17 @@ export async function generatePremiumReport(
         if (!phase4.success) throw new Error(`Phase 4 failed: ${phase4.error}`);
         Object.assign(results, phase4.data);
 
-        // Phase 5: Special Analysis + Action Plan
+        // Phase 5A: Special Analysis + Action Plan + Date Selection
         onProgress?.(5, PHASE_LABELS[4].label, PHASE_LABELS[4].icon);
-        const phase5 = await generateSinglePhase(5, userData, results, apiKey);
-        if (!phase5.success) throw new Error(`Phase 5 failed: ${phase5.error}`);
-        Object.assign(results, phase5.data);
+        const phase5A = await generateSinglePhase(5, userData, results, apiKey);
+        if (!phase5A.success) throw new Error(`Phase 5A failed: ${phase5A.error}`);
+        Object.assign(results, phase5A.data);
+
+        // Phase 5B (6): Past Life + Glossary + Final Verdict
+        onProgress?.(6, PHASE_LABELS[5].label, PHASE_LABELS[5].icon);
+        const phase5B = await generateSinglePhase(6, userData, results, apiKey);
+        if (!phase5B.success) throw new Error(`Phase 5B failed: ${phase5B.error}`);
+        Object.assign(results, phase5B.data);
 
         return { success: true, report: results };
 
@@ -111,7 +119,10 @@ export async function generateSinglePhase(
             promptBuilder = buildPhase4Prompt;
             break;
         case 5:
-            promptBuilder = buildPhase5Prompt;
+            promptBuilder = buildPhase5APrompt;
+            break;
+        case 6:
+            promptBuilder = buildPhase5BPrompt;
             break;
         default:
             return { phase: phaseNumber, success: false, data: null, error: 'Invalid phase' };
