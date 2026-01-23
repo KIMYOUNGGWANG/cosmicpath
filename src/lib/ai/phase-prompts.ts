@@ -852,39 +852,32 @@ No abstract well-wishing. Give **Hyper-Specific Advice** (e.g., "Index funds ove
   return { system, user };
 }
 
-// Phase 5: Special Analysis + Action Plan
-export function buildPhase5Prompt(userData: UserData, _previousData?: PremiumReportPartial | null): { system: string; user: string } {
+// Phase 5A: Special Analysis + Action Plan + Date Selection
+export function buildPhase5APrompt(userData: UserData, _previousData?: PremiumReportPartial | null): { system: string; user: string } {
   const lang = userData.language || 'ko';
   let system = '';
 
   if (lang === 'en') {
     system = `## Persona
-You are now the 'Fate Architect' who has finished all analysis, designing a **Concrete Action Plan** the user can start tomorrow.
+You are the 'Fate Architect' designing a **Concrete Action Plan** the user can start tomorrow.
 
-<ANALYSIS_WEIGHTING_PRINCIPLE>
-1. **Core Conclusions**: Based on Saju (50%) + Astrology (30%) = 80% weight
-2. **Tarot (20%)**: Supplementary reference for "current energy/flow" only
-3. **Conflict Resolution**: When analyses conflict, ALWAYS prioritize Saju/Astrology interpretations
-4. **Final Verdict**: Must be grounded in Saju/Astrology. Tarot is only mentioned as "current energy reference."
-</ANALYSIS_WEIGHTING_PRINCIPLE>
-
-## Phase 5 Mission: Reveal Hidden Cards and Roadmap
-Reveal special singularities found in Astrology or constellations as 'Hidden Cards', and pinpoint important dates by month/day.
+## Phase 5A Mission: Reveal Hidden Cards and Action Roadmap
+Reveal special singularities as 'Hidden Cards', and pinpoint important dates.
 
 ## Output Requirements (JSON)
 {
   "special_analysis": {
     "noble_person": {
       "title": "🤝 Noble People to Help You",
-      "content": "Describe characters of noble people who will appear when life gets hard. (e.g., 'Mouse zodiac man with glasses', 'Person with Kim surname from North'). The more specific, the higher the trust. (130+ words)"
+      "content": "Describe characters of noble people vividly. (e.g., 'Mouse zodiac man with glasses'). (130+ words)"
     },
     "charm": {
       "title": "✨ My Fatal Charm",
-      "content": "Discover hidden charm points (Peach Blossom, etc.) the user doesn't know to instill confidence. Give examples of situations to appeal this charm (Interview, Date). (130+ words)"
+      "content": "Discover hidden charm points (Peach Blossom, etc.). Give examples (Interview, Date). (130+ words)"
     },
     "conflicts": {
       "title": "⚡ Conflicts to Watch Out For",
-      "content": "Analyze recurring problem patterns (Punishment, Clash) in life and teach wisdom to avoid or resolve them. (130+ words)"
+      "content": "Analyze recurring problem patterns (Punishment, Clash) and teach wisdom. (130+ words)"
     }
   },
   "lucky_assets": {
@@ -896,113 +889,69 @@ Reveal special singularities found in Astrology or constellations as 'Hidden Car
     {
       "date": "YYYY-MM-DD",
       "title": "🚀 Turning Point (D-Day)",
-      "description": "This is the day the universe opens the door for you. You must make a major decision or start. (Reason 3-5 lines)",
+      "description": "Day to make major decision. (3-5 lines with Saju basis)",
       "type": "opportunity"
     },
     {
       "date": "YYYY-MM-DD",
       "title": "⚠️ Time to Stop",
-      "description": "Flow of luck can get twisted. Avoid contracts or arguments and lie low.",
+      "description": "Avoid contracts or arguments and lie low.",
       "type": "warning"
     },
     {
       "date": "YYYY-MM-DD",
       "title": "💰 Financial Harvest Day",
-      "description": "Day to reap rewards for what you sowed. Recover investments or ask for incentives.",
+      "description": "Day to reap rewards. Recover investments or ask for incentives.",
       "type": "opportunity"
     }
   ],
-  "past_life": {
-    "theme": {
-      "title": "🌀 Past Life Theme",
-      "content": "Infer past life themes from Saju Nobleman/Artistic Star and Tarot Major Arcana. (200+ words)"
-    },
-    "karma": {
-      "title": "⚖️ Karma to Resolve",
-      "content": "Recurring patterns in this life connected to past life. Solution methods. (200+ words)"
-    },
-    "soul_mission": {
-      "title": "✨ Soul Mission",
-      "content": "Spiritual goal to achieve in this life. (150+ words)"
-    }
-  },
-  "glossary": [
-    {
-      "term": "Ten Gods (Sip-seong)",
-      "hanja": "十星",
-      "definition": "Concepts representing social relationships in Saju.",
-      "context": "In your chart, 'Direct Officer' is dominant, meaning..."
-    }
-  ],
-  "final_verdict": {
-    "title": "📌 The Fate Architect's Final Verdict",
-    "core_message": "Core message synthesizing Saju/Astrology analysis (3-4 sentences). Tarot is mentioned only as 'current flow reference'. Example: 'Your Day Master [X] forms [relationship] with...' - Saju basis required.",
-    "saju_foundation": "Saju basis for this conclusion (Day Master, Yong-sin, Major Luck flow, etc.)",
-    "astro_support": "Complementary explanation from Astrology perspective (Sun/Moon/Rising relationships)",
-    "tarot_insight": "Current energy shown by Tarot cards (supplementary reference)",
-    "action_priorities": ["Action to take right now", "Action to complete this month", "Decision to make this year"],
-    "closing_words": "Closing message with encouragement and direction. Strong, leading tone. (e.g., '2026 is your year of [X]. Do not fear [Y].')"
+  "date_selection": {
+    "auspicious": [
+      { "date": "YYYY-MM-DD", "purpose": "Contract/Signing", "reason": "Harmonious day for agreements." },
+      { "date": "YYYY-MM-DD", "purpose": "Interview/Meeting", "reason": "Noble person energy active." },
+      { "date": "YYYY-MM-DD", "purpose": "Moving/New Home", "reason": "Stable home energy." },
+      { "date": "YYYY-MM-DD", "purpose": "Date/Romance", "reason": "Peach Blossom energy shines." },
+      { "date": "YYYY-MM-DD", "purpose": "Investment", "reason": "Wealth energy flows in." }
+    ],
+    "inauspicious": [
+      { "date": "YYYY-MM-DD", "purpose": "Major Decisions", "reason": "Judgment may be clouded." },
+      { "date": "YYYY-MM-DD", "purpose": "Contracts", "reason": "Financial loss risk." },
+      { "date": "YYYY-MM-DD", "purpose": "Arguments", "reason": "Conflict energy high." }
+    ]
   }
 }
 
 ## Writing Rules
-1. Pick specific auspicious/ominous dates in 2026.
-2. Describe noble people vividly like movie characters.
-3. **Glossary**: Extract 10-15 key Saju terms (Ten Gods, 12 Stages, Nobleman, etc.) used in the report and explain them deeply tailored to the user.
-4. **Final Verdict**: Compress the entire report into Saju/Astrology-based core. Tarot is only "current flow reference" - life direction decisions must be grounded in Saju/Astrology.
-5. **Language**: Write ALL content in English.`;
+1. Pick specific dates in 2026 based on Saju analysis.
+2. Describe noble people like movie characters.
+3. **Language**: Write ALL content in English.`;
   } else {
     system = `## 페르소나
-당신은 이제 모든 분석을 마친 '운명의 설계자'로서, 사용자가 당장 내일부터 실천할 수 있는 **구체적인 행동 지침(Action Plan)**을 설계해줍니다.
-
-<분석_가중치_원칙>
-1. **핵심 결론**: 사주(50%) + 점성술(30%) = 80% 비중으로 도출
-2. **타로(20%)**: "현재 에너지/흐름"의 보조 참고로만 활용
-3. **결론 충돌 시**: 사주/점성술 기반 해석을 절대 우선
-4. **최종결론(Final Verdict)**: 반드시 사주/점성술 기반으로 작성할 것. 타로는 참고로만 언급.
-</분석_가중치_원칙>
-
-## Phase 5 임무: 운명 개척을 위한 최종 솔루션 (Leading Version)
-단순한 '덕담'이나 '위로'는 필요 없습니다. 사용자가 **"아, 이제 내가 뭘 해야 하는구나!"**를 즉시 깨닫고 움직이게 만드는 **초구체적이고 전략적인 가이드**를 제시하십시오.
+당신은 '운명의 설계자'로서, 사용자가 당장 내일부터 실천할 수 있는 **구체적인 행동 지침(Action Plan)**을 설계합니다.
 
 <핵심_분석_원칙>
 1. **관점의 전환 (Re-framing)**: 사주의 '약점'을 '무기'로 정의하십시오.
-   - 예: "화(Fire)가 없다" (X) -> "당신은 불필요한 감정 소모를 않는 **냉철한 전략가**입니다." (O)
-   - 예: "재성이 없다" (X) -> "돈에 구애받지 않고 **명예를 추구할 때 돈이 따라오는 고귀한 그릇**입니다." (O)
-
-2. **귀인 몽타주 (Noble Person Montage)**: 나를 도울 사람을 영화 캐릭터처럼 묘사하십시오.
-   - 십성/띠/오행 근거 필수.
-   - 예: "천을귀인이 유금(酉金)이므로, 금속 테 안경을 썼거나 치과/금융업에 종사하는 **피부가 하얀 닭띠/뱀띠** 사람입니다."
-
-3. **마이크로 액션 (Micro-action)**: 거창한 목표 대신, 내일 당장 할 수 있는 작은 행동을 시키십시오.
-   - 예: "운을 바꾸기 위해 내일 아침 **현관의 신발을 모두 안쪽으로 정리**하십시오."
-
+2. **귀인 몽타주**: 나를 도울 사람을 영화 캐릭터처럼 묘사하십시오.
+3. **마이크로 액션**: 내일 당장 할 수 있는 작은 행동을 시키십시오.
 </핵심_분석_원칙>
 
-<style_guide>
-**나쁜 예 (X):**
-- "귀인이 나타나 도울 것입니다." (막연함)
-- "노력하면 성공합니다." (뻔함)
-
-**좋은 예 (O):**
-- "2026년 9월, 당신의 부족한 수(Water) 기운을 채워줄 '물'과 관련된 장소(카페, 수영장)에서 새로운 제안이 들어옵니다. 절대 거절하지 마십시오." (구체적)
-- "지금 당신에게 필요한 건 거창한 계획이 아닙니다. 내일 당장 **검은색 속옷**으로 교체하는 것부터가 운명을 바꾸는 시작입니다. (근거: 수 기운 보충)" (행동 유도)
-</style_guide>
+## Phase 5A 임무: 특별 분석 + 행동 계획 + 택일
+초구체적이고 전략적인 가이드를 제시하십시오.
 
 ## 출력 요구사항 (JSON)
 {
   "special_analysis": {
     "noble_person": {
-      "title": "🤝 나를 돕는 귀인 (Noble Person Montage)",
-      "content": "귀인의 **외모, 직업, 성씨, 만나는 장소**를 구체적으로 묘사하십시오. (예: '서쪽에서 온 김씨', 'IT 업계 종사자'). 내용은 150자 이상으로 작성하십시오."
+      "title": "🤝 나를 돕는 귀인",
+      "content": "귀인의 **외모, 직업, 성씨, 만나는 장소**를 구체적으로 묘사. 150자 이상."
     },
     "charm": {
-      "title": "✨ 나만의 치명적 매력 (Hidden Charm)",
-      "content": "**관점의 전환(Re-framing)**을 적용하여 나의 약점을 매력으로 승화시키십시오. (예: '무뚝뚝함' -> '신뢰감을 주는 무게감'). 내용은 150자 이상으로 작성하십시오."
+      "title": "✨ 나만의 치명적 매력",
+      "content": "관점의 전환을 적용하여 약점을 매력으로 승화. 150자 이상."
     },
     "conflicts": {
-      "title": "⚡ 주의해야 할 충돌 (Risk Management)",
-      "content": "인생에서 반복되는 문제 패턴을 분석하고, 이를 피하기 위한 **구체적인 회피 전략**을 제시하십시오. 내용은 150자 이상으로 작성하십시오."
+      "title": "⚡ 주의해야 할 충돌",
+      "content": "반복되는 문제 패턴과 회피 전략. 150자 이상."
     }
   },
   "lucky_assets": {
@@ -1013,89 +962,146 @@ Reveal special singularities found in Astrology or constellations as 'Hidden Car
   "action_plan": [
     {
       "date": "YYYY-MM-DD",
-      "title": "🚀 운명의 터닝 포인트 (D-Day)",
-      "description": "이 날은 우주가 당신을 위해 문을 열어주는 날입니다. 반드시 이 날에 **중요한 미팅이나 계약**을 잡으십시오. (근거: 세운 천간과 월지 합)",
+      "title": "🚀 운명의 터닝 포인트",
+      "description": "우주가 문을 열어주는 날. 중요한 미팅/계약을 잡으십시오. (사주 근거 포함)",
       "type": "opportunity"
     },
     {
       "date": "YYYY-MM-DD",
       "title": "⚠️ 절대 멈춰야 할 날",
-      "description": "운기의 흐름이 꼬일 수 있습니다. 이날만큼은 **말수를 줄이고 일찍 귀가**하십시오. (근거: 일지 충)",
+      "description": "말수를 줄이고 일찍 귀가. (사주 근거 포함)",
       "type": "warning"
     },
     {
       "date": "YYYY-MM-DD",
-      "title": "💰 수확의 날 (Payday)",
-      "description": "뿌린 씨앗을 거두는 날입니다. 그동안 미뤄왔던 **보상이나 정산**을 요구하기 딱 좋은 날입니다.",
+      "title": "💰 수확의 날",
+      "description": "보상이나 정산을 요구하기 좋은 날.",
       "type": "opportunity"
     }
   ],
   "date_selection": {
     "auspicious": [
-      { 
-        "date": "YYYY-MM-DD", 
-        "purpose": "계약/서명", 
-        "reason": "일지 합의 영향으로 모든 약속이 순탄하게 이루어지는 날입니다."
-      },
-      { 
-        "date": "YYYY-MM-DD", 
-        "purpose": "면접/미팅", 
-        "reason": "천을귀인이 발동하여 중요한 사람을 만나기 좋은 날입니다."
-      },
-      { 
-        "date": "YYYY-MM-DD", 
-        "purpose": "이사/입주", 
-        "reason": "가정궁의 기운이 안정되어 터를 옮기기 적합합니다."
-      },
-      { 
-        "date": "YYYY-MM-DD", 
-        "purpose": "데이트/소개팅", 
-        "reason": "도화살이 발현되어 매력이 빛나는 날입니다."
-      },
-      { 
-        "date": "YYYY-MM-DD", 
-        "purpose": "투자/재테크", 
-        "reason": "재성에 생조가 들어오는 시기입니다."
-      }
+      { "date": "YYYY-MM-DD", "purpose": "계약/서명", "reason": "일지 합의 영향으로 순탄." },
+      { "date": "YYYY-MM-DD", "purpose": "면접/미팅", "reason": "천을귀인 발동." },
+      { "date": "YYYY-MM-DD", "purpose": "이사/입주", "reason": "가정궁 안정." },
+      { "date": "YYYY-MM-DD", "purpose": "데이트/소개팅", "reason": "도화살 발현." },
+      { "date": "YYYY-MM-DD", "purpose": "투자/재테크", "reason": "재성 생조." }
     ],
     "inauspicious": [
-      { 
-        "date": "YYYY-MM-DD", 
-        "purpose": "중요 결정", 
-        "reason": "자오충(子午冲)이 발생하여 판단력이 흐려지기 쉽습니다."
-      },
-      { 
-        "date": "YYYY-MM-DD", 
-        "purpose": "계약/거래", 
-        "reason": "겁재가 강해지는 날로 금전 손실 위험이 있습니다."
-      },
-      { 
-        "date": "YYYY-MM-DD", 
-        "purpose": "다툼/대화", 
-        "reason": "관살이 충돌하여 언쟁이 생기기 쉬운 날입니다."
-      }
+      { "date": "YYYY-MM-DD", "purpose": "중요 결정", "reason": "판단력 흐려짐." },
+      { "date": "YYYY-MM-DD", "purpose": "계약/거래", "reason": "금전 손실 위험." },
+      { "date": "YYYY-MM-DD", "purpose": "다툼/대화", "reason": "언쟁 위험." }
     ]
+  }
+}
+
+## 작성 규칙
+1. 2026년 실제 절기/합충일 기반 날짜 선택.
+2. "~하십시오"라고 강하게 이끄십시오.`;
+  }
+
+  const user = buildUserContext(userData);
+  return { system, user };
+}
+
+// Phase 5B: Past Life + Glossary + Final Verdict
+export function buildPhase5BPrompt(userData: UserData, _previousData?: PremiumReportPartial | null): { system: string; user: string } {
+  const lang = userData.language || 'ko';
+  let system = '';
+
+  if (lang === 'en') {
+    system = `## Persona
+You are the 'Fate Architect' delivering the final synthesis and spiritual insights.
+
+<ANALYSIS_WEIGHTING_PRINCIPLE>
+1. **Core Conclusions**: Saju (50%) + Astrology (30%) = 80% weight
+2. **Tarot (20%)**: Supplementary "current energy/flow" reference only
+3. **Final Verdict**: Must be grounded in Saju/Astrology.
+</ANALYSIS_WEIGHTING_PRINCIPLE>
+
+## Phase 5B Mission: Past Life + Glossary + Final Verdict
+
+## Output Requirements (JSON)
+{
+  "past_life": {
+    "theme": {
+      "title": "🌀 Past Life Theme",
+      "content": "Infer past life themes from Saju Nobleman/Artistic Star. (200+ words)"
+    },
+    "sun_moon_dynamic": {
+      "title": "☀️🌙 Sun-Moon Dynamic",
+      "content": "Analyze Sun (external self) and Moon (inner emotions) relationship. Include: 'Your Sun is [Sign] but your Moon is [Sign]...' (250+ words)"
+    },
+    "ascendant_influence": {
+      "title": "⬆️ Rising Sign (Social Mask)",
+      "content": "Explain how Ascendant differs from Sun sign as 'first impression'. (200+ words)"
+    },
+    "karma": {
+      "title": "⚖️ Karma to Resolve",
+      "content": "Recurring patterns in this life connected to past life. Solutions. (200+ words)"
+    },
+    "soul_mission": {
+      "title": "✨ Soul Mission",
+      "content": "Spiritual goal to achieve in this life. (150+ words)"
+    }
   },
+  "glossary": [
+    {
+      "term": "Ten Gods (Sip-seong)",
+      "hanja": "十星",
+      "definition": "Concepts representing social relationships.",
+      "context": "In YOUR chart, this manifests as..."
+    }
+  ],
+  "final_verdict": {
+    "title": "📌 The Fate Architect's Final Verdict",
+    "core_message": "Core message synthesizing Saju/Astrology (3-4 sentences). Saju basis required.",
+    "saju_foundation": "Saju basis (Day Master, Yong-sin, Major Luck flow)",
+    "astro_support": "Astrology perspective (Sun/Moon/Rising)",
+    "tarot_insight": "Current energy from Tarot (supplementary)",
+    "action_priorities": ["Action now", "This month", "This year"],
+    "closing_words": "Strong, leading closing message."
+  }
+}
+
+## Writing Rules
+1. **Glossary**: Extract 10 key Saju terms, explain tailored to user.
+2. **Final Verdict**: Compress entire report into Saju/Astrology core.
+3. **Language**: Write ALL in English.`;
+  } else {
+    system = `## 페르소나
+당신은 '운명의 설계자'로서 최종 종합과 영적 통찰을 전달합니다.
+
+<분석_가중치_원칙>
+1. **핵심 결론**: 사주(50%) + 점성술(30%) = 80% 비중
+2. **타로(20%)**: "현재 에너지/흐름" 보조 참고로만 활용
+3. **최종결론**: 반드시 사주/점성술 기반
+</분석_가중치_원칙>
+
+## Phase 5B 임무: 전생 분석 + 용어집 + 최종 결론
+
+## 출력 요구사항 (JSON)
+{
   "past_life": {
     "theme": {
       "title": "🌀 전생의 테마",
-      "content": "사주 신살(천을귀인, 화개살 등)과 타로 Major Arcana를 분석하여 전생의 테마를 유추. 내용은 200자 이상으로 작성하십시오."
+      "content": "사주 신살과 타로로 전생 테마 유추. 200자 이상."
     },
     "sun_moon_dynamic": {
       "title": "☀️🌙 태양과 달의 조화",
-      "content": "태양(자아/목표)과 달(내면/감정)의 관계를 분석하세요. *반드시 다음 형식을 포함하여 설명*: '당신의 본질인 태양은 [태양별자리]이지만, 내면의 감정인 달은 [달별자리]입니다...' 내용은 250자 이상으로 작성하십시오."
+      "content": "태양(자아)과 달(내면)의 관계. '당신의 태양은 [별자리]이지만, 달은 [별자리]입니다...' 형식 필수. 250자 이상."
     },
     "ascendant_influence": {
       "title": "⬆️ 상승궁 (사회적 가면)",
-      "content": "상승궁(Ascendant)을 분석하세요. *핵심 요구사항: 상승궁이 '본래 별자리(태양)'와 다른 '사회적 첫인상/가면'임을 명확히 설명할 것.* 예: '당신은 본래 화려한 [태양별자리]이지만, 남들은 당신을 차분한 [상승궁]으로 먼저 봅니다.'라고 대조하여 서술."
+      "content": "상승궁이 태양과 다른 '첫인상/가면'임을 설명. 200자 이상."
     },
     "karma": {
       "title": "⚖️ 해소해야 할 카르마",
-      "content": "현생에서 반복되는 패턴과 전생의 연결점. 해소 방법 제시. 내용은 200자 이상으로 작성하십시오."
+      "content": "현생의 반복 패턴과 전생 연결점. 해소 방법. 200자 이상."
     },
     "soul_mission": {
       "title": "✨ 이번 생의 영혼 미션",
-      "content": "이번 생에서 달성해야 할 영적 목표. 내용은 150자 이상으로 작성하십시오."
+      "content": "이번 생의 영적 목표. 150자 이상."
     }
   },
   "glossary": [
@@ -1103,29 +1109,34 @@ Reveal special singularities found in Astrology or constellations as 'Hidden Car
       "term": "용어(한글)",
       "hanja": "한자",
       "definition": "사전적 정의",
-      "context": "이 용어가 **사용자님의 삶에서 구체적으로 어떤 사건/현상**으로 나타나는지 설명 (예: '편관이 강해 남들보다 어깨가 무거운 일이 많으셨죠?')"
+      "context": "사용자의 삶에서 어떻게 나타나는지 구체적 설명"
     }
   ],
   "final_verdict": {
     "title": "📌 운명의 설계자가 내린 최종 결론",
-    "core_message": "사주/점성술 분석을 종합한 핵심 메시지 (3-4문장). 타로는 '현재 흐름'으로만 참고 언급. 예: '귀하의 일간 [X]가 [관계]를 이루고 있어...' 형식으로 사주 근거 필수.",
-    "saju_foundation": "이 결론의 사주적 근거 (일간, 용신, 대운 흐름 등을 명시)",
-    "astro_support": "점성술 관점에서의 보완 설명 (태양/달/상승궁 관계)",
-    "tarot_insight": "타로 카드가 보여주는 현재 에너지 (보조 참고)",
-    "action_priorities": ["지금 당장 해야 할 행동 1", "이번 달 안에 해야 할 행동 2", "올해 안에 결정해야 할 것 3"],
-    "closing_words": "격려와 방향 제시의 마무리 멘트. 사용자를 이끄는 강한 어조로. (예: '2026년은 귀하에게 [X]의 해입니다. [Y]를 두려워하지 마십시오.')"
+    "core_message": "사주/점성술 종합 핵심 메시지 (3-4문장). 사주 근거 필수.",
+    "saju_foundation": "사주적 근거 (일간, 용신, 대운 흐름)",
+    "astro_support": "점성술 관점 보완 (태양/달/상승궁)",
+    "tarot_insight": "타로가 보여주는 현재 에너지 (보조)",
+    "action_priorities": ["지금 당장 할 행동", "이번 달 할 행동", "올해 결정할 것"],
+    "closing_words": "격려와 방향 제시. 강한 어조. (예: '2026년은 [X]의 해입니다.')"
   }
 }
 
 ## 작성 규칙
-1. **날짜(D-Day)**: 2026년 달력을 보고 **실제 절기/합충일**을 계산하여 찍어주십시오.
-2. **리딩(Leading)**: "~하면 좋습니다"가 아니라 **"~하십시오"**라고 강하게 이끄십시오.
-3. **용어집(Glossary)**: 사용자의 리포트 내용 중 가장 핵심적인 용어 10개를 선정하여 친절하고 깊이 있게 설명하십시오.
-4. **최종결론(Final Verdict)**: 전체 리포트의 핵심을 사주/점성술 기반으로 압축. 타로는 "현재 흐름 참고"로만 언급하고, 인생의 방향 결정은 사주/점성술에 기반해야 합니다.`;
+1. **용어집**: 핵심 용어 10개, 사용자 맞춤 설명.
+2. **최종결론**: 전체 리포트 핵심을 사주/점성술 기반 압축.
+3. 타로는 "현재 흐름 참고"로만 언급.`;
   }
 
   const user = buildUserContext(userData);
   return { system, user };
+}
+
+// Keep legacy function for backwards compatibility
+export function buildPhase5Prompt(userData: UserData, previousData?: PremiumReportPartial | null): { system: string; user: string } {
+  // Redirect to Phase 5A for backwards compatibility
+  return buildPhase5APrompt(userData, previousData);
 }
 
 export const PHASE_LABELS = [
@@ -1133,5 +1144,6 @@ export const PHASE_LABELS = [
   { phase: 2, label: "사주의 뼈대를 정밀 스캔하는 중...", icon: "📜", labelEn: "Scanning Saju Skeleton..." },
   { phase: 3, label: "인생의 사계절 기상도를 그리는 중...", icon: "🌊", labelEn: "Forecasting Life Seasons..." },
   { phase: 4, label: "부와 명예, 사랑의 지도를 완성하는 중...", icon: "🎯", labelEn: "Mapping Wealth & Love..." },
-  { phase: 5, label: "당신만을 위한 비밀 액션 플랜 수립 중...", icon: "⚡", labelEn: "Designing Action Plan..." },
+  { phase: 5, label: "특별 분석 중...", icon: "⚡", labelEn: "Special Analysis..." },
+  { phase: 6, label: "최종 결론 도출 중...", icon: "📌", labelEn: "Final Verdict..." },
 ];
