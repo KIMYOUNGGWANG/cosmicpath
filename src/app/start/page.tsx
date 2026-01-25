@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useRef, useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
+import { RefreshCw } from 'lucide-react';
 import { ReadingInput, ReadingData } from '@/components/reading/reading-input';
 import { ReadingSession, createSession } from '@/lib/session/reading-session';
 import { StickyCTA } from '@/components/common/sticky-cta';
 
-import { Suspense } from 'react';
 import { Footer } from '@/components/landing/Footer';
 import { GlobalHeader } from '@/components/common/GlobalHeader';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
@@ -381,6 +381,7 @@ function CosmicPathContent() {
 
     checkResume();
   }, []);
+
 
   // Step 1: Birthdate Submission -> Go to Tarot
   const handleInputSubmit = (data: ReadingData) => {
@@ -814,12 +815,24 @@ function CosmicPathContent() {
                       ? "The cosmic alignment was too complex to process at this moment."
                       : "우주의 기운이 너무 복잡하여 현재 처리할 수 없습니다.")}
                   </p>
-                  <button
-                    onClick={() => window.location.href = '/start?reset=true'}
-                    className="btn-secondary px-8 py-3 text-sm font-medium tracking-widest uppercase hover:bg-white/5 transition-all"
-                  >
-                    Start New Journey
-                  </button>
+                  <div className="flex flex-col gap-3 justify-center items-center">
+                    {(isPremium || searchParams.get('paid') === 'true') ? (
+                      <button
+                        onClick={() => window.location.reload()}
+                        className="btn-primary px-8 py-3 text-sm font-medium tracking-widest uppercase hover:brightness-110 transition-all flex items-center gap-2"
+                      >
+                        <RefreshCw size={16} />
+                        {language === 'en' ? 'Retry Analysis' : '분석 다시 시도하기'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => window.location.href = '/start?reset=true'}
+                        className="btn-secondary px-8 py-3 text-sm font-medium tracking-widest uppercase hover:bg-white/5 transition-all"
+                      >
+                        {language === 'en' ? 'Start New Journey' : '처음부터 다시하기'}
+                      </button>
+                    )}
+                  </div>
                 </motion.div>
               )}
             </motion.div>
