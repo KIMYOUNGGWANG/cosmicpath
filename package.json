@@ -15,6 +15,7 @@
     "@stripe/stripe-js": "^8.6.0",
     "@tosspayments/payment-widget-sdk": "^0.12.1",
     "@vercel/analytics": "^1.6.1",
+    "@vercel/og": "^0.8.6",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.26",
     "html2canvas": "^1.4.1",

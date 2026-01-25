@@ -28,9 +28,12 @@ const ReviewModal = dynamic(() => import('@/components/review/ReviewModal').then
 const ChatInterface = dynamic(() => import('@/components/oracle-chat/ChatInterface').then(mod => mod.ChatInterface), {
   loading: () => <Skeleton className="h-48 w-full" />
 });
+const RevealContainer = dynamic(() => import('@/components/reading/RevealContainer').then(mod => mod.RevealContainer), {
+  loading: () => <div className="animate-pulse w-full h-96 bg-white/5 rounded-2xl" />
+});
 
 function CosmicPathContent() {
-  const [step, setStep] = useState<'input' | 'mirror' | 'tarot' | 'result'>('input');
+  const [step, setStep] = useState<'input' | 'mirror' | 'tarot' | 'reveal' | 'result'>('input');
   const [readingData, setReadingData] = useState<ReadingData | null>(null);
   const [selectedCards, setSelectedCards] = useState<{ name: string; isReversed: boolean }[]>([]);
 
@@ -67,8 +70,7 @@ function CosmicPathContent() {
   // Dynamic Price State
   const [dynamicPrice, setDynamicPrice] = useState<string>('$3.99');
 
-  // Review Modal State
-  const [isReviewOpen, setIsReviewOpen] = useState(false);
+
 
   // Fetch dynamic price on mount
   // --- Persistence Helper ---
@@ -131,6 +133,10 @@ function CosmicPathContent() {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isLoading]);
 
+  // Review Modal State
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [hasDismissedReview, setHasDismissedReview] = useState(false); // 🚀 Prevent reopening
+
   // Review Modal Trigger - Scroll-based
   const hasReportSummary = !!reportData?.summary;
   useEffect(() => {
@@ -147,13 +153,20 @@ function CosmicPathContent() {
     const shouldShow =
       (isPaidSession || isPromoUser || isPremiumStatus) &&
       !hasReviewed &&
+      !hasDismissedReview && // 🚀 Check dismissal
       step === 'result' &&
       !isLoading &&
       isGuardPassed;
 
     if (shouldShow) {
       const handleScroll = () => {
-        const scrollPercent = (window.scrollY + window.innerHeight) / document.documentElement.scrollHeight;
+        const { scrollY, innerHeight } = window;
+        const { scrollHeight } = document.documentElement;
+
+        // Prevent triggering on short pages (e.g. initial loading phase)
+        if (scrollHeight < innerHeight * 1.5) return;
+
+        const scrollPercent = (scrollY + innerHeight) / scrollHeight;
 
         if (scrollPercent >= 0.7) {
           setIsReviewOpen(true);
@@ -161,14 +174,14 @@ function CosmicPathContent() {
         }
       };
 
-      handleScroll();
+      // Removed immediate handleScroll() call to prevent instant popup on mount
       window.addEventListener('scroll', handleScroll);
 
       return () => {
         window.removeEventListener('scroll', handleScroll);
       };
     }
-  }, [step, isLoading, isDecisionAccepted, hasReportSummary]);
+  }, [step, isLoading, isDecisionAccepted, hasReportSummary, hasDismissedReview]);
 
   // Resume Reading after Payment
   const isProcessingResume = useRef(false);
@@ -367,7 +380,7 @@ function CosmicPathContent() {
     };
 
     checkResume();
-  }, [searchParams]);
+  }, []);
 
   // Step 1: Birthdate Submission -> Go to Tarot
   const handleInputSubmit = (data: ReadingData) => {
@@ -382,27 +395,27 @@ function CosmicPathContent() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-
-  // Step 2: Tarot Completion -> Start Partial Reading
+  // Step 2: Tarot Completion -> Start Reveal Ritual
   const handleTarotComplete = async (cards: { name: string; isReversed: boolean }[]) => {
     setSelectedCards(cards);
-
-    // Mark session as active and persist data once we reach results
-    // Mark session as active and persist data once we reach results
     saveToSessionAndBackup('is_session_active', 'true');
     if (readingData) {
       saveToSessionAndBackup('pending_reading_data', JSON.stringify({ ...readingData, tarotCards: cards }));
     }
 
-    setStep('result');
-    setIsLoading(true);
-    setIsConverging(true);
+    // Go to Reveal Step instead of direct Result
+    setStep('reveal');
 
-    // Initial analysis (Phases 1-2 for free preview)
+    // Start Data Fetching in Background (So it's ready when they unseal)
+    // We don't await here, we let it run. The Result step handles 'isLoading' check.
+    startReading(cards);
+  };
+
+  const handleRevealComplete = () => {
+    // Transition to full result dashboard after the visual payoff
     setTimeout(() => {
-      setIsConverging(false);
-      startReading(cards);
-    }, 2000);
+      setStep('result');
+    }, 1500); // Let them admire the revealed card for a moment
   };
 
   const handleUpgrade = async () => {
@@ -496,6 +509,12 @@ function CosmicPathContent() {
           accumulatedMetadata = { ...accumulatedMetadata, ...result.metadata };
           setMetadata({ ...accumulatedMetadata });
           saveToSessionAndBackup('pending_metadata', JSON.stringify(accumulatedMetadata));
+        }
+
+        // 🚀 CRITICAL: Unblock UI after Phase 1 (Summary)
+        // This allows user to start reading while background analysis runs
+        if (phase === 1 || phase === startPhase) {
+          setIsLoading(false);
         }
       }
 
@@ -673,6 +692,44 @@ function CosmicPathContent() {
             </motion.div>
           )}
 
+          {/* New Step: Visual Reveal (The Seal) */}
+          {step === 'reveal' && (
+            <motion.div
+              key="reveal"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, scale: 1.1 }}
+              className="w-full min-h-[60vh] flex flex-col items-center justify-center py-20"
+            >
+              <div className="text-center mb-12">
+                <h2 className="text-2xl md:text-3xl font-cinzel text-starlight mb-4">
+                  {language === 'en' ? 'The Stars Are Aligned' : '별들의 배치가 끝났습니다'}
+                </h2>
+                <p className="text-acc-gold/80 text-sm tracking-widest uppercase">
+                  {language === 'en' ? 'Your destiny is sealed within' : '당신의 운명이 봉인되어 있습니다'}
+                </p>
+              </div>
+
+              <RevealContainer onReveal={handleRevealComplete}>
+                {/* Back of the card (Visual Result Summary) */}
+                <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-[#0A0A0C]">
+                  <div className="w-16 h-16 rounded-full bg-acc-gold/10 flex items-center justify-center mb-6">
+                    <span className="text-3xl">✨</span>
+                  </div>
+                  <h3 className="font-cinzel text-xl text-white mb-2">
+                    {language === 'en' ? 'Destiny Unsealed' : '봉인 해제 완료'}
+                  </h3>
+                  <p className="text-sm text-gray-400 mb-8 max-w-[200px]">
+                    {language === 'en' ? 'Your cosmic blueprint is ready.' : '당신의 우주 설계도가 준비되었습니다.'}
+                  </p>
+                  <div className="text-xs text-acc-gold animate-pulse tracking-widest uppercase">
+                    {language === 'en' ? 'Entering Dashboard...' : '대시보드로 진입 중...'}
+                  </div>
+                </div>
+              </RevealContainer>
+            </motion.div>
+          )}
+
           {/* Step 4: Result (Deep Dive) */}
           {step === 'result' && (
             <motion.div
@@ -788,7 +845,10 @@ function CosmicPathContent() {
 
       <ReviewModal
         isOpen={isReviewOpen}
-        onClose={() => setIsReviewOpen(false)}
+        onClose={() => {
+          setIsReviewOpen(false);
+          setHasDismissedReview(true);
+        }}
         readingId={shareUrl?.split('/').pop()}
       />
 

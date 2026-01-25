@@ -3,14 +3,14 @@
 import { motion, Variants } from 'framer-motion';
 import { useRef, useState, useEffect } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { ChevronDown, Sparkles, Star, Shield, TrendingUp, Calendar, Target, Zap, Lock, CircleHelp, Download, Printer, RefreshCw } from 'lucide-react';
+import { ChevronDown, Sparkles, Star, Shield, TrendingUp, Calendar, Target, Zap, Lock, CircleHelp, Download, Printer, RefreshCw, Briefcase, Coins, Heart, Activity, Droplets, Flame, ScrollText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PrintLayout } from './PrintLayout';
 import { CosmicRadar } from './cosmic-radar';
 import { DraftProposal } from './draft-proposal';
 import { EvidenceTooltip } from '../ui/confidence-badge';
 import { TarotDetailModal } from './tarot-detail-modal';
-import { SharePanel } from '../share/SharePanel';
+import { ShareCard } from './share-card';
 import { BlindSpotTeaser } from './blind-spot-teaser';
 import { StickyCTA } from '../common/sticky-cta';
 import { FortuneTimelineChart, TimelineScore } from './FortuneTimelineChart';
@@ -22,6 +22,7 @@ import { READING_PRODUCT } from '@/lib/payment/payment-config';
 import { ElementHarmony } from './ElementHarmony';
 import { ActionChecklist } from './ActionChecklist';
 import { FinalVerdictCard } from './FinalVerdictCard';
+import { InsightCard, InsightHighlight } from './ui/InsightCard';
 // import TossPaymentWidget from '../payment/TossPaymentWidget'; // Toss Payments (Commented out)
 
 // 새로운 Premium Report 타입 (기존 CosmicReport 대체)
@@ -617,13 +618,33 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
             {/* Share Panel */}
             <section className="mt-16 px-4 md:px-6 text-center">
                 <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent mb-10" />
-                <SharePanel
-                    language={language}
-                    shareUrl={shareUrl}
-                    shareTitle={report.summary?.title || (language === 'en' ? 'My CosmicPath Reading' : '나의 CosmicPath 리딩')}
-                    shareDescription={report.summary?.content?.slice(0, 100) + '...' || undefined}
-                    onPrint={() => handlePrint()}
-                />
+
+
+                {/* Visual Share Card */}
+                <div className="mb-12">
+                    <h2 className="text-xl font-cinzel text-white mb-6">
+                        {language === 'en' ? 'Claim Your Destiny' : '운명 봉인 해제'}
+                    </h2>
+                    <p className="text-white/60 text-sm mb-8 font-light">
+                        {language === 'en'
+                            ? "Save this card as a talisman, or share it to complete the ritual."
+                            : "이 카드를 부적처럼 저장하거나, 공유하여 리추얼을 완성하세요."}
+                    </p>
+
+                    <ShareCard
+                        shareUrl={shareUrl || (typeof window !== 'undefined' ? window.location.href : '')}
+                        trustScore={report.summary?.trust_score}
+                        mainCardName={metadata?.tarot?.[0]?.name}
+                    />
+                </div>
+
+                {/* Legacy Print Button (Optional) */}
+                <button
+                    onClick={() => handlePrint()}
+                    className="text-xs text-white/30 hover:text-white/60 underline decoration-white/20 underline-offset-4 transition-colors"
+                >
+                    {language === 'en' ? 'Print Full Report' : '전체 리포트 인쇄하기'}
+                </button>
             </section>
 
             {/* Tarot Detail Modal */}
@@ -989,55 +1010,68 @@ function CoreAnalysisSection({ data, sajuData, language }: { data: NonNullable<P
     const isEn = language === 'en';
     return (
         <section className="mt-6 px-4 md:px-6">
-            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <Sparkles size={18} className="text-gold" />
-                {isEn ? 'Core Saju Summary' : '내 사주 핵심 정리'}
+            <h2 className="text-xl font-cinzel text-white mb-6 flex items-center gap-3">
+                <Sparkles size={24} className="text-acc-gold" />
+                {isEn ? 'Elemental Blueprint' : '내 사주 핵심 정리'}
             </h2>
 
             {/* Five Elements Harmony Chart */}
-            <div className="mb-8">
+            <div className="mb-8 p-6 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-md">
+                <div className="mb-4">
+                    <h3 className="text-lg font-bold text-white mb-1">
+                        {isEn ? 'Five Elements Harmony' : '오행 균형도'}
+                    </h3>
+                    <p className="text-sm text-white/50">
+                        {isEn ? 'Your energy distribution based on birth chart' : '내 사주 원국의 오행 분포율'}
+                    </p>
+                </div>
                 <ElementHarmony sajuData={sajuData} scores={data.element_scores} language={language} />
             </div>
 
-            <div className="space-y-4">
-                {/* Lacking Elements - Rainbow Border */}
-                <div className="rainbow-border p-4 md:p-5">
-                    <div className="flex items-start gap-3">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Lacking Elements */}
+                <InsightCard
+                    title={isEn ? 'Lacking Elements' : '부족한 오행'}
+                    tag={isEn ? 'Custom Remedy' : '맞춤 개운법'}
+                    icon={Droplets}
+                    className="border-blue-500/30 bg-blue-500/5 hover:bg-blue-500/10"
+                >
+                    <div className="flex items-center gap-2 mb-4">
                         <span className="text-2xl">🌊</span>
-                        <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                                <h3 className="text-white font-bold">{isEn ? 'Lacking Elements & Remedy' : '부족한 오행 및 개운법'}</h3>
-                                <span className="category-tag tag-general">{isEn ? 'Custom Remedy' : '맞춤 개운법 제시'}</span>
-                            </div>
-                            <p className="text-sm text-gold mb-2">💧 {data.lacking_elements.elements}</p>
-                            <p className="text-xs text-gray-400 leading-relaxed whitespace-pre-line">
-                                {data.lacking_elements.description}
-                            </p>
-                            <div className="mt-3 p-3 bg-white/5 rounded-lg">
-                                <p className="text-xs text-gray-300">
-                                    <span className="text-gold font-bold">{isEn ? 'Remedy:' : '개운법:'}</span> {data.lacking_elements.remedy}
-                                </p>
-                            </div>
-                        </div>
+                        <span className="text-lg font-bold text-blue-200">{data.lacking_elements.elements}</span>
                     </div>
-                </div>
+
+                    <p className="text-blue-100/80 leading-relaxed mb-6">
+                        {data.lacking_elements.description}
+                    </p>
+
+                    <InsightHighlight type="tip">
+                        <span className="font-bold mr-2">{isEn ? 'Remedy:' : '개운법:'}</span>
+                        {data.lacking_elements.remedy}
+                    </InsightHighlight>
+                </InsightCard>
 
                 {/* Abundant Elements */}
-                <div className="accordion-item p-4 md:p-5">
-                    <div className="flex items-start gap-3">
-                        <span className="text-2xl">⭐</span>
-                        <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                                <h3 className="text-white font-bold">{isEn ? 'Abundant Elements & Usage' : '풍부한 오행과 활용법'}</h3>
-                                <span className="category-tag tag-career">{isEn ? 'Talent Usage' : '재능 활용법'}</span>
-                            </div>
-                            <p className="text-sm text-gold mb-2">⭐ {data.abundant_elements.elements}</p>
-                            <p className="text-xs text-gray-400 leading-relaxed whitespace-pre-line">
-                                {data.abundant_elements.description}
-                            </p>
-                        </div>
+                <InsightCard
+                    title={isEn ? 'Dominant Elements' : '발달한 오행'}
+                    tag={isEn ? 'Hidden Talent' : '재능 활용'}
+                    icon={Flame}
+                    className="border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10"
+                >
+                    <div className="flex items-center gap-2 mb-4">
+                        <span className="text-2xl">🔥</span>
+                        <span className="text-lg font-bold text-amber-200">{data.abundant_elements.elements}</span>
                     </div>
-                </div>
+
+                    <p className="text-amber-100/80 leading-relaxed mb-6">
+                        {data.abundant_elements.description}
+                    </p>
+
+                    <InsightHighlight type="default">
+                        <span className="font-bold mr-2">{isEn ? 'Strategy:' : '활용법:'}</span>
+                        {data.abundant_elements.usage}
+                    </InsightHighlight>
+                </InsightCard>
             </div>
         </section>
     );
@@ -1045,51 +1079,26 @@ function CoreAnalysisSection({ data, sajuData, language }: { data: NonNullable<P
 
 function AccordionSection({ title, items, source, language }: { title: string; items: { id: string; title: string; content: string }[]; source?: string; language: 'ko' | 'en' }) {
     const isEn = language === 'en';
-    const [openItems, setOpenItems] = useState<Set<string>>(new Set());
-
-    const toggleItem = (id: string) => {
-        setOpenItems(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(id)) {
-                newSet.delete(id);
-            } else {
-                newSet.add(id);
-            }
-            return newSet;
-        });
-    };
 
     return (
-        <section className="mt-6 px-4 md:px-6">
-            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <section className="mt-8 px-4 md:px-6">
+            <h2 className="text-xl font-cinzel text-white mb-6 flex items-center gap-3">
                 {source && <EvidenceTooltip tag={source === 'saju' ? '📜' : source === 'tarot' ? '🔮' : '🌌'} sources={[source]} explanation={isEn ? "Analysis based on this scholarly system." : "이 섹션의 분석은 해당 학문 체계를 근거로 합니다."} />}
                 {title}
             </h2>
-            <div className="space-y-3">
-                {items.map((item) => (
-                    <div key={item.id} className={cn("accordion-item", openItems.has(item.id) && "open")}>
-                        <div
-                            className="accordion-header"
-                            onClick={() => toggleItem(item.id)}
-                        >
-                            <h3 className="text-sm md:text-base">{item.title}</h3>
-                            <ChevronDown
-                                size={20}
-                                className={cn(
-                                    "accordion-icon transition-transform duration-300",
-                                    openItems.has(item.id) && "rotate-180"
-                                )}
-                            />
-                        </div>
-                        <div className={cn(
-                            "overflow-hidden transition-all duration-300",
-                            openItems.has(item.id) ? "max-h-[2000px] px-5 pb-5" : "max-h-0"
-                        )}>
-                            <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">
-                                {item.content}
-                            </p>
-                        </div>
-                    </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {items.map((item, idx) => (
+                    <InsightCard
+                        key={item.id}
+                        title={item.title}
+                        delay={idx * 0.1}
+                        className="bg-white/5 border-white/10 hover:border-acc-gold/30 transition-colors"
+                    >
+                        <p className="whitespace-pre-line leading-relaxed text-secondary-100">
+                            {item.content}
+                        </p>
+                    </InsightCard>
                 ))}
             </div>
         </section>
@@ -1294,73 +1303,50 @@ function FortuneFlowSection({ data, language }: { data: NonNullable<PremiumRepor
     );
 }
 
+
 function LifeAreasSection({ data, language }: { data: NonNullable<PremiumReportData['life_areas']>, language: 'ko' | 'en' }) {
     const isEn = language === 'en';
-    const [openItems, setOpenItems] = useState<Set<string>>(new Set());
-
-    const toggleItem = (id: string) => {
-        setOpenItems(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(id)) newSet.delete(id);
-            else newSet.add(id);
-            return newSet;
-        });
-    };
 
     const areas = [
-        data.career && { id: 'career', icon: '💼', ...data.career },
-        data.wealth && { id: 'wealth', icon: '💰', ...data.wealth },
-        data.love && { id: 'love', icon: '💕', ...data.love },
-        data.health && { id: 'health', icon: '🏥', ...data.health },
-    ].filter(Boolean) as { id: string; icon: string; title: string; tag?: string; content: string; subsections?: string[] }[];
+        data.career && { id: 'career', icon: Briefcase, ...data.career },
+        data.wealth && { id: 'wealth', icon: Coins, ...data.wealth },
+        data.love && { id: 'love', icon: Heart, ...data.love },
+        data.health && { id: 'health', icon: Activity, ...data.health },
+    ].filter(Boolean) as { id: string; icon: any; title: string; tag?: string; content: string; subsections?: string[] }[];
 
     return (
         <section className="mt-6 px-4 md:px-6">
-            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <Target size={18} className="text-gold" />
-                {isEn ? 'Detailed Analysis by Area' : '영역별 상세 분석'}
+            <h2 className="text-xl font-cinzel text-white mb-6 flex items-center gap-3">
+                <Target size={24} className="text-acc-gold" />
+                {isEn ? 'Detailed Life Analysis' : '영역별 상세 분석'}
             </h2>
-            <div className="space-y-3">
-                {areas.map((area) => (
-                    <div key={area.id} className={cn("accordion-item rainbow-border-static", openItems.has(area.id) && "open")}>
-                        <div
-                            className="accordion-header"
-                            onClick={() => toggleItem(area.id)}
-                        >
-                            <h3 className="text-sm md:text-base flex items-center gap-2">
-                                <span>{area.icon}</span>
-                                <span>{area.title}</span>
-                                {area.tag && (
-                                    <span className="category-tag tag-career text-[10px]">{area.tag}</span>
-                                )}
-                            </h3>
-                            <ChevronDown
-                                size={20}
-                                className={cn(
-                                    "accordion-icon transition-transform duration-300",
-                                    openItems.has(area.id) && "rotate-180"
-                                )}
-                            />
-                        </div>
-                        <div className={cn(
-                            "overflow-hidden transition-all duration-300",
-                            openItems.has(area.id) ? "max-h-[2000px] px-5 pb-5" : "max-h-0"
-                        )}>
-                            {area.subsections && (
-                                <div className="subsection-grid mb-4">
-                                    {area.subsections.map((sub: string, idx: number) => (
-                                        <div key={idx} className="subsection-item">
-                                            <span className="text-gold">✦</span>
-                                            <span>{sub}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                            <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-line">
-                                {area.content}
-                            </p>
-                        </div>
-                    </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {areas.map((area, idx) => (
+                    <InsightCard
+                        key={area.id}
+                        title={area.title}
+                        icon={area.icon}
+                        tag={area.tag}
+                        delay={idx * 0.1}
+                        className="h-full" // Ensure equal height
+                    >
+                        {/* Subsections as Pill Tags */}
+                        {area.subsections && (
+                            <div className="flex flex-wrap gap-2 mb-6">
+                                {area.subsections.map((sub: string, i: number) => (
+                                    <span key={i} className="px-2.5 py-1 rounded-md bg-white/5 border border-white/5 text-xs text-secondary-300">
+                                        {sub}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Main Content */}
+                        <p className="whitespace-pre-line leading-relaxed text-secondary-100">
+                            {area.content}
+                        </p>
+                    </InsightCard>
                 ))}
             </div>
 

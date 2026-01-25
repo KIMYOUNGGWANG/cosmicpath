@@ -6,27 +6,12 @@ export const runtime = 'edge';
 export async function GET(req: NextRequest) {
     try {
         const { searchParams } = new URL(req.url);
-        const id = searchParams.get('id');
 
-        // Default values if no ID or fetch fails
-        let title = 'CosmicPath';
-        let subtitle = 'AI Driven Destiny Navigation';
-        let type = 'Destiny Analysis';
-        let score = '';
-
-        if (id) {
-            // Ideally we would fetch from DB here, but in Edge runtime we might need direct DB access or pass params via URL.
-            // For V1, let's keep it simple or allow passing params directly for speed.
-            // Or we can "simulate" dynamic content if we passed it in url like ?title=...
-            const paramTitle = searchParams.get('title');
-            const paramDesc = searchParams.get('desc');
-            const paramScore = searchParams.get('score');
-
-            if (paramTitle) title = paramTitle;
-            if (paramDesc) subtitle = paramDesc;
-            if (paramScore) score = paramScore;
-        }
-
+        // Dynamic Params
+        const title = searchParams.get('title') || 'Cosmic Path';
+        const description = searchParams.get('desc') || 'AI Driven Destiny Analysis';
+        const cardName = searchParams.get('card') || 'The Universe';
+        const trustScore = searchParams.get('score') || '98';
 
         return new ImageResponse(
             (
@@ -38,43 +23,74 @@ export async function GET(req: NextRequest) {
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        backgroundColor: '#0f172a',
-                        backgroundImage: 'radial-gradient(circle at 25% 25%, #2a2a4a 0%, #0f172a 50%)',
-                        color: 'white',
+                        backgroundColor: '#030014',
+                        backgroundImage: 'linear-gradient(to bottom, #030014, #1a1a2e)',
                         fontFamily: 'sans-serif',
+                        color: 'white',
+                        position: 'relative',
                     }}
                 >
-                    <div style={{
-                        display: 'flex',
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        opacity: 0.3,
-                        backgroundImage: 'url(https://cosmicpath.app/noise-overlay.png)', // Texture
-                    }} />
+                    {/* Decorative Background Elements */}
+                    <div style={{ position: 'absolute', top: '-20%', left: '-10%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(124,58,237,0.2) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+                    <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(234,179,8,0.15) 0%, transparent 70%)', filter: 'blur(60px)' }} />
 
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 10, padding: '40px', textAlign: 'center' }}>
+                    {/* Card Container */}
+                    <div
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: 32,
+                            padding: '60px 80px',
+                            backgroundColor: 'rgba(255,255,255,0.03)',
+                            boxShadow: '0 20px 50px -10px rgba(0, 0, 0, 0.5)',
+                            maxWidth: '900px',
+                        }}
+                    >
                         {/* Logo / Brand */}
-                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-                            <div style={{ fontSize: 60, marginRight: '10px' }}>✨</div>
-                            <div style={{ fontSize: 40, fontWeight: 'bold', background: 'linear-gradient(to right, #fbbf24, #d97706)', backgroundClip: 'text', color: 'transparent' }}>CosmicPath</div>
+                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
+                            <span style={{ fontSize: 24, fontWeight: 400, letterSpacing: '0.2em', color: '#EAB308', opacity: 0.9 }}>COSMIC PATH</span>
                         </div>
 
-                        {/* Main Title / Score */}
-                        <div style={{ fontSize: 70, fontWeight: 900, marginBottom: '20px', lineHeight: 1.1, textShadow: '0 0 20px rgba(139, 92, 246, 0.5)' }}>
+                        {/* Trust Score Area */}
+                        <div style={{ display: 'flex', alignItems: 'center', padding: '10px 24px', borderRadius: 999, background: 'rgba(234,179,8,0.1)', border: '1px solid rgba(234,179,8,0.3)', marginBottom: 30 }}>
+                            <span style={{ fontSize: 24, marginRight: 8 }}>✨</span>
+                            <span style={{ fontSize: 24, color: '#EAB308', fontWeight: 700 }}>Trust Score {trustScore}/5.0</span>
+                        </div>
+
+                        {/* Main Title */}
+                        <div style={{
+                            fontSize: 72,
+                            fontWeight: 800,
+                            marginBottom: 20,
+                            textAlign: 'center',
+                            background: 'linear-gradient(to right, #fff, #a5b4fc)',
+                            backgroundClip: 'text',
+                            color: 'transparent',
+                            lineHeight: 1.1,
+                        }}>
                             {title}
                         </div>
 
-                        {/* Subtitle / Description */}
-                        <div style={{ fontSize: 30, color: '#94a3b8', maxWidth: '800px', lineHeight: 1.4 }}>
-                            {subtitle}
+                        {/* Subtitle / Card Name */}
+                        <div style={{ fontSize: 32, fontWeight: 300, color: '#94a3b8', marginBottom: 20, textAlign: 'center', maxWidth: 700 }}>
+                            {description}
                         </div>
 
-                        {/* Call to Action Badge */}
-                        <div style={{ marginTop: '40px', display: 'flex', padding: '10px 30px', background: 'rgba(255,255,255,0.1)', borderRadius: '50px', border: '1px solid rgba(255,255,255,0.2)' }}>
-                            <div style={{ fontSize: 24, color: '#fbbf24' }}>Check Your Destiny ➔</div>
+                        {/* Selected Card Badge */}
+                        <div style={{
+                            marginTop: 20,
+                            fontSize: 24,
+                            color: '#e2e8f0',
+                            letterSpacing: '0.05em',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px'
+                        }}>
+                            <span style={{ opacity: 0.5 }}>Your Card:</span>
+                            <span style={{ borderBottom: '1px solid #EAB308', paddingBottom: '4px' }}>{cardName}</span>
                         </div>
                     </div>
                 </div>
@@ -85,7 +101,7 @@ export async function GET(req: NextRequest) {
             },
         );
     } catch (e: any) {
-        console.log(`${e.message}`);
+        console.error(`${e.message}`);
         return new Response(`Failed to generate the image`, {
             status: 500,
         });

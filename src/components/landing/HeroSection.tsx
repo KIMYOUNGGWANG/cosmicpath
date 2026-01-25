@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ShaderGradientCanvas, ShaderGradient } from 'shadergradient';
 import Link from 'next/link';
@@ -16,25 +16,48 @@ export function HeroSection() {
     const scale = useTransform(scrollYProgress, [0, 0.5], [1, 0.8]);
     const y = useTransform(scrollYProgress, [0, 0.5], [0, 100]);
 
+    const [isMobile, setIsMobile] = useState(true); // Default to true (safe/fast) to prevent hydration mismatch with mobile-first approach
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        // Initial check
+        checkMobile();
+
+        // Listener
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     return (
         <section ref={containerRef} className="relative h-screen w-full overflow-hidden bg-void">
-            {/* Background: Shader/Nebula Effect */}
+            {/* Background: Hybrid Engine (Video on Mobile, Shader on Desktop) */}
             <div className="absolute inset-0 z-0 opacity-40">
-                <ShaderGradientCanvas
-                    pixelDensity={0.6}
-                    fov={45}
-                >
-                    <ShaderGradient
-                        control='props'
-                        color1="#1a1230"  // Deep Cosmic Purple
-                        color2="#4A0E0E"  // Deep Mars Red
-                        color3="#D4AF37"  // Gold Accent
-                        animate="on"
-                        uSpeed={0.3}
-                        uStrength={2.0}
-                        uDensity={1.5}
-                    />
-                </ShaderGradientCanvas>
+                {isMobile ? (
+                    <div className="absolute inset-0 bg-gradient-to-b from-void via-[#1a1230] to-void">
+                        {/* Fallback Image/Video can go here. For now, a high-quality CSS gradient that mimics the shader. */}
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(74,14,14,0.3)_0%,transparent_70%)]" />
+                        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_30%,rgba(212,175,55,0.15)_0%,transparent_60%)]" />
+                    </div>
+                ) : (
+                    <ShaderGradientCanvas
+                        pixelDensity={0.6}
+                        fov={45}
+                    >
+                        <ShaderGradient
+                            control='props'
+                            color1="#1a1230"  // Deep Cosmic Purple
+                            color2="#4A0E0E"  // Deep Mars Red
+                            color3="#D4AF37"  // Gold Accent
+                            animate="on"
+                            uSpeed={0.3}
+                            uStrength={2.0}
+                            uDensity={1.5}
+                        />
+                    </ShaderGradientCanvas>
+                )}
             </div>
 
             {/* Content */}
@@ -58,10 +81,10 @@ export function HeroSection() {
                     transition={{ duration: 1.2, delay: 0.8 }}
                     className="text-lg md:text-2xl text-moonlight font-light max-w-2xl leading-relaxed mb-10"
                 >
-                    &quot;<span className="text-white font-medium">운명</span>은 침묵하지 않습니다. <br className="hidden md:block" /> 단지 우리가 듣지 못할 뿐.&quot;<br />
+                    &quot;<span className="text-white font-medium">운명의 궤적</span>은 침묵하지 않습니다. <br className="hidden md:block" /> 단지 우리가 듣기를 기다릴 뿐.&quot;<br />
                     <span className="text-sm md:text-base text-dim mt-4 block font-sans">
-                        당신이 궁금해하는 그 시간, 그 흐름을 <br className="md:hidden" />
-                        <span className="text-acc-logic font-semibold">3가지 고대 지혜</span>로 읽어드립니다.
+                        고대의 지혜와 AI의 연산으로 <br className="md:hidden" />
+                        <span className="text-acc-logic font-semibold">당신의 내면(Inner Universe)</span>을 봉인 해제합니다.
                     </span>
                 </motion.p>
 
@@ -72,7 +95,7 @@ export function HeroSection() {
                     transition={{ duration: 1, delay: 1.2 }}
                     className="flex flex-wrap justify-center gap-4 md:gap-8"
                 >
-                    {['3-Way Cross Check', 'AI Precision Analysis', '5-Phase Deep Dive'].map((badge, i) => (
+                    {['Unseal Your Destiny', 'Hyper-Personalized AI', 'Integrated Cosmic Analysis'].map((badge, i) => (
                         <div key={i} className="px-4 py-2 border border-white/10 rounded-full bg-white/5 backdrop-blur-md">
                             <span className="text-xs md:text-sm text-acc-gold tracking-widest uppercase">{badge}</span>
                         </div>
@@ -91,7 +114,7 @@ export function HeroSection() {
                         className="group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-acc-gold via-amber-300 to-acc-gold bg-[length:200%_auto] animate-shimmer text-deep-navy font-bold text-lg tracking-widest rounded-full shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:shadow-[0_0_40px_rgba(212,175,55,0.6)] hover:scale-105 transition-all duration-300"
                     >
                         <span className="relative z-10 flex items-center gap-2">
-                            BECOME THE MASTER
+                            UNSEAL YOUR DESTINY
                             <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                         </span>
                     </Link>

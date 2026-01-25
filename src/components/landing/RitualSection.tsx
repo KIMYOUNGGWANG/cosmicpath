@@ -64,8 +64,8 @@ export function RitualSection() {
                     className="text-moonlight text-xs md:text-sm mb-12 md:mb-20 font-light tracking-[0.2em] max-w-lg mx-auto leading-relaxed border-l border-r border-white/10 px-8"
                 >
                     {language === 'ko'
-                        ? "운명의 좌표가 정밀하게 조율되었습니다. 황금빛 구심점을 통해 당신의 미래를 해독하십시오."
-                        : "The coordinates of fate are precisely aligned. Decode your future through the golden center."}
+                        ? "당신의 좌표가 우주의 시간과 정렬되었습니다. 황금빛 궤적을 따라 내면의 봉인을 해제하십시오."
+                        : "Your coordinates are aligned. Unseal your inner universe through the golden trajectory."}
                 </motion.p>
 
                 {/* Chronos Dial: Color Hierarchy Refined */}
@@ -148,7 +148,7 @@ export function RitualSection() {
                                 ENTER
                             </span>
                             <span className="relative z-10 font-cinzel text-lg md:text-2xl font-bold tracking-[0.2em] text-starlight group-hover:text-white group-hover:scale-110 transition-all duration-500">
-                                {language === 'ko' ? "분석 시작" : "START"}
+                                {language === 'ko' ? "봉인 해제" : "UNSEAL"}
                             </span>
 
                             <div className="mt-4 w-8 h-[1px] bg-acc-gold/30 group-hover:w-16 group-hover:bg-acc-gold transition-all duration-700" />

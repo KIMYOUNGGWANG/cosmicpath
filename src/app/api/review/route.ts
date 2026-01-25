@@ -55,7 +55,25 @@ export async function POST(request: NextRequest) {
             }
         });
 
-        return NextResponse.json({ success: true, review });
+        // 🎁 REWARD LOGIC: Grant +1 Credit for valid review
+        let rewardGranted = false;
+        if (data.readingId) {
+            try {
+                // Find and update the chat session linked to this reading
+                const updatedSession = await prisma.chatSession.update({
+                    where: { readingResultId: data.readingId },
+                    data: {
+                        credits: { increment: 1 } // Give 1 free question
+                    }
+                });
+                if (updatedSession) rewardGranted = true;
+            } catch (err) {
+                console.error("Failed to grant reward:", err);
+                // Don't fail the review creation just because reward failed, but log it
+            }
+        }
+
+        return NextResponse.json({ success: true, review, rewardGranted });
     } catch (error) {
         return NextResponse.json({ error: 'Failed to create review' }, { status: 400 });
     }

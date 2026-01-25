@@ -18,30 +18,30 @@ export function ReviewModal({ isOpen, onClose, readingId }: ReviewModalProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
 
-    // Handle browser back button - close modal instead of navigating away
+    // Handle browser back button - close modal
     useEffect(() => {
         if (!isOpen) return;
 
-        const modalState = { modalType: 'review', modalOpen: true };
-        window.history.pushState(modalState, '');
-
         const handlePopState = () => {
-            if (isOpen) {
-                onClose();
-            }
+            onClose();
         };
 
+        // Push a state so back button closes modal instead of page navigation
+        window.history.pushState({ modalType: 'review' }, '');
         window.addEventListener('popstate', handlePopState);
-        return () => window.removeEventListener('popstate', handlePopState);
+
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+            // If checking history state is too complex, just skip explicit back() on unmount
+            // relying on user action.
+        };
     }, [isOpen, onClose]);
 
-    // Handle close with history cleanup
+    // Handle close button click
     const handleClose = useCallback(() => {
-        if (window.history.state?.modalType === 'review') {
-            window.history.back();
-        } else {
-            onClose();
-        }
+        onClose();
+        // Optionally go back if we pushed state
+        // if (window.history.state?.modalType === 'review') window.history.back();
     }, [onClose]);
 
     const handleSubmit = async () => {
@@ -93,11 +93,14 @@ export function ReviewModal({ isOpen, onClose, readingId }: ReviewModalProps) {
 
                     {isSubmitted ? (
                         <div className="text-center py-8">
-                            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Star className="text-green-500 fill-green-500" size={32} />
+                            <div className="w-16 h-16 bg-gradient-to-br from-acc-gold to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                                <Star className="text-black fill-black" size={32} />
                             </div>
-                            <h3 className="text-xl font-bold text-white mb-2">소중한 후기 감사합니다!</h3>
-                            <p className="text-white/60">여러분의 이야기가 큰 힘이 됩니다.</p>
+                            <h3 className="text-xl font-bold text-white mb-2">🎁 보상 지급 완료!</h3>
+                            <p className="text-white/80">
+                                소중한 후기 감사합니다.<br />
+                                <span className="text-acc-gold font-bold">무료 질문권 1회</span>가 추가되었습니다.
+                            </p>
                         </div>
                     ) : (
                         <>

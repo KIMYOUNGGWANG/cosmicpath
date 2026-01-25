@@ -195,15 +195,16 @@ export async function generateSinglePhase(
 
             // Extract text from response
             let text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            // Log raw result for debugging (Gemini 3 compatibility check)
             if (!text) {
                 const finishReason = result.candidates?.[0]?.finishReason;
                 const safetyRatings = result.candidates?.[0]?.safetyRatings;
+                console.warn(`[Phase ${phaseNumber}] Empty content. FinishReason: ${finishReason}`, { safetyRatings, rawResult: JSON.stringify(result) });
 
-                console.warn(`[Phase ${phaseNumber}] Empty content. Reason: ${finishReason}`, safetyRatings);
                 lastError = new Error(`Empty content. FinishReason: ${finishReason}`);
 
-                // SAFETY 차단인 경우 재시도해도 안될 가능성이 높음 -> 에러 던지고 종료? 아니면 재시도?
-                // 일단 재시도.
+                // If finishReason is OTHER or similar, it might be a transient glitch.
                 retries++;
                 continue;
             }

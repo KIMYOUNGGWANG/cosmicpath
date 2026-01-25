@@ -42,11 +42,11 @@ export const metadata: Metadata = {
     canonical: './',
   },
   title: {
-    default: "CosmicPath | 2026 AI New Year Fortune & Saju",
+    default: "CosmicPath | AI Driven Destiny Navigation",
     template: "%s | CosmicPath",
   },
-  description: "Navigate your destiny with AI-powered Saju, Astrology, and Tarot analysis. Discover your cosmic blueprint for 2026.",
-  keywords: ["saju", "astrology", "tarot", "fortune telling", "destiny", "AI", "사주", "점성술", "타로", "운세", "궁합", "2026년 운세", "신년운세", "무료사주"],
+  description: "Unlock your 2026 destiny with CosmicPath. Ancient wisdom meets AI intelligence in a private, deep-dive analysis. The Astral Architect awaits.",
+  keywords: ["saju", "astrology", "tarot", "fortune telling", "destiny", "AI", "AI Fortune", "2026 Prediction", "사주", "점성술", "타로", "운세", "궁합", "2026년 운세", "신년운세", "무료사주"],
   authors: [{ name: "CosmicPath Team" }],
   creator: "CosmicPath",
   publisher: "CosmicPath",
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: process.env.NEXT_PUBLIC_APP_URL || "https://cosmicpath.app",
     title: "CosmicPath | AI Driven Destiny Navigation",
-    description: "Your Sacred Narrative woven through Saju, Astrology, and Tarot. Experience the next generation of destiny analysis.",
+    description: "Unlock your 2026 destiny with CosmicPath. Ancient wisdom meets AI intelligence in a private, deep-dive analysis.",
     siteName: "CosmicPath",
     images: [
       {
@@ -69,7 +69,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "CosmicPath | AI Driven Destiny Navigation",
-    description: "Your Sacred Narrative woven through Saju, Astrology, and Tarot.",
+    description: "Unlock your 2026 destiny with CosmicPath. Ancient wisdom meets AI intelligence.",
     images: ["/og-image.png"],
     creator: "@cosmicpath",
   },
