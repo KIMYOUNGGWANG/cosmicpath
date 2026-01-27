@@ -514,7 +514,9 @@ function CosmicPathContent() {
 
         // 🚀 CRITICAL: Unblock UI after Phase 1 (Summary)
         // This allows user to start reading while background analysis runs
-        if (phase === 1 || phase === startPhase) {
+        // BUT for Premium users, we want to show the full "Analysis" sequence (2/5 -> 5/5)
+        // so we ONLY unblock early for FREE users.
+        if ((!isPremium && !isPremiumOverride) && (phase === 1 || phase === startPhase)) {
           setIsLoading(false);
         }
       }
@@ -790,6 +792,20 @@ function CosmicPathContent() {
                         onUnlock={handleUpgrade}
                         isPremium={isPremium}
                         price={dynamicPrice}
+                        isLoading={isLoading}
+                        onRetry={() => {
+                          const determineNextPhase = (r: any) => {
+                            if (!r || !r.summary) return 1;
+                            if (!r.saju_sections) return 2;
+                            if (!r.fortune_flow) return 3;
+                            if (!r.life_areas) return 4;
+                            if (!r.special_analysis) return 5;
+                            return 6; // All complete
+                          };
+                          const nextPhase = determineNextPhase(reportData);
+                          console.log('[Retry] Resuming from phase:', nextPhase);
+                          startReading(selectedCards, true, readingData!, reportData, nextPhase);
+                        }}
                       />
                       {/* Oracle Chat Integration - Only show if readingId exists (saved) */}
                       {shareUrl && (

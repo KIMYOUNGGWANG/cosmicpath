@@ -216,6 +216,8 @@ interface PremiumReportProps {
     onUnlock?: () => void;
     isPremium?: boolean;
     price?: string;
+    isLoading?: boolean;
+    onRetry?: () => void;
 }
 
 interface MetadataWithReadingData extends NonNullable<PremiumReportProps['metadata']> {
@@ -322,7 +324,7 @@ const fadeInUp: Variants = {
     }
 };
 
-export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock, isPremium, price }: PremiumReportProps) {
+export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock, isPremium, price, isLoading, onRetry }: PremiumReportProps) {
     const isEn = language === 'en';
     const [selectedCardIdx, setSelectedCardIdx] = useState<number | null>(null);
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -449,12 +451,24 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     {report.fortune_flow ? (
                         <FortuneFlowSection data={report.fortune_flow} language={language} />
                     ) : isPremium ? (
-                        <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 mx-4 md:px-6">
-                            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-acc-gold/50" />
-                            <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
-                                {isEn ? "Syncing Cosmic Flow..." : "심층 운세 동기화 중..."}
-                            </p>
-                        </div>
+                        isLoading ? (
+                            <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 mx-4 md:px-6">
+                                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-acc-gold/50" />
+                                <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
+                                    {isEn ? "Syncing Cosmic Flow..." : "심층 운세 동기화 중..."}
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="p-12 text-center bg-red-500/5 rounded-3xl border border-red-500/20 mx-4 md:px-6">
+                                <p className="text-red-400 mb-4">{isEn ? 'Analysis Interrupted' : '분석이 일시 중단되었습니다'}</p>
+                                <button
+                                    onClick={onRetry}
+                                    className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-full text-sm transition-colors border border-red-500/30"
+                                >
+                                    {isEn ? 'Resume Analysis' : '분석 이어하기'}
+                                </button>
+                            </div>
+                        )
                     ) : (
                         <div className="px-4 md:px-6">
                             <BlindSpotTeaser
@@ -485,12 +499,23 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                             {report.soulmate && <SoulmateSection data={report.soulmate} language={language} />}
                         </>
                     ) : isPremium ? (
-                        <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 mx-4 md:px-6">
-                            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-star-yellow/50" />
-                            <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
-                                {isEn ? "Unveiling Life Secrets..." : "영역별 상세 분석 조율 중..."}
-                            </p>
-                        </div>
+                        isLoading ? (
+                            <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 mx-4 md:px-6">
+                                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-star-yellow/50" />
+                                <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
+                                    {isEn ? "Unveiling Life Secrets..." : "영역별 상세 분석 조율 중..."}
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="p-12 text-center bg-red-500/5 rounded-3xl border border-red-500/20 mx-4 md:px-6">
+                                <button
+                                    onClick={onRetry}
+                                    className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-full text-sm transition-colors border border-red-500/30"
+                                >
+                                    {isEn ? 'Resume Analysis' : '분석 이어하기'}
+                                </button>
+                            </div>
+                        )
                     ) : (
                         <div className="px-4 md:px-6">
                             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -531,12 +556,23 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                             )}
                         </>
                     ) : isPremium ? (
-                        <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 mx-4 md:px-6">
-                            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-purple-400/50" />
-                            <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
-                                {isEn ? "Finalizing Action Plan..." : "특수 비책 및 솔루션 도출 중..."}
-                            </p>
-                        </div>
+                        isLoading ? (
+                            <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 mx-4 md:px-6">
+                                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-purple-400/50" />
+                                <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
+                                    {isEn ? "Finalizing Action Plan..." : "특수 비책 및 솔루션 도출 중..."}
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="p-12 text-center bg-red-500/5 rounded-3xl border border-red-500/20 mx-4 md:px-6">
+                                <button
+                                    onClick={onRetry}
+                                    className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-full text-sm transition-colors border border-red-500/30"
+                                >
+                                    {isEn ? 'Resume Analysis' : '분석 이어하기'}
+                                </button>
+                            </div>
+                        )
                     ) : (
                         <div className="px-4 md:px-6">
                             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
