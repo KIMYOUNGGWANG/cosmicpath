@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
+import { ScarcityTimer } from '@/components/sales/ScarcityTimer';
 
 interface StickyCTAProps {
     price: string;
@@ -35,10 +36,7 @@ export function StickyCTA({ price, originalPrice, onUnlock, language }: StickyCT
                 >
                     <div className="bg-deep-navy/90 backdrop-blur-xl border border-acc-gold/30 rounded-full p-2 pl-6 shadow-[0_10px_40px_rgba(0,0,0,0.5)] flex items-center justify-between gap-4">
                         <div className="flex flex-col">
-                            <span className="text-[10px] text-gray-400 uppercase tracking-wider flex items-center gap-1">
-                                <Clock size={10} className="text-red-400 animate-pulse" />
-                                {isEn ? "Offer ends soon" : "할인 마감 임박"}
-                            </span>
+                            <ScarcityTimer language={language} />
                             <div className="flex items-baseline gap-2">
                                 <span className="text-gray-500 line-through text-xs font-serif">{originalPrice}</span>
                                 <span className="text-acc-gold font-bold font-cinzel text-lg">{price}</span>

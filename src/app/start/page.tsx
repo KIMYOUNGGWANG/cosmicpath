@@ -67,8 +67,8 @@ function CosmicPathContent() {
   const searchParams = useSearchParams();
   const [hasCheckedResume, setHasCheckedResume] = useState(false);
 
-  // Dynamic Price State
-  const [dynamicPrice, setDynamicPrice] = useState<string>('$3.99');
+  // Dynamic Price State (fetched from Stripe)
+  const [dynamicPrice, setDynamicPrice] = useState<string>('');
 
 
 

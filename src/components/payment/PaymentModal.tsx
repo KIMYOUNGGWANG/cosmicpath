@@ -33,8 +33,23 @@ export function PaymentModal({
     const [emailError, setEmailError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Use price from prop, fallback to default
-    const dynamicPrice = price || '$3.99';
+    // Dynamic price from prop or fetched from API
+    const [fetchedPrice, setFetchedPrice] = useState<string>('');
+    const dynamicPrice = price || fetchedPrice || '...';
+
+    // Fetch price from Stripe when modal opens (if not provided via prop)
+    useEffect(() => {
+        if (isOpen && !price) {
+            fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.formattedPrice) {
+                        setFetchedPrice(data.formattedPrice);
+                    }
+                })
+                .catch(err => console.error('Failed to fetch price:', err));
+        }
+    }, [isOpen, price]);
 
     // Promo Code State
     const [promoCodeId, setPromoCodeId] = useState<string | null>(null);
