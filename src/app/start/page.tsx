@@ -12,6 +12,7 @@ import { StickyCTA } from '@/components/common/sticky-cta';
 import { Footer } from '@/components/landing/Footer';
 import { GlobalHeader } from '@/components/common/GlobalHeader';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { UnifiedReadingDisplay } from '@/components/cosmic/UnifiedReadingDisplay'; // Integration
 import { Skeleton } from '@/components/ui/skeleton';
 
 // 🚀 Dynamic Imports - 초기 번들 크기 최적화
@@ -605,6 +606,55 @@ function CosmicPathContent() {
     }
   };
 
+  // --- Integration: Helper to map Korean text tags to CosmicTagEnum ---
+  const mapTagToEnum = (tag: string): any => { // Returns CosmicTagEnum or undefined
+    const map: Record<string, string> = {
+      // Wealth
+      '#재물운': 'WEALTH_WINDFALL', '#횡재': 'WEALTH_WINDFALL', '#투자': 'WEALTH_WINDFALL',
+      '#손재': 'WEALTH_LOSS', '#절약': 'WEALTH_STEADY', '#안정': 'WEALTH_STEADY',
+      // Career
+      '#승진': 'CAREER_PROMOTION', '#취업': 'CAREER_PROMOTION', '#명예': 'CAREER_PROMOTION',
+      '#이직': 'CAREER_CHANGE', '#변동': 'CAREER_CHANGE', '#창업': 'CAREER_CHANGE',
+      '#압박': 'CAREER_PRESSURE', '#책임': 'CAREER_PRESSURE', '#과로': 'CAREER_PRESSURE',
+      // Love
+      '#연애': 'LOVE_NEW', '#만남': 'LOVE_NEW', '#사랑': 'LOVE_DEEPENING',
+      '#이별': 'LOVE_BREAKUP', '#갈등': 'LOVE_CONFLICT', '#결혼': 'LOVE_DEEPENING',
+      // Life
+      '#새로운_시작': 'NEW_START', '#이동': 'NEW_START', '#독립': 'NEW_START',
+      '#건강': 'HEALTH_CAUTION', '#스트레스': 'MENTAL_STRESS', '#휴식': 'PEACE_STABILITY',
+      '#평화': 'PEACE_STABILITY', '#귀인': 'DESTINY_MOMENT', '#기회': 'DESTINY_MOMENT',
+      '#변화': 'KARMA_CYCLE', '#운명': 'KARMA_CYCLE', '#경고': 'CAUTION'
+    };
+    // Strip # if present for matching
+    const key = tag.startsWith('#') ? tag : `#${tag}`;
+    return map[key] || 'DESTINY_MOMENT'; // Fallback
+  };
+
+  // --- Integration: Construct Unified Result from Metadata ---
+  const getUnifiedResult = () => {
+    if (!reportData || !metadata) return null;
+
+    // 1. Map Tags from keyThemes (passed from API)
+    const rawTags = (metadata as any).keyThemes || [];
+    const mappedTags = rawTags.map((t: any) => mapTagToEnum(t.tag || t));
+    const uniqueTags: any[] = Array.from(new Set(mappedTags)); // Deduplicate
+
+    // 2. Build Source Results (Simulated from Metadata)
+    const sources = [];
+    if ((metadata as any).sajuResult) sources.push({ source: 'SAJU', analysis: "사주 원국 분석", score: (metadata.radarScores?.saju || 80), detectedTags: uniqueTags.slice(0, 2) });
+    if ((metadata as any).astrology) sources.push({ source: 'ASTROLOGY', analysis: "천체 배치 분석", score: (metadata.radarScores?.astrology || 75), detectedTags: uniqueTags.slice(1, 3) });
+    if ((metadata as any).tarot) sources.push({ source: 'TAROT', analysis: "타로 카드 리딩", score: (metadata.radarScores?.tarot || 85), detectedTags: uniqueTags.slice(2, 4) });
+
+    return {
+      summary: reportData.summary?.title || "운명의 통합 분석",
+      detailedContent: reportData.summary?.content || "사주와 점성술, 타로가 공통적으로 가리키는 당신의 운명입니다.",
+      primaryTags: uniqueTags.slice(0, 5), // Top 5
+      totalConfidenceScore: reportData.summary?.trust_score ? reportData.summary.trust_score * 20 : 85, // Scale 1-5 to 100
+      matchLevel: (reportData.summary?.trust_score || 0) >= 4.5 ? 'PERFECT' : (reportData.summary?.trust_score || 0) >= 3 ? 'PARTIAL' : 'CONFLICT',
+      sources: sources
+    };
+  };
+
   return (
     <main className="min-h-screen relative overflow-hidden text-foreground selection:bg-accent-gold selection:text-bg-void font-outfit">
       {/* Conversion-Focused Background */}
@@ -784,6 +834,11 @@ function CosmicPathContent() {
                   />
                   {(reportData.summary.trust_score > 2 || isDecisionAccepted) && (
                     <ErrorBoundary>
+                      {/* Integrated Unified Display (Cross-Validation UI) */}
+                      <div className="mb-8 px-4 md:px-0">
+                        <UnifiedReadingDisplay result={getUnifiedResult() as any} />
+                      </div>
+
                       <PremiumReport
                         report={reportData}
                         metadata={metadata}
