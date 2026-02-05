@@ -32,6 +32,7 @@ const ChatInterface = dynamic(() => import('@/components/oracle-chat/ChatInterfa
 const RevealContainer = dynamic(() => import('@/components/reading/RevealContainer').then(mod => mod.RevealContainer), {
   loading: () => <div className="animate-pulse w-full h-96 bg-white/5 rounded-2xl" />
 });
+const ShareCardModal = dynamic(() => import('@/components/share/ShareCardModal').then(mod => mod.ShareCardModal));
 
 function CosmicPathContent() {
   const [step, setStep] = useState<'input' | 'mirror' | 'tarot' | 'reveal' | 'result'>('input');
@@ -64,6 +65,7 @@ function CosmicPathContent() {
   // Payment State
   const [isPremium, setIsPremium] = useState(false); // Paywall Enabled
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false); // Share Card Modal
 
   const searchParams = useSearchParams();
   const [hasCheckedResume, setHasCheckedResume] = useState(false);
@@ -641,9 +643,30 @@ function CosmicPathContent() {
 
     // 2. Build Source Results (Simulated from Metadata)
     const sources = [];
-    if ((metadata as any).sajuResult) sources.push({ source: 'SAJU', analysis: "사주 원국 분석", score: (metadata.radarScores?.saju || 80), detectedTags: uniqueTags.slice(0, 2) });
-    if ((metadata as any).astrology) sources.push({ source: 'ASTROLOGY', analysis: "천체 배치 분석", score: (metadata.radarScores?.astrology || 75), detectedTags: uniqueTags.slice(1, 3) });
-    if ((metadata as any).tarot) sources.push({ source: 'TAROT', analysis: "타로 카드 리딩", score: (metadata.radarScores?.tarot || 85), detectedTags: uniqueTags.slice(2, 4) });
+    if ((metadata as any).sajuResult) {
+      sources.push({
+        source: 'SAJU',
+        originalText: (metadata as any).sajuResult?.summary || "사주 원국 분석",
+        detectedTags: uniqueTags.slice(0, 2),
+        confidence: ((metadata.radarScores?.saju || 80) / 100)
+      });
+    }
+    if ((metadata as any).astrology) {
+      sources.push({
+        source: 'ASTROLOGY',
+        originalText: (metadata as any).astrology?.summary || "천체 배치 분석",
+        detectedTags: uniqueTags.slice(1, 3),
+        confidence: ((metadata.radarScores?.astrology || 75) / 100)
+      });
+    }
+    if ((metadata as any).tarot) {
+      sources.push({
+        source: 'TAROT',
+        originalText: (metadata as any).tarot?.summary || "타로 카드 리딩",
+        detectedTags: uniqueTags.slice(2, 4),
+        confidence: ((metadata.radarScores?.tarot || 85) / 100)
+      });
+    }
 
     return {
       summary: reportData.summary?.title || "운명의 통합 분석",
@@ -837,6 +860,19 @@ function CosmicPathContent() {
                       {/* Integrated Unified Display (Cross-Validation UI) */}
                       <div className="mb-8 px-4 md:px-0">
                         <UnifiedReadingDisplay result={getUnifiedResult() as any} />
+
+                        {/* 공유 버튼 */}
+                        <div className="flex justify-center mt-6">
+                          <button
+                            onClick={() => setIsShareModalOpen(true)}
+                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#A184FF]/20 to-[#6366F1]/20 border border-[#A184FF]/30 rounded-full text-white/80 hover:text-white hover:border-[#A184FF]/50 transition-all"
+                          >
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span className="text-sm font-medium">인스타 스토리용 이미지 저장</span>
+                          </button>
+                        </div>
                       </div>
 
                       <PremiumReport
@@ -936,7 +972,24 @@ function CosmicPathContent() {
         readingId={shareUrl?.split('/').pop()}
       />
 
+      {/* Share Card Modal */}
+      {reportData && (
+        <ShareCardModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          title={reportData.summary?.title || "나의 우주적 운명"}
+          trustScore={reportData.summary?.trust_score ? Math.round(reportData.summary.trust_score * 20) : 85}
+          matchLevel={
+            (reportData.summary?.trust_score || 0) >= 4.5 ? 'PERFECT' :
+              (reportData.summary?.trust_score || 0) >= 3 ? 'PARTIAL' : 'CONFLICT'
+          }
+          keywords={reportData.summary?.keywords?.slice(0, 4) || ['운명', '변화', '성장']}
+          userName={readingData?.name}
+        />
+      )}
+
     </main >
+
   );
 }
 

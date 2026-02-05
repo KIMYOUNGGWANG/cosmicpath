@@ -13,7 +13,9 @@ import { TarotDetailModal } from './tarot-detail-modal';
 import { ShareCard } from './share-card';
 import { BlindSpotTeaser } from './blind-spot-teaser';
 import { TeaserCard } from '../sales/TeaserCard';
+import { BlurredPreviewSection } from '../sales/BlurredPreviewSection';
 import { StickyCTA } from '../common/sticky-cta';
+
 import { FortuneTimelineChart, TimelineScore } from './FortuneTimelineChart';
 import { SoulmateSection, SoulmateData } from './SoulmateSection';
 import { LuckyAssetsGrid, LuckyAssetsData } from './LuckyAssetsGrid';
@@ -424,7 +426,18 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     {/* Core Analysis */}
                     {isPremium ? (
                         report.core_analysis && <CoreAnalysisSection data={report.core_analysis} sajuData={(metadata as any)?.sajuResult} language={language} />
+                    ) : report.core_analysis ? (
+                        // 실제 데이터가 있으면 블러 처리로 미리보기
+                        <BlurredPreviewSection
+                            title={isEn ? "Core Energy Analysis" : "핵심 에너지 분석"}
+                            subtitle={isEn ? "⚠️ Critical Element Imbalance Detected" : "⚠️ 사주 오행의 심각한 불균형 감지"}
+                            onUnlock={handleUnlock}
+                            language={language}
+                        >
+                            <CoreAnalysisSection data={report.core_analysis} sajuData={(metadata as any)?.sajuResult} language={language} />
+                        </BlurredPreviewSection>
                     ) : (
+                        // 데이터가 없으면 기존 TeaserCard fallback
                         <TeaserCard
                             title={isEn ? "Core Energy Analysis" : "핵심 에너지 분석"}
                             hook={isEn ? "⚠️ Critical Element Imbalance Detected in your chart foundation." : "⚠️ 사주 오행의 심각한 불균형이 감지되었습니다."}
@@ -434,9 +447,19 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                         />
                     )}
 
+
                     {/* 🌌 Astro Deep Dive */}
                     {isPremium ? (
                         report.astro_deep && <AstroDeepSection data={report.astro_deep} language={language} />
+                    ) : report.astro_deep ? (
+                        <BlurredPreviewSection
+                            title={isEn ? "Deep Astrological Insight" : "점성술 심층 분석"}
+                            subtitle={isEn ? "🪐 Saturn's karmic challenge awaits" : "🪐 토성이 가리키는 업보(Karma)"}
+                            onUnlock={handleUnlock}
+                            language={language}
+                        >
+                            <AstroDeepSection data={report.astro_deep} language={language} />
+                        </BlurredPreviewSection>
                     ) : (
                         <TeaserCard
                             title={isEn ? "Deep Astrological Insight" : "점성술 심층 분석"}
@@ -450,6 +473,15 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     {/* 🔢 Numerology */}
                     {isPremium ? (
                         report.numerology && <NumerologySection data={report.numerology} language={language} />
+                    ) : report.numerology ? (
+                        <BlurredPreviewSection
+                            title={isEn ? "Soul Code (Numerology)" : "영혼의 코드 (수비학)"}
+                            subtitle={isEn ? "🔢 Your Life Path reveals a turning point" : "🔢 생명수가 가리키는 전환점"}
+                            onUnlock={handleUnlock}
+                            language={language}
+                        >
+                            <NumerologySection data={report.numerology} language={language} />
+                        </BlurredPreviewSection>
                     ) : (
                         <TeaserCard
                             title={isEn ? "Soul Code (Numerology)" : "영혼의 코드 (수비학)"}
@@ -470,6 +502,20 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                 language={language}
                             />
                         )
+                    ) : report.saju_sections ? (
+                        <BlurredPreviewSection
+                            title={isEn ? "Elemental Blueprint" : "사주 원국 정밀 분석"}
+                            subtitle={isEn ? "📜 60-year destiny cycle revealed" : "📜 60년 운명의 지도"}
+                            onUnlock={handleUnlock}
+                            language={language}
+                        >
+                            <AccordionSection
+                                title={isEn ? "🌏 Elemental Blueprint" : "📜 사주 기본 분석"}
+                                items={report.saju_sections}
+                                source="saju"
+                                language={language}
+                            />
+                        </BlurredPreviewSection>
                     ) : (
                         <TeaserCard
                             title={isEn ? "Elemental Blueprint" : "사주 원국 정밀 분석"}
@@ -479,6 +525,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                             language={language}
                         />
                     )}
+
                 </motion.section>
 
                 {/* 2. Destiny Flow - PAYWALL */}

@@ -119,7 +119,39 @@ export function PaymentModal({
 
             onPaymentStart?.();
 
-            const readingId = sessionStorage.getItem('pending_reading_id');
+            let readingId = sessionStorage.getItem('pending_reading_id');
+
+            // [CRITICAL FIX] If readingId is missing (users who jump to payment early),
+            // we MUST save to DB first to generate an ID. Otherwise, the webhook has nothing to link to.
+            if (!readingId && currentReport) {
+                try {
+                    console.log('PaymentModal: No readingId found, saving pre-payment state to DB...');
+                    const saveRes = await fetch('/api/reading/save', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            data: currentReport,
+                            metadata: {
+                                ...metadata,
+                                isPremium: false, // Not premium yet
+                                email: email, // Capture email early
+                                paymentSource: 'stripe_pending'
+                            }
+                        })
+                    });
+
+                    if (saveRes.ok) {
+                        const saved = await saveRes.json();
+                        if (saved.id) {
+                            readingId = saved.id;
+                            sessionStorage.setItem('pending_reading_id', saved.id);
+                            console.log('PaymentModal: Generated new readingId:', saved.id);
+                        }
+                    }
+                } catch (saveErr) {
+                    console.error('PaymentModal: Failed to save pre-payment state', saveErr);
+                }
+            }
 
             // 2. 프로모션 코드 (무료) 처리
             if (discount === 100 && promoCodeId) {

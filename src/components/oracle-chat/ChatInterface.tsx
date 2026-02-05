@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, Sparkles, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { CreditPurchaseModal } from './CreditPurchaseModal';
 
 interface Message {
     id?: string;
@@ -22,10 +23,12 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [isThinking, setIsThinking] = useState(false);
     const [hasInteracted, setHasInteracted] = useState(false);
+    const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const searchParams = useSearchParams();
     const router = useRouter();
+
 
     const fetchStatus = useCallback(async () => {
         try {
@@ -141,18 +144,19 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
         }
     };
 
-    // 결제 핸들러
-    const handlePayment = async () => {
+    // 결제 핸들러 (모달에서 선택된 옵션으로 결제)
+    const handlePayment = async (creditType: 'single' | 'pack') => {
         try {
-            if (!confirm('질문권을 충전하시겠습니까? ($1.00)')) return;
-
             setIsLoading(true);
+            setIsPurchaseModalOpen(false);
+
             const res = await fetch('/api/payment/chat-credit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     readingId,
-                    returnUrl: window.location.href
+                    returnUrl: window.location.href,
+                    creditType: creditType
                 }),
             });
 
@@ -249,14 +253,22 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
                     </div>
                 ) : (
                     <button
-                        onClick={handlePayment}
-                        className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-xl flex items-center justify-center gap-2 text-white font-medium transition-all shadow-lg hover:shadow-purple-500/25"
+                        onClick={() => setIsPurchaseModalOpen(true)}
+                        className="w-full py-3 bg-gradient-to-r from-[#FFD700] to-[#FFA500] hover:opacity-90 rounded-xl flex items-center justify-center gap-2 text-black font-semibold transition-all shadow-lg shadow-[#FFD700]/20"
                     >
-                        <Lock className="w-4 h-4" />
-                        <span>추가 질문권 구매하기 ($1.00)</span>
+                        <Sparkles className="w-4 h-4" />
+                        <span>질문권 충전하기</span>
                     </button>
                 )}
             </div>
+
+            {/* Credit Purchase Modal */}
+            <CreditPurchaseModal
+                isOpen={isPurchaseModalOpen}
+                onClose={() => setIsPurchaseModalOpen(false)}
+                onSelectOption={handlePayment}
+                isLoading={isLoading}
+            />
         </div>
     );
 }
