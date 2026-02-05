@@ -25,6 +25,29 @@ export const FOLLOW_UP_PRODUCT = {
     followUpQuestions: 1,
 } as const;
 
+// Chat Credit Products (Upsell Options)
+export const CHAT_CREDIT_SINGLE = {
+    id: 'cosmicpath_credit_single',
+    productId: process.env.NODE_ENV === 'development'
+        ? (process.env.NEXT_PUBLIC_STRIPE_CREDIT_SINGLE_ID_TEST || 'prod_TestCreditSingle')
+        : (process.env.NEXT_PUBLIC_STRIPE_CREDIT_SINGLE_ID || 'prod_LiveCreditSingle'),
+    name: '질문권 1회',
+    description: 'Oracle Chat 1 Question',
+    price: 100, // $1.00 in cents
+    credits: 1,
+} as const;
+
+export const CHAT_CREDIT_PACK = {
+    id: 'cosmicpath_credit_pack',
+    productId: process.env.NODE_ENV === 'development'
+        ? (process.env.NEXT_PUBLIC_STRIPE_CREDIT_PACK_ID_TEST || 'prod_TestCreditPack')
+        : (process.env.NEXT_PUBLIC_STRIPE_CREDIT_PACK_ID || 'prod_LiveCreditPack'),
+    name: '질문권 3회 패키지',
+    description: 'Oracle Chat 3 Questions (33% OFF)',
+    price: 199, // $1.99 in cents
+    credits: 3,
+} as const;
+
 export const MATCH_PRODUCT = {
     id: 'cosmicpath_match_v1',
     productId: process.env.NODE_ENV === 'development'

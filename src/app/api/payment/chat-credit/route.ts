@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createCheckoutSession } from '@/lib/payment/stripe';
-import { FOLLOW_UP_PRODUCT } from '@/lib/payment/payment-config';
+import { CHAT_CREDIT_SINGLE, CHAT_CREDIT_PACK } from '@/lib/payment/payment-config';
 
 export async function POST(request: NextRequest) {
     try {
-        const { readingId, returnUrl } = await request.json();
+        const { readingId, returnUrl, creditType = 'single' } = await request.json();
         const origin = request.headers.get('origin') || 'http://localhost:3000';
 
         if (!readingId) {
             return NextResponse.json({ error: 'Missing readingId' }, { status: 400 });
         }
+
+        // Select product based on creditType
+        const product = creditType === 'pack' ? CHAT_CREDIT_PACK : CHAT_CREDIT_SINGLE;
 
         // Determine success/cancel URLs
         const baseUrl = returnUrl || `${origin}/share/${readingId}`;
@@ -19,13 +22,13 @@ export async function POST(request: NextRequest) {
         const cancelUrl = `${baseUrl}${separator}payment=cancelled`;
 
         const session = await createCheckoutSession({
-            productId: FOLLOW_UP_PRODUCT.productId,
+            productId: product.productId,
             successUrl,
             cancelUrl,
             metadata: {
                 type: 'chat_credit',
                 readingId: readingId,
-                credits: String(FOLLOW_UP_PRODUCT.followUpQuestions)
+                credits: String(product.credits)
             },
         });
 
@@ -38,3 +41,4 @@ export async function POST(request: NextRequest) {
         );
     }
 }
+

@@ -134,12 +134,14 @@ ${JSON.stringify(userData.partnerSajuData, null, 2)}
 export function buildPhase1Prompt(userData: UserData): { system: string; user: string } {
   const lang = userData.language || 'ko';
 
-  // Calculate Numerology Data
-  const birthDateObj = new Date(userData.birthDate);
+  // Calculate Numerology Data (Fix: Parse date string directly to avoid timezone issues)
+  const [year, month, day] = userData.birthDate.split('-').map(Number);
+  const birthDateObj = new Date(year, month - 1, day); // Local timezone
   const lifePathNumber = calculateLifePathNumber(birthDateObj);
   const lifePathKeyword = getLifePathKeyword(lifePathNumber, lang);
 
   let system = '';
+
 
   if (lang === 'en') {
     system = `## Persona

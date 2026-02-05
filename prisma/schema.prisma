@@ -34,6 +34,8 @@ model ChatMessage {
   role          String      // 'user' | 'assistant'
   content       String
   createdAt     DateTime    @default(now())
+
+  @@index([chatSessionId])
 }
 
 model PromotionCode {
@@ -59,6 +61,7 @@ model PromoRedemption {
   createdAt   DateTime      @default(now())
 
   @@unique([promoCodeId, email])
+  @@index([promoCodeId])
 }
 
 model Review {
@@ -85,6 +88,8 @@ model Payment {
   metadata      String?  // JSON string for extra data
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([readingId])
 }
 
 model MatchSession {
@@ -103,6 +108,8 @@ model MatchSession {
   expiresAt    DateTime
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  @@index([paymentId])
 }
 
 model VerificationToken {

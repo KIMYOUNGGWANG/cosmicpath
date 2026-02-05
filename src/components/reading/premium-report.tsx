@@ -12,7 +12,10 @@ import { EvidenceTooltip } from '../ui/confidence-badge';
 import { TarotDetailModal } from './tarot-detail-modal';
 import { ShareCard } from './share-card';
 import { BlindSpotTeaser } from './blind-spot-teaser';
+import { TeaserCard } from '../sales/TeaserCard';
+import { BlurredPreviewSection } from '../sales/BlurredPreviewSection';
 import { StickyCTA } from '../common/sticky-cta';
+
 import { FortuneTimelineChart, TimelineScore } from './FortuneTimelineChart';
 import { SoulmateSection, SoulmateData } from './SoulmateSection';
 import { LuckyAssetsGrid, LuckyAssetsData } from './LuckyAssetsGrid';
@@ -336,9 +339,24 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
         documentTitle: `CosmicPath_Report_${report.summary.title.replace(/\s+/g, '_')}`,
     });
 
-    // Use price from prop, fallback to default
-    const dynamicPrice = price || '$3.99';
+    // Dynamic price from prop or fetched from API
+    const [fetchedPrice, setFetchedPrice] = useState<string>('');
+    const dynamicPrice = price || fetchedPrice || '...';
     const originalPrice = '$19.90';
+
+    // Fetch price from Stripe when component mounts (if not provided via prop)
+    useEffect(() => {
+        if (!price) {
+            fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.formattedPrice) {
+                        setFetchedPrice(data.formattedPrice);
+                    }
+                })
+                .catch(err => console.error('Failed to fetch price:', err));
+        }
+    }, [price]);
 
     const handleUnlock = () => {
         if (onUnlock) {
@@ -408,22 +426,70 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     {/* Core Analysis */}
                     {isPremium ? (
                         report.core_analysis && <CoreAnalysisSection data={report.core_analysis} sajuData={(metadata as any)?.sajuResult} language={language} />
+                    ) : report.core_analysis ? (
+                        // 실제 데이터가 있으면 블러 처리로 미리보기
+                        <BlurredPreviewSection
+                            title={isEn ? "Core Energy Analysis" : "핵심 에너지 분석"}
+                            subtitle={isEn ? "⚠️ Critical Element Imbalance Detected" : "⚠️ 사주 오행의 심각한 불균형 감지"}
+                            onUnlock={handleUnlock}
+                            language={language}
+                        >
+                            <CoreAnalysisSection data={report.core_analysis} sajuData={(metadata as any)?.sajuResult} language={language} />
+                        </BlurredPreviewSection>
                     ) : (
-                        <LockedContent title={isEn ? "Core Energy Analysis" : "핵심 에너지 분석"} type="chart" onClick={handleUnlock} language={language} />
+                        // 데이터가 없으면 기존 TeaserCard fallback
+                        <TeaserCard
+                            title={isEn ? "Core Energy Analysis" : "핵심 에너지 분석"}
+                            hook={isEn ? "⚠️ Critical Element Imbalance Detected in your chart foundation." : "⚠️ 사주 오행의 심각한 불균형이 감지되었습니다."}
+                            type="danger"
+                            onUnlock={handleUnlock}
+                            language={language}
+                        />
                     )}
+
 
                     {/* 🌌 Astro Deep Dive */}
                     {isPremium ? (
                         report.astro_deep && <AstroDeepSection data={report.astro_deep} language={language} />
+                    ) : report.astro_deep ? (
+                        <BlurredPreviewSection
+                            title={isEn ? "Deep Astrological Insight" : "점성술 심층 분석"}
+                            subtitle={isEn ? "🪐 Saturn's karmic challenge awaits" : "🪐 토성이 가리키는 업보(Karma)"}
+                            onUnlock={handleUnlock}
+                            language={language}
+                        >
+                            <AstroDeepSection data={report.astro_deep} language={language} />
+                        </BlurredPreviewSection>
                     ) : (
-                        <LockedContent title={isEn ? "Deep Astrological Insight" : "점성술 심층 분석"} type="text" onClick={handleUnlock} language={language} />
+                        <TeaserCard
+                            title={isEn ? "Deep Astrological Insight" : "점성술 심층 분석"}
+                            hook={isEn ? "🪐 Saturn's position indicates a karmic challenge you must face." : "🪐 토성의 위치가 당신이 마주해야 할 업보(Karma)를 가리킵니다."}
+                            type="general"
+                            onUnlock={handleUnlock}
+                            language={language}
+                        />
                     )}
 
                     {/* 🔢 Numerology */}
                     {isPremium ? (
                         report.numerology && <NumerologySection data={report.numerology} language={language} />
+                    ) : report.numerology ? (
+                        <BlurredPreviewSection
+                            title={isEn ? "Soul Code (Numerology)" : "영혼의 코드 (수비학)"}
+                            subtitle={isEn ? "🔢 Your Life Path reveals a turning point" : "🔢 생명수가 가리키는 전환점"}
+                            onUnlock={handleUnlock}
+                            language={language}
+                        >
+                            <NumerologySection data={report.numerology} language={language} />
+                        </BlurredPreviewSection>
                     ) : (
-                        <LockedContent title={isEn ? "Soul Code (Numerology)" : "영혼의 코드 (수비학)"} type="text" onClick={handleUnlock} language={language} />
+                        <TeaserCard
+                            title={isEn ? "Soul Code (Numerology)" : "영혼의 코드 (수비학)"}
+                            hook={isEn ? "🔢 Your Life Path Number reveals a major turning point at age 30." : "🔢 당신의 '생명수'가 가리키는 인생의 결정적 전환점."}
+                            type="general"
+                            onUnlock={handleUnlock}
+                            language={language}
+                        />
                     )}
 
                     {/* Saju Sections (Renamed for EN: Elemental Blueprint) */}
@@ -436,9 +502,30 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                 language={language}
                             />
                         )
+                    ) : report.saju_sections ? (
+                        <BlurredPreviewSection
+                            title={isEn ? "Elemental Blueprint" : "사주 원국 정밀 분석"}
+                            subtitle={isEn ? "📜 60-year destiny cycle revealed" : "📜 60년 운명의 지도"}
+                            onUnlock={handleUnlock}
+                            language={language}
+                        >
+                            <AccordionSection
+                                title={isEn ? "🌏 Elemental Blueprint" : "📜 사주 기본 분석"}
+                                items={report.saju_sections}
+                                source="saju"
+                                language={language}
+                            />
+                        </BlurredPreviewSection>
                     ) : (
-                        <LockedContent title={isEn ? "Elemental Blueprint" : "사주 원국 정밀 분석"} type="list" onClick={handleUnlock} language={language} />
+                        <TeaserCard
+                            title={isEn ? "Elemental Blueprint" : "사주 원국 정밀 분석"}
+                            hook={isEn ? "📜 Your birth chart holds the key to your 60-year destiny cycle." : "📜 내 사주팔자에 숨겨진 60년 운명의 지도를 확인하세요."}
+                            type="general"
+                            onUnlock={handleUnlock}
+                            language={language}
+                        />
                     )}
+
                 </motion.section>
 
                 {/* 2. Destiny Flow - PAYWALL */}
@@ -579,11 +666,12 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                 <Zap size={18} className="text-gold" />
                                 {isEn ? 'Special Analysis' : '특수/심화 분석'}
                             </h2>
-                            <LockedSection
+                            <TeaserCard
                                 title={isEn ? 'Special Analysis' : '특수 분석'}
-                                icon={<Zap size={18} className="text-gray-400" />}
-                                language={language}
+                                hook={isEn ? "⚡ Confirm your hidden 'Noble Person' and 'Danger Zones'." : "⚡ 당신을 도울 '천을귀인'과 피해야 할 '공망'을 확인하세요."}
+                                type="money"
                                 onUnlock={handleUnlock}
+                                language={language}
                             />
                         </div>
                     )}
@@ -825,77 +913,7 @@ function TarotSpreadSection({ cards, onCardClick, language }: { cards: { name: s
     );
 }
 
-// --- Locked Content Component for Free Tier ---
-function LockedContent({ title, type, onClick, language }: { title: string, type: 'text' | 'chart' | 'list', onClick: () => void, language: 'ko' | 'en' }) {
-    const isEn = language === 'en';
 
-    return (
-        <div className="relative mt-8 rounded-2xl overflow-hidden border border-white/10 bg-white/5 cursor-pointer group" onClick={onClick}>
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between bg-white/5">
-                <h3 className="font-cinzel text-lg text-white/50">{title}</h3>
-                <Lock className="w-4 h-4 text-white/40" />
-            </div>
-
-            {/* Blurred Body */}
-            <div className="p-6 relative">
-                <div className="absolute inset-0 z-10 backdrop-blur-[6px] bg-void/40 flex flex-col items-center justify-center p-6 text-center transition-all group-hover:backdrop-blur-[4px]">
-                    <div className="w-12 h-12 rounded-full bg-acc-gold/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                        <Lock className="w-5 h-5 text-acc-gold" />
-                    </div>
-                    <p className="font-cinzel text-white text-lg mb-1">
-                        {isEn ? "Analysis Complete" : "분석 완료"}
-                    </p>
-                    <p className="text-white/60 text-sm font-light mb-4">
-                        {isEn ? "Unlock to reveal your detailed destiny data." : "결제 후 전체 데이터를 즉시 확인하세요."}
-                    </p>
-                    <span className="text-xs font-bold text-acc-gold border border-acc-gold/30 px-3 py-1 rounded-full uppercase tracking-widest bg-acc-gold/5 group-hover:bg-acc-gold/10 transition-colors">
-                        {isEn ? "View Report" : "리포트 보기"}
-                    </span>
-                </div>
-
-                {/* Fake Content Background */}
-                <div className="opacity-30 select-none pointer-events-none grayscale">
-                    {type === 'text' && (
-                        <div className="space-y-3">
-                            <div className="h-4 bg-white/40 rounded w-3/4" />
-                            <div className="h-4 bg-white/40 rounded w-full" />
-                            <div className="h-4 bg-white/40 rounded w-5/6" />
-                            <div className="h-4 bg-white/40 rounded w-4/5" />
-                        </div>
-                    )}
-                    {type === 'chart' && (
-                        <div className="flex items-end gap-2 h-32 justify-center px-10">
-                            <div className="w-full bg-white/40 rounded-t h-[40%]" />
-                            <div className="w-full bg-white/40 rounded-t h-[70%]" />
-                            <div className="w-full bg-white/40 rounded-t h-[50%]" />
-                            <div className="w-full bg-white/40 rounded-t h-[80%]" />
-                            <div className="w-full bg-white/40 rounded-t h-[30%]" />
-                        </div>
-                    )}
-                    {type === 'list' && (
-                        <div className="space-y-4">
-                            <div className="flex gap-4">
-                                <div className="w-16 h-16 rounded bg-white/40" />
-                                <div className="flex-1 space-y-2">
-                                    <div className="h-4 bg-white/40 rounded w-1/3" />
-                                    <div className="h-4 bg-white/40 rounded w-full" />
-                                </div>
-                            </div>
-                            <div className="flex gap-4">
-                                <div className="w-16 h-16 rounded bg-white/40" />
-                                <div className="flex-1 space-y-2">
-                                    <div className="h-4 bg-white/40 rounded w-1/3" />
-                                    <div className="h-4 bg-white/40 rounded w-full" />
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-}
 
 function HeaderSection({ summary, language }: { summary: PremiumReportData['summary'], language: 'ko' | 'en' }) {
     const isEn = language === 'en';
@@ -1546,42 +1564,7 @@ function ContentCard({ title, content }: { title: string; content: string }) {
     );
 }
 
-function LockedSection({ title, icon, language, onUnlock }: { title: string; icon: React.ReactNode; language: 'ko' | 'en'; onUnlock?: () => void }) {
-    const isEn = language === 'en';
-    return (
-        <section className="mt-8 px-4 md:px-6 relative">
-            <div className="absolute inset-0 top-10 bg-deep-navy/40 backdrop-blur-sm z-10 flex flex-col items-center justify-center rounded-xl border border-white/5">
-                <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center mb-4">
-                    <Lock className="w-6 h-6 text-white/50" />
-                </div>
-                <h3 className="text-lg font-bold text-white mb-2 text-center">
-                    {title} {isEn ? 'Locked' : '잠금됨'}
-                </h3>
-                <p className="text-sm text-gray-400 mb-6 text-center max-w-xs">
-                    {isEn ? 'Full analysis requires premium access.' : '전체 분석을 위해 프리미엄 결제가 필요합니다.'}
-                </p>
-                <button
-                    onClick={onUnlock}
-                    className="px-6 py-2 bg-acc-gold text-black font-bold rounded-full text-sm hover:scale-105 transition-transform"
-                >
-                    {isEn ? 'Unlock' : '잠금 해제'}
-                </button>
-            </div>
 
-            {/* Fake Content Background */}
-            <div className="opacity-20 blur-[2px] pointer-events-none select-none" aria-hidden="true">
-                <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                    {icon}
-                    {title}
-                </h2>
-                <div className="space-y-4">
-                    <div className="h-16 bg-white/10 rounded-lg w-full"></div>
-                    <div className="h-32 bg-white/10 rounded-lg w-full"></div>
-                </div>
-            </div>
-        </section>
-    );
-}
 
 // 🌌 Astro Deep Dive Section (NEW)
 function AstroDeepSection({ data, language }: { data: NonNullable<PremiumReportData['astro_deep']>, language: 'ko' | 'en' }) {

@@ -31,7 +31,8 @@ const STAR_DATA = [
 ];
 
 export function CrossroadsSection() {
-    const [dynamicPrice, setDynamicPrice] = useState<string>('$3.99');
+    // Dynamic prices fetched from Stripe
+    const [dynamicPrice, setDynamicPrice] = useState<string>('');
     const [originalPrice, setOriginalPrice] = useState<string>('$29.99');
 
     useEffect(() => {

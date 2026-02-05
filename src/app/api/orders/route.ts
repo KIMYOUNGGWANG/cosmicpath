@@ -2,20 +2,20 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
-
-const secretKey = process.env.AUTH_SECRET;
-
-if (!secretKey) {
-    if (process.env.NODE_ENV === 'production') {
-        throw new Error('AUTH_SECRET environment variable is not defined');
+function getSecret() {
+    const secretKey = process.env.AUTH_SECRET;
+    if (!secretKey) {
+        if (process.env.NODE_ENV === 'production') {
+            throw new Error('AUTH_SECRET environment variable is not defined');
+        }
+        console.warn('WARNING: AUTH_SECRET is not defined, using unsafe default for development only.');
     }
-    console.warn('WARNING: AUTH_SECRET is not defined, using unsafe default for development only.');
+    return new TextEncoder().encode(secretKey || 'default_secret_please_change');
 }
-
-const secret = new TextEncoder().encode(secretKey || 'default_secret_please_change');
 
 export async function GET(request: Request) {
     try {
+        const secret = getSecret();
         const cookieStore = await cookies();
         const token = cookieStore.get('auth-token')?.value;
 
