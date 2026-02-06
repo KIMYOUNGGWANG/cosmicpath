@@ -18,16 +18,15 @@ export const MODEL_CONFIG: Record<ModelTier, {
     free: {
         provider: 'google',
         model: 'gemini-3-flash-preview',
-        // 무료 티어는 fallback 없음 (비용 절약)
     },
     basic: {
         provider: 'google',
         model: 'gemini-3-flash-preview',
-        fallback: { provider: 'google', model: 'gemini-2.5-flash' },
+        fallback: { provider: 'google', model: 'gemini-2.0-flash' },
     },
     premium: {
-        provider: 'anthropic',
-        model: 'claude-sonnet-4-5',  // 2025.09 출시, 감성 표현 최강
+        provider: 'google',
+        model: 'gemini-3-flash-preview',
         fallback: { provider: 'google', model: 'gemini-1.5-pro' },
     },
 };
@@ -421,10 +420,10 @@ export async function generateStructuredReport<T>(
     tier: ModelTier = 'free'
 ): Promise<T> {
     const config = MODEL_CONFIG[tier];
-    const apiKey = process.env.GOOGLE_AI_API_KEY; // 모든 티어에서 Gemini 활용 (JSON 특화)
+    const apiKey = process.env.GOOGLE_AI_API_KEY;
 
-    // 현재 구조화된 응답은 Gemini가 가장 강력하므로 Provider를 Google로 고정 (또는 Fallback)
-    const model = config.provider === 'google' ? config.model : 'gemini-1.5-flash';
+    // 최신 고성능 모델인 Gemini 3 Flash(config.model)를 우선 사용
+    const model = config.provider === 'google' ? config.model : 'gemini-3-flash-preview';
 
     if (!apiKey) throw new Error('GOOGLE_AI_API_KEY is not configured');
 

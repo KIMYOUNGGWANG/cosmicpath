@@ -361,7 +361,8 @@ function CosmicPathContent() {
                 if (!r.fortune_flow) return 3;
                 if (!r.life_areas) return 4;
                 if (!r.special_analysis) return 5;
-                return 6; // All complete
+                if (!r.final_verdict) return 6; // Phase 6 (conclusion)
+                return 7; // All complete
               };
 
               // Only resume if not currently loading (to avoid double trigger on refresh)
@@ -453,24 +454,26 @@ function CosmicPathContent() {
       // If resuming, use existing report, otherwise start empty
       let accumulatedReport: any = initialReport || {};
       let accumulatedMetadata: any = metadata || {};
-      const totalPhases = 5;
+      const totalPhases = 6;
 
       const labelsKo = [
         "",
-        "핵심 요약 분석 중... (1/5)",
-        "사주 기본 분석 중... (2/5)",
-        "운의 흐름 분석 중... (3/5)",
-        "영역별 상세 분석 중... (4/5)",
-        "특수 분석 & 액션 플랜 생성 중... (5/5)"
+        "핵심 요약 분석 중... (1/6)",
+        "사주 기본 분석 중... (2/6)",
+        "운의 흐름 분석 중... (3/6)",
+        "영역별 상세 분석 중... (4/6)",
+        "특수 분석 & 액션 플랜 생성 중... (5/6)",
+        "최종 결론 도출 중... (6/6)"
       ];
       // ... (labelsEn omitted for brevity, assuming existing code structure)
       const labelsEn = [
         "",
-        "Analyzing core summary... (1/5)",
-        "Analyzing Saju fundamentals... (2/5)",
-        "Analyzing fortune flow... (3/5)",
-        "Detailed area analysis... (4/5)",
-        "Generating action plan... (5/5)"
+        "Analyzing core summary... (1/6)",
+        "Analyzing Saju fundamentals... (2/6)",
+        "Analyzing fortune flow... (3/6)",
+        "Detailed area analysis... (4/6)",
+        "Generating action plan... (5/6)",
+        "Final verdict construction... (6/6)"
       ];
       const labels = language === 'en' ? labelsEn : labelsKo;
 
@@ -533,7 +536,7 @@ function CosmicPathContent() {
       }
 
       // Save result to DB for sharing (Async) - Final save
-      const isComplete = maxPhase === 5;
+      const isComplete = maxPhase === 6;
       if (isComplete) {
         setIsPremium(true);
         saveToSessionAndBackup('is_premium_user', 'true');
