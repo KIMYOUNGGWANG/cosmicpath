@@ -11,8 +11,10 @@ interface OrderLookupModalProps {
 
 export function OrderLookupModal({ isOpen, onClose }: OrderLookupModalProps) {
     const [step, setStep] = useState<'EMAIL' | 'OTP' | 'LIST'>('EMAIL');
+    const [lookupMode, setLookupMode] = useState<'OTP' | 'ID'>('OTP'); // New Toggle
     const [email, setEmail] = useState('');
     const [otp, setOtp] = useState('');
+    const [orderId, setOrderId] = useState(''); // New State
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [orders, setOrders] = useState<any[]>([]);
@@ -99,6 +101,7 @@ export function OrderLookupModal({ isOpen, onClose }: OrderLookupModalProps) {
         setStep('EMAIL');
         setEmail('');
         setOtp('');
+        setOrderId('');
         setOrders([]);
         setError('');
         onClose();
@@ -130,11 +133,29 @@ export function OrderLookupModal({ isOpen, onClose }: OrderLookupModalProps) {
 
             {/* Header */}
             <div className="bg-gradient-to-r from-[#0f0f2a] to-[#1a1a3a] px-6 py-6 border-b border-white/5">
-                <h2 className="text-xl font-bold font-cinzel text-white">
-                    {step === 'LIST' ? 'My Orders' : 'Find My Orders'}
-                </h2>
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold font-cinzel text-white">
+                        {step === 'LIST' ? 'My Orders' : (lookupMode === 'OTP' ? 'Find My Orders' : 'Find by Order ID')}
+                    </h2>
+                    {step === 'EMAIL' && (
+                        <div className="flex bg-black/40 rounded-lg p-1">
+                            <button
+                                onClick={() => { setLookupMode('OTP'); setError(''); }}
+                                className={`px-3 py-1 text-xs rounded-md transition-all ${lookupMode === 'OTP' ? 'bg-white text-black font-bold' : 'text-gray-400 hover:text-white'}`}
+                            >
+                                OTP
+                            </button>
+                            <button
+                                onClick={() => { setLookupMode('ID'); setError(''); }}
+                                className={`px-3 py-1 text-xs rounded-md transition-all ${lookupMode === 'ID' ? 'bg-white text-black font-bold' : 'text-gray-400 hover:text-white'}`}
+                            >
+                                ID
+                            </button>
+                        </div>
+                    )}
+                </div>
                 <p className="text-xs text-gray-400 mt-1">
-                    {step === 'EMAIL' && '이메일로 지난 점사 결과를 찾아보세요'}
+                    {step === 'EMAIL' && (lookupMode === 'OTP' ? '이메일 인증으로 이전 주문 내역을 모두 조회합니다.' : '주문 확인 이메일의 Order ID로 조회합니다.')}
                     {step === 'OTP' && '인증번호를 입력해주세요'}
                     {step === 'LIST' && `${email}님의 보관함`}
                 </p>
@@ -149,7 +170,8 @@ export function OrderLookupModal({ isOpen, onClose }: OrderLookupModalProps) {
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
-                            onSubmit={handleSendOtp}
+                            exit={{ opacity: 0, x: -20 }}
+                            onSubmit={lookupMode === 'OTP' ? handleSendOtp : handleDirectLookup}
                             className="space-y-4"
                         >
                             <div className="space-y-2">
@@ -166,13 +188,31 @@ export function OrderLookupModal({ isOpen, onClose }: OrderLookupModalProps) {
                                     />
                                 </div>
                             </div>
+
+                            {lookupMode === 'ID' && (
+                                <div className="space-y-2">
+                                    <label className="text-xs text-gray-400 ml-1">주문/결제 ID (Order ID)</label>
+                                    <div className="relative">
+                                        <Lock className="absolute left-3 top-3.5 w-4 h-4 text-gray-500" />
+                                        <input
+                                            type="text"
+                                            required
+                                            placeholder="이메일에 포함된 주문 번호"
+                                            value={orderId}
+                                            onChange={(e) => setOrderId(e.target.value)}
+                                            className="w-full bg-[#050510] border border-white/10 rounded-xl py-3 pl-10 pr-4 text-sm focus:ring-2 focus:ring-purple-500/50 outline-none transition-all placeholder:text-gray-600"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
                             {error && <p className="text-red-400 text-xs text-center bg-red-500/10 py-2 rounded">{error}</p>}
                             <button
                                 type="submit"
                                 disabled={loading}
                                 className="w-full bg-white text-black py-3 rounded-xl font-bold hover:bg-gray-200 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 text-sm"
                             >
-                                {loading ? <Loader2 className="animate-spin w-4 h-4" /> : '인증번호 전송'}
+                                {loading ? <Loader2 className="animate-spin w-4 h-4" /> : (lookupMode === 'OTP' ? '인증번호 전송' : '주문 조회')}
                             </button>
                         </motion.form>
                     )}

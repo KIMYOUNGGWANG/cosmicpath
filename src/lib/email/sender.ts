@@ -31,7 +31,7 @@ export async function sendResultEmail({
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ||
         (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
-    const resultUrl = `${appUrl}/share/${resultId}`;
+    const resultUrl = `${appUrl}/share/${resultId}?view=full`;
     // 제목에 줄바꿈이 있으면 Resend API에서 에러 발생 (validation_error)
     // 줄바꿈을 공백으로 치환하고 앞뒤 공백 제거
     const cleanTitle = (title || 'CosmicPath Reading Result').replace(/[\r\n]+/g, ' ').trim();

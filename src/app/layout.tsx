@@ -42,11 +42,11 @@ export const metadata: Metadata = {
     canonical: './',
   },
   title: {
-    default: "CosmicPath | AI Driven Destiny Navigation",
+    default: "CosmicPath | Data-Driven Destiny & AI Astrology",
     template: "%s | CosmicPath",
   },
-  description: "Unlock your 2026 destiny with CosmicPath. Ancient wisdom meets AI intelligence in a private, deep-dive analysis. The Astral Architect awaits.",
-  keywords: ["saju", "astrology", "tarot", "fortune telling", "destiny", "AI", "AI Fortune", "2026 Prediction", "사주", "점성술", "타로", "운세", "궁합", "2026년 운세", "신년운세", "무료사주"],
+  description: "Unseal your destiny with CosmicPath. We combine ancient astrological wisdom with advanced AI to decode your life's blueprint. Discover your Cosmic MBTI and data-driven insights.",
+  keywords: ["saju", "astrology", "tarot", "fortune telling", "destiny", "AI", "AI Fortune", "2026 Prediction", "사주", "점성술", "타로", "운세", "궁합", "2026년 운세", "신년운세", "무료사주", "Data-Driven Destiny", "AI Oracle", "Cosmic MBTI"],
   authors: [{ name: "CosmicPath Team" }],
   creator: "CosmicPath",
   publisher: "CosmicPath",
@@ -54,8 +54,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: process.env.NEXT_PUBLIC_APP_URL || "https://cosmicpath.app",
-    title: "CosmicPath | AI Driven Destiny Navigation",
-    description: "Unlock your 2026 destiny with CosmicPath. Ancient wisdom meets AI intelligence in a private, deep-dive analysis.",
+    title: "CosmicPath | Data-Driven Destiny & AI Astrology",
+    description: "Unseal your destiny with CosmicPath. Ancient wisdom meets AI intelligence in a private, deep-dive analysis.",
     siteName: "CosmicPath",
     images: [
       {
@@ -68,8 +68,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "CosmicPath | AI Driven Destiny Navigation",
-    description: "Unlock your 2026 destiny with CosmicPath. Ancient wisdom meets AI intelligence.",
+    title: "CosmicPath | Data-Driven Destiny & AI Astrology",
+    description: "Unseal your destiny with CosmicPath. Ancient wisdom meets AI intelligence.",
     images: ["/og-image.png"],
     creator: "@cosmicpath",
   },

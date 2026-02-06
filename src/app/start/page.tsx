@@ -345,9 +345,14 @@ function CosmicPathContent() {
               window.history.replaceState({ readingId: pendingId }, '', `/share/${pendingId}${window.location.search}`);
             }
 
-            // Success Flow: If explicitly paid, trigger premium logic
-            if (paid === 'true') {
+            // Success Flow: If explicitly paid OR previously marked as paid, trigger premium logic
+            const isPaymentCompleted = sessionStorage.getItem('payment_completed') === 'true';
+            if (paid === 'true' || isPaymentCompleted) {
               setIsPremium(true);
+              if (paid === 'true') {
+                saveToSessionAndBackup('payment_completed', 'true'); // Ensure it's saved
+              }
+
               const report = pendingReportJson ? JSON.parse(pendingReportJson) : null;
 
               const determineNextPhase = (r: any) => {
@@ -359,13 +364,16 @@ function CosmicPathContent() {
                 return 6; // All complete
               };
 
-              const nextPhase = determineNextPhase(report);
-
-              if (nextPhase <= 5) {
-                console.log(`[Resume] Resuming analysis from phase ${nextPhase}`);
-                startReading(data.tarotCards || [], true, data, report || undefined, nextPhase);
-              } else {
-                console.log('[Resume] Analysis already complete. Skipping resumption.');
+              // Only resume if not currently loading (to avoid double trigger on refresh)
+              if (!isLoading) {
+                const nextPhase = determineNextPhase(report);
+                if (nextPhase <= 5) {
+                  console.log(`[Resume] Resuming analysis from phase ${nextPhase}`);
+                  // Ensure we pass the data properly
+                  startReading(data.tarotCards || [], true, data, report || undefined, nextPhase);
+                } else {
+                  console.log('[Resume] Analysis already complete. Skipping resumption.');
+                }
               }
             }
 
@@ -925,11 +933,26 @@ function CosmicPathContent() {
                   <div className="flex flex-col gap-3 justify-center items-center">
                     {(isPremium || searchParams.get('paid') === 'true') ? (
                       <button
-                        onClick={() => window.location.reload()}
+                        onClick={() => {
+                          // In-place retry logic
+                          setIsLoading(true);
+                          setStreamContent('');
+                          // Determine phase to resume from
+                          const determineNextPhase = (r: any) => {
+                            if (!r || !r.summary) return 1;
+                            if (!r.saju_sections) return 2;
+                            if (!r.fortune_flow) return 3;
+                            if (!r.life_areas) return 4;
+                            if (!r.special_analysis) return 5;
+                            return 6;
+                          };
+                          const nextPhase = determineNextPhase(reportData);
+                          startReading(selectedCards, true, readingData!, reportData, nextPhase);
+                        }}
                         className="btn-primary px-8 py-3 text-sm font-medium tracking-widest uppercase hover:brightness-110 transition-all flex items-center gap-2"
                       >
                         <RefreshCw size={16} />
-                        {language === 'en' ? 'Retry Analysis' : '분석 다시 시도하기'}
+                        {language === 'en' ? 'Retry Analysis' : '분석 이어서 진행하기'}
                       </button>
                     ) : (
                       <button
