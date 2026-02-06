@@ -35,10 +35,10 @@ export function BlurredPreviewSection({
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                    {icon || <Sparkles size={18} className="text-[#FFD700]" />}
+                    {icon || <Sparkles size={18} className="text-[#D4AF37]" />}
                     <h3 className="text-lg font-bold text-white">{title}</h3>
                 </div>
-                <span className="text-[10px] px-2 py-0.5 rounded-full uppercase tracking-widest font-bold bg-[#FFD700]/10 text-[#FFD700] border border-[#FFD700]/30">
+                <span className="text-[10px] px-2 py-0.5 rounded-full uppercase tracking-widest font-bold bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30">
                     {isEn ? 'Premium' : '프리미엄'}
                 </span>
             </div>
@@ -48,10 +48,10 @@ export function BlurredPreviewSection({
             )}
 
             {/* Blurred Content Container */}
-            <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-white/5">
+            <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-white/5 group">
                 {/* Actual Content - Heavily Blurred */}
                 <div
-                    className="blur-[8px] select-none pointer-events-none opacity-70 max-h-[300px] overflow-hidden"
+                    className="blur-[8px] select-none pointer-events-none opacity-70 max-h-[300px] overflow-hidden transition-opacity duration-700 group-hover:opacity-80"
                     aria-hidden="true"
                 >
                     {children}
@@ -66,7 +66,7 @@ export function BlurredPreviewSection({
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={onUnlock}
-                        className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-black font-bold rounded-full shadow-lg shadow-[#FFD700]/20 transition-all hover:shadow-[#FFD700]/40"
+                        className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#D4AF37] to-[#B4941F] text-black font-bold rounded-full shadow-lg shadow-[#D4AF37]/20 transition-all hover:shadow-[#D4AF37]/40 z-10"
                     >
                         <Lock size={16} />
                         <span>{isEn ? 'Unlock Full Analysis' : '전체 분석 잠금 해제'}</span>
@@ -80,10 +80,10 @@ export function BlurredPreviewSection({
 
                 {/* Decorative Elements */}
                 <div className="absolute top-4 right-4 pointer-events-none">
-                    <div className="w-2 h-2 rounded-full bg-[#FFD700]/50 animate-pulse" />
+                    <div className="w-2 h-2 rounded-full bg-[#D4AF37]/50 animate-pulse" />
                 </div>
                 <div className="absolute bottom-4 left-4 pointer-events-none">
-                    <div className="w-2 h-2 rounded-full bg-[#FFD700]/30 animate-pulse delay-300" />
+                    <div className="w-2 h-2 rounded-full bg-[#D4AF37]/30 animate-pulse delay-300" />
                 </div>
             </div>
         </div>

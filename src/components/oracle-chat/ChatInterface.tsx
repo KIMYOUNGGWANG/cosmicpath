@@ -254,7 +254,7 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
                 ) : (
                     <button
                         onClick={() => setIsPurchaseModalOpen(true)}
-                        className="w-full py-3 bg-gradient-to-r from-[#FFD700] to-[#FFA500] hover:opacity-90 rounded-xl flex items-center justify-center gap-2 text-black font-semibold transition-all shadow-lg shadow-[#FFD700]/20"
+                        className="w-full py-3 bg-gradient-to-r from-[#D4AF37] to-[#B4941F] hover:opacity-90 rounded-xl flex items-center justify-center gap-2 text-black font-semibold transition-all shadow-lg shadow-[#D4AF37]/20 hover:shadow-[#D4AF37]/40 active:scale-[0.98]"
                     >
                         <Sparkles className="w-4 h-4" />
                         <span>질문권 충전하기</span>

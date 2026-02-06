@@ -48,13 +48,13 @@ export function CreditPurchaseModal({
                         <div className="relative p-6 pb-4 border-b border-white/10">
                             <button
                                 onClick={onClose}
-                                className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors"
+                                className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors active:scale-90"
                             >
                                 <X size={20} className="text-white/60" />
                             </button>
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-[#FFD700]/20 rounded-xl">
-                                    <Sparkles className="w-6 h-6 text-[#FFD700]" />
+                                <div className="p-2 bg-[#D4AF37]/20 rounded-xl">
+                                    <Sparkles className="w-6 h-6 text-[#D4AF37]" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-bold text-white">질문권 충전</h2>
@@ -70,9 +70,9 @@ export function CreditPurchaseModal({
                                 onClick={() => setSelectedOption('single')}
                                 disabled={isLoading}
                                 className={`
-                                    w-full p-4 rounded-xl border-2 transition-all text-left
+                                    w-full p-4 rounded-xl border-2 transition-all text-left active:scale-[0.98]
                                     ${selectedOption === 'single'
-                                        ? 'border-[#FFD700]/50 bg-[#FFD700]/5'
+                                        ? 'border-[#D4AF37]/50 bg-[#D4AF37]/5 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
                                         : 'border-white/10 bg-white/5 hover:border-white/20'
                                     }
                                 `}
@@ -80,8 +80,8 @@ export function CreditPurchaseModal({
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <div className={`
-                                            w-5 h-5 rounded-full border-2 flex items-center justify-center
-                                            ${selectedOption === 'single' ? 'border-[#FFD700] bg-[#FFD700]' : 'border-white/30'}
+                                            w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors
+                                            ${selectedOption === 'single' ? 'border-[#D4AF37] bg-[#D4AF37]' : 'border-white/30'}
                                         `}>
                                             {selectedOption === 'single' && (
                                                 <Check size={12} className="text-black" />
@@ -104,23 +104,23 @@ export function CreditPurchaseModal({
                                 onClick={() => setSelectedOption('pack')}
                                 disabled={isLoading}
                                 className={`
-                                    w-full p-4 rounded-xl border-2 transition-all text-left relative overflow-hidden
+                                    w-full p-4 rounded-xl border-2 transition-all text-left relative overflow-hidden active:scale-[0.98]
                                     ${selectedOption === 'pack'
-                                        ? 'border-[#FFD700] bg-[#FFD700]/10'
+                                        ? 'border-[#D4AF37] bg-[#D4AF37]/10 shadow-[0_0_20px_rgba(212,175,55,0.15)]'
                                         : 'border-white/10 bg-white/5 hover:border-white/20'
                                     }
                                 `}
                             >
                                 {/* Recommended Badge */}
-                                <div className="absolute top-0 right-0 bg-gradient-to-l from-[#FFD700] to-[#FFA500] text-black text-[10px] font-bold px-3 py-1 rounded-bl-lg">
+                                <div className="absolute top-0 right-0 bg-gradient-to-l from-[#D4AF37] to-[#B4941F] text-black text-[10px] font-bold px-3 py-1 rounded-bl-lg">
                                     추천
                                 </div>
 
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <div className={`
-                                            w-5 h-5 rounded-full border-2 flex items-center justify-center
-                                            ${selectedOption === 'pack' ? 'border-[#FFD700] bg-[#FFD700]' : 'border-white/30'}
+                                            w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors
+                                            ${selectedOption === 'pack' ? 'border-[#D4AF37] bg-[#D4AF37]' : 'border-white/30'}
                                         `}>
                                             {selectedOption === 'pack' && (
                                                 <Check size={12} className="text-black" />
@@ -137,7 +137,7 @@ export function CreditPurchaseModal({
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-xl font-bold text-[#FFD700]">$1.99</p>
+                                        <p className="text-xl font-bold text-[#D4AF37]">$1.99</p>
                                         <p className="text-xs text-white/40 line-through">$3.00</p>
                                     </div>
                                 </div>
@@ -151,10 +151,10 @@ export function CreditPurchaseModal({
                                 disabled={isLoading}
                                 className={`
                                     w-full py-4 rounded-xl font-semibold text-lg
-                                    transition-all flex items-center justify-center gap-2
+                                    transition-all flex items-center justify-center gap-2 active:scale-[0.98]
                                     ${isLoading
                                         ? 'bg-white/10 text-white/50 cursor-wait'
-                                        : 'bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-black hover:opacity-90 shadow-lg shadow-[#FFD700]/20'
+                                        : 'bg-gradient-to-r from-[#D4AF37] to-[#B4941F] text-black hover:opacity-90 shadow-lg shadow-[#D4AF37]/20 hover:shadow-[#D4AF37]/40'
                                     }
                                 `}
                             >

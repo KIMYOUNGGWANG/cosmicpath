@@ -47,13 +47,13 @@ export const CosmicShareCard = forwardRef<HTMLDivElement, CosmicShareCardProps>(
 
                     {/* 그라디언트 오버레이 */}
                     <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#A184FF]/10 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#FFD700]/5 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#D4AF37]/5 to-transparent" />
                 </div>
 
                 {/* 상단: 로고 영역 */}
                 <div className="relative pt-10 pb-6 text-center">
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10">
-                        <Sparkles className="w-4 h-4 text-[#FFD700]" />
+                        <Sparkles className="w-4 h-4 text-[#D4AF37]" />
                         <span className="text-white/80 text-xs font-medium tracking-widest uppercase">
                             Cosmic Reading
                         </span>
@@ -107,7 +107,7 @@ export const CosmicShareCard = forwardRef<HTMLDivElement, CosmicShareCardProps>(
                     {/* User Name (Optional) */}
                     {userName && (
                         <div className="text-white/40 text-sm mb-4">
-                            for <span className="text-[#FFD700]">{userName}</span>
+                            for <span className="text-[#D4AF37]">{userName}</span>
                         </div>
                     )}
                 </div>
@@ -115,11 +115,11 @@ export const CosmicShareCard = forwardRef<HTMLDivElement, CosmicShareCardProps>(
                 {/* 하단: 워터마크 (바이럴용) */}
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                     <div className="flex items-center justify-center gap-2 mb-3">
-                        <Star className="w-4 h-4 text-[#FFD700]" />
+                        <Star className="w-4 h-4 text-[#D4AF37]" />
                         <span className="text-white/60 text-xs tracking-widest uppercase">
                             CosmicPath
                         </span>
-                        <Star className="w-4 h-4 text-[#FFD700]" />
+                        <Star className="w-4 h-4 text-[#D4AF37]" />
                     </div>
                     <div className="text-center">
                         <span className="text-white/40 text-[10px] tracking-wider">
