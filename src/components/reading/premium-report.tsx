@@ -1,6 +1,9 @@
 'use client';
 
+import { useSession } from 'next-auth/react';
+import { useLoginModal } from '@/components/auth/LoginModal';
 import { motion, Variants } from 'framer-motion';
+import { CompatibilityHeader } from './CompatibilityHeader';
 import { useRef, useState, useEffect } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { ChevronDown, Sparkles, Star, Shield, TrendingUp, Calendar, Target, Zap, Lock, CircleHelp, Download, Printer, RefreshCw, Briefcase, Coins, Heart, Activity, Droplets, Flame, ScrollText } from 'lucide-react';
@@ -383,14 +386,28 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
 
     const tarotCards = metadata?.tarot || [];
 
+    // Auth & Save Logic
+    const { data: session, status } = useSession();
+    const { openLoginModal } = useLoginModal();
+
     return (
         <div className="w-full max-w-2xl mx-auto pb-24 md:pb-32">
             {/* Header */}
-            {/* Header */}
-            <HeaderSection
-                summary={report.summary}
-                language={language}
-            />
+            {(metadata as any)?.readingData?.partnerName ? (
+                <CompatibilityHeader
+                    userName={(metadata as any)?.readingData?.name || 'User'}
+                    partnerName={(metadata as any)?.readingData?.partnerName}
+                    score={report.summary.trust_score * 20} // Convert 1-5 to percentage
+                    title={report.summary.title}
+                    content={report.summary.content}
+                    language={language}
+                />
+            ) : (
+                <HeaderSection
+                    summary={report.summary}
+                    language={language}
+                />
+            )}
 
             {/* Hidden Print Layout */}
             <div className="hidden">
@@ -755,11 +772,25 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                             : "이 카드를 부적처럼 저장하거나, 공유하여 리추얼을 완성하세요."}
                     </p>
 
+
                     <ShareCard
                         shareUrl={shareUrl || (typeof window !== 'undefined' ? window.location.href : '')}
                         trustScore={report.summary?.trust_score}
                         mainCardName={metadata?.tarot?.[0]?.name}
                     />
+
+                    {/* Guest: Save to Account */}
+                    {status === 'unauthenticated' && (
+                        <motion.button
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            onClick={openLoginModal}
+                            className="mt-6 px-6 py-3 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/30 rounded-full text-[#D4AF37] font-cinzel text-sm transition-all flex items-center gap-2 mx-auto"
+                        >
+                            <Download className="w-4 h-4" />
+                            <span>{language === 'en' ? 'Save Result needed' : '결과 영구 저장하기'}</span>
+                        </motion.button>
+                    )}
                 </div>
 
                 {/* Legacy Print Button (Optional) */}

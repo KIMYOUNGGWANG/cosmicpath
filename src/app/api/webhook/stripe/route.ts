@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // 2. 프리미엄 리딩 결제 처리 (이메일 발송)
+        // 2. 프리미엄 리딩 결제 처리 (이메일 발송 & 유저 연동)
         // type이 없거나 'premium_reading'인 경우 = 리딩 결제
         if (!type || type === 'premium_reading') {
             const customerEmail = email || session.customer_email;
@@ -88,7 +88,12 @@ export async function POST(req: NextRequest) {
                 devLog.log(`[Webhook] Premium reading payment completed. Email: ${customerEmail}, ReadingID: ${readingId}`);
 
                 try {
-                    // DB에서 리딩 결과 조회
+                    // [New] 결제 이메일로 유저 찾기 (계정 연동)
+                    const user = await prisma.user.findUnique({
+                        where: { email: customerEmail }
+                    });
+
+                    // DB에서 리딩 결과 조회 및 업데이트
                     const reading = await prisma.readingResult.findUnique({
                         where: { id: readingId }
                     });
@@ -110,7 +115,7 @@ export async function POST(req: NextRequest) {
                                 userContext: savedMeta.userContext
                             });
 
-                            // 이메일 발송 완료 플래그 업데이트
+                            // 이메일 발송 완료 플래그 & 유저 ID 업데이트
                             await prisma.readingResult.update({
                                 where: { id: readingId },
                                 data: {
@@ -119,11 +124,13 @@ export async function POST(req: NextRequest) {
                                         email: customerEmail,
                                         emailSent: true,
                                         emailSentVia: 'webhook'
-                                    })
+                                    }),
+                                    // 유저가 존재하고, 아직 연동 안된 경우 연동
+                                    ...(user && !reading.userId ? { userId: user.id } : {})
                                 }
                             });
 
-                            devLog.log(`[Webhook] Email sent successfully to ${customerEmail}`);
+                            devLog.log(`[Webhook] Email sent successfully to ${customerEmail}. User linked: ${!!user}`);
                         }
                     } else {
                         devLog.warn(`[Webhook] Reading not found in DB: ${readingId}`);

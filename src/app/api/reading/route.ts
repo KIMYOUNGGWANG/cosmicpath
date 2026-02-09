@@ -53,6 +53,8 @@ const ReadingRequestSchema = z.object({
     calendarType: z.enum(['solar', 'lunar']).default('solar'),
     unknownTime: z.boolean().default(false),
     isPaid: z.boolean().default(false),
+    inviteCode: z.string().optional(),
+    readingId: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -72,13 +74,74 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { name, gender, birthDate, birthTime, context, question, tarotCards, tier, language, phase, previousReport, calendarType, partnerBirthDate, partnerBirthTime, partnerGender, partnerName } = validationResult.data;
+        let {
+            name,
+            gender,
+            birthDate,
+            birthTime,
+            context,
+            question,
+            tarotCards,
+            tier,
+            language,
+            phase,
+            previousReport,
+            calendarType,
+            partnerBirthDate,
+            partnerBirthTime,
+            partnerGender,
+            partnerName,
+            unknownTime,
+            isPaid,
+            inviteCode,
+            readingId
+        } = validationResult.data;
+
+        // === Viral Loop: Handle Invitation ===
+        if (inviteCode) {
+            // Find inviter's reading
+            const inviterReading = await import('@/lib/prisma').then(m => m.prisma.readingResult.findUnique({
+                where: { invitationCode: inviteCode }
+            }));
+
+            if (inviterReading) {
+                try {
+                    const parsedData = JSON.parse(inviterReading.data);
+                    // Inject Inviter as Partner
+                    partnerName = parsedData.personal?.name || parsedData.name || 'Inviter';
+                    partnerBirthDate = parsedData.personal?.birthDate || parsedData.birthDate;
+                    partnerBirthTime = parsedData.personal?.birthTime || parsedData.birthTime;
+                    partnerGender = parsedData.personal?.gender || parsedData.gender || 'male'; // Default fallback
+
+                    // Upgrade to Premium for Free
+                    tier = 'premium';
+                    isPaid = true;
+                    context = 'love'; // Force compatibility context
+
+                    console.log(`[Viral] Link activated. Inviter: ${partnerName}, Invitee: ${name}`);
+
+                    // Increment Invitation Count (Only on first phase/start)
+                    // Note: We use updateMany/update with atomic increment
+                    if (!phase || phase === 1) {
+                        try {
+                            await import('@/lib/prisma').then(m => m.prisma.readingResult.update({
+                                where: { id: inviterReading.id },
+                                data: { invitationCount: { increment: 1 } }
+                            }));
+                        } catch (err) {
+                            console.error('[Viral] Failed to increment count:', err);
+                        }
+                    }
+                } catch (e) {
+                    console.error('[Viral] Failed to parse inviter data', e);
+                }
+            }
+        }
 
         // 1. 사주/점성술용 날짜 파싱 (타임존 이슈 방지: YYYY, MM, DD 직접 추출)
         const [yearPart, monthPart, dayPart] = birthDate.split('-').map(Number);
-        const birthDateTime = new Date(yearPart, monthPart - 1, dayPart, 12, 0, 0); // 기본 12시 세팅
-        const [hours, minutes] = birthTime.split(':').map(Number);
 
+        const [hours, minutes] = birthTime.split(':').map(Number);
         // 실제 생시 반영된 Date 객체
         const exactBirthDateTime = new Date(yearPart, monthPart - 1, dayPart, hours, minutes || 0, 0);
 
@@ -108,14 +171,45 @@ export async function POST(request: NextRequest) {
 
         // ===== Premium Mode: Multi-Turn API =====
         if (tier === 'premium') {
-            // 🔒 결제 검증: Phase 2 이상은 isPaid 필수 (Phase 1만 무료)
+            // 🔒 결제 검증: Phase 2 이상은 DB에서 실제 결제 여부 확인
             const currentPhase = validationResult.data.phase || 1;
-            if (currentPhase >= 2 && !validationResult.data.isPaid) {
-                return NextResponse.json(
-                    { error: '결제가 필요합니다. 심층 분석을 이용하려면 먼저 결제를 완료해주세요.', code: 'PAYMENT_REQUIRED' },
-                    { status: 402 }
-                );
+
+            if (currentPhase >= 2) {
+                let isVerified = false;
+
+                // 1. readingId로 DB 조회
+                if (readingId) {
+                    const reading = await import('@/lib/prisma').then(m => m.prisma.readingResult.findUnique({
+                        where: { id: readingId }
+                    }));
+
+                    if (reading) {
+                        try {
+                            const meta = JSON.parse(reading.metadata || '{}');
+                            // Webhook이나 Save API에서 결제 완료 시 isPremium: true로 설정함
+                            if (meta.isPremium || meta.emailSent) {
+                                isVerified = true;
+                            }
+                        } catch (e) {
+                            console.error('Metadata parse failed during verification', e);
+                        }
+                    }
+                }
+
+                // 2. 초대 코드(Viral)로 인한 무료 업그레이드인 경우
+                if (isPaid && inviteCode) {
+                    // 이미 앞단 Viral Loop 로직에서 isPaid=true로 설정됨 (신뢰 가능: 서버 로직 내에서 설정됨)
+                    isVerified = true;
+                }
+
+                if (!isVerified) {
+                    return NextResponse.json(
+                        { error: '결제 정보가 확인되지 않습니다.', code: 'PAYMENT_REQUIRED' },
+                        { status: 402 }
+                    );
+                }
             }
+
             const apiKey = process.env.GOOGLE_AI_API_KEY;
             const currentDate = new Date().toLocaleDateString('ko-KR', {
                 timeZone: 'Asia/Seoul',
@@ -196,7 +290,6 @@ export async function POST(request: NextRequest) {
                     isPremium: true,
                     metadata: {
                         confidence: guide.confidence,
-                        // ... metadata
                         matching: guide.matching,
                         radarScores: guide.radarScores,
                         keyThemes: guide.keyThemes,
@@ -236,7 +329,9 @@ export async function POST(request: NextRequest) {
             context as ReadingContext,
             question,
             language as 'ko' | 'en',
-            currentDate
+            currentDate,
+            partnerSaju,
+            partnerName
         );
 
         try {
@@ -300,4 +395,3 @@ export async function GET() {
         features: ['saju', 'astrology', 'tarot', 'ai-interpretation', 'premium-multi-turn'],
     });
 }
-

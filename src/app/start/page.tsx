@@ -73,6 +73,11 @@ function CosmicPathContent() {
   // Dynamic Price State (fetched from Stripe)
   const [dynamicPrice, setDynamicPrice] = useState<string>('');
 
+  // Viral Invitation State
+  const [inviteCode, setInviteCode] = useState<string | undefined>(undefined);
+  const [inviterName, setInviterName] = useState<string | undefined>(undefined);
+  const [isInvitationMode, setIsInvitationMode] = useState(false);
+
 
 
   // Fetch dynamic price on mount
@@ -120,6 +125,24 @@ function CosmicPathContent() {
       setLanguage(savedLang);
     }
   }, []);
+
+  // 🎫 Viral Invitation Verification
+  useEffect(() => {
+    const code = searchParams.get('invite');
+    if (code) {
+      setInviteCode(code);
+      // Verify Code
+      fetch(`/api/invite/verify?code=${code}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.isValid) {
+            setInviterName(data.hostName);
+            setIsInvitationMode(true);
+          }
+        })
+        .catch(err => console.error('Invite verification failed:', err));
+    }
+  }, [searchParams]);
 
   // 🚨 beforeunload: 로딩 중 창 닫기 방지
   useEffect(() => {
@@ -342,7 +365,11 @@ function CosmicPathContent() {
               const origin = window.location.origin;
               const appUrl = origin.endsWith('/') ? origin.slice(0, -1) : origin;
               setShareUrl(`${appUrl}/share/${pendingId}`);
-              window.history.replaceState({ readingId: pendingId }, '', `/share/${pendingId}${window.location.search}`);
+
+              const currentUrl = new URL(window.location.href);
+              currentUrl.searchParams.set('reading_id', pendingId);
+              // Note: invite param should already be there from initial load if present
+              window.history.replaceState({ readingId: pendingId }, '', currentUrl.toString());
             }
 
             // Success Flow: If explicitly paid OR previously marked as paid, trigger premium logic
@@ -497,6 +524,7 @@ function CosmicPathContent() {
             phase, // Execute specific phase
             previousReport: accumulatedReport, // Pass context
             isPaid: isPremium || isPremiumOverride, // 🔒 결제 여부 전달
+            readingId: sessionStorage.getItem('pending_reading_id') || undefined, // 🔑 검증용 ID 전달
           }),
         });
 
@@ -594,11 +622,17 @@ function CosmicPathContent() {
             saveToSessionAndBackup('pending_reading_id', id);
             const origin = window.location.origin;
             const appUrl = origin.endsWith('/') ? origin.slice(0, -1) : origin;
-            const newUrl = `/share/${id}`;
-            setShareUrl(`${appUrl}${newUrl}`);
+            const shareUrlPath = `/share/${id}`;
+            setShareUrl(`${appUrl}${shareUrlPath}`);
 
-            // 브라우저 주소창 동기화 (새로고침 시 결과 유지)
-            window.history.replaceState({ readingId: id }, '', newUrl);
+            // 브라우저 주소창 동기화 (새로고침 시 결과 유지 - /share로 이동하지 않음)
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('reading_id', id);
+            // inviteCode가 있다면 유지하여 리프레시 시에도 초대 모드 유지
+            if (inviteCode) {
+              currentUrl.searchParams.set('invite', inviteCode);
+            }
+            window.history.replaceState({ readingId: id }, '', currentUrl.toString());
 
             // Client-side email trigger REMOVED (Moved to Server-side in /api/reading/save)
           }
@@ -741,6 +775,8 @@ function CosmicPathContent() {
                   });
                 }}
                 isLoading={isLoading}
+                inviterName={inviterName}
+                inviteCode={inviteCode}
               />
             </motion.div>
           )}
@@ -872,16 +908,78 @@ function CosmicPathContent() {
                       <div className="mb-8 px-4 md:px-0">
                         <UnifiedReadingDisplay result={getUnifiedResult() as any} />
 
-                        {/* 공유 버튼 */}
-                        <div className="flex justify-center mt-6">
+                        {/* Viral Loop Actions */}
+                        <div className="flex flex-col items-center gap-4 mt-8">
+                          {/* CASE A: Premium Owner -> Invite Friend */}
+                          {(isPremium || searchParams.get('paid') === 'true') && !isInvitationMode && (
+                            <button
+                              onClick={async () => {
+                                // Ensure we have an ID to share
+                                const rId = shareUrl?.split('/').pop() || sessionStorage.getItem('pending_reading_id');
+                                if (!rId) {
+                                  alert('결과를 저장 중입니다. 잠시 후 다시 시도해주세요.');
+                                  return;
+                                }
+
+                                try {
+                                  const res = await fetch('/api/invite/create', {
+                                    method: 'POST',
+                                    body: JSON.stringify({ readingId: rId })
+                                  });
+                                  const data = await res.json();
+                                  if (data.code) {
+                                    const link = `${window.location.origin}/start?invite=${data.code}`;
+                                    navigator.clipboard.writeText(link);
+                                    alert(language === 'en' ? 'Invitation link copied!' : '골든 티켓(초대 링크)이 복사되었습니다!\n친구에게 공유하여 무료 궁합을 확인해보세요.');
+                                  }
+                                } catch (e) {
+                                  console.error(e);
+                                  alert('Error creating invite link');
+                                }
+                              }}
+                              className="relative group px-8 py-4 bg-gradient-to-r from-acc-gold to-[#F59E0B] text-bg-void font-bold rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all overflow-hidden"
+                            >
+                              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
+                              <div className="relative flex items-center gap-2">
+                                <span className="text-xl">🎟️</span>
+                                <span className="font-cinzel tracking-wider">
+                                  {language === 'en' ? 'SEND GOLDEN TICKET' : '친구 초대하고 궁합 무료로 보기'}
+                                </span>
+                              </div>
+                            </button>
+                          )}
+
+                          {/* CASE B: Invited Guest -> Upsell */}
+                          {isInvitationMode && (
+                            <div className="w-full max-w-md bg-white/5 border border-acc-gold/30 rounded-xl p-6 text-center animate-in fade-in slide-in-from-bottom-4">
+                              <div className="text-acc-gold text-xs font-bold tracking-widest uppercase mb-2">
+                                🎁 Special Offer
+                              </div>
+                              <h3 className="text-white text-lg font-cinzel mb-4 leading-relaxed">
+                                {language === 'en'
+                                  ? `Curious about your 2026 Fortune?`
+                                  : `${inviterName || '친구'}님과의 궁합은 어떠셨나요?\n나의 2026년 운세도 확인해보세요.`}
+                              </h3>
+                              <button
+                                onClick={() => setIsPaymentModalOpen(true)}
+                                className="w-full py-3 bg-white/10 text-starlight font-bold rounded-lg hover:bg-acc-gold hover:text-bg-void transition-colors border border-white/20 hover:border-transparent"
+                              >
+                                {language === 'en' ? 'Unlock My Fortune (30% OFF)' : '내 신년운세 확인하기 (30% 할인)'}
+                              </button>
+                            </div>
+                          )}
+
+                          {/* Legacy Share Button */}
                           <button
                             onClick={() => setIsShareModalOpen(true)}
-                            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#A184FF]/20 to-[#6366F1]/20 border border-[#A184FF]/30 rounded-full text-white/80 hover:text-white hover:border-[#A184FF]/50 transition-all"
+                            className="flex items-center gap-2 px-6 py-3 transition-colors text-dim hover:text-white"
                           >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            <span className="text-sm font-medium">인스타 스토리용 이미지 저장</span>
+                            <span className="text-sm border-b border-transparent hover:border-white/50 transition-colors">
+                              {language === 'en' ? 'Save Result Card' : '결과 카드 저장하기'}
+                            </span>
                           </button>
                         </div>
                       </div>

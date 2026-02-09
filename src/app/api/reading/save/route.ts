@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
 import { devLog } from '@/lib/dev-logger';
 import { sendResultEmail } from '@/lib/email/sender';
 
@@ -38,9 +39,14 @@ export async function POST(request: Request) {
             }, { status: 400 });
         }
 
+        // [New] 세션 확인 및 userId 연결
+        const session = await auth();
+        const userId = session?.user?.id;
+
         devLog.log('Save API: Saving to database...', {
             dataLength: dataStr.length,
-            hasMetadata: !!metaStr
+            hasMetadata: !!metaStr,
+            userId: userId || 'anonymous'
         });
 
         const result = id
@@ -49,12 +55,15 @@ export async function POST(request: Request) {
                 data: {
                     data: dataStr,
                     metadata: metaStr,
+                    // 기존 기록에 userId가 없으면 연결 (선택 사항)
+                    ...(userId ? { userId } : {})
                 },
             })
             : await prisma.readingResult.create({
                 data: {
                     data: dataStr,
                     metadata: metaStr,
+                    userId: userId // 로그인 상태라면 user_id 저장
                 },
             });
 

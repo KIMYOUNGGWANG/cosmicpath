@@ -326,9 +326,19 @@ export function getMatchPhaseUserPrompt(
     const hostElement = FIVE_ELEMENTS[hostSaju.elements[2].stem];
     const guestElement = FIVE_ELEMENTS[guestSaju.elements[2].stem];
 
+    // Add Hanja for clarity to prevent AI hallucination
+    const dayMasterHanja: Record<string, string> = {
+        '갑': '甲', '을': '乙', '병': '丙', '정': '丁', '무': '戊',
+        '기': '己', '경': '庚', '신': '辛', '임': '壬', '계': '癸'
+    };
+    const hostHanja = dayMasterHanja[hostDayMaster] || hostDayMaster;
+    const guestHanja = dayMasterHanja[guestDayMaster] || guestDayMaster;
+
     const sajuContext = `
-【${hostName}】 일간: ${hostDayMaster}(${hostElement}) | 사주: ${hostSaju.yeonPillar.stem}${hostSaju.yeonPillar.branch} ${hostSaju.monthPillar.stem}${hostSaju.monthPillar.branch} ${hostSaju.dayPillar.stem}${hostSaju.dayPillar.branch} ${hostSaju.hourPillar.stem}${hostSaju.hourPillar.branch}
-【${guestName}】 일간: ${guestDayMaster}(${guestElement}) | 사주: ${guestSaju.yeonPillar.stem}${guestSaju.yeonPillar.branch} ${guestSaju.monthPillar.stem}${guestSaju.monthPillar.branch} ${guestSaju.dayPillar.stem}${guestSaju.dayPillar.branch} ${guestSaju.hourPillar.stem}${guestSaju.hourPillar.branch}`;
+【${hostName}】 일간: ${hostDayMaster}(${hostHanja}, ${hostElement}) | 사주: ${hostSaju.yeonPillar.stem}${hostSaju.yeonPillar.branch} ${hostSaju.monthPillar.stem}${hostSaju.monthPillar.branch} ${hostSaju.dayPillar.stem}${hostSaju.dayPillar.branch} ${hostSaju.hourPillar.stem}${hostSaju.hourPillar.branch}
+【${guestName}】 일간: ${guestDayMaster}(${guestHanja}, ${guestElement}) | 사주: ${guestSaju.yeonPillar.stem}${guestSaju.yeonPillar.branch} ${guestSaju.monthPillar.stem}${guestSaju.monthPillar.branch} ${guestSaju.dayPillar.stem}${guestSaju.dayPillar.branch} ${guestSaju.hourPillar.stem}${guestSaju.hourPillar.branch}
+
+⚠️ 중요: 위 일간 정보를 정확히 사용하세요. 갑(甲)과 을(乙)은 완전히 다른 천간입니다!`;
 
     const hostSun = hostAstro.sunSign !== undefined ? ZODIAC_SIGNS[hostAstro.sunSign]?.name : '미상';
     const guestSun = guestAstro.sunSign !== undefined ? ZODIAC_SIGNS[guestAstro.sunSign]?.name : '미상';
@@ -351,7 +361,8 @@ ${scoresContext}
 
 ${hostName}님과 ${guestName}님의 궁합을 분석해 주세요.
 ⚠️ 각 항목의 글자 수 제한을 반드시 지켜주세요.
-⚠️ JSON 형식으로만 응답하세요.`;
+⚠️ JSON 형식으로만 응답하세요.
+⚠️ 일간 정보를 정확히 인용하세요: ${hostName}=${hostDayMaster}(${hostHanja}), ${guestName}=${guestDayMaster}(${guestHanja})`;
 }
 
 export const MATCH_PHASE_LABELS = {

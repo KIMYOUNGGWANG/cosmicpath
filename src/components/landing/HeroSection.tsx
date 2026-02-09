@@ -4,8 +4,10 @@ import { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ShaderGradientCanvas, ShaderGradient } from 'shadergradient';
 import Link from 'next/link';
+import { useLoginModal } from '@/components/auth/LoginModal';
 
 export function HeroSection() {
+    const { openLoginModal } = useLoginModal();
     const containerRef = useRef<HTMLDivElement>(null);
     const { scrollYProgress } = useScroll({
         target: containerRef,

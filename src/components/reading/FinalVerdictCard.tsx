@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Check, Star, Scale, Sparkles, ScrollText, AlertCircle, Quote } from 'lucide-react';
 

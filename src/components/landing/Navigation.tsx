@@ -6,8 +6,14 @@ import Link from 'next/link';
 import { Menu, Search, Sparkles, Heart } from 'lucide-react';
 import { OrderLookupModal } from '@/components/orders/OrderLookupModal';
 import { MobileMenu } from '@/components/common/MobileMenu';
+import { User } from 'lucide-react';
+import UserMenu from '@/components/layout/UserMenu';
+import { LoginModal, useLoginModal } from '@/components/auth/LoginModal';
+import { useSession } from 'next-auth/react';
 
 export function Navigation() {
+    const { status } = useSession();
+    const { openLoginModal } = useLoginModal();
     const { scrollY } = useScroll();
     const [hidden, setHidden] = useState(false);
     const [prevScroll, setPrevScroll] = useState(0);
@@ -61,30 +67,34 @@ export function Navigation() {
                     </Link>
 
                     {/* Desktop Actions */}
-                    <div className="hidden md:flex items-center gap-4">
-                        <button
-                            onClick={toggleOrderModal}
-                            className="text-sm font-medium text-starlight hover:text-acc-gold transition-colors font-cinzel tracking-wider uppercase"
-                        >
-                            FIND ORDERS
-                        </button>
+                    <div className="hidden md:flex items-center gap-6">
                         <Link
                             href="/match/new"
-                            className="text-sm font-medium text-starlight hover:text-acc-gold transition-colors font-cinzel tracking-wider"
+                            className="text-xs font-medium text-starlight hover:text-acc-gold transition-colors font-cinzel tracking-widest"
                         >
                             COMPATIBILITY
                         </Link>
                         <Link
                             href="/daily"
-                            className="text-sm font-medium text-starlight hover:text-acc-gold transition-colors font-cinzel tracking-wider uppercase"
+                            className="text-xs font-medium text-starlight hover:text-acc-gold transition-colors font-cinzel tracking-widest uppercase"
                         >
                             DAILY
                         </Link>
+                        <button
+                            onClick={toggleOrderModal}
+                            className="text-xs font-medium text-starlight hover:text-acc-gold transition-colors font-cinzel tracking-widest uppercase"
+                        >
+                            FIND ORDERS
+                        </button>
+
+                        <div className="w-px h-4 bg-white/10 mx-2" /> {/* Divider */}
+
+                        <UserMenu />
                         <Link
                             href="/start?reset=true"
-                            className="inline-flex items-center justify-center px-5 py-2 font-cinzel font-bold text-xs text-white border border-white/20 rounded-full transition-all duration-300 hover:border-acc-gold hover:text-acc-gold bg-white/5 backdrop-blur-sm tracking-widest uppercase gap-2"
+                            className="inline-flex items-center justify-center px-5 py-2 font-cinzel font-bold text-xs text-white border border-white/20 rounded-full transition-all duration-300 hover:border-acc-gold hover:text-deep-navy hover:bg-acc-gold tracking-widest uppercase gap-2"
                         >
-                            <Sparkles size={14} className="text-gold" />
+                            <Sparkles size={14} className="text-gold group-hover:text-deep-navy" />
                             Start Analysis
                         </Link>
                     </div>
@@ -115,6 +125,14 @@ export function Navigation() {
                 isOpen={isMobileMenuOpen}
                 onClose={() => setIsMobileMenuOpen(false)}
                 menuItems={[
+                    ...(status === 'unauthenticated' ? [{
+                        type: 'button' as const,
+                        icon: User,
+                        iconColorClass: 'group-hover:bg-white/10 group-hover:text-white',
+                        label: 'LOGIN',
+                        subLabel: 'Save your destiny',
+                        onClick: openLoginModal,
+                    }] : []),
                     {
                         type: 'button',
                         icon: Search,
@@ -154,6 +172,7 @@ export function Navigation() {
                 isOpen={isOrderModalOpen}
                 onClose={() => setIsOrderModalOpen(false)}
             />
+            <LoginModal />
         </>
     );
 }

@@ -185,7 +185,9 @@ export function buildUserPrompt(
   context: ReadingContext,
   question: string,
   language: Language = 'ko',
-  currentDate?: string
+  currentDate?: string,
+  partnerSaju?: SajuResult | null,   // Added
+  partnerName?: string               // Added
 ): string {
   const config = CONTEXT_CONFIG[context];
   const isEn = language === 'en';
@@ -198,9 +200,18 @@ export function buildUserPrompt(
     .map(c => isEn ? `${c.nameEn} (${c.isReversed ? 'R' : 'U'})` : `${c.name} (${c.isReversed ? '역' : '정'})`)
     .join(', ');
 
+  // Partner Data Formatting
+  let partnerInfo = '';
+  if (partnerSaju) {
+    const pSaju = formatSaju(partnerSaju);
+    partnerInfo = isEn
+      ? `\n**Partner (${partnerName || 'Partner'})**: ${pSaju}`
+      : `\n**상대방 (${partnerName || '상대방'})**: ${pSaju}`;
+  }
+
   if (isEn) {
     return `# Analysis Data
-**Saju (${Math.round(WEIGHTS.saju * 100)}%)**: ${sajuData}
+**User Saju (${Math.round(WEIGHTS.saju * 100)}%)**: ${sajuData}${partnerInfo}
 **Astrology (${Math.round(WEIGHTS.astrology * 100)}%)**: ${astroData}
 **Tarot (${Math.round(WEIGHTS.tarot * 100)}%)**: ${tarotData}
 
@@ -237,7 +248,7 @@ ${guide.warnings.length > 0 ? `⚠️ Warnings: ${guide.warnings.join('; ')}` : 
   }
 
   return `# 분석 데이터
-**사주 (${Math.round(WEIGHTS.saju * 100)}%)**: ${sajuData}
+**사용자 사주 (${Math.round(WEIGHTS.saju * 100)}%)**: ${sajuData}${partnerInfo}
 **점성술 (${Math.round(WEIGHTS.astrology * 100)}%)**: ${astroData}
 **타로 (${Math.round(WEIGHTS.tarot * 100)}%)**: ${tarotData}
 
@@ -395,7 +406,9 @@ export function buildChatSystemPrompt(
     tarot: any;
     name?: string;
   },
-  language: Language = 'ko'
+  language: Language = 'ko',
+  // partnerSaju?: any, // Future use
+  // partnerName?: string // Future use
 ): string {
   const isEn = language === 'en';
 

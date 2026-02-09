@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
             });
 
             // Record redemption with email
+            // Record redemption with email
             const redemption = await tx.promoRedemption.create({
                 data: {
                     promoCodeId: codeId,
@@ -60,6 +61,17 @@ export async function POST(request: NextRequest) {
                     userAgent
                 }
             });
+
+            // [New] Link reading to user if email matches an account
+            if (readingId) {
+                const user = await tx.user.findUnique({ where: { email } });
+                if (user) {
+                    await tx.readingResult.update({
+                        where: { id: readingId },
+                        data: { userId: user.id }
+                    });
+                }
+            }
 
             return redemption;
         });

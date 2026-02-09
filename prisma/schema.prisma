@@ -14,6 +14,68 @@ model ReadingResult {
   metadata  String?
   createdAt DateTime @default(now())
   chatSession ChatSession?
+  
+  // Viral Loop Fields
+  invitationCode String? @unique
+  invitationCount Int @default(0)
+
+  // Link to User
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          String    @default("USER") // USER | ADMIN
+  accounts      Account[]
+  sessions      Session[]
+  readings      ReadingResult[]
+  
+  // Custom Fields
+  marketingConsent Boolean @default(false)
+  
+  // Match Sessions
+  hostedMatches MatchSession[] @relation("Host")
+  guestMatches  MatchSession[] @relation("Guest")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 model ChatSession {
@@ -109,14 +171,15 @@ model MatchSession {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  // Link to Users (Optional)
+  hostUserId   String?
+  hostUser     User?    @relation("Host", fields: [hostUserId], references: [id])
+  guestUserId  String?
+  guestUser    User?    @relation("Guest", fields: [guestUserId], references: [id])
+
   @@index([paymentId])
+  @@index([hostUserId])
+  @@index([guestUserId])
 }
 
-model VerificationToken {
-  identifier String
-  token      String
-  expires    DateTime
-  createdAt  DateTime @default(now())
 
-  @@unique([identifier, token])
-}

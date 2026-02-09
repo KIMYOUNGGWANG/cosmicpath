@@ -11,6 +11,8 @@ import { ReadingContext } from '@/lib/ai/prompt-builder';
 interface ReadingInputProps {
     onSubmit: (data: ReadingData) => void;
     isLoading?: boolean;
+    inviterName?: string;
+    inviteCode?: string;
 }
 
 export interface ReadingData {
@@ -28,6 +30,7 @@ export interface ReadingData {
     partnerBirthDate?: string;
     partnerBirthTime?: string;
     partnerGender?: 'male' | 'female';
+    inviteCode?: string;
 }
 
 const contexts: { value: ReadingContext; labelKo: string; labelEn: string }[] = [
@@ -38,7 +41,7 @@ const contexts: { value: ReadingContext; labelKo: string; labelEn: string }[] = 
     { value: 'general', labelKo: '운세 / 종합', labelEn: 'Destiny / General' },
 ];
 
-export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps) {
+export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteCode }: ReadingInputProps) {
     const [name, setName] = useState('');
     const [gender, setGender] = useState<'male' | 'female'>('male');
     const [birthDate, setBirthDate] = useState('');
@@ -90,7 +93,8 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                 partnerBirthDate,
                 partnerBirthTime,
                 partnerGender
-            } : {})
+            } : {}),
+            inviteCode
         });
     };
 
@@ -132,7 +136,9 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                 {/* 1. Identity */}
                 <div className="relative group">
                     <label className="block text-xs text-acc-gold tracking-widest uppercase mb-4">
-                        {isEn ? '01. Subject Identity' : '01. Subject Identity (신원 정보)'}
+                        {inviterName
+                            ? (isEn ? `01. Your Identity (${inviterName} invited you)` : `01. Your Identity (${inviterName}님의 초대)`)
+                            : (isEn ? '01. Subject Identity' : '01. Subject Identity (신원 정보)')}
                     </label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
@@ -373,7 +379,13 @@ export function ReadingInput({ onSubmit, isLoading = false }: ReadingInputProps)
                     className={`group relative px-12 py-4 bg-transparent border border-white/20 overflow-hidden transition-all hover:border-acc-gold/50 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                     <span className={`relative z-10 font-cinzel font-bold text-sm tracking-[0.3em] uppercase transition-colors ${isLoading ? 'text-dim' : 'text-starlight group-hover:text-acc-gold'}`}>
-                        {isLoading ? (isEn ? 'CALCULATING...' : 'CALCULATING...') : (isEn ? 'INITIATE SEQUENCE' : '운명 분석 시작')}
+                        {isLoading
+                            ? (isEn ? 'CALCULATING...' : 'CALCULATING...')
+                            : (inviteCode
+                                ? (isEn ? 'SEE COMPATIBILITY (FREE)' : '무료로 궁합 확인하기')
+                                : (isEn ? 'INITIATE SEQUENCE' : '운명 분석 시작')
+                            )
+                        }
                     </span>
 
                     {/* Hover Effect */}

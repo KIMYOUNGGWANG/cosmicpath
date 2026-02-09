@@ -134,11 +134,15 @@ export async function POST(
         }
 
         // If full analysis exists and no specific phase requested, return cached
-        if (existingMetadata?.fullAnalysis && !requestedPhase) {
+        // Fix: Only return cached if it's COMPLETE (has phase 4). otherwise continue generation.
+        const isComplete = existingMetadata?.fullAnalysis?.phase4;
+
+        if (isComplete && !requestedPhase) {
             return NextResponse.json({
                 success: true,
                 cached: true,
-                analysis: existingMetadata.fullAnalysis,
+                analysis: convertToLegacyFormat(existingMetadata.fullAnalysis),
+                fullAnalysis: existingMetadata.fullAnalysis,
                 phase: 4,
                 totalPhases: 4,
             });
@@ -153,8 +157,30 @@ export async function POST(
         const [hostHours, hostMinutes] = hostTime.split(':').map(Number);
         const [guestHours, guestMinutes] = guestTime.split(':').map(Number);
 
-        const hostSaju = calculateSaju(hostBirth, hostHours, hostMinutes, false, 'male');
-        const guestSaju = calculateSaju(guestBirth, guestHours, guestMinutes, false, 'female');
+        // Fix: DB stores birth date as UTC midnight (e.g., 1998-05-18T00:00:00Z).
+        // converting to new Date() in local timezone (e.g., -07:00) shifts it to previous day (17th).
+        // We must construct the date using UTC components to ensure it remains the correct calendar date in local time context.
+        const hostBirthDate = new Date(session.hostBirth);
+        const guestBirthDate = new Date(session.guestBirth);
+
+        const hostSajuDate = new Date(
+            hostBirthDate.getUTCFullYear(),
+            hostBirthDate.getUTCMonth(),
+            hostBirthDate.getUTCDate(),
+            hostHours,
+            hostMinutes
+        );
+
+        const guestSajuDate = new Date(
+            guestBirthDate.getUTCFullYear(),
+            guestBirthDate.getUTCMonth(),
+            guestBirthDate.getUTCDate(),
+            guestHours,
+            guestMinutes
+        );
+
+        const hostSaju = calculateSaju(hostSajuDate, hostHours, hostMinutes, false, 'male');
+        const guestSaju = calculateSaju(guestSajuDate, guestHours, guestMinutes, false, 'female');
 
         const hostAstrology = calculateAstrology(hostBirth, hostTime);
         const guestAstrology = calculateAstrology(guestBirth, guestTime);
@@ -256,6 +282,22 @@ export async function POST(
 
             } catch (phaseError: any) {
                 console.error(`[Match Analyze] Phase ${phase} Error:`, phaseError);
+
+                // Fix: Return partial success if we have at least Phase 1
+                if (fullAnalysis.phase1) {
+                    const legacyAnalysis = convertToLegacyFormat(fullAnalysis);
+                    return NextResponse.json({
+                        success: true,
+                        cached: false,
+                        isPartial: true, // Frontend can use this to show "Analyzing..." indicator
+                        error: `Phase ${phase} failed: ${phaseError.message}`,
+                        analysis: legacyAnalysis,
+                        fullAnalysis: fullAnalysis,
+                        phase: phase - 1, // Return last successful phase
+                        totalPhases: 4,
+                    });
+                }
+
                 return NextResponse.json({
                     success: false,
                     error: `Phase ${phase} generation failed: ${phaseError.message}`,

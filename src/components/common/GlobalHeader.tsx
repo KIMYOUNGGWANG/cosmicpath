@@ -1,12 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronLeft, Menu, Search, Sparkles } from 'lucide-react';
+import { ChevronLeft, Menu, Search, Sparkles, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
 import { OrderLookupModal } from '@/components/orders/OrderLookupModal';
 import { MobileMenu, MenuItem } from '@/components/common/MobileMenu';
+import UserMenu from '@/components/layout/UserMenu';
+import { LoginModal, useLoginModal } from '@/components/auth/LoginModal';
+import { useSession } from 'next-auth/react';
 
 interface GlobalHeaderProps {
     language?: 'ko' | 'en';
@@ -16,6 +19,8 @@ interface GlobalHeaderProps {
 export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalHeaderProps) {
     const pathname = usePathname();
     const isEn = language === 'en';
+    const { status } = useSession();
+    const { openLoginModal } = useLoginModal();
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -72,11 +77,13 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
 
                     {/* Desktop Navigation (Hidden on Mobile) */}
                     <div className="hidden md:flex items-center gap-4">
+                        <UserMenu />
+
                         <button
                             onClick={toggleOrderModal}
                             className="text-xs text-gray-400 hover:text-white transition-colors tracking-wider uppercase hover:underline underline-offset-4"
                         >
-                            {isEn ? 'Find My Orders' : '내 결과 찾기'}
+                            {isEn ? 'Find My Orders' : '비회원 주문 조회'}
                         </button>
 
                         <Link
@@ -114,11 +121,19 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
                 isOpen={isMobileMenuOpen}
                 onClose={() => setIsMobileMenuOpen(false)}
                 menuItems={[
+                    ...(status === 'unauthenticated' ? [{
+                        type: 'button' as const,
+                        icon: User,
+                        iconColorClass: 'group-hover:bg-white/10 group-hover:text-white',
+                        label: isEn ? 'Login / Sign Up' : '로그인 / 회원가입',
+                        subLabel: isEn ? 'Save your destiny' : '기록 저장 및 연동',
+                        onClick: openLoginModal,
+                    }] : []),
                     {
                         type: 'button',
                         icon: Search,
                         iconColorClass: 'group-hover:bg-purple-500/20 group-hover:text-purple-300',
-                        label: isEn ? 'Find My Orders' : '내 결과 찾기',
+                        label: isEn ? 'Find My Orders' : '비회원 주문 조회',
                         subLabel: isEn ? 'Lookup past readings' : '지난 점사 기록 조회',
                         onClick: () => setIsOrderModalOpen(true),
                     },
@@ -138,6 +153,9 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
                 isOpen={isOrderModalOpen}
                 onClose={() => setIsOrderModalOpen(false)}
             />
+
+            {/* Login Modal */}
+            <LoginModal />
         </>
     );
 }
