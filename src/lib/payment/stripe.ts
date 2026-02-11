@@ -17,7 +17,15 @@ function getStripe(): Stripe {
 const stripe = getStripe();
 
 // Simple in-memory cache for pricing
-const priceCache = new Map<string, { data: any, timestamp: number }>();
+interface CachedPrice {
+    productId: string;
+    priceId: string;
+    amount: number;
+    currency: string;
+    formattedPrice: string;
+    metadata: Stripe.Metadata;
+}
+const priceCache = new Map<string, { data: CachedPrice, timestamp: number }>();
 const CACHE_TTL = 3600 * 1000; // 1 hour
 
 /**
@@ -128,7 +136,7 @@ export async function createCheckoutSession({
                 },
             ],
             mode: 'payment',
-            success_url: successUrl,
+            success_url: `${successUrl}${successUrl.includes('?') ? '&' : '?'}reading_id=${metadata?.readingId || ''}`, // Ensure reading_id passed back
             cancel_url: cancelUrl,
             metadata,
         });
@@ -150,6 +158,7 @@ export async function verifyCheckoutSession(sessionId: string) {
         success: session.payment_status === 'paid',
         sessionId: session.id,
         productId: session.metadata?.productId,
+        readingId: session.metadata?.readingId, // Added readingId
         followUpQuestions: Number(session.metadata?.followUpQuestions || 0),
         customerEmail: session.customer_details?.email,
     };

@@ -3,7 +3,7 @@
 import { useState, useEffect, use, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, animate } from 'framer-motion';
-import { Heart, Lock, Share2, Sparkles, AlertCircle, Copy, Check, Unlock, Star, AlertTriangle, MessageCircle, Loader2, Zap, Calendar, TrendingUp } from 'lucide-react';
+import { Heart, Lock, Share2, Sparkles, AlertCircle, Copy, Check, Unlock, Star, AlertTriangle, MessageCircle, Loader2, Zap, Calendar, TrendingUp, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import {
     MatchRadar,
@@ -11,7 +11,8 @@ import {
     CosmicSignatureBadge,
     TimelineCard,
     ActionChecklist,
-    LuckyElements
+    LuckyElements,
+    ProsperityCard
 } from '@/components/match/MatchVisuals';
 
 // AI Analysis types (v3.0 - with rich visual data)
@@ -70,6 +71,19 @@ interface AIAnalysis {
         score: number;
         insight: string;
     }>;
+    _prosperitySync?: {
+        score: number;
+        wealthStyle: string;
+        prosperityTip: string;
+    };
+    _careerSynergy?: {
+        compatibility: number;
+        businessPotential: string;
+    };
+    _socialMirror?: {
+        publicImage: string;
+        socialAura: string;
+    };
     _timelineForecasts?: Array<{
         period: string;
         title: string;
@@ -164,7 +178,9 @@ export default function MatchResultPage({ params }: PageProps) {
 
     // Fetch AI analysis when unlocked
     const fetchAIAnalysis = useCallback(async () => {
-        if (!data?.isUnlocked || aiAnalysis) return;
+        // Only run if unlocked and NOT already complete
+        const isAlreadyComplete = aiAnalysis && (aiAnalysis as any)._prosperitySync && (aiAnalysis as any)._weeklyRituals;
+        if (!data?.isUnlocked || isAlreadyComplete) return;
 
         setIsLoadingAI(true);
         setAiError(null);
@@ -411,20 +427,44 @@ export default function MatchResultPage({ params }: PageProps) {
                         {isLoadingAI && (
                             <div className="glass-card p-8 border-purple-500/20 text-center">
                                 <Loader2 size={32} className="animate-spin text-purple-400 mx-auto mb-4" />
-                                <p className="text-white font-cinzel font-bold">AI 심층 분석 중...</p>
-                                <p className="text-[var(--fg-moonlight)] text-sm mt-2">4단계 심층 분석을 진행하고 있습니다</p>
+                                <p className="text-white font-cinzel font-bold">이어지는 분석... (Resuming Analysis)</p>
+                                <p className="text-[var(--fg-moonlight)] text-sm mt-2">이전까지 완료된 단계를 확인하고 남은 분석을 이어갑니다</p>
                                 <div className="flex justify-center gap-2 mt-4">
-                                    {[1, 2, 3, 4].map((phase) => (
-                                        <div
-                                            key={phase}
-                                            className="w-8 h-1 rounded-full bg-white/10 overflow-hidden"
-                                        >
+                                    {[1, 2, 3, 4, 5].map((phase) => {
+                                        const isDone = aiAnalysis && (
+                                            phase === 1 ? !!(aiAnalysis as any).energyAnalysis :
+                                                phase === 2 ? !!(aiAnalysis as any).emotionalCompatibility :
+                                                    phase === 3 ? !!(aiAnalysis as any)._prosperitySync :
+                                                        phase === 4 ? !!(aiAnalysis as any)._timelineForecasts :
+                                                            phase === 5 ? !!(aiAnalysis as any)._weeklyRituals : false
+                                        );
+                                        const isCurrent = !isDone && (
+                                            phase === 1 || (
+                                                phase === 2 ? !!(aiAnalysis as any).energyAnalysis :
+                                                    phase === 3 ? !!(aiAnalysis as any).emotionalCompatibility :
+                                                        phase === 4 ? !!(aiAnalysis as any)._prosperitySync :
+                                                            phase === 5 ? !!(aiAnalysis as any)._timelineForecasts : false
+                                            )
+                                        );
+
+                                        return (
                                             <div
-                                                className="h-full bg-gradient-to-r from-purple-500 to-pink-500 animate-pulse"
-                                                style={{ width: '100%' }}
-                                            />
-                                        </div>
-                                    ))}
+                                                key={phase}
+                                                className={`w-10 h-1.5 rounded-full overflow-hidden transition-colors duration-500 ${isDone ? 'bg-purple-500' : 'bg-white/10'
+                                                    }`}
+                                            >
+                                                {isCurrent && (
+                                                    <motion.div
+                                                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+                                                        initial={{ x: '-100%' }}
+                                                        animate={{ x: '100%' }}
+                                                        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                                                    />
+                                                )}
+                                                {isDone && <div className="h-full w-full bg-gradient-to-r from-purple-500 to-pink-500 opacity-50" />}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}
@@ -446,7 +486,7 @@ export default function MatchResultPage({ params }: PageProps) {
                         {/* AI Analysis Content */}
                         {aiAnalysis && (
                             <>
-                                {/* Energy Analysis */}
+                                {/* Phase 1: Energy Analysis */}
                                 <div className="glass-card p-6 border-purple-500/20">
                                     <h3 className="text-white font-cinzel font-bold mb-4 flex items-center gap-2">
                                         <Zap size={18} className="text-purple-400" />
@@ -481,6 +521,15 @@ export default function MatchResultPage({ params }: PageProps) {
                                         {aiAnalysis.emotionalCompatibility.content}
                                     </p>
                                 </div>
+
+                                {/* Wealth & Success Synchronization (New Phase 3) */}
+                                {(aiAnalysis._prosperitySync || aiAnalysis._careerSynergy) && (
+                                    <ProsperityCard
+                                        prosperity={aiAnalysis._prosperitySync || { score: 0, wealthStyle: '', prosperityTip: '' }}
+                                        career={aiAnalysis._careerSynergy || { compatibility: 0, businessPotential: '' }}
+                                        social={aiAnalysis._socialMirror || { publicImage: '', socialAura: '' }}
+                                    />
+                                )}
 
                                 {/* Long-term Outlook */}
                                 <div className="glass-card p-6 border-blue-500/20">
@@ -595,8 +644,10 @@ export default function MatchResultPage({ params }: PageProps) {
                             ))}
                         </ul>
 
-                        <button
-                            className="w-full py-4 bg-gradient-to-r from-[var(--acc-gold)] to-[#F59E0B] text-black font-bold font-cinzel tracking-wider rounded-xl flex items-center justify-center gap-2 hover:translate-y-[-2px] hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all duration-300 relative z-10 disabled:opacity-50 disabled:cursor-not-allowed"
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="w-full relative py-5 px-10 rounded-2xl font-cinzel tracking-[0.2em] font-bold overflow-hidden transition-all duration-500 group z-10"
                             onClick={async () => {
                                 try {
                                     const res = await fetch(`/api/match/${id}/pay`, { method: 'POST' });
@@ -611,9 +662,27 @@ export default function MatchResultPage({ params }: PageProps) {
                                 }
                             }}
                         >
-                            <Sparkles size={18} />
-                            Unlock Full Report ($2.99)
-                        </button>
+                            {/* Glassmorphism Background with stronger default border */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-[var(--acc-gold)]/20 to-orange-500/20 backdrop-blur-xl border border-[var(--acc-gold)]/40 group-hover:border-[var(--acc-gold)] transition-all duration-500 shadow-[0_0_20px_rgba(212,175,55,0.1)] group-hover:shadow-[0_0_40px_rgba(212,175,55,0.3)]" />
+
+                            {/* Inner Glow - Persistent subtle gold tint */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-[var(--acc-gold)]/20 to-transparent opacity-60 group-hover:opacity-100 transition-opacity duration-700" />
+
+                            {/* Animated Shimmer Line */}
+                            <div className="absolute inset-0 opacity-0 group-hover:opacity-40 pointer-events-none overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full animate-shimmer" />
+                            </div>
+
+                            {/* Content with Gold text */}
+                            <span className="relative z-10 flex items-center justify-center gap-3 text-white group-hover:scale-105 transition-transform duration-300">
+                                <Sparkles size={20} className="text-[var(--acc-gold)] animate-pulse" />
+                                <span className="text-sm md:text-base">Unlock Full Report ($2.99)</span>
+                                <ArrowRight size={18} className="opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 delay-75" />
+                            </span>
+
+                            {/* External Bloom Glow - Always slightly visible */}
+                            <div className="absolute -inset-4 bg-[var(--acc-gold)]/10 blur-3xl opacity-100 group-hover:bg-[var(--acc-gold)]/20 transition-all duration-1000 pointer-events-none" />
+                        </motion.button>
                     </motion.div>
                 )}
 
@@ -624,22 +693,25 @@ export default function MatchResultPage({ params }: PageProps) {
                     transition={{ delay: 0.7 }}
                     className="flex flex-col gap-4"
                 >
-                    <button
+                    <motion.button
                         onClick={handleShare}
-                        className="btn-secondary w-full flex items-center justify-center gap-2 group"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        className="w-full py-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-[var(--acc-gold)]/30 transition-all duration-300 font-cinzel text-sm tracking-widest flex items-center justify-center gap-3 relative overflow-hidden group"
                     >
                         {copied ? (
                             <>
-                                <Check size={18} className="text-green-400" />
+                                <Check size={18} className="text-green-400 animate-in zoom-in duration-300" />
                                 <span className="text-green-400">Link Copied</span>
                             </>
                         ) : (
                             <>
-                                <Share2 size={18} className="group-hover:scale-110 transition-transform" />
-                                Share Results
+                                <Share2 size={18} className="text-white/40 group-hover:text-[var(--acc-gold)] group-hover:scale-110 transition-all duration-300" />
+                                <span className="text-white/70 group-hover:text-white transition-colors">Share Results</span>
                             </>
                         )}
-                    </button>
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-shimmer pointer-events-none" />
+                    </motion.button>
                     <Link
                         href="/match/new"
                         className="text-center text-[var(--fg-moonlight)] hover:text-white text-sm transition-colors font-outfit"

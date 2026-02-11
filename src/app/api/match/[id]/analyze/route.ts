@@ -16,8 +16,16 @@ import {
     MatchPhase2Result,
     MatchPhase3Result,
     MatchPhase4Result,
+    MatchPhase5Result,
     MatchFullAnalysis,
 } from '@/lib/ai/match-phase-prompts';
+import {
+    MatchPhase1Schema,
+    MatchPhase2Schema,
+    MatchPhase3Schema,
+    MatchPhase4Schema,
+    MatchPhase5Schema
+} from '@/lib/ai/match-schemas';
 
 // Convert new Phase format to legacy AIAnalysis format for backward compatibility
 function convertToLegacyFormat(fullAnalysis: Partial<MatchFullAnalysis>) {
@@ -25,6 +33,7 @@ function convertToLegacyFormat(fullAnalysis: Partial<MatchFullAnalysis>) {
     const p2 = fullAnalysis.phase2;
     const p3 = fullAnalysis.phase3;
     const p4 = fullAnalysis.phase4;
+    const p5 = fullAnalysis.phase5;
 
     return {
         energyAnalysis: {
@@ -46,27 +55,29 @@ function convertToLegacyFormat(fullAnalysis: Partial<MatchFullAnalysis>) {
                 : (p1?.overallScore?.chemistry || 50) >= 50 ? 'medium' : 'low',
         },
         longTermOutlook: {
-            title: '📈 장기 전망',
+            title: '📈 장기 전망 및 시너지',
             content: [
-                p3?.destinyNarrative?.presentMission || '',
-                p3?.destinyNarrative?.futurePotential || '',
+                p3?.prosperitySync?.wealthStyle ? `💰 재물 합: ${p3.prosperitySync.wealthStyle}` : '',
+                p3?.careerSynergy?.businessPotential ? `💼 커리어 시너지: ${p3.careerSynergy.businessPotential}` : '',
+                p4?.destinyNarrative?.presentMission || '',
+                p4?.destinyNarrative?.futurePotential || '',
             ].filter(Boolean).join('\n\n'),
-            timeline: (p3?.timelineForecasts || []).map(t => ({
+            timeline: (p4?.timelineForecasts || []).map(t => ({
                 period: t.period,
                 prediction: t.prediction,
             })),
         },
-        strengths: (p4?.strengths || []).map(s => ({
+        strengths: (p5?.strengths || []).map(s => ({
             title: s.title,
             description: `${s.shortDesc} (${s.basis})`,
         })),
-        challenges: (p4?.challenges || []).map(c => ({
+        challenges: (p5?.challenges || []).map(c => ({
             title: c.title,
             description: `${c.shortDesc}\n해결책: ${c.solution}`,
         })),
         advice: {
-            summary: p4?.finalBlessing || '',
-            actionItems: p4?.doAndDont?.do?.slice(0, 5) || [],
+            summary: p5?.finalBlessing || '',
+            actionItems: p5?.doAndDont?.do?.slice(0, 5) || [],
         },
         // New rich data for enhanced UI
         _cosmicSignature: p1?.cosmicSignature,
@@ -74,12 +85,15 @@ function convertToLegacyFormat(fullAnalysis: Partial<MatchFullAnalysis>) {
         _quickInsights: p1?.quickInsights,
         _emotionalRadar: p2?.emotionalRadar,
         _dailyLifeCards: p2?.dailyLifeCards,
-        _timelineForecasts: p3?.timelineForecasts,
-        _turningPoints: p3?.majorTurningPoints,
-        _longevityScore: p3?.longevityScore,
-        _weeklyRituals: p4?.weeklyRituals,
-        _doAndDont: p4?.doAndDont,
-        _luckyElements: p4?.luckyElements,
+        _prosperitySync: p3?.prosperitySync,
+        _careerSynergy: p3?.careerSynergy,
+        _socialMirror: p3?.socialMirror,
+        _timelineForecasts: p4?.timelineForecasts,
+        _turningPoints: p4?.majorTurningPoints,
+        _longevityScore: p4?.longevityScore,
+        _weeklyRituals: p5?.weeklyRituals,
+        _doAndDont: p5?.doAndDont,
+        _luckyElements: p5?.luckyElements,
     };
 }
 
@@ -134,8 +148,8 @@ export async function POST(
         }
 
         // If full analysis exists and no specific phase requested, return cached
-        // Fix: Only return cached if it's COMPLETE (has phase 4). otherwise continue generation.
-        const isComplete = existingMetadata?.fullAnalysis?.phase4;
+        // Fix: Only return cached if it's COMPLETE (has phase 5). otherwise continue generation.
+        const isComplete = existingMetadata?.fullAnalysis?.phase5;
 
         if (isComplete && !requestedPhase) {
             return NextResponse.json({
@@ -143,8 +157,8 @@ export async function POST(
                 cached: true,
                 analysis: convertToLegacyFormat(existingMetadata.fullAnalysis),
                 fullAnalysis: existingMetadata.fullAnalysis,
-                phase: 4,
-                totalPhases: 4,
+                phase: 5,
+                totalPhases: 5,
             });
         }
 
@@ -179,11 +193,16 @@ export async function POST(
             guestMinutes
         );
 
-        const hostSaju = calculateSaju(hostSajuDate, hostHours, hostMinutes, false, 'male');
-        const guestSaju = calculateSaju(guestSajuDate, guestHours, guestMinutes, false, 'female');
+        // Run Saju and Astrology calculations in parallel
+        const [hostSaju, guestSaju, hostAstrology, guestAstrology] = await Promise.all([
+            Promise.resolve(calculateSaju(hostSajuDate, hostHours, hostMinutes, false, 'male')),
+            Promise.resolve(calculateSaju(guestSajuDate, guestHours, guestMinutes, false, 'female')),
+            Promise.resolve(calculateAstrology(hostBirth, hostTime)),
+            Promise.resolve(calculateAstrology(guestBirth, guestTime))
+        ]);
 
-        const hostAstrology = calculateAstrology(hostBirth, hostTime);
-        const guestAstrology = calculateAstrology(guestBirth, guestTime);
+
+
 
         // 4. Get basic scores from existing metadata
         const basicScores = {
@@ -196,7 +215,7 @@ export async function POST(
         // 5. Determine which phases to run
         const previousPhases: Partial<MatchFullAnalysis> = existingMetadata?.fullAnalysis || {};
         const startPhase = requestedPhase || 1;
-        const endPhase = requestedPhase || 4;
+        const endPhase = requestedPhase || 5;
 
         let fullAnalysis: Partial<MatchFullAnalysis> = { ...previousPhases };
 
@@ -233,7 +252,8 @@ export async function POST(
                         phaseResult = await generateStructuredReport<MatchPhase1Result>(
                             systemPrompt,
                             userPrompt,
-                            'basic'
+                            'basic',
+                            MatchPhase1Schema
                         );
                         fullAnalysis.phase1 = phaseResult;
                         break;
@@ -241,7 +261,8 @@ export async function POST(
                         phaseResult = await generateStructuredReport<MatchPhase2Result>(
                             systemPrompt,
                             userPrompt,
-                            'basic'
+                            'basic',
+                            MatchPhase2Schema
                         );
                         fullAnalysis.phase2 = phaseResult;
                         break;
@@ -249,7 +270,8 @@ export async function POST(
                         phaseResult = await generateStructuredReport<MatchPhase3Result>(
                             systemPrompt,
                             userPrompt,
-                            'basic'
+                            'basic',
+                            MatchPhase3Schema
                         );
                         fullAnalysis.phase3 = phaseResult;
                         break;
@@ -257,9 +279,19 @@ export async function POST(
                         phaseResult = await generateStructuredReport<MatchPhase4Result>(
                             systemPrompt,
                             userPrompt,
-                            'basic'
+                            'basic',
+                            MatchPhase4Schema
                         );
                         fullAnalysis.phase4 = phaseResult;
+                        break;
+                    case 5:
+                        phaseResult = await generateStructuredReport<MatchPhase5Result>(
+                            systemPrompt,
+                            userPrompt,
+                            'basic',
+                            MatchPhase5Schema
+                        );
+                        fullAnalysis.phase5 = phaseResult;
                         break;
                 }
 
@@ -294,7 +326,7 @@ export async function POST(
                         analysis: legacyAnalysis,
                         fullAnalysis: fullAnalysis,
                         phase: phase - 1, // Return last successful phase
-                        totalPhases: 4,
+                        totalPhases: 5,
                     });
                 }
 
@@ -317,7 +349,7 @@ export async function POST(
             analysis: legacyAnalysis, // Legacy format for existing UI
             fullAnalysis: fullAnalysis, // New format for future UI
             phase: endPhase,
-            totalPhases: 4,
+            totalPhases: 5,
         });
 
     } catch (error: any) {
@@ -352,6 +384,7 @@ export async function GET(
             hasPhase2: false,
             hasPhase3: false,
             hasPhase4: false,
+            hasPhase5: false,
             isComplete: false,
             lastPhase: 0,
         };
@@ -364,8 +397,9 @@ export async function GET(
                     analysisStatus.hasPhase2 = !!meta.fullAnalysis.phase2;
                     analysisStatus.hasPhase3 = !!meta.fullAnalysis.phase3;
                     analysisStatus.hasPhase4 = !!meta.fullAnalysis.phase4;
+                    analysisStatus.hasPhase5 = !!meta.fullAnalysis.phase5;
                     analysisStatus.isComplete = analysisStatus.hasPhase1 && analysisStatus.hasPhase2 &&
-                        analysisStatus.hasPhase3 && analysisStatus.hasPhase4;
+                        analysisStatus.hasPhase3 && analysisStatus.hasPhase4 && analysisStatus.hasPhase5;
                     analysisStatus.lastPhase = meta.lastPhase || 0;
                 }
             } catch { }

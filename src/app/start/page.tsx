@@ -547,17 +547,42 @@ function CosmicPathContent() {
         setReportData({ ...accumulatedReport });
         saveToSessionAndBackup('pending_report_data', JSON.stringify(accumulatedReport));
 
-        // Metadata update (once is enough, usually from first phase or accumulated)
+        // Metadata update
         if (result.metadata) {
           accumulatedMetadata = { ...accumulatedMetadata, ...result.metadata };
           setMetadata({ ...accumulatedMetadata });
           saveToSessionAndBackup('pending_metadata', JSON.stringify(accumulatedMetadata));
         }
 
+        // [New] Intermediate Save for Premium Users after Phase 1
+        // This ensures a ReadingResult record exists in DB for payment verification in Phase 2+
+        if ((isPremium || isPremiumOverride) && phase === 1) {
+          try {
+            const saveRes = await fetch('/api/reading/save', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                id: sessionStorage.getItem('pending_reading_id') || undefined,
+                data: accumulatedReport,
+                metadata: {
+                  ...accumulatedMetadata,
+                  isPremium: false, // Will be set to true by webhook/sync
+                  paymentSource: isPremiumOverride ? 'override' : 'pending'
+                }
+              })
+            });
+            if (saveRes.ok) {
+              const saved = await saveRes.json();
+              if (saved.id && !sessionStorage.getItem('pending_reading_id')) {
+                sessionStorage.setItem('pending_reading_id', saved.id);
+              }
+            }
+          } catch (e) {
+            console.error('[Intermediate Save] Failed:', e);
+          }
+        }
+
         // 🚀 CRITICAL: Unblock UI after Phase 1 (Summary)
-        // This allows user to start reading while background analysis runs
-        // BUT for Premium users, we want to show the full "Analysis" sequence (2/5 -> 5/5)
-        // so we ONLY unblock early for FREE users.
         if ((!isPremium && !isPremiumOverride) && (phase === 1 || phase === startPhase)) {
           setIsLoading(false);
         }

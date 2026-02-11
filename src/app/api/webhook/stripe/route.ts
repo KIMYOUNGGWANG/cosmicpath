@@ -121,6 +121,7 @@ export async function POST(req: NextRequest) {
                                 data: {
                                     metadata: JSON.stringify({
                                         ...savedMeta,
+                                        isPremium: true, // Explicitly set as premium
                                         email: customerEmail,
                                         emailSent: true,
                                         emailSentVia: 'webhook'

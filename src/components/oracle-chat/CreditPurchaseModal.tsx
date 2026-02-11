@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Sparkles, Zap, Check } from 'lucide-react';
+import { X, Sparkles, Zap, Check, Lock } from 'lucide-react';
 
 interface CreditPurchaseModalProps {
     isOpen: boolean;
@@ -38,63 +38,65 @@ export function CreditPurchaseModal({
                     onClick={onClose}
                 >
                     <motion.div
-                        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                        initial={{ scale: 0.9, opacity: 0, y: 30 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                        className="relative w-full max-w-md bg-gradient-to-b from-[#1A1F2E] to-[#0F1419] rounded-2xl border border-white/10 overflow-hidden shadow-2xl"
+                        exit={{ scale: 0.9, opacity: 0, y: 30 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                        className="relative w-full max-w-md bg-[#0A0C1B] rounded-[2rem] border border-white/10 overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.8)]"
                         onClick={(e) => e.stopPropagation()}
                     >
+                        {/* Background Glow */}
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-[#D4AF37]/10 blur-[60px] pointer-events-none" />
                         {/* Header */}
-                        <div className="relative p-6 pb-4 border-b border-white/10">
+                        <div className="relative p-8 pb-4">
                             <button
                                 onClick={onClose}
-                                className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors active:scale-90"
+                                className="absolute top-6 right-6 p-2 bg-white/5 hover:bg-white/10 rounded-full transition-all active:scale-90 border border-white/5"
                             >
-                                <X size={20} className="text-white/60" />
+                                <X size={18} className="text-white/40" />
                             </button>
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-[#D4AF37]/20 rounded-xl">
-                                    <Sparkles className="w-6 h-6 text-[#D4AF37]" />
+                            <div className="flex flex-col items-center text-center gap-4">
+                                <div className="w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#B4941F] rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(212,175,55,0.2)]">
+                                    <Sparkles className="w-8 h-8 text-black" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-bold text-white">질문권 충전</h2>
-                                    <p className="text-sm text-white/50">Oracle에게 더 물어보세요</p>
+                                    <h2 className="text-2xl font-bold text-white tracking-tight">질문권 충전</h2>
+                                    <p className="text-sm text-star-yellow/60 mt-1 font-medium uppercase tracking-widest text-[10px]">Divine Credits</p>
                                 </div>
                             </div>
                         </div>
 
                         {/* Options */}
-                        <div className="p-6 space-y-4">
+                        <div className="p-8 space-y-4">
                             {/* Single Option */}
                             <button
                                 onClick={() => setSelectedOption('single')}
                                 disabled={isLoading}
                                 className={`
-                                    w-full p-4 rounded-xl border-2 transition-all text-left active:scale-[0.98]
+                                    w-full p-5 rounded-2xl border transition-all text-left active:scale-[0.98] relative overflow-hidden group
                                     ${selectedOption === 'single'
-                                        ? 'border-[#D4AF37]/50 bg-[#D4AF37]/5 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
-                                        : 'border-white/10 bg-white/5 hover:border-white/20'
+                                        ? 'border-[#D4AF37]/40 bg-[#D4AF37]/5 shadow-[0_0_20px_rgba(212,175,55,0.05)]'
+                                        : 'border-white/5 bg-white/5 hover:bg-white/10'
                                     }
                                 `}
                             >
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
+                                <div className="flex items-center justify-between relative z-10">
+                                    <div className="flex items-center gap-4">
                                         <div className={`
-                                            w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors
-                                            ${selectedOption === 'single' ? 'border-[#D4AF37] bg-[#D4AF37]' : 'border-white/30'}
+                                            w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300
+                                            ${selectedOption === 'single' ? 'border-[#D4AF37] bg-[#D4AF37]' : 'border-white/20'}
                                         `}>
                                             {selectedOption === 'single' && (
-                                                <Check size={12} className="text-black" />
+                                                <Check size={14} className="text-black stroke-[3px]" />
                                             )}
                                         </div>
                                         <div>
-                                            <p className="font-semibold text-white">1회 질문권</p>
-                                            <p className="text-xs text-white/50">기본 충전</p>
+                                            <p className="font-bold text-gray-100 italic">Single Quest</p>
+                                            <p className="text-[11px] text-gray-500 font-medium tracking-wide">1회 질문권</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-xl font-bold text-white">$1.00</p>
-                                        <p className="text-xs text-white/40">$1.00/회</p>
+                                        <p className="text-lg font-black text-white">$1.00</p>
                                     </div>
                                 </div>
                             </button>
@@ -104,75 +106,78 @@ export function CreditPurchaseModal({
                                 onClick={() => setSelectedOption('pack')}
                                 disabled={isLoading}
                                 className={`
-                                    w-full p-4 rounded-xl border-2 transition-all text-left relative overflow-hidden active:scale-[0.98]
+                                    w-full p-5 rounded-2xl border transition-all text-left relative overflow-hidden active:scale-[0.98] group
                                     ${selectedOption === 'pack'
-                                        ? 'border-[#D4AF37] bg-[#D4AF37]/10 shadow-[0_0_20px_rgba(212,175,55,0.15)]'
-                                        : 'border-white/10 bg-white/5 hover:border-white/20'
+                                        ? 'border-[#D4AF37] bg-[#D4AF37]/10 shadow-[0_5px_25px_rgba(212,175,55,0.1)]'
+                                        : 'border-white/5 bg-white/5 hover:bg-white/10'
                                     }
                                 `}
                             >
                                 {/* Recommended Badge */}
-                                <div className="absolute top-0 right-0 bg-gradient-to-l from-[#D4AF37] to-[#B4941F] text-black text-[10px] font-bold px-3 py-1 rounded-bl-lg">
-                                    추천
+                                <div className="absolute top-0 right-0 bg-gradient-to-l from-[#D4AF37] to-[#B4941F] text-black text-[9px] font-black px-4 py-1.5 rounded-bl-xl uppercase tracking-tighter">
+                                    Best Value
                                 </div>
 
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
+                                <div className="flex items-center justify-between relative z-10">
+                                    <div className="flex items-center gap-4">
                                         <div className={`
-                                            w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors
-                                            ${selectedOption === 'pack' ? 'border-[#D4AF37] bg-[#D4AF37]' : 'border-white/30'}
+                                            w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300
+                                            ${selectedOption === 'pack' ? 'border-[#D4AF37] bg-[#D4AF37]' : 'border-white/20'}
                                         `}>
                                             {selectedOption === 'pack' && (
-                                                <Check size={12} className="text-black" />
+                                                <Check size={14} className="text-black stroke-[3px]" />
                                             )}
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <p className="font-semibold text-white">3회 패키지</p>
-                                                <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-bold rounded-full">
-                                                    33% 할인
+                                                <p className="font-bold text-gray-100 italic">Destiny Pack</p>
+                                                <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[9px] font-black rounded-md tracking-tighter">
+                                                    SAVE 33%
                                                 </span>
                                             </div>
-                                            <p className="text-xs text-white/50">가장 인기 있는 선택</p>
+                                            <p className="text-[11px] text-gray-500 font-medium tracking-wide">3회 패키지</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-xl font-bold text-[#D4AF37]">$1.99</p>
-                                        <p className="text-xs text-white/40 line-through">$3.00</p>
+                                        <p className="text-xl font-black text-[#D4AF37]">$1.99</p>
+                                        <p className="text-[10px] text-white/20 line-through tracking-tighter">$3.00</p>
                                     </div>
                                 </div>
                             </button>
                         </div>
 
                         {/* CTA */}
-                        <div className="p-6 pt-2">
+                        <div className="p-8 pt-2">
                             <button
                                 onClick={handlePurchase}
                                 disabled={isLoading}
                                 className={`
-                                    w-full py-4 rounded-xl font-semibold text-lg
-                                    transition-all flex items-center justify-center gap-2 active:scale-[0.98]
+                                    w-full py-5 rounded-2xl font-bold text-lg
+                                    transition-all flex items-center justify-center gap-3 active:scale-[0.98] relative overflow-hidden
                                     ${isLoading
-                                        ? 'bg-white/10 text-white/50 cursor-wait'
-                                        : 'bg-gradient-to-r from-[#D4AF37] to-[#B4941F] text-black hover:opacity-90 shadow-lg shadow-[#D4AF37]/20 hover:shadow-[#D4AF37]/40'
+                                        ? 'bg-white/10 text-white/20 cursor-wait'
+                                        : 'bg-gradient-to-r from-[#D4AF37] via-[#F2D479] to-[#D4AF37] bg-[length:200%_auto] animate-shimmer text-black shadow-lg shadow-[#D4AF37]/20 hover:shadow-[#D4AF37]/40 active:grayscale-[0.2]'
                                     }
                                 `}
                             >
                                 {isLoading ? (
                                     <>
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                        처리 중...
+                                        <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                        <span className="animate-pulse">Divining...</span>
                                     </>
                                 ) : (
                                     <>
-                                        <Zap size={20} />
-                                        {selectedOption === 'single' ? '$1.00 결제하기' : '$1.99 결제하기'}
+                                        <Zap size={22} className="fill-current" />
+                                        <span>{selectedOption === 'single' ? 'Charge $1.00' : 'Charge $1.99'}</span>
                                     </>
                                 )}
                             </button>
-                            <p className="text-center text-white/30 text-xs mt-3">
-                                안전한 Stripe 결제 • 즉시 충전
-                            </p>
+                            <div className="flex items-center justify-center gap-2 mt-5 opacity-30">
+                                <Lock size={10} className="text-white" />
+                                <p className="text-[10px] text-white font-medium uppercase tracking-widest">
+                                    Secured by Stripe
+                                </p>
+                            </div>
                         </div>
                     </motion.div>
                 </motion.div>

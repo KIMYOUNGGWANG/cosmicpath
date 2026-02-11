@@ -202,23 +202,43 @@ export default function MatchNewPage() {
                                 </motion.p>
                             )}
 
-                            <button
+                            <motion.button
                                 type="submit"
                                 disabled={isLoading || !name.trim() || !birthDate}
-                                className="btn-primary w-full flex items-center justify-center gap-2 group relative overflow-hidden"
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                className="w-full relative py-6 px-10 rounded-2xl font-cinzel tracking-[0.25em] font-bold overflow-hidden transition-all duration-500 disabled:opacity-40 disabled:cursor-not-allowed group"
                             >
-                                <span className="relative z-10 font-cinzel tracking-wider flex items-center gap-2">
+                                {/* Glassmorphism Background with stronger default border */}
+                                <div className="absolute inset-0 bg-white/5 backdrop-blur-xl border border-[var(--acc-gold)]/30 group-hover:border-[var(--acc-gold)]/60 transition-all duration-500 shadow-[0_0_20px_rgba(212,175,55,0.05)] group-hover:shadow-[0_0_30px_rgba(212,175,55,0.15)]" />
+
+                                {/* Inner Glow - Persistent subtle gold tint */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-[var(--acc-gold)]/10 to-transparent opacity-40 group-hover:opacity-100 transition-opacity duration-700" />
+
+                                {/* Animated Shimmer Line */}
+                                <div className="absolute inset-0 opacity-0 group-hover:opacity-30 pointer-events-none overflow-hidden">
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-shimmer" />
+                                </div>
+
+                                {/* Content with Gold text */}
+                                <span className="relative z-10 flex items-center justify-center gap-3 text-[var(--acc-gold)] group-hover:text-white transition-all duration-300">
                                     {isLoading ? (
-                                        <span className="animate-pulse">Analyzing...</span>
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-5 h-5 border-2 border-[var(--acc-gold)] border-t-transparent rounded-full animate-spin" />
+                                            <span className="animate-pulse tracking-widest text-xs">SUMMONING STARS...</span>
+                                        </div>
                                     ) : (
                                         <>
-                                            <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
-                                            Generate Invite Link
+                                            <Sparkles size={20} className="text-[var(--acc-gold)] group-hover:rotate-12 group-hover:scale-125 transition-all duration-500" />
+                                            <span className="text-sm md:text-base">Generate Invite Link</span>
+                                            <ArrowRight size={18} className="opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 delay-75" />
                                         </>
                                     )}
                                 </span>
-                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 pointer-events-none" />
-                            </button>
+
+                                {/* External Bloom Glow - Always slightly visible */}
+                                <div className="absolute -inset-4 bg-[var(--acc-gold)]/5 blur-3xl opacity-100 group-hover:bg-[var(--acc-gold)]/15 transition-all duration-1000 pointer-events-none" />
+                            </motion.button>
                         </form>
                     ) : (
                         <motion.div
@@ -240,22 +260,25 @@ export default function MatchNewPage() {
                                     {inviteUrl}
                                 </div>
 
-                                <button
+                                <motion.button
                                     onClick={handleCopy}
-                                    className="btn-secondary w-full flex items-center justify-center gap-2 group"
+                                    whileHover={{ scale: 1.01 }}
+                                    whileTap={{ scale: 0.99 }}
+                                    className="w-full py-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-[var(--acc-gold)]/30 transition-all duration-300 font-cinzel text-sm tracking-widest flex items-center justify-center gap-3 relative overflow-hidden group"
                                 >
                                     {copied ? (
                                         <>
-                                            <Check size={18} className="text-green-400" />
+                                            <Check size={18} className="text-green-400 animate-in zoom-in duration-300" />
                                             <span className="text-green-400">Copied!</span>
                                         </>
                                     ) : (
                                         <>
-                                            <Copy size={18} className="group-hover:scale-110 transition-transform" />
-                                            Copy Link
+                                            <Copy size={18} className="text-white/40 group-hover:text-[var(--acc-gold)] group-hover:scale-110 transition-all duration-300" />
+                                            <span className="text-white/70 group-hover:text-white transition-colors">Copy Link</span>
                                         </>
                                     )}
-                                </button>
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-shimmer pointer-events-none" />
+                                </motion.button>
                             </div>
 
                             <div className="text-center">

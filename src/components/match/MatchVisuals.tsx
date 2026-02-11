@@ -330,3 +330,70 @@ export function LuckyElements({ colors, numbers, direction, season }: LuckyEleme
         </div>
     );
 }
+/**
+ * 재물 및 사회적 시너지 카드 (Prosperity & Social Synergy)
+ */
+interface ProsperityCardProps {
+    prosperity: {
+        score: number;
+        wealthStyle: string;
+        prosperityTip: string;
+    };
+    career: {
+        compatibility: number;
+        businessPotential: string;
+    };
+    social: {
+        publicImage: string;
+        socialAura: string;
+    };
+}
+
+export function ProsperityCard({ prosperity, career, social }: ProsperityCardProps) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass-card p-6 border-[var(--acc-gold)]/30 bg-gradient-to-br from-[var(--acc-gold)]/5 to-emerald-500/5"
+        >
+            <div className="flex items-center justify-between mb-6">
+                <h3 className="text-white font-cinzel font-bold flex items-center gap-2">
+                    <span className="p-1.5 rounded-lg bg-[var(--acc-gold)]/10 border border-[var(--acc-gold)]/20 text-[var(--acc-gold)]">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></svg>
+                    </span>
+                    Wealth & Success Synchronization
+                </h3>
+                <div className="text-right">
+                    <div className="text-2xl font-black text-[var(--acc-gold)]">{prosperity.score}%</div>
+                    <div className="text-[10px] text-white/40 uppercase tracking-widest">Synergy Score</div>
+                </div>
+            </div>
+
+            <div className="space-y-4">
+                {/* Wealth Style */}
+                <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                    <div className="text-[10px] text-emerald-400 uppercase tracking-widest mb-1">Wealth Style</div>
+                    <p className="text-sm text-white/90 font-outfit">{prosperity.wealthStyle}</p>
+                </div>
+
+                {/* Career & Social Grid */}
+                <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                        <div className="text-[10px] text-blue-400 uppercase tracking-widest mb-1">Career Power</div>
+                        <p className="text-xs text-white/80">{career.businessPotential}</p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+                        <div className="text-[10px] text-purple-400 uppercase tracking-widest mb-1">Social Image</div>
+                        <p className="text-xs text-white/80">{social.publicImage}</p>
+                    </div>
+                </div>
+
+                {/* Prosperity Tip */}
+                <div className="p-3 rounded-xl bg-[var(--acc-gold)]/5 border border-[var(--acc-gold)]/20">
+                    <div className="text-[10px] text-[var(--acc-gold)] uppercase tracking-widest mb-1">Oracle's Prosperity Tip</div>
+                    <p className="text-xs text-[var(--acc-gold)]/90 italic">" {prosperity.prosperityTip} "</p>
+                </div>
+            </div>
+        </motion.div>
+    );
+}

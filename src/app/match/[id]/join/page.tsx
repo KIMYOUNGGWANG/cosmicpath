@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Sparkles, Users, AlertCircle } from 'lucide-react';
+import { Heart, Sparkles, Users, AlertCircle, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface PageProps {
@@ -258,23 +258,43 @@ export default function MatchJoinPage({ params }: PageProps) {
                             </motion.p>
                         )}
 
-                        <button
+                        <motion.button
                             type="submit"
                             disabled={isSubmitting || !name.trim() || !birthDate}
-                            className="btn-primary w-full flex items-center justify-center gap-2 group relative overflow-hidden"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="w-full relative py-6 px-10 rounded-2xl font-cinzel tracking-[0.25em] font-bold overflow-hidden transition-all duration-500 disabled:opacity-40 disabled:cursor-not-allowed group"
                         >
-                            <span className="relative z-10 font-cinzel tracking-wider flex items-center gap-2">
+                            {/* Glassmorphism Background with stronger default border */}
+                            <div className="absolute inset-0 bg-white/5 backdrop-blur-xl border border-[var(--acc-gold)]/30 group-hover:border-[var(--acc-gold)]/60 transition-all duration-500 shadow-[0_0_20px_rgba(212,175,55,0.05)] group-hover:shadow-[0_0_30px_rgba(212,175,55,0.15)]" />
+
+                            {/* Inner Glow - Persistent subtle gold tint */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-[var(--acc-gold)]/10 to-transparent opacity-40 group-hover:opacity-100 transition-opacity duration-700" />
+
+                            {/* Animated Shimmer Line */}
+                            <div className="absolute inset-0 opacity-0 group-hover:opacity-30 pointer-events-none overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-shimmer" />
+                            </div>
+
+                            {/* Content with Gold text */}
+                            <span className="relative z-10 flex items-center justify-center gap-3 text-[var(--acc-gold)] group-hover:text-white transition-all duration-300">
                                 {isSubmitting ? (
-                                    <span className="animate-pulse">Analyzing...</span>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-5 h-5 border-2 border-[var(--acc-gold)] border-t-transparent rounded-full animate-spin" />
+                                        <span className="animate-pulse tracking-widest text-xs uppercase">SUMMONING STARS...</span>
+                                    </div>
                                 ) : (
                                     <>
-                                        <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
-                                        Reveal Compatibility
+                                        <Sparkles size={20} className="text-[var(--acc-gold)] group-hover:rotate-12 group-hover:scale-125 transition-all duration-500" />
+                                        <span className="text-sm md:text-base">Reveal Compatibility</span>
+                                        <Heart size={18} className="opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500 delay-75 text-pink-400" />
                                     </>
                                 )}
                             </span>
-                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 pointer-events-none" />
-                        </button>
+
+                            {/* External Bloom Glow - Always slightly visible */}
+                            <div className="absolute -inset-4 bg-[var(--acc-gold)]/5 blur-3xl opacity-100 group-hover:bg-[var(--acc-gold)]/15 transition-all duration-1000 pointer-events-none" />
+                        </motion.button>
                     </form>
                 </motion.div>
             </div>

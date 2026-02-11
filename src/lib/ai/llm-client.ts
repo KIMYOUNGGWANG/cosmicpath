@@ -1,15 +1,15 @@
 /**
  * LLM 클라이언트 (LLM Client)
- * 다중 AI 모델 지원 및 스트리밍 응답 처리
+ * 다중 AI 모델 지원 및 스트리밍 응답 처리 + 지수 백오프 재시도 로직 포함
  */
+
+import { z } from 'zod';
 
 // 지원 모델 타입
 export type ModelProvider = 'openai' | 'anthropic' | 'google';
 export type ModelTier = 'free' | 'basic' | 'premium';
 
-// 모델 설정 (2025.12 최신)
-// - Free/Basic: Gemini (비용 효율 최고, 한국어 우수)
-// - Premium: Claude Sonnet 4.5 (감성적 톤, 고품질) - 추후 활성화 예정
+// 모델 설정
 export const MODEL_CONFIG: Record<ModelTier, {
     provider: ModelProvider;
     model: string;
@@ -43,10 +43,50 @@ export interface LLMResponse {
     };
 }
 
-// 스트리밍 청크 타입
-export interface StreamChunk {
-    content: string;
-    done: boolean;
+/**
+ * 지수 백오프를 이용한 fetch 재시도 헬퍼
+ * 503 (High Demand) 또는 429 (Rate Limit) 오류 시 재시도 수행
+ */
+async function fetchWithRetry(
+    url: string,
+    options: RequestInit,
+    maxRetries: number = 3,
+    initialDelay: number = 1500
+): Promise<Response> {
+    let lastError: Error | null = null;
+
+    for (let i = 0; i <= maxRetries; i++) {
+        try {
+            const response = await fetch(url, options);
+
+            // 503 (High Demand) 또는 429 (Rate Limit)인 경우에만 재시도
+            if (response.status === 503 || response.status === 429) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`${response.status}: ${errorData.error?.message || response.statusText}`);
+            }
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                const message = errorData.error?.message || response.statusText;
+                throw new Error(`API error (${response.status}): ${message}`);
+            }
+
+            return response;
+        } catch (error: any) {
+            lastError = error;
+
+            // 마지막 시도거나 503/429가 아닌 치명적 에러인 경우 즉시 중단
+            if (i === maxRetries || (!error.message.includes('503') && !error.message.includes('429'))) {
+                break;
+            }
+
+            const delay = initialDelay * Math.pow(2, i);
+            console.warn(`[AI Client Retry] Attempt ${i + 1} failed (Status: ${error.message}). Retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+
+    throw lastError || new Error('All retry attempts failed');
 }
 
 /**
@@ -59,12 +99,9 @@ async function callOpenAI(
     stream: boolean = false
 ): Promise<Response> {
     const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) throw new Error('OPENAI_API_KEY is not configured');
 
-    if (!apiKey) {
-        throw new Error('OPENAI_API_KEY is not configured');
-    }
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    return fetchWithRetry('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -81,13 +118,6 @@ async function callOpenAI(
             max_tokens: 2000,
         }),
     });
-
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(`OpenAI API error: ${error.error?.message || response.statusText}`);
-    }
-
-    return response;
 }
 
 /**
@@ -100,12 +130,9 @@ async function callAnthropic(
     stream: boolean = false
 ): Promise<Response> {
     const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not configured');
 
-    if (!apiKey) {
-        throw new Error('ANTHROPIC_API_KEY is not configured');
-    }
-
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    return fetchWithRetry('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -123,13 +150,6 @@ async function callAnthropic(
             temperature: 0.7,
         }),
     });
-
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(`Anthropic API error: ${error.error?.message || response.statusText}`);
-    }
-
-    return response;
 }
 
 /**
@@ -142,16 +162,13 @@ async function callGoogle(
     stream: boolean = false
 ): Promise<Response> {
     const apiKey = process.env.GOOGLE_AI_API_KEY;
-
-    if (!apiKey) {
-        throw new Error('GOOGLE_AI_API_KEY is not configured');
-    }
+    if (!apiKey) throw new Error('GOOGLE_AI_API_KEY is not configured');
 
     const endpoint = stream
         ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`
         : `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
-    const response = await fetch(endpoint, {
+    return fetchWithRetry(endpoint, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -168,17 +185,10 @@ async function callGoogle(
             ],
             generationConfig: {
                 temperature: 0.85,
-                maxOutputTokens: 4000,  // 더 긴 응답을 위해 증가
+                maxOutputTokens: 4000,
             },
         }),
     });
-
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(`Google AI API error: ${error.error?.message || response.statusText}`);
-    }
-
-    return response;
 }
 
 /**
@@ -202,9 +212,8 @@ export async function generateCompletion(
 
         return await parseResponse(response, config.provider, config.model);
     } catch (error) {
-        // 폴백 시도
         if (config.fallback) {
-            console.warn(`Primary model failed, trying fallback: ${config.fallback.model}`);
+            console.warn(`[AI Client] Primary model failed, trying fallback: ${config.fallback.model}`);
             const fallbackResponse = await callProvider(
                 config.fallback.provider,
                 systemPrompt,
@@ -213,6 +222,45 @@ export async function generateCompletion(
                 false
             );
             return await parseResponse(fallbackResponse, config.fallback.provider, config.fallback.model);
+        }
+        throw error;
+    }
+}
+
+/**
+ * 스트리밍 LLM 호출
+ */
+export async function generateStreamingCompletion(
+    systemPrompt: string,
+    userPrompt: string,
+    tier: ModelTier = 'free'
+): Promise<Response> {
+    const config = MODEL_CONFIG[tier];
+
+    try {
+        const response = await callProvider(
+            config.provider,
+            systemPrompt,
+            userPrompt,
+            config.model,
+            true
+        );
+
+        if (!response.ok) {
+            throw new Error(`Streaming API call failed: ${response.statusText}`);
+        }
+
+        return response;
+    } catch (error) {
+        if (config.fallback) {
+            console.warn(`[AI Client] Primary streaming failed, trying fallback: ${config.fallback.model}`);
+            return await callProvider(
+                config.fallback.provider,
+                systemPrompt,
+                userPrompt,
+                config.fallback.model,
+                true
+            );
         }
         throw error;
     }
@@ -229,14 +277,10 @@ async function callProvider(
     stream: boolean
 ): Promise<Response> {
     switch (provider) {
-        case 'openai':
-            return callOpenAI(systemPrompt, userPrompt, model, stream);
-        case 'anthropic':
-            return callAnthropic(systemPrompt, userPrompt, model, stream);
-        case 'google':
-            return callGoogle(systemPrompt, userPrompt, model, stream);
-        default:
-            throw new Error(`Unsupported provider: ${provider}`);
+        case 'openai': return callOpenAI(systemPrompt, userPrompt, model, stream);
+        case 'anthropic': return callAnthropic(systemPrompt, userPrompt, model, stream);
+        case 'google': return callGoogle(systemPrompt, userPrompt, model, stream);
+        default: throw new Error(`Unsupported provider: ${provider}`);
     }
 }
 
@@ -249,7 +293,6 @@ async function parseResponse(
     model: string
 ): Promise<LLMResponse> {
     const data = await response.json();
-
     let content: string;
     let usage: LLMResponse['usage'];
 
@@ -262,7 +305,6 @@ async function parseResponse(
                 totalTokens: data.usage.total_tokens,
             } : undefined;
             break;
-
         case 'anthropic':
             content = data.content[0]?.text || '';
             usage = data.usage ? {
@@ -271,7 +313,6 @@ async function parseResponse(
                 totalTokens: data.usage.input_tokens + data.usage.output_tokens,
             } : undefined;
             break;
-
         case 'google':
             content = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
             usage = data.usageMetadata ? {
@@ -280,186 +321,115 @@ async function parseResponse(
                 totalTokens: data.usageMetadata.totalTokenCount,
             } : undefined;
             break;
-
         default:
             content = '';
     }
 
-    return {
-        content,
-        model,
-        provider,
-        usage,
-    };
-}
-
-/**
- * 스트리밍 LLM 호출 (ReadableStream 반환)
- */
-export async function generateStreamingCompletion(
-    systemPrompt: string,
-    userPrompt: string,
-    tier: ModelTier = 'free'
-): Promise<ReadableStream<Uint8Array>> {
-    const config = MODEL_CONFIG[tier];
-
-    const response = await callProvider(
-        config.provider,
-        systemPrompt,
-        userPrompt,
-        config.model,
-        true
-    );
-
-    if (!response.body) {
-        throw new Error('No response body for streaming');
-    }
-
-    return transformStream(response.body, config.provider);
-}
-
-/**
- * 프로바이더별 스트림 변환
- */
-function transformStream(
-    body: ReadableStream<Uint8Array>,
-    provider: ModelProvider
-): ReadableStream<Uint8Array> {
-    const reader = body.getReader();
-    const decoder = new TextDecoder();
-    const encoder = new TextEncoder();
-
-    return new ReadableStream({
-        async pull(controller) {
-            const { done, value } = await reader.read();
-
-            if (done) {
-                controller.close();
-                return;
-            }
-
-            const text = decoder.decode(value, { stream: true });
-            const lines = text.split('\n').filter(line => line.trim());
-
-            for (const line of lines) {
-                try {
-                    let content = '';
-
-                    if (provider === 'openai') {
-                        if (line.startsWith('data: ')) {
-                            const data = line.slice(6);
-                            if (data === '[DONE]') continue;
-                            const parsed = JSON.parse(data);
-                            content = parsed.choices?.[0]?.delta?.content || '';
-                        }
-                    } else if (provider === 'anthropic') {
-                        if (line.startsWith('data: ')) {
-                            const data = line.slice(6);
-                            const parsed = JSON.parse(data);
-                            if (parsed.type === 'content_block_delta') {
-                                content = parsed.delta?.text || '';
-                            }
-                        }
-                    } else if (provider === 'google') {
-                        if (line.startsWith('data: ')) {
-                            const data = line.slice(6);
-                            const parsed = JSON.parse(data);
-                            content = parsed.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                        }
-                    }
-
-                    if (content) {
-                        controller.enqueue(encoder.encode(content));
-                    }
-                } catch {
-                    // 파싱 에러 무시 (스트림 청크가 불완전할 수 있음)
-                }
-            }
-        },
-    });
-}
-
-/**
- * 토큰 사용량 추정 (비용 계산용)
- */
-export function estimateTokens(text: string): number {
-    // 대략적인 추정: 한국어는 약 2-3자당 1토큰
-    // 영어는 약 4자당 1토큰
-    const koreanChars = (text.match(/[\uAC00-\uD7AF]/g) || []).length;
-    const otherChars = text.length - koreanChars;
-
-    return Math.ceil(koreanChars / 2.5 + otherChars / 4);
-}
-
-/**
- * 예상 비용 계산 (USD)
- */
-export function estimateCost(
-    inputTokens: number,
-    outputTokens: number,
-    tier: ModelTier
-): number {
-    // 2024년 기준 대략적인 가격 (1M 토큰당)
-    const pricing: Record<ModelTier, { input: number; output: number }> = {
-        free: { input: 0.15, output: 0.6 },     // GPT-4o-mini
-        basic: { input: 0.15, output: 0.6 },    // GPT-4o-mini
-        premium: { input: 3, output: 15 },       // Claude Sonnet
-    };
-
-    const price = pricing[tier];
-    return (inputTokens * price.input + outputTokens * price.output) / 1_000_000;
+    return { content, model, provider, usage };
 }
 
 /**
  * 구조화된 JSON 응답 생성 (Cosmic Report용)
- * Gemini의 JSON Output 모드 활용
  */
 export async function generateStructuredReport<T>(
     systemPrompt: string,
     userPrompt: string,
-    tier: ModelTier = 'free'
+    tier: ModelTier = 'free',
+    schema?: z.ZodSchema<T>
 ): Promise<T> {
     const config = MODEL_CONFIG[tier];
     const apiKey = process.env.GOOGLE_AI_API_KEY;
-
-    // 최신 고성능 모델인 Gemini 3 Flash(config.model)를 우선 사용
     const model = config.provider === 'google' ? config.model : 'gemini-3-flash-preview';
 
     if (!apiKey) throw new Error('GOOGLE_AI_API_KEY is not configured');
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const options = {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            systemInstruction: {
-                parts: [{ text: systemPrompt }],
-            },
-            contents: [{
-                role: 'user',
-                parts: [{ text: userPrompt }],
-            }],
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
             generationConfig: {
-                temperature: 0.85,
-                maxOutputTokens: 8192, // 긴 리포트를 위해 충분히 확보
-                responseMimeType: "application/json", // 핵심: JSON 강제
+                temperature: 0.7, // 0.85 -> 0.7 for higher stability
+                maxOutputTokens: 8192,
+                responseMimeType: "application/json",
             },
         }),
-    });
+    };
 
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(`Google AI API error: ${error.error?.message || response.statusText}`);
-    }
-
+    const response = await fetchWithRetry(url, options);
     const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+
+    // Helper: Clean problematic JSON content
+    const cleanJsonString = (str: string) => {
+        let cleaned = str.trim();
+        // 1. Remove markdown code blocks if present
+        if (cleaned.startsWith('```')) {
+            cleaned = cleaned.replace(/^```[a-z]*\n/i, '').replace(/\n```$/m, '');
+        }
+
+        // 2. Handle unescaped internal double quotes more robustly
+        // This is a common issue where AI says "He said "Hello""
+        // We look for quotes that aren't structural (not after : { [ , or before : } ] ,)
+        // Note: This is an approximation.
+        cleaned = cleaned.replace(/([^\\:[{,\s\n])"([^,:\]}\s\n])/g, "$1'$2");
+
+        // 3. Handle raw newlines within string values (Critical for long poetic responses)
+        // JSON requires \n, but AI often gives raw newlines in multi-line strings.
+        // We look for parts between : " and " , or " }
+        // We replace newlines with \n only inside quotes
+        let inString = false;
+        let finalResult = '';
+        for (let i = 0; i < cleaned.length; i++) {
+            const char = cleaned[i];
+            const prevChar = i > 0 ? cleaned[i - 1] : '';
+
+            if (char === '"' && prevChar !== '\\') {
+                inString = !inString;
+                finalResult += char;
+            } else if (char === '\n' && inString) {
+                finalResult += '\\n';
+            } else {
+                finalResult += char;
+            }
+        }
+        cleaned = finalResult;
+
+        // 4. Remove trailing commas (e.g., [1, 2, ] -> [1, 2])
+        cleaned = cleaned.replace(/,\s*([\]}])/g, '$1');
+
+        return cleaned;
+    };
+
+    const text = cleanJsonString(rawText);
 
     try {
-        return JSON.parse(text) as T;
-    } catch (e) {
-        console.error("JSON Parse Error:", text);
-        throw new Error("Failed to parse AI response as JSON");
+        const parsed = JSON.parse(text);
+        if (schema) {
+            const validation = schema.safeParse(parsed);
+            if (!validation.success) {
+                console.error("[AI Schema Validation Failed]", validation.error);
+                console.error("[Bad Response Body]", text);
+                throw new Error(`Schema Validation Failed: ${validation.error.message}`);
+            }
+            return validation.data;
+        }
+        return parsed as T;
+    } catch (e: any) {
+        // Advanced diagnostics: Find error position
+        const errorPosMatch = e.message.match(/position (\d+)/);
+        if (errorPosMatch) {
+            const pos = parseInt(errorPosMatch[1], 10);
+            const start = Math.max(0, pos - 50);
+            const end = Math.min(text.length, pos + 50);
+            console.error(`[JSON Parse Detail] Error around position ${pos}:`);
+            console.error(`...${text.substring(start, pos)} >>> ${text.charAt(pos)} <<< ${text.substring(pos + 1, end)}...`);
+        }
+
+        console.error("JSON Parse Error Message:", e.message);
+        console.error("Failed JSON Content (Full):", text);
+        throw new Error(`Failed to parse AI response: ${e.message}`);
     }
 }

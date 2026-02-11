@@ -111,12 +111,19 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
         setHasInteracted(true);
         const userMessage = input.trim();
         setInput('');
+
+        // 사용자 메시지 즉시 추가
         setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+
+        // AI 메시지 객체 선행 생성 (스트리밍용)
+        const assistantMessageId = 'temp-' + Date.now();
+        setMessages(prev => [...prev, { id: assistantMessageId, role: 'assistant', content: '' }]);
+
         setIsLoading(true);
         setIsThinking(true);
 
         try {
-            const res = await fetch('/api/reading/followup', {
+            const res = await fetch('/api/reading/followup/stream', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -125,19 +132,44 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
                 }),
             });
 
-            if (!res.ok) throw new Error('Failed to send message');
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                if (res.status === 402) {
+                    setIsPurchaseModalOpen(true);
+                    setMessages(prev => prev.filter(m => m.id !== assistantMessageId));
+                    return;
+                }
+                throw new Error(errorData.error || 'Failed to send message');
+            }
 
-            const data = await res.json();
+            setIsThinking(false);
 
-            setMessages(prev => [...prev, {
-                role: 'assistant',
-                content: data.answer
-            }]);
-            setCredits(data.creditsLeft);
+            const reader = res.body?.getReader();
+            if (!reader) throw new Error('No reader found');
+
+            const decoder = new TextDecoder();
+            let accumulatedContent = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                accumulatedContent += chunk;
+
+                // 해당 메시지만 업데이트
+                setMessages(prev => prev.map(m =>
+                    m.id === assistantMessageId ? { ...m, content: accumulatedContent } : m
+                ));
+            }
+
+            // 최종 크레딧 갱신
+            setTimeout(fetchStatus, 500);
 
         } catch (error) {
             console.error(error);
             alert('메시지 전송 중 오류가 발생했습니다.');
+            setMessages(prev => prev.filter(m => m.id !== assistantMessageId));
         } finally {
             setIsLoading(false);
             setIsThinking(false);
@@ -174,90 +206,114 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
     };
 
     return (
-        <div className="w-full max-w-2xl mx-auto mt-12 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
+        <div className="w-full max-w-2xl mx-auto mt-12 bg-[#0A0C1B]/80 backdrop-blur-xl rounded-3xl border border-white/10 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] relative">
+            {/* Background Aura */}
+            <div className="absolute top-0 left-1/4 w-1/2 h-px bg-gradient-to-r from-transparent via-[#D4AF37]/50 to-transparent" />
+
             {/* Header */}
-            <div className="p-4 border-b border-white/10 bg-deep-navy/50 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-star-yellow animate-pulse" />
-                    <h3 className="text-lg font-bold text-gray-100">Oracle Chat</h3>
+            <div className="p-5 border-b border-white/10 bg-white/5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#B4941F] flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.3)]">
+                        <Sparkles className="w-5 h-5 text-black" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-100 tracking-tight">Cosmic Oracle</h3>
+                        <p className="text-[10px] text-star-yellow/70 uppercase tracking-widest font-medium">Digital Deviner</p>
+                    </div>
                 </div>
-                <div className="text-sm font-medium">
-                    <span className="text-gray-400 mr-2">남은 질문권:</span>
-                    <span className={credits && credits > 0 ? "text-star-yellow" : "text-red-400"}>
-                        {credits !== null ? `${credits}회` : '...'}
+                <div className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 flex items-center gap-2">
+                    <span className="text-[11px] text-gray-400 font-medium italic">Remaining:</span>
+                    <span className={`text-sm font-bold ${credits && credits > 0 ? "text-[#D4AF37]" : "text-red-400"}`}>
+                        {credits !== null ? `${credits}` : '...'}
                     </span>
                 </div>
             </div>
 
             {/* Messages Area */}
-            <div className="h-[400px] overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-white/10">
+            <div className="h-[450px] overflow-y-auto p-6 space-y-6 scroll-smooth scrollbar-thin scrollbar-thumb-white/10">
                 {messages.length === 0 && !isThinking && (
-                    <div className="text-center text-gray-400 py-10">
-                        <p>운세에 대해 더 궁금한 점이 있으신가요?</p>
-                        <p className="text-sm mt-2 opacity-70">AI 상담가에게 무엇이든 물어보세요.</p>
+                    <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-60">
+                        <div className="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center text-star-yellow/40">
+                            <Sparkles className="w-8 h-8" />
+                        </div>
+                        <div>
+                            <p className="text-gray-300 font-medium">운명의 설계도에 대해 더 깊이 물어보세요</p>
+                            <p className="text-xs text-gray-500 mt-1">오라클이 당신의 데이터를 바탕으로 답변합니다.</p>
+                        </div>
                     </div>
                 )}
 
                 {messages.map((msg, idx) => (
                     <motion.div
                         key={idx}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ duration: 0.4, ease: "easeOut" }}
                         className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
-                        <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${msg.role === 'user'
-                            ? 'bg-star-yellow/20 text-star-yellow rounded-tr-none'
-                            : 'bg-white/10 text-gray-200 rounded-tl-none'
+                        <div className={`max-w-[85%] rounded-[1.5rem] px-5 py-4 relative group ${msg.role === 'user'
+                            ? 'bg-gradient-to-br from-[#D4AF37]/20 to-[#B4941F]/10 border border-[#D4AF37]/30 text-[#FFEBB0] rounded-tr-none'
+                            : 'bg-white/5 border border-white/10 text-gray-200 rounded-tl-none backdrop-blur-sm'
                             }`}>
-                            <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                            {msg.role === 'assistant' && (
+                                <div className="absolute -top-3 -left-1 opacity-20 group-hover:opacity-100 transition-opacity">
+                                    <Sparkles className="w-3 h-3 text-star-yellow" />
+                                </div>
+                            )}
+                            <p className="text-[15px] whitespace-pre-wrap leading-relaxed font-light tracking-wide">{msg.content}</p>
                         </div>
                     </motion.div>
                 ))}
 
                 {isThinking && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-                        <div className="bg-white/5 rounded-2xl rounded-tl-none px-4 py-3 flex items-center gap-2">
-                            <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                            <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100" />
-                            <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200" />
+                        <div className="bg-white/5 rounded-2xl rounded-tl-none px-5 py-4 flex items-center gap-2 border border-white/5 shadow-inner">
+                            <span className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-pulse shadow-[0_0_8px_#D4AF37]" />
+                            <span className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-pulse delay-75 shadow-[0_0_8px_#D4AF37]" />
+                            <span className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-pulse delay-150 shadow-[0_0_8px_#D4AF37]" />
                         </div>
                     </motion.div>
                 )}
-                <div ref={messagesEndRef} />
+                <div ref={messagesEndRef} className="h-2" />
             </div>
 
             {/* Input Area */}
-            <div className="p-4 border-t border-white/10 bg-deep-navy/30">
+            <div className="p-6 bg-gradient-to-b from-transparent to-black/40">
                 {credits !== null && credits > 0 ? (
-                    <div className="relative flex items-center gap-2">
-                        <textarea
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSend();
-                                }
-                            }}
-                            placeholder="질문을 입력하세요..."
-                            disabled={isLoading}
-                            className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-star-yellow/50 resize-none h-[50px] scrollbar-hide"
-                        />
+                    <div className="relative flex items-center gap-3">
+                        <div className="relative flex-1">
+                            <textarea
+                                value={input}
+                                onChange={(e) => setInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault();
+                                        handleSend();
+                                    }
+                                }}
+                                placeholder="당신만의 운명을 더 깊이 읽어보세요..."
+                                disabled={isLoading}
+                                className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-[15px] text-white placeholder-gray-500 focus:outline-none focus:border-[#D4AF37]/40 focus:ring-1 focus:ring-[#D4AF37]/20 transition-all resize-none h-[60px] scrollbar-hide shadow-inner"
+                            />
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-gray-600 font-mono tracking-tighter">
+                                ENTER TO SEND
+                            </div>
+                        </div>
                         <button
                             onClick={handleSend}
                             disabled={!input.trim() || isLoading}
-                            className="p-3 bg-star-yellow/20 hover:bg-star-yellow/30 text-star-yellow rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-14 h-14 bg-gradient-to-br from-[#D4AF37] to-[#B4941F] hover:shadow-[0_0_25px_rgba(212,175,55,0.4)] text-black rounded-2xl transition-all disabled:opacity-30 disabled:grayscale flex items-center justify-center group active:scale-95"
                         >
-                            <Send className="w-5 h-5" />
+                            <Send className="w-6 h-6 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                         </button>
                     </div>
                 ) : (
                     <button
                         onClick={() => setIsPurchaseModalOpen(true)}
-                        className="w-full py-3 bg-gradient-to-r from-[#D4AF37] to-[#B4941F] hover:opacity-90 rounded-xl flex items-center justify-center gap-2 text-black font-semibold transition-all shadow-lg shadow-[#D4AF37]/20 hover:shadow-[#D4AF37]/40 active:scale-[0.98]"
+                        className="w-full py-5 bg-gradient-to-r from-[#D4AF37] via-[#F2D479] to-[#D4AF37] bg-[length:200%_auto] animate-shimmer hover:opacity-95 rounded-2xl flex items-center justify-center gap-3 text-black font-bold text-lg transition-all shadow-[0_8px_30px_rgb(212,175,55,0.25)] hover:shadow-[0_8px_40px_rgb(212,175,55,0.4)] active:scale-[0.98]"
                     >
-                        <Sparkles className="w-4 h-4" />
-                        <span>질문권 충전하기</span>
+                        <Sparkles className="w-6 h-6 animate-spin-slow" />
+                        <span>오라클 질문권 충전하기</span>
                     </button>
                 )}
             </div>

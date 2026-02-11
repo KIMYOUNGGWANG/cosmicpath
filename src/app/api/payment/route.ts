@@ -53,6 +53,36 @@ export async function GET(request: NextRequest) {
 
         const result = await verifyCheckoutSession(sessionId);
 
+        // [Sync] If paid, update the ReadingResult in DB immediately to avoid webhook race condition
+        if (result.success && result.readingId) {
+            try {
+                const { prisma } = await import('@/lib/prisma');
+                const reading = await prisma.readingResult.findUnique({
+                    where: { id: result.readingId }
+                });
+
+                if (reading) {
+                    const meta = reading.metadata ? JSON.parse(reading.metadata) : {};
+                    if (!meta.isPremium) {
+                        await prisma.readingResult.update({
+                            where: { id: result.readingId },
+                            data: {
+                                metadata: JSON.stringify({
+                                    ...meta,
+                                    isPremium: true,
+                                    paymentVerifiedAt: new Date().toISOString(),
+                                    paymentSource: 'sync_verification'
+                                })
+                            }
+                        });
+                        console.log(`[Sync] Updated reading ${result.readingId} status to premium via sync.`);
+                    }
+                }
+            } catch (syncErr) {
+                console.error('[Sync] Failed to sync payment status to DB:', syncErr);
+            }
+        }
+
         return NextResponse.json({
             status: result.success ? 'paid' : 'unpaid',
             customer_email: result.customerEmail,

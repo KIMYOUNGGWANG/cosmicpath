@@ -29,4 +29,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         signIn: '/login', // We will use a modal, but this is a fallback
         error: '/error',
     },
+    trustHost: true,
 })
