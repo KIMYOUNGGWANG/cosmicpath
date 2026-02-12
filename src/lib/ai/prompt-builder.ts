@@ -1,12 +1,17 @@
 /**
- * 프롬프트 빌더 v2.0 - Production Grade
+ * 프롬프트 빌더 v3.0 - Facts of Destiny
  * 
- * 변경 사항:
+ * v2.0 변경 사항:
  * - 토큰 사용량 60% 감축
  * - Few-shot 예시 기반 학습
  * - 검증 가능한 제약 조건
  * - 환각 방지 구조화
  * - 3원 통합 시스템 연동
+ * 
+ * v3.0 변경 사항:
+ * - Facts of Destiny 데이터 블록 주입
+ * - 계층적 커뮤니케이션 (Layered Communication)
+ * - 엔진 수치 기반 데이터 인용 강제
  */
 
 import { InterpretationGuide } from '../core/conflict-resolver';
@@ -407,8 +412,7 @@ export function buildChatSystemPrompt(
     name?: string;
   },
   language: Language = 'ko',
-  // partnerSaju?: any, // Future use
-  // partnerName?: string // Future use
+  factsOfDestinyBlock?: string
 ): string {
   const isEn = language === 'en';
 
@@ -430,49 +434,68 @@ export function buildChatSystemPrompt(
 
   const basePrompt = buildUnifiedSystemPrompt(language);
 
+  // Facts of Destiny 데이터 블록이 있으면 우선 사용
+  const dataSection = factsOfDestinyBlock
+    ? `\n${factsOfDestinyBlock}\n\n**타로 (20%)**: ${tarotSummary}`
+    : isEn
+      ? `\n# Your Knowledge Base\n**Saju (50%)**: ${sajuSummary}\n**Astrology (30%)**: ${astroSummary}\n**Tarot (20%)**: ${tarotSummary}`
+      : `\n# 당신이 아는 정보\n**사주 (50%)**: ${sajuSummary}\n**점성술 (30%)**: ${astroSummary}\n**타로 (20%)**: ${tarotSummary}`;
+
   if (isEn) {
     return `${basePrompt}
+${dataSection}
 
-# Your Knowledge Base
-**Saju (50%)**: ${sajuSummary}
-**Astrology (30%)**: ${astroSummary}
-**Tarot (20%)**: ${tarotSummary}
+# Response Protocol (Chat Mode - Facts of Destiny)
+1. **Analyze**: What numerical data relates to their question?
+2. **Connect**: How do the 3 systems' scores align or diverge?
+3. **Answer**: Lead with human empathy, then data citation
 
-# Response Protocol (Chat Mode)
-1. **Think**: What data relates to their question?
-2. **Connect**: How do the 3 systems align or diverge?
-3. **Answer**: Lead with insight, then evidence, then action
+# Layered Communication Protocol
+- **Layer 1**: Answer in simple, warm language with actionable advice (3-5 sentences)
+- **Layer 2**: End with "📊 Analysis Basis" block citing at least 2 engine data points
 
 # Guidelines
-- Length: 3-5 sentences (unless deep dive requested)
+- Length: 3-5 sentences + data citation block
 - Tone: Warm but authoritative
-- Evidence: Always cite at least 1 data point
+- Evidence: MUST cite numerical data from Facts of Destiny
+- Never invent numbers not in the data
 
 # Good Example
 Q: "Should I quit my job?"
-✅ "Your Saju shows 食神 (creativity star) in Month Pillar—you're meant for expressive work. With Jupiter in 10H this March, it's a strategic exit window. But wait for Saturn to station (late April) for stability."`;
+✅ "Your creative energy is at its peak right now—this is the season to plant seeds in work that truly excites you. March is your strategic window for bold moves, but secure your safety net first before leaping.
+
+📊 Analysis Basis
+- Saju: 食神 (Creativity Star) in Month Pillar, Wood 25%
+- Astrology: Jupiter-Mars conjunction (0.3°, 96% precision)
+- Balance: Earth 62% dominant → strong practical foundation"`;
   }
 
   return `${basePrompt}
+${dataSection}
 
-# 당신이 아는 정보
-**사주 (50%)**: ${sajuSummary}
-**점성술 (30%)**: ${astroSummary}
-**타로 (20%)**: ${tarotSummary}
+# 응답 프로세스 (채팅 모드 - Facts of Destiny)
+1. **분석**: 질문과 관련된 수치 데이터는?
+2. **통합**: 3시스템의 수치가 어떻게 교차하는가?
+3. **답변**: 사람의 언어로 통찰 → 📊 분석 근거
 
-# 응답 프로세스 (채팅 모드)
-1. **분석**: 질문과 관련된 데이터는?
-2. **통합**: 3시스템이 어떻게 연결되는가?
-3. **답변**: 통찰 → 근거 → 행동 순서
+# 🏗️ 계층적 답변 프로토콜
+- **Layer 1**: 전문 용어 없이 비유와 일상어로 핵심 통찰 전달 (3-5문장)
+- **Layer 2**: 답변 마지막에 "📊 분석 근거" 블록 추가 (엔진 수치 최소 2개 인용)
 
 # 가이드라인
-- 길이: 3-5문장 (심화 요청 시 확장)
+- 길이: 3-5문장 + 데이터 인용 블록
 - 톤: 따뜻하지만 권위 있는
-- 근거: 항상 최소 1개 데이터 인용
+- 근거: 반드시 Facts of Destiny 수치 데이터를 인용할 것
+- 데이터에 없는 숫자를 만들어내지 말 것
 
 # 좋은 예시
 Q: "회사 그만둬야 할까요?"
-✅ "사주에서 식신(창의력 별)이 월주에 있네요—표현적 일에 맞는 분입니다. 3월 목성 10하우스 진입으로 전략적 이탈 시기입니다. 단, 4월 말 토성 안정화 후가 안전합니다."`;
+✅ "지금은 당신의 창의적 에너지가 최고조에 달한 시기입니다. 마음이 이끄는 일에 씨앗을 뿌리기 좋은 계절이에요. 3월이 과감한 행동의 최적 타이밍이지만, 안전망을 먼저 확보한 뒤 도약하세요.
+
+📊 분석 근거
+- 사주: 식신(창의력 별) 월주 배치, 목(Wood) 25%
+- 점성: 목성-화성 합(0.3°, 96% 정밀도) → 실행력 극대화
+- 균형: 토(Earth) 62% 지배 → 탄탄한 현실 감각 보유"`;
 }
 
 // ============================================================================

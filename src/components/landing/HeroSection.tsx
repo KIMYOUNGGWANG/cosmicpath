@@ -97,7 +97,7 @@ export function HeroSection() {
                     transition={{ duration: 1, delay: 1.2 }}
                     className="flex flex-wrap justify-center gap-4 md:gap-8"
                 >
-                    {['Unseal Your Destiny', 'Hyper-Personalized AI', 'Integrated Cosmic Analysis'].map((badge, i) => (
+                    {['Hyper-Personalized AI', 'Integrated Cosmic Analysis'].map((badge, i) => (
                         <div key={i} className="px-4 py-2 border border-white/10 rounded-full bg-white/5 backdrop-blur-md">
                             <span className="text-xs md:text-sm text-acc-gold tracking-widest uppercase">{badge}</span>
                         </div>
@@ -113,7 +113,7 @@ export function HeroSection() {
                 >
                     <Link
                         href="/start?reset=true"
-                        className="group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-acc-gold via-amber-300 to-acc-gold bg-[length:200%_auto] animate-shimmer text-deep-navy font-bold text-lg tracking-widest rounded-full shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:shadow-[0_0_40px_rgba(212,175,55,0.6)] hover:scale-105 transition-all duration-300"
+                        className="group relative inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-acc-gold via-amber-300 to-acc-gold bg-[length:200%_auto] animate-pulse-slow text-deep-navy font-bold text-lg tracking-widest rounded-full shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:shadow-[0_0_40px_rgba(212,175,55,0.6)] hover:scale-105 transition-all duration-300"
                     >
                         <span className="relative z-10 flex items-center gap-2">
                             UNSEAL YOUR DESTINY

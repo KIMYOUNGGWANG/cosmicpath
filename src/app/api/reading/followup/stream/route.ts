@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { buildOracleChatSystemPrompt } from '@/lib/ai/oracle-prompts';
 import { generateStreamingCompletion } from '@/lib/ai/llm-client';
+import { buildFactsOfDestiny } from '@/lib/engines/intelligence-bridge';
 
 /**
  * POST /api/reading/followup/stream
@@ -60,7 +61,21 @@ export async function POST(request: NextRequest) {
             name: metadata?.readingData?.name
         };
 
-        const systemPrompt = buildOracleChatSystemPrompt(chatContext);
+        // Facts of Destiny: 원천 데이터가 있으면 정량화된 데이터 블록 생성
+        let factsOfDestinyBlock: string | undefined;
+        try {
+            const rawSaju = metadata?.sajuResult || metadata?.saju;
+            const rawAstro = metadata?.astrologyResult || metadata?.astrology;
+            if (rawSaju && typeof rawSaju === 'object' && rawSaju.dayMaster &&
+                rawAstro && typeof rawAstro === 'object' && rawAstro.sunSign !== undefined) {
+                const factsData = buildFactsOfDestiny(rawSaju, rawAstro);
+                factsOfDestinyBlock = factsData.fullDataBlock;
+            }
+        } catch (bridgeError) {
+            console.warn('[Facts of Destiny] Bridge generation skipped:', bridgeError);
+        }
+
+        const systemPrompt = buildOracleChatSystemPrompt(chatContext, factsOfDestinyBlock);
 
         // 이전 대화 내역 (최근 6개 참조)
         const historyText = session.messages.slice(-6).map((m: any) =>

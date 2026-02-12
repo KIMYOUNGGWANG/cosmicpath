@@ -440,10 +440,10 @@ export default function MatchResultPage({ params }: PageProps) {
                                         );
                                         const isCurrent = !isDone && (
                                             phase === 1 || (
-                                                phase === 2 ? !!(aiAnalysis as any).energyAnalysis :
-                                                    phase === 3 ? !!(aiAnalysis as any).emotionalCompatibility :
-                                                        phase === 4 ? !!(aiAnalysis as any)._prosperitySync :
-                                                            phase === 5 ? !!(aiAnalysis as any)._timelineForecasts : false
+                                                phase === 2 ? !!(aiAnalysis as any)?.energyAnalysis :
+                                                    phase === 3 ? !!(aiAnalysis as any)?.emotionalCompatibility :
+                                                        phase === 4 ? !!(aiAnalysis as any)?._prosperitySync :
+                                                            phase === 5 ? !!(aiAnalysis as any)?._timelineForecasts : false
                                             )
                                         );
 
