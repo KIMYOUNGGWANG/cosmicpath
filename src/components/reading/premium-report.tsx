@@ -29,6 +29,8 @@ import { ElementHarmony } from './ElementHarmony';
 import { ActionChecklist } from './ActionChecklist';
 import { FinalVerdictCard } from './FinalVerdictCard';
 import { InsightCard, InsightHighlight } from './ui/InsightCard';
+import { DestinyDashboardSection } from '../dashboard/DestinyDashboardSection';
+import { GhostDetectorSection } from '../dashboard/GhostDetectorSection';
 // import TossPaymentWidget from '../payment/TossPaymentWidget'; // Toss Payments (Commented out)
 
 // 새로운 Premium Report 타입 (기존 CosmicReport 대체)
@@ -422,6 +424,20 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
             {/* Cosmic Radar Section (New) */}
             <CosmicRadarMemo report={report} metadata={metadata} language={language} />
 
+            {/* Destiny Dashboard — Saju Energy Visualization */}
+            {/* Destiny Dashboard — Saju Energy Visualization */}
+            {(metadata as any)?.sajuResult && (
+                <DestinyDashboardSection
+                    details={{
+                        hostSaju: (metadata as any).sajuResult,
+                        hostAstrology: (metadata as any)?.astrologyResult
+                    }}
+                    hasGuest={false}
+                    hostName={(metadata as any)?.readingData?.name || 'You'}
+                    guestName={undefined}
+                />
+            )}
+
             {/* Tarot Spread Section */}
             {tarotCards.length > 0 && (
                 <TarotSpreadSection cards={tarotCards} onCardClick={setSelectedCardIdx} language={language} />
@@ -755,6 +771,16 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 </motion.section>
 
             </div>
+
+            {/* Ghost Detector (Viral Hook) — Personal Report */}
+            {(() => {
+                return (metadata as any)?.sajuResult && (
+                    <GhostDetectorSection
+                        sajuResult={(metadata as any).sajuResult}
+                        userName={(metadata as any)?.readingData?.name || 'You'}
+                    />
+                );
+            })()}
 
             {/* Share Panel */}
             <section className="mt-16 px-4 md:px-6 text-center">

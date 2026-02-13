@@ -82,6 +82,11 @@ export interface MatchResult {
     guestDayMaster?: string;
     tianganHe?: boolean;  // 천간합 여부
     dizhiChong?: boolean; // 지지충 여부
+    // Engines for Dashboard/Ghost Detector
+    hostSaju?: SajuResult;
+    guestSaju?: SajuResult;
+    hostAstrology?: any;
+    guestAstrology?: any;
 }
 
 /**
@@ -260,6 +265,10 @@ export function calculateCompatibility(host: PersonData, guest: PersonData): Mat
         guest.gender || 'female'
     );
 
+    // Calculate Astrology
+    const hostAstrology = calculateAstrology(host.birthDate, host.birthTime || '12:00');
+    const guestAstrology = calculateAstrology(guest.birthDate, guest.birthTime || '12:00');
+
     // 2. Saju Score (40%) - using real engine
     const sajuResult = calculateSajuCompatibility(hostSaju, guestSaju);
     const sajuScore = sajuResult.score;
@@ -334,5 +343,10 @@ export function calculateCompatibility(host: PersonData, guest: PersonData): Mat
         guestDayMaster: guestSaju.dayMaster,
         tianganHe: sajuResult.tianganHe,
         dizhiChong: sajuResult.dizhiChong,
+        // Full engines
+        hostSaju,
+        guestSaju,
+        hostAstrology,
+        guestAstrology,
     };
 }

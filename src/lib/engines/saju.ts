@@ -801,6 +801,255 @@ export interface SewoonInteractions {
   harmPresent: boolean;             // 해 성립
 }
 
+// =====================================
+// 신살 (神殺) 정밀 계산 엔진 (Authentic)
+// 연해자평, 삼명통회 등 고전 명리학 기반
+// =====================================
+
+export enum ShinSalType {
+  CHEONEUL = 'CHEONEUL',
+  MOONCHANG = 'MOONCHANG',
+  HAKDANG = 'HAKDANG',
+  JANGSUNG = 'JANGSUNG',
+  CHEONDEOK = 'CHEONDEOK',
+  WOLDEOK = 'WOLDEOK',
+  BANAN = 'BANAN',
+  DOHWA = 'DOHWA',
+  HWAGAE = 'HWAGAE',
+  YORKMA = 'YORKMA',
+  YANGIN = 'YANGIN',
+  GEOBSAL = 'GEOBSAL',
+  JAESAL = 'JAESAL',
+  BAEKHO = 'BAEKHO',
+  GOEGANG = 'GOEGANG',
+  GWIMUN = 'GWIMUN',
+  HYEONCHIM = 'HYEONCHIM',
+  CHEONMUN = 'CHEONMUN',
+  JEONGROK = 'JEONGROK', // 정록 (Lu)
+  WOLSAY = 'WOLSAY',     // 월살 (Wol-sal)
+  CHEONSAL = 'CHEONSAL', // 천살 (Cheon-sal)
+  JISAL = 'JISAL',       // 지살 (Ji-sal)
+  MANGSIN = 'MANGSIN',   // 망신살 (Mang-sin)
+  YUKHAE = 'YUKHAE',      // 육해살 (Yuk-hae)
+  HWANGEUN = 'HWANGEUN'   // 황은대사 (Imperial Grace)
+}
+
+export interface AuthenticShinSalResult {
+  type: ShinSalType;
+  name: string;
+  description: string;
+  level: number; // 0-100 (strength)
+}
+
+/**
+ * 신살 계산 메인 함수
+ * @param result 사주 결과 (SajuResult)
+ */
+export function calculateShinSal(result: any): AuthenticShinSalResult[] {
+  const list: AuthenticShinSalResult[] = [];
+
+  // 기준점 추출
+  const yearBranch = result.yeonPillar?.branch || result.yearPillar?.branch;
+  const dayBranch = result.dayPillar?.branch;
+  const dayStem = result.dayPillar?.stem;
+  const monthBranch = result.monthPillar?.branch; // Added for Cheondeok/Woldeok
+
+  if (!yearBranch || !dayBranch || !dayStem) return [];
+
+  const allBranches = [
+    result.yeonPillar?.branch || result.yearPillar?.branch,
+    result.monthPillar?.branch,
+    result.dayPillar?.branch,
+    result.hourPillar?.branch
+  ].filter(Boolean);
+
+  const allStems = [
+    result.yeonPillar?.stem || result.yearPillar?.stem,
+    result.monthPillar?.stem,
+    result.dayPillar?.stem,
+    result.hourPillar?.stem
+  ].filter(Boolean);
+
+  const myPillars = [
+    result.yeonPillar, result.monthPillar, result.dayPillar, result.hourPillar
+  ].filter(Boolean).map(p => (p.stem || '') + (p.branch || ''));
+
+  // 12신살 맵핑 (겁재천지년월망장반역육화)
+  const group12Map: Record<string, string[]> = {
+    '목': ['신', '유', '술', '해', '자', '축', '인', '묘', '진', '사', '오', '미'],
+    '화': ['해', '자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술'],
+    '금': ['인', '묘', '진', '사', '오', '미', '신', '유', '술', '해', '자', '축'],
+    '수': ['사', '오', '미', '신', '유', '술', '해', '자', '축', '인', '묘', '진']
+  };
+
+  const getSamHapGroup = (b: string) => {
+    if (['인', '오', '술'].includes(b)) return '화';
+    if (['신', '자', '진'].includes(b)) return '수';
+    if (['사', '유', '축'].includes(b)) return '금';
+    if (['해', '묘', '미'].includes(b)) return '목';
+    return null;
+  };
+
+  const salTypes = [
+    ShinSalType.GEOBSAL, ShinSalType.JAESAL, ShinSalType.CHEONSAL,
+    ShinSalType.JISAL, ShinSalType.DOHWA, ShinSalType.WOLSAY,
+    ShinSalType.MANGSIN, ShinSalType.JANGSUNG, ShinSalType.BANAN,
+    ShinSalType.YORKMA, ShinSalType.YUKHAE, ShinSalType.HWAGAE
+  ];
+
+  const salNames = [
+    '겁살 (Robbery Star)', '재살 (Disaster Star)', '천살 (Heavenly Curse)',
+    '지살 (Earthly Foundation)', '도화살 (Peach Blossom)', '월살 (Creeper Star)',
+    '망신살 (Public Shame)', '장성살 (General Star)', '반안살 (Road to Success)',
+    '역마살 (Global Nomad)', '육해살 (Six Damages)', '화개살 (Artistic Talent)'
+  ];
+
+  const salDescs = [
+    '강력한 경쟁심과 투쟁적 에너지', '위기를 기회로 바꾸는 영리한 지혜', '하늘의 엄중함과 정신적 성찰',
+    '이동과 변화를 통한 새로운 기반', '사람을 홀리는 치명적인 매력', '어둠 속에 피어나는 고독한 지성',
+    '드러내고 표현하며 얻는 명성과 실책', '조직의 중심에서 발휘하는 강력한 권위', '안전한 자리에 올라탄 순탄한 성공',
+    '세상을 누비며 기회를 찾는 역동성', '빠른 순발력과 민감한 감수성', '깊은 예술성과 지성, 정신적 깊이'
+  ];
+
+  // 12신살 전수 조사 (년/일 기준 모두 반영)
+  [yearBranch, dayBranch].forEach((basis, basisIdx) => {
+    const group = getSamHapGroup(basis);
+    if (!group) return;
+    const map = group12Map[group];
+
+    allBranches.forEach((target) => {
+      const salIdx = map.indexOf(target);
+      if (salIdx !== -1) {
+        const type = salTypes[salIdx];
+        // 중복 방지 (이미 같은 타입이 있으면 레벨만 보강하거나 스킵)
+        if (!list.find(s => s.type === type)) {
+          list.push({
+            type,
+            name: salNames[salIdx],
+            description: salDescs[salIdx],
+            level: 60 + (basisIdx * 10) // 일지 기준에 조금 더 가중치
+          });
+        }
+      }
+    });
+  });
+
+  // 1.5. 도화살 보강 (자오묘유 자체를 도화로 보는 관점 추가)
+  const inherentDohwa = ['자', '오', '묘', '유'];
+  allBranches.forEach(b => {
+    if (inherentDohwa.includes(b) && !list.find(s => s.type === ShinSalType.DOHWA)) {
+      list.push({
+        type: ShinSalType.DOHWA,
+        name: '도화살 (Peach Blossom)',
+        description: '자오묘유(子午卯酉)의 기운으로 사람을 끌어당기는 치명적인 매력',
+        level: 65
+      });
+    }
+  });
+
+  // 2. 길신(Noble) 및 특수 신살
+
+  // 2-0. 황은대사 (Hwang-eun-dae-sa) - 천재지변이나 국가적 사면 등 특별한 은혜
+  const hwangEunMap: Record<string, string> = {
+    '자': '진', '축': '사', '인': '미', '묘': '신', '진': '해', '사': '술',
+    '오': '자', '미': '축', '신': '인', '유': '묘', '술': '진', '해': '사'
+  };
+  const monthBranchForHwang = result.monthPillar?.branch;
+  if (monthBranchForHwang && allBranches.includes(hwangEunMap[monthBranchForHwang])) {
+    list.push({
+      type: ShinSalType.HWANGEUN,
+      name: '황은대사 (Imperial Grace)',
+      description: '국가나 사회로부터 입는 예상치 못한 큰 은혜와 도움',
+      level: 85
+    });
+  }
+
+  // 2-1. 정록 (Jeong-rok) - 건록
+  const luMap: Record<string, string> = {
+    '갑': '인', '을': '묘', '병': '사', '정': '오', '무': '사',
+    '기': '오', '경': '신', '신': '유', '임': '해', '계': '자'
+  };
+  if (allBranches.includes(luMap[dayStem])) {
+    list.push({
+      type: ShinSalType.JEONGROK,
+      name: '정록 (Celestial Wage)',
+      description: '하늘이 내린 안정적인 복록과 품격 있는 삶',
+      level: 85
+    });
+  }
+
+  // 2-2. 천을귀인
+  const cheoneulMap: Record<string, string[]> = {
+    '갑': ['축', '미'], '무': ['축', '미'], '경': ['축', '미'],
+    '을': ['자', '신'], '기': ['자', '신'],
+    '병': ['해', '유'], '정': ['해', '유'],
+    '신': ['오', '인'],
+    '임': ['사', '묘'], '계': ['사', '묘']
+  };
+  const teulTargets = cheoneulMap[dayStem] || [];
+  const teulCount = allBranches.filter(b => teulTargets.includes(b)).length;
+  if (teulCount > 0) {
+    list.push({ type: ShinSalType.CHEONEUL, name: '천을귀인 (Guardian Angel)', description: '하늘이 내린 최고의 수호신. 위기에서 구원받음', level: 90 });
+  }
+
+  // 2-3. 학당/문창
+  const hakMap: Record<string, string> = { '갑': '해', '을': '오', '병': '인', '정': '유', '무': '인', '기': '유', '경': '사', '신': '자', '임': '신', '계': '묘' };
+  if (allBranches.includes(hakMap[dayStem])) {
+    list.push({ type: ShinSalType.HAKDANG, name: '학당귀인 (Academy Noble)', description: '학문적 성취와 가르치는 재능이 뛰어난 지능', level: 80 });
+  }
+  const moonMap: Record<string, string> = { '갑': '사', '을': '오', '병': '신', '정': '유', '무': '신', '기': '유', '경': '해', '신': '자', '임': '인', '계': '묘' };
+  if (allBranches.includes(moonMap[dayStem])) {
+    list.push({ type: ShinSalType.MOONCHANG, name: '문창귀인 (Academic Star)', description: '깊은 지혜와 뛰어난 문장력으로 성공할 운명', level: 80 });
+  }
+
+  // 2-4. 천덕귀인 (Heavenly Virtue)
+  const cheondeokMap: Record<string, string> = { '인': '정', '묘': '신', '진': '임', '사': '신', '오': '해', '미': '갑', '신': '계', '유': '인', '술': '병', '해': '을', '자': '사', '축': '경' };
+  if (monthBranch && allStems.includes(cheondeokMap[monthBranch])) {
+    list.push({ type: ShinSalType.CHEONDEOK, name: '천덕귀인 (Heavenly Virtue)', description: '하늘의 은덕으로 온갖 재앙을 물리치는 신성한 기운', level: 85 });
+  }
+
+  // 2-5. 월덕귀인 (Monthly Virtue)
+  const woldeokBasis: Record<string, string> = { '인': '병', '오': '병', '술': '병', '신': '임', '자': '임', '진': '임', '사': '경', '유': '경', '축': '경', '해': '갑', '묘': '갑', '미': '갑' };
+  if (monthBranch && allStems.includes(woldeokBasis[monthBranch])) {
+    list.push({ type: ShinSalType.WOLDEOK, name: '월덕귀인 (Monthly Virtue)', description: '달의 기운으로 인덕이 따르고 도움을 받는 길운', level: 85 });
+  }
+
+  // 3. 흉살 및 강력한 살
+  const yanginMap: Record<string, string> = { '갑': '묘', '병': '오', '무': '오', '경': '유', '임': '자' };
+  if (allBranches.includes(yanginMap[dayStem])) {
+    list.push({ type: ShinSalType.YANGIN, name: '양인살 (Charismatic Leader)', description: '압도적인 카리스마와 실행력을 가진 장군의 운명', level: 90 });
+  }
+
+  const baekhoPillars = ['갑진', '을미', '병술', '정축', '무진', '임술', '계축'];
+  const baekhoCount = myPillars.filter(p => baekhoPillars.includes(p)).length;
+  if (baekhoCount > 0) {
+    list.push({ type: ShinSalType.BAEKHO, name: '백호대살 (White Tiger)', description: '비범한 에너지와 폭발적인 기세를 가진 전문성', level: 85 });
+  }
+
+  const goegangPillars = ['무술', '경진', '경술', '임진', '임술', '무진'];
+  const goegangCount = myPillars.filter(p => goegangPillars.includes(p)).length;
+  if (goegangCount > 0) {
+    list.push({ type: ShinSalType.GOEGANG, name: '괴강살 (Master Leader)', description: '대중을 압도하는 통솔력과 강력한 리더 기질', level: 85 });
+  }
+
+  const gwiMap: Record<string, string> = { '자': '유', '축': '오', '인': '미', '묘': '신', '진': '해', '사': '술', '유': '자', '오': '축', '미': '인', '신': '묘', '해': '진', '술': '사' };
+  if (allBranches.includes(gwiMap[dayBranch])) {
+    list.push({ type: ShinSalType.GWIMUN, name: '귀문관살 (Sixth Sense)', description: '예민한 직관력과 남다른 감수성, 천재적인 영감', level: 85 });
+  }
+
+  const needleChars = ['갑', '을', '신', '묘', '오', '미', '신', '癸'];
+  const needleCount = [...allStems, ...allBranches].filter(c => needleChars.includes(c)).length;
+  if (needleCount >= 2) {
+    list.push({ type: ShinSalType.HYEONCHIM, name: '현침살 (Sharp Precision)', description: '바늘 끝처럼 예리한 분석력과 완벽한 전문성', level: 75 });
+  }
+
+  const checkCheonmun = allBranches.filter(b => ['술', '해'].includes(b)).length;
+  if (checkCheonmun >= 1) {
+    list.push({ type: ShinSalType.CHEONMUN, name: '천문성 (Healer)', description: '사람을 치유하고 살리는 활인업의 자비로운 기운', level: 70 + (checkCheonmun * 10) });
+  }
+
+  return list.sort((a, b) => b.level - a.level);
+}
 /**
  * 십신별 길흉 점수 (신강/신약에 따라 다름)
  */
@@ -3166,3 +3415,4 @@ export function diagnoseElementBalance(saju: SajuResult): {
     balanced: excessive.length === 0 && lacking.length === 0,
   };
 }
+

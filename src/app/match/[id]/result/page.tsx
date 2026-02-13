@@ -14,6 +14,8 @@ import {
     LuckyElements,
     ProsperityCard
 } from '@/components/match/MatchVisuals';
+import { DestinyDashboardSection } from '@/components/dashboard/DestinyDashboardSection';
+import { GhostDetectorSection } from '@/components/dashboard/GhostDetectorSection';
 
 // AI Analysis types (v3.0 - with rich visual data)
 interface AIAnalysis {
@@ -118,6 +120,7 @@ interface MatchDetails {
     numScore?: number;
     summary?: string;
     aiAnalysis?: AIAnalysis;
+    hostSaju?: any; // Added for GhostDetector
 }
 
 interface MatchData {
@@ -423,6 +426,16 @@ export default function MatchResultPage({ params }: PageProps) {
                             </div>
                         )}
 
+                        {/* Destiny Dashboard (User Energy) */}
+                        {data.details && (
+                            <DestinyDashboardSection
+                                details={data.details}
+                                hasGuest={data.hasGuest}
+                                hostName={data.hostName}
+                                guestName={data.guestName || undefined}
+                            />
+                        )}
+
                         {/* AI Loading State */}
                         {isLoadingAI && (
                             <div className="glass-card p-8 border-purple-500/20 text-center">
@@ -684,6 +697,15 @@ export default function MatchResultPage({ params }: PageProps) {
                             <div className="absolute -inset-4 bg-[var(--acc-gold)]/10 blur-3xl opacity-100 group-hover:bg-[var(--acc-gold)]/20 transition-all duration-1000 pointer-events-none" />
                         </motion.button>
                     </motion.div>
+                )}
+
+
+                {/* Ghost Detector (Viral Hook) */}
+                {data.details?.hostSaju && (
+                    <GhostDetectorSection
+                        sajuResult={data.details.hostSaju}
+                        userName={data.hostName}
+                    />
                 )}
 
                 {/* Share Button */}

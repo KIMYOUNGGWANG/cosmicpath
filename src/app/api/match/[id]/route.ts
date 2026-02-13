@@ -45,11 +45,16 @@ export async function GET(
             hasGuest,
             summary: details?.summary,
             // Only return full details if unlocked
+            // BUT: We need hostSaju/hostAstrology for the Dashboard & Ghost Detector (Viral Hook) even if locked
             details: session.isUnlocked ? details : {
                 hostSign: details?.hostSign,
                 guestSign: details?.guestSign,
                 hostElement: details?.hostElement,
                 guestElement: details?.guestElement,
+                // Expose Engine Data for Dashboard/Ghost Detector (Safe to expose raw scores)
+                hostSaju: details?.hostSaju,
+                hostAstrology: details?.hostAstrology,
+                // Do NOT expose AI Analysis or detailed compatibility scores until unlocked
             },
             expiresAt: session.expiresAt,
         });
