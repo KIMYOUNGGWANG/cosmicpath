@@ -1,8 +1,11 @@
 import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
 import Kakao from "next-auth/providers/kakao"
+import type { KakaoProfile } from "next-auth/providers/kakao"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
+
+const kakaoScope = process.env.KAKAO_SCOPE?.trim()
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
     adapter: PrismaAdapter(prisma),
@@ -14,12 +17,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         Kakao({
             clientId: process.env.KAKAO_CLIENT_ID,
             clientSecret: process.env.KAKAO_CLIENT_SECRET,
-            profile(profile) {
+            authorization: {
+                url: "https://kauth.kakao.com/oauth/authorize",
+                ...(kakaoScope ? { params: { scope: kakaoScope } } : {}),
+            },
+            profile(profile: KakaoProfile) {
+                const nickname = profile?.kakao_account?.profile?.nickname ?? profile?.properties?.nickname
+                const image = profile?.kakao_account?.profile?.profile_image_url ?? profile?.properties?.profile_image
                 return {
                     id: profile.id.toString(),
-                    name: profile.kakao_account?.profile?.nickname,
-                    email: profile.kakao_account?.email,
-                    image: profile.kakao_account?.profile?.profile_image_url,
+                    name: nickname ?? null,
+                    email: profile?.kakao_account?.email ?? null,
+                    image: image ?? null,
                 }
             },
         }),
@@ -38,4 +47,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         error: '/error',
     },
     trustHost: true,
+    events: {
+        async signIn({ user, account, profile }) {
+            if (account?.provider === "kakao") {
+                try {
+                    const kakaoProfile = profile as KakaoProfile | undefined
+                    const nickname =
+                        kakaoProfile?.kakao_account?.profile?.nickname ??
+                        kakaoProfile?.properties?.nickname
+
+                    if (!nickname) return
+
+                    // If user has no name or name is different from nickname (and we want to sync it)
+                    // Note: This updates the DB record. NextAuth session might need a refresh to see changes immediately.
+                    if (!user.name || user.name === "Guest") {
+                        await prisma.user.update({
+                            where: { id: user.id },
+                            data: { name: nickname }
+                        })
+                    }
+                } catch (error) {
+                    console.error("Error syncing user name from Kakao:", error)
+                }
+            }
+        }
+    }
 })
