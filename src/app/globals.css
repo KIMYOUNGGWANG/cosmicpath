@@ -5,6 +5,13 @@
    ================================ */
 
 :root {
+  /* Offline-safe font variables (avoid build-time network fetch from next/font/google) */
+  --font-cinzel: "Times New Roman", "Georgia", serif;
+  --font-outfit: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+  --font-gowun-batang: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Serif KR", serif;
+  --font-noto-sans: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", "Menlo", "Consolas", monospace;
+
   /* Ethereal Brutalism - Cosmic Path Palette */
   --bg-void: #050505;
   /* メイン背景 (Main Background) */

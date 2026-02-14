@@ -5,22 +5,23 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { getClientIp } from '@/lib/audit-logger';
 import { rateLimit } from '@/lib/rate-limiter';
 import { calculateSaju } from '@/lib/engines/saju';
 import { calculateAstrology, ZODIAC_SIGNS } from '@/lib/engines/astrology';
 import { drawCards, TarotCard } from '@/lib/engines/tarot';
 import { extractAllTags } from '@/lib/core/tag-engine';
-import { generateInterpretationGuide, renderConfidenceStars } from '@/lib/core/conflict-resolver';
+import { generateInterpretationGuide } from '@/lib/core/conflict-resolver';
 import {
-    buildSystemPrompt,
     buildStructuredSystemPrompt,
     buildUserPrompt,
-    buildDisclaimer,
     buildFallbackMessage,
     ReadingContext
 } from '@/lib/ai/prompt-builder';
 import { generateStructuredReport, ModelTier } from '@/lib/ai/llm-client';
 import { generatePremiumReport, generateSinglePhase } from '@/lib/ai/premium-reading-service';
+import { consumeDailyQuota } from '@/lib/plan-limits';
+import { trackGrowthEvent } from '@/lib/growth-events';
 
 export const maxDuration = 60; // Vercel Function Timeout (Increased for multi-turn)
 export const dynamic = 'force-dynamic';
@@ -74,28 +75,30 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        let {
+        const {
             name,
             gender,
             birthDate,
             birthTime,
-            context,
             question,
             tarotCards,
-            tier,
             language,
             phase,
             previousReport,
             calendarType,
+            inviteCode,
+            readingId,
+        } = validationResult.data;
+        let {
+            context,
+            tier,
             partnerBirthDate,
             partnerBirthTime,
             partnerGender,
             partnerName,
-            unknownTime,
             isPaid,
-            inviteCode,
-            readingId
         } = validationResult.data;
+        const clientIp = getClientIp(request.headers);
 
         // === Viral Loop: Handle Invitation ===
         if (inviteCode) {
@@ -128,6 +131,14 @@ export async function POST(request: NextRequest) {
                                 where: { id: inviterReading.id },
                                 data: { invitationCount: { increment: 1 } }
                             }));
+
+                            await trackGrowthEvent({
+                                event: 'invite_converted',
+                                readingId: inviterReading.id,
+                                referralCode: inviteCode,
+                                channel: 'reading_api',
+                                metadata: { inviteeName: name || 'unknown' },
+                            });
                         } catch (err) {
                             console.error('[Viral] Failed to increment count:', err);
                         }
@@ -135,6 +146,36 @@ export async function POST(request: NextRequest) {
                 } catch (e) {
                     console.error('[Viral] Failed to parse inviter data', e);
                 }
+            }
+        }
+
+        // === Plan Limits: Free tier daily quota (phase 1 only) ===
+        const isFirstPhase = !phase || phase === 1;
+        if (isFirstPhase && !isPaid && tier === 'free') {
+            const quota = await consumeDailyQuota({
+                identifier: clientIp,
+                action: 'daily_free_reading',
+            });
+
+            if (!quota.allowed) {
+                await trackGrowthEvent({
+                    event: 'soft_paywall_shown',
+                    channel: 'reading_api_quota',
+                    metadata: {
+                        identifier: clientIp,
+                        used: quota.used,
+                        limit: quota.limit,
+                    },
+                });
+
+                return NextResponse.json(
+                    {
+                        error: '무료 플랜 사용량을 초과했습니다. 결제 후 계속 이용해주세요.',
+                        code: 'QUOTA_EXCEEDED',
+                        quota,
+                    },
+                    { status: 402 }
+                );
             }
         }
 

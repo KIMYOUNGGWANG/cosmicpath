@@ -156,7 +156,7 @@ export function CreditPurchaseModal({
                                     transition-all flex items-center justify-center gap-3 active:scale-[0.98] relative overflow-hidden
                                     ${isLoading
                                         ? 'bg-white/10 text-white/20 cursor-wait'
-                                        : 'bg-gradient-to-r from-[#D4AF37] via-[#F2D479] to-[#D4AF37] bg-[length:200%_auto] animate-shimmer text-black shadow-lg shadow-[#D4AF37]/20 hover:shadow-[#D4AF37]/40 active:grayscale-[0.2]'
+                                        : 'bg-gradient-to-r from-[#D4AF37] via-[#F2D479] to-[#D4AF37] text-black shadow-lg shadow-[#D4AF37]/20 hover:shadow-[#D4AF37]/40 active:grayscale-[0.2]'
                                     }
                                 `}
                             >

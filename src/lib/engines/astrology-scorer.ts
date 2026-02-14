@@ -13,7 +13,6 @@ import {
     type PlanetPosition,
     type EnhancedAspectResult,
     type PlanetDignityResult,
-    type ChartPattern,
 } from './astrology';
 
 // ============================================================================
@@ -75,12 +74,6 @@ const ELEMENT_KO: Record<string, string> = {
     water: '물(Water)',
 };
 
-const MODALITY_KO: Record<string, string> = {
-    cardinal: '주도형(Cardinal)',
-    fixed: '고정형(Fixed)',
-    mutable: '변통형(Mutable)',
-};
-
 // 행성별 가중치 (내행성 > 외행성)
 const PLANET_WEIGHTS: Record<string, number> = {
     sun: 3.0,
@@ -103,26 +96,30 @@ const PLANET_WEIGHTS: Record<string, number> = {
  * 점성술 결과에서 정량화된 스코어 리포트 생성
  */
 export function calculateAstrologyScores(astro: AstrologyResult): AstrologyScoreReport {
+    const safePlanets = Array.isArray(astro?.planets) ? astro.planets : [];
+    const safeAspects = Array.isArray(astro?.enhancedAspects) ? astro.enhancedAspects : [];
+    const safePatterns = Array.isArray(astro?.patterns) ? astro.patterns : [];
+
     // === 1. 원소 분포 (Element Distribution) ===
-    const elements = calculateElementDistribution(astro.planets);
+    const elements = calculateElementDistribution(safePlanets);
 
     // === 2. 양상 분포 (Modality Distribution) ===
-    const modalities = calculateModalityDistribution(astro.planets);
+    const modalities = calculateModalityDistribution(safePlanets);
 
     // === 3. 품위 총점 (Dignity Score) ===
     const dignityTotalScore = calculateDignityTotal(astro.dignities);
 
     // === 4. 조화 점수 (Harmony Score) ===
-    const harmonyScore = calculateHarmonyScore(astro.enhancedAspects || []);
+    const harmonyScore = calculateHarmonyScore(safeAspects);
 
     // === 5. 핵심 각도 TOP 3 ===
-    const topAspects = extractTopAspects(astro.enhancedAspects || []);
+    const topAspects = extractTopAspects(safeAspects);
 
     // === 6. 차트 패턴 ===
-    const patterns = (astro.patterns || []).map(p => ({
+    const patterns = safePatterns.map(p => ({
         name: p.name,
         nameEn: p.nameEn,
-        planets: p.planets.map(pk => PLANETS[pk].name),
+        planets: p.planets.map(pk => PLANETS[pk]?.name || String(pk)),
         score: p.score,
     }));
 
@@ -174,10 +171,12 @@ export function calculateAstrologyScores(astro: AstrologyResult): AstrologyScore
 // 내부 계산 함수
 // ============================================================================
 
-function calculateElementDistribution(planets: PlanetPosition[]): ElementDistribution {
+function calculateElementDistribution(planets: PlanetPosition[] = []): ElementDistribution {
     const raw: ElementDistribution = { fire: 0, earth: 0, air: 0, water: 0 };
 
     planets.forEach(p => {
+        if (!p || typeof p.sign !== 'number' || typeof p.planet !== 'string') return;
+
         const sign = ZODIAC_SIGNS[p.sign];
         if (!sign) return;
 
@@ -197,10 +196,12 @@ function calculateElementDistribution(planets: PlanetPosition[]): ElementDistrib
     };
 }
 
-function calculateModalityDistribution(planets: PlanetPosition[]): ModalityDistribution {
+function calculateModalityDistribution(planets: PlanetPosition[] = []): ModalityDistribution {
     const raw: ModalityDistribution = { cardinal: 0, fixed: 0, mutable: 0 };
 
     planets.forEach(p => {
+        if (!p || typeof p.sign !== 'number' || typeof p.planet !== 'string') return;
+
         const sign = ZODIAC_SIGNS[p.sign];
         if (!sign) return;
 
@@ -226,7 +227,7 @@ function calculateDignityTotal(
     return Object.values(dignities).reduce((sum, d) => sum + d.score, 0);
 }
 
-function calculateHarmonyScore(aspects: EnhancedAspectResult[]): number {
+function calculateHarmonyScore(aspects: EnhancedAspectResult[] = []): number {
     if (aspects.length === 0) return 50;
 
     const softCount = aspects.filter(a => a.harmony === 'soft').length;
@@ -237,17 +238,23 @@ function calculateHarmonyScore(aspects: EnhancedAspectResult[]): number {
     return Math.round((softCount / total) * 100);
 }
 
-function extractTopAspects(aspects: EnhancedAspectResult[]): AstrologyScoreReport['topAspects'] {
-    return aspects.slice(0, 3).map(a => {
-        const p1Name = PLANETS[a.planet1].name;
-        const p2Name = PLANETS[a.planet2].name;
-        const aspectDef = ASPECTS[a.aspect];
+function extractTopAspects(aspects: EnhancedAspectResult[] = []): AstrologyScoreReport['topAspects'] {
+    const topAspects: AstrologyScoreReport['topAspects'] = [];
 
-        return {
+    aspects.slice(0, 3).forEach((a) => {
+        const aspectDef = ASPECTS[a.aspect];
+        if (!aspectDef) return;
+
+        const p1Name = PLANETS[a.planet1]?.name || a.planet1;
+        const p2Name = PLANETS[a.planet2]?.name || a.planet2;
+
+        topAspects.push({
             label: `${p1Name} ${aspectDef.name} ${p2Name}`,
             type: aspectDef.nameEn,
             precision: a.exactness,
             harmony: a.harmony === 'soft' ? '조화' : a.harmony === 'hard' ? '긴장' : '중립',
-        };
+        });
     });
+
+    return topAspects;
 }

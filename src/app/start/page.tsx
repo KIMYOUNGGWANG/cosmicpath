@@ -953,8 +953,30 @@ function CosmicPathContent() {
                                   });
                                   const data = await res.json();
                                   if (data.code) {
+                                    // Referral tracking: CTA and copy actions
+                                    await fetch('/api/invite/track', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({
+                                        code: data.code,
+                                        action: 'invite_cta_clicked',
+                                        channel: 'start_result_cta',
+                                      }),
+                                    }).catch(() => null);
+
                                     const link = `${window.location.origin}/start?invite=${data.code}`;
                                     navigator.clipboard.writeText(link);
+
+                                    await fetch('/api/invite/track', {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({
+                                        code: data.code,
+                                        action: 'invite_link_copied',
+                                        channel: 'clipboard',
+                                      }),
+                                    }).catch(() => null);
+
                                     alert(language === 'en' ? 'Invitation link copied!' : '골든 티켓(초대 링크)이 복사되었습니다!\n친구에게 공유하여 무료 궁합을 확인해보세요.');
                                   }
                                 } catch (e) {

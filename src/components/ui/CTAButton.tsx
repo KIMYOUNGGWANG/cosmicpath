@@ -52,13 +52,6 @@ export function CTAButton({ children, onClick, className = '' }: CTAButtonProps)
       `}
         >
             <span className="relative z-10">{children}</span>
-            {/* Shine effect */}
-            <motion.div
-                initial={{ x: '-100%' }}
-                animate={{ x: '100%' }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear', repeatDelay: 3 }}
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"
-            />
         </motion.button>
     );
 }

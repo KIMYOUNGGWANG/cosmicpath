@@ -69,8 +69,9 @@ export async function POST(request: NextRequest) {
         try {
             const rawSaju = metadata?.sajuResult || metadata?.saju;
             const rawAstro = metadata?.astrologyResult || metadata?.astrology;
+            const hasAstroPlanets = Array.isArray(rawAstro?.planets) && rawAstro.planets.length > 0;
             if (rawSaju && typeof rawSaju === 'object' && rawSaju.dayMaster &&
-                rawAstro && typeof rawAstro === 'object' && rawAstro.sunSign !== undefined) {
+                rawAstro && typeof rawAstro === 'object' && rawAstro.sunSign !== undefined && hasAstroPlanets) {
                 const factsData = buildFactsOfDestiny(rawSaju, rawAstro);
                 factsOfDestinyBlock = factsData.fullDataBlock;
             }
@@ -126,10 +127,11 @@ export async function POST(request: NextRequest) {
             success: true,
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
         console.error('Follow-up question failed:', error);
         return NextResponse.json(
-            { error: 'Failed to process follow-up question', details: error.message },
+            { error: 'Failed to process follow-up question', details: message },
             { status: 500 }
         );
     }
@@ -177,9 +179,10 @@ export async function GET(request: NextRequest) {
             hasSession: true
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
         return NextResponse.json(
-            { error: 'Failed to fetch chat status', details: error.message },
+            { error: 'Failed to fetch chat status', details: message },
             { status: 500 }
         );
     }

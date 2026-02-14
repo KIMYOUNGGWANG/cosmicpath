@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { trackGrowthEvent } from '@/lib/growth-events';
 
 export async function GET(req: NextRequest) {
     try {
@@ -30,6 +31,13 @@ export async function GET(req: NextRequest) {
         }
 
         // 3. Return minimal info (Security: NO birth data here)
+        await trackGrowthEvent({
+            event: 'invite_link_opened',
+            readingId: reading.id,
+            referralCode: code,
+            channel: 'verify_api',
+        });
+
         return NextResponse.json({
             isValid: true,
             hostName: hostName

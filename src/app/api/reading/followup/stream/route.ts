@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { buildOracleChatSystemPrompt } from '@/lib/ai/oracle-prompts';
 import { generateStreamingCompletion } from '@/lib/ai/llm-client';
@@ -53,11 +53,16 @@ export async function POST(request: NextRequest) {
         // 4. AI 컨텍스트 구성
         const reportData = JSON.parse(reading.data);
         const metadata = reading.metadata ? JSON.parse(reading.metadata) : null;
+        const tarotNames = Array.isArray(metadata?.tarotCards)
+            ? metadata.tarotCards
+                .map((card: { name?: string } | null | undefined) => card?.name)
+                .filter((name: string | undefined): name is string => Boolean(name))
+            : [];
 
         const chatContext = {
             saju: metadata?.saju || reportData.saju_sections?.overview || '사주 정보 없음',
             astrology: metadata?.astrology || reportData.summary?.astro_anchor || '점성술 정보 없음',
-            tarot: metadata?.tarotCards?.map((c: any) => c.name).join(', ') || '타로 정보 없음',
+            tarot: tarotNames.join(', ') || '타로 정보 없음',
             name: metadata?.readingData?.name
         };
 
@@ -66,8 +71,9 @@ export async function POST(request: NextRequest) {
         try {
             const rawSaju = metadata?.sajuResult || metadata?.saju;
             const rawAstro = metadata?.astrologyResult || metadata?.astrology;
+            const hasAstroPlanets = Array.isArray(rawAstro?.planets) && rawAstro.planets.length > 0;
             if (rawSaju && typeof rawSaju === 'object' && rawSaju.dayMaster &&
-                rawAstro && typeof rawAstro === 'object' && rawAstro.sunSign !== undefined) {
+                rawAstro && typeof rawAstro === 'object' && rawAstro.sunSign !== undefined && hasAstroPlanets) {
                 const factsData = buildFactsOfDestiny(rawSaju, rawAstro);
                 factsOfDestinyBlock = factsData.fullDataBlock;
             }
@@ -78,7 +84,7 @@ export async function POST(request: NextRequest) {
         const systemPrompt = buildOracleChatSystemPrompt(chatContext, factsOfDestinyBlock);
 
         // 이전 대화 내역 (최근 6개 참조)
-        const historyText = session.messages.slice(-6).map((m: any) =>
+        const historyText = session.messages.slice(-6).map((m: { role: string; content: string }) =>
             `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`
         ).join('\n');
 
@@ -98,14 +104,54 @@ export async function POST(request: NextRequest) {
         const encoder = new TextEncoder();
         const decoder = new TextDecoder();
         let fullResponse = '';
+        let sseBuffer = '';
+
+        const parseGeminiSseLine = (line: string): string => {
+            const trimmed = line.trim();
+            if (!trimmed.startsWith('data:')) return '';
+
+            const payload = trimmed.slice(5).trim();
+            if (!payload || payload === '[DONE]') return '';
+
+            try {
+                const parsed = JSON.parse(payload);
+                const parts = parsed?.candidates?.[0]?.content?.parts;
+                if (!Array.isArray(parts)) return '';
+
+                return parts
+                    .map((part: { text?: string } | null | undefined) => (
+                        typeof part?.text === 'string' ? part.text : ''
+                    ))
+                    .join('');
+            } catch {
+                return '';
+            }
+        };
 
         const transformStream = new TransformStream({
             async transform(chunk, controller) {
-                const text = decoder.decode(chunk);
-                fullResponse += text;
-                controller.enqueue(chunk);
+                const text = decoder.decode(chunk, { stream: true });
+                sseBuffer += text;
+
+                const lines = sseBuffer.split(/\r?\n/);
+                sseBuffer = lines.pop() ?? '';
+
+                for (const line of lines) {
+                    const content = parseGeminiSseLine(line);
+                    if (!content) continue;
+                    fullResponse += content;
+                    controller.enqueue(encoder.encode(content));
+                }
             },
             async flush() {
+                // 버퍼에 남은 마지막 이벤트도 처리 시도
+                if (sseBuffer.trim()) {
+                    const content = parseGeminiSseLine(sseBuffer);
+                    if (content) {
+                        fullResponse += content;
+                    }
+                }
+
                 // 스트림 종료 시 DB 저장
                 try {
                     await prisma.$transaction([
@@ -142,8 +188,9 @@ export async function POST(request: NextRequest) {
             },
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
         console.error('Streaming follow-up failed:', error);
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+        return new Response(JSON.stringify({ error: message }), { status: 500 });
     }
 }

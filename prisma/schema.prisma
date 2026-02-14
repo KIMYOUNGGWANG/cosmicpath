@@ -182,4 +182,85 @@ model MatchSession {
   @@index([guestUserId])
 }
 
+model FollowUpJob {
+  id           String   @id @default(uuid())
+  readingId    String
+  email        String
+  stage        String   // H48 | D7
+  scheduledFor DateTime
+  status       String   @default("PENDING") // PENDING | SENT | FAILED | CANCELED
+  attempts     Int      @default(0)
+  sentAt       DateTime?
+  lastError    String?
+  metadata     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([readingId, stage])
+  @@index([status, scheduledFor])
+  @@index([readingId])
+}
+
+model GrowthEvent {
+  id           String   @id @default(uuid())
+  event        String
+  readingId    String?
+  referralCode String?
+  channel      String?
+  metadata     String?
+  createdAt    DateTime @default(now())
+
+  @@index([event, createdAt])
+  @@index([readingId])
+  @@index([referralCode])
+}
+
+model QuotaUsageDaily {
+  id         String   @id @default(uuid())
+  day        DateTime
+  identifier String
+  action     String
+  used       Int      @default(0)
+  limit      Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([day, identifier, action])
+  @@index([identifier, day])
+}
+
+model UsageCounterDaily {
+  id        String   @id @default(uuid())
+  day       DateTime
+  provider  String
+  metric    String
+  count     Int      @default(0)
+  amount    Int      @default(0) // Optional numeric amount (tokens, cents, etc)
+  metadata  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([day, provider, metric])
+  @@index([provider, day])
+}
+
+model OpsAlert {
+  id              String   @id @default(uuid())
+  source          String
+  alertKey        String
+  severity        String
+  title           String
+  message         String
+  details         String?
+  status          String   @default("OPEN") // OPEN | ACK | RESOLVED
+  firstSeenAt     DateTime @default(now())
+  lastSeenAt      DateTime @default(now())
+  occurrenceCount Int      @default(1)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([source, alertKey])
+  @@index([severity, lastSeenAt])
+  @@index([status, lastSeenAt])
+}
 

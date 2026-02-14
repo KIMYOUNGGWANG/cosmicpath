@@ -11,6 +11,11 @@ export default function UserMenu() {
     const { data: session, status } = useSession();
     const { openLoginModal } = useLoginModal();
     const [isOpen, setIsOpen] = useState(false);
+    const displayName =
+        session?.user?.name?.split(" ")[0] ||
+        session?.user?.email?.split("@")[0] ||
+        "Traveler";
+    const signedInAs = session?.user?.email || session?.user?.name || "Kakao User";
 
     // Link Guest Data on first login
     useEffect(() => {
@@ -82,7 +87,7 @@ export default function UserMenu() {
                 <div className="flex flex-col items-start text-left hidden sm:block">
                     <span className="text-xs text-[#D4AF37] font-medium leading-none mb-0.5">Traveler</span>
                     <span className="text-sm font-outfit text-white/90 leading-none max-w-[100px] truncate">
-                        {session?.user?.name?.split(' ')[0] || "Guest"}
+                        {displayName}
                     </span>
                 </div>
             </button>
@@ -105,7 +110,7 @@ export default function UserMenu() {
                         >
                             <div className="p-4 border-b border-white/10 bg-white/3">
                                 <p className="text-[10px] text-[#D4AF37] uppercase tracking-widest font-semibold mb-1">Signed in as</p>
-                                <p className="text-sm font-medium text-white/90 truncate">{session?.user?.email}</p>
+                                <p className="text-sm font-medium text-white/90 truncate">{signedInAs}</p>
                             </div>
 
                             <div className="p-2 space-y-1">

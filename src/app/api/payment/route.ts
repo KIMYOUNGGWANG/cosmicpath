@@ -27,10 +27,11 @@ export async function POST(request: NextRequest) {
         }
 
         return NextResponse.json({ url: session.url });
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Internal Server Error';
         console.error('Payment initialization failed:', error);
         return NextResponse.json(
-            { error: error.message || 'Internal Server Error' },
+            { error: message },
             { status: 500 }
         );
     }
@@ -53,8 +54,23 @@ export async function GET(request: NextRequest) {
 
         const result = await verifyCheckoutSession(sessionId);
 
-        // [Sync] If paid, update the ReadingResult in DB immediately to avoid webhook race condition
-        if (result.success && result.readingId) {
+        let chatCreditApplied = false;
+        let chatCreditTotal: number | undefined;
+
+        // [Sync] Chat credit purchase: apply credits immediately to avoid webhook delay/miss
+        if (result.success && result.type === 'chat_credit' && result.session) {
+            try {
+                const { applyChatCreditFromSession } = await import('@/lib/payment/chat-credit');
+                const applied = await applyChatCreditFromSession(result.session, 'sync_verify');
+                chatCreditApplied = applied.applied;
+                chatCreditTotal = applied.totalCredits;
+            } catch (syncErr) {
+                console.error('[Sync] Failed to apply chat credits via sync verification:', syncErr);
+            }
+        }
+
+        // [Sync] Premium reading purchase: update ReadingResult immediately to avoid webhook race condition
+        if (result.success && result.readingId && (!result.type || result.type === 'premium_reading')) {
             try {
                 const { prisma } = await import('@/lib/prisma');
                 const reading = await prisma.readingResult.findUnique({
@@ -86,11 +102,16 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
             status: result.success ? 'paid' : 'unpaid',
             customer_email: result.customerEmail,
+            payment_type: result.type || 'premium_reading',
+            reading_id: result.readingId || null,
+            credits_applied: chatCreditApplied,
+            credits_total: chatCreditTotal ?? null,
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Internal Server Error';
         console.error('Payment verification failed:', error);
         return NextResponse.json(
-            { error: error.message || 'Internal Server Error' },
+            { error: message },
             { status: 500 }
         );
     }

@@ -59,8 +59,8 @@ export function ScarcityTimer({ durationMinutes = 15, language, onExpire }: Scar
     if (timeLeft <= 0) return null;
 
     return (
-        <div className="flex items-center gap-2 text-xs md:text-sm font-bold text-red-400 bg-red-500/10 px-3 py-1.5 rounded-full border border-red-500/20 animate-pulse">
-            <Clock size={14} className="animate-spin-slow" />
+        <div className="flex items-center gap-2 text-xs md:text-sm font-bold text-red-400 bg-red-500/10 px-3 py-1.5 rounded-full border border-red-500/20">
+            <Clock size={14} />
             <span>
                 {isEn ? "Offer expires in:" : "할인 마감:"}
             </span>

@@ -4,6 +4,7 @@
  */
 
 import { z } from 'zod';
+import { safeIncrementUsageCounter } from '@/lib/usage-metrics';
 
 // 지원 모델 타입
 export type ModelProvider = 'openai' | 'anthropic' | 'google';
@@ -72,16 +73,17 @@ async function fetchWithRetry(
             }
 
             return response;
-        } catch (error: any) {
-            lastError = error;
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+            lastError = error instanceof Error ? error : new Error(message);
 
             // 마지막 시도거나 503/429가 아닌 치명적 에러인 경우 즉시 중단
-            if (i === maxRetries || (!error.message.includes('503') && !error.message.includes('429'))) {
+            if (i === maxRetries || (!message.includes('503') && !message.includes('429'))) {
                 break;
             }
 
             const delay = initialDelay * Math.pow(2, i);
-            console.warn(`[AI Client Retry] Attempt ${i + 1} failed (Status: ${error.message}). Retrying in ${delay}ms...`);
+            console.warn(`[AI Client Retry] Attempt ${i + 1} failed (Status: ${message}). Retrying in ${delay}ms...`);
             await new Promise(resolve => setTimeout(resolve, delay));
         }
     }
@@ -276,10 +278,24 @@ async function callProvider(
     model: string,
     stream: boolean
 ): Promise<Response> {
+    const metadata = { stream, model };
+
     switch (provider) {
-        case 'openai': return callOpenAI(systemPrompt, userPrompt, model, stream);
-        case 'anthropic': return callAnthropic(systemPrompt, userPrompt, model, stream);
-        case 'google': return callGoogle(systemPrompt, userPrompt, model, stream);
+        case 'openai': {
+            const response = await callOpenAI(systemPrompt, userPrompt, model, stream);
+            await safeIncrementUsageCounter({ provider: 'openai', metric: 'api_requests', count: 1, metadata });
+            return response;
+        }
+        case 'anthropic': {
+            const response = await callAnthropic(systemPrompt, userPrompt, model, stream);
+            await safeIncrementUsageCounter({ provider: 'anthropic', metric: 'api_requests', count: 1, metadata });
+            return response;
+        }
+        case 'google': {
+            const response = await callGoogle(systemPrompt, userPrompt, model, stream);
+            await safeIncrementUsageCounter({ provider: 'google', metric: 'api_requests', count: 1, metadata });
+            return response;
+        }
         default: throw new Error(`Unsupported provider: ${provider}`);
     }
 }
@@ -325,6 +341,16 @@ async function parseResponse(
             content = '';
     }
 
+    if (usage?.totalTokens) {
+        await safeIncrementUsageCounter({
+            provider,
+            metric: 'tokens_total',
+            count: 1,
+            amount: usage.totalTokens,
+            metadata: { model },
+        });
+    }
+
     return { content, model, provider, usage };
 }
 
@@ -360,6 +386,24 @@ export async function generateStructuredReport<T>(
 
     const response = await fetchWithRetry(url, options);
     const data = await response.json();
+    await safeIncrementUsageCounter({
+        provider: 'google',
+        metric: 'api_requests',
+        count: 1,
+        metadata: { model, mode: 'structured_report' },
+    });
+
+    const tokenTotal = data.usageMetadata?.totalTokenCount;
+    if (typeof tokenTotal === 'number' && tokenTotal > 0) {
+        await safeIncrementUsageCounter({
+            provider: 'google',
+            metric: 'tokens_total',
+            count: 1,
+            amount: tokenTotal,
+            metadata: { model, mode: 'structured_report' },
+        });
+    }
+
     const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
 
     // Helper: Clean problematic JSON content
@@ -417,9 +461,10 @@ export async function generateStructuredReport<T>(
             return validation.data;
         }
         return parsed as T;
-    } catch (e: any) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error);
         // Advanced diagnostics: Find error position
-        const errorPosMatch = e.message.match(/position (\d+)/);
+        const errorPosMatch = message.match(/position (\d+)/);
         if (errorPosMatch) {
             const pos = parseInt(errorPosMatch[1], 10);
             const start = Math.max(0, pos - 50);
@@ -428,8 +473,8 @@ export async function generateStructuredReport<T>(
             console.error(`...${text.substring(start, pos)} >>> ${text.charAt(pos)} <<< ${text.substring(pos + 1, end)}...`);
         }
 
-        console.error("JSON Parse Error Message:", e.message);
+        console.error("JSON Parse Error Message:", message);
         console.error("Failed JSON Content (Full):", text);
-        throw new Error(`Failed to parse AI response: ${e.message}`);
+        throw new Error(`Failed to parse AI response: ${message}`);
     }
 }

@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, Sparkles, Lock } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { Send, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { useSearchParams } from 'next/navigation';
 import { CreditPurchaseModal } from './CreditPurchaseModal';
 
 interface Message {
@@ -27,7 +27,6 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const searchParams = useSearchParams();
-    const router = useRouter();
 
 
     const fetchStatus = useCallback(async () => {
@@ -50,24 +49,54 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
 
     // 결제 성공 처리
     useEffect(() => {
-        if (searchParams.get('payment') === 'success') {
-            const newUrl = window.location.pathname;
-            window.history.replaceState({}, '', newUrl);
+        if (searchParams.get('payment') !== 'success') return;
 
-            // [DEV ONLY] 웹훅 설정 없이도 개발 환경에서 테스트 가능하도록 강제 지급
-            if (process.env.NODE_ENV === 'development') {
-                fetch('/api/debug/force-credit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ readingId })
-                }).then(() => console.log('[Dev] Forced credit update'));
-            }
+        const sessionId = searchParams.get('session_id');
+        const syncKey = sessionId
+            ? `chat-credit-payment-sync:${sessionId}`
+            : `chat-credit-payment-sync:dev:${readingId}`;
 
-            setTimeout(() => {
-                fetchStatus();
-                alert('결제가 완료되었습니다! 추가 질문권이 지급되었습니다.');
-            }, 1000);
+        const syncState = window.sessionStorage.getItem(syncKey);
+        if (syncState === 'processing' || syncState === 'done') {
+            window.history.replaceState({}, '', window.location.pathname);
+            return;
         }
+        window.sessionStorage.setItem(syncKey, 'processing');
+        window.history.replaceState({}, '', window.location.pathname);
+
+        const finalizePayment = async () => {
+            try {
+                if (sessionId) {
+                    const verifyRes = await fetch(`/api/payment?session_id=${encodeURIComponent(sessionId)}`);
+                    if (!verifyRes.ok) {
+                        throw new Error('Payment verification request failed');
+                    }
+
+                    const verifyData = await verifyRes.json();
+                    if (verifyData.status !== 'paid') {
+                        throw new Error('Payment was not confirmed as paid');
+                    }
+                } else if (process.env.NODE_ENV === 'development') {
+                    // Dev fallback for local webhook-less flow
+                    await fetch('/api/debug/force-credit', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ readingId }),
+                    });
+                }
+
+                await fetchStatus();
+                window.sessionStorage.setItem(syncKey, 'done');
+                alert('결제가 완료되었습니다! 추가 질문권이 지급되었습니다.');
+            } catch (error) {
+                console.error('[ChatCredit] Payment success sync failed:', error);
+                window.sessionStorage.removeItem(syncKey);
+                await fetchStatus();
+                alert('결제는 완료되었지만 질문권 반영이 지연될 수 있습니다. 잠시 후 다시 확인해 주세요.');
+            }
+        };
+
+        finalizePayment();
     }, [searchParams, fetchStatus, readingId]);
 
     // 공유 보상 실시간 반영 (SharePanel에서 발생시키는 이벤트 수신)
@@ -310,9 +339,9 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
                 ) : (
                     <button
                         onClick={() => setIsPurchaseModalOpen(true)}
-                        className="w-full py-5 bg-gradient-to-r from-[#D4AF37] via-[#F2D479] to-[#D4AF37] bg-[length:200%_auto] animate-shimmer hover:opacity-95 rounded-2xl flex items-center justify-center gap-3 text-black font-bold text-lg transition-all shadow-[0_8px_30px_rgb(212,175,55,0.25)] hover:shadow-[0_8px_40px_rgb(212,175,55,0.4)] active:scale-[0.98]"
+                        className="w-full py-5 bg-gradient-to-r from-[#D4AF37] via-[#F2D479] to-[#D4AF37] hover:opacity-95 rounded-2xl flex items-center justify-center gap-3 text-black font-bold text-lg transition-all shadow-[0_8px_30px_rgb(212,175,55,0.25)] hover:shadow-[0_8px_40px_rgb(212,175,55,0.4)] active:scale-[0.98]"
                     >
-                        <Sparkles className="w-6 h-6 animate-spin-slow" />
+                        <Sparkles className="w-6 h-6" />
                         <span>오라클 질문권 충전하기</span>
                     </button>
                 )}

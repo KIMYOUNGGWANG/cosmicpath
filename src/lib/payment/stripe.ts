@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { devLog } from '@/lib/dev-logger';
+import { safeIncrementUsageCounter } from '@/lib/usage-metrics';
 
 // Lazy initialization to avoid build-time errors
 let stripeInstance: Stripe | null = null;
@@ -51,6 +52,13 @@ export async function getProductPrice(productId: string, targetCurrency: string 
             product: productId,
             active: true,
             limit: 10
+        });
+
+        await safeIncrementUsageCounter({
+            provider: 'stripe',
+            metric: 'api_requests',
+            count: 1,
+            metadata: { action: 'get_product_price', productId },
         });
 
         // 3. 목표 통화(예: USD)와 일치하는 가격 찾기
@@ -141,6 +149,13 @@ export async function createCheckoutSession({
             metadata,
         });
 
+        await safeIncrementUsageCounter({
+            provider: 'stripe',
+            metric: 'api_requests',
+            count: 1,
+            metadata: { action: 'create_checkout_session', productId },
+        });
+
         return { url: session.url };
     } catch (error) {
         devLog.error('Error creating checkout session:', error);
@@ -154,13 +169,23 @@ export async function createCheckoutSession({
 export async function verifyCheckoutSession(sessionId: string) {
     const session = await getStripe().checkout.sessions.retrieve(sessionId);
 
+    await safeIncrementUsageCounter({
+        provider: 'stripe',
+        metric: 'api_requests',
+        count: 1,
+        metadata: { action: 'verify_checkout_session' },
+    });
+
     return {
         success: session.payment_status === 'paid',
+        type: session.metadata?.type || null,
         sessionId: session.id,
         productId: session.metadata?.productId,
         readingId: session.metadata?.readingId, // Added readingId
+        credits: Number.parseInt(session.metadata?.credits || '0', 10) || 0,
         followUpQuestions: Number(session.metadata?.followUpQuestions || 0),
         customerEmail: session.customer_details?.email,
+        session,
     };
 }
 

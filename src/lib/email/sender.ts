@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { devLog } from '@/lib/dev-logger';
+import { safeIncrementUsageCounter } from '@/lib/usage-metrics';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -141,9 +142,16 @@ export async function sendResultEmail({
             throw new Error(error.message);
         }
 
+        await safeIncrementUsageCounter({
+            provider: 'resend',
+            metric: 'emails_sent',
+            count: 1,
+            metadata: { type: 'result' },
+        });
+
         return data;
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         devLog.error('Failed to send email:', error);
         throw error;
     }
@@ -197,9 +205,146 @@ export async function sendVerificationEmail({ email, token }: SendVerificationEm
             throw new Error(error.message);
         }
 
+        await safeIncrementUsageCounter({
+            provider: 'resend',
+            metric: 'emails_sent',
+            count: 1,
+            metadata: { type: 'verification' },
+        });
+
         return data;
     } catch (error) {
         devLog.error('Failed to send verification email:', error);
         throw error;
     }
+}
+
+interface SendFollowUpNudgeEmailParams {
+    email: string;
+    readingId: string;
+    stage: 'H48' | 'D7';
+    readingUrl: string;
+}
+
+export async function sendFollowUpNudgeEmail({
+    email,
+    readingId,
+    stage,
+    readingUrl,
+}: SendFollowUpNudgeEmailParams) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+        throw new Error('Invalid email format');
+    }
+
+    const stageLabel = stage === 'H48' ? '48시간' : '7일';
+    const subject = stage === 'H48'
+        ? '⏳ 아직 확인하지 않은 리딩 결과가 있어요'
+        : '🌙 일주일 후, 다시 보는 나의 흐름';
+
+    try {
+        const { data, error } = await resend.emails.send({
+            from: 'CosmicPath <noreply@cosmicpath.app>',
+            to: [email],
+            subject,
+            html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="utf-8" />
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                    <title>${subject}</title>
+                </head>
+                <body style="margin:0;padding:0;background:#08080f;color:#e5e7eb;font-family:Inter,Arial,sans-serif;">
+                    <div style="max-width:560px;margin:32px auto;padding:28px;border:1px solid rgba(139,92,246,.25);border-radius:18px;background:#0f1020;">
+                        <p style="margin:0 0 10px 0;font-size:12px;letter-spacing:2px;color:#a78bfa;text-transform:uppercase;">CosmicPath Follow-up</p>
+                        <h1 style="margin:0 0 16px 0;font-size:24px;color:#fff;">${stageLabel} 후 리마인드</h1>
+                        <p style="margin:0 0 18px 0;line-height:1.7;color:#cbd5e1;">
+                            지난 리딩 이후 시간이 흘렀습니다. 지금 다시 보면 더 선명하게 보이는 포인트가 있습니다.
+                        </p>
+                        <a href="${readingUrl}" style="display:inline-block;background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;text-decoration:none;padding:13px 18px;border-radius:12px;font-weight:700;">
+                            내 리딩 다시 열기
+                        </a>
+                        <p style="margin:22px 0 0 0;font-size:12px;color:#64748b;">
+                            Reading ID: ${readingId}
+                        </p>
+                    </div>
+                </body>
+                </html>
+            `,
+        });
+
+        if (error) {
+            devLog.error('Resend Error:', error);
+            throw new Error(error.message);
+        }
+
+        await safeIncrementUsageCounter({
+            provider: 'resend',
+            metric: 'emails_sent',
+            count: 1,
+            metadata: { type: 'followup', stage },
+        });
+
+        return data;
+    } catch (error) {
+        devLog.error('Failed to send follow-up email:', error);
+        throw error;
+    }
+}
+
+interface SendOpsAlertEmailParams {
+    email: string;
+    source: string;
+    severity: 'info' | 'warning' | 'critical';
+    title: string;
+    message: string;
+    details?: Record<string, unknown>;
+}
+
+export async function sendOpsAlertEmail({
+    email,
+    source,
+    severity,
+    title,
+    message,
+    details,
+}: SendOpsAlertEmailParams) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
+        throw new Error('Invalid email format');
+    }
+
+    const detailsText = details ? JSON.stringify(details, null, 2).slice(0, 3000) : '';
+    const subject = `[${severity.toUpperCase()}] ${source} - ${title}`;
+
+    const { data, error } = await resend.emails.send({
+        from: 'CosmicPath Ops <noreply@cosmicpath.app>',
+        to: [email],
+        subject,
+        html: `
+            <div style="font-family:Inter,Arial,sans-serif;padding:20px;background:#0f172a;color:#e2e8f0;">
+                <h2 style="margin:0 0 8px 0;">Operational Alert</h2>
+                <p style="margin:0 0 8px 0;"><strong>Source:</strong> ${source}</p>
+                <p style="margin:0 0 8px 0;"><strong>Severity:</strong> ${severity}</p>
+                <p style="margin:0 0 8px 0;"><strong>Title:</strong> ${title}</p>
+                <p style="margin:0 0 16px 0;"><strong>Message:</strong> ${message}</p>
+                ${detailsText ? `<pre style=\"white-space:pre-wrap;background:#020617;padding:12px;border-radius:8px;\">${detailsText}</pre>` : ''}
+            </div>
+        `,
+    });
+
+    if (error) {
+        devLog.error('Resend Error:', error);
+        throw new Error(error.message);
+    }
+
+    await safeIncrementUsageCounter({
+        provider: 'resend',
+        metric: 'emails_sent',
+        count: 1,
+        metadata: { type: 'ops_alert', source, severity },
+    });
+
+    return data;
 }
