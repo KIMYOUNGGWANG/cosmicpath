@@ -1,7 +1,12 @@
-'use client';
+import type { Metadata } from 'next';
 
 import { Navigation } from '@/components/landing/Navigation';
 import { DailySealedWidget } from '@/components/daily/DailySealedWidget';
+
+export const metadata: Metadata = {
+    title: '오늘의 운세 | CosmicPath',
+    description: '생년월일 기반 오늘의 운세를 확인하고 사랑/재물/커리어/건강 흐름을 받아보세요.',
+};
 
 export default function DailyPage() {
     return (
@@ -16,10 +21,10 @@ export default function DailyPage() {
                 <div className="z-10 w-full max-w-2xl">
                     <header className="text-center mb-12">
                         <h1 className="text-4xl md:text-5xl font-serif text-transparent bg-clip-text bg-gradient-to-b from-acc-gold via-white to-white/50 mb-4">
-                            Daily Cosmic Forecast
+                            오늘의 운세
                         </h1>
                         <p className="text-starlight/60 text-lg">
-                            Unlock your daily energy based on the stars.
+                            생년월일 기반으로 오늘의 에너지를 확인하세요.
                         </p>
                     </header>
 

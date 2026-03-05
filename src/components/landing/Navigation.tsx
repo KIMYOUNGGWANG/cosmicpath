@@ -10,6 +10,7 @@ import { User } from 'lucide-react';
 import UserMenu from '@/components/layout/UserMenu';
 import { LoginModal, useLoginModal } from '@/components/auth/LoginModal';
 import { useSession } from 'next-auth/react';
+import { SubscriptionModal } from '@/components/payment/SubscriptionModal';
 
 export function Navigation() {
     const { status } = useSession();
@@ -19,6 +20,7 @@ export function Navigation() {
     const [prevScroll, setPrevScroll] = useState(0);
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
 
     useMotionValueEvent(scrollY, "change", (latest) => {
         const previous = prevScroll;
@@ -78,7 +80,7 @@ export function Navigation() {
                             href="/daily"
                             className="text-xs font-medium text-starlight hover:text-acc-gold transition-colors font-cinzel tracking-widest uppercase"
                         >
-                            DAILY
+                            오늘의 운세
                         </Link>
                         <button
                             onClick={toggleOrderModal}
@@ -90,11 +92,17 @@ export function Navigation() {
                         <div className="w-px h-4 bg-white/10 mx-2" /> {/* Divider */}
 
                         <UserMenu />
+                        <button
+                            onClick={() => setIsSubscriptionModalOpen(true)}
+                            className="inline-flex items-center justify-center px-5 py-2 font-cinzel font-bold text-xs text-black bg-gradient-to-r from-[#D4AF37] to-[#F2D479] rounded-full transition-all duration-300 hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:scale-105 tracking-widest uppercase gap-2"
+                        >
+                            <Sparkles size={14} className="fill-current" />
+                            PRO ✨
+                        </button>
                         <Link
                             href="/start?reset=true"
                             className="inline-flex items-center justify-center px-5 py-2 font-cinzel font-bold text-xs text-white border border-white/20 rounded-full transition-all duration-300 hover:border-acc-gold hover:text-deep-navy hover:bg-acc-gold tracking-widest uppercase gap-2"
                         >
-                            <Sparkles size={14} className="text-gold group-hover:text-deep-navy" />
                             Start Analysis
                         </Link>
                     </div>
@@ -102,11 +110,17 @@ export function Navigation() {
                     {/* Mobile Navigation */}
                     <div className="flex md:hidden items-center gap-2 z-20">
                         {/* Primary CTA on Mobile Header - Premium Design */}
+                        <button
+                            onClick={() => setIsSubscriptionModalOpen(true)}
+                            className="inline-flex items-center justify-center px-4 py-1.5 font-cinzel font-bold text-[10px] text-black bg-gradient-to-r from-[#D4AF37] to-[#F2D479] rounded-full transition-all duration-300 hover:shadow-[0_0_10px_rgba(212,175,55,0.4)] mr-1 tracking-widest uppercase gap-1"
+                        >
+                            <Sparkles size={12} className="fill-current" />
+                            PRO
+                        </button>
                         <Link
                             href="/start?reset=true"
-                            className="inline-flex items-center justify-center px-4 py-1.5 font-cinzel font-bold text-[10px] text-white border border-white/20 rounded-full transition-all duration-300 hover:border-acc-gold hover:text-acc-gold bg-white/5 backdrop-blur-sm mr-1 tracking-widest uppercase gap-1"
+                            className="inline-flex items-center justify-center px-4 py-1.5 font-cinzel font-bold text-[10px] text-white border border-white/20 rounded-full transition-all duration-300 hover:border-acc-gold hover:text-acc-gold bg-white/5 backdrop-blur-sm tracking-widest uppercase gap-1"
                         >
-                            <Sparkles size={12} className="text-gold" />
                             Start
                         </Link>
 
@@ -153,8 +167,8 @@ export function Navigation() {
                         type: 'link',
                         icon: Sparkles,
                         iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
-                        label: 'DAILY FORECAST',
-                        subLabel: 'Your daily cosmic energy',
+                        label: '오늘의 운세',
+                        subLabel: '생년월일 기반 데일리 운세',
                         href: '/daily',
                     },
                     {
@@ -173,6 +187,10 @@ export function Navigation() {
                 onClose={() => setIsOrderModalOpen(false)}
             />
             <LoginModal />
+            <SubscriptionModal
+                isOpen={isSubscriptionModalOpen}
+                onClose={() => setIsSubscriptionModalOpen(false)}
+            />
         </>
     );
 }

@@ -1,68 +1,130 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import { calculateDailyForecast, calculateDayMaster, DailyForecast, DayMaster } from '@/lib/daily-forecast';
 import { BirthDateInput } from '@/components/common/BirthDateInput';
-import { useRouter } from 'next/navigation';
+import { SubscriptionModal } from '@/components/payment/SubscriptionModal';
+import { Sparkles } from 'lucide-react';
+
+interface DailyFortuneResponse {
+    date: string;
+    dayMaster: string;
+    overallLuck: number;
+    summary: string;
+    luckyColor: string;
+    luckyNumber: number;
+    luckyDirection: string;
+    areas: {
+        love: number;
+        money: number;
+        career: number;
+        health: number;
+    };
+    advice: string;
+    cachedUntil: string;
+    isPremium?: boolean;
+}
+
+interface StoredBirthData {
+    birthDate: string;
+    birthTime?: string;
+}
+
+const areaLabelMap = {
+    love: '연애',
+    money: '재물',
+    career: '커리어',
+    health: '건강',
+} as const;
+
+function getStrongestArea(areas: DailyFortuneResponse['areas']) {
+    return Object.entries(areas).reduce((best, current) =>
+        current[1] > best[1] ? current : best
+    ) as [keyof DailyFortuneResponse['areas'], number];
+}
+
+function getWeakestArea(areas: DailyFortuneResponse['areas']) {
+    return Object.entries(areas).reduce((worst, current) =>
+        current[1] < worst[1] ? current : worst
+    ) as [keyof DailyFortuneResponse['areas'], number];
+}
 
 export function DailySealedWidget() {
-    const router = useRouter();
-    const [forecast, setForecast] = useState<DailyForecast | null>(null);
+    const [forecast, setForecast] = useState<DailyFortuneResponse | null>(null);
     const [isRevealed, setIsRevealed] = useState(false);
-    const [userData, setUserData] = useState<any>(null);
+    const [userData, setUserData] = useState<StoredBirthData | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     // Quick Input State
     const [inputDate, setInputDate] = useState('');
     const [inputTime, setInputTime] = useState('');
+    const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
 
     useEffect(() => {
         // 1. Check LocalStorage
         const storedData = localStorage.getItem('cosmic_user_data');
         if (storedData) {
             try {
-                const parsed = JSON.parse(storedData);
-                setUserData(parsed);
-                generateForecast(parsed);
+                const parsed = JSON.parse(storedData) as { birthDate?: string; birthTime?: string };
+                if (parsed.birthDate) {
+                    const normalized = {
+                        birthDate: parsed.birthDate,
+                        birthTime: parsed.birthTime,
+                    };
+                    setUserData(normalized);
+                    setInputDate(normalized.birthDate);
+                    setInputTime(normalized.birthTime ?? '');
+                    void fetchDailyFortune(normalized.birthDate, normalized.birthTime);
+                }
             } catch (e) {
                 console.error('Failed to parse user data', e);
             }
         }
     }, []);
 
-    const generateForecast = (data: any) => {
-        // Fallback DayMaster logic
-        let dm: DayMaster = 'jia';
+    const fetchDailyFortune = async (birthDate: string, birthTime?: string) => {
+        setIsLoading(true);
+        setErrorMessage(null);
 
-        if (data.saju?.dayMaster) {
-            dm = data.saju.dayMaster;
-        } else if (data.birthDate) {
-            // Calculate on the fly if only date exists
-            dm = calculateDayMaster(data.birthDate);
+        try {
+            const params = new URLSearchParams({ birthday: birthDate });
+            if (birthTime) {
+                params.set('birthtime', birthTime);
+            }
+
+            const response = await fetch(`/api/daily/fortune?${params.toString()}`, {
+                cache: 'no-store',
+            });
+            const payload = (await response.json()) as DailyFortuneResponse & {
+                error?: { message?: string };
+            };
+
+            if (!response.ok) {
+                throw new Error(payload?.error?.message || '오늘의 운세를 불러오지 못했습니다.');
+            }
+
+            setForecast(payload);
+            setIsRevealed(false);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
+            setErrorMessage(message);
+        } finally {
+            setIsLoading(false);
         }
-
-        const today = new Date().toISOString().split('T')[0];
-        const result = calculateDailyForecast(dm, today);
-        setForecast(result);
     };
 
     const handleQuickSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!inputDate) return;
 
-        // Calculate Day Master
-        const dm = calculateDayMaster(inputDate);
-
-        // Save to LocalStorage (Minimal)
         const newUserData = {
             birthDate: inputDate,
             birthTime: inputTime,
-            saju: { dayMaster: dm } // Cache it
         };
 
         localStorage.setItem('cosmic_user_data', JSON.stringify(newUserData));
         setUserData(newUserData);
-        generateForecast(newUserData);
+        void fetchDailyFortune(newUserData.birthDate, newUserData.birthTime);
     };
 
     if (!userData) {
@@ -79,6 +141,8 @@ export function DailySealedWidget() {
                     onDateChange={setInputDate}
                     onTimeChange={setInputTime}
                     onSubmit={handleQuickSubmit}
+                    isLoading={isLoading}
+                    buttonText="Reveal Today's Fortune"
                 />
 
                 <p className="text-[10px] text-starlight/30 text-center mt-4">
@@ -88,7 +152,20 @@ export function DailySealedWidget() {
         );
     }
 
-    if (!forecast) return <div>Loading Cosmic Energy...</div>;
+    if (!forecast) {
+        return (
+            <div className="w-full max-w-md mx-auto bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-xl text-center">
+                {errorMessage ? (
+                    <p className="text-red-300 text-sm">{errorMessage}</p>
+                ) : (
+                    <p className="text-starlight/70 text-sm">{isLoading ? 'Loading Cosmic Energy...' : '운세를 불러오는 중입니다.'}</p>
+                )}
+            </div>
+        );
+    }
+
+    const strongestArea = getStrongestArea(forecast.areas);
+    const weakestArea = getWeakestArea(forecast.areas);
 
     return (
         <div className="w-full max-w-md mx-auto min-h-[440px] flex items-center justify-center relative perspective-1000">
@@ -124,16 +201,22 @@ export function DailySealedWidget() {
 
                     <div className="text-center mb-8 relative z-10">
                         <p className="text-starlight/40 text-xs uppercase tracking-[0.2em] mb-2">{forecast.date}</p>
-                        <h2 className="text-3xl md:text-4xl font-gowun-batang text-white mb-3 text-glow-gold">{forecast.keyword}</h2>
+                        <h2 className="text-3xl md:text-4xl font-gowun-batang text-white mb-3 text-glow-gold">
+                            오늘의 운세 {forecast.overallLuck}점
+                        </h2>
 
                         <div className="flex items-center justify-center gap-2 mb-6">
-                            <span className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-starlight/70 font-medium">{forecast.tenGod}</span>
-                            <span className="text-xs px-2.5 py-1 rounded-full bg-acc-gold/10 border border-acc-gold/20 text-acc-gold font-bold">에너지 {forecast.score}점</span>
+                            <span className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-starlight/70 font-medium">
+                                일간 {forecast.dayMaster}
+                            </span>
+                            <span className="text-xs px-2.5 py-1 rounded-full bg-acc-gold/10 border border-acc-gold/20 text-acc-gold font-bold">
+                                Lucky #{forecast.luckyNumber}
+                            </span>
                         </div>
 
                         <div className="bg-white/[0.03] p-6 rounded-xl border border-white/5 mb-6 text-center">
                             <p className="text-lg leading-relaxed text-starlight/90 font-medium font-gowun-batang break-keep">
-                                "{forecast.advice}"
+                                &ldquo;{forecast.summary}&rdquo;
                             </p>
                         </div>
 
@@ -146,22 +229,63 @@ export function DailySealedWidget() {
                                 <span className="block text-starlight/40 text-xs mb-1">길한 방향</span>
                                 <span className="text-white font-medium">{forecast.luckyDirection}</span>
                             </div>
+                            <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                <span className="block text-starlight/40 text-xs mb-1">연애 운</span>
+                                <span className="text-white font-medium">{forecast.areas.love}점</span>
+                            </div>
+                            <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                <span className="block text-starlight/40 text-xs mb-1">재물 운</span>
+                                <span className="text-white font-medium">{forecast.areas.money}점</span>
+                            </div>
+                            <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                <span className="block text-starlight/40 text-xs mb-1">커리어 운</span>
+                                <span className="text-white font-medium">{forecast.areas.career}점</span>
+                            </div>
+                            <div className="p-3 bg-white/5 rounded-lg border border-white/5">
+                                <span className="block text-starlight/40 text-xs mb-1">건강 운</span>
+                                <span className="text-white font-medium">{forecast.areas.health}점</span>
+                            </div>
                         </div>
 
-                        {/* Upsell CTA */}
-                        <div className="pt-6 border-t border-white/10">
-                            <p className="text-starlight/50 text-xs mb-3">더 깊은 운명의 흐름이 궁금하신가요?</p>
-                            <button
-                                onClick={() => router.push('/start')}
-                                className="w-full py-4 bg-gradient-to-r from-acc-gold to-amber-600 text-white font-bold rounded-xl shadow-lg hover:shadow-acc-gold/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
-                            >
-                                <span>프리미엄 정밀 분석 보기</span>
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
-                            </button>
+                        <div className="bg-white/[0.03] p-4 rounded-xl border border-white/5 mb-8 text-left">
+                            <p className="text-starlight/50 text-xs mb-2">오늘의 조언</p>
+                            <p className="text-starlight/85 text-sm leading-relaxed break-keep">{forecast.advice}</p>
                         </div>
+
+                        {forecast.isPremium ? (
+                            <div className="pt-6 border-t border-acc-gold/30 text-left">
+                                <p className="text-acc-gold text-xs font-bold tracking-[0.16em] uppercase mb-3">
+                                    Premium Insight
+                                </p>
+                                <div className="rounded-xl border border-acc-gold/20 bg-acc-gold/5 p-4">
+                                    <p className="text-starlight/90 text-sm leading-relaxed break-keep">
+                                        오늘은 <span className="text-acc-gold font-semibold">{areaLabelMap[strongestArea[0]]}</span> 흐름({strongestArea[1]}점)을
+                                        중심으로 움직이면 성과를 빠르게 만들 수 있습니다.
+                                        {' '}반대로 <span className="text-red-300 font-semibold">{areaLabelMap[weakestArea[0]]}</span> 영역({weakestArea[1]}점)은
+                                        에너지 소모가 크니 과한 결정은 내일로 미루는 편이 안전합니다.
+                                    </p>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="pt-6 border-t border-white/10">
+                                <p className="text-starlight/50 text-xs mb-3">매일 업데이트되는 맞춤형 운세가 필요하신가요?</p>
+                                <button
+                                    onClick={() => setIsSubscriptionModalOpen(true)}
+                                    className="w-full py-4 bg-gradient-to-r from-acc-gold to-amber-600 text-white font-bold rounded-xl shadow-lg hover:shadow-acc-gold/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                                >
+                                    <span>CosmicPath Pro 무제한 구독</span>
+                                    <Sparkles className="w-4 h-4 fill-current" />
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
+
+            <SubscriptionModal
+                isOpen={isSubscriptionModalOpen}
+                onClose={() => setIsSubscriptionModalOpen(false)}
+            />
         </div>
     );
 }

@@ -8,6 +8,7 @@ interface CreditPurchaseModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSelectOption: (option: 'single' | 'pack') => void;
+    onUpgradeToPro?: () => void;
     isLoading?: boolean;
 }
 
@@ -19,6 +20,7 @@ export function CreditPurchaseModal({
     isOpen,
     onClose,
     onSelectOption,
+    onUpgradeToPro,
     isLoading = false,
 }: CreditPurchaseModalProps) {
     const [selectedOption, setSelectedOption] = useState<'single' | 'pack'>('pack');
@@ -178,6 +180,22 @@ export function CreditPurchaseModal({
                                     Secured by Stripe
                                 </p>
                             </div>
+
+                            {/* Upsell to PRO */}
+                            {onUpgradeToPro && (
+                                <div className="mt-6 pt-5 border-t border-white/10 text-center">
+                                    <button
+                                        onClick={() => {
+                                            onClose();
+                                            onUpgradeToPro();
+                                        }}
+                                        className="w-full py-3.5 rounded-xl font-bold text-sm bg-white/5 border border-[#D4AF37]/30 text-[#D4AF37] transition-all duration-300 hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/60 active:scale-[0.98] flex items-center justify-center gap-2"
+                                    >
+                                        <Sparkles size={16} />
+                                        <span>CosmicPath Pro 무제한 구독하기</span>
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </motion.div>
                 </motion.div>

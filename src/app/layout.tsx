@@ -3,6 +3,7 @@ import "./globals.css";
 import JsonLd from "@/components/seo/json-ld";
 import { Analytics } from '@vercel/analytics/react';
 import SessionProvider from "@/components/providers/SessionProvider";
+import LenisProvider from "@/components/providers/LenisProvider";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://cosmicpath.app"),
@@ -74,9 +75,11 @@ export default function RootLayout({
       >
 
         <SessionProvider>
-          <JsonLd />
-          {children}
-          <Analytics />
+          <LenisProvider>
+            <JsonLd />
+            {children}
+            <Analytics />
+          </LenisProvider>
         </SessionProvider>
         <script
           src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
@@ -90,6 +93,6 @@ export default function RootLayout({
 
 declare global {
   interface Window {
-    Kakao: any;
+    Kakao: unknown;
   }
 }

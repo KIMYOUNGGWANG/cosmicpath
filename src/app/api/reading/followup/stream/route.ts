@@ -3,6 +3,22 @@ import { prisma } from '@/lib/prisma';
 import { buildOracleChatSystemPrompt } from '@/lib/ai/oracle-prompts';
 import { generateStreamingCompletion } from '@/lib/ai/llm-client';
 import { buildFactsOfDestiny } from '@/lib/engines/intelligence-bridge';
+import { authorizeOracleAccess, OracleAccessError } from '@/lib/oracle-access';
+
+function errorResponse(status: number, message: string, code: string) {
+    return new Response(
+        JSON.stringify({
+            error: {
+                code,
+                message,
+            },
+        }),
+        {
+            status,
+            headers: { 'Content-Type': 'application/json' },
+        }
+    );
+}
 
 /**
  * POST /api/reading/followup/stream
@@ -10,26 +26,24 @@ import { buildFactsOfDestiny } from '@/lib/engines/intelligence-bridge';
  */
 export async function POST(request: NextRequest) {
     try {
-        const body = await request.json();
-        const { readingId, question } = body;
+        const body = await request.json().catch(() => null);
+        const readingId = typeof body?.readingId === 'string' ? body.readingId : '';
+        const question = typeof body?.question === 'string' ? body.question.trim() : '';
 
         if (!readingId || !question) {
-            return new Response('Missing required fields', { status: 400 });
+            return errorResponse(400, 'Missing required fields', 'BAD_REQUEST');
         }
 
-        // 1. 리딩 결과 조회
-        const reading = await prisma.readingResult.findUnique({
-            where: { id: readingId },
-        });
-
-        if (!reading) {
-            return new Response('Reading not found', { status: 404 });
-        }
+        const { reading, isUnlimited } = await authorizeOracleAccess(readingId);
 
         // 2. 채팅 세션 확인 및 생성
         let session = await prisma.chatSession.findUnique({
             where: { readingResultId: readingId },
-            include: { messages: true },
+            include: {
+                messages: {
+                    orderBy: { createdAt: 'asc' },
+                },
+            },
         });
 
         if (!session) {
@@ -38,16 +52,17 @@ export async function POST(request: NextRequest) {
                     readingResultId: readingId,
                     credits: 1, // 무료 1회
                 },
-                include: { messages: true },
+                include: {
+                    messages: {
+                        orderBy: { createdAt: 'asc' },
+                    },
+                },
             });
         }
 
         // 3. 크레딧 확인
-        if (session.credits <= 0) {
-            return new Response(JSON.stringify({ error: 'Not enough credits', code: 'PAYMENT_REQUIRED' }), {
-                status: 402,
-                headers: { 'Content-Type': 'application/json' }
-            });
+        if (!isUnlimited && session.credits <= 0) {
+            return errorResponse(402, 'Not enough credits', 'PAYMENT_REQUIRED');
         }
 
         // 4. AI 컨텍스트 구성
@@ -94,6 +109,9 @@ export async function POST(request: NextRequest) {
 
         // 5. 스트리밍 호출
         const response = await generateStreamingCompletion(systemPrompt, fullUserPrompt, 'free');
+        if (!response.body) {
+            return errorResponse(500, 'Failed to start stream', 'STREAM_INIT_FAILED');
+        }
 
         // 6. 비동기적으로 메시지 및 크레딧 업데이트 (Stream Pass-through)
         // Note: Edge Runtime이나 서버 환경에 따라 이 패턴이 다를 수 있으나,
@@ -152,36 +170,39 @@ export async function POST(request: NextRequest) {
                     }
                 }
 
-                // 스트림 종료 시 DB 저장
+                // 스트림 종료 후 비동기 저장 (응답은 이미 클라이언트로 전달됨)
                 try {
-                    await prisma.$transaction([
-                        prisma.chatMessage.create({
+                    await prisma.$transaction(async (transaction) => {
+                        await transaction.chatMessage.create({
                             data: {
                                 chatSessionId: session!.id,
                                 role: 'user',
                                 content: question,
-                            }
-                        }),
-                        prisma.chatMessage.create({
+                            },
+                        });
+
+                        await transaction.chatMessage.create({
                             data: {
                                 chatSessionId: session!.id,
                                 role: 'assistant',
                                 content: fullResponse || '(답변을 생성하지 못했습니다)',
-                            }
-                        }),
-                        prisma.chatSession.update({
-                            where: { id: session!.id },
-                            data: { credits: { decrement: 1 } },
-                        })
-                    ]);
-                    console.log(`[Oracle Stream] Session ${session!.id} updated and credit deducted.`);
+                            },
+                        });
+
+                        if (!isUnlimited) {
+                            await transaction.chatSession.update({
+                                where: { id: session!.id },
+                                data: { credits: { decrement: 1 } },
+                            });
+                        }
+                    });
                 } catch (dbError) {
                     console.error('[Oracle Stream DB Update Error]', dbError);
                 }
             }
         });
 
-        return new Response(response.body?.pipeThrough(transformStream), {
+        return new Response(response.body.pipeThrough(transformStream), {
             headers: {
                 'Content-Type': 'text/plain; charset=utf-8',
                 'Transfer-Encoding': 'chunked',
@@ -189,8 +210,12 @@ export async function POST(request: NextRequest) {
         });
 
     } catch (error: unknown) {
+        if (error instanceof OracleAccessError) {
+            return errorResponse(error.status, error.message, error.code);
+        }
+
         const message = error instanceof Error ? error.message : String(error);
         console.error('Streaming follow-up failed:', error);
-        return new Response(JSON.stringify({ error: message }), { status: 500 });
+        return errorResponse(500, message, 'INTERNAL_SERVER_ERROR');
     }
 }

@@ -5,11 +5,22 @@ import { Send, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import { CreditPurchaseModal } from './CreditPurchaseModal';
+import { SubscriptionModal } from '@/components/payment/SubscriptionModal';
 
 interface Message {
     id?: string;
     role: 'user' | 'assistant';
     content: string;
+}
+
+interface ChatStatusResponse {
+    credits: number;
+    messages: Message[];
+    isUnlimited?: boolean;
+}
+
+interface ErrorPayload {
+    error?: string | { message?: string };
 }
 
 interface ChatInterfaceProps {
@@ -20,10 +31,13 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [credits, setCredits] = useState<number | null>(null);
+    const [isUnlimited, setIsUnlimited] = useState(false);
+    const [accessError, setAccessError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [isThinking, setIsThinking] = useState(false);
     const [hasInteracted, setHasInteracted] = useState(false);
     const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+    const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const searchParams = useSearchParams();
@@ -32,11 +46,29 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
     const fetchStatus = useCallback(async () => {
         try {
             const res = await fetch(`/api/reading/followup?readingId=${readingId}`);
-            if (res.ok) {
-                const data = await res.json();
-                setCredits(data.credits);
-                setMessages(data.messages || []);
+            const payload = (await res.json().catch(() => ({}))) as ChatStatusResponse & ErrorPayload;
+
+            if (!res.ok) {
+                const errorMessage =
+                    typeof payload.error === 'string'
+                        ? payload.error
+                        : payload.error?.message;
+
+                if (res.status === 401 || res.status === 403) {
+                    setAccessError(errorMessage || '이 리딩에 접근할 권한이 없습니다.');
+                    setIsUnlimited(false);
+                    setCredits(0);
+                    setMessages([]);
+                    return;
+                }
+
+                throw new Error(errorMessage || 'Failed to load chat status');
             }
+
+            setAccessError(null);
+            setCredits(payload.credits);
+            setMessages(payload.messages || []);
+            setIsUnlimited(Boolean(payload.isUnlimited));
         } catch (error) {
             console.error('Failed to load chat status:', error);
         }
@@ -135,7 +167,8 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
     }, [hasInteracted]);
 
     const handleSend = async () => {
-        if (!input.trim() || !credits || credits <= 0 || isLoading) return;
+        if (!input.trim() || isLoading || accessError) return;
+        if (!isUnlimited && (!credits || credits <= 0)) return;
 
         setHasInteracted(true);
         const userMessage = input.trim();
@@ -162,16 +195,28 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
             });
 
             if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
+                const errorData = (await res.json().catch(() => ({}))) as ErrorPayload;
+                const errorMessage =
+                    typeof errorData.error === 'string'
+                        ? errorData.error
+                        : errorData.error?.message;
+
+                if (res.status === 401 || res.status === 403) {
+                    setAccessError(errorMessage || '이 리딩에 접근할 권한이 없습니다.');
+                    setMessages(prev => prev.filter(m => m.id !== assistantMessageId));
+                    return;
+                }
+
                 if (res.status === 402) {
                     setIsPurchaseModalOpen(true);
                     setMessages(prev => prev.filter(m => m.id !== assistantMessageId));
                     return;
                 }
-                throw new Error(errorData.error || 'Failed to send message');
+                throw new Error(errorMessage || 'Failed to send message');
             }
 
             setIsThinking(false);
+            setAccessError(null);
 
             const reader = res.body?.getReader();
             if (!reader) throw new Error('No reader found');
@@ -234,6 +279,10 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
         }
     };
 
+    const hasAvailableQuestions = isUnlimited || (credits !== null && credits > 0);
+    const remainingLabel = isUnlimited ? '∞' : (credits !== null ? `${credits}` : '...');
+    const remainingClassName = hasAvailableQuestions ? 'text-[#D4AF37]' : 'text-red-400';
+
     return (
         <div className="w-full max-w-2xl mx-auto mt-12 bg-[#0A0C1B]/80 backdrop-blur-xl rounded-3xl border border-white/10 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] relative">
             {/* Background Aura */}
@@ -252,8 +301,8 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
                 </div>
                 <div className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 flex items-center gap-2">
                     <span className="text-[11px] text-gray-400 font-medium italic">Remaining:</span>
-                    <span className={`text-sm font-bold ${credits && credits > 0 ? "text-[#D4AF37]" : "text-red-400"}`}>
-                        {credits !== null ? `${credits}` : '...'}
+                    <span className={`text-sm font-bold ${remainingClassName}`}>
+                        {remainingLabel}
                     </span>
                 </div>
             </div>
@@ -308,7 +357,11 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
 
             {/* Input Area */}
             <div className="p-6 bg-gradient-to-b from-transparent to-black/40">
-                {credits !== null && credits > 0 ? (
+                {accessError ? (
+                    <div className="rounded-2xl border border-red-400/35 bg-red-500/10 px-4 py-4 text-sm text-red-200">
+                        {accessError}
+                    </div>
+                ) : hasAvailableQuestions ? (
                     <div className="relative flex items-center gap-3">
                         <div className="relative flex-1">
                             <textarea
@@ -336,6 +389,10 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
                             <Send className="w-6 h-6 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                         </button>
                     </div>
+                ) : credits === null ? (
+                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-white/60">
+                        채팅 접근 상태를 확인하는 중입니다...
+                    </div>
                 ) : (
                     <button
                         onClick={() => setIsPurchaseModalOpen(true)}
@@ -352,7 +409,13 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
                 isOpen={isPurchaseModalOpen}
                 onClose={() => setIsPurchaseModalOpen(false)}
                 onSelectOption={handlePayment}
+                onUpgradeToPro={() => setIsSubscriptionModalOpen(true)}
                 isLoading={isLoading}
+            />
+
+            <SubscriptionModal
+                isOpen={isSubscriptionModalOpen}
+                onClose={() => setIsSubscriptionModalOpen(false)}
             />
         </div>
     );

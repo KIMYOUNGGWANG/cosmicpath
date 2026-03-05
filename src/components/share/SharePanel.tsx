@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Share2, MessageCircle, Link2, Check, X, Download } from 'lucide-react';
+import { Share2, MessageCircle, Link2, Check, X, Download, AtSign, Music2 } from 'lucide-react';
 
 interface SharePanelProps {
     resultRef?: React.RefObject<HTMLElement | null>;
@@ -23,6 +23,23 @@ export function SharePanel({
     const isEn = language === 'en';
     const [isOpen, setIsOpen] = useState(false);
     const [copied, setCopied] = useState(false);
+
+    const resolveShareUrl = () => {
+        if (typeof window === 'undefined') return shareUrl || '';
+        if (!shareUrl) return window.location.href;
+
+        const origin = window.location.origin;
+        return shareUrl.startsWith('http')
+            ? shareUrl
+            : `${origin}${shareUrl.startsWith('/') ? '' : '/'}${shareUrl}`;
+    };
+
+    const buildTikTokTemplate = (url: string) => {
+        if (isEn) {
+            return `AI read my destiny today and this one line was too accurate... 🔮\n\nTry yours: ${url}\n#CosmicPath #AIFortune #Astrology #DailyEnergy #fyp`;
+        }
+        return `AI가 오늘 내 운세를 읽어줬는데 소름 돋았어요 🔮\n\n너도 해보기: ${url}\n#코스믹패스 #AI운세 #오늘의운세 #사주 #추천`;
+    };
 
     const claimReward = async () => {
         // 클라이언트 사이드 체크 (이미 받았으면 요청 안 함)
@@ -68,7 +85,15 @@ export function SharePanel({
     const handleKakaoShare = () => {
         if (typeof window === 'undefined') return;
 
-        const kakao = (window as any).Kakao;
+        const kakao = (
+            window as {
+                Kakao?: {
+                    isInitialized: () => boolean;
+                    init: (key: string) => void;
+                    Share: { sendDefault: (payload: unknown) => void };
+                };
+            }
+        ).Kakao;
 
         if (!kakao) {
             alert(isEn ? 'Kakao SDK not loaded.' : '카카오 SDK가 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.');
@@ -135,7 +160,7 @@ export function SharePanel({
 
     // 링크 복사
     const handleCopyLink = async () => {
-        const url = shareUrl || window.location.href;
+        const url = resolveShareUrl();
 
         try {
             if (navigator.clipboard && window.isSecureContext) {
@@ -168,6 +193,32 @@ export function SharePanel({
             document.body.removeChild(textArea);
         } catch (error) {
             console.error('Failed to copy:', error);
+        }
+    };
+
+    const handleThreadsShare = () => {
+        if (typeof window === 'undefined') return;
+
+        const url = resolveShareUrl();
+        const text = isEn
+            ? `I got my AI destiny reading from CosmicPath. This part was scary accurate.\n\n${url}`
+            : `CosmicPath에서 AI 운세를 봤는데 진짜 소름... 오늘의 결과 공유해요.\n\n${url}`;
+
+        const intentUrl = `https://threads.net/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+        window.open(intentUrl, '_blank', 'noopener,noreferrer');
+        claimReward();
+    };
+
+    const handleCopyTikTokTemplate = async () => {
+        const url = resolveShareUrl();
+        const template = buildTikTokTemplate(url);
+
+        try {
+            await navigator.clipboard.writeText(template);
+            alert(isEn ? 'TikTok caption copied!' : 'TikTok 공유 문구가 복사되었습니다!');
+            claimReward();
+        } catch {
+            alert(isEn ? 'Failed to copy TikTok caption.' : 'TikTok 문구 복사에 실패했습니다.');
         }
     };
 
@@ -246,6 +297,48 @@ export function SharePanel({
                                     </p>
                                     <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
                                         {isEn ? 'Share with friends' : '친구에게 결과 공유'}
+                                    </p>
+                                </div>
+                            </button>
+
+                            {/* Threads 공유 */}
+                            <button
+                                onClick={handleThreadsShare}
+                                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-white/5"
+                            >
+                                <div
+                                    className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
+                                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}
+                                >
+                                    <AtSign size={20} style={{ color: '#ffffff' }} />
+                                </div>
+                                <div className="text-left">
+                                    <p className="font-medium" style={{ color: '#ffffff' }}>
+                                        {isEn ? 'Share to Threads' : 'Threads 공유'}
+                                    </p>
+                                    <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                                        {isEn ? 'Post with one tap' : '한 번에 Threads 게시'}
+                                    </p>
+                                </div>
+                            </button>
+
+                            {/* TikTok 템플릿 복사 */}
+                            <button
+                                onClick={handleCopyTikTokTemplate}
+                                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-white/5"
+                            >
+                                <div
+                                    className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
+                                    style={{ backgroundColor: 'rgba(244, 63, 94, 0.2)' }}
+                                >
+                                    <Music2 size={20} style={{ color: '#f43f5e' }} />
+                                </div>
+                                <div className="text-left">
+                                    <p className="font-medium" style={{ color: '#ffffff' }}>
+                                        {isEn ? 'Copy TikTok Caption' : 'TikTok 문구 복사'}
+                                    </p>
+                                    <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                                        {isEn ? 'Optimized viral template' : '바이럴 최적화 템플릿'}
                                     </p>
                                 </div>
                             </button>

@@ -59,4 +59,23 @@ export const MATCH_PRODUCT = {
     price: 299, // $2.99 in cents
 } as const;
 
+export const SUBSCRIPTION_PLAN_IDS = ['pro_monthly', 'pro_yearly', 'couple_monthly'] as const;
+export type SubscriptionPlanId = (typeof SUBSCRIPTION_PLAN_IDS)[number];
+
+export const SUBSCRIPTION_PRICE_IDS = {
+    pro_monthly: process.env.NODE_ENV === 'development'
+        ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY || 'price_pro_monthly_TBD')
+        : (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY || 'price_pro_monthly_TBD'),
+    pro_yearly: process.env.NODE_ENV === 'development'
+        ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY || 'price_pro_yearly_TBD')
+        : (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY || 'price_pro_yearly_TBD'),
+    couple_monthly: process.env.NODE_ENV === 'development'
+        ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY || 'price_couple_monthly_TBD')
+        : (process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY || 'price_couple_monthly_TBD'),
+} as const satisfies Record<SubscriptionPlanId, string>;
+
+export function getSubscriptionPriceId(planId: SubscriptionPlanId): string {
+    return SUBSCRIPTION_PRICE_IDS[planId];
+}
+
 export type ProductType = typeof READING_PRODUCT | typeof FOLLOW_UP_PRODUCT | typeof MATCH_PRODUCT;

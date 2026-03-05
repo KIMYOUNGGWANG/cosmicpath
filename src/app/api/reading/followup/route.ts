@@ -3,6 +3,20 @@ import { prisma } from '@/lib/prisma';
 import { buildChatSystemPrompt } from '@/lib/ai/prompt-builder';
 import { generateCompletion } from '@/lib/ai/llm-client';
 import { buildFactsOfDestiny } from '@/lib/engines/intelligence-bridge';
+import { authorizeOracleAccess, OracleAccessError } from '@/lib/oracle-access';
+
+function errorResponse(code: number, message: string, details?: string) {
+    return NextResponse.json(
+        {
+            error: {
+                code,
+                message,
+                ...(details ? { details } : {}),
+            },
+        },
+        { status: code }
+    );
+}
 
 /**
  * POST /api/reading/followup
@@ -10,26 +24,24 @@ import { buildFactsOfDestiny } from '@/lib/engines/intelligence-bridge';
  */
 export async function POST(request: NextRequest) {
     try {
-        const body = await request.json();
-        const { readingId, question } = body;
+        const body = await request.json().catch(() => null);
+        const readingId = typeof body?.readingId === 'string' ? body.readingId : '';
+        const question = typeof body?.question === 'string' ? body.question.trim() : '';
 
         if (!readingId || !question) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        // 1. 리딩 결과 조회 (컨텍스트용)
-        const reading = await prisma.readingResult.findUnique({
-            where: { id: readingId },
-        });
-
-        if (!reading) {
-            return NextResponse.json({ error: 'Reading not found' }, { status: 404 });
-        }
+        const { reading, isUnlimited } = await authorizeOracleAccess(readingId);
 
         // 2. 채팅 세션 확인 및 생성 (없으면 무료 1회 생성)
         let session = await prisma.chatSession.findUnique({
             where: { readingResultId: readingId },
-            include: { messages: true },
+            include: {
+                messages: {
+                    orderBy: { createdAt: 'asc' },
+                },
+            },
         });
 
         if (!session) {
@@ -38,12 +50,16 @@ export async function POST(request: NextRequest) {
                     readingResultId: readingId,
                     credits: 1, // 무료 1회
                 },
-                include: { messages: true }, // 빈 배열
+                include: {
+                    messages: {
+                        orderBy: { createdAt: 'asc' },
+                    },
+                },
             });
         }
 
         // 3. 크레딧 확인
-        if (session.credits <= 0) {
+        if (!isUnlimited && session.credits <= 0) {
             return NextResponse.json(
                 { error: 'Not enough credits', code: 'PAYMENT_REQUIRED' },
                 { status: 402 } // Payment Required
@@ -95,39 +111,45 @@ export async function POST(request: NextRequest) {
         // 5. DB 저장 (User & Assistant) - 트랜잭션 추천
         // Note: 크레딧 차감은 답변 성공 시에만
 
-        await prisma.$transaction([
-            // 사용자 질문 저장
-            prisma.chatMessage.create({
+        await prisma.$transaction(async (transaction) => {
+            await transaction.chatMessage.create({
                 data: {
                     chatSessionId: session.id,
                     role: 'user',
                     content: question,
-                }
-            }),
-            // AI 답변 저장
-            prisma.chatMessage.create({
+                },
+            });
+
+            await transaction.chatMessage.create({
                 data: {
                     chatSessionId: session.id,
                     role: 'assistant',
                     content: aiResponse.content,
-                }
-            }),
-            // 크레딧 차감
-            prisma.chatSession.update({
-                where: { id: session.id },
-                data: { credits: { decrement: 1 } },
-            })
-        ]);
+                },
+            });
+
+            if (!isUnlimited) {
+                await transaction.chatSession.update({
+                    where: { id: session.id },
+                    data: { credits: { decrement: 1 } },
+                });
+            }
+        });
 
 
         // 6. 응답 반환
         return NextResponse.json({
             answer: aiResponse.content,
-            creditsLeft: session.credits - 1,
+            creditsLeft: isUnlimited ? session.credits : Math.max(session.credits - 1, 0),
+            isUnlimited,
             success: true,
         });
 
     } catch (error: unknown) {
+        if (error instanceof OracleAccessError) {
+            return errorResponse(error.status, error.message, error.code);
+        }
+
         const message = error instanceof Error ? error.message : String(error);
         console.error('Follow-up question failed:', error);
         return NextResponse.json(
@@ -150,6 +172,8 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Missing readingId' }, { status: 400 });
         }
 
+        const { isUnlimited } = await authorizeOracleAccess(readingId);
+
         const session = await prisma.chatSession.findUnique({
             where: { readingResultId: readingId },
             include: {
@@ -164,7 +188,8 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({
                 credits: 1,
                 messages: [],
-                hasSession: false
+                hasSession: false,
+                isUnlimited,
             });
         }
 
@@ -176,10 +201,15 @@ export async function GET(request: NextRequest) {
                 content: m.content,
                 createdAt: m.createdAt
             })),
-            hasSession: true
+            hasSession: true,
+            isUnlimited,
         });
 
     } catch (error: unknown) {
+        if (error instanceof OracleAccessError) {
+            return errorResponse(error.status, error.message, error.code);
+        }
+
         const message = error instanceof Error ? error.message : String(error);
         return NextResponse.json(
             { error: 'Failed to fetch chat status', details: message },
