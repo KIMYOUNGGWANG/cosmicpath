@@ -865,6 +865,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 currentReport={report}
                 metadata={metadata}
                 readingData={(metadata as MetadataWithReadingData)?.readingData}
+                trackingSource="shared_report_unlock"
             />
 
             {/* Sticky CTA for Partial Result (Show if we can unlock) */}

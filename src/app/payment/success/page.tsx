@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { CheckCircle2, ArrowRight, XCircle, Home, RefreshCw } from 'lucide-react';
+import { trackClientGrowthEvent } from '@/lib/client-growth-events';
 
 function PaymentSuccessContent() {
     const searchParams = useSearchParams();
@@ -19,6 +20,13 @@ function PaymentSuccessContent() {
             if (!sessionId) {
                 setStatus('error');
                 setErrorMsg('세션 ID가 누락되었습니다.');
+                void trackClientGrowthEvent({
+                    event: 'checkout_failure',
+                    source: 'payment_success_page',
+                    step: 'payment_verification',
+                    readingId: readingId || undefined,
+                    metadata: { reason: 'missing_session_id' },
+                });
                 return;
             }
 
@@ -29,6 +37,16 @@ function PaymentSuccessContent() {
 
                 if (result.status === 'paid') {
                     setStatus('success');
+                    void trackClientGrowthEvent({
+                        event: 'checkout_success',
+                        source: 'payment_success_page',
+                        step: 'payment_verification',
+                        readingId: readingId || undefined,
+                        plan: result.payment_type || 'premium_reading',
+                        metadata: {
+                            sessionId,
+                        },
+                    });
                     // Mark payment completed in storage for start/page.tsx to pick up
                     sessionStorage.setItem('payment_completed', 'true');
 
@@ -38,16 +56,36 @@ function PaymentSuccessContent() {
                 } else {
                     setStatus('error');
                     setErrorMsg('결제가 완료되지 않았습니다.');
+                    void trackClientGrowthEvent({
+                        event: 'checkout_failure',
+                        source: 'payment_success_page',
+                        step: 'payment_verification',
+                        readingId: readingId || undefined,
+                        metadata: {
+                            sessionId,
+                            status: result.status || 'unknown',
+                        },
+                    });
                 }
             } catch (error) {
                 console.error('Payment verification error:', error);
                 setStatus('error');
                 setErrorMsg('결제 검증 중 오류가 발생했습니다.');
+                void trackClientGrowthEvent({
+                    event: 'checkout_failure',
+                    source: 'payment_success_page',
+                    step: 'payment_verification',
+                    readingId: readingId || undefined,
+                    metadata: {
+                        sessionId,
+                        reason: error instanceof Error ? error.message : 'payment_verification_error',
+                    },
+                });
             }
         };
 
         verifyPayment();
-    }, [sessionId, router]);
+    }, [readingId, router, sessionId]);
 
     return (
         <motion.div

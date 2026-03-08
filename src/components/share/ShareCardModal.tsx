@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Download, Share2, Check } from 'lucide-react';
+import { X, Download, Check } from 'lucide-react';
 import { CosmicShareCard } from './CosmicShareCard';
 import { useShareCard } from '@/hooks/useShareCard';
+import { trackClientGrowthEvent } from '@/lib/client-growth-events';
 
 interface ShareCardModalProps {
     isOpen: boolean;
@@ -36,6 +37,11 @@ export function ShareCardModal({
 
     const handleDownload = async () => {
         await captureAndDownload();
+        await trackClientGrowthEvent({
+            event: 'share_clicked',
+            source: 'share_card_download',
+            step: 'share_modal',
+        });
         setIsDownloaded(true);
         setTimeout(() => setIsDownloaded(false), 3000);
     };

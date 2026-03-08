@@ -8,6 +8,7 @@ import { RefreshCw } from 'lucide-react';
 import { ReadingInput, ReadingData } from '@/components/reading/reading-input';
 import { ReadingSession, createSession } from '@/lib/session/reading-session';
 import { StickyCTA } from '@/components/common/sticky-cta';
+import { trackClientGrowthEvent } from '@/lib/client-growth-events';
 
 import { Footer } from '@/components/landing/Footer';
 import { GlobalHeader } from '@/components/common/GlobalHeader';
@@ -65,6 +66,7 @@ function CosmicPathContent() {
   // Payment State
   const [isPremium, setIsPremium] = useState(false); // Paywall Enabled
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paymentTrackingSource, setPaymentTrackingSource] = useState('start_result_unlock');
   const [isShareModalOpen, setIsShareModalOpen] = useState(false); // Share Card Modal
 
   const searchParams = useSearchParams();
@@ -77,6 +79,9 @@ function CosmicPathContent() {
   const [inviteCode, setInviteCode] = useState<string | undefined>(undefined);
   const [inviterName, setInviterName] = useState<string | undefined>(undefined);
   const [isInvitationMode, setIsInvitationMode] = useState(false);
+  const hasTrackedLandingView = useRef(false);
+  const hasTrackedFreeResult = useRef(false);
+  const hasTrackedReportComplete = useRef(false);
 
 
 
@@ -126,6 +131,20 @@ function CosmicPathContent() {
     }
   }, []);
 
+  useEffect(() => {
+    if (hasTrackedLandingView.current) return;
+
+    hasTrackedLandingView.current = true;
+    void trackClientGrowthEvent({
+      event: 'landing_view',
+      source: searchParams.get('invite') ? 'start_page_invite' : 'start_page',
+      step: step,
+      language,
+      invitationMode: Boolean(searchParams.get('invite')),
+      price: dynamicPrice || undefined,
+    });
+  }, [dynamicPrice, language, searchParams, step]);
+
   // 🎫 Viral Invitation Verification
   useEffect(() => {
     const code = searchParams.get('invite');
@@ -143,6 +162,46 @@ function CosmicPathContent() {
         .catch(err => console.error('Invite verification failed:', err));
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (step !== 'result' || !reportData?.summary || isPremium) return;
+    if (hasTrackedFreeResult.current) return;
+
+    hasTrackedFreeResult.current = true;
+    void trackClientGrowthEvent({
+      event: 'free_result_shown',
+      source: 'start_result',
+      step,
+      language,
+      context: readingData?.context,
+      invitationMode: isInvitationMode,
+      price: dynamicPrice || undefined,
+      readingId: sessionStorage.getItem('pending_reading_id') || undefined,
+    });
+  }, [dynamicPrice, isInvitationMode, isPremium, language, readingData, reportData, step]);
+
+  useEffect(() => {
+    const isPaidSession =
+      isPremium ||
+      searchParams.get('paid') === 'true' ||
+      sessionStorage.getItem('payment_completed') === 'true';
+
+    if (step !== 'result' || !reportData?.final_verdict || !isPaidSession) return;
+    if (hasTrackedReportComplete.current) return;
+
+    hasTrackedReportComplete.current = true;
+    void trackClientGrowthEvent({
+      event: 'report_complete',
+      source: 'start_result',
+      step,
+      language,
+      context: readingData?.context,
+      invitationMode: isInvitationMode,
+      price: dynamicPrice || undefined,
+      readingId: sessionStorage.getItem('pending_reading_id') || undefined,
+      plan: 'premium_reading',
+    });
+  }, [dynamicPrice, isInvitationMode, isPremium, language, readingData, reportData, searchParams, step]);
 
   // 🚨 beforeunload: 로딩 중 창 닫기 방지
   useEffect(() => {
@@ -427,10 +486,22 @@ function CosmicPathContent() {
     clearSessionAndBackup(); // Clear previous session data
     saveToSessionAndBackup('is_session_active', 'false'); // Explicitly false until results are ready
 
+    hasTrackedFreeResult.current = false;
+    hasTrackedReportComplete.current = false;
+
     setReadingData(data);
     setReadingData(data);
     setLanguage(data.language);
     localStorage.setItem('user_language', data.language);
+    void trackClientGrowthEvent({
+      event: 'analysis_start',
+      source: 'reading_input',
+      step: 'input',
+      language: data.language,
+      context: data.context,
+      invitationMode: isInvitationMode,
+      price: dynamicPrice || undefined,
+    });
     setStep('tarot');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -445,6 +516,18 @@ function CosmicPathContent() {
 
     // Go to Reveal Step instead of direct Result
     setStep('reveal');
+    void trackClientGrowthEvent({
+      event: 'tarot_complete',
+      source: 'tarot_picker',
+      step: 'tarot',
+      language,
+      context: readingData?.context,
+      invitationMode: isInvitationMode,
+      price: dynamicPrice || undefined,
+      metadata: {
+        tarotCount: cards.length,
+      },
+    });
 
     // Start Data Fetching in Background (So it's ready when they unseal)
     // We don't await here, we let it run. The Result step handles 'isLoading' check.
@@ -461,6 +544,7 @@ function CosmicPathContent() {
   const handleUpgrade = async () => {
     // Open payment modal instead of direct unlock, unless already premium
     if (isPremium) return;
+    setPaymentTrackingSource('start_result_unlock');
     setIsPaymentModalOpen(true);
   };
 
@@ -953,6 +1037,18 @@ function CosmicPathContent() {
                                   });
                                   const data = await res.json();
                                   if (data.code) {
+                                    void trackClientGrowthEvent({
+                                      event: 'invite_created',
+                                      source: 'start_result_cta',
+                                      step: 'result',
+                                      language,
+                                      context: readingData?.context,
+                                      invitationMode: isInvitationMode,
+                                      price: dynamicPrice || undefined,
+                                      readingId: rId || undefined,
+                                      referralCode: data.code,
+                                    });
+
                                     // Referral tracking: CTA and copy actions
                                     await fetch('/api/invite/track', {
                                       method: 'POST',
@@ -966,6 +1062,18 @@ function CosmicPathContent() {
 
                                     const link = `${window.location.origin}/start?invite=${data.code}`;
                                     navigator.clipboard.writeText(link);
+
+                                    void trackClientGrowthEvent({
+                                      event: 'invite_copied',
+                                      source: 'start_result_cta',
+                                      step: 'result',
+                                      language,
+                                      context: readingData?.context,
+                                      invitationMode: isInvitationMode,
+                                      price: dynamicPrice || undefined,
+                                      readingId: rId || undefined,
+                                      referralCode: data.code,
+                                    });
 
                                     await fetch('/api/invite/track', {
                                       method: 'POST',
@@ -1008,9 +1116,12 @@ function CosmicPathContent() {
                                   : `${inviterName || '친구'}님과의 궁합은 어떠셨나요?\n나의 2026년 운세도 확인해보세요.`}
                               </h3>
                               <button
-                                onClick={() => setIsPaymentModalOpen(true)}
-                                className="w-full py-3 bg-white/10 text-starlight font-bold rounded-lg hover:bg-acc-gold hover:text-bg-void transition-colors border border-white/20 hover:border-transparent"
-                              >
+                            onClick={() => {
+                              setPaymentTrackingSource('invite_upsell');
+                              setIsPaymentModalOpen(true);
+                            }}
+                            className="w-full py-3 bg-white/10 text-starlight font-bold rounded-lg hover:bg-acc-gold hover:text-bg-void transition-colors border border-white/20 hover:border-transparent"
+                          >
                                 {language === 'en' ? 'Unlock My Fortune (30% OFF)' : '내 신년운세 확인하기 (30% 할인)'}
                               </button>
                             </div>
@@ -1018,7 +1129,19 @@ function CosmicPathContent() {
 
                           {/* Legacy Share Button */}
                           <button
-                            onClick={() => setIsShareModalOpen(true)}
+                            onClick={() => {
+                              void trackClientGrowthEvent({
+                                event: 'share_clicked',
+                                source: 'result_share_button',
+                                step: 'result',
+                                language,
+                                context: readingData?.context,
+                                invitationMode: isInvitationMode,
+                                price: dynamicPrice || undefined,
+                                readingId: shareUrl?.split('/').pop() || sessionStorage.getItem('pending_reading_id') || undefined,
+                              });
+                              setIsShareModalOpen(true);
+                            }}
                             className="flex items-center gap-2 px-6 py-3 transition-colors text-dim hover:text-white"
                           >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1132,6 +1255,7 @@ function CosmicPathContent() {
         metadata={metadata}
         isDecisionAccepted={isDecisionAccepted}
         price={dynamicPrice}
+        trackingSource={paymentTrackingSource}
       />
 
       <ReviewModal
