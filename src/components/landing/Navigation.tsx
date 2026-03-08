@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import Link from 'next/link';
-import { Menu, Search, Sparkles, Heart } from 'lucide-react';
+import { Menu, Search, Sparkles, Heart, Palette } from 'lucide-react';
 import { OrderLookupModal } from '@/components/orders/OrderLookupModal';
 import { MobileMenu } from '@/components/common/MobileMenu';
 import { User } from 'lucide-react';
@@ -11,6 +11,7 @@ import UserMenu from '@/components/layout/UserMenu';
 import { LoginModal, useLoginModal } from '@/components/auth/LoginModal';
 import { useSession } from 'next-auth/react';
 import { SubscriptionModal } from '@/components/payment/SubscriptionModal';
+import { trackClientGrowthEvent } from '@/lib/client-growth-events';
 
 export function Navigation() {
     const { status } = useSession();
@@ -49,6 +50,17 @@ export function Navigation() {
         setIsMobileMenuOpen(false);
     };
 
+    const trackKDestinyNavClick = (context: 'desktop' | 'mobile') => {
+        void trackClientGrowthEvent({
+            event: 'k_destiny_nav_click',
+            source: 'navigation',
+            context,
+            metadata: {
+                authenticated: status === 'authenticated',
+            },
+        });
+    };
+
     return (
         <>
             <motion.nav
@@ -81,6 +93,13 @@ export function Navigation() {
                             className="text-xs font-medium text-starlight hover:text-acc-gold transition-colors font-cinzel tracking-widest uppercase"
                         >
                             오늘의 운세
+                        </Link>
+                        <Link
+                            href="/k-destiny"
+                            onClick={() => trackKDestinyNavClick('desktop')}
+                            className="text-xs font-medium text-[#7FDBFF] hover:text-[#FFD166] transition-colors font-cinzel tracking-widest uppercase"
+                        >
+                            K-DESTINY
                         </Link>
                         <button
                             onClick={toggleOrderModal}
@@ -162,6 +181,15 @@ export function Navigation() {
                         label: 'COMPATIBILITY',
                         subLabel: 'Check relationship compatibility',
                         href: '/match/new',
+                    },
+                    {
+                        type: 'link',
+                        icon: Palette,
+                        iconColorClass: 'group-hover:bg-cyan-500/20 group-hover:text-cyan-300',
+                        label: 'K-DESTINY',
+                        subLabel: 'Generate your aura card',
+                        href: '/k-destiny',
+                        onClick: () => trackKDestinyNavClick('mobile'),
                     },
                     {
                         type: 'link',

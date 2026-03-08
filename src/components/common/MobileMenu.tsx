@@ -2,8 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { X, Search, Sparkles, Heart, LucideIcon } from 'lucide-react';
-import { ReactNode } from 'react';
+import { X, LucideIcon } from 'lucide-react';
 
 export interface MenuItem {
     type: 'button' | 'link';
@@ -99,7 +98,10 @@ export function MobileMenu({ isOpen, onClose, menuItems }: MobileMenuProps) {
                                             key={index}
                                             href={item.href}
                                             className="flex items-center gap-4 text-left group"
-                                            onClick={onClose}
+                                            onClick={() => {
+                                                item.onClick?.();
+                                                onClose();
+                                            }}
                                         >
                                             {content}
                                         </Link>
