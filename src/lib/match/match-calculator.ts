@@ -7,6 +7,7 @@
 
 import { calculateSaju, SajuResult, FIVE_ELEMENTS } from '../engines/saju';
 import { calculateAstrology } from '../engines/astrology';
+import { createTimezoneAwareBirthData } from '@/lib/utils/timezone';
 
 // Five Elements compatibility matrix: [source][target] = bonus/penalty
 // 상생: 목→화→토→금→수→목 (+15)
@@ -245,29 +246,48 @@ function generatePremiumContent(
  * v2.0 - Uses real Saju engine for accurate scoring
  */
 export function calculateCompatibility(host: PersonData, guest: PersonData): MatchResult {
-    // Parse birth times
-    const [hostHour, hostMin] = (host.birthTime || '12:00').split(':').map(Number);
-    const [guestHour, guestMin] = (guest.birthTime || '12:00').split(':').map(Number);
+    const hostBirthData = createTimezoneAwareBirthData({
+        birthDate: host.birthDate,
+        birthTime: host.birthTime,
+        timezone: host.timezone,
+    });
+    const guestBirthData = createTimezoneAwareBirthData({
+        birthDate: guest.birthDate,
+        birthTime: guest.birthTime,
+        timezone: guest.timezone,
+    });
 
     // 1. Calculate Saju for both people using REAL engine
     const hostSaju = calculateSaju(
-        host.birthDate,
-        hostHour,
-        hostMin,
+        hostBirthData.civilDate,
+        hostBirthData.clockTime.hour,
+        hostBirthData.clockTime.minute,
         false, // assume solar calendar
         host.gender || 'male'
     );
     const guestSaju = calculateSaju(
-        guest.birthDate,
-        guestHour,
-        guestMin,
+        guestBirthData.civilDate,
+        guestBirthData.clockTime.hour,
+        guestBirthData.clockTime.minute,
         false,
         guest.gender || 'female'
     );
 
     // Calculate Astrology
-    const hostAstrology = calculateAstrology(host.birthDate, host.birthTime || '12:00');
-    const guestAstrology = calculateAstrology(guest.birthDate, guest.birthTime || '12:00');
+    const hostAstrology = calculateAstrology(
+        hostBirthData.utcCalendarDate,
+        host.birthTime || '12:00',
+        37.5665,
+        126.9780,
+        hostBirthData.timezoneOffsetHours
+    );
+    const guestAstrology = calculateAstrology(
+        guestBirthData.utcCalendarDate,
+        guest.birthTime || '12:00',
+        37.5665,
+        126.9780,
+        guestBirthData.timezoneOffsetHours
+    );
 
     // 2. Saju Score (40%) - using real engine
     const sajuResult = calculateSajuCompatibility(hostSaju, guestSaju);
@@ -276,8 +296,8 @@ export function calculateCompatibility(host: PersonData, guest: PersonData): Mat
     const guestElement = FIVE_ELEMENTS[guestSaju.elements[2].stem];
 
     // 3. Astrology Score (40%)
-    const hostSign = getZodiacSign(host.birthDate);
-    const guestSign = getZodiacSign(guest.birthDate);
+    const hostSign = getZodiacSign(hostBirthData.civilDate);
+    const guestSign = getZodiacSign(guestBirthData.civilDate);
     const hostAstroElement = SIGN_ELEMENTS[hostSign];
     const guestAstroElement = SIGN_ELEMENTS[guestSign];
 
@@ -296,8 +316,8 @@ export function calculateCompatibility(host: PersonData, guest: PersonData): Mat
     const astroScore = Math.min(100, Math.max(0, astroBase));
 
     // 4. Numerology Score (20%)
-    const hostLifePath = getLifePathNumber(host.birthDate);
-    const guestLifePath = getLifePathNumber(guest.birthDate);
+    const hostLifePath = getLifePathNumber(hostBirthData.civilDate);
+    const guestLifePath = getLifePathNumber(guestBirthData.civilDate);
     const numDiff = Math.abs(hostLifePath - guestLifePath);
     const numScore = numDiff === 0 ? 100 : Math.max(0, 80 - numDiff * 10);
 

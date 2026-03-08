@@ -26,6 +26,7 @@ import {
     MatchPhase4Schema,
     MatchPhase5Schema
 } from '@/lib/ai/match-schemas';
+import { createTimezoneAwareBirthData } from '@/lib/utils/timezone';
 
 // Convert new Phase format to legacy AIAnalysis format for backward compatibility
 function convertToLegacyFormat(fullAnalysis: Partial<MatchFullAnalysis>) {
@@ -163,42 +164,57 @@ export async function POST(
         }
 
         // 3. Calculate Saju and Astrology for both people
-        const hostBirth = new Date(session.hostBirth);
-        const guestBirth = new Date(session.guestBirth);
         const hostTime = '12:00';
         const guestTime = '12:00';
-
-        const [hostHours, hostMinutes] = hostTime.split(':').map(Number);
-        const [guestHours, guestMinutes] = guestTime.split(':').map(Number);
-
-        // Fix: DB stores birth date as UTC midnight (e.g., 1998-05-18T00:00:00Z).
-        // converting to new Date() in local timezone (e.g., -07:00) shifts it to previous day (17th).
-        // We must construct the date using UTC components to ensure it remains the correct calendar date in local time context.
-        const hostBirthDate = new Date(session.hostBirth);
-        const guestBirthDate = new Date(session.guestBirth);
-
-        const hostSajuDate = new Date(
-            hostBirthDate.getUTCFullYear(),
-            hostBirthDate.getUTCMonth(),
-            hostBirthDate.getUTCDate(),
-            hostHours,
-            hostMinutes
-        );
-
-        const guestSajuDate = new Date(
-            guestBirthDate.getUTCFullYear(),
-            guestBirthDate.getUTCMonth(),
-            guestBirthDate.getUTCDate(),
-            guestHours,
-            guestMinutes
-        );
+        const hostBirthData = createTimezoneAwareBirthData({
+            birthDate: session.hostBirth,
+            birthTime: hostTime,
+            timezone: session.hostTimezone,
+        });
+        const guestBirthData = createTimezoneAwareBirthData({
+            birthDate: session.guestBirth,
+            birthTime: guestTime,
+            timezone: session.guestTimezone || 'Asia/Seoul',
+        });
 
         // Run Saju and Astrology calculations in parallel
         const [hostSaju, guestSaju, hostAstrology, guestAstrology] = await Promise.all([
-            Promise.resolve(calculateSaju(hostSajuDate, hostHours, hostMinutes, false, 'male')),
-            Promise.resolve(calculateSaju(guestSajuDate, guestHours, guestMinutes, false, 'female')),
-            Promise.resolve(calculateAstrology(hostBirth, hostTime)),
-            Promise.resolve(calculateAstrology(guestBirth, guestTime))
+            Promise.resolve(
+                calculateSaju(
+                    hostBirthData.civilDate,
+                    hostBirthData.clockTime.hour,
+                    hostBirthData.clockTime.minute,
+                    false,
+                    'male'
+                )
+            ),
+            Promise.resolve(
+                calculateSaju(
+                    guestBirthData.civilDate,
+                    guestBirthData.clockTime.hour,
+                    guestBirthData.clockTime.minute,
+                    false,
+                    'female'
+                )
+            ),
+            Promise.resolve(
+                calculateAstrology(
+                    hostBirthData.utcCalendarDate,
+                    hostTime,
+                    37.5665,
+                    126.9780,
+                    hostBirthData.timezoneOffsetHours
+                )
+            ),
+            Promise.resolve(
+                calculateAstrology(
+                    guestBirthData.utcCalendarDate,
+                    guestTime,
+                    37.5665,
+                    126.9780,
+                    guestBirthData.timezoneOffsetHours
+                )
+            )
         ]);
 
 
