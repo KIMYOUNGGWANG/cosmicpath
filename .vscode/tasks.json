@@ -9,7 +9,7 @@
         "cwd": "${workspaceFolder}"
       },
       "presentation": {
-        "reveal": "silent",
+        "reveal": "always",
         "panel": "shared"
       },
       "problemMatcher": [],
@@ -17,25 +17,31 @@
         "kind": "build",
         "isDefault": true
       },
-      "detail": "Generates context for the selected workflow in the current project."
+      "detail": "Generates optimized context for Codex using the selected workflow."
     }
   ],
   "inputs": [
     {
       "id": "workflowName",
       "type": "pickString",
-      "description": "Select the workflow for Codex:",
+      "description": "Select Workflow:",
       "options": [
         "develop",
+        "plan",
         "fix",
-        "launch",
-        "ship",
-        "micro",
-        "cycle",
-        "ideate",
         "uiux",
-        "optimize",
-        "marketing"
+        "ship",
+        "cycle",
+        "micro",
+        "mvp",
+        "stitch",
+        "review",
+        "test",
+        "qa",
+        "content",
+        "status",
+        "agent-builder",
+        "ddd"
       ],
       "default": "develop"
     }

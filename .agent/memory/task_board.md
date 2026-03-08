@@ -65,12 +65,33 @@
 | BEN-03 | Daily Fortune: 구독자 프리미엄 인사이트 제공 여부 로직 구성 | `src/app/api/daily/fortune/route.ts` | `[x]` |
 | BEN-04 | Daily Fortune UI: 구독자에게만 노출되는 프리미엄 UI 블록 | `src/components/daily/DailySealedWidget.tsx` | `[x]` |
 
+## 🌐 Priority 7 — K-Astrology Aura Cards (Global Viral)
+
+| ID | 태스크 | 파일 | 상태 |
+|----|--------|------|------|
+| GLB-01 | 타임존 기반 사주/점성 데이터 변환 유틸리티 | `src/lib/utils/timezone.ts` | `[x]` |
+| GLB-02 | K-Aura 점수 생성기 (사주 기반 색상/키워드 로직) | `src/lib/engines/aura.ts` | `[x]` |
+| GLB-03 | `/api/aura/generate` API (LLM 기반 영문 요약) | `src/app/api/aura/generate/route.ts` | `[x]` |
+| GLB-04 | Vercel OG Image Generation (TikTok/IG 공유용) | `src/app/api/og/aura/route.tsx` | `[x]` |
+| GLB-05 | `/k-destiny` 글로벌 전용 랜딩 & 폼 UI | `src/app/k-destiny/page.tsx` | `[x]` |
+
+---
+
+## 💍 Priority 8 — Cosmic Circle (소셜 관계망 궁합)
+
+| ID | 태스크 | 파일 | 상태 |
+|----|--------|------|------|
+| CIR-01 | Supabase `Relations` 테이블 설계 및 셋업 | DB Migration SQL | `[ ]` |
+| CIR-02 | `/api/circle/add`, `/api/circle/list` CRUD 로직 | `src/app/api/circle/route.ts` | `[ ]` |
+| CIR-03 | `/api/circle/match` 다자간 궁합 분석 API | `src/app/api/circle/match/route.ts` | `[ ]` |
+| CIR-04 | Cosmic Circle 대시보드 UI | `src/app/circle/page.tsx` | `[ ]` |
+
 ---
 
 ## 📊 Progress
-- **Total**: 24 tasks
-- **Done**: 24/24
-- **In Progress**: 0/24
+- **Total**: 33 tasks
+- **Done**: 24/33
+- **In Progress**: 0/33
 
 ## ✅ Kaizen Gate
-- `/launch` 완료 후 회고: _기록 예정_
+- `/launch` 완료 후 회고: _글로벌 타겟팅(Timezone, English default)으로 구조적 확장 고려 필수._
