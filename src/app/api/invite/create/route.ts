@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { nanoid } from 'nanoid';
+import { z } from 'zod';
+
+const CreateInviteSchema = z.object({
+    readingId: z.string().min(1, 'Reading ID is required'),
+});
 
 export async function POST(req: NextRequest) {
     try {
-        const { readingId } = await req.json();
-
-        if (!readingId) {
-            return NextResponse.json({ error: 'Reading ID is required' }, { status: 400 });
-        }
+        const body = await req.json();
+        const { readingId } = CreateInviteSchema.parse(body);
 
         // 1. Check if reading exists
         const reading = await prisma.readingResult.findUnique({

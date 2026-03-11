@@ -33,7 +33,7 @@ export const CHAT_CREDIT_SINGLE = {
         : (process.env.NEXT_PUBLIC_STRIPE_CREDIT_SINGLE_ID || 'prod_LiveCreditSingle'),
     name: '질문권 1회',
     description: 'Oracle Chat 1 Question',
-    price: 100, // $1.00 in cents
+    price: 199, // $1.99 in cents
     credits: 1,
 } as const;
 
@@ -44,7 +44,7 @@ export const CHAT_CREDIT_PACK = {
         : (process.env.NEXT_PUBLIC_STRIPE_CREDIT_PACK_ID || 'prod_LiveCreditPack'),
     name: '질문권 3회 패키지',
     description: 'Oracle Chat 3 Questions (33% OFF)',
-    price: 199, // $1.99 in cents
+    price: 399, // $3.99 in cents
     credits: 3,
 } as const;
 
@@ -56,7 +56,7 @@ export const MATCH_PRODUCT = {
     name: 'Cosmic Compatibility Full Report',
     description: '사주 + 점성술 기반 상세 궁합 분석 리포트',
     currency: 'USD',
-    price: 299, // $2.99 in cents
+    price: 799, // $7.99 in cents
 } as const;
 
 export const SUBSCRIPTION_PLAN_IDS = ['pro_monthly', 'pro_yearly', 'couple_monthly'] as const;
@@ -64,18 +64,25 @@ export type SubscriptionPlanId = (typeof SUBSCRIPTION_PLAN_IDS)[number];
 
 export const SUBSCRIPTION_PRICE_IDS = {
     pro_monthly: process.env.NODE_ENV === 'development'
-        ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY || 'price_pro_monthly_TBD')
-        : (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY || 'price_pro_monthly_TBD'),
+        ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY || 'price_1T7Ken0RiEHwZwUJ9BYSpD74')
+        : (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY || 'price_1T7Ken0RiEHwZwUJ9BYSpD74'),
     pro_yearly: process.env.NODE_ENV === 'development'
-        ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY || 'price_pro_yearly_TBD')
-        : (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY || 'price_pro_yearly_TBD'),
+        ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY || 'price_1T7Ken0RiEHwZwUJydDuq9Tq')
+        : (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY || 'price_1T7Ken0RiEHwZwUJydDuq9Tq'),
     couple_monthly: process.env.NODE_ENV === 'development'
-        ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY || 'price_couple_monthly_TBD')
-        : (process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY || 'price_couple_monthly_TBD'),
+        ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY || 'price_1T7Keo0RiEHwZwUJVtCaF6Nn')
+        : (process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY || 'price_1T7Keo0RiEHwZwUJVtCaF6Nn'),
 } as const satisfies Record<SubscriptionPlanId, string>;
 
 export function getSubscriptionPriceId(planId: SubscriptionPlanId): string {
     return SUBSCRIPTION_PRICE_IDS[planId];
+}
+
+export function formatUsdFromCents(cents: number): string {
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+    }).format(cents / 100);
 }
 
 export type ProductType = typeof READING_PRODUCT | typeof FOLLOW_UP_PRODUCT | typeof MATCH_PRODUCT;

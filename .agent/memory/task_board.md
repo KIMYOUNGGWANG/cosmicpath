@@ -88,10 +88,45 @@
 
 ---
 
+## 💰 Priority 9 — 단가 인상
+
+| ID | 태스크 | 파일 | 상태 |
+|----|--------|------|------|
+| PRC-01 | Chat/Pack/궁합 가격 업데이트 ($1→$1.99, $1.99→$3.99, $2.99→$7.99) | `src/lib/payment/payment-config.ts` | `[x]` |
+| PRC-02 | Stripe 대시보드 리포트 가격 변경 (수동) | Stripe Dashboard | `[ ]` |
+
+---
+
+## 📡 Priority 10 — 블로그 SEO 시스템
+
+| ID | 태스크 | 파일 | 상태 |
+|----|--------|------|------|
+| BLG-01 | MDX 파싱 유틸리티 | `src/lib/blog/index.ts` | `[x]` |
+| BLG-02 | 초기 콘텐츠 5편 작성 | `content/blog/*.mdx` | `[x]` |
+| BLG-03 | 블로그 인덱스 페이지 | `src/app/blog/page.tsx` | `[x]` |
+| BLG-04 | 블로그 포스트 상세 | `src/app/blog/[slug]/page.tsx` | `[x]` |
+| BLG-05 | BlogCard UI 컴포넌트 | `src/components/blog/BlogCard.tsx` | `[x]` |
+| BLG-06 | BlogCTA 배너 컴포넌트 | `src/components/blog/BlogCTA.tsx` | `[x]` |
+| BLG-07 | 사이트맵에 블로그 URL 추가 | `src/app/sitemap.ts` | `[x]` |
+| BLG-08 | Navigation에 Blog 링크 추가 | `Navigation.tsx` | `[x]` |
+
+---
+
+## 🔄 Priority 11 — 퍼널 완성
+
+| ID | 태스크 | 파일 | 상태 |
+|----|--------|------|------|
+| FNL-01 | 구독 Price ID TBD → 실제 Stripe ID 연동 | `src/lib/payment/payment-config.ts` | `[x]` |
+| FNL-02 | SubscriptionModal 가격/할인율 업데이트 | `SubscriptionModal.tsx` | `[x]` |
+| FNL-03 | Revenue Engine B1~B4 배포 체크리스트 확인 | B1~B4 관련 파일 | `[x]` |
+
+---
+
 ## 📊 Progress
-- **Total**: 33 tasks
-- **Done**: 24/33
-- **In Progress**: 0/33
+- **Total**: 46 tasks
+- **Done**: 36/46
+- **In Progress**: 0/46
 
 ## ✅ Kaizen Gate
 - `/launch` 완료 후 회고: _글로벌 타겟팅(Timezone, English default)으로 구조적 확장 고려 필수._
+- `/plan` 3대 전략 기획 완료: _가격 저평가 + 채널 집중 리스크 + 퍼널 미완성이 핵심 병목._

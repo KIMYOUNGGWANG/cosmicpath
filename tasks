@@ -1,0 +1,164 @@
+CosmicPath Revenue Recovery Plan
+
+Target window
+- Start: 2026-03-08
+- First checkpoint: 2026-03-15
+- Second checkpoint: 2026-03-22
+
+Primary goal
+- Restore paid conversions within 14 days.
+- Make the funnel measurable enough to identify the main leak.
+
+North-star metrics
+- landing_view -> analysis_start >= 25%
+- analysis_start -> free_result_shown >= 40%
+- free_result_shown -> paywall_open >= 60%
+- paywall_open -> checkout_start >= 20%
+- checkout_start -> checkout_success >= 35%
+- checkout_success -> report_complete >= 90%
+
+Immediate constraints
+- Do not add new surface area before fixing measurement.
+- Keep the main offer focused on the premium reading.
+- Treat daily fortune and subscription as secondary retention layers.
+
+Phase 1: 2026-03-08 to 2026-03-10
+- Add event instrumentation across the main reading funnel.
+- Add a server endpoint for growth event ingestion from the client.
+- Track the minimum required events before changing pricing or traffic.
+
+Files to touch
+- /Users/kim-young-gwang/Desktop/cosmicpath/src/lib/growth-events.ts
+- /Users/kim-young-gwang/Desktop/cosmicpath/src/app/api/growth/track/route.ts
+- /Users/kim-young-gwang/Desktop/cosmicpath/src/app/start/page.tsx
+- /Users/kim-young-gwang/Desktop/cosmicpath/src/components/payment/PaymentModal.tsx
+- /Users/kim-young-gwang/Desktop/cosmicpath/src/app/payment/success/page.tsx
+- /Users/kim-young-gwang/Desktop/cosmicpath/src/components/share/ShareCardModal.tsx
+
+Events to add
+- landing_view
+- analysis_start
+- tarot_complete
+- free_result_shown
+- paywall_open
+- paywall_close
+- checkout_start
+- checkout_success
+- checkout_failure
+- report_complete
+- share_clicked
+- invite_created
+- invite_copied
+
+Required event payload
+- sessionId
+- userId if available
+- readingId if available
+- language
+- context
+- invitationMode
+- source
+- step
+- price
+- plan
+
+Implementation notes
+- Reuse GrowthEvent table first. Do not introduce a new analytics vendor yet.
+- Keep client events fire-and-forget. They must never block the UI.
+- Add rate limiting to the client event endpoint.
+
+Phase 2: 2026-03-09 to 2026-03-12
+- Reduce paywall friction.
+- Rewrite the paywall copy around specific unlocked value.
+- Remove vague claims and over-promises.
+
+Files to touch
+- /Users/kim-young-gwang/Desktop/cosmicpath/src/components/payment/PaymentModal.tsx
+- /Users/kim-young-gwang/Desktop/cosmicpath/src/components/reading/premium-report.tsx
+- /Users/kim-young-gwang/Desktop/cosmicpath/src/components/landing/VerdictSection.tsx
+- /Users/kim-young-gwang/Desktop/cosmicpath/src/components/landing/ReviewCarousel.tsx
+
+Paywall copy draft
+- Heading: Unlock Your Full Cosmic Report
+- Subheading: See the parts hidden from the free summary.
+- Bullet 1: 2026 fortune flow and timing
+- Bullet 2: Career, love, money, and health deep dive
+- Bullet 3: Action plan based on Saju, astrology, and tarot overlap
+- CTA: Unlock Full Report
+
+Korean paywall copy draft
+- Heading: Full Cosmic Report Open
+- Subheading: Free summary ends here. The detailed reading starts below.
+- Bullet 1: 2026 overall flow and timing
+- Bullet 2: Career, love, money, and health analysis
+- Bullet 3: Practical action guide from cross-validated signals
+- CTA: Unlock Full Report
+
+Current copy to remove or soften
+- Any claim equivalent to zero hallucination.
+- Any social proof number that cannot be defended.
+- Generic value lines that do not tell the user what becomes visible after payment.
+
+Phase 3: 2026-03-11 to 2026-03-15
+- Publish one concrete sample report.
+- Tighten trust and proof.
+- Add recovery messaging for incomplete checkout.
+
+Files to touch
+- /Users/kim-young-gwang/Desktop/cosmicpath/src/app/page.tsx
+- /Users/kim-young-gwang/Desktop/cosmicpath/src/components/landing/ReviewCarousel.tsx
+- /Users/kim-young-gwang/Desktop/cosmicpath/src/components/landing/VerdictSection.tsx
+- /Users/kim-young-gwang/Desktop/cosmicpath/src/app/payment/success/page.tsx
+- /Users/kim-young-gwang/Desktop/cosmicpath/src/app/start/page.tsx
+
+Landing changes
+- Add one sample outcome block above the paywall moment.
+- Replace abstract credibility language with real examples:
+  - what the user gets
+  - who it is for
+  - how long it takes
+- Highlight the paid deliverable, not the engine.
+
+Recovery loop
+- If checkout starts but does not succeed, keep the reading state and show a resume path.
+- Add a 24-hour recovery message if email exists.
+
+Phase 4: 2026-03-15 to 2026-03-22
+- Run exactly two experiments.
+- Do not split traffic across too many variants.
+
+Experiment A
+- Variable: paywall timing
+- Control: current free summary then paywall
+- Variant: earlier paywall after a shorter teaser
+- Success metric: checkout_start per analysis_start
+
+Experiment B
+- Variable: paywall framing
+- Control: generic premium unlock copy
+- Variant: outcome-based copy with 3 visible deliverables
+- Success metric: checkout_success per paywall_open
+
+Backlog after funnel is measurable
+- Revisit email requirement on the paywall
+- Move subscription upsell to post-purchase or daily retention surfaces
+- Add a simple admin report for GrowthEvent counts by day and by event
+
+Product focus decision
+- Primary offer: premium reading
+- Secondary retention: daily fortune
+- Secondary acquisition experiment: invite and compatibility
+- Tertiary upsell: subscription and chat credits
+
+What not to do this week
+- Do not redesign the whole landing page.
+- Do not launch new products.
+- Do not raise prices before measuring the current leak.
+- Do not add paid traffic before checkout_start and checkout_success are visible.
+
+Execution order
+1. Instrument the funnel.
+2. Rewrite the paywall.
+3. Add one sample report and stronger proof.
+4. Run two controlled experiments.
+5. Review metrics on 2026-03-15 and 2026-03-22.

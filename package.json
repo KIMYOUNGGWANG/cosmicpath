@@ -7,7 +7,7 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "npm run lint:target",
-    "lint:target": "eslint src/app/api/invite src/app/api/ops src/app/api/plan src/app/api/reading/route.ts src/app/api/webhook/stripe src/lib/ai/llm-client.ts src/lib/email/sender.ts src/lib/followup-jobs.ts src/lib/growth-events.ts src/lib/ops-alert.ts src/lib/payment/stripe.ts src/lib/plan-limits.ts src/lib/usage-metrics.ts",
+    "lint:target": "eslint src/app/api/invite src/app/api/ops src/app/api/plan src/app/api/reading/route.ts src/app/api/webhook/stripe src/app/blog src/app/billing src/lib/ai/llm-client.ts src/lib/blog src/lib/email/sender.ts src/lib/followup-jobs.ts src/lib/growth-events.ts src/lib/ops-alert.ts src/lib/payment src/lib/plan-limits.ts src/lib/usage-metrics.ts src/components/blog src/components/oracle-chat/CreditPurchaseModal.tsx src/components/payment/SubscriptionModal.tsx src/components/Pricing/PricingSection.tsx src/components/Mirror/MirrorSection.tsx src/components/landing/Navigation.tsx src/app/sitemap.ts",
     "lint:full": "eslint"
   },
   "dependencies": {
@@ -22,6 +22,7 @@
     "@vercel/og": "^0.8.6",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.26",
+    "gray-matter": "^4.0.3",
     "html2canvas": "^1.4.1",
     "jose": "^6.1.3",
     "korean-lunar-calendar": "^0.3.6",

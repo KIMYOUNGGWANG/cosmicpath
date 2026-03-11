@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CTAButton } from '../ui/CTAButton';
+import { READING_PRODUCT } from '@/lib/payment/payment-config';
 
 interface MirrorSectionProps {
     language: 'ko' | 'en';
@@ -13,6 +14,7 @@ interface MirrorSectionProps {
 
 export function MirrorSection({ language, onUnlockFullReport, isLoading, teaserContent }: MirrorSectionProps) {
     const [showResult, setShowResult] = useState(false);
+    const [priceLabel, setPriceLabel] = useState('$9.99');
 
     useEffect(() => {
         if (!isLoading && teaserContent) {
@@ -21,17 +23,42 @@ export function MirrorSection({ language, onUnlockFullReport, isLoading, teaserC
         }
     }, [isLoading, teaserContent]);
 
+    useEffect(() => {
+        let isMounted = true;
+
+        async function loadPrice() {
+            try {
+                const response = await fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`, {
+                    cache: 'no-store',
+                });
+                const payload = await response.json();
+
+                if (isMounted && response.ok && typeof payload.formattedPrice === 'string') {
+                    setPriceLabel(payload.formattedPrice);
+                }
+            } catch (error) {
+                console.error('Failed to load reading price:', error);
+            }
+        }
+
+        void loadPrice();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
     const content = {
         ko: {
             loading: "천체들을 조립하는 중...",
             subloading: "1985년생, 화성이 7하우스에 위치했던 해...",
-            cta: "$4.99로 50페이지 분석 보기",
+            cta: `${priceLabel}로 50페이지 분석 보기`,
             emailCTA: "이메일로 월별 운세 받기"
         },
         en: {
             loading: "Assembling Constellations...",
             subloading: "Born in 1985, the year Mars was in the 7th House...",
-            cta: "Unlock 50-Page Report for $4.99",
+            cta: `Unlock 50-Page Report for ${priceLabel}`,
             emailCTA: "Get Monthly Fortune via Email"
         }
     };

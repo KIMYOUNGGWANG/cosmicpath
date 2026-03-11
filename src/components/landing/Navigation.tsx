@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import Link from 'next/link';
-import { Menu, Search, Sparkles, Heart, Palette } from 'lucide-react';
+import { Menu, Search, Sparkles, Heart, Palette, BookOpen } from 'lucide-react';
 import { OrderLookupModal } from '@/components/orders/OrderLookupModal';
 import { MobileMenu } from '@/components/common/MobileMenu';
 import { User } from 'lucide-react';
@@ -95,6 +95,12 @@ export function Navigation() {
                             오늘의 운세
                         </Link>
                         <Link
+                            href="/blog"
+                            className="text-xs font-medium text-starlight hover:text-acc-gold transition-colors font-cinzel tracking-widest uppercase"
+                        >
+                            BLOG
+                        </Link>
+                        <Link
                             href="/k-destiny"
                             onClick={() => trackKDestinyNavClick('desktop')}
                             className="text-xs font-medium text-[#7FDBFF] hover:text-[#FFD166] transition-colors font-cinzel tracking-widest uppercase"
@@ -181,6 +187,14 @@ export function Navigation() {
                         label: 'COMPATIBILITY',
                         subLabel: 'Check relationship compatibility',
                         href: '/match/new',
+                    },
+                    {
+                        type: 'link',
+                        icon: BookOpen,
+                        iconColorClass: 'group-hover:bg-amber-500/20 group-hover:text-amber-300',
+                        label: 'BLOG',
+                        subLabel: 'SEO guides and cosmic insights',
+                        href: '/blog',
                     },
                     {
                         type: 'link',

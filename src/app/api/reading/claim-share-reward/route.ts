@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/dev-logger';
+import { z } from 'zod';
+
+const ClaimRewardSchema = z.object({
+    readingId: z.string().min(1, 'Reading ID is required'),
+});
 
 export async function POST(req: NextRequest) {
     try {
-        const { readingId } = await req.json();
-
-        if (!readingId) {
-            devLog.log('[Reward API] Error: Missing readingId');
-            return NextResponse.json({ error: 'Reading ID is required' }, { status: 400 });
-        }
+        const body = await req.json();
+        const { readingId } = ClaimRewardSchema.parse(body);
 
         devLog.log(`[Reward API] Processing claim for readingId: ${readingId}`);
 

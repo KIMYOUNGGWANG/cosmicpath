@@ -1,8 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Zap, Check, Lock } from 'lucide-react';
+import {
+    CHAT_CREDIT_PACK,
+    CHAT_CREDIT_SINGLE,
+    formatUsdFromCents,
+} from '@/lib/payment/payment-config';
 
 interface CreditPurchaseModalProps {
     isOpen: boolean;
@@ -10,6 +15,11 @@ interface CreditPurchaseModalProps {
     onSelectOption: (option: 'single' | 'pack') => void;
     onUpgradeToPro?: () => void;
     isLoading?: boolean;
+}
+
+interface ProductPriceState {
+    amount: number;
+    formattedPrice: string;
 }
 
 /**
@@ -24,6 +34,77 @@ export function CreditPurchaseModal({
     isLoading = false,
 }: CreditPurchaseModalProps) {
     const [selectedOption, setSelectedOption] = useState<'single' | 'pack'>('pack');
+    const [singlePrice, setSinglePrice] = useState<ProductPriceState>({
+        amount: CHAT_CREDIT_SINGLE.price / 100,
+        formattedPrice: formatUsdFromCents(CHAT_CREDIT_SINGLE.price),
+    });
+    const [packPrice, setPackPrice] = useState<ProductPriceState>({
+        amount: CHAT_CREDIT_PACK.price / 100,
+        formattedPrice: formatUsdFromCents(CHAT_CREDIT_PACK.price),
+    });
+
+    useEffect(() => {
+        if (!isOpen) {
+            return;
+        }
+
+        let isMounted = true;
+
+        async function loadPrices() {
+            const requests = [
+                fetch(`/api/payment/price?productId=${CHAT_CREDIT_SINGLE.productId}`, { cache: 'no-store' }),
+                fetch(`/api/payment/price?productId=${CHAT_CREDIT_PACK.productId}`, { cache: 'no-store' }),
+            ];
+
+            try {
+                const [singleResponse, packResponse] = await Promise.all(requests);
+                const [singlePayload, packPayload] = await Promise.all([
+                    singleResponse.json(),
+                    packResponse.json(),
+                ]);
+
+                if (!isMounted) {
+                    return;
+                }
+
+                if (singleResponse.ok && typeof singlePayload.amount === 'number' && typeof singlePayload.formattedPrice === 'string') {
+                    setSinglePrice({
+                        amount: singlePayload.amount,
+                        formattedPrice: singlePayload.formattedPrice,
+                    });
+                }
+
+                if (packResponse.ok && typeof packPayload.amount === 'number' && typeof packPayload.formattedPrice === 'string') {
+                    setPackPrice({
+                        amount: packPayload.amount,
+                        formattedPrice: packPayload.formattedPrice,
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load chat credit prices:', error);
+            }
+        }
+
+        void loadPrices();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [isOpen]);
+
+    const packComparePrice = useMemo(() => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+        }).format(singlePrice.amount * CHAT_CREDIT_PACK.credits);
+    }, [singlePrice.amount]);
+
+    const savingsPercent = useMemo(() => {
+        const regularTotal = singlePrice.amount * CHAT_CREDIT_PACK.credits;
+        if (regularTotal <= 0) return 0;
+
+        return Math.max(0, Math.round((1 - packPrice.amount / regularTotal) * 100));
+    }, [packPrice.amount, singlePrice.amount]);
 
     const handlePurchase = () => {
         onSelectOption(selectedOption);
@@ -98,7 +179,7 @@ export function CreditPurchaseModal({
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-lg font-black text-white">$1.00</p>
+                                        <p className="text-lg font-black text-white">{singlePrice.formattedPrice}</p>
                                     </div>
                                 </div>
                             </button>
@@ -134,15 +215,15 @@ export function CreditPurchaseModal({
                                             <div className="flex items-center gap-2">
                                                 <p className="font-bold text-gray-100 italic">Destiny Pack</p>
                                                 <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[9px] font-black rounded-md tracking-tighter">
-                                                    SAVE 33%
+                                                    SAVE {savingsPercent}%
                                                 </span>
                                             </div>
                                             <p className="text-[11px] text-gray-500 font-medium tracking-wide">3회 패키지</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-xl font-black text-[#D4AF37]">$1.99</p>
-                                        <p className="text-[10px] text-white/20 line-through tracking-tighter">$3.00</p>
+                                        <p className="text-xl font-black text-[#D4AF37]">{packPrice.formattedPrice}</p>
+                                        <p className="text-[10px] text-white/20 line-through tracking-tighter">{packComparePrice}</p>
                                     </div>
                                 </div>
                             </button>
@@ -170,7 +251,11 @@ export function CreditPurchaseModal({
                                 ) : (
                                     <>
                                         <Zap size={22} className="fill-current" />
-                                        <span>{selectedOption === 'single' ? 'Charge $1.00' : 'Charge $1.99'}</span>
+                                        <span>
+                                            {selectedOption === 'single'
+                                                ? `Charge ${singlePrice.formattedPrice}`
+                                                : `Charge ${packPrice.formattedPrice}`}
+                                        </span>
                                     </>
                                 )}
                             </button>

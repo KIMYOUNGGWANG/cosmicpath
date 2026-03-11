@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CTAButton } from '../ui/CTAButton';
+import { READING_PRODUCT } from '@/lib/payment/payment-config';
 
 interface PricingSectionProps {
     language: 'ko' | 'en';
@@ -9,10 +11,37 @@ interface PricingSectionProps {
 }
 
 export function PricingSection({ language, onSelect }: PricingSectionProps) {
+    const [priceLabel, setPriceLabel] = useState('$9.99');
+
+    useEffect(() => {
+        let isMounted = true;
+
+        async function loadPrice() {
+            try {
+                const response = await fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`, {
+                    cache: 'no-store',
+                });
+                const payload = await response.json();
+
+                if (isMounted && response.ok && typeof payload.formattedPrice === 'string') {
+                    setPriceLabel(payload.formattedPrice);
+                }
+            } catch (error) {
+                console.error('Failed to load reading price:', error);
+            }
+        }
+
+        void loadPrice();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
     const content = {
         ko: {
             title: "하나의 리포트, 모든 해답",
-            price: "$4.99",
+            price: priceLabel,
             period: "일회성 결제",
             cta: "지금 운명 확인하기",
             features: [
@@ -26,7 +55,7 @@ export function PricingSection({ language, onSelect }: PricingSectionProps) {
         },
         en: {
             title: "One Report, All Answers",
-            price: "$4.99",
+            price: priceLabel,
             period: "One-Time Payment",
             cta: "Unlock Your Destiny Now",
             features: [

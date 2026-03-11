@@ -36,7 +36,7 @@ const PLAN_OPTIONS: PlanOption[] = [
         name: 'CosmicPath Pro 연간',
         description: '연간 구독 할인으로 가장 높은 가성비',
         priceLabel: '$49.99 / year',
-        badge: 'BEST VALUE',
+        badge: '40% OFF',
         benefits: ['월 대비 40%+ 절약', 'Daily Fortune', '프리미엄 전용 인사이트'],
     },
     {
