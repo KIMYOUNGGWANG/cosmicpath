@@ -83,7 +83,7 @@ export function ShareCard({
                 >
                     {copied ? <Check className="w-5 h-5 relative z-10" /> : <Copy className="w-5 h-5 relative z-10" />}
                     <span className="relative z-10 tracking-widest uppercase text-sm">
-                        {copied ? 'Link Copied' : '초대 링크 복사'}
+                        {copied ? 'Link Copied ✨' : '초대 링크 복사 (크레딧 받기)'}
                     </span>
                     <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 rounded-xl" />
                 </motion.button>
