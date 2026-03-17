@@ -1,132 +1,52 @@
-# 🗂️ CosmicPath v2.0 — Task Board
+# 🗂️ CosmicPath v2.0 — 통합 태스크 보드
 
-**Sprint**: 2026-03 | **목표**: MRR 구조 + SEO 복구 + 재방문 훅  
-**워크플로우**: `/ideate` (전략 검증 완료 ✅) → `/launch` (스펙 잠금 중)
-
----
-
-## 🔴 Priority 1 — 구독 모델 (MRR)
-
-| ID | 태스크 | 파일 | 상태 |
-|----|--------|------|------|
-| SUB-01 | `payment-config.ts`에 Pro/Couple 구독 Price ID 추가 | `src/lib/payment/payment-config.ts` | `[x]` |
-| SUB-02 | Stripe 구독 Checkout 세션 생성 API | `src/app/api/subscription/create/route.ts` | `[x]` |
-| SUB-03 | 구독 상태 조회 API | `src/app/api/subscription/status/route.ts` | `[x]` |
-| SUB-04 | Webhook에 subscription 이벤트 핸들러 추가 | `src/app/api/webhooks/route.ts` | `[x]` |
-| SUB-05 | `SubscriptionModal.tsx` UI 컴포넌트 | `src/components/payment/SubscriptionModal.tsx` | `[x]` |
-| SUB-06 | Supabase `users` 테이블에 구독 컬럼 마이그레이션 | DB Migration SQL | `[x]` |
+**Sprint**: 2026-03 | **목표**: 프리미엄 내실 강화 + 바이럴 루프 활성화 + 수익화 안정성
+**상태**: `/plan` (기획 정교화 완료) → `/develop` 대기 중
 
 ---
 
-## 🔴 Priority 2 — SEO 복구
-
-| ID | 태스크 | 파일 | 상태 |
-|----|--------|------|------|
-| SEO-01 | `page.tsx`에서 `'use client'` 제거, Server Component 전환 | `src/app/page.tsx` | `[x]` |
-| SEO-02 | `LenisProvider.tsx` Client Component 분리 | `src/components/providers/LenisProvider.tsx` | `[x]` |
-| SEO-03 | `layout.tsx`에 LenisProvider + JSON-LD 추가 | `src/app/layout.tsx` | `[x]` |
-| SEO-04 | Static `metadata` export (title/description/og:image) | `src/app/page.tsx` | `[x]` |
-
----
-
-## 🟡 Priority 3 — Daily Fortune 재방문 훅
-
-| ID | 태스크 | 파일 | 상태 |
-|----|--------|------|------|
-| DAY-01 | Daily Fortune API (캐싱 1일) | `src/app/api/daily/fortune/route.ts` | `[x]` |
-| DAY-02 | `/daily` 페이지 구현 | `src/app/daily/page.tsx` | `[x]` |
-| DAY-03 | Navigation에 "오늘의 운세" 링크 추가 | `src/components/landing/Navigation.tsx` | `[x]` |
+## 🏗️ Phase 1: 내실 다지기 (Refinement & Stability)
+- [x] 초기 코드베이스 및 API 아키텍처 감사 (Audit)
+- [/] **UI/UX 폴리싱 (Design DNA)**
+    - [/] 모든 모달 및 카드에 Glassmorphism (`backdrop-blur-md`) 적용
+    - [x] 섹션 전환 및 버튼 호버 마이크로 애니메이션 추가
+- [/] **코드베이스 클린업**
+    - [x] 주석 처리된 토스 페이먼츠(`TossPaymentWidget`) 제거 및 정리
+    - [/] 구형 스키마(`Legacy support`) 조작 정리 및 최적화
+- [/] **결제 웹훅 안정화**
+    - [x] Stripe 웹훅 예외 처리 강화 및 결제 실패 알림(OpsAlert) 연동
 
 ---
 
-## 🟡 Priority 4 — 리퍼럴 프로그램
-
-| ID | 태스크 | 파일 | 상태 |
-|----|--------|------|------|
-| REF-01 | 리퍼럴 코드 생성 / 검증 로직 | `src/app/api/invite/` 기존 파일 수정 | `[x]` |
-| REF-02 | 초대 성공 시 Pro 7일 부여 로직 | `src/app/api/invite/redeem/route.ts` | `[x]` |
-| REF-03 | `ReferralPanel.tsx` UI 컴포넌트 | `src/components/share/ReferralPanel.tsx` | `[x]` |
-
----
-
-## 🟢 Priority 5 — Threads 공유 확장
-
-| ID | 태스크 | 파일 | 상태 |
-|----|--------|------|------|
-| TH-01 | `SharePanel.tsx`에 Threads 버튼 추가 | `src/components/share/SharePanel.tsx` | `[x]` |
-| TH-02 | TikTok 최적화 공유 텍스트 템플릿 추가 | `src/components/share/SharePanel.tsx` | `[x]` |
-
-## � Priority 6 — 구독 상품 혜택 로직 연동 (Premium Features)
-
-| ID | 태스크 | 파일 | 상태 |
-|----|--------|------|------|
-| BEN-01 | Oracle Chat: 구독자 판별 로직 및 크레딧 무제한 처리 (Stream) | `src/app/api/reading/followup/stream/route.ts` | `[x]` |
-| BEN-02 | Oracle Chat: 비동기 메시지 저장 및 DB 트랜잭션 예외 처리 | `src/app/api/reading/followup/stream/route.ts` | `[x]` |
-| BEN-03 | Daily Fortune: 구독자 프리미엄 인사이트 제공 여부 로직 구성 | `src/app/api/daily/fortune/route.ts` | `[x]` |
-| BEN-04 | Daily Fortune UI: 구독자에게만 노출되는 프리미엄 UI 블록 | `src/components/daily/DailySealedWidget.tsx` | `[x]` |
-
-## 🌐 Priority 7 — K-Astrology Aura Cards (Global Viral)
-
-| ID | 태스크 | 파일 | 상태 |
-|----|--------|------|------|
-| GLB-01 | 타임존 기반 사주/점성 데이터 변환 유틸리티 | `src/lib/utils/timezone.ts` | `[x]` |
-| GLB-02 | K-Aura 점수 생성기 (사주 기반 색상/키워드 로직) | `src/lib/engines/aura.ts` | `[x]` |
-| GLB-03 | `/api/aura/generate` API (LLM 기반 영문 요약) | `src/app/api/aura/generate/route.ts` | `[x]` |
-| GLB-04 | Vercel OG Image Generation (TikTok/IG 공유용) | `src/app/api/og/aura/route.tsx` | `[x]` |
-| GLB-05 | `/k-destiny` 글로벌 전용 랜딩 & 폼 UI | `src/app/k-destiny/page.tsx` | `[x]` |
+## 📈 Phase 2: 바이럴 성장 가속화 (Viral Growth)
+- [x] **동적 OG 이미지 시스템 구축**
+    - [x] `/api/og/reading/[id]` 엔드포인트를 통한 개인화된 운세 결과 이미지 생성
+- [x] **바이럴 공유 페이지 (`/share/[id]`) 고도화**
+    - [x] 시각적으로 매력적인 공유 전용 UI 레이아웃 구현
+- [x] **참여형 리워드 로직 구현**
+    - [x] 리포트 공유 완료 시 +1 채팅 크레딧 즉시 부여 로직 연동
+    - [x] 인플루언서/추천인 연동 할인 코드(`referralCode`) 자동 적용
 
 ---
 
-## 💍 Priority 8 — Cosmic Circle (소셜 관계망 궁합)
-
-| ID | 태스크 | 파일 | 상태 |
-|----|--------|------|------|
-| CIR-01 | Supabase `Relations` 테이블 설계 및 셋업 | DB Migration SQL | `[ ]` |
-| CIR-02 | `/api/circle/add`, `/api/circle/list` CRUD 로직 | `src/app/api/circle/route.ts` | `[ ]` |
-| CIR-03 | `/api/circle/match` 다자간 궁합 분석 API | `src/app/api/circle/match/route.ts` | `[ ]` |
-| CIR-04 | Cosmic Circle 대시보드 UI | `src/app/circle/page.tsx` | `[ ]` |
-
----
-
-## 💰 Priority 9 — 단가 인상
-
-| ID | 태스크 | 파일 | 상태 |
-|----|--------|------|------|
-| PRC-01 | Chat/Pack/궁합 가격 업데이트 ($1→$1.99, $1.99→$3.99, $2.99→$7.99) | `src/lib/payment/payment-config.ts` | `[x]` |
-| PRC-02 | Stripe 대시보드 리포트 가격 변경 (수동) | Stripe Dashboard | `[ ]` |
+## 💰 Phase 3: 운영 자동화 및 확장 (Ops & Scaling)
+- [ ] **이메일 후속 조치 자동화 (`FollowUpJob`)**
+    - [ ] 결제 48시간 후 후속 질문 유도 이메일 발송 로직 활성화
+- [ ] **운영 대시보드 (Admin) 기초 구축**
+    - [ ] `UsageCounterDaily` 기반 API 비용 및 트래픽 시각화
+    - [ ] 시스템 이상 징후 발생 시 관리자 알림 연동
+- [ ] **Cosmic Circle (소셜 관계망 궁합) — 잔여 작업**
+    - [ ] 다자간 궁합 분석 API (`/api/circle/match`) 완성 및 UI 연동
 
 ---
 
-## 📡 Priority 10 — 블로그 SEO 시스템
-
-| ID | 태스크 | 파일 | 상태 |
-|----|--------|------|------|
-| BLG-01 | MDX 파싱 유틸리티 | `src/lib/blog/index.ts` | `[x]` |
-| BLG-02 | 초기 콘텐츠 5편 작성 | `content/blog/*.mdx` | `[x]` |
-| BLG-03 | 블로그 인덱스 페이지 | `src/app/blog/page.tsx` | `[x]` |
-| BLG-04 | 블로그 포스트 상세 | `src/app/blog/[slug]/page.tsx` | `[x]` |
-| BLG-05 | BlogCard UI 컴포넌트 | `src/components/blog/BlogCard.tsx` | `[x]` |
-| BLG-06 | BlogCTA 배너 컴포넌트 | `src/components/blog/BlogCTA.tsx` | `[x]` |
-| BLG-07 | 사이트맵에 블로그 URL 추가 | `src/app/sitemap.ts` | `[x]` |
-| BLG-08 | Navigation에 Blog 링크 추가 | `Navigation.tsx` | `[x]` |
+## ✅ 진행률 (Progress)
+- **전체 태스크**: 20개 (새로 정의된 우선순위 기준)
+- **완료**: 6/20
+- **상태**: Phase 1 진행 중, Phase 2 핵심 바이럴 루프 구현 완료
 
 ---
 
-## 🔄 Priority 11 — 퍼널 완성
-
-| ID | 태스크 | 파일 | 상태 |
-|----|--------|------|------|
-| FNL-01 | 구독 Price ID TBD → 실제 Stripe ID 연동 | `src/lib/payment/payment-config.ts` | `[x]` |
-| FNL-02 | SubscriptionModal 가격/할인율 업데이트 | `SubscriptionModal.tsx` | `[x]` |
-| FNL-03 | Revenue Engine B1~B4 배포 체크리스트 확인 | B1~B4 관련 파일 | `[x]` |
-
----
-
-## 📊 Progress
-- **Total**: 46 tasks
-- **Done**: 36/46
-- **In Progress**: 0/46
-
-## ✅ Kaizen Gate
-- `/launch` 완료 후 회고: _글로벌 타겟팅(Timezone, English default)으로 구조적 확장 고려 필수._
-- `/plan` 3대 전략 기획 완료: _가격 저평가 + 채널 집중 리스크 + 퍼널 미완성이 핵심 병목._
+## 💡 Kaizen & Learnings
+- *Learning*: 현재 텍스트 위주의 마케팅 채널이 병목임. 비주얼 카드 및 참여형 베이트 도입이 즉각적인 해답.
+- *Strategy*: 무분별한 기능 추가보다는 기존 기능의 '프리미엄화'와 '바이럴 장치' 장착에 집중.

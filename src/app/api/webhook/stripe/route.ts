@@ -18,6 +18,19 @@ function getErrorMessage(error: unknown): string {
     return String(error);
 }
 
+function parseJsonObject(raw: string | null | undefined): Record<string, unknown> {
+    if (!raw) return {};
+    try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            return parsed as Record<string, unknown>;
+        }
+    } catch {
+        // Ignore malformed metadata and fall back to empty object.
+    }
+    return {};
+}
+
 const activeSubscriptionStatuses = new Set<Stripe.Subscription.Status>([
     'trialing',
     'active',
@@ -197,10 +210,41 @@ async function alertWebhookIssue(params: {
     });
 }
 
+async function mergePaymentMetadata(orderId: string, patch: Record<string, unknown>): Promise<void> {
+    const payment = await prisma.payment.findUnique({
+        where: { orderId },
+        select: { metadata: true },
+    });
+
+    const existing = parseJsonObject(payment?.metadata);
+
+    await prisma.payment.update({
+        where: { orderId },
+        data: {
+            metadata: JSON.stringify({
+                ...existing,
+                ...patch,
+            }),
+        },
+    });
+}
+
 export async function POST(req: NextRequest) {
     const requestId = req.headers.get('x-request-id') ?? `stripe-webhook-${Date.now()}`;
     const body = await req.text();
     const signature = req.headers.get('stripe-signature');
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
+
+    if (!webhookSecret) {
+        devLog.error('[Webhook] STRIPE_WEBHOOK_SECRET is not configured');
+        await alertWebhookIssue({
+            severity: 'critical',
+            title: 'STRIPE_WEBHOOK_SECRET missing',
+            message: 'Stripe webhook route is enabled but STRIPE_WEBHOOK_SECRET is missing.',
+            details: { requestId },
+        });
+        return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 });
+    }
 
     if (!signature) {
         devLog.error('[Webhook] Missing stripe-signature');
@@ -220,7 +264,7 @@ export async function POST(req: NextRequest) {
         event = stripe.webhooks.constructEvent(
             body,
             signature,
-            process.env.STRIPE_WEBHOOK_SECRET!
+            webhookSecret
         );
     } catch (error) {
         const reason = getErrorMessage(error);
@@ -238,9 +282,25 @@ export async function POST(req: NextRequest) {
         if (event.type === 'checkout.session.completed') {
             const session = event.data.object as Stripe.Checkout.Session;
             const { type, readingId, email } = session.metadata || {};
+            const metadataPatch = {
+                ...(session.metadata || {}),
+                webhookEventId: event.id,
+                webhookEventType: event.type,
+                webhookProcessedAt: new Date().toISOString(),
+            };
 
             // 0. Payment 테이블에 기록 저장 (idempotent)
             try {
+                const existingPayment = await prisma.payment.findUnique({
+                    where: { orderId: session.id },
+                    select: { metadata: true },
+                });
+
+                const mergedMetadata = {
+                    ...parseJsonObject(existingPayment?.metadata),
+                    ...metadataPatch,
+                };
+
                 await prisma.payment.upsert({
                     where: { orderId: session.id },
                     create: {
@@ -252,9 +312,8 @@ export async function POST(req: NextRequest) {
                         receiptUrl: session.url || null,
                         customerEmail: email || session.customer_details?.email || '',
                         readingId: readingId || null,
-                        metadata: JSON.stringify(session.metadata || {}),
+                        metadata: JSON.stringify(mergedMetadata),
                     },
-                    // Keep existing metadata as-is to preserve idempotency markers.
                     update: {
                         amount: session.amount_total || 0,
                         currency: session.currency || 'usd',
@@ -263,6 +322,7 @@ export async function POST(req: NextRequest) {
                         receiptUrl: session.url || null,
                         customerEmail: email || session.customer_details?.email || '',
                         readingId: readingId || null,
+                        metadata: JSON.stringify(mergedMetadata),
                     },
                 });
                 devLog.log(`[Webhook] Payment record created for session ${session.id}`);
@@ -306,6 +366,57 @@ export async function POST(req: NextRequest) {
             // type이 없거나 'premium_reading'인 경우 = 리딩 결제
             if (!type || type === 'premium_reading') {
                 const customerEmail = email || session.customer_email;
+
+                if (!readingId) {
+                    devLog.warn('[Webhook] Missing readingId for premium reading checkout session');
+                    await alertWebhookIssue({
+                        severity: 'warning',
+                        title: 'Premium payment missing readingId',
+                        message: 'Premium reading checkout completed without readingId metadata.',
+                        details: { requestId, eventId: event.id, sessionId: session.id },
+                    });
+                }
+
+                if (readingId) {
+                    try {
+                        const reading = await prisma.readingResult.findUnique({
+                            where: { id: readingId },
+                        });
+
+                        if (!reading) {
+                            await alertWebhookIssue({
+                                severity: 'warning',
+                                title: 'Premium reading not found',
+                                message: 'Webhook received a premium payment but the target reading was missing.',
+                                details: { requestId, eventId: event.id, readingId },
+                            });
+                        } else {
+                            const savedMeta = reading.metadata ? JSON.parse(reading.metadata) : {};
+                            if (!savedMeta.isPremium) {
+                                await prisma.readingResult.update({
+                                    where: { id: readingId },
+                                    data: {
+                                        metadata: JSON.stringify({
+                                            ...savedMeta,
+                                            isPremium: true,
+                                            paymentVerifiedAt: new Date().toISOString(),
+                                            paymentSource: 'stripe_webhook',
+                                            email: customerEmail || savedMeta.email || '',
+                                        }),
+                                    },
+                                });
+                            }
+                        }
+                    } catch (readingUpdateError) {
+                        devLog.error('[Webhook] Failed to mark reading as premium:', readingUpdateError);
+                        await alertWebhookIssue({
+                            severity: 'critical',
+                            title: 'Premium reading status update failed',
+                            message: 'Webhook failed while marking reading result as premium.',
+                            details: { requestId, eventId: event.id, readingId },
+                        });
+                    }
+                }
 
                 if (customerEmail && readingId) {
                     devLog.log(`[Webhook] Premium reading payment completed. Email: ${customerEmail}, ReadingID: ${readingId}`);
@@ -355,6 +466,9 @@ export async function POST(req: NextRequest) {
                                 });
 
                                 devLog.log(`[Webhook] Email sent successfully to ${customerEmail}. User linked: ${!!user}`);
+                                await mergePaymentMetadata(session.id, {
+                                    premiumEmailSentAt: new Date().toISOString(),
+                                });
                             }
                         } else {
                             devLog.warn(`[Webhook] Reading not found in DB: ${readingId}`);
@@ -375,6 +489,9 @@ export async function POST(req: NextRequest) {
                             readingId,
                             email: customerEmail,
                         });
+                        await mergePaymentMetadata(session.id, {
+                            followUpsScheduledAt: new Date().toISOString(),
+                        });
                     } catch (scheduleError) {
                         devLog.error('[Webhook] Failed to schedule follow-up jobs:', scheduleError);
                         await alertWebhookIssue({
@@ -386,6 +503,18 @@ export async function POST(req: NextRequest) {
                     }
                 } else {
                     devLog.warn(`[Webhook] Missing email or readingId for premium reading. Email: ${customerEmail}, ReadingID: ${readingId}`);
+                    await alertWebhookIssue({
+                        severity: 'warning',
+                        title: 'Premium payment metadata incomplete',
+                        message: 'Premium reading checkout completed without full metadata required for email/follow-up.',
+                        details: {
+                            requestId,
+                            eventId: event.id,
+                            sessionId: session.id,
+                            readingId: readingId || null,
+                            customerEmail: customerEmail || null,
+                        },
+                    });
                 }
             }
 

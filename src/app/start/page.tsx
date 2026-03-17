@@ -70,6 +70,11 @@ function CosmicPathContent() {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false); // Share Card Modal
 
   const searchParams = useSearchParams();
+  const autoReferralCode =
+    searchParams.get('referralCode') ||
+    searchParams.get('ref') ||
+    searchParams.get('promo') ||
+    undefined;
   const [hasCheckedResume, setHasCheckedResume] = useState(false);
 
   // Dynamic Price State (fetched from Stripe)
@@ -141,9 +146,10 @@ function CosmicPathContent() {
       step: step,
       language,
       invitationMode: Boolean(searchParams.get('invite')),
+      referralCode: autoReferralCode,
       price: dynamicPrice || undefined,
     });
-  }, [dynamicPrice, language, searchParams, step]);
+  }, [autoReferralCode, dynamicPrice, language, searchParams, step]);
 
   // 🎫 Viral Invitation Verification
   useEffect(() => {
@@ -741,6 +747,9 @@ function CosmicPathContent() {
             if (inviteCode) {
               currentUrl.searchParams.set('invite', inviteCode);
             }
+            if (autoReferralCode) {
+              currentUrl.searchParams.set('referralCode', autoReferralCode);
+            }
             window.history.replaceState({ readingId: id }, '', currentUrl.toString());
 
             // Client-side email trigger REMOVED (Moved to Server-side in /api/reading/save)
@@ -1092,7 +1101,7 @@ function CosmicPathContent() {
                                   alert('Error creating invite link');
                                 }
                               }}
-                              className="relative group px-8 py-4 bg-gradient-to-r from-acc-gold to-[#F59E0B] text-bg-void font-bold rounded-xl hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all overflow-hidden"
+                              className="relative group overflow-hidden rounded-xl bg-gradient-to-r from-acc-gold to-[#F59E0B] px-8 py-4 font-bold text-bg-void shadow-[0_14px_32px_rgba(212,175,55,0.14)] transition-[transform,box-shadow,filter] duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(212,175,55,0.28)] hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acc-gold/70"
                             >
                               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
                               <div className="relative flex items-center gap-2">
@@ -1120,14 +1129,14 @@ function CosmicPathContent() {
                               setPaymentTrackingSource('invite_upsell');
                               setIsPaymentModalOpen(true);
                             }}
-                            className="w-full py-3 bg-white/10 text-starlight font-bold rounded-lg hover:bg-acc-gold hover:text-bg-void transition-colors border border-white/20 hover:border-transparent"
+                            className="w-full rounded-lg border border-white/20 bg-white/10 py-3 font-bold text-starlight transition-[transform,background-color,border-color,color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-transparent hover:bg-acc-gold hover:text-bg-void hover:shadow-[0_16px_32px_rgba(212,175,55,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acc-gold/70"
                           >
                                 {language === 'en' ? 'Unlock My Fortune (30% OFF)' : '내 신년운세 확인하기 (30% 할인)'}
                               </button>
                             </div>
                           )}
 
-                          {/* Legacy Share Button */}
+                          {/* Secondary share-card action */}
                           <button
                             onClick={() => {
                               void trackClientGrowthEvent({
@@ -1142,7 +1151,7 @@ function CosmicPathContent() {
                               });
                               setIsShareModalOpen(true);
                             }}
-                            className="flex items-center gap-2 px-6 py-3 transition-colors text-dim hover:text-white"
+                            className="flex items-center gap-2 px-6 py-3 text-dim transition-[transform,color] duration-300 hover:-translate-y-0.5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
                           >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -1256,6 +1265,7 @@ function CosmicPathContent() {
         isDecisionAccepted={isDecisionAccepted}
         price={dynamicPrice}
         trackingSource={paymentTrackingSource}
+        autoReferralCode={autoReferralCode}
       />
 
       <ReviewModal

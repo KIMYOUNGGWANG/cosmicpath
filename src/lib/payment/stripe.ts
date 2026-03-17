@@ -113,6 +113,24 @@ interface CheckoutSessionOptions {
     metadata?: Record<string, string>;
 }
 
+function withReadingId(successUrl: string, readingId?: string): string {
+    if (!readingId) return successUrl;
+
+    try {
+        const url = new URL(successUrl);
+        if (!url.searchParams.has('reading_id')) {
+            url.searchParams.set('reading_id', readingId);
+        }
+        return url.toString();
+    } catch {
+        const separator = successUrl.includes('?') ? '&' : '?';
+        if (successUrl.includes('reading_id=')) {
+            return successUrl;
+        }
+        return `${successUrl}${separator}reading_id=${readingId}`;
+    }
+}
+
 /**
  * Stripe Checkout 세션을 생성합니다.
  */
@@ -144,8 +162,9 @@ export async function createCheckoutSession({
                 },
             ],
             mode: 'payment',
-            success_url: `${successUrl}${successUrl.includes('?') ? '&' : '?'}reading_id=${metadata?.readingId || ''}`, // Ensure reading_id passed back
+            success_url: withReadingId(successUrl, metadata?.readingId),
             cancel_url: cancelUrl,
+            customer_email: metadata?.email || undefined,
             metadata,
         });
 

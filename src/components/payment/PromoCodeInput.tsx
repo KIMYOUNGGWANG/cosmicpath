@@ -1,23 +1,37 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tag, Check, X, Loader2 } from 'lucide-react';
 
 interface PromoCodeInputProps {
-    onApply: (codeId: string, discount: number) => void;
+    onApply: (codeId: string, discount: number, code: string) => void;
     disabled?: boolean;
     email?: string; // Email for duplicate checking
+    initialCode?: string;
+    autoApply?: boolean;
 }
 
-export function PromoCodeInput({ onApply, disabled, email }: PromoCodeInputProps) {
+export function PromoCodeInput({
+    onApply,
+    disabled,
+    email,
+    initialCode,
+    autoApply = false,
+}: PromoCodeInputProps) {
     const [code, setCode] = useState('');
     const [status, setStatus] = useState<'idle' | 'validating' | 'valid' | 'invalid'>('idle');
     const [message, setMessage] = useState('');
 
-    const handleApply = async () => {
-        if (!code.trim()) return;
+    useEffect(() => {
+        if (!initialCode) return;
+        setCode((current) => current || initialCode.toUpperCase());
+    }, [initialCode]);
+
+    const handleApply = useCallback(async (overrideCode?: string) => {
+        const normalizedCode = (overrideCode ?? code).trim().toUpperCase();
+        if (!normalizedCode) return;
 
         setStatus('validating');
         setMessage('');
@@ -27,7 +41,7 @@ export function PromoCodeInput({ onApply, disabled, email }: PromoCodeInputProps
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    code: code.trim(),
+                    code: normalizedCode,
                     email: email || undefined // Pass email if available
                 }),
             });
@@ -37,7 +51,8 @@ export function PromoCodeInput({ onApply, disabled, email }: PromoCodeInputProps
             if (data.valid) {
                 setStatus('valid');
                 setMessage(`코드 적용 완료! (${data.remaining}명 남음)`);
-                onApply(data.id, data.discount);
+                setCode(normalizedCode);
+                onApply(data.id, data.discount, normalizedCode);
             } else {
                 setStatus('invalid');
                 setMessage(data.message || '유효하지 않은 코드입니다.');
@@ -46,7 +61,13 @@ export function PromoCodeInput({ onApply, disabled, email }: PromoCodeInputProps
             setStatus('invalid');
             setMessage('오류가 발생했습니다.');
         }
-    };
+    }, [code, email, onApply]);
+
+    useEffect(() => {
+        if (!autoApply || !initialCode) return;
+        if (status !== 'idle') return;
+        void handleApply(initialCode);
+    }, [autoApply, handleApply, initialCode, status]);
 
     return (
         <div className="space-y-2">
@@ -74,7 +95,9 @@ export function PromoCodeInput({ onApply, disabled, email }: PromoCodeInputProps
                         </span>
                     ) : (
                         <button
-                            onClick={handleApply}
+                            onClick={() => {
+                                void handleApply();
+                            }}
                             disabled={!code || status === 'validating' || disabled}
                             className="bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:hover:bg-white/10 text-white text-xs px-3 py-1.5 rounded-lg transition-colors"
                         >

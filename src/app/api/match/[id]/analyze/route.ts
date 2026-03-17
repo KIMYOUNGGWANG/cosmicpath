@@ -28,8 +28,8 @@ import {
 } from '@/lib/ai/match-schemas';
 import { createTimezoneAwareBirthData } from '@/lib/utils/timezone';
 
-// Convert new Phase format to legacy AIAnalysis format for backward compatibility
-function convertToLegacyFormat(fullAnalysis: Partial<MatchFullAnalysis>) {
+// Bridge the phase-based match analysis to the current UI-compatible response shape.
+function convertToUiAnalysisFormat(fullAnalysis: Partial<MatchFullAnalysis>) {
     const p1 = fullAnalysis.phase1;
     const p2 = fullAnalysis.phase2;
     const p3 = fullAnalysis.phase3;
@@ -156,7 +156,7 @@ export async function POST(
             return NextResponse.json({
                 success: true,
                 cached: true,
-                analysis: convertToLegacyFormat(existingMetadata.fullAnalysis),
+                analysis: convertToUiAnalysisFormat(existingMetadata.fullAnalysis),
                 fullAnalysis: existingMetadata.fullAnalysis,
                 phase: 5,
                 totalPhases: 5,
@@ -333,13 +333,13 @@ export async function POST(
 
                 // Fix: Return partial success if we have at least Phase 1
                 if (fullAnalysis.phase1) {
-                    const legacyAnalysis = convertToLegacyFormat(fullAnalysis);
+                    const analysis = convertToUiAnalysisFormat(fullAnalysis);
                     return NextResponse.json({
                         success: true,
                         cached: false,
                         isPartial: true, // Frontend can use this to show "Analyzing..." indicator
                         error: `Phase ${phase} failed: ${phaseError.message}`,
-                        analysis: legacyAnalysis,
+                        analysis,
                         fullAnalysis: fullAnalysis,
                         phase: phase - 1, // Return last successful phase
                         totalPhases: 5,
@@ -355,15 +355,15 @@ export async function POST(
             }
         }
 
-        // 7. Convert to legacy format for backward compatibility with existing UI
-        const legacyAnalysis = convertToLegacyFormat(fullAnalysis);
+        // 7. Convert to the current UI response shape.
+        const analysis = convertToUiAnalysisFormat(fullAnalysis);
 
         // 8. Return complete analysis
         return NextResponse.json({
             success: true,
             cached: false,
-            analysis: legacyAnalysis, // Legacy format for existing UI
-            fullAnalysis: fullAnalysis, // New format for future UI
+            analysis,
+            fullAnalysis,
             phase: endPhase,
             totalPhases: 5,
         });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/dev-logger';
+import { trackGrowthEvent } from '@/lib/growth-events';
 import { z } from 'zod';
 
 const ClaimRewardSchema = z.object({
@@ -13,47 +14,79 @@ export async function POST(req: NextRequest) {
         const { readingId } = ClaimRewardSchema.parse(body);
 
         devLog.log(`[Reward API] Processing claim for readingId: ${readingId}`);
-
-        // Find the chat session
-        const session = await prisma.chatSession.findUnique({
-            where: { readingResultId: readingId }
+        const reading = await prisma.readingResult.findUnique({
+            where: { id: readingId },
+            select: { id: true },
         });
 
-        // Create session if it doesn't exist (edge case)
-        if (!session) {
-            await prisma.chatSession.create({
-                data: {
-                    readingResultId: readingId,
-                    credits: 2, // 1 default + 1 reward
-                    shareRewardClaimed: true
-                }
+        if (!reading) {
+            return NextResponse.json({ success: false, message: 'Reading not found' }, { status: 404 });
+        }
+
+        const result = await prisma.$transaction(async (tx) => {
+            await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${readingId})::bigint)`;
+
+            const session = await tx.chatSession.findUnique({
+                where: { readingResultId: readingId },
+                select: { id: true, credits: true, shareRewardClaimed: true },
             });
-            return NextResponse.json({ success: true, credits: 2, message: 'Reward claimed' });
-        }
 
-        // Check if reward already claimed
-        if (session.shareRewardClaimed) {
-            return NextResponse.json({ success: false, message: 'Reward already claimed' });
-        }
+            if (!session) {
+                const created = await tx.chatSession.create({
+                    data: {
+                        readingResultId: readingId,
+                        credits: 2,
+                        shareRewardClaimed: true,
+                    },
+                    select: { credits: true },
+                });
 
-        // Grant reward
-        const updatedSession = await prisma.chatSession.update({
-            where: { id: session.id },
-            data: {
-                credits: { increment: 1 },
-                shareRewardClaimed: true
+                return {
+                    success: true,
+                    credits: created.credits,
+                    message: 'Reward claimed',
+                    alreadyClaimed: false,
+                };
             }
+
+            if (session.shareRewardClaimed) {
+                return {
+                    success: false,
+                    credits: session.credits,
+                    message: 'Reward already claimed',
+                    alreadyClaimed: true,
+                };
+            }
+
+            const updatedSession = await tx.chatSession.update({
+                where: { id: session.id },
+                data: {
+                    credits: { increment: 1 },
+                    shareRewardClaimed: true,
+                },
+                select: { credits: true },
+            });
+
+            return {
+                success: true,
+                credits: updatedSession.credits,
+                message: 'Reward claimed successfully',
+                alreadyClaimed: false,
+            };
         });
 
-        return NextResponse.json({
-            success: true,
-            credits: updatedSession.credits,
-            message: 'Reward claimed successfully'
-        });
+        if (result.success) {
+            await trackGrowthEvent({
+                event: 'share_reward_claimed',
+                readingId,
+                channel: 'claim_share_reward_api',
+            });
+        }
+
+        return NextResponse.json(result);
 
     } catch (error) {
         devLog.error('Failed to claim share reward:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
-

@@ -31,7 +31,6 @@ import { FinalVerdictCard } from './FinalVerdictCard';
 import { InsightCard, InsightHighlight } from './ui/InsightCard';
 import { DestinyDashboardSection } from '../dashboard/DestinyDashboardSection';
 import { GhostDetectorSection } from '../dashboard/GhostDetectorSection';
-// import TossPaymentWidget from '../payment/TossPaymentWidget'; // Toss Payments (Commented out)
 
 // 새로운 Premium Report 타입 (기존 CosmicReport 대체)
 export interface PremiumReportData {
@@ -197,8 +196,7 @@ export interface PremiumReportData {
         karma: { title: string; content: string };
         soul_mission: { title: string; content: string };
     };
-    // Legacy support for old schema
-    // Legacy support for old schema
+    // Fallback for older saved report schema
     deep_dive?: {
         saju?: { balance: string; flow_10yr: string; flow_yearly: string };
         astro?: { natal: string; transit: string };
@@ -670,9 +668,9 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                             {report.lucky_assets && <LuckyAssetsGrid data={report.lucky_assets} language={language} />}
                             {/* 🌀 Past Life Analysis (NEW - P2-1) */}
                             {report.past_life && <PastLifeSection data={report.past_life} language={language} />}
-                            {/* Legacy Support - Deep Dive */}
+                            {/* Compatibility deep-dive block for older saved report payloads */}
                             {report.deep_dive && !report.saju_sections && (
-                                <LegacyDeepDiveSection data={report.deep_dive} language={language} />
+                                <CompatibleDeepDiveSection data={report.deep_dive} language={language} />
                             )}
                         </>
                     ) : isPremium ? (
@@ -819,7 +817,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     )}
                 </div>
 
-                {/* Legacy Print Button (Optional) */}
+                {/* Optional print action */}
                 <button
                     onClick={() => handlePrint()}
                     className="text-xs text-white/30 hover:text-white/60 underline decoration-white/20 underline-offset-4 transition-colors"
@@ -878,39 +876,6 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 />
             )}
 
-            {/* Toss Payment Modal (Commented out)
-            {isCheckoutOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 md:p-10">
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => setIsCheckoutOpen(false)}
-                        className="absolute inset-0 bg-black/80 backdrop-blur-md"
-                    />
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        className="relative w-full max-w-xl bg-deep-navy border border-white/10 rounded-3xl overflow-y-auto max-h-[90vh] shadow-[0_0_50px_rgba(161,132,255,0.2)]"
-                    >
-                        <div className="absolute top-4 right-4 z-10">
-                            <button
-                                onClick={() => setIsCheckoutOpen(false)}
-                                className="p-2 hover:bg-white/10 rounded-full transition-colors"
-                            >
-                                <Lock size={20} className="text-white/40" />
-                            </button>
-                        </div>
-                        <TossPaymentWidget
-                            onFail={(err) => {
-                                console.error('Payment Modal Error:', err);
-                                setIsCheckoutOpen(false);
-                            }}
-                        />
-                    </motion.div>
-                </div>
-            )}
-            */}
         </div>
     );
 }
@@ -1562,8 +1527,8 @@ function ActionPlanSection({ actionPlan, trustScore, language }: {
     );
 }
 
-// Legacy support for old schema
-function LegacyDeepDiveSection({ data, language }: { data: NonNullable<PremiumReportData['deep_dive']>, language: 'ko' | 'en' }) {
+// Compatibility renderer for older saved report payloads
+function CompatibleDeepDiveSection({ data, language }: { data: NonNullable<PremiumReportData['deep_dive']>, language: 'ko' | 'en' }) {
     const isEn = language === 'en';
     const [activeTab, setActiveTab] = useState<'saju' | 'astro' | 'tarot'>('saju');
 

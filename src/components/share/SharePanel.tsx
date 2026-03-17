@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Share2, MessageCircle, Link2, Check, X, Download, AtSign, Music2 } from 'lucide-react';
+import { Share2, MessageCircle, Link2, Check, X, Download, AtSign, Music2, Gift, Users } from 'lucide-react';
 
 interface SharePanelProps {
     resultRef?: React.RefObject<HTMLElement | null>;
@@ -24,7 +24,7 @@ export function SharePanel({
     const [isOpen, setIsOpen] = useState(false);
     const [copied, setCopied] = useState(false);
 
-    const resolveShareUrl = () => {
+    const resolveShareUrl = useCallback(() => {
         if (typeof window === 'undefined') return shareUrl || '';
         if (!shareUrl) return window.location.href;
 
@@ -32,7 +32,44 @@ export function SharePanel({
         return shareUrl.startsWith('http')
             ? shareUrl
             : `${origin}${shareUrl.startsWith('/') ? '' : '/'}${shareUrl}`;
-    };
+    }, [shareUrl]);
+
+    const readingId = useMemo(() => {
+        const resolvedUrl = resolveShareUrl();
+        if (!resolvedUrl) return null;
+
+        try {
+            const parsed = new URL(resolvedUrl, typeof window !== 'undefined' ? window.location.origin : 'https://cosmicpath.app');
+            const segments = parsed.pathname.split('/').filter(Boolean);
+            return segments.at(-1) ?? null;
+        } catch {
+            const segments = resolvedUrl.split('/').filter(Boolean);
+            return segments.at(-1) ?? null;
+        }
+    }, [resolveShareUrl]);
+
+    const rewardStorageKey = useMemo(
+        () => (readingId ? `share_reward_claimed:${readingId}` : null),
+        [readingId]
+    );
+
+    const trackShareEvent = useCallback(async (event: string, metadata?: Record<string, unknown>) => {
+        try {
+            await fetch('/api/growth/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    event,
+                    readingId: readingId || undefined,
+                    source: 'share_panel',
+                    path: typeof window !== 'undefined' ? window.location.pathname : '/share',
+                    metadata,
+                }),
+            });
+        } catch (error) {
+            console.error('[SharePanel] Failed to track share event:', error);
+        }
+    }, [readingId]);
 
     const buildTikTokTemplate = (url: string) => {
         if (isEn) {
@@ -41,45 +78,38 @@ export function SharePanel({
         return `AI가 오늘 내 운세를 읽어줬는데 소름 돋았어요 🔮\n\n너도 해보기: ${url}\n#코스믹패스 #AI운세 #오늘의운세 #사주 #추천`;
     };
 
-    const claimReward = async () => {
-        // 클라이언트 사이드 체크 (이미 받았으면 요청 안 함)
-        const hasClaimed = sessionStorage.getItem('share_reward_claimed');
-        if (hasClaimed) return;
+    const claimReward = useCallback(async () => {
+        if (!readingId || !rewardStorageKey) return false;
+
+        const hasClaimed = sessionStorage.getItem(rewardStorageKey);
+        if (hasClaimed) return false;
 
         try {
-            // shareUrl에서 readingResultId 추출 (마지막 경로 세그먼트)
-            console.log('[SharePanel] shareUrl:', shareUrl);
-            const readingId = shareUrl?.split('/').pop();
-            console.log('[SharePanel] Extracted readingId:', readingId);
-
-            if (!readingId) {
-                console.error('[SharePanel] Failed to extract readingId');
-                return;
-            }
-
             const res = await fetch('/api/reading/claim-share-reward', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ readingId })
+                body: JSON.stringify({ readingId }),
             });
 
             const data = await res.json();
-            console.log('[SharePanel] API Response:', data);
 
             if (res.ok && data.success) {
-                // 성공 시 무조건 알림 (메시지 내용 무관)
                 alert(isEn ? '🎁 Share Reward: +1 Free Question Credit!' : '🎁 공유 보상: 추가 질문권 1개가 지급되었습니다!');
-                sessionStorage.setItem('share_reward_claimed', 'true');
-
-                // ChatInterface 등에 크레딧 갱신 알림
+                sessionStorage.setItem(rewardStorageKey, 'true');
                 window.dispatchEvent(new Event('credit-updated'));
+                await trackShareEvent('share_reward_claimed_client', { readingId });
+                return true;
             } else {
-                console.warn('[SharePanel] Reward claim failed:', data.message);
+                if (data?.alreadyClaimed || data?.message === 'Reward already claimed') {
+                    sessionStorage.setItem(rewardStorageKey, 'true');
+                }
+                return false;
             }
         } catch (error) {
             console.error('Failed to claim reward:', error);
+            return false;
         }
-    };
+    }, [isEn, readingId, rewardStorageKey, trackShareEvent]);
 
     // 카카오톡 공유
     const handleKakaoShare = () => {
@@ -124,6 +154,10 @@ export function SharePanel({
             finalUrl = shareUrl.startsWith('http') ? shareUrl : `${appUrl}${shareUrl.startsWith('/') ? '' : '/'}${shareUrl}`;
         }
 
+        const ogImageUrl = readingId
+            ? `${appUrl}/api/og/reading/${readingId}`
+            : 'https://cosmicpath.app/og-image.png';
+
         // 설명 글자수 제한
         const trimmedDescription = shareDescription.length > 120
             ? shareDescription.substring(0, 120) + '...'
@@ -135,7 +169,7 @@ export function SharePanel({
             content: {
                 title: shareTitle,
                 description: trimmedDescription,
-                imageUrl: 'https://cosmicpath.app/og-image.png', // 프로덕션 이미지 고정
+                imageUrl: ogImageUrl,
                 imageWidth: 1200,
                 imageHeight: 630,
                 link: {
@@ -155,7 +189,8 @@ export function SharePanel({
         });
 
         // 공유 시도 시 보상 청구
-        claimReward();
+        void trackShareEvent('share_kakao_clicked');
+        void claimReward();
     };
 
     // 링크 복사
@@ -166,7 +201,8 @@ export function SharePanel({
             if (navigator.clipboard && window.isSecureContext) {
                 await navigator.clipboard.writeText(url);
                 setCopied(true);
-                claimReward(); // 보상 청구
+                void trackShareEvent('share_link_copied');
+                void claimReward();
                 setTimeout(() => setCopied(false), 2000);
                 return;
             }
@@ -183,7 +219,8 @@ export function SharePanel({
             try {
                 document.execCommand('copy');
                 setCopied(true);
-                claimReward(); // 보상 청구
+                void trackShareEvent('share_link_copied_fallback');
+                void claimReward();
                 setTimeout(() => setCopied(false), 2000);
             } catch (err) {
                 console.error('Fallback copy failed:', err);
@@ -206,7 +243,8 @@ export function SharePanel({
 
         const intentUrl = `https://threads.net/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
         window.open(intentUrl, '_blank', 'noopener,noreferrer');
-        claimReward();
+        void trackShareEvent('share_threads_clicked');
+        void claimReward();
     };
 
     const handleCopyTikTokTemplate = async () => {
@@ -216,7 +254,8 @@ export function SharePanel({
         try {
             await navigator.clipboard.writeText(template);
             alert(isEn ? 'TikTok caption copied!' : 'TikTok 공유 문구가 복사되었습니다!');
-            claimReward();
+            void trackShareEvent('share_tiktok_caption_copied');
+            void claimReward();
         } catch {
             alert(isEn ? 'Failed to copy TikTok caption.' : 'TikTok 문구 복사에 실패했습니다.');
         }
@@ -227,21 +266,24 @@ export function SharePanel({
     return (
         <div className="relative">
             {/* 공유 버튼 */}
-            <button
+            <motion.button
                 onClick={() => setIsOpen(!isOpen)}
-                className="relative flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all hover:bg-violet-500/10"
+                whileHover={{ y: -2, boxShadow: '0 18px 36px rgba(168,85,247,0.18)' }}
+                whileTap={{ scale: 0.985 }}
+                className="relative flex items-center gap-2 rounded-xl px-5 py-3 font-medium transition-[transform,box-shadow,background-color,border-color] duration-300 hover:bg-violet-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/70"
                 style={{
                     backgroundColor: 'rgba(139, 92, 246, 0.2)',
                     color: '#a855f7',
                     border: '1px solid rgba(139, 92, 246, 0.3)',
                 }}
             >
-                <div className="absolute -top-3 -right-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg animate-bounce">
-                    🎁 +1 Credit
+                <div className="absolute -top-3 -right-2 flex items-center gap-1 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-lg shadow-rose-950/40">
+                    <Gift size={10} />
+                    <span>+1 Credit</span>
                 </div>
                 <Share2 size={18} />
                 {isEn ? 'Share & Get Reward' : '공유하고 선물받기'}
-            </button>
+            </motion.button>
 
             {/* 공유 패널 */}
             <AnimatePresence>
@@ -250,7 +292,8 @@ export function SharePanel({
                         initial={{ opacity: 0, y: 10, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute right-0 mt-2 w-72 rounded-2xl overflow-hidden z-50 transition-all duration-300"
+                        transition={{ duration: 0.22, ease: 'easeOut' }}
+                        className="absolute right-0 z-50 mt-2 w-72 overflow-hidden rounded-2xl backdrop-blur-xl"
                         style={{
                             background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
                             border: '1px solid rgba(139, 92, 246, 0.3)',
@@ -267,11 +310,12 @@ export function SharePanel({
                                     {isEn ? 'Share Result' : '결과 공유하기'}
                                 </span>
                                 <span className="text-xs text-pink-400 font-medium mt-0.5">
-                                    {isEn ? '✨ Get 1 Free Question Credit!' : '✨ 공유하면 질문권 1개 무료!'}
+                                    {isEn ? 'Get 1 free question credit' : '공유하면 질문권 1개 무료'}
                                 </span>
                             </div>
                             <button
                                 onClick={() => setIsOpen(false)}
+                                className="rounded-full p-1 transition-colors duration-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/70"
                                 style={{ color: 'rgba(255, 255, 255, 0.5)' }}
                             >
                                 <X size={18} />
@@ -283,10 +327,10 @@ export function SharePanel({
                             {/* 카카오톡 */}
                             <button
                                 onClick={handleKakaoShare}
-                                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-white/5"
+                                className="w-full rounded-xl px-4 py-3 text-left transition-[transform,background-color] duration-200 hover:translate-x-1 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/70"
                             >
                                 <div
-                                    className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
+                                    className="flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200 group-hover:scale-105"
                                     style={{ backgroundColor: '#FEE500' }}
                                 >
                                     <MessageCircle size={20} style={{ color: '#3C1E1E' }} />
@@ -304,10 +348,10 @@ export function SharePanel({
                             {/* Threads 공유 */}
                             <button
                                 onClick={handleThreadsShare}
-                                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-white/5"
+                                className="w-full rounded-xl px-4 py-3 text-left transition-[transform,background-color] duration-200 hover:translate-x-1 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/70"
                             >
                                 <div
-                                    className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
+                                    className="flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200"
                                     style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}
                                 >
                                     <AtSign size={20} style={{ color: '#ffffff' }} />
@@ -325,10 +369,10 @@ export function SharePanel({
                             {/* TikTok 템플릿 복사 */}
                             <button
                                 onClick={handleCopyTikTokTemplate}
-                                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-white/5"
+                                className="w-full rounded-xl px-4 py-3 text-left transition-[transform,background-color] duration-200 hover:translate-x-1 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/70"
                             >
                                 <div
-                                    className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
+                                    className="flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200"
                                     style={{ backgroundColor: 'rgba(244, 63, 94, 0.2)' }}
                                 >
                                     <Music2 size={20} style={{ color: '#f43f5e' }} />
@@ -350,10 +394,10 @@ export function SharePanel({
                                         onPrint();
                                         setIsOpen(false);
                                     }}
-                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-white/5"
+                                    className="w-full rounded-xl px-4 py-3 text-left transition-[transform,background-color] duration-200 hover:translate-x-1 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/70"
                                 >
                                     <div
-                                        className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
+                                        className="flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200"
                                         style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
                                     >
                                         <Download size={20} style={{ color: '#ffffff' }} />
@@ -372,10 +416,10 @@ export function SharePanel({
                             {/* 링크 복사 */}
                             <button
                                 onClick={handleCopyLink}
-                                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-white/5"
+                                className="w-full rounded-xl px-4 py-3 text-left transition-[transform,background-color] duration-200 hover:translate-x-1 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/70"
                             >
                                 <div
-                                    className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
+                                    className="flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200"
                                     style={{ backgroundColor: 'rgba(59, 130, 246, 0.2)' }}
                                 >
                                     {copied ? (
@@ -399,16 +443,17 @@ export function SharePanel({
                                 onClick={() => {
                                     const compatUrl = shareUrl ? `${shareUrl}?match=invite` : `${window.location.href}?match=invite`;
                                     navigator.clipboard?.writeText(compatUrl);
+                                    void trackShareEvent('share_compatibility_link_copied');
                                     alert(isEn ? 'Compatibility link copied! Share with your partner.' : '궁합 링크가 복사되었습니다! 상대방에게 공유하세요.');
                                     setIsOpen(false);
                                 }}
-                                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors hover:bg-white/5"
+                                className="w-full rounded-xl px-4 py-3 text-left transition-[transform,background-color] duration-200 hover:translate-x-1 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/70"
                             >
                                 <div
-                                    className="w-10 h-10 rounded-full flex items-center justify-center transition-transform hover:scale-110"
+                                    className="flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200"
                                     style={{ backgroundColor: 'rgba(236, 72, 153, 0.2)' }}
                                 >
-                                    <span className="text-lg">💕</span>
+                                    <Users size={20} style={{ color: '#f472b6' }} />
                                 </div>
                                 <div className="text-left">
                                     <p className="font-medium" style={{ color: '#ffffff' }}>

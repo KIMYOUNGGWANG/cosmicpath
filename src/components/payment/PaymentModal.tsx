@@ -17,7 +17,14 @@ interface PaymentModalProps {
     isDecisionAccepted?: boolean;
     price?: string;
     trackingSource?: string;
+    autoReferralCode?: string;
 }
+
+const modalSpring = {
+    type: 'spring',
+    stiffness: 260,
+    damping: 24,
+} as const;
 
 export function PaymentModal({
     isOpen,
@@ -29,6 +36,7 @@ export function PaymentModal({
     isDecisionAccepted,
     price,
     trackingSource = 'payment_modal',
+    autoReferralCode,
 }: PaymentModalProps) {
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState<string | null>(null);
@@ -56,6 +64,20 @@ export function PaymentModal({
     // Promo Code State
     const [promoCodeId, setPromoCodeId] = useState<string | null>(null);
     const [discount, setDiscount] = useState<number>(0);
+    const [appliedReferralCode, setAppliedReferralCode] = useState<string | null>(null);
+
+    const resolvedAutoReferralCode = (() => {
+        if (autoReferralCode?.trim()) return autoReferralCode.trim().toUpperCase();
+        if (typeof window === 'undefined') return null;
+
+        const params = new URLSearchParams(window.location.search);
+        const candidate =
+            params.get('referralCode') ||
+            params.get('ref') ||
+            params.get('promo');
+
+        return candidate?.trim() ? candidate.trim().toUpperCase() : null;
+    })();
 
     const trackPaywallClose = useCallback(
         (sourceSuffix?: string) =>
@@ -66,6 +88,7 @@ export function PaymentModal({
                 language: metadata?.language,
                 context: readingData?.context as string | undefined,
                 invitationMode: Boolean(metadata?.inviteCode),
+                referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
                 price: dynamicPrice !== '...' ? dynamicPrice : undefined,
                 readingId: sessionStorage.getItem('pending_reading_id') || undefined,
                 plan: READING_PRODUCT.id,
@@ -83,6 +106,7 @@ export function PaymentModal({
             language: metadata?.language,
             context: readingData?.context as string | undefined,
             invitationMode: Boolean(metadata?.inviteCode),
+            referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
             price: dynamicPrice !== '...' ? dynamicPrice : undefined,
             readingId:
                 sessionStorage.getItem('pending_reading_id') ||
@@ -169,12 +193,14 @@ export function PaymentModal({
                 language: metadata?.language,
                 context: readingData?.context as string | undefined,
                 invitationMode: Boolean(metadata?.inviteCode),
+                referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
                 price: dynamicPrice !== '...' ? dynamicPrice : undefined,
                 readingId: readingId || undefined,
                 plan: isFreePromo ? 'promo_free_unlock' : READING_PRODUCT.id,
                 metadata: {
                     emailProvided: Boolean(email),
                     discount,
+                    promoCodeId,
                 },
             });
 
@@ -240,6 +266,7 @@ export function PaymentModal({
                     language: metadata?.language,
                     context: readingData?.context as string | undefined,
                     invitationMode: Boolean(metadata?.inviteCode),
+                    referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
                     price: 'FREE',
                     readingId: readingId || undefined,
                     plan: 'promo_free_unlock',
@@ -258,7 +285,10 @@ export function PaymentModal({
                 body: JSON.stringify({
                     productId: READING_PRODUCT.productId,
                     email,
-                    readingId: readingId || undefined
+                    readingId: readingId || undefined,
+                    referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
+                    promoCodeId: promoCodeId || undefined,
+                    discount: discount || undefined,
                 }),
             });
 
@@ -278,6 +308,7 @@ export function PaymentModal({
                 language: metadata?.language,
                 context: readingData?.context as string | undefined,
                 invitationMode: Boolean(metadata?.inviteCode),
+                referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
                 price: dynamicPrice !== '...' ? dynamicPrice : undefined,
                 readingId: sessionStorage.getItem('pending_reading_id') || undefined,
                 plan: isFreePromo ? 'promo_free_unlock' : READING_PRODUCT.id,
@@ -300,26 +331,37 @@ export function PaymentModal({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                    transition={{ duration: 0.22 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
                     onClick={handleClose}
                 >
                     <motion.div
                         initial={{ scale: 0.95, opacity: 0, y: 20 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                        className="relative w-full max-w-xl bg-[#0f0f23] border border-white/10 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(161,132,255,0.2)]"
+                        transition={modalSpring}
+                        className="relative w-full max-w-xl overflow-hidden rounded-3xl border border-white/10 bg-[#0f0f23] shadow-[0_0_50px_rgba(161,132,255,0.2)]"
                         onClick={(e) => e.stopPropagation()}
                     >
+                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(161,132,255,0.16),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.05),transparent_28%)]" />
+
                         {/* Close button */}
-                        <button
+                        <motion.button
                             onClick={handleClose}
-                            className="absolute right-6 top-6 z-10 p-2 hover:bg-white/10 rounded-full transition-colors"
+                            whileHover={{ y: -1, backgroundColor: 'rgba(255,255,255,0.12)' }}
+                            whileTap={{ scale: 0.97 }}
+                            className="absolute right-6 top-6 z-10 rounded-full p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A184FF]/70"
                         >
                             <X size={20} className="text-white/40" />
-                        </button>
+                        </motion.button>
 
-                        <div className="p-8 md:p-12">
-                            <div className="text-center mb-10">
+                        <div className="relative p-8 md:p-12">
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.35, delay: 0.05 }}
+                                className="text-center mb-10"
+                            >
                                 <h3 className="text-2xl font-bold text-white mb-3">
                                     {isEnglish ? 'Unlock Your Full Cosmic Report' : '전체 Cosmic Report 열기'}
                                 </h3>
@@ -336,12 +378,17 @@ export function PaymentModal({
                                         </>
                                     )}
                                 </p>
-                                <div className="mt-6 inline-block px-4 py-2 bg-[#A184FF]/10 rounded-full border border-[#A184FF]/20">
+                                <div className="mt-6 inline-block rounded-full border border-[#A184FF]/20 bg-[#A184FF]/10 px-4 py-2 shadow-[0_0_24px_rgba(161,132,255,0.14)]">
                                     <span className="text-[#A184FF] font-bold text-xl">{dynamicPrice}</span>
                                 </div>
-                            </div>
+                            </motion.div>
 
-                            <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                            <motion.div
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.35, delay: 0.1 }}
+                                className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-[transform,border-color,background-color] duration-300 hover:-translate-y-1 hover:border-white/15 hover:bg-white/[0.045]"
+                            >
                                 <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#A184FF]">
                                     {isEnglish ? 'What Opens After Payment' : '결제 후 열리는 내용'}
                                 </p>
@@ -350,10 +397,15 @@ export function PaymentModal({
                                     <li>{isEnglish ? 'Career, love, money, and health deep dive' : '커리어, 연애, 재물, 건강 상세 분석'}</li>
                                     <li>{isEnglish ? 'Action guide from Saju, astrology, and tarot overlap' : '사주, 점성술, 타로가 겹치는 지점 기반 액션 가이드'}</li>
                                 </ul>
-                            </div>
+                            </motion.div>
 
                             {/* Email Input */}
-                            <div className="mb-6">
+                            <motion.div
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.35, delay: 0.14 }}
+                                className="mb-6"
+                            >
                                 <label className="block text-xs font-semibold text-[#A184FF] mb-3 ml-1 uppercase tracking-widest">
                                     {isEnglish ? 'Email for your result link' : '결과를 받아볼 이메일'}
                                     {isFreePromo ? <span className="text-red-400 ml-1">*</span> : <span className="text-white/30 ml-2 normal-case">(optional)</span>}
@@ -370,9 +422,9 @@ export function PaymentModal({
                                         : (isEnglish
                                             ? 'Optional: receive the result link by email'
                                             : '선택: 결제 후 결과 링크를 이메일로 받기')}
-                                    className={`w-full bg-white/5 border rounded-2xl px-5 py-4 text-white placeholder:text-gray-600 focus:outline-none transition-all font-light ${emailError
+                                    className={`w-full rounded-2xl border bg-white/5 px-5 py-4 font-light text-white placeholder:text-gray-600 transition-[border-color,box-shadow,background-color] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A184FF]/40 ${emailError
                                         ? 'border-red-500 focus:border-red-500'
-                                        : 'border-white/10 focus:border-[#A184FF]/50'
+                                        : 'border-white/10 focus:border-[#A184FF]/50 hover:border-white/15 hover:bg-white/[0.06]'
                                         }`}
                                 />
                                 {emailError && (
@@ -380,37 +432,47 @@ export function PaymentModal({
                                         {emailError}
                                     </p>
                                 )}
-                            </div>
+                            </motion.div>
 
                             {/* Promo Code Input */}
-                            <div className="mb-8">
+                            <motion.div
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.35, delay: 0.18 }}
+                                className="mb-8"
+                            >
                                 <PromoCodeInput
                                     email={email}
-                                    onApply={(id, discount) => {
+                                    initialCode={resolvedAutoReferralCode || undefined}
+                                    autoApply={isOpen}
+                                    onApply={(id, discount, code) => {
                                         setPromoCodeId(id);
                                         setDiscount(discount);
+                                        setAppliedReferralCode(code);
                                         // 무료 쿠폰 적용 시 에러 클리어
                                         if (discount === 100) setEmailError(null);
                                     }}
                                     disabled={isLoading}
                                 />
-                            </div>
+                            </motion.div>
 
-                            <button
+                            <motion.button
                                 onClick={handlePayment}
                                 disabled={isLoading}
+                                whileHover={isLoading ? undefined : { y: -2, boxShadow: Number(discount) === 100 ? '0 18px 44px rgba(16,185,129,0.28)' : '0 18px 44px rgba(139,92,246,0.28)' }}
+                                whileTap={isLoading ? undefined : { scale: 0.985 }}
                                 className={`w-full py-4 font-bold rounded-2xl hover:opacity-90 disabled:opacity-50 transition-all shadow-lg
                                     ${Number(discount) === 100
                                         ? 'bg-gradient-to-r from-emerald-500 to-green-500 shadow-emerald-500/30'
                                         : 'bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] shadow-[#8B5CF6]/30'
-                                    } text-white`}
+                                    } text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-[#A184FF]/60`}
                             >
                                 {isLoading
                                     ? (isEnglish ? 'Processing...' : '처리 중...')
                                     : (Number(discount) === 100
                                         ? (isEnglish ? 'Unlock for Free' : '무료로 결과 확인하기')
                                         : (isEnglish ? 'Unlock Full Report' : '전체 리포트 열기'))}
-                            </button>
+                            </motion.button>
 
                             <p className="mt-4 text-center text-xs text-white/35">
                                 {isEnglish

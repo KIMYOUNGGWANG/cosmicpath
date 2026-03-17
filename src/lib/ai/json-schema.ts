@@ -181,7 +181,7 @@ export interface CosmicReport {
     }[];
 }
 
-// Legacy support
+// Shared elemental graph shape used by older and newer report UIs.
 export interface EvaluationGraph {
     wood: number;
     fire: number;

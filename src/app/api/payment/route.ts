@@ -8,17 +8,22 @@ import { READING_PRODUCT } from '@/lib/payment/payment-config';
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { productId, email, readingId } = body;
+        const { productId, email, readingId, referralCode, promoCodeId, discount } = body;
 
         const origin = request.headers.get('origin') || 'http://localhost:3000';
 
         const session = await createCheckoutSession({
-            productId: productId || READING_PRODUCT.id,
+            productId: productId || READING_PRODUCT.productId,
             successUrl: `${origin}/payment/success?session_id={CHECKOUT_SESSION_ID}&reading_id=${readingId || ''}`,
             cancelUrl: `${origin}/start?canceled=true`,
             metadata: {
+                type: 'premium_reading',
+                productId: productId || READING_PRODUCT.productId,
                 email: email || '',
-                readingId: readingId || ''
+                readingId: readingId || '',
+                referralCode: referralCode || '',
+                promoCodeId: promoCodeId || '',
+                discount: typeof discount === 'number' ? String(discount) : '',
             },
         });
 
