@@ -6,9 +6,14 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 
 const kakaoScope = process.env.KAKAO_SCOPE?.trim()
+const authSecret =
+    process.env.AUTH_SECRET ||
+    process.env.NEXTAUTH_SECRET ||
+    (process.env.NODE_ENV !== "production" ? "dev-only-auth-secret" : undefined)
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
     adapter: PrismaAdapter(prisma),
+    secret: authSecret,
     providers: [
         Google({
             clientId: process.env.GOOGLE_CLIENT_ID,
