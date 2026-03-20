@@ -317,17 +317,43 @@ export function SubscriptionModal({
         if (!isOpen) return undefined;
 
         const previousOverflow = document.body.style.overflow;
+        const previousBodyPosition = document.body.style.position;
+        const previousBodyTop = document.body.style.top;
+        const previousBodyWidth = document.body.style.width;
+        const previousBodyLeft = document.body.style.left;
+        const previousBodyRight = document.body.style.right;
+        const previousHtmlOverflow = document.documentElement.style.overflow;
+        const previousHtmlOverscrollBehavior = document.documentElement.style.overscrollBehavior;
+        const scrollY = window.scrollY;
+        const lenis = window.__lenis;
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape' && !isLoading) {
                 handleDismiss();
             }
         };
 
+        lenis?.stop();
+        document.documentElement.style.overflow = 'hidden';
+        document.documentElement.style.overscrollBehavior = 'none';
         document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.left = '0';
+        document.body.style.right = '0';
+        document.body.style.width = '100%';
         window.addEventListener('keydown', handleKeyDown);
 
         return () => {
+            lenis?.start();
+            document.documentElement.style.overflow = previousHtmlOverflow;
+            document.documentElement.style.overscrollBehavior = previousHtmlOverscrollBehavior;
             document.body.style.overflow = previousOverflow;
+            document.body.style.position = previousBodyPosition;
+            document.body.style.top = previousBodyTop;
+            document.body.style.width = previousBodyWidth;
+            document.body.style.left = previousBodyLeft;
+            document.body.style.right = previousBodyRight;
+            window.scrollTo(0, scrollY);
             window.removeEventListener('keydown', handleKeyDown);
         };
     }, [handleDismiss, isLoading, isOpen]);
@@ -430,7 +456,8 @@ export function SubscriptionModal({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(2,6,23,0.82)] p-3 backdrop-blur-md sm:p-4"
+                    className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[rgba(2,6,23,0.82)] p-3 backdrop-blur-md sm:items-center sm:p-4"
+                    data-lenis-prevent=""
                     onClick={handleDismiss}
                 >
                     <motion.div
@@ -441,7 +468,7 @@ export function SubscriptionModal({
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby="subscription-modal-title"
-                        className="relative max-h-[92vh] w-full max-w-6xl overflow-hidden rounded-[32px] border border-[#f0d487]/20 bg-[radial-gradient(circle_at_top_left,rgba(244,216,138,0.16),transparent_30%),radial-gradient(circle_at_85%_15%,rgba(99,102,241,0.22),transparent_26%),linear-gradient(155deg,#060914,#0d1322_48%,#0a0f1d)] shadow-[0_32px_120px_rgba(0,0,0,0.52)] overscroll-contain"
+                        className="relative my-auto flex max-h-[calc(100dvh-1.5rem)] w-full max-w-6xl flex-col overflow-hidden rounded-[32px] border border-[#f0d487]/20 bg-[radial-gradient(circle_at_top_left,rgba(244,216,138,0.16),transparent_30%),radial-gradient(circle_at_85%_15%,rgba(99,102,241,0.22),transparent_26%),linear-gradient(155deg,#060914,#0d1322_48%,#0a0f1d)] shadow-[0_32px_120px_rgba(0,0,0,0.52)] overscroll-contain sm:max-h-[calc(100dvh-2rem)]"
                         onClick={(event) => event.stopPropagation()}
                     >
                         <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-[#f4d88a]/70 to-transparent" />
@@ -467,8 +494,12 @@ export function SubscriptionModal({
                             <X size={18} />
                         </button>
 
-                        <div className="max-h-[92vh] overflow-y-auto p-5 sm:p-7 md:p-8 lg:p-10">
-                            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.85fr)] xl:gap-8">
+                        <div
+                            className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain p-5 sm:p-7 md:p-8 lg:p-10"
+                            data-lenis-prevent=""
+                            style={{ WebkitOverflowScrolling: 'touch' }}
+                        >
+                            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.42fr)_minmax(320px,0.78fr)] xl:gap-8 2xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.85fr)]">
                                 <div>
                                     <div className="mb-6 max-w-4xl">
                                         <div className="mb-4 inline-flex min-h-9 items-center gap-2 rounded-full border border-[#f0d487]/25 bg-[#f0d487]/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#f4d88a]">
@@ -530,7 +561,7 @@ export function SubscriptionModal({
                                         ))}
                                     </div>
 
-                                    <div className="grid gap-4 md:grid-cols-3">
+                                    <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
                                         {orderedPlans.map((plan, index) => {
                                             const isSelected = selectedPlanType === plan.id;
                                             const Icon = PLAN_ICONS[plan.id];
@@ -545,7 +576,7 @@ export function SubscriptionModal({
                                                     initial={shouldReduceMotion ? false : { opacity: 0, y: 14 }}
                                                     animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
                                                     transition={{ delay: shouldReduceMotion ? 0 : index * 0.05, duration: 0.25 }}
-                                                    className={`group relative min-h-[300px] cursor-pointer overflow-hidden rounded-[30px] border p-5 text-left transition-[transform,border-color,background-color,box-shadow] duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f4d88a]/70 ${
+                                                    className={`group relative flex min-h-[320px] h-full cursor-pointer flex-col overflow-hidden rounded-[30px] border p-5 text-left transition-[transform,border-color,background-color,box-shadow] duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f4d88a]/70 ${
                                                         isSelected
                                                             ? 'border-[#f4d88a]/60 bg-[linear-gradient(180deg,rgba(244,216,138,0.14),rgba(244,216,138,0.05))] shadow-[0_20px_45px_rgba(212,175,55,0.16)]'
                                                             : 'border-white/10 bg-white/[0.03] hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.05]'
@@ -560,7 +591,7 @@ export function SubscriptionModal({
                                                     )}
 
                                                     <div className="mb-5 flex items-start justify-between gap-4">
-                                                        <div className="flex items-center gap-3">
+                                                        <div className="flex min-w-0 items-center gap-3">
                                                             <span
                                                                 className={`inline-flex h-12 w-12 items-center justify-center rounded-2xl border ${
                                                                     isSelected
@@ -574,7 +605,9 @@ export function SubscriptionModal({
                                                                 <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#f4d88a]/80">
                                                                     {plan.eyebrow}
                                                                 </p>
-                                                                <p className="mt-1 text-lg font-semibold text-white">{plan.name}</p>
+                                                                <p className="mt-1 break-keep text-xl font-semibold leading-tight text-white">
+                                                                    {plan.name}
+                                                                </p>
                                                             </div>
                                                         </div>
                                                         <div className="flex flex-col items-end gap-2">
@@ -596,7 +629,7 @@ export function SubscriptionModal({
                                                     </div>
 
                                                     <div className="mb-5">
-                                                        <p className="text-3xl font-semibold tracking-tight text-[#f4d88a]">
+                                                        <p className="text-[2.8rem] font-semibold leading-[1.02] tracking-tight text-[#f4d88a]">
                                                             {plan.priceLabel}
                                                         </p>
                                                         <p className="mt-2 text-xs font-semibold uppercase tracking-[0.22em] text-white/50">
@@ -604,10 +637,12 @@ export function SubscriptionModal({
                                                         </p>
                                                     </div>
 
-                                                    <p className="mb-3 text-sm leading-7 text-white/72">{plan.description}</p>
-                                                    <div className="rounded-[22px] border border-white/10 bg-black/15 px-4 py-3">
-                                                        <p className="text-sm font-semibold text-white">{plan.valueLabel}</p>
-                                                        <p className="mt-1 text-xs leading-6 text-white/56">{plan.supportingLabel}</p>
+                                                    <div className="mt-auto space-y-3">
+                                                        <p className="break-keep text-sm leading-7 text-white/72">{plan.description}</p>
+                                                        <div className="rounded-[22px] border border-white/10 bg-black/15 px-4 py-3">
+                                                            <p className="break-keep text-sm font-semibold text-white">{plan.valueLabel}</p>
+                                                            <p className="mt-1 break-keep text-xs leading-6 text-white/56">{plan.supportingLabel}</p>
+                                                        </div>
                                                     </div>
                                                 </motion.button>
                                             );
@@ -616,13 +651,13 @@ export function SubscriptionModal({
                                 </div>
 
                                 <div className="xl:pt-10">
-                                    <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-6">
+                                    <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-6 xl:sticky xl:top-0">
                                         <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
                                             <div>
                                                 <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#f4d88a]">
                                                     Selected Plan
                                                 </p>
-                                                <h3 className="mt-2 font-cinzel text-2xl text-white">
+                                                <h3 className="mt-2 break-keep font-cinzel text-2xl text-white">
                                                     {selectedPlan.name}
                                                 </h3>
                                             </div>
@@ -632,8 +667,8 @@ export function SubscriptionModal({
                                         </div>
 
                                         <div className="rounded-[24px] border border-[#f4d88a]/18 bg-[#f4d88a]/8 px-4 py-4">
-                                            <p className="text-sm font-semibold text-white">{selectedPlan.valueLabel}</p>
-                                            <p className="mt-2 text-xs leading-6 text-white/62">
+                                            <p className="break-keep text-sm font-semibold text-white">{selectedPlan.valueLabel}</p>
+                                            <p className="mt-2 break-keep text-xs leading-6 text-white/62">
                                                 {selectedPlan.commitmentNote}
                                             </p>
                                         </div>
@@ -642,7 +677,7 @@ export function SubscriptionModal({
                                             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#f4d88a]/80">
                                                 {activeSegment.insightLabel}
                                             </p>
-                                            <p className="mt-2 text-sm leading-7 text-white/72">
+                                            <p className="mt-2 break-keep text-sm leading-7 text-white/72">
                                                 {activeSegment.insightBody}
                                             </p>
                                         </div>
@@ -660,7 +695,7 @@ export function SubscriptionModal({
                                                             <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-[#f4d88a]/20 bg-[#f4d88a]/10 text-[#f4d88a]">
                                                                 <Icon size={16} />
                                                             </span>
-                                                            <span className="leading-6">{benefit}</span>
+                                                            <span className="break-keep leading-6">{benefit}</span>
                                                         </li>
                                                     );
                                                 })}
@@ -681,7 +716,9 @@ export function SubscriptionModal({
                                             whileTap={shouldReduceMotion || isLoading ? undefined : { scale: 0.99 }}
                                             className="mt-6 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#f8e7aa] via-[#d4af37] to-[#b8902f] px-5 py-4 text-base font-bold text-[#111111] shadow-[0_18px_40px_rgba(212,175,55,0.2)] transition-[box-shadow,filter,opacity] duration-300 hover:shadow-[0_24px_46px_rgba(212,175,55,0.28)] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f4d88a]/80"
                                         >
-                                            <span>{isLoading ? 'Stripe Checkout 준비 중...' : `${selectedPlan.priceLabel}으로 시작하기`}</span>
+                                            <span className="break-keep text-center">
+                                                {isLoading ? 'Stripe Checkout 준비 중...' : `${selectedPlan.priceLabel}으로 시작하기`}
+                                            </span>
                                             {!isLoading && <ArrowRight size={18} />}
                                         </motion.button>
 
@@ -690,7 +727,7 @@ export function SubscriptionModal({
                                                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#f4d88a]/80">
                                                     Activation
                                                 </p>
-                                                <p className="mt-2 text-sm leading-6 text-white/68">
+                                                <p className="mt-2 break-keep text-sm leading-6 text-white/68">
                                                     결제 직후 구독 상태가 반영되면 `/my`, `/daily`, Oracle Chat에서 바로 확인할 수 있습니다.
                                                 </p>
                                             </div>
@@ -698,7 +735,7 @@ export function SubscriptionModal({
                                                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#f4d88a]/80">
                                                     Experiment Note
                                                 </p>
-                                                <p className="mt-2 text-sm leading-6 text-white/68">
+                                                <p className="mt-2 break-keep text-sm leading-6 text-white/68">
                                                     현재 모달은 진입 위치에 따라 추천 플랜과 카피가 달라집니다. checkout start는 growth event로 함께 기록됩니다.
                                                 </p>
                                             </div>

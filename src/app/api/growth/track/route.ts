@@ -20,6 +20,19 @@ const growthEventSchema = z.object({
     metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
+function errorResponse(code: number, message: string, details?: string) {
+    return NextResponse.json(
+        {
+            error: {
+                code,
+                message,
+                ...(details ? { details } : {}),
+            },
+        },
+        { status: code }
+    );
+}
+
 export async function POST(request: NextRequest) {
     const rateLimitResponse = await rateLimit(request, { limit: 120, windowMs: 60 * 1000 });
     if (rateLimitResponse) return rateLimitResponse;
@@ -29,10 +42,7 @@ export async function POST(request: NextRequest) {
         const parsed = growthEventSchema.safeParse(body);
 
         if (!parsed.success) {
-            return NextResponse.json(
-                { error: 'Invalid growth event payload' },
-                { status: 400 }
-            );
+            return errorResponse(400, '유효하지 않은 입력입니다.', parsed.error.message);
         }
 
         const {
@@ -70,7 +80,8 @@ export async function POST(request: NextRequest) {
         });
 
         return NextResponse.json({ ok: true });
-    } catch {
-        return NextResponse.json({ error: 'Failed to track growth event' }, { status: 500 });
+    } catch (error) {
+        const details = error instanceof Error ? error.message : '알 수 없는 오류';
+        return errorResponse(500, '성장 이벤트 기록에 실패했습니다.', details);
     }
 }

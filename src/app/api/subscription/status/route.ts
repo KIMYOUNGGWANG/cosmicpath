@@ -77,7 +77,7 @@ export async function GET() {
     const userId = session?.user?.id;
 
     if (!userId) {
-        return errorResponse(401, 'Unauthorized');
+        return errorResponse(401, '로그인이 필요합니다.');
     }
 
     const user = await prisma.user.findUnique({
@@ -86,7 +86,7 @@ export async function GET() {
     });
 
     if (!user) {
-        return errorResponse(404, 'User not found');
+        return errorResponse(404, '사용자를 찾을 수 없습니다.');
     }
 
     if (!user.email) {
@@ -140,6 +140,6 @@ export async function GET() {
         });
     } catch (error) {
         const details = error instanceof Error ? error.message : 'Unknown error';
-        return errorResponse(500, 'Server Error', details);
+        return errorResponse(500, '서버 오류가 발생했습니다.', details);
     }
 }

@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
 
     const parsed = querySchema.safeParse(rawQuery);
     if (!parsed.success) {
-        return errorResponse(400, 'Bad Request', parsed.error.message);
+        return errorResponse(400, '유효하지 않은 입력입니다.', parsed.error.message);
     }
 
     const now = new Date();

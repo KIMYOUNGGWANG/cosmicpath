@@ -15,12 +15,26 @@ const ScheduleDripSchema = z.object({
   fromDate: z.string().datetime().optional(),
 });
 
+function errorResponse(code: number, message: string, details?: string) {
+  return NextResponse.json(
+    {
+      error: {
+        code,
+        message,
+        ...(details ? { details } : {}),
+      },
+      ok: false,
+    },
+    { status: code }
+  );
+}
+
 export async function POST(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET?.trim();
   const token = parseBearerToken(request.headers.get('authorization'));
 
   if (!cronSecret || token !== cronSecret) {
-    return NextResponse.json({ error: { message: 'Unauthorized', code: 401 } }, { status: 401 });
+    return errorResponse(401, '인증에 실패했습니다.');
   }
 
   try {
@@ -41,9 +55,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to schedule drip emails';
-    return NextResponse.json(
-      { ok: false, error: { message, code: 400 } },
-      { status: 400 }
-    );
+    return errorResponse(400, '드립 이메일 예약에 실패했습니다.', message);
   }
 }

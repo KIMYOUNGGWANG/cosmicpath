@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
     const userId = session?.user?.id;
 
     if (!userId) {
-        return errorResponse(401, 'Unauthorized');
+        return errorResponse(401, '로그인이 필요합니다.');
     }
 
     let parsedBody: z.infer<typeof createSubscriptionRequestSchema>;
@@ -81,9 +81,9 @@ export async function POST(request: NextRequest) {
         parsedBody = createSubscriptionRequestSchema.parse(await request.json());
     } catch (error) {
         if (error instanceof z.ZodError) {
-            return errorResponse(400, 'Invalid request schema', error.message);
+            return errorResponse(400, '유효하지 않은 입력입니다.', error.message);
         }
-        return errorResponse(400, 'Bad Request');
+        return errorResponse(400, '잘못된 요청입니다.');
     }
 
     const user = await prisma.user.findUnique({
@@ -92,12 +92,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
-        return errorResponse(404, 'User not found');
+        return errorResponse(404, '사용자를 찾을 수 없습니다.');
     }
 
     const priceId = getSubscriptionPriceIdForPlanType(parsedBody.planType);
     if (!priceId || priceId.endsWith('_TBD')) {
-        return errorResponse(500, 'Stripe price ID is not configured');
+        return errorResponse(500, '구독 가격 설정이 누락되었습니다.');
     }
 
     try {
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (!checkoutSession.url) {
-            return errorResponse(500, 'Failed to create checkout session');
+            return errorResponse(500, '구독 결제 세션 생성에 실패했습니다.');
         }
 
         return NextResponse.json({
@@ -137,6 +137,6 @@ export async function POST(request: NextRequest) {
         const details = error instanceof Error ? error.message : 'Unknown error';
         const configHint = getStripeConfigHint(parsedBody.planType);
         const mergedDetails = configHint ? `${details} ${configHint}` : details;
-        return errorResponse(500, 'Server Error', mergedDetails);
+        return errorResponse(500, '서버 오류가 발생했습니다.', mergedDetails);
     }
 }
