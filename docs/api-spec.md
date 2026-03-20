@@ -66,6 +66,8 @@ interface DailyTarotResponse {
 
 ## 🔄 구독 (Subscription) — **Frontend 연결 필요**
 
+> 변경 사유 (2026-03-19): 사용자 결정에 따라 구독 가격 통화는 KRW가 아니라 USD 기준을 유지함.
+
 | Method | Path | 설명 | Auth |
 |--------|------|------|------|
 | POST | `/api/subscription/create` | 구독 세션 생성 | Required |
@@ -79,8 +81,8 @@ interface DailyTarotResponse {
 // Request
 interface CreateSubscriptionRequest {
   planType: "MONTHLY" | "ANNUAL";
-  // MONTHLY: ₩9,900/월 (price_monthly_9900)
-  // ANNUAL: ₩79,000/년 (price_annual_79000)
+  // MONTHLY: $9.99/month (price_pro_monthly)
+  // ANNUAL: $49.99/year (price_pro_yearly)
 }
 
 // Response: 303 Redirect to Stripe Checkout
@@ -93,10 +95,10 @@ interface CreateSubscriptionResponse {
 
 | Tier | 가격 | Stripe Price ID | 혜택 |
 |------|------|-----------------|------|
-| Free | ₩0 | - | Phase 1-2 무료, 일일 타로 1회 |
-| One-time | ₩4,500 | `price_onetime_4500` | Phase 3-5 잠금 해제 |
-| Monthly | ₩9,900/월 | `price_monthly_9900` | 무제한 Chat + 월간 리포트 |
-| Annual | ₩79,000/년 | `price_annual_79000` | 월간 혜택 + 2개월 무료 |
+| Free | $0 | - | Phase 1-2 무료, 일일 타로 1회 |
+| One-time | $5.99 | `price_onetime_4500` | Phase 3-5 잠금 해제 |
+| Monthly | $9.99/month | `price_pro_monthly` | 무제한 Chat + 월간 리포트 |
+| Annual | $49.99/year | `price_pro_yearly` | 최대 할인 + 월간 혜택 유지 |
 
 ---
 
@@ -168,11 +170,45 @@ interface CreateSubscriptionResponse {
 | Day | 제목 | 트리거 |
 |-----|------|--------|
 | D+0 | 운명 리딩 결과 (현재 ✅) | 리딩 완료 |
-| D+2 | "리딩 어떠셨어요?" + 할인코드 | Cron |
+| D+2 | "리딩 어떠셨어요?" + 20% 단일 사용 코드 | Cron |
 | D+5 | 천체 이벤트 + Phase 4 CTA | Cron |
 | D+7 | "분석 보관 처리 예정" | Cron |
 | D+14 | 미니 주간 운세 + 구독 제안 | Cron |
 | D+30 | 구독 LTV 비교 | Cron |
+
+### `POST /api/email/drip/schedule`
+
+```typescript
+interface ScheduleDripRequest {
+  readingId: string;
+  email: string;
+  fromDate?: string; // ISO datetime, optional
+}
+
+interface ScheduleDripResponse {
+  ok: true;
+  readingId: string;
+  email: string;
+  scheduledStages: Array<"D2_DISCOUNT" | "D5_COSMIC_WINDOW" | "D7">;
+}
+```
+
+### `POST /api/email/drip/send`
+
+```typescript
+interface SendDripRequest {
+  limit?: number;
+  dryRun?: boolean;
+}
+
+interface SendDripResponse {
+  ok: boolean;
+  scanned: number;
+  sent: number;
+  failed: number;
+  skipped: number;
+}
+```
 
 ---
 

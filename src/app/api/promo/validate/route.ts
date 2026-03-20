@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
         const { code, email } = validateSchema.parse(body);
+        const normalizedEmail = email?.trim().toLowerCase();
 
         const promoCode = await prisma.promotionCode.findUnique({
             where: { code },
@@ -46,12 +47,12 @@ export async function POST(request: NextRequest) {
         }
 
         // Check if this email already used this promo code
-        if (email) {
+        if (normalizedEmail) {
             const existingRedemption = await prisma.promoRedemption.findUnique({
                 where: {
                     promoCodeId_email: {
                         promoCodeId: promoCode.id,
-                        email: email
+                        email: normalizedEmail
                     }
                 }
             });

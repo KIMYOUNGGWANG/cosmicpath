@@ -12,8 +12,13 @@ interface PaymentModalProps {
     onClose: () => void;
     onPaymentStart?: () => void;
     readingData?: Record<string, unknown>;
-    currentReport?: any; // To persist Phase 1-2 results
-    metadata?: any;
+    currentReport?: unknown; // To persist Phase 1-2 results
+    metadata?: {
+        language?: 'ko' | 'en';
+        inviteCode?: string;
+        readingId?: string;
+        [key: string]: unknown;
+    };
     isDecisionAccepted?: boolean;
     price?: string;
     trackingSource?: string;
@@ -41,11 +46,24 @@ export function PaymentModal({
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [promoCodeId, setPromoCodeId] = useState<string | null>(null);
+    const [discount, setDiscount] = useState<number>(0);
+    const [appliedReferralCode, setAppliedReferralCode] = useState<string | null>(null);
     const isEnglish = metadata?.language === 'en' || readingData?.language === 'en';
 
     // Dynamic price from prop or fetched from API
     const [fetchedPrice, setFetchedPrice] = useState<string>('');
     const dynamicPrice = price || fetchedPrice || '...';
+    const numericDynamicPrice = Number.parseFloat(dynamicPrice.replace(/[^0-9.]/g, ''));
+    const discountedPriceLabel =
+        discount > 0 && discount < 100 && Number.isFinite(numericDynamicPrice)
+            ? new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+            }).format(numericDynamicPrice * ((100 - discount) / 100))
+            : null;
+    const effectivePriceLabel =
+        discount === 100 ? 'FREE' : discountedPriceLabel || dynamicPrice;
 
     // Fetch price from Stripe when modal opens (if not provided via prop)
     useEffect(() => {
@@ -60,11 +78,6 @@ export function PaymentModal({
                 .catch(err => console.error('Failed to fetch price:', err));
         }
     }, [isOpen, price]);
-
-    // Promo Code State
-    const [promoCodeId, setPromoCodeId] = useState<string | null>(null);
-    const [discount, setDiscount] = useState<number>(0);
-    const [appliedReferralCode, setAppliedReferralCode] = useState<string | null>(null);
 
     const resolvedAutoReferralCode = (() => {
         if (autoReferralCode?.trim()) return autoReferralCode.trim().toUpperCase();
@@ -89,11 +102,11 @@ export function PaymentModal({
                 context: readingData?.context as string | undefined,
                 invitationMode: Boolean(metadata?.inviteCode),
                 referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
-                price: dynamicPrice !== '...' ? dynamicPrice : undefined,
+                price: effectivePriceLabel !== '...' ? effectivePriceLabel : undefined,
                 readingId: sessionStorage.getItem('pending_reading_id') || undefined,
                 plan: READING_PRODUCT.id,
             }),
-        [dynamicPrice, metadata, readingData, trackingSource]
+        [appliedReferralCode, effectivePriceLabel, metadata, readingData, resolvedAutoReferralCode, trackingSource]
     );
 
     useEffect(() => {
@@ -107,13 +120,13 @@ export function PaymentModal({
             context: readingData?.context as string | undefined,
             invitationMode: Boolean(metadata?.inviteCode),
             referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
-            price: dynamicPrice !== '...' ? dynamicPrice : undefined,
+            price: effectivePriceLabel !== '...' ? effectivePriceLabel : undefined,
             readingId:
                 sessionStorage.getItem('pending_reading_id') ||
                 (typeof metadata?.readingId === 'string' ? metadata.readingId : undefined),
             plan: READING_PRODUCT.id,
         });
-    }, [dynamicPrice, isOpen, metadata, readingData, trackingSource]);
+    }, [appliedReferralCode, effectivePriceLabel, isOpen, metadata, readingData, resolvedAutoReferralCode, trackingSource]);
 
     // Handle browser back button - close modal instead of navigating away
     useEffect(() => {
@@ -194,7 +207,7 @@ export function PaymentModal({
                 context: readingData?.context as string | undefined,
                 invitationMode: Boolean(metadata?.inviteCode),
                 referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
-                price: dynamicPrice !== '...' ? dynamicPrice : undefined,
+                price: effectivePriceLabel !== '...' ? effectivePriceLabel : undefined,
                 readingId: readingId || undefined,
                 plan: isFreePromo ? 'promo_free_unlock' : READING_PRODUCT.id,
                 metadata: {
@@ -299,7 +312,8 @@ export function PaymentModal({
             } else {
                 throw new Error(data.error || 'Failed to create payment session');
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : '잠시 후 다시 시도해 주세요.';
             console.error('Payment error:', error);
             await trackClientGrowthEvent({
                 event: 'checkout_failure',
@@ -309,14 +323,14 @@ export function PaymentModal({
                 context: readingData?.context as string | undefined,
                 invitationMode: Boolean(metadata?.inviteCode),
                 referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
-                price: dynamicPrice !== '...' ? dynamicPrice : undefined,
+                price: effectivePriceLabel !== '...' ? effectivePriceLabel : undefined,
                 readingId: sessionStorage.getItem('pending_reading_id') || undefined,
                 plan: isFreePromo ? 'promo_free_unlock' : READING_PRODUCT.id,
                 metadata: {
-                    message: error?.message || 'unknown_payment_error',
+                    message,
                 },
             });
-            alert(`결제 오류: ${error.message || '잠시 후 다시 시도해 주세요.'}`);
+            alert(`결제 오류: ${message}`);
         } finally {
             setIsLoading(false);
         }
@@ -379,8 +393,20 @@ export function PaymentModal({
                                     )}
                                 </p>
                                 <div className="mt-6 inline-block rounded-full border border-[#A184FF]/20 bg-[#A184FF]/10 px-4 py-2 shadow-[0_0_24px_rgba(161,132,255,0.14)]">
-                                    <span className="text-[#A184FF] font-bold text-xl">{dynamicPrice}</span>
+                                    {discountedPriceLabel ? (
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-sm text-white/35 line-through">{dynamicPrice}</span>
+                                            <span className="text-[#A184FF] font-bold text-xl">{discountedPriceLabel}</span>
+                                        </div>
+                                    ) : (
+                                        <span className="text-[#A184FF] font-bold text-xl">{effectivePriceLabel}</span>
+                                    )}
                                 </div>
+                                {discountedPriceLabel ? (
+                                    <p className="mt-3 text-xs font-medium text-emerald-300">
+                                        {discount}% 할인 코드가 적용되었습니다.
+                                    </p>
+                                ) : null}
                             </motion.div>
 
                             <motion.div

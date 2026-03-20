@@ -282,6 +282,9 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
     const hasAvailableQuestions = isUnlimited || (credits !== null && credits > 0);
     const remainingLabel = isUnlimited ? '∞' : (credits !== null ? `${credits}` : '...');
     const remainingClassName = hasAvailableQuestions ? 'text-[#D4AF37]' : 'text-red-400';
+    const oracleStatusMessage = isUnlimited
+        ? '구독이 활성화되어 있어 Oracle Chat을 무제한으로 사용할 수 있습니다.'
+        : '무료 질문이 끝나면 질문권 충전 또는 구독 업그레이드로 계속 이어갈 수 있습니다.';
 
     return (
         <div className="w-full max-w-2xl mx-auto mt-12 bg-[#0A0C1B]/80 backdrop-blur-xl rounded-3xl border border-white/10 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] relative">
@@ -300,11 +303,23 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
                     </div>
                 </div>
                 <div className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 flex items-center gap-2">
-                    <span className="text-[11px] text-gray-400 font-medium italic">Remaining:</span>
+                    <span className="text-[11px] text-gray-400 font-medium italic">
+                        {isUnlimited ? 'Access:' : 'Remaining:'}
+                    </span>
                     <span className={`text-sm font-bold ${remainingClassName}`}>
-                        {remainingLabel}
+                        {isUnlimited ? 'Unlimited' : remainingLabel}
                     </span>
                 </div>
+            </div>
+
+            <div
+                className={`border-b px-5 py-3 text-sm ${
+                    isUnlimited
+                        ? 'border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#FFE8A3]'
+                        : 'border-white/10 bg-white/[0.03] text-white/65'
+                }`}
+            >
+                {oracleStatusMessage}
             </div>
 
             {/* Messages Area */}
@@ -394,13 +409,21 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
                         채팅 접근 상태를 확인하는 중입니다...
                     </div>
                 ) : (
-                    <button
-                        onClick={() => setIsPurchaseModalOpen(true)}
-                        className="w-full py-5 bg-gradient-to-r from-[#D4AF37] via-[#F2D479] to-[#D4AF37] hover:opacity-95 rounded-2xl flex items-center justify-center gap-3 text-black font-bold text-lg transition-all shadow-[0_8px_30px_rgb(212,175,55,0.25)] hover:shadow-[0_8px_40px_rgb(212,175,55,0.4)] active:scale-[0.98]"
-                    >
-                        <Sparkles className="w-6 h-6" />
-                        <span>오라클 질문권 충전하기</span>
-                    </button>
+                    <div className="space-y-3">
+                        <button
+                            onClick={() => setIsPurchaseModalOpen(true)}
+                            className="w-full py-5 bg-gradient-to-r from-[#D4AF37] via-[#F2D479] to-[#D4AF37] hover:opacity-95 rounded-2xl flex items-center justify-center gap-3 text-black font-bold text-lg transition-all shadow-[0_8px_30px_rgb(212,175,55,0.25)] hover:shadow-[0_8px_40px_rgb(212,175,55,0.4)] active:scale-[0.98]"
+                        >
+                            <Sparkles className="w-6 h-6" />
+                            <span>오라클 질문권 충전하기</span>
+                        </button>
+                        <button
+                            onClick={() => setIsSubscriptionModalOpen(true)}
+                            className="w-full rounded-2xl border border-[#D4AF37]/30 bg-white/[0.03] py-4 text-sm font-semibold text-[#F4D88A] transition-colors hover:bg-[#D4AF37]/10"
+                        >
+                            구독으로 무제한 Oracle Chat 열기
+                        </button>
+                    </div>
                 )}
             </div>
 

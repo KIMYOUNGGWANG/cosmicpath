@@ -12,6 +12,7 @@ import { sendResultEmail } from '@/lib/email/sender';
 import { sendOpsAlert } from '@/lib/ops-alert';
 import { scheduleDefaultFollowUps } from '@/lib/followup-jobs';
 import { applyChatCreditFromSession } from '@/lib/payment/chat-credit';
+import { redeemPromotionCode } from '@/lib/promo-codes';
 
 function getErrorMessage(error: unknown): string {
     if (error instanceof Error) return error.message;
@@ -229,6 +230,41 @@ async function mergePaymentMetadata(orderId: string, patch: Record<string, unkno
     });
 }
 
+async function redeemCheckoutPromo(session: Stripe.Checkout.Session): Promise<{
+    skipped: boolean;
+    alreadyRedeemed?: boolean;
+    redemptionId?: string;
+}> {
+    const promoCodeId = session.metadata?.promoCodeId?.trim();
+    const discount = Number(session.metadata?.discount || '0');
+
+    if (!promoCodeId || !(discount > 0 && discount < 100)) {
+        return { skipped: true };
+    }
+
+    const customerEmail =
+        session.metadata?.email?.trim() ||
+        session.customer_details?.email?.trim() ||
+        session.customer_email?.trim();
+
+    if (!customerEmail) {
+        throw new Error('Promo checkout completed without customer email');
+    }
+
+    const result = await redeemPromotionCode({
+        codeId: promoCodeId,
+        email: customerEmail,
+        readingId: session.metadata?.readingId || undefined,
+        userAgent: 'stripe_webhook',
+    });
+
+    return {
+        skipped: false,
+        alreadyRedeemed: result.alreadyRedeemed,
+        redemptionId: result.redemptionId,
+    };
+}
+
 export async function POST(req: NextRequest) {
     const requestId = req.headers.get('x-request-id') ?? `stripe-webhook-${Date.now()}`;
     const body = await req.text();
@@ -335,6 +371,33 @@ export async function POST(req: NextRequest) {
                     details: { requestId, eventId: event.id, sessionId: session.id },
                 });
                 // 결제 기록 실패가 전체 로직을 막지 않도록 continue
+            }
+
+            try {
+                const promoResult = await redeemCheckoutPromo(session);
+                if (!promoResult.skipped) {
+                    await mergePaymentMetadata(session.id, {
+                        promoRedemptionId: promoResult.redemptionId || null,
+                        promoRedeemedAt: new Date().toISOString(),
+                        promoAlreadyRedeemed: promoResult.alreadyRedeemed === true,
+                    });
+                }
+            } catch (promoError) {
+                devLog.error('[Webhook] Promo redemption failed:', promoError);
+                await mergePaymentMetadata(session.id, {
+                    promoRedemptionError: getErrorMessage(promoError).slice(0, 300),
+                }).catch(() => undefined);
+                await alertWebhookIssue({
+                    severity: 'warning',
+                    title: 'Promo redemption failed',
+                    message: 'Checkout completed but promo code redemption could not be finalized.',
+                    details: {
+                        requestId,
+                        eventId: event.id,
+                        sessionId: session.id,
+                        promoCodeId: session.metadata?.promoCodeId || null,
+                    },
+                });
             }
 
             // 1. 채팅 크레딧 결제 처리

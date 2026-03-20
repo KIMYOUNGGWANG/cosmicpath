@@ -4,14 +4,13 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getStripe } from '@/lib/payment/stripe';
 import {
-    SUBSCRIPTION_PLAN_IDS,
-    getSubscriptionPriceId,
+    SUBSCRIPTION_CHECKOUT_PLAN_MAP,
+    SUBSCRIPTION_PLAN_TYPES,
+    getSubscriptionPriceIdForPlanType,
 } from '@/lib/payment/payment-config';
 
 const createSubscriptionRequestSchema = z.object({
-    planId: z.enum(SUBSCRIPTION_PLAN_IDS),
-    successUrl: z.string().url(),
-    cancelUrl: z.string().url(),
+    planType: z.enum(SUBSCRIPTION_PLAN_TYPES),
 });
 
 function errorResponse(
@@ -29,6 +28,39 @@ function errorResponse(
         },
         { status: code }
     );
+}
+
+function resolveAppOrigin(request: NextRequest): string {
+    const forwardedHost = request.headers.get('x-forwarded-host');
+    const forwardedProto = request.headers.get('x-forwarded-proto');
+
+    if (forwardedHost && forwardedProto) {
+        return `${forwardedProto}://${forwardedHost}`;
+    }
+
+    return request.headers.get('origin') || request.nextUrl.origin;
+}
+
+function getTestPriceEnvKey(planType: z.infer<typeof createSubscriptionRequestSchema>['planType']): string {
+    return planType === 'MONTHLY'
+        ? 'NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY_TEST'
+        : 'NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY_TEST';
+}
+
+function getStripeConfigHint(planType: z.infer<typeof createSubscriptionRequestSchema>['planType']): string | null {
+    const secretKey = process.env.STRIPE_SECRET_KEY?.trim() ?? '';
+    const isTestSecret = secretKey.startsWith('sk_test_');
+
+    if (!isTestSecret) {
+        return null;
+    }
+
+    const envKey = getTestPriceEnvKey(planType);
+    if (process.env[envKey]?.trim()) {
+        return null;
+    }
+
+    return `Using a Stripe test secret without ${envKey}. Add the matching test-mode recurring price ID to .env.local.`;
 }
 
 export async function POST(request: NextRequest) {
@@ -58,28 +90,32 @@ export async function POST(request: NextRequest) {
         return errorResponse(404, 'User not found');
     }
 
-    const priceId = getSubscriptionPriceId(parsedBody.planId);
+    const priceId = getSubscriptionPriceIdForPlanType(parsedBody.planType);
     if (!priceId || priceId.endsWith('_TBD')) {
         return errorResponse(500, 'Stripe price ID is not configured');
     }
 
     try {
         const stripe = getStripe();
+        const origin = resolveAppOrigin(request);
+        const planId = SUBSCRIPTION_CHECKOUT_PLAN_MAP[parsedBody.planType];
         const checkoutSession = await stripe.checkout.sessions.create({
             mode: 'subscription',
             line_items: [{ price: priceId, quantity: 1 }],
-            success_url: parsedBody.successUrl,
-            cancel_url: parsedBody.cancelUrl,
+            success_url: new URL('/billing/success', origin).toString(),
+            cancel_url: new URL('/billing/cancel', origin).toString(),
             client_reference_id: user.id,
             customer_email: user.email ?? undefined,
             metadata: {
                 userId: user.id,
-                planId: parsedBody.planId,
+                planId,
+                planType: parsedBody.planType,
             },
             subscription_data: {
                 metadata: {
                     userId: user.id,
-                    planId: parsedBody.planId,
+                    planId,
+                    planType: parsedBody.planType,
                 },
             },
             allow_promotion_codes: true,
@@ -91,10 +127,11 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
             checkoutUrl: checkoutSession.url,
-            sessionId: checkoutSession.id,
         });
     } catch (error) {
         const details = error instanceof Error ? error.message : 'Unknown error';
-        return errorResponse(500, 'Server Error', details);
+        const configHint = getStripeConfigHint(parsedBody.planType);
+        const mergedDetails = configHint ? `${details} ${configHint}` : details;
+        return errorResponse(500, 'Server Error', mergedDetails);
     }
 }

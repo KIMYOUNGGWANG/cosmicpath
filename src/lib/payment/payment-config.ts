@@ -61,6 +61,8 @@ export const MATCH_PRODUCT = {
 
 export const SUBSCRIPTION_PLAN_IDS = ['pro_monthly', 'pro_yearly', 'couple_monthly'] as const;
 export type SubscriptionPlanId = (typeof SUBSCRIPTION_PLAN_IDS)[number];
+export const SUBSCRIPTION_PLAN_TYPES = ['MONTHLY', 'ANNUAL'] as const;
+export type SubscriptionPlanType = (typeof SUBSCRIPTION_PLAN_TYPES)[number];
 
 export const SUBSCRIPTION_PRICE_IDS = {
     pro_monthly: process.env.NODE_ENV === 'development'
@@ -74,8 +76,22 @@ export const SUBSCRIPTION_PRICE_IDS = {
         : (process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY || 'price_1T7Keo0RiEHwZwUJVtCaF6Nn'),
 } as const satisfies Record<SubscriptionPlanId, string>;
 
+export const SUBSCRIPTION_CHECKOUT_PLAN_MAP = {
+    MONTHLY: 'pro_monthly',
+    ANNUAL: 'pro_yearly',
+} as const satisfies Record<SubscriptionPlanType, SubscriptionPlanId>;
+
+export const SUBSCRIPTION_CHECKOUT_PRICE_IDS = {
+    MONTHLY: SUBSCRIPTION_PRICE_IDS.pro_monthly,
+    ANNUAL: SUBSCRIPTION_PRICE_IDS.pro_yearly,
+} as const satisfies Record<SubscriptionPlanType, string>;
+
 export function getSubscriptionPriceId(planId: SubscriptionPlanId): string {
     return SUBSCRIPTION_PRICE_IDS[planId];
+}
+
+export function getSubscriptionPriceIdForPlanType(planType: SubscriptionPlanType): string {
+    return SUBSCRIPTION_CHECKOUT_PRICE_IDS[planType];
 }
 
 export function formatUsdFromCents(cents: number): string {

@@ -3,10 +3,9 @@
 import Link from 'next/link';
 import { ChevronLeft, Menu, Search, Sparkles, User } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { usePathname } from 'next/navigation';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { OrderLookupModal } from '@/components/orders/OrderLookupModal';
-import { MobileMenu, MenuItem } from '@/components/common/MobileMenu';
+import { MobileMenu } from '@/components/common/MobileMenu';
 import UserMenu from '@/components/layout/UserMenu';
 import { LoginModal, useLoginModal } from '@/components/auth/LoginModal';
 import { useSession } from 'next-auth/react';
@@ -17,17 +16,11 @@ interface GlobalHeaderProps {
 }
 
 export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalHeaderProps) {
-    const pathname = usePathname();
     const isEn = language === 'en';
     const { status } = useSession();
     const { openLoginModal } = useLoginModal();
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-    // Close mobile menu when route changes
-    useEffect(() => {
-        setIsMobileMenuOpen(false);
-    }, [pathname]);
 
     // Lock body scroll when menu is open
     useEffect(() => {
@@ -51,7 +44,7 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
             <motion.header
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="fixed top-0 left-0 right-0 z-[9000] px-4 md:px-6 py-4 pt-[calc(1rem+env(safe-area-inset-top,0px))]"
+                className="fixed top-0 left-0 right-0 z-[9000] px-3 sm:px-4 md:px-5 xl:px-6 py-4 pt-[calc(1rem+env(safe-area-inset-top,0px))]"
             >
                 {/* Background Layers */}
                 <div className="absolute inset-0 bg-[#050505]/95 backdrop-blur-md border-b border-white/5" />
@@ -59,7 +52,7 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
                     style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
                 />
 
-                <div className="relative max-w-7xl mx-auto flex items-center justify-between h-10">
+                <div className="relative mx-auto flex h-10 max-w-7xl items-center justify-between">
                     {/* Left: Logo & Back Button */}
                     <div className="flex items-center gap-2 md:gap-4 z-20">
                         {showBackButton && (
@@ -70,36 +63,39 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
                                 <ChevronLeft size={20} />
                             </Link>
                         )}
-                        <Link href="/" className="font-cinzel text-lg md:text-xl font-bold tracking-widest text-starlight hover:opacity-80 transition-opacity pt-1 truncate">
-                            COSMIC PATH
+                        <Link
+                            href="/"
+                            className="shrink-0 pt-1 font-cinzel text-base font-bold tracking-[0.24em] text-starlight transition-opacity hover:opacity-80 sm:text-lg xl:text-xl"
+                        >
+                            <span className="hidden sm:inline">COSMIC PATH</span>
+                            <span className="sm:hidden">COSMIC</span>
                         </Link>
                     </div>
 
-                    {/* Desktop Navigation (Hidden on Mobile) */}
-                    <div className="hidden md:flex items-center gap-4">
+                    {/* Desktop Navigation */}
+                    <div className="hidden xl:flex items-center gap-3 2xl:gap-4">
                         <UserMenu />
 
                         <button
                             onClick={toggleOrderModal}
-                            className="text-xs text-gray-400 hover:text-white transition-colors tracking-wider uppercase hover:underline underline-offset-4"
+                            className="shrink-0 whitespace-nowrap text-[11px] uppercase tracking-[0.22em] text-gray-400 transition-colors hover:text-white hover:underline underline-offset-4 2xl:text-xs"
                         >
                             {isEn ? 'Find My Orders' : '비회원 주문 조회'}
                         </button>
 
                         <Link
                             href="/start?reset=true"
-                            className="inline-flex items-center justify-center pt-[10px] pb-[6px] px-5 bg-white/10 border border-white/20 text-xs font-bold tracking-[0.1em] text-starlight hover:bg-acc-gold hover:text-deep-navy hover:border-acc-gold transition-all duration-300 uppercase backdrop-blur-sm rounded-full leading-none"
+                            className="inline-flex shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 px-4 pb-[6px] pt-[10px] font-bold uppercase leading-none tracking-[0.16em] text-starlight transition-all duration-300 hover:border-acc-gold hover:bg-acc-gold hover:text-deep-navy 2xl:px-5 text-[11px] 2xl:text-xs backdrop-blur-sm"
                         >
                             {isEn ? 'New Journey' : '다시 시작하기'}
                         </Link>
                     </div>
 
-                    {/* Mobile Navigation (Visible on Mobile) */}
-                    <div className="flex md:hidden items-center gap-2 z-20">
-                        {/* Primary CTA on Mobile Header - Premium Design */}
+                    {/* Compact Navigation */}
+                    <div className="z-20 flex items-center gap-2 xl:hidden">
                         <Link
                             href="/start?reset=true"
-                            className="inline-flex items-center justify-center px-4 py-1.5 font-cinzel font-bold text-[10px] text-white border border-white/20 rounded-full transition-all duration-300 hover:border-acc-gold hover:text-acc-gold bg-white/5 backdrop-blur-sm mr-1 tracking-widest uppercase gap-1"
+                            className="mr-1 inline-flex items-center justify-center rounded-full border border-white/20 bg-white/5 px-3 py-1.5 font-cinzel text-[10px] font-bold uppercase tracking-[0.22em] text-white transition-all duration-300 hover:border-acc-gold hover:text-acc-gold sm:px-4 sm:tracking-[0.26em] backdrop-blur-sm"
                         >
                             <Sparkles size={12} className="text-gold" />
                             {isEn ? 'Start' : '시작'}
@@ -108,7 +104,8 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
                         {/* Hamburger Button */}
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="p-2 text-white hover:bg-white/10 rounded-full transition-colors"
+                            className="rounded-full p-2 text-white transition-colors hover:bg-white/10"
+                            aria-label={isEn ? 'Open menu' : '메뉴 열기'}
                         >
                             <Menu size={24} />
                         </button>

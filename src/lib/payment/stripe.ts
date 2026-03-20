@@ -15,8 +15,6 @@ function getStripe(): Stripe {
     return stripeInstance;
 }
 
-const stripe = getStripe();
-
 // Simple in-memory cache for pricing
 interface CachedPrice {
     productId: string;
@@ -34,6 +32,8 @@ const CACHE_TTL = 3600 * 1000; // 1 hour
  * 특정 통화(currency)를 우선적으로 찾습니다.
  */
 export async function getProductPrice(productId: string, targetCurrency: string = 'USD') {
+    const stripe = getStripe();
+
     // 0. Cache Check
     const cacheKey = `${productId}-${targetCurrency}`;
     const cached = priceCache.get(cacheKey);
@@ -111,6 +111,7 @@ interface CheckoutSessionOptions {
     successUrl: string;
     cancelUrl: string;
     metadata?: Record<string, string>;
+    discountPercent?: number;
 }
 
 function withReadingId(successUrl: string, readingId?: string): string {
@@ -139,7 +140,10 @@ export async function createCheckoutSession({
     successUrl,
     cancelUrl,
     metadata,
+    discountPercent,
 }: CheckoutSessionOptions) {
+    const stripe = getStripe();
+
     try {
         // Find the product and its default price
         const stripeProduct = await stripe.products.retrieve(productId, {
@@ -153,26 +157,71 @@ export async function createCheckoutSession({
             throw new Error('Default price not found for product');
         }
 
+        const shouldApplyDiscount =
+            typeof discountPercent === 'number' &&
+            Number.isFinite(discountPercent) &&
+            discountPercent > 0 &&
+            discountPercent < 100;
+
+        if (shouldApplyDiscount && price.type !== 'one_time') {
+            throw new Error('Discounted checkout is only supported for one-time products');
+        }
+
+        if (shouldApplyDiscount && typeof price.unit_amount !== 'number') {
+            throw new Error('Discounted checkout requires a fixed unit amount');
+        }
+
+        const discountedUnitAmount = shouldApplyDiscount && typeof price.unit_amount === 'number'
+            ? Math.max(50, Math.round(price.unit_amount * ((100 - discountPercent) / 100)))
+            : null;
+
+        const sessionMetadata: Record<string, string> = {
+            ...(metadata ?? {}),
+            ...(shouldApplyDiscount && discountedUnitAmount !== null
+                ? {
+                    originalAmount: String(price.unit_amount),
+                    discountedAmount: String(discountedUnitAmount),
+                }
+                : {}),
+        };
+
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: [
-                {
-                    price: priceId,
-                    quantity: 1,
-                },
+                shouldApplyDiscount && discountedUnitAmount !== null
+                    ? {
+                        price_data: {
+                            currency: price.currency,
+                            product: stripeProduct.id,
+                            unit_amount: discountedUnitAmount,
+                            tax_behavior:
+                                price.tax_behavior && price.tax_behavior !== 'unspecified'
+                                    ? price.tax_behavior
+                                    : undefined,
+                        },
+                        quantity: 1,
+                    }
+                    : {
+                        price: priceId,
+                        quantity: 1,
+                    },
             ],
             mode: 'payment',
-            success_url: withReadingId(successUrl, metadata?.readingId),
+            success_url: withReadingId(successUrl, sessionMetadata?.readingId),
             cancel_url: cancelUrl,
-            customer_email: metadata?.email || undefined,
-            metadata,
+            customer_email: sessionMetadata?.email || undefined,
+            metadata: sessionMetadata,
         });
 
         await safeIncrementUsageCounter({
             provider: 'stripe',
             metric: 'api_requests',
             count: 1,
-            metadata: { action: 'create_checkout_session', productId },
+            metadata: {
+                action: 'create_checkout_session',
+                productId,
+                ...(shouldApplyDiscount ? { discountPercent: String(discountPercent) } : {}),
+            },
         });
 
         return { url: session.url };

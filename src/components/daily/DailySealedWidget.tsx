@@ -166,6 +166,7 @@ export function DailySealedWidget() {
 
     const strongestArea = getStrongestArea(forecast.areas);
     const weakestArea = getWeakestArea(forecast.areas);
+    const isPremiumTheme = forecast.isPremium === true;
 
     return (
         <div className="w-full max-w-md mx-auto min-h-[440px] flex items-center justify-center relative perspective-1000">
@@ -174,14 +175,24 @@ export function DailySealedWidget() {
             {!isRevealed ? (
                 <div
                     onClick={() => setIsRevealed(true)}
-                    className="cursor-pointer group relative w-72 h-52 bg-[#1a1a2e] border border-white/10 rounded-lg shadow-2xl flex flex-col items-center justify-center transform transition-all hover:scale-105 hover:rotate-1"
+                    className={`cursor-pointer group relative w-72 h-52 rounded-lg shadow-2xl flex flex-col items-center justify-center transform transition-all hover:scale-105 hover:rotate-1 ${
+                        isPremiumTheme
+                            ? 'bg-[#1a1326] border border-acc-gold/30'
+                            : 'bg-[#1a1a2e] border border-white/10'
+                    }`}
                     style={{
-                        backgroundImage: 'radial-gradient(circle at center, #2d2d44 0%, #1a1a2e 100%)',
+                        backgroundImage: isPremiumTheme
+                            ? 'radial-gradient(circle at center, rgba(120,88,42,0.95) 0%, #1a1326 100%)'
+                            : 'radial-gradient(circle at center, #2d2d44 0%, #1a1a2e 100%)',
                         boxShadow: '0 20px 50px -12px rgba(0, 0, 0, 0.5)'
                     }}
                 >
                     {/* Wax Seal */}
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-800 to-red-900 border-4 border-red-950/50 flex items-center justify-center shadow-lg mb-4 relative z-10 group-hover:scale-110 transition-transform duration-300">
+                    <div className={`w-20 h-20 rounded-full border-4 flex items-center justify-center shadow-lg mb-4 relative z-10 group-hover:scale-110 transition-transform duration-300 ${
+                        isPremiumTheme
+                            ? 'bg-gradient-to-br from-acc-gold to-amber-700 border-amber-950/40'
+                            : 'bg-gradient-to-br from-red-800 to-red-900 border-red-950/50'
+                    }`}>
                         <span className="text-3xl filter drop-shadow-md">⚡️</span>
                         <div className="absolute inset-0 rounded-full border border-white/10" />
                     </div>
@@ -189,15 +200,28 @@ export function DailySealedWidget() {
                         DAILY SEAL<br />
                         <span className="text-[10px] text-starlight/40 font-sans tracking-normal opacity-0 group-hover:opacity-100 transition-opacity mt-1 block">터치하여 봉인 해제</span>
                     </p>
+                    {isPremiumTheme && (
+                        <span className="mt-3 rounded-full border border-acc-gold/25 bg-acc-gold/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-acc-gold">
+                            Premium Theme
+                        </span>
+                    )}
 
                     {/* Envelope Flap Effect (Pseudo) */}
                     <div className="absolute top-0 left-0 w-full h-full border border-white/5 rounded-lg pointer-events-none" />
                 </div>
             ) : (
                 /* Revealed Card State */
-                <div className="w-full bg-[#0a0a0c]/80 backdrop-blur-xl border border-white/10 p-8 rounded-2xl shadow-2xl animate-fade-in-up relative overflow-hidden">
+                <div className={`w-full backdrop-blur-xl border p-8 rounded-2xl shadow-2xl animate-fade-in-up relative overflow-hidden ${
+                    isPremiumTheme
+                        ? 'bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.18),transparent_35%),rgba(10,10,12,0.92)] border-acc-gold/20'
+                        : 'bg-[#0a0a0c]/80 border border-white/10'
+                }`}>
                     {/* Background Noise/Gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-acc-gold/5 to-transparent pointer-events-none" />
+                    <div className={`absolute inset-0 pointer-events-none ${
+                        isPremiumTheme
+                            ? 'bg-gradient-to-b from-acc-gold/10 to-transparent'
+                            : 'bg-gradient-to-b from-acc-gold/5 to-transparent'
+                    }`} />
 
                     <div className="text-center mb-8 relative z-10">
                         <p className="text-starlight/40 text-xs uppercase tracking-[0.2em] mb-2">{forecast.date}</p>
@@ -205,13 +229,18 @@ export function DailySealedWidget() {
                             오늘의 운세 {forecast.overallLuck}점
                         </h2>
 
-                        <div className="flex items-center justify-center gap-2 mb-6">
+                        <div className="flex items-center justify-center gap-2 mb-6 flex-wrap">
                             <span className="text-xs px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-starlight/70 font-medium">
                                 일간 {forecast.dayMaster}
                             </span>
                             <span className="text-xs px-2.5 py-1 rounded-full bg-acc-gold/10 border border-acc-gold/20 text-acc-gold font-bold">
                                 Lucky #{forecast.luckyNumber}
                             </span>
+                            {isPremiumTheme && (
+                                <span className="text-xs px-2.5 py-1 rounded-full bg-acc-gold/15 border border-acc-gold/30 text-acc-gold font-bold uppercase tracking-[0.18em]">
+                                    Pro Theme
+                                </span>
+                            )}
                         </div>
 
                         <div className="bg-white/[0.03] p-6 rounded-xl border border-white/5 mb-6 text-center">
@@ -268,7 +297,9 @@ export function DailySealedWidget() {
                             </div>
                         ) : (
                             <div className="pt-6 border-t border-white/10">
-                                <p className="text-starlight/50 text-xs mb-3">매일 업데이트되는 맞춤형 운세가 필요하신가요?</p>
+                                <p className="text-starlight/50 text-xs mb-3">
+                                    매일 업데이트되는 맞춤형 운세와 프리미엄 테마가 필요하신가요?
+                                </p>
                                 <button
                                     onClick={() => setIsSubscriptionModalOpen(true)}
                                     className="w-full py-4 bg-gradient-to-r from-acc-gold to-amber-600 text-white font-bold rounded-xl shadow-lg hover:shadow-acc-gold/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createCheckoutSession, verifyCheckoutSession } from '@/lib/payment/stripe';
 import { READING_PRODUCT } from '@/lib/payment/payment-config';
+import { validatePromotionCodeForCheckout } from '@/lib/promo-codes';
 
 /**
  * POST /api/payment - 결제 세션 생성 (Stripe)
@@ -9,6 +10,27 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
         const { productId, email, readingId, referralCode, promoCodeId, discount } = body;
+        const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
+        let appliedDiscount = 0;
+        let appliedPromoCodeId = '';
+
+        if (promoCodeId) {
+            const promoCode = await validatePromotionCodeForCheckout({
+                codeId: promoCodeId,
+                expectedDiscount: typeof discount === 'number' ? discount : undefined,
+                email: normalizedEmail || undefined,
+            });
+
+            if (promoCode.discount >= 100) {
+                return NextResponse.json(
+                    { error: '100% 할인 코드는 직접 사용 흐름으로만 처리됩니다.' },
+                    { status: 400 }
+                );
+            }
+
+            appliedDiscount = promoCode.discount;
+            appliedPromoCodeId = promoCode.id;
+        }
 
         const origin = request.headers.get('origin') || 'http://localhost:3000';
 
@@ -16,14 +38,15 @@ export async function POST(request: NextRequest) {
             productId: productId || READING_PRODUCT.productId,
             successUrl: `${origin}/payment/success?session_id={CHECKOUT_SESSION_ID}&reading_id=${readingId || ''}`,
             cancelUrl: `${origin}/start?canceled=true`,
+            discountPercent: appliedDiscount || undefined,
             metadata: {
                 type: 'premium_reading',
                 productId: productId || READING_PRODUCT.productId,
-                email: email || '',
+                email: normalizedEmail,
                 readingId: readingId || '',
                 referralCode: referralCode || '',
-                promoCodeId: promoCodeId || '',
-                discount: typeof discount === 'number' ? String(discount) : '',
+                promoCodeId: appliedPromoCodeId,
+                discount: appliedDiscount ? String(appliedDiscount) : '',
             },
         });
 
@@ -37,7 +60,7 @@ export async function POST(request: NextRequest) {
         console.error('Payment initialization failed:', error);
         return NextResponse.json(
             { error: message },
-            { status: 500 }
+            { status: message.includes('프로모션') || message.includes('코드') ? 400 : 500 }
         );
     }
 }

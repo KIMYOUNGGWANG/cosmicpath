@@ -70,88 +70,92 @@ export function Navigation() {
                 }}
                 animate={hidden ? "hidden" : "visible"}
                 transition={{ duration: 0.35, ease: "easeInOut" }}
-                className="fixed top-0 left-0 right-0 z-[9999] px-4 md:px-6 py-4 text-white"
+                className="fixed top-0 left-0 right-0 z-[9999] px-3 sm:px-4 md:px-5 xl:px-6 py-4 text-white"
             >
                 <div className="absolute inset-0 backdrop-blur-md bg-[#050505]/80 border-b border-white/5 noise-overlay" />
 
-                <div className="relative max-w-7xl mx-auto flex items-center justify-between">
+                <div className="relative mx-auto flex max-w-7xl items-center justify-between">
                     {/* Logo */}
-                    <Link href="/" className="font-cinzel text-lg md:text-xl font-bold tracking-widest text-starlight hover:opacity-80 transition-opacity truncate z-20">
-                        COSMIC PATH
+                    <Link
+                        href="/"
+                        className="z-20 shrink-0 font-cinzel text-base font-bold tracking-[0.24em] text-starlight transition-opacity hover:opacity-80 sm:text-lg xl:text-xl"
+                    >
+                        <span className="hidden sm:inline">COSMIC PATH</span>
+                        <span className="sm:hidden">COSMIC</span>
                     </Link>
 
                     {/* Desktop Actions */}
-                    <div className="hidden md:flex items-center gap-6">
+                    <div className="hidden xl:flex items-center gap-3 2xl:gap-5">
                         <Link
                             href="/match/new"
-                            className="text-xs font-medium text-starlight hover:text-acc-gold transition-colors font-cinzel tracking-widest"
+                            className="shrink-0 whitespace-nowrap text-[11px] font-medium text-starlight transition-colors hover:text-acc-gold 2xl:text-xs font-cinzel tracking-[0.22em]"
                         >
                             COMPATIBILITY
                         </Link>
                         <Link
                             href="/daily"
-                            className="text-xs font-medium text-starlight hover:text-acc-gold transition-colors font-cinzel tracking-widest uppercase"
+                            className="shrink-0 whitespace-nowrap text-[11px] font-medium text-starlight transition-colors hover:text-acc-gold 2xl:text-xs font-cinzel tracking-[0.22em] uppercase"
                         >
                             오늘의 운세
                         </Link>
                         <Link
                             href="/blog"
-                            className="text-xs font-medium text-starlight hover:text-acc-gold transition-colors font-cinzel tracking-widest uppercase"
+                            className="shrink-0 whitespace-nowrap text-[11px] font-medium text-starlight transition-colors hover:text-acc-gold 2xl:text-xs font-cinzel tracking-[0.22em] uppercase"
                         >
                             BLOG
                         </Link>
                         <Link
                             href="/k-destiny"
                             onClick={() => trackKDestinyNavClick('desktop')}
-                            className="text-xs font-medium text-[#7FDBFF] hover:text-[#FFD166] transition-colors font-cinzel tracking-widest uppercase"
+                            className="shrink-0 whitespace-nowrap text-[11px] font-medium text-[#7FDBFF] transition-colors hover:text-[#FFD166] 2xl:text-xs font-cinzel tracking-[0.22em] uppercase"
                         >
                             K-DESTINY
                         </Link>
                         <button
                             onClick={toggleOrderModal}
-                            className="text-xs font-medium text-starlight hover:text-acc-gold transition-colors font-cinzel tracking-widest uppercase"
+                            className="shrink-0 whitespace-nowrap text-[11px] font-medium text-starlight transition-colors hover:text-acc-gold 2xl:text-xs font-cinzel tracking-[0.22em] uppercase"
                         >
                             FIND ORDERS
                         </button>
 
-                        <div className="w-px h-4 bg-white/10 mx-2" /> {/* Divider */}
+                        <div className="mx-1 h-4 w-px bg-white/10 2xl:mx-2" /> {/* Divider */}
 
                         <UserMenu />
                         <button
                             onClick={() => setIsSubscriptionModalOpen(true)}
-                            className="inline-flex items-center justify-center px-5 py-2 font-cinzel font-bold text-xs text-black bg-gradient-to-r from-[#D4AF37] to-[#F2D479] rounded-full transition-all duration-300 hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] hover:scale-105 tracking-widest uppercase gap-2"
+                            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F2D479] px-4 py-2 font-cinzel text-[11px] font-bold uppercase tracking-[0.22em] text-black transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] 2xl:px-5 2xl:text-xs"
                         >
                             <Sparkles size={14} className="fill-current" />
-                            PRO ✨
+                            PRO
                         </button>
                         <Link
                             href="/start?reset=true"
-                            className="inline-flex items-center justify-center px-5 py-2 font-cinzel font-bold text-xs text-white border border-white/20 rounded-full transition-all duration-300 hover:border-acc-gold hover:text-deep-navy hover:bg-acc-gold tracking-widest uppercase gap-2"
+                            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-white/20 px-4 py-2 font-cinzel text-[11px] font-bold uppercase tracking-[0.22em] text-white transition-all duration-300 hover:border-acc-gold hover:bg-acc-gold hover:text-deep-navy 2xl:px-5 2xl:text-xs"
                         >
                             Start Analysis
                         </Link>
                     </div>
 
-                    {/* Mobile Navigation */}
-                    <div className="flex md:hidden items-center gap-2 z-20">
-                        {/* Primary CTA on Mobile Header - Premium Design */}
+                    {/* Compact Navigation */}
+                    <div className="z-20 flex items-center gap-2 xl:hidden">
                         <button
                             onClick={() => setIsSubscriptionModalOpen(true)}
-                            className="inline-flex items-center justify-center px-4 py-1.5 font-cinzel font-bold text-[10px] text-black bg-gradient-to-r from-[#D4AF37] to-[#F2D479] rounded-full transition-all duration-300 hover:shadow-[0_0_10px_rgba(212,175,55,0.4)] mr-1 tracking-widest uppercase gap-1"
+                            className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F2D479] px-3 py-1.5 font-cinzel text-[10px] font-bold uppercase tracking-[0.22em] text-black transition-all duration-300 hover:shadow-[0_0_10px_rgba(212,175,55,0.4)] sm:px-4 sm:tracking-[0.26em]"
                         >
                             <Sparkles size={12} className="fill-current" />
                             PRO
                         </button>
                         <Link
                             href="/start?reset=true"
-                            className="inline-flex items-center justify-center px-4 py-1.5 font-cinzel font-bold text-[10px] text-white border border-white/20 rounded-full transition-all duration-300 hover:border-acc-gold hover:text-acc-gold bg-white/5 backdrop-blur-sm tracking-widest uppercase gap-1"
+                            className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/5 px-3 py-1.5 font-cinzel text-[10px] font-bold uppercase tracking-[0.22em] text-white transition-all duration-300 hover:border-acc-gold hover:text-acc-gold sm:px-4 sm:tracking-[0.26em]"
                         >
                             Start
                         </Link>
 
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="p-2 text-white hover:bg-white/10 rounded-full transition-colors"
+                            className="rounded-full p-2 text-white transition-colors hover:bg-white/10"
+                            aria-label="메뉴 열기"
                         >
                             <Menu size={24} />
                         </button>
