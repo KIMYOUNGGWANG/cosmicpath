@@ -134,6 +134,18 @@ export default function UserMenu() {
                                     <span className="font-medium">Cosmic Match</span>
                                 </Link>
 
+                                {session?.user?.role === 'ADMIN' && (
+                                    <Link
+                                        href="/ops/growth"
+                                        className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all group"
+                                    >
+                                        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
+                                            <Sparkles className="w-4 h-4 text-emerald-400" />
+                                        </div>
+                                        <span className="font-medium">Growth Ops</span>
+                                    </Link>
+                                )}
+
                                 <Link
                                     href="#"
                                     className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/40 cursor-not-allowed rounded-xl transition-all group"

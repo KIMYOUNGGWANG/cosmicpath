@@ -2,87 +2,98 @@
 
 > 기준일: 2026-03-19 | 리서치: `RESEARCH/CosmicPath_Analysis_20260318`
 > 목표: **3개월 내 MAU 3,000 / 월 수익 500만원 / k-factor 1.5**
-> 실행 상태: `T-A2-03` 진행 완료 | Agent: `Codex [PRECISION]` | Recommended model: `GPT-5 Pro`
 
 ---
 
-## 🔴 Phase A — 즉시 실행 (0-4주): 리텐션 + 수익 기반
+## 🔥 Rebased Execution Queue (2026-03-20)
+*기준: `07_implementation_gap_audit_20260320.md` 감사 결과 반영*
 
-### Sprint A-1: 구독 모델 활성화 (수익 즉시 효과)
-- [x] **T-A1-01**: 구독 결제 UI 연결 — `SubscriptionModal` → `/api/subscription/create` 연동
-- [x] **T-A1-02**: 구독 가격 티어 UI — $9.99/월 + $49.99/년 (약 $0.14/day 프레이밍)
-- [x] **T-A1-03**: 구독 상태 확인 UI — `/my` 페이지에 구독 뱃지 + 관리 링크
-- [x] **T-A1-04**: 구독자 전용 혜택 게이팅 — 무제한 Oracle Chat, 프리미엄 테마
-
-### Sprint A-2: 이메일 드립 시퀀스 (전환율 증폭)
-- [x] **T-A2-01**: D+2 이메일 — "리딩 어떠셨어요?" + 20% 할인 코드
-- [x] **T-A2-02**: D+5 이메일 — 천체 이벤트 + Phase 4 연결 CTA
-- [x] **T-A2-03**: D+7 이메일 — "분석 보관 처리 예정" 손실회피 트리거
-- [ ] **T-A2-04**: D+14 이메일 — 미니 주간 운세 + 구독 제안
-- [ ] **T-A2-05**: D+30 이메일 — 구독 LTV 비교 + 연간 ROI
-
-### Sprint A-3: 재방문 훅 (일일 콘텐츠)
-- [ ] **T-A3-01**: 오늘의 타로 한 장 (Daily Tarot Draw) — 기존 타로 엔진 재활용
-- [ ] **T-A3-02**: `/daily` 페이지 리뉴얼 — 일일 운세 + 타로 통합
-- [ ] **T-A3-03**: PWA Web Push 알림 기본 인프라
-
-### Sprint A-4: 페이월 + 전환 최적화
-- [ ] **T-A4-01**: Completion Gate 방식으로 전환 — 첫 문장 + 핵심 키워드 노출
-- [ ] **T-A4-02**: CTA 문구 "나의 2026년 열기" + 취소선 가격 표시 (~~₩9,000~~ → ₩4,500)
-- [ ] **T-A4-03**: 실시간 사용자 수 / 같은 별자리 후기 표시 (사회적 증명)
-- [ ] **T-A4-04**: 가격 앵커링 UI (점집 30,000~100,000원 vs CosmicPath 4,500원)
-
----
-
-## 🟡 Phase B — 단기 (4-8주): 바이럴 루프 활성화
-
-### Sprint B-1: 궁합 공유 바이럴 (k-factor 핵심)
-- [ ] **T-B1-01**: 궁합 결과 → "친구와 궁합 확인하기" 공유 플로우
-- [ ] **T-B1-02**: 궁합 공유 → 상대방 생년월일 입력 → 무료 미리보기 → 결제
-- [ ] **T-B1-03**: 궁합 결과 소셜 카드 자동 생성
-
-### Sprint B-2: 소셜 카드 공유 시스템
-- [ ] **T-B2-01**: 결과 카드 1080×1920 세로형 이미지 생성 (`@vercel/og`)
-- [ ] **T-B2-02**: 인스타 스토리/피드 직접 공유 버튼
-- [ ] **T-B2-03**: 카카오톡 OG 이미지 개인화 (이름 + 키워드)
-- [ ] **T-B2-04**: 동적 OG 이미지 — `/api/og/reading/[id]` 강화
-
-### Sprint B-3: 레퍼럴 프로그램 강화
-- [ ] **T-B3-01**: "친구 결제 시 → 나도 1회 추가 무료" 로직
-- [ ] **T-B3-02**: 레퍼럴 대시보드 UI (`/my` 페이지 내)
-
-### Sprint B-4: 카카오 로그인 + 알림톡
-- [ ] **T-B4-01**: 카카오 소셜 로그인 (NextAuth Provider 추가)
-- [ ] **T-B4-02**: 카카오 알림톡 발송 (결과 안내, 궁합 초대)
+- [x] **Now 1: Daily Tarot 완성**
+    - [x] `GET /api/daily/tarot` 엔드포인트 구현
+    - [x] `/daily` 또는 관련 위젯에 Daily Tarot UI 연결
+    - [x] 무료 해석 / 구독자 advice 노출 규칙 반영
+    - [x] 자정 기준 캐시 및 시드 고정 검증
+- [x] **Now 2: Referral Reward + Share Credit 정합화**
+    - [x] `POST /api/referral/reward` 구현
+    - [x] 친구 가입 완료 시 초대자 Credit +1 지급
+    - [x] 기존 invite/redeem 흐름과 중복 보상 방지 로직 통합
+    - [x] 공유 보상 Credit 정책과 ChatSession 반영 방식 확정
+- [x] **Now 3: Viral OG 카드 고도화**
+    - [x] 궁합 결과 OG 카드 생성 고도화
+    - [x] K-Destiny 소셜 카드 OG 시안/문구/CTA 개선
+    - [x] Kakao 공유 경로와 OG 카드 연결 검증
+- [x] **Now 4: Growth Metrics 계측**
+    - [x] PostHog 또는 Mixpanel 도입
+    - [x] `share`, `invite`, `install`, `paid conversion`, `retention` 이벤트 정의
+    - [x] KPI 대시보드 초안 구성
+- [x] **Next 5: Monetization Experiments**
+    - [x] 주간 플랜 도입 검토 및 가격/카피 반영
+    - [x] 페이월 애니메이션화
+    - [x] post-close 24시간 특가 배너
+    - [x] 연간 플랜 월 환산 프레이밍 / 이름 개인화 페이월 실험
 
 ---
 
-## 🟢 Phase C — 중기 (2-3개월): 차별화 + 글로벌
+## 🟢 Phase A: 수익화 기반 및 리텐션 엔진 (Revenue Engine) [진행중]
+*목표: 유료 전환 Funnel 구축 및 자동 리마인드 시스템 완료*
 
-### Sprint C-1: 추가 인게이지먼트
-- [ ] **T-C1-01**: 행운의 날 캘린더 (iCal 내보내기)
-- [ ] **T-C1-02**: 운세 적중 피드백 루프 ("맞았나요?" 평점)
-- [ ] **T-C1-03**: AI 음성 리딩 (ElevenLabs TTS)
+- [x] **Sprint 1: Premium Paywall (Lock/Blur)**
+    - [x] SharedPageClient 내 Section 3-5 요약본 노출 및 상세 잠금 로직
+    - [x] 결제 유도 모달(SubscriptionModal) UI 구현
+- [x] **Sprint 2: Subscription System (Stripe)**
+    - [x] $9.99(월) / $49.99(연) 구독 플랜 설정
+    - [x] Stripe Checkout 세션 생성 및 결과 반영 (Webhook)
+    - [x] /billing 페이지 현황 노출 구현
+- [x] **Sprint 3: Subscription Management**
+    - [x] /billing 페이지 내 구독 취소(Cancel) 버튼 및 API 연동
+    - [x] 플랜 변경(Upgrade/Downgrade) 로직 검토
+    - [x] 직접 Checkout 기반 플랜 변경은 중복 구독 위험으로 보류, Billing Portal 또는 전용 update API 필요
+- [x] **Sprint 4: Drip Email (Retention)**
+    - [x] D+2: 결제 미완료 시 20% 할인 프로모션 코드 발송
+    - [x] D+5: Cosmic Window 기반 개인화 리마인드 발송
+    - [x] D+7: 데이터 보관 만료 안내 및 최종 전환 유도
 
-### Sprint C-2: 코드 클린업 (안정성)
-- [ ] **T-C2-01**: 코드 클린업 Phase 0 — 기준선 고정 (tsc, build, 스모크 테스트)
-- [ ] **T-C2-02**: Phase 1 — 불필요 파일 제거 (`.DS_Store`, 백업, 테스트 스크립트)
-- [ ] **T-C2-03**: Phase 2 — lint 체계 정상화 (전체 lint 전환)
-- [ ] **T-C2-04**: Phase 3 — 클라이언트 경계 최적화 + `any` 제거
+## 🔴 Phase B: 데일리 루틴 및 바이럴 루프 (Growth & Daily)
+*목표: 매일 접속하는 이유를 만들고 공유를 통한 무료 유입 가속화*
 
-### Sprint C-3: 네이티브 앱 + 글로벌
-- [ ] **T-C3-01**: iOS/Android 네이티브 앱 (React Native or Capacitor)
-- [ ] **T-C3-02**: 영어 완전 지원 (K-culture 기반 글로벌 마케팅)
-- [ ] **T-C3-03**: 일본어 지원 (Phase 2 글로벌)
+- [ ] **Sprint 5: Daily Routine (Fortune & Tarot)**
+    - [x] 오늘의 운세(Daily Fortune) 위젯 및 봉인(Seal) 해제 애니메이션
+    - [x] `GET /api/daily/tarot` 계약 스펙 구현
+    - [x] Daily Tarot 카드/위젯 UI 추가
+    - [x] 무료 `meaning` / 구독자 `advice` 분기 연결
+    - [x] 자정 캐시 및 birthday seed 재현성 검증
+    - [x] 프리미엄 사용자를 위한 상세 Advice(Premium Insight) 노출
+- [ ] **Sprint 6: Sharing & Viral Loop**
+    - [x] 쓰레드(Threads) / X 공유 전용 카드 UI
+    - [x] 링크 복사 기반 친구 초대 UI
+    - [x] `POST /api/referral/reward` 구현
+    - [x] 친구 가입 완료 시 초대자 Credit +1 지급
+    - [x] 공유 시 보상 크레딧(1 Credit) 지급 백엔드 로직
+    - [x] 기존 invite / redeem / track 로직과 중복 방지 정합화
+- [ ] **Sprint 7: Growth Optimization**
+    - [x] 리서치 기반 K-Destiny 소셜 카드(성격/성향) OG 이미지 고도화
+    - [x] 궁합 결과 OG 이미지 카드 고도화
+    - [x] Kakao 공유 루프와 OG 카드 연결 검증
+    - [x] MAU/매출 핵심 지표 트래킹 (PostHog/Mixpanel)
+    - [x] share / invite / paid conversion KPI 대시보드 정의
 
----
+## ⚪️ Phase C: 브랜드 강화 및 플랫폼 확장 (Scale)
+- [ ] **Sprint 8: Local UX (Kakao)**
+    - [ ] 카카오톡 로그인 QA 및 사용자 플로우 마감
+    - [ ] 알림톡/친구톡 기반 리마인드 채널 확장
+- [ ] **Sprint 9: Content & SEO**
+    - [ ] 리서치 제안 '운세 활용법' 블로그 포스팅 10건 발행
+    - [ ] 주요 검색 키워드(사주, 타로, 궁합) SEO 최적화
+- [ ] **Sprint 10: Final Polish & Launch**
+    - [ ] 전 채널 버그 픽스 및 성능 최적화
+    - [ ] 정식 버전 v2.0 배포 및 마케팅 캠페인 시작
 
-## 📊 핵심 KPI 추적
+## 🟡 Revenue Experiments Backlog
+*리서치 P0/P1 수익화 항목 별도 추적*
 
-| KPI | 현재 | 1개월 | 3개월 | 6개월 |
-|-----|------|-------|-------|-------|
-| MAU | ~100 | 500 | 3,000 | 10,000 |
-| 월 수익 | ~2만원 | 100만원 | 500만원 | 320만원+ |
-| 구독 유저 | 0 | 10 | 50 | 200 |
-| k-factor | <1 | 1.2 | 1.5 | 2.0 |
-| 전환율 | ~5% | 8% | 10% | 12% |
+- [x] 주간 플랜 (`₩3,990/주`) 상품 구조 / Stripe price / 카피 설계
+- [x] 페이월 애니메이션화
+- [x] post-close 24시간 특가 배너
+- [x] 연간 플랜 월 환산 프레이밍 강화
+- [x] 사용자 이름 개인화 페이월
+- [x] 세그먼트 기반 다이나믹 페이월

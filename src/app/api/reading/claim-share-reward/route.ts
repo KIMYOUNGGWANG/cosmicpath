@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/dev-logger';
 import { trackGrowthEvent } from '@/lib/growth-events';
 import { z } from 'zod';
+import { grantCreditsToReadingSession } from '@/lib/chat-session-rewards';
 
 const ClaimRewardSchema = z.object({
     readingId: z.string().min(1, 'Reading ID is required'),
@@ -32,13 +33,8 @@ export async function POST(req: NextRequest) {
             });
 
             if (!session) {
-                const created = await tx.chatSession.create({
-                    data: {
-                        readingResultId: readingId,
-                        credits: 2,
-                        shareRewardClaimed: true,
-                    },
-                    select: { credits: true },
+                const created = await grantCreditsToReadingSession(tx, readingId, 1, {
+                    markShareRewardClaimed: true,
                 });
 
                 return {
@@ -58,13 +54,8 @@ export async function POST(req: NextRequest) {
                 };
             }
 
-            const updatedSession = await tx.chatSession.update({
-                where: { id: session.id },
-                data: {
-                    credits: { increment: 1 },
-                    shareRewardClaimed: true,
-                },
-                select: { credits: true },
+            const updatedSession = await grantCreditsToReadingSession(tx, readingId, 1, {
+                markShareRewardClaimed: true,
             });
 
             return {

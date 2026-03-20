@@ -74,7 +74,7 @@ export async function GET() {
         return NextResponse.json({
             referralCode,
             totalInvited,
-            rewardEarned: totalInvited * 7,
+            rewardEarned: totalInvited,
         });
     } catch (error) {
         const details = error instanceof Error ? error.message : 'Unknown error';

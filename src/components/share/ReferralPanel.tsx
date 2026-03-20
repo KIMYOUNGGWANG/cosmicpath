@@ -17,7 +17,8 @@ interface InviteCodeResponse {
 interface RedeemInviteResponse {
     success: boolean;
     message: string;
-    proExpiresAt: string;
+    inviterUserId: string;
+    creditsAdded: number;
 }
 
 export function ReferralPanel({ language = 'ko', className }: ReferralPanelProps) {
@@ -34,16 +35,22 @@ export function ReferralPanel({ language = 'ko', className }: ReferralPanelProps
         () => ({
             title: isEn ? 'Referral Program' : '친구 초대 프로그램',
             subtitle: isEn
-                ? 'Invite a friend and both of you get 7 days of Pro access.'
-                : '친구를 초대하면 두 사람 모두 Pro 7일 혜택을 받습니다.',
-            myCode: isEn ? 'My Referral Code' : '내 초대 코드',
-            copy: isEn ? 'Copy' : '복사',
-            copied: isEn ? 'Copied' : '복사됨',
+                ? 'When a friend signs up through your link, you earn 1 Oracle credit.'
+                : '친구가 내 링크로 가입을 완료하면 오라클 질문권 1개가 지급됩니다.',
+            myCode: isEn ? 'My Invite Link' : '내 초대 링크',
+            copy: isEn ? 'Copy Link' : '링크 복사',
+            copied: isEn ? 'Link Copied' : '링크 복사됨',
             invited: isEn ? 'Total Invited' : '총 초대 수',
-            rewardDays: isEn ? 'Reward Earned' : '획득 혜택',
-            redeemTitle: isEn ? 'Redeem Code' : '코드 등록',
+            rewardDays: isEn ? 'Credits Earned' : '획득 크레딧',
+            redeemTitle: isEn ? 'Connect with Code' : '코드로 친구 연결',
             redeemPlaceholder: isEn ? 'Enter referral code' : '초대 코드를 입력하세요',
-            redeemButton: isEn ? 'Activate 7-day Pro' : '7일 Pro 활성화',
+            redeemButton: isEn ? 'Apply Code' : '코드 적용',
+            copyHint: isEn
+                ? 'Share this link. Signup completion triggers the reward automatically.'
+                : '이 링크를 공유하세요. 친구가 가입을 완료하면 보상이 자동 지급됩니다.',
+            redeemHint: isEn
+                ? 'If you received only a code, enter it after login to credit your inviter.'
+                : '링크 대신 코드만 받았다면 로그인 후 등록해 초대한 친구에게 보상을 지급하세요.',
             loginRequired: isEn ? 'Login required' : '로그인이 필요합니다.',
         }),
         [isEn]
@@ -75,6 +82,14 @@ export function ReferralPanel({ language = 'ko', className }: ReferralPanelProps
         }
     }, [text.loginRequired]);
 
+    const buildReferralLink = useCallback(() => {
+        if (!codeInfo?.referralCode || typeof window === 'undefined') {
+            return '';
+        }
+
+        return `${window.location.origin}/start?ref=${codeInfo.referralCode}`;
+    }, [codeInfo?.referralCode]);
+
     useEffect(() => {
         void fetchCodeInfo();
     }, [fetchCodeInfo]);
@@ -83,7 +98,7 @@ export function ReferralPanel({ language = 'ko', className }: ReferralPanelProps
         if (!codeInfo?.referralCode) return;
 
         try {
-            await navigator.clipboard.writeText(codeInfo.referralCode);
+            await navigator.clipboard.writeText(buildReferralLink() || codeInfo.referralCode);
             setIsCopied(true);
             setTimeout(() => setIsCopied(false), 1200);
         } catch {
@@ -116,12 +131,7 @@ export function ReferralPanel({ language = 'ko', className }: ReferralPanelProps
                 throw new Error(payload?.error?.message || 'Failed to redeem referral code');
             }
 
-            showNotice(
-                isEn
-                    ? `${payload.message} (Expires: ${new Date(payload.proExpiresAt).toLocaleDateString()})`
-                    : `${payload.message} (만료일: ${new Date(payload.proExpiresAt).toLocaleDateString()})`,
-                'success'
-            );
+            showNotice(payload.message, 'success');
             setRedeemCode('');
             await fetchCodeInfo();
         } catch (error) {
@@ -155,6 +165,7 @@ export function ReferralPanel({ language = 'ko', className }: ReferralPanelProps
                         <span className="text-xs">{isCopied ? text.copied : text.copy}</span>
                     </button>
                 </div>
+                <p className="mt-2 text-xs text-white/45">{text.copyHint}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3 mb-5">
@@ -170,7 +181,7 @@ export function ReferralPanel({ language = 'ko', className }: ReferralPanelProps
                         <Gift size={12} />
                         {text.rewardDays}
                     </p>
-                    <p className="text-white font-semibold">{codeInfo?.rewardEarned ?? 0} days</p>
+                    <p className="text-white font-semibold">{codeInfo?.rewardEarned ?? 0} credits</p>
                 </div>
             </div>
 
@@ -192,6 +203,7 @@ export function ReferralPanel({ language = 'ko', className }: ReferralPanelProps
                         {isSubmitting ? '...' : text.redeemButton}
                     </button>
                 </div>
+                <p className="mt-2 text-xs text-white/45">{text.redeemHint}</p>
             </div>
 
             {notice && (

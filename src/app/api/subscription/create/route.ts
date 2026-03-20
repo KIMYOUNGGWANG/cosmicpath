@@ -42,9 +42,14 @@ function resolveAppOrigin(request: NextRequest): string {
 }
 
 function getTestPriceEnvKey(planType: z.infer<typeof createSubscriptionRequestSchema>['planType']): string {
-    return planType === 'MONTHLY'
-        ? 'NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY_TEST'
-        : 'NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY_TEST';
+    switch (planType) {
+        case 'WEEKLY':
+            return 'NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY_TEST';
+        case 'MONTHLY':
+            return 'NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY_TEST';
+        case 'ANNUAL':
+            return 'NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY_TEST';
+    }
 }
 
 function getStripeConfigHint(planType: z.infer<typeof createSubscriptionRequestSchema>['planType']): string | null {

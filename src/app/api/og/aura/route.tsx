@@ -4,7 +4,7 @@ import { NextRequest } from 'next/server';
 export const runtime = 'edge';
 
 const DEFAULT_COLORS = ['#0F8A5F', '#2D7FF9'] as const;
-const DEFAULT_KEYWORDS = ['radiant', 'magnetic', 'pioneer'] as const;
+const DEFAULT_KEYWORDS = ['magnetic', 'lucid', 'iconic'] as const;
 
 function parseColors(rawValue: string | null): [string, string] {
     const values = (rawValue ?? '')
@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
         const name = searchParams.get('name')?.trim() || 'Cosmic Aura';
         const catchphrase =
             searchParams.get('catchphrase')?.trim() ||
-            'Your aura card, distilled by CosmicPath.';
+            'Share your K-Astrology identity, distilled by CosmicPath.';
 
         return new ImageResponse(
             (

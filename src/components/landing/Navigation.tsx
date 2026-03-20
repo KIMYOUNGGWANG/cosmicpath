@@ -236,6 +236,7 @@ export function Navigation() {
             <SubscriptionModal
                 isOpen={isSubscriptionModalOpen}
                 onClose={() => setIsSubscriptionModalOpen(false)}
+                source="landing"
             />
         </>
     );

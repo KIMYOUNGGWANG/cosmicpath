@@ -3,19 +3,12 @@
 import { useState, useEffect, use, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, animate } from 'framer-motion';
-import { Heart, Lock, Share2, Sparkles, AlertCircle, Copy, Check, Unlock, Star, AlertTriangle, MessageCircle, Loader2, Zap, Calendar, TrendingUp, ArrowRight } from 'lucide-react';
+import { Heart, Lock, Share2, Sparkles, AlertCircle, Check, Unlock, Star, AlertTriangle, MessageCircle, Loader2, Zap, Calendar, TrendingUp, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import {
-    MatchRadar,
-    InsightBadge,
-    CosmicSignatureBadge,
-    TimelineCard,
-    ActionChecklist,
-    LuckyElements,
-    ProsperityCard
-} from '@/components/match/MatchVisuals';
+import { ProsperityCard } from '@/components/match/MatchVisuals';
 import { DestinyDashboardSection } from '@/components/dashboard/DestinyDashboardSection';
 import { GhostDetectorSection } from '@/components/dashboard/GhostDetectorSection';
+import type { SajuResult } from '@/lib/engines/saju';
 
 // AI Analysis types (v3.0 - with rich visual data)
 interface AIAnalysis {
@@ -120,7 +113,7 @@ interface MatchDetails {
     numScore?: number;
     summary?: string;
     aiAnalysis?: AIAnalysis;
-    hostSaju?: any; // Added for GhostDetector
+    hostSaju?: unknown; // Added for GhostDetector
 }
 
 interface MatchData {
@@ -139,6 +132,23 @@ interface PageProps {
     params: Promise<{ id: string }>;
 }
 
+function isSajuResult(value: unknown): value is SajuResult {
+    if (!value || typeof value !== 'object') {
+        return false;
+    }
+
+    const candidate = value as Record<string, unknown>;
+    return (
+        'yeonPillar' in candidate &&
+        'monthPillar' in candidate &&
+        'dayPillar' in candidate &&
+        'hourPillar' in candidate &&
+        'dayMaster' in candidate &&
+        'elements' in candidate &&
+        'tenGods' in candidate
+    );
+}
+
 export default function MatchResultPage({ params }: PageProps) {
     const { id } = use(params);
     const searchParams = useSearchParams();
@@ -147,6 +157,7 @@ export default function MatchResultPage({ params }: PageProps) {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
+    const [kakaoShared, setKakaoShared] = useState(false);
     const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis | null>(null);
     const [isLoadingAI, setIsLoadingAI] = useState(false);
     const [aiError, setAiError] = useState<string | null>(null);
@@ -172,7 +183,7 @@ export default function MatchResultPage({ params }: PageProps) {
             if (result.details?.aiAnalysis) {
                 setAiAnalysis(result.details.aiAnalysis);
             }
-        } catch (err) {
+        } catch {
             setError('결과를 불러오는데 실패했습니다.');
         } finally {
             setIsLoading(false);
@@ -182,7 +193,7 @@ export default function MatchResultPage({ params }: PageProps) {
     // Fetch AI analysis when unlocked
     const fetchAIAnalysis = useCallback(async () => {
         // Only run if unlocked and NOT already complete
-        const isAlreadyComplete = aiAnalysis && (aiAnalysis as any)._prosperitySync && (aiAnalysis as any)._weeklyRituals;
+        const isAlreadyComplete = Boolean(aiAnalysis?._prosperitySync && aiAnalysis?._weeklyRituals);
         if (!data?.isUnlocked || isAlreadyComplete) return;
 
         setIsLoadingAI(true);
@@ -198,7 +209,7 @@ export default function MatchResultPage({ params }: PageProps) {
             }
 
             setAiAnalysis(result.analysis);
-        } catch (err) {
+        } catch {
             setAiError('AI 분석 중 오류가 발생했습니다');
         } finally {
             setIsLoadingAI(false);
@@ -219,8 +230,6 @@ export default function MatchResultPage({ params }: PageProps) {
     // Refetch when returning from Stripe with ?unlocked=true
     useEffect(() => {
         const unlocked = searchParams.get('unlocked');
-        const sessionId = searchParams.get('session_id');
-
         if (unlocked === 'true') {
             // 결제 완료 후: 직접 unlock API 호출 (로컬에서 webhook 대체)
             const performUnlock = async () => {
@@ -261,11 +270,79 @@ export default function MatchResultPage({ params }: PageProps) {
     }, [data?.score]);
 
     const handleShare = async () => {
-        const shareUrl = `${window.location.origin}/match/${id}/join`;
+        const shareUrl = `${window.location.origin}/match/${id}/result`;
         await navigator.clipboard.writeText(shareUrl);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
+
+    const handleKakaoShare = useCallback(() => {
+        if (typeof window === 'undefined' || !data) {
+            return;
+        }
+
+        const kakao = (
+            window as {
+                Kakao?: {
+                    isInitialized: () => boolean;
+                    init: (key: string) => void;
+                    Share: { sendDefault: (payload: unknown) => void };
+                };
+            }
+        ).Kakao;
+
+        if (!kakao) {
+            alert('카카오 SDK가 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.');
+            return;
+        }
+
+        const jsKey = process.env.NEXT_PUBLIC_KAKAO_JS_KEY;
+        if (!jsKey) {
+            console.error('Kakao JS Key is missing');
+            return;
+        }
+
+        if (!kakao.isInitialized()) {
+            try {
+                kakao.init(jsKey);
+            } catch (error) {
+                console.error('Kakao init error:', error);
+            }
+        }
+
+        const shareUrl = `${window.location.origin}/match/${id}/result`;
+        const ogImageUrl = `${window.location.origin}/api/og/match/${id}`;
+        const description = data.summary
+            ? data.summary
+            : `${data.hostName}님과 ${data.guestName ?? '상대'}님의 궁합 결과를 확인해보세요.`;
+
+        kakao.Share.sendDefault({
+            objectType: 'feed',
+            content: {
+                title: `${data.hostName} × ${data.guestName ?? 'Guest'} 궁합 결과`,
+                description,
+                imageUrl: ogImageUrl,
+                imageWidth: 1200,
+                imageHeight: 630,
+                link: {
+                    mobileWebUrl: shareUrl,
+                    webUrl: shareUrl,
+                },
+            },
+            buttons: [
+                {
+                    title: '궁합 결과 보기',
+                    link: {
+                        mobileWebUrl: shareUrl,
+                        webUrl: shareUrl,
+                    },
+                },
+            ],
+        });
+
+        setKakaoShared(true);
+        setTimeout(() => setKakaoShared(false), 2000);
+    }, [data, id]);
 
     const getScoreColor = (score: number) => {
         if (score >= 85) return 'from-yellow-400 via-orange-500 to-red-500';
@@ -365,7 +442,7 @@ export default function MatchResultPage({ params }: PageProps) {
                 </motion.div>
 
                 {/* Details Grid */}
-                {data.details && (
+                {data.details ? (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -387,7 +464,7 @@ export default function MatchResultPage({ params }: PageProps) {
                             <p className="text-purple-400 text-sm font-outfit">{data.details.guestElement}</p>
                         </div>
                     </motion.div>
-                )}
+                ) : null}
                 {/* Unlocked Premium Content - AI Analysis */}
                 {data.isUnlocked && (
                     <motion.div
@@ -445,18 +522,18 @@ export default function MatchResultPage({ params }: PageProps) {
                                 <div className="flex justify-center gap-2 mt-4">
                                     {[1, 2, 3, 4, 5].map((phase) => {
                                         const isDone = aiAnalysis && (
-                                            phase === 1 ? !!(aiAnalysis as any).energyAnalysis :
-                                                phase === 2 ? !!(aiAnalysis as any).emotionalCompatibility :
-                                                    phase === 3 ? !!(aiAnalysis as any)._prosperitySync :
-                                                        phase === 4 ? !!(aiAnalysis as any)._timelineForecasts :
-                                                            phase === 5 ? !!(aiAnalysis as any)._weeklyRituals : false
+                                            phase === 1 ? Boolean(aiAnalysis?.energyAnalysis) :
+                                                phase === 2 ? Boolean(aiAnalysis?.emotionalCompatibility) :
+                                                    phase === 3 ? Boolean(aiAnalysis?._prosperitySync) :
+                                                        phase === 4 ? Boolean(aiAnalysis?._timelineForecasts) :
+                                                            phase === 5 ? Boolean(aiAnalysis?._weeklyRituals) : false
                                         );
                                         const isCurrent = !isDone && (
                                             phase === 1 || (
-                                                phase === 2 ? !!(aiAnalysis as any)?.energyAnalysis :
-                                                    phase === 3 ? !!(aiAnalysis as any)?.emotionalCompatibility :
-                                                        phase === 4 ? !!(aiAnalysis as any)?._prosperitySync :
-                                                            phase === 5 ? !!(aiAnalysis as any)?._timelineForecasts : false
+                                                phase === 2 ? Boolean(aiAnalysis?.energyAnalysis) :
+                                                    phase === 3 ? Boolean(aiAnalysis?.emotionalCompatibility) :
+                                                        phase === 4 ? Boolean(aiAnalysis?._prosperitySync) :
+                                                            phase === 5 ? Boolean(aiAnalysis?._timelineForecasts) : false
                                             )
                                         );
 
@@ -670,7 +747,7 @@ export default function MatchResultPage({ params }: PageProps) {
                                     } else {
                                         alert(json.error || 'Failed to initiate payment');
                                     }
-                                } catch (err) {
+                                } catch {
                                     alert('Payment failed. Please try again.');
                                 }
                             }}
@@ -701,12 +778,12 @@ export default function MatchResultPage({ params }: PageProps) {
 
 
                 {/* Ghost Detector (Viral Hook) */}
-                {data.details?.hostSaju && (
+                {isSajuResult(data.details?.hostSaju) ? (
                     <GhostDetectorSection
                         sajuResult={data.details.hostSaju}
                         userName={data.hostName}
                     />
-                )}
+                ) : null}
 
                 {/* Share Button */}
                 <motion.div
@@ -715,25 +792,47 @@ export default function MatchResultPage({ params }: PageProps) {
                     transition={{ delay: 0.7 }}
                     className="flex flex-col gap-4"
                 >
-                    <motion.button
-                        onClick={handleShare}
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                        className="w-full py-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-[var(--acc-gold)]/30 transition-all duration-300 font-cinzel text-sm tracking-widest flex items-center justify-center gap-3 relative overflow-hidden group"
-                    >
-                        {copied ? (
-                            <>
-                                <Check size={18} className="text-green-400 animate-in zoom-in duration-300" />
-                                <span className="text-green-400">Link Copied</span>
-                            </>
-                        ) : (
-                            <>
-                                <Share2 size={18} className="text-white/40 group-hover:text-[var(--acc-gold)] group-hover:scale-110 transition-all duration-300" />
-                                <span className="text-white/70 group-hover:text-white transition-colors">Share Results</span>
-                            </>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-shimmer pointer-events-none" />
-                    </motion.button>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <motion.button
+                            onClick={handleShare}
+                            whileHover={{ scale: 1.01 }}
+                            whileTap={{ scale: 0.99 }}
+                            className="w-full py-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-[var(--acc-gold)]/30 transition-all duration-300 font-cinzel text-sm tracking-widest flex items-center justify-center gap-3 relative overflow-hidden group"
+                        >
+                            {copied ? (
+                                <>
+                                    <Check size={18} className="text-green-400 animate-in zoom-in duration-300" />
+                                    <span className="text-green-400">Link Copied</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Share2 size={18} className="text-white/40 group-hover:text-[var(--acc-gold)] group-hover:scale-110 transition-all duration-300" />
+                                    <span className="text-white/70 group-hover:text-white transition-colors">Copy Result Link</span>
+                                </>
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-shimmer pointer-events-none" />
+                        </motion.button>
+
+                        <motion.button
+                            onClick={handleKakaoShare}
+                            whileHover={{ scale: 1.01 }}
+                            whileTap={{ scale: 0.99 }}
+                            className="w-full py-4 rounded-xl border border-[#FEE500]/25 bg-[#FEE500]/10 hover:bg-[#FEE500]/16 hover:border-[#FEE500]/40 transition-all duration-300 font-cinzel text-sm tracking-widest flex items-center justify-center gap-3 relative overflow-hidden group"
+                        >
+                            {kakaoShared ? (
+                                <>
+                                    <Check size={18} className="text-[#FEE500] animate-in zoom-in duration-300" />
+                                    <span className="text-[#FEE500]">Kakao Shared</span>
+                                </>
+                            ) : (
+                                <>
+                                    <MessageCircle size={18} className="text-[#FEE500] group-hover:scale-110 transition-transform duration-300" />
+                                    <span className="text-white/80 group-hover:text-white transition-colors">Share to Kakao</span>
+                                </>
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FEE500]/10 to-transparent -translate-x-full group-hover:animate-shimmer pointer-events-none" />
+                        </motion.button>
+                    </div>
                     <Link
                         href="/match/new"
                         className="text-center text-[var(--fg-moonlight)] hover:text-white text-sm transition-colors font-outfit"

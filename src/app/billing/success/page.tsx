@@ -9,7 +9,7 @@ type SubscriptionTier = 'free' | 'pro' | 'couple';
 interface SubscriptionStatusPayload {
     status: SubscriptionTier;
     expiresAt: string | null;
-    plan: 'pro_monthly' | 'pro_yearly' | 'couple_monthly' | null;
+    plan: 'pro_weekly' | 'pro_monthly' | 'pro_yearly' | 'couple_monthly' | null;
 }
 
 export default function BillingSuccessPage() {
@@ -50,9 +50,11 @@ export default function BillingSuccessPage() {
             ? 'CosmicPath Pro Annual'
             : payload?.plan === 'pro_monthly'
                 ? 'CosmicPath Pro Monthly'
-                : payload?.plan === 'couple_monthly'
-                    ? 'CosmicPath Couple Monthly'
-                    : 'Subscription sync in progress';
+                : payload?.plan === 'pro_weekly'
+                    ? 'CosmicPath Pro Weekly'
+                    : payload?.plan === 'couple_monthly'
+                        ? 'CosmicPath Couple Monthly'
+                        : 'Subscription sync in progress';
 
     return (
         <main className="min-h-screen bg-[#04060d] px-6 pb-16 pt-28 text-white">

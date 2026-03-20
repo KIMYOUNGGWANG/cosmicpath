@@ -6,14 +6,14 @@ import { Navigation } from '@/components/landing/Navigation';
 import { KDestinyExperience } from './KDestinyExperience';
 
 export const metadata: Metadata = {
-    title: 'K-Destiny Aura Card | CosmicPath',
+    title: 'K-Destiny Social Aura Card | CosmicPath',
     description:
-        'Generate a global-ready K-Astrology aura card with Saju, astrology, and numerology-based colors, keywords, and OG sharing.',
+        'Generate a share-ready K-Astrology aura card with Saju, astrology, and numerology-driven colors, keywords, and viral OG framing.',
     openGraph: {
-        title: 'K-Destiny Aura Card | CosmicPath',
+        title: 'K-Destiny Social Aura Card | CosmicPath',
         description:
-            'Generate a global-ready K-Astrology aura card with Saju, astrology, and numerology-based colors, keywords, and OG sharing.',
-        images: ['/api/og/aura?name=Cosmic%20Aura&colors=%230F8A5F%2C%232D7FF9&keywords=verdant%2Clucid%2Cpioneer&catchphrase=Your%20K-Astrology%20identity%2C%20distilled.'],
+            'Generate a share-ready K-Astrology aura card with Saju, astrology, and numerology-driven colors, keywords, and viral OG framing.',
+        images: ['/api/og/aura?name=K-Destiny%20Aura&colors=%230F8A5F%2C%232D7FF9&keywords=magnetic%2Clucid%2Ciconic&catchphrase=Share%20your%20K-Astrology%20identity%20with%20a%20card%20built%20to%20travel.'],
     },
 };
 

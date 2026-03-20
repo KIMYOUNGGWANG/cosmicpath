@@ -1,251 +1,325 @@
 # API 명세서: CosmicPath v2.0 🌌
 
-> 기준일: 2026-03-19 | 상태: **LOCKED** (변경 시 사유 기재 필수)
-> 근거: `RESEARCH/CosmicPath_Analysis_20260318` + 기존 코드베이스 분석
+> **Project**: CosmicPath | **Version**: v2.0 | **Generated**: 2026-03-19
+> **Base URL**: `/api` | **Auth Method**: Next-Auth Session (서버사이드)
+> **Status**: **LOCKED** — 변경 시 사유 기재 필수
+> **근거**: `docs/prd-v2.md` (친구 가입 완료 시 Credit +1 정책 확정)
 
 ---
 
-## 🔮 운세 및 엔진 (Reading & Engine)
+## Authentication
 
-| Method | Path | 설명 | Auth |
-|--------|------|------|------|
-| POST | `/api/reading` | 생년월일 기반 AI 리포트 생성 (Stream) | Optional |
-| GET | `/api/reading/save` | 운세 세션 DB 저장 | Optional |
-| POST | `/api/reading/claim-share-reward` | 공유 보상 무료 질문 수령 | Required |
-| POST | `/api/reading/followup` | 후속 질문 (Oracle Chat) | Required |
-| POST | `/api/reading/followup/stream` | 후속 질문 스트림 | Required |
+- **공개 엔드포인트**: Auth 불필요 (`/api/daily/fortune`, `/api/reading/*`, `/api/growth/track`)
+- **보호 엔드포인트**: `next-auth` 세션 필수. `auth()` 서버 액션으로 검증.
+- **관리자 엔드포인트**: 세션 + `session.user.role === 'ADMIN'` 필요 (`/api/growth/summary`)
 
 ---
 
-## 🌅 일일 운세 (Daily Fortune) — **NEW**
-
-| Method | Path | 설명 | Auth |
-|--------|------|------|------|
-| GET | `/api/daily/fortune` | 오늘의 사주 기반 일일 운세 조회 | Optional |
-| **GET** | **`/api/daily/tarot`** | **오늘의 타로 한 장 뽑기** | **Optional** |
-
-### `GET /api/daily/tarot` (NEW)
+## Error Codes 공통
 
 ```typescript
-// Request: Query params
-interface DailyTarotRequest {
-  birthDate?: string; // YYYY-MM-DD (개인화용, optional)
+interface ErrorResponse {
+  error: {
+    code: number;
+    message: string;  // 사용자 노출용 (한국어)
+    details?: string; // 개발자용
+  }
 }
+```
 
-// Response: 200 OK
-interface DailyTarotResponse {
-  card: {
-    name: string;          // "The Star"
-    nameKo: string;        // "별"
-    number: number;        // 17
-    isReversed: boolean;
-    imageUrl: string;
-  };
-  interpretation: string;  // AI 해석 1-2문장
+| Code | Meaning |
+|:-----|:--------|
+| `400` | Bad Request — 유효하지 않은 입력 |
+| `401` | Unauthorized — 로그인 필요 |
+| `403` | Forbidden — 관리자 권한 필요 |
+| `404` | Not Found — 리소스 없음 |
+| `409` | Conflict — 중복 (이미 처리됨) |
+| `500` | Server Error |
+
+---
+
+## Endpoints
+
+> **Spec Update Note (2026-03-20)**: `Sprint 7: Growth Metrics` 구현을 위해 내부 운영용 분석 엔드포인트 2종을 추가함.
+> 제품 기능 계약(`Daily Tarot`, `Referral Reward`)은 유지하고, 계측/운영 목적의 endpoint만 확장함.
+
+### 1. 오늘의 운세 (Daily Fortune) ✅ 구현됨
+
+| Method | Path | Auth | Cache |
+|:-------|:-----|:-----|:------|
+| `GET` | `/api/daily/fortune` | ❌ | 자정까지 |
+
+**Query**
+```
+birthday: string  // YYYY-MM-DD (Required)
+birthtime: string // HH:mm (Optional)
+```
+
+**Response**
+```typescript
+interface DailyFortuneResponse {
+  date: string;
+  dayMaster: string;
+  overallLuck: number;     // 0-100
+  summary: string;
   luckyColor: string;
   luckyNumber: number;
-  shareCardUrl: string;    // 소셜공유용 이미지 URL
+  luckyDirection: string;
+  areas: { love: number; money: number; career: number; health: number; };
+  advice: string;          // 프리미엄 시 추가 인사이트 포함
+  cachedUntil: string;     // ISO 8601
+  isPremium: boolean;
 }
 ```
 
 ---
 
-## 💳 결제 및 주문 (Payment & Orders)
+### 2. 오늘의 타로 (Daily Tarot) 🆕 구현 필요
 
-| Method | Path | 설명 | Auth |
-|--------|------|------|------|
-| POST | `/api/payment` | Stripe Checkout 세션 생성 | Optional |
-| GET | `/api/payment/price` | 지역화 가격 반환 | Public |
-| POST | `/api/payment/chat-credit` | Oracle Chat 크레딧 구매 | Required |
-| POST | `/api/webhook/stripe` | Stripe 비동기 이벤트 처리 | Stripe Sig |
-| POST | `/api/webhook/stripe/reconcile` | 미처리 결제 복구 | Internal |
-| GET | `/api/orders` | 주문 내역 조회 | Required |
-| GET | `/api/orders/public` | 공개 주문 통계 (사회적 증명) | Public |
+| Method | Path | Auth | Cache |
+|:-------|:-----|:-----|:------|
+| `GET` | `/api/daily/tarot` | ❌ | 자정까지 |
 
----
-
-## 🔄 구독 (Subscription) — **Frontend 연결 필요**
-
-> 변경 사유 (2026-03-19): 사용자 결정에 따라 구독 가격 통화는 KRW가 아니라 USD 기준을 유지함.
-
-| Method | Path | 설명 | Auth |
-|--------|------|------|------|
-| POST | `/api/subscription/create` | 구독 세션 생성 | Required |
-| GET | `/api/subscription/status` | 구독 상태 확인 | Required |
-| **POST** | **`/api/subscription/cancel`** | **구독 해지** | **Required** |
-| **POST** | **`/api/subscription/change-plan`** | **플랜 변경 (월→연)** | **Required** |
-
-### `POST /api/subscription/create` (기존 + 확장)
-
-```typescript
-// Request
-interface CreateSubscriptionRequest {
-  planType: "MONTHLY" | "ANNUAL";
-  // MONTHLY: $9.99/month (price_pro_monthly)
-  // ANNUAL: $49.99/year (price_pro_yearly)
-}
-
-// Response: 303 Redirect to Stripe Checkout
-interface CreateSubscriptionResponse {
-  checkoutUrl: string;
-}
+**Query**
+```
+birthday: string  // YYYY-MM-DD (Required) — Seed 생성에 사용
 ```
 
-### Subscription Tiers (가격 정책)
-
-| Tier | 가격 | Stripe Price ID | 혜택 |
-|------|------|-----------------|------|
-| Free | $0 | - | Phase 1-2 무료, 일일 타로 1회 |
-| One-time | $5.99 | `price_onetime_4500` | Phase 3-5 잠금 해제 |
-| Monthly | $9.99/month | `price_pro_monthly` | 무제한 Chat + 월간 리포트 |
-| Annual | $49.99/year | `price_pro_yearly` | 최대 할인 + 월간 혜택 유지 |
-
----
-
-## 💬 오라클 채팅 (Oracle Chat)
-
-| Method | Path | 설명 | Auth |
-|--------|------|------|------|
-| POST | `/api/chat/message` | AI 후속 질문 전송 | Required |
-| GET | `/api/chat/session/[id]` | 채팅 기록 + 잔여 크레딧 | Required |
-
----
-
-## 📈 성장 및 바이럴 (Growth & Viral)
-
-| Method | Path | 설명 | Auth |
-|--------|------|------|------|
-| POST | `/api/growth/track` | 바이럴 이벤트 기록 | Optional |
-| GET | `/api/invite/code` | 내 초대 코드 조회 | Required |
-| POST | `/api/invite/create` | 초대 링크 생성 | Required |
-| POST | `/api/invite/redeem` | 초대 보상 수령 | Required |
-| POST | `/api/invite/track` | 초대 클릭 추적 | Public |
-| GET | `/api/invite/verify` | 초대 코드 검증 | Public |
-
----
-
-## 💕 궁합 매칭 (Match/Compatibility)
-
-| Method | Path | 설명 | Auth |
-|--------|------|------|------|
-| POST | `/api/match/create` | 궁합 세션 생성 | Required |
-| POST | `/api/match/join` | 궁합 참여 (상대방) | Public |
-| GET | `/api/match/[id]` | 궁합 상태 조회 | Public |
-| POST | `/api/match/[id]/analyze` | 궁합 AI 분석 실행 | Required |
-| POST | `/api/match/[id]/pay` | 궁합 결제 | Required |
-| POST | `/api/match/[id]/unlock` | 궁합 결과 잠금 해제 | Required |
-
----
-
-## 🖼️ OG 이미지 (Social Share) — **확장 필요**
-
-| Method | Path | 설명 | Auth |
-|--------|------|------|------|
-| GET | `/api/og` | 기본 OG 이미지 | Public |
-| GET | `/api/og/reading/[id]` | 개인화 리딩 OG 이미지 | Public |
-| GET | `/api/og/aura` | 오라 OG 이미지 | Public |
-| **GET** | **`/api/og/social-card/[id]`** | **1080×1920 세로 소셜 카드** | **Public** |
-| **GET** | **`/api/og/match/[id]`** | **궁합 결과 공유 카드** | **Public** |
-
-### `GET /api/og/social-card/[id]` (NEW)
-
+**Response**
 ```typescript
-// 1080×1920 세로형 소셜 카드 이미지
-// 포함: 별자리 시각화, 핵심 결과 1-2문장, 워터마크, QR코드
-// 용도: 인스타 스토리, TikTok, Threads 공유
+interface DailyTarotResponse {
+  date: string;
+  cardIndex: number;       // 0-77 (Major 22 / Minor 56)
+  cardName: string;        // e.g. "The Star"
+  cardNameKo: string;      // e.g. "별"
+  isReversed: boolean;
+  keywordKo: string;       // e.g. "희망, 영감, 평온"
+  meaning: string;         // 기본 해석 (무료)
+  advice: string;          // 구독자 전용 행동 가이드
+  isPremium: boolean;
+}
 ```
 
 ---
 
-## 📧 이메일 (Email) — **드립 시퀀스 확장**
+### 3. 구독 상태 조회 (Subscription Status) ✅ 구현됨
 
-| Method | Path | 설명 | Auth |
-|--------|------|------|------|
-| POST | `/api/email/send-result` | 결과 이메일 발송 (D+0) | Internal |
-| **POST** | **`/api/email/drip/schedule`** | **드립 시퀀스 등록** | **Internal** |
-| **POST** | **`/api/email/drip/send`** | **드립 이메일 발송 (Cron)** | **Internal** |
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `GET` | `/api/subscription/status` | ✅ |
 
-### Drip Sequence Schedule
-
-| Day | 제목 | 트리거 |
-|-----|------|--------|
-| D+0 | 운명 리딩 결과 (현재 ✅) | 리딩 완료 |
-| D+2 | "리딩 어떠셨어요?" + 20% 단일 사용 코드 | Cron |
-| D+5 | 천체 이벤트 + Phase 4 CTA | Cron |
-| D+7 | "분석 보관 처리 예정" | Cron |
-| D+14 | 미니 주간 운세 + 구독 제안 | Cron |
-| D+30 | 구독 LTV 비교 | Cron |
-
-### `POST /api/email/drip/schedule`
-
+**Response**
 ```typescript
-interface ScheduleDripRequest {
-  readingId: string;
-  email: string;
-  fromDate?: string; // ISO datetime, optional
-}
-
-interface ScheduleDripResponse {
-  ok: true;
-  readingId: string;
-  email: string;
-  scheduledStages: Array<"D2_DISCOUNT" | "D5_COSMIC_WINDOW" | "D7">;
+interface SubscriptionStatusResponse {
+  status: 'free' | 'pro' | 'couple';
+  plan: 'pro_weekly' | 'pro_monthly' | 'pro_yearly' | 'couple_monthly' | null;
+  expiresAt: string | null;
+  stripeCustomerId: string | null;
 }
 ```
 
-### `POST /api/email/drip/send`
+---
 
+### 4. 구독 세션 생성 (Checkout Create) ✅ 구현됨
+
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `POST` | `/api/subscription/create` | ✅ |
+
+**Request**
 ```typescript
-interface SendDripRequest {
-  limit?: number;
-  dryRun?: boolean;
+interface SubscriptionCreateRequest {
+  planType: 'WEEKLY' | 'MONTHLY' | 'ANNUAL';
 }
+```
 
-interface SendDripResponse {
+**Response**: `{ checkoutUrl: string }`
+
+---
+
+### 5. 구독 해지 (Subscription Cancel) 🆕 구현 필요
+
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `POST` | `/api/subscription/cancel` | ✅ |
+
+**Response**
+```typescript
+interface SubscriptionCancelResponse {
   ok: boolean;
-  scanned: number;
-  sent: number;
-  failed: number;
-  skipped: number;
+  subscriptionId: string;
+  cancelAtPeriodEnd: boolean;  // 항상 true
+  currentPeriodEnd: string;    // ISO 8601 — 이 날짜까지 서비스 유지
 }
 ```
 
----
-
-## 🔐 인증 (Auth)
-
-| Method | Path | 설명 | Auth |
-|--------|------|------|------|
-| * | `/api/auth/[...nextauth]` | NextAuth 핸들러 | Public |
-| POST | `/api/auth/otp/send` | OTP 발송 | Public |
-| POST | `/api/auth/otp/verify` | OTP 검증 | Public |
-| **POST** | **`/api/auth/kakao`** | **카카오 소셜 로그인** | **Public** |
+**Error**: `404` — 활성 구독 없음
 
 ---
 
-## 🛠️ 운영 (Ops)
+### 6. 드립 이메일 스케줄링 (Drip Schedule) ✅ 구현됨
 
-| Method | Path | 설명 | Auth |
-|--------|------|------|------|
-| POST | `/api/ops/followups/run` | 후속 알림 Cron 실행 | Internal |
-| GET | `/api/ops/usage/counters` | 사용량 카운터 | Internal |
-| GET | `/api/promo/validate` | 프로모코드 검증 | Public |
-| POST | `/api/promo/redeem` | 프로모코드 적용 | Required |
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `POST` | `/api/email/drip/schedule` | CRON_SECRET |
 
----
+**Request**: `{ readingId: string; email: string; fromDate?: string }`
 
-## Error Codes (공통)
-
-| Code | 설명 |
-|------|------|
-| 400 | Invalid request body / Missing required field |
-| 401 | Unauthorized — 로그인 필요 |
-| 403 | Forbidden — 구독/결제 필요 |
-| 404 | Resource not found |
-| 429 | Rate limited — 일일 한도 초과 |
-| 500 | Internal server error |
+**Action**: D+2(할인), D+5(Cosmic Window), D+7(아카이브) 자동 예약
 
 ---
 
-> ⚠️ **NEW 표시 항목**: 리서치 분석 결과 추가가 필요한 신규 엔드포인트.
-> 기존 API는 코드베이스에서 직접 확인하여 명세함.
+### 7. 친구 초대 가입 보상 (Referral Reward) 🆕 구현 필요
+
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `POST` | `/api/referral/reward` | ✅ (신규 가입 유저) |
+
+**비즈니스 로직 (LOCKED)**:
+- 친구가 초대 링크(`?ref=<referralCode>`)를 통해 **가입 완료** 시 자동 호출.
+- `Referral` 테이블에 기록 → 초대자(`inviterUserId`)의 ChatSession에 Credit +1 지급.
+- 동일 `inviteeUserId`에 대한 중복 지급 방지 (`@@unique([referralCode, inviteeUserId])`).
+
+**Request**
+```typescript
+interface ReferralRewardRequest {
+  referralCode: string;   // 초대한 기존 유저의 코드
+  inviteeUserId: string;  // 가입 완료한 신규 유저 ID
+}
+```
+
+**Response**
+```typescript
+interface ReferralRewardResponse {
+  ok: boolean;
+  inviterUserId: string;
+  creditsAdded: number;       // 항상 1
+}
+```
+
+**Error**: `409` — 이미 이 초대 코드로 보상이 지급됨
+
+---
+
+### 8. 오라클 챗 (Oracle Chat) ✅ 구현됨
+
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `POST` | `/api/chat/message` | ✅ |
+
+**Logic**: 구독자 → 무제한 | 무료 → Credit 소진 시 차단
+
+---
+
+### 9. 성장 이벤트 수집 (Growth Track) ✅ 구현됨
+
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `POST` | `/api/growth/track` | ❌ |
+
+**Request**
+```typescript
+interface GrowthTrackRequest {
+  event: string;              // raw event name (e.g. share_clicked, checkout_success)
+  sessionId?: string;
+  readingId?: string;
+  referralCode?: string;
+  source?: string;
+  step?: string;
+  language?: 'ko' | 'en';
+  context?: string;
+  invitationMode?: boolean;
+  price?: string;
+  plan?: string;
+  path?: string;
+  metadata?: Record<string, unknown>;
+}
+```
+
+**Logic**
+- 내부 `GrowthEvent` 테이블에 저장
+- `canonicalEvent`를 metadata에 함께 기록
+- 환경변수 설정 시 PostHog / Mixpanel로 미러 전송
+
+**Canonical KPI Events**
+- `install`
+- `daily_active` → retention 계산용
+- `share`
+- `invite`
+- `invite_conversion`
+- `paid_conversion`
+
+---
+
+### 10. 성장 KPI 요약 (Growth Summary) 🆕 구현 필요
+
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `GET` | `/api/growth/summary` | ✅ ADMIN |
+
+**Query**
+```
+days?: number // default 30, max 90
+```
+
+**Response**
+```typescript
+interface GrowthSummaryResponse {
+  dateRange: { from: string; to: string; days: number };
+  totals: {
+    installs: number;
+    activeUsers: number;
+    shares: number;
+    invites: number;
+    inviteConversions: number;
+    paidConversions: number;
+    checkoutStarts: number;
+    paywallViews: number;
+    landingViews: number;
+    returningUsers: number;
+  };
+  rates: {
+    retentionRate: number;
+    landingToCheckoutRate: number;
+    checkoutConversionRate: number;
+    viralCoefficientProxy: number;
+  };
+  series: Array<{
+    date: string;
+    installs: number;
+    activeUsers: number;
+    shares: number;
+    invites: number;
+    inviteConversions: number;
+    paidConversions: number;
+  }>;
+  topSources: Array<{ source: string; count: number }>;
+}
+```
+
+**Error**
+- `401` 로그인 필요
+- `403` 관리자 권한 필요
+
+---
+
+## Database Tables (관련 테이블)
+
+| Table | 핵심 컬럼 | 비고 |
+|:------|:---------|:-----|
+| `User` | `referralCode`, `stripeSubscriptionId`, `subscriptionStatus` | 초대 코드 관리 |
+| `Referral` | `referralCode`, `inviterUserId`, `inviteeUserId` | 중복 방지 `@@unique` |
+| `ChatSession` | `credits`, `shareRewardClaimed` | Credit 지급 대상 |
+| `FollowUpJob` | `stage`, `status`, `scheduledFor` | 드립 이메일 관리 |
+| `GrowthEvent` | `event`, `channel`, `metadata`, `createdAt` | 퍼널/리텐션/바이럴 계측 |
+
+---
+
+## Task-to-Endpoint Mapping
+
+| Task (task_board.md) | Endpoint |
+|:---------------------|:---------|
+| 구독 해지 버튼 | `POST /api/subscription/cancel` |
+| 데일리 타로 UI | `GET /api/daily/tarot` |
+| 친구 초대 보상 | `POST /api/referral/reward` |
+| KPI 대시보드 | `GET /api/growth/summary` |

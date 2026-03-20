@@ -439,6 +439,7 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
             <SubscriptionModal
                 isOpen={isSubscriptionModalOpen}
                 onClose={() => setIsSubscriptionModalOpen(false)}
+                source="oracle_chat"
             />
         </div>
     );

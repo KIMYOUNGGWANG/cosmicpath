@@ -21,6 +21,14 @@ const stripe = new Stripe(liveKey, { apiVersion: '2024-12-18.acacia' });
 
 const PLANS = [
     {
+        envKey: 'NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY',
+        productName: 'CosmicPath Pro (Weekly)',
+        productDescription: '주간 스타터 구독 - 가장 낮은 진입 가격으로 7일 동안 무제한 Oracle Chat과 Daily Tarot premium advice 제공',
+        unitAmount: 399,
+        currency: 'usd',
+        interval: 'week',
+    },
+    {
         envKey: 'NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY',
         productName: 'CosmicPath Pro (Monthly)',
         productDescription: '무제한 Oracle Chat + Daily Fortune + 프리미엄 인사이트',

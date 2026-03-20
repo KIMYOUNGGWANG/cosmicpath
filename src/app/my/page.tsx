@@ -31,7 +31,7 @@ interface ParsedReadingMetadata {
 }
 
 type SubscriptionTier = "free" | "pro" | "couple";
-type SubscriptionPlan = "pro_monthly" | "pro_yearly" | "couple_monthly" | null;
+type SubscriptionPlan = "pro_weekly" | "pro_monthly" | "pro_yearly" | "couple_monthly" | null;
 
 interface SubscriptionStatusPayload {
     status: SubscriptionTier;
@@ -60,6 +60,8 @@ function parseReadingMetadata(metadata: string | null): ParsedReadingMetadata {
 
 function getPlanLabel(plan: SubscriptionPlan): string {
     switch (plan) {
+        case "pro_weekly":
+            return "Pro Weekly";
         case "pro_monthly":
             return "Pro Monthly";
         case "pro_yearly":
@@ -359,6 +361,7 @@ export default function MyPage() {
             <SubscriptionModal
                 isOpen={isSubscriptionModalOpen}
                 onClose={() => setIsSubscriptionModalOpen(false)}
+                source="my"
             />
         </div>
     );
