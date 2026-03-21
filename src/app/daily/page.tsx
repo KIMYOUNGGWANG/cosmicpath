@@ -2,15 +2,68 @@ import type { Metadata } from 'next';
 
 import { Navigation } from '@/components/landing/Navigation';
 import { DailySealedWidget } from '@/components/daily/DailySealedWidget';
+import { StructuredData } from '@/components/seo/StructuredData';
 
 export const metadata: Metadata = {
     title: '오늘의 운세 & 타로 | CosmicPath',
     description: '생년월일 기반 오늘의 운세와 데일리 타로를 확인하고 오늘의 흐름과 행동 가이드를 받아보세요.',
+    keywords: ['오늘의 운세', '데일리 타로', '무료 타로', '생년월일 운세', '오늘의 타로', '사주 운세'],
+    alternates: {
+        canonical: '/daily',
+    },
+    openGraph: {
+        title: '오늘의 운세 & 타로 | CosmicPath',
+        description: '생년월일 기반 오늘의 운세와 데일리 타로를 확인하고 오늘의 흐름과 행동 가이드를 받아보세요.',
+        url: 'https://cosmicpath.app/daily',
+        type: 'website',
+        images: ['/og-image.png'],
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: '오늘의 운세 & 타로 | CosmicPath',
+        description: '매일 자정 갱신되는 오늘의 운세와 타로 리추얼.',
+        images: ['/og-image.png'],
+    },
 };
 
 export default function DailyPage() {
+    const structuredData = [
+        {
+            '@context': 'https://schema.org',
+            '@type': 'WebPage',
+            name: '오늘의 운세 & 타로',
+            url: 'https://cosmicpath.app/daily',
+            description: '생년월일 기반 오늘의 운세와 데일리 타로를 확인하는 페이지.',
+            inLanguage: 'ko-KR',
+            about: ['오늘의 운세', '데일리 타로', '사주 운세'],
+        },
+        {
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            mainEntity: [
+                {
+                    '@type': 'Question',
+                    name: '오늘의 운세는 어떻게 계산되나요?',
+                    acceptedAnswer: {
+                        '@type': 'Answer',
+                        text: '생년월일을 기준으로 당일 에너지 흐름과 고정 시드를 결합해 자정까지 유지되는 운세와 타로 결과를 제공합니다.',
+                    },
+                },
+                {
+                    '@type': 'Question',
+                    name: '데일리 타로는 매일 바뀌나요?',
+                    acceptedAnswer: {
+                        '@type': 'Answer',
+                        text: '네. 결과는 날짜 기준으로 매일 갱신되며 같은 날에는 동일한 생년월일에 대해 일관된 결과를 보여줍니다.',
+                    },
+                },
+            ],
+        },
+    ];
+
     return (
         <main className="w-full min-h-screen bg-void text-starlight selection:bg-acc-gold selection:text-bg-void flex flex-col">
+            <StructuredData data={structuredData} />
             <Navigation />
 
             <div className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">

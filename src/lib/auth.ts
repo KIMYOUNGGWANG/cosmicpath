@@ -48,8 +48,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         },
     },
     pages: {
-        signIn: '/login', // We will use a modal, but this is a fallback
-        error: '/error',
+        signIn: '/login',
+        error: '/auth/error',
     },
     trustHost: true,
     events: {

@@ -20,6 +20,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.9,
         },
         {
+            url: `${baseUrl}/daily`,
+            lastModified: new Date(),
+            changeFrequency: 'daily',
+            priority: 0.85,
+        },
+        {
+            url: `${baseUrl}/k-destiny`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly',
+            priority: 0.8,
+        },
+        {
+            url: `${baseUrl}/match/new`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly',
+            priority: 0.8,
+        },
+        {
             url: `${baseUrl}/terms`,
             lastModified: new Date(),
             changeFrequency: 'monthly',
