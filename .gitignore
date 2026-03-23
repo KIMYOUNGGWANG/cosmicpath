@@ -49,6 +49,9 @@ cosmicpath_prd_v3
 # documentation (except README)
 *.md
 !README.md
+!marketing/strategy.md
+!marketing/copy.md
+!marketing/threads_150_posts.md
 
 # dev utility scripts
 check-env*.js
@@ -59,3 +62,4 @@ docs/marketing/*.md
 
 # utility scripts
 convert_threads_posts.py
+.tmp/prompt-verify/
