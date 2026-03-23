@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { buildChatSystemPrompt } from '@/lib/ai/prompt-builder';
+import { buildChatSystemPrompt, buildChatUserPrompt } from '@/lib/ai/prompt-builder';
 import { generateCompletion } from '@/lib/ai/llm-client';
 import { buildFactsOfDestiny } from '@/lib/engines/intelligence-bridge';
 import { authorizeOracleAccess, OracleAccessError } from '@/lib/oracle-access';
@@ -102,9 +102,7 @@ export async function POST(request: NextRequest) {
             `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`
         ).join('\n');
 
-        const fullUserPrompt = historyText
-            ? `Previous Conversation:\n${historyText}\n\nCurrent Question: ${question}`
-            : question;
+        const fullUserPrompt = buildChatUserPrompt(question, historyText);
 
         const aiResponse = await generateCompletion(systemPrompt, fullUserPrompt, 'free');
 

@@ -1,11 +1,13 @@
 /**
  * Premium Reading Service
- * Orchestrates 6-phase multi-turn API calls for rich content generation
+ * Orchestrates 7-phase multi-turn API calls for rich content generation
+ * Phase 1 is split into 1A (summary/traits/core) and 1B (astro/tarot/numerology)
  * Phase 5 is split into 5A (action) and 5B (conclusion) for stability
  */
 
 import {
     buildPhase1Prompt,
+    buildPhase1BPrompt,
     buildPhase2Prompt,
     buildPhase3Prompt,
     buildPhase4Prompt,
@@ -50,33 +52,39 @@ export async function generatePremiumReport(
         if (!phase1.success) throw new Error(`Phase 1 failed: ${phase1.error}`);
         Object.assign(results, phase1.data);
 
-        // Phase 2: Saju Basics
+        // Phase 1B: Astro Deep + Tarot + Numerology
         onProgress?.(2, PHASE_LABELS[1].label, PHASE_LABELS[1].icon);
-        const phase2 = await generateSinglePhase(2, userData, results, apiKey);
+        const phase1B = await generateSinglePhase(2, userData, results, apiKey);
+        if (!phase1B.success) throw new Error(`Phase 1B failed: ${phase1B.error}`);
+        Object.assign(results, phase1B.data);
+
+        // Phase 2: Saju Basics
+        onProgress?.(3, PHASE_LABELS[2].label, PHASE_LABELS[2].icon);
+        const phase2 = await generateSinglePhase(3, userData, results, apiKey);
         if (!phase2.success) throw new Error(`Phase 2 failed: ${phase2.error}`);
         Object.assign(results, phase2.data);
 
         // Phase 3: Fortune Flow
-        onProgress?.(3, PHASE_LABELS[2].label, PHASE_LABELS[2].icon);
-        const phase3 = await generateSinglePhase(3, userData, results, apiKey);
+        onProgress?.(4, PHASE_LABELS[3].label, PHASE_LABELS[3].icon);
+        const phase3 = await generateSinglePhase(4, userData, results, apiKey);
         if (!phase3.success) throw new Error(`Phase 3 failed: ${phase3.error}`);
         Object.assign(results, phase3.data);
 
         // Phase 4: Life Areas
-        onProgress?.(4, PHASE_LABELS[3].label, PHASE_LABELS[3].icon);
-        const phase4 = await generateSinglePhase(4, userData, results, apiKey);
+        onProgress?.(5, PHASE_LABELS[4].label, PHASE_LABELS[4].icon);
+        const phase4 = await generateSinglePhase(5, userData, results, apiKey);
         if (!phase4.success) throw new Error(`Phase 4 failed: ${phase4.error}`);
         Object.assign(results, phase4.data);
 
         // Phase 5A: Special Analysis + Action Plan + Date Selection
-        onProgress?.(5, PHASE_LABELS[4].label, PHASE_LABELS[4].icon);
-        const phase5A = await generateSinglePhase(5, userData, results, apiKey);
+        onProgress?.(6, PHASE_LABELS[5].label, PHASE_LABELS[5].icon);
+        const phase5A = await generateSinglePhase(6, userData, results, apiKey);
         if (!phase5A.success) throw new Error(`Phase 5A failed: ${phase5A.error}`);
         Object.assign(results, phase5A.data);
 
-        // Phase 5B (6): Past Life + Glossary + Final Verdict
-        onProgress?.(6, PHASE_LABELS[5].label, PHASE_LABELS[5].icon);
-        const phase5B = await generateSinglePhase(6, userData, results, apiKey);
+        // Phase 5B (7): Past Life + Glossary + Final Verdict
+        onProgress?.(7, PHASE_LABELS[6].label, PHASE_LABELS[6].icon);
+        const phase5B = await generateSinglePhase(7, userData, results, apiKey);
         if (!phase5B.success) throw new Error(`Phase 5B failed: ${phase5B.error}`);
         Object.assign(results, phase5B.data);
 
@@ -110,18 +118,21 @@ export async function generateSinglePhase(
             promptBuilder = buildPhase1Prompt;
             break;
         case 2:
-            promptBuilder = buildPhase2Prompt;
+            promptBuilder = buildPhase1BPrompt;
             break;
         case 3:
-            promptBuilder = buildPhase3Prompt;
+            promptBuilder = buildPhase2Prompt;
             break;
         case 4:
-            promptBuilder = buildPhase4Prompt;
+            promptBuilder = buildPhase3Prompt;
             break;
         case 5:
-            promptBuilder = buildPhase5APrompt;
+            promptBuilder = buildPhase4Prompt;
             break;
         case 6:
+            promptBuilder = buildPhase5APrompt;
+            break;
+        case 7:
             promptBuilder = buildPhase5BPrompt;
             break;
         default:
@@ -158,7 +169,7 @@ export async function generateSinglePhase(
                             { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
                             { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
                             { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
                         ],
                     }),
                 }

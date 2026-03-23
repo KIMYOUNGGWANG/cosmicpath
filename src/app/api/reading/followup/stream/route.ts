@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { buildOracleChatSystemPrompt } from '@/lib/ai/oracle-prompts';
+import { buildChatSystemPrompt, buildChatUserPrompt } from '@/lib/ai/prompt-builder';
 import { generateStreamingCompletion } from '@/lib/ai/llm-client';
 import { buildFactsOfDestiny } from '@/lib/engines/intelligence-bridge';
 import { authorizeOracleAccess, OracleAccessError } from '@/lib/oracle-access';
@@ -68,16 +68,10 @@ export async function POST(request: NextRequest) {
         // 4. AI 컨텍스트 구성
         const reportData = JSON.parse(reading.data);
         const metadata = reading.metadata ? JSON.parse(reading.metadata) : null;
-        const tarotNames = Array.isArray(metadata?.tarotCards)
-            ? metadata.tarotCards
-                .map((card: { name?: string } | null | undefined) => card?.name)
-                .filter((name: string | undefined): name is string => Boolean(name))
-            : [];
-
         const chatContext = {
             saju: metadata?.saju || reportData.saju_sections?.overview || '사주 정보 없음',
             astrology: metadata?.astrology || reportData.summary?.astro_anchor || '점성술 정보 없음',
-            tarot: tarotNames.join(', ') || '타로 정보 없음',
+            tarot: metadata?.tarotCards || metadata?.tarot || [],
             name: metadata?.readingData?.name
         };
 
@@ -96,16 +90,14 @@ export async function POST(request: NextRequest) {
             console.warn('[Facts of Destiny] Bridge generation skipped:', bridgeError);
         }
 
-        const systemPrompt = buildOracleChatSystemPrompt(chatContext, factsOfDestinyBlock);
+        const systemPrompt = buildChatSystemPrompt(chatContext, 'ko', factsOfDestinyBlock);
 
         // 이전 대화 내역 (최근 6개 참조)
         const historyText = session.messages.slice(-6).map((m: { role: string; content: string }) =>
             `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`
         ).join('\n');
 
-        const fullUserPrompt = historyText
-            ? `Previous Conversation:\n${historyText}\n\nCurrent Question: ${question}`
-            : question;
+        const fullUserPrompt = buildChatUserPrompt(question, historyText);
 
         // 5. 스트리밍 호출
         const response = await generateStreamingCompletion(systemPrompt, fullUserPrompt, 'free');

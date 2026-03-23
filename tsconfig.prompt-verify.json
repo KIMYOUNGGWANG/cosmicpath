@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".tmp/prompt-verify",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2020",
+    "isolatedModules": false,
+    "incremental": false
+  },
+  "include": [
+    "scripts/verify-oracle-prompt-refactor.ts",
+    "scripts/run-oracle-live-check.ts",
+    "src/lib/ai/prompt-builder.ts",
+    "src/lib/ai/prompts/system-core.ts",
+    "src/lib/ai/prompts/saju-rules.ts",
+    "src/lib/ai/prompts/astro-rules.ts",
+    "src/lib/ai/prompts/tarot-rules.ts",
+    "src/lib/engines/saju.ts",
+    "src/lib/engines/astrology.ts",
+    "src/lib/engines/tarot.ts",
+    "src/lib/core/conflict-resolver.ts"
+  ]
+}

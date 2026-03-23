@@ -1,10 +1,10 @@
 /**
  * 사주 명리학 해석 규칙 + 엔진 통합 (Saju Interpretation Rules)
  * Phase 8: 프롬프트 통합
- * 
+ *
  * 가중치: 50% (본질, 장기 운세)
  * 사용: AI 프롬프트에 컨텍스트로 주입
- * 
+ *
  * 사주명리학 시스템 지침 v1.0.3 기준
  */
 
@@ -286,7 +286,75 @@ export function formatSajuForPrompt(saju: SajuResult, lang: 'ko' | 'en' = 'ko'):
 }
 
 /**
- * 사주 해석 지시문 생성
+ * 채팅용 경량 사주 해석 지시문 (Slim)
+ *
+ * 핵심 3블록만 포함: SAJU_ANALYSIS + INTERPRETATION_RULES + TIMING_HINT
+ * 세운/월운/대운 상세는 Premium Phase 3에서 다루므로 채팅에서는 생략.
+ * → Lost in the Middle 방지 + 토큰 절약 (~60줄 vs 원본 ~200줄)
+ */
+export function getSajuChatDirective(saju: SajuResult, lang: 'ko' | 'en' = 'ko'): string {
+    const sajuContext = formatSajuForPrompt(saju, lang);
+    const currentDaeun = saju.daeun?.currentDaeun;
+    const nextDaeunInfo = (() => {
+        if (!saju.daeun?.currentDaeun) return null;
+        const currentIdx = saju.daeun.sequence.findIndex(d =>
+            d.stem === saju.daeun!.currentDaeun!.stem &&
+            d.branch === saju.daeun!.currentDaeun!.branch
+        );
+        if (currentIdx >= 0 && currentIdx < saju.daeun.sequence.length - 1) {
+            return saju.daeun.sequence[currentIdx + 1];
+        }
+        return null;
+    })();
+
+    if (lang === 'ko') {
+        return `
+<SAJU_ANALYSIS>
+${sajuContext}
+</SAJU_ANALYSIS>
+
+<SAJU_INTERPRETATION_RULES>
+1. 위 사주 분석은 결정론적 엔진에서 계산된 정확한 데이터입니다.
+2. 격국(${saju.gyeokguk?.type || '보통격'})과 용신(${saju.enhancedYongsin?.primary ? FIVE_ELEMENTS[saju.enhancedYongsin.primary] : '미정'})을 중심으로 해석하세요.
+3. 신강/신약(${saju.enhancedYongsin?.bodyStrength || '중화'})에 따른 조언을 제공하세요.
+4. 사주는 타고난 성향(50% 가중치)이므로, 점성술/타로와 교차 검증하세요.
+${currentDaeun ? `5. 현재 대운: ${currentDaeun.stem}${currentDaeun.branch} (${currentDaeun.startAge}~${currentDaeun.endAge}세, ${currentDaeun.tenGod}) — 답변에 자연스럽게 반영하세요.` : ''}
+${nextDaeunInfo ? `6. 다음 대운 전환: ${nextDaeunInfo.startAge}세부터 ${nextDaeunInfo.stem}${nextDaeunInfo.branch} (${nextDaeunInfo.tenGod})` : ''}
+</SAJU_INTERPRETATION_RULES>
+
+<TIMING_HINT>
+- 시기 질문에는 구체적으로 답하세요: "올해 5월(사월) 전후로 전환점" ✓ / "곧 좋아질 것" ✗
+${currentDaeun ? `- 대운 전환 시점인 ${nextDaeunInfo ? nextDaeunInfo.startAge + '세' : 'XX세'}까지 현재 기조를 참고하세요.` : ''}
+</TIMING_HINT>
+`;
+    } else {
+        return `
+<SAJU_ANALYSIS>
+${sajuContext}
+</SAJU_ANALYSIS>
+
+<SAJU_INTERPRETATION_RULES>
+1. The above Saju analysis is accurate data calculated by a deterministic engine.
+2. Focus on Structure (${saju.gyeokguk?.type || '보통격'}) and Yongsin (${saju.enhancedYongsin?.primary || 'undetermined'}).
+3. Provide advice based on body strength (${saju.enhancedYongsin?.bodyStrength || '중화'}).
+4. Saju represents innate tendencies (50% weight) — cross-validate with Astrology/Tarot.
+${currentDaeun ? `5. Current Daewoon: ${currentDaeun.stem}${currentDaeun.branch} (Age ${currentDaeun.startAge}~${currentDaeun.endAge}, ${currentDaeun.tenGod}).` : ''}
+${nextDaeunInfo ? `6. Next Daewoon transition: Age ${nextDaeunInfo.startAge} → ${nextDaeunInfo.stem}${nextDaeunInfo.branch} (${nextDaeunInfo.tenGod})` : ''}
+</SAJU_INTERPRETATION_RULES>
+
+<TIMING_HINT>
+- Be specific with timing: "Around May of this year, expect a turning point" ✓ / "Good things will happen soon" ✗
+${currentDaeun ? `- Reference the Daewoon transition at age ${nextDaeunInfo ? nextDaeunInfo.startAge : 'XX'} for long-term context.` : ''}
+</TIMING_HINT>
+`;
+    }
+}
+
+/**
+ * 사주 해석 지시문 생성 (Full — Premium Reports / Phase Prompts 전용)
+ *
+ * 6개 XML 블록 포함 (150-200줄): ANALYSIS + RULES + DAEWOON + SEWOON + WOLWOON + TIMING
+ * ⚠️ 채팅에서는 getSajuChatDirective()를 사용하세요 (Lost in the Middle 방지)
  */
 export function getSajuInterpretationDirective(saju: SajuResult, lang: 'ko' | 'en' = 'ko'): string {
     const sajuContext = formatSajuForPrompt(saju, lang);

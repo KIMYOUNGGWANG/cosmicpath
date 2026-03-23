@@ -130,6 +130,80 @@ ${JSON.stringify(userData.partnerSajuData, null, 2)}
 `;
 }
 
+// ============================================================================
+// R3: Phase 간 핵심 결론 전달 헬퍼
+// Phase 2만 previousData를 사용하던 것을 Phase 3-5B까지 확장
+// 전체 JSON을 덤프하지 않고, 핵심 결론만 추출하여 토큰 절약
+// ============================================================================
+function buildPreviousPhaseContext(
+  previousData: PremiumReportPartial | null | undefined,
+  lang: 'ko' | 'en' = 'ko'
+): string {
+  if (!previousData) return '';
+
+  const isEn = lang === 'en';
+  const lines: string[] = [];
+
+  // Phase 1 핵심: 요약 제목 + 신뢰 점수
+  if (previousData.summary) {
+    lines.push(isEn
+      ? `- Report title: "${previousData.summary.title}"`
+      : `- 리포트 제목: "${previousData.summary.title}"`
+    );
+    lines.push(isEn
+      ? `- Trust score: ${previousData.summary.trust_score}/5 (${previousData.summary.trust_reason})`
+      : `- 신뢰 점수: ${previousData.summary.trust_score}/5 (${previousData.summary.trust_reason})`
+    );
+  }
+
+  // Phase 1 핵심: 오행 균형 (core_analysis)
+  const coreAnalysis = previousData.core_analysis as { lacking_elements?: { elements?: string }; abundant_elements?: { elements?: string } } | undefined;
+  if (coreAnalysis) {
+    if (coreAnalysis.lacking_elements?.elements) {
+      lines.push(isEn
+        ? `- Lacking elements: ${coreAnalysis.lacking_elements.elements}`
+        : `- 부족 오행: ${coreAnalysis.lacking_elements.elements}`
+      );
+    }
+    if (coreAnalysis.abundant_elements?.elements) {
+      lines.push(isEn
+        ? `- Abundant elements: ${coreAnalysis.abundant_elements.elements}`
+        : `- 과다 오행: ${coreAnalysis.abundant_elements.elements}`
+      );
+    }
+  }
+
+  // Phase 2 핵심: 사주 분석 결론 (일간, 신강/신약)
+  const sajuSections = previousData.saju_sections as Array<{ id?: string; title?: string; content?: string }> | undefined;
+  if (sajuSections && Array.isArray(sajuSections)) {
+    const dayMaster = sajuSections.find(s => s.id === 'day_master');
+    const strength = sajuSections.find(s => s.id === 'strength');
+    if (dayMaster?.content) {
+      const snippet = dayMaster.content.slice(0, 150);
+      lines.push(isEn
+        ? `- Day master analysis (summary): ${snippet}...`
+        : `- 일간 분석 (요약): ${snippet}...`
+      );
+    }
+    if (strength?.content) {
+      const snippet = strength.content.slice(0, 100);
+      lines.push(isEn
+        ? `- Strength assessment (summary): ${snippet}...`
+        : `- 신강/신약 판단 (요약): ${snippet}...`
+      );
+    }
+  }
+
+  if (lines.length === 0) return '';
+
+  const tag = isEn ? 'previous_phase_context' : '이전_분석_핵심';
+  const instruction = isEn
+    ? 'Reference these prior conclusions for consistency. Do not contradict them unless new data warrants it.'
+    : '이전 Phase의 핵심 결론입니다. 일관성을 위해 참조하되, 새로운 데이터가 있을 때만 수정하세요.';
+
+  return `\n<${tag}>\n${instruction}\n${lines.join('\n')}\n</${tag}>`;
+}
+
 // Phase 1: Summary + Traits + Core Analysis
 export function buildPhase1Prompt(userData: UserData): { system: string; user: string } {
   const lang = userData.language || 'ko';
@@ -214,63 +288,6 @@ Create a strong first impression so that the user feels "This resonates deeply w
       "metal": 0-100,
       "water": 0-100
     }
-  },
-  "astro_deep": {
-    "sun_moon_dynamic": {
-      "title": "☀️🌙 Sun-Moon Dynamic",
-      "content": "Analyze the harmony or conflict between Sun (Outer Self) and Moon (Inner Emotion). Lead with Astrology language ('Your Sun in [Sign] seeks recognition, while your Moon in [Sign] craves emotional security...'). (250+ words)"
-    },
-    "ascendant_influence": {
-      "title": "⬆️ Rising Sign (Your Social Mask)",
-      "content": "Explain how the Ascendant shapes first impressions. 'People perceive you as a [Rising Sign] type—[traits]—even though your true core (Sun) is [Sun Sign].' (200+ words)"
-    },
-    "dominant_element": {
-      "title": "🔥💧 Dominant Element",
-      "content": "Analyze the strongest element in your chart (Fire/Earth/Air/Water) and its effect on personality. (200+ words)"
-    },
-    "planetary_warning": {
-      "title": "⚠️ Planetary Alert",
-      "content": "Warn about retrograde planets or tense aspects. If none, explain favorable alignments. (150+ words)"
-    }
-  },
-  "tarot_details": [
-    {
-      "position": "Past / Card 1",
-      "card_name": "Card Name",
-      "is_reversed": true/false,
-      "keywords": ["Keyword1", "Keyword2"],
-      "interpretation": "Personalized interpretation connecting this card to your past. Link to Astrology transit if relevant (e.g., 'This card mirrors your Saturn Return period'). (200+ words)",
-      "saju_connection": "Optional: Connect to Soul Element for added depth.",
-      "advice": "Personalized advice (100+ words)"
-    },
-    {
-      "position": "Present / Card 2",
-      "card_name": "Card Name",
-      "is_reversed": true/false,
-      "keywords": ["Keyword1", "Keyword2"],
-      "interpretation": "Interpretation for current situation. (200+ words)",
-      "saju_connection": "Soul Element connection",
-      "advice": "Advice"
-    },
-    {
-      "position": "Future / Card 3",
-      "card_name": "Card Name",
-      "is_reversed": true/false,
-      "keywords": ["Keyword1", "Keyword2"],
-      "interpretation": "Interpretation for future potential. (200+ words)",
-      "saju_connection": "Soul Element connection",
-      "advice": "Advice"
-    }
-  ],
-  "numerology": {
-    "life_path": {
-      "number": ${lifePathNumber},
-      "title": "🔢 Life Path Number: ${lifePathNumber} - ${lifePathKeyword}",
-      "meaning": "Explain your soul's purpose and life journey through Numerology. (150+ words)",
-      "saju_connection": "Connect this number to your Soul Element for a unique fusion insight."
-    },
-    "lucky_numbers": [0, 0, 0],
-    "lucky_day_advice": "Specific advice on dates/times using your lucky numbers."
   }
 }
 
@@ -279,7 +296,7 @@ Create a strong first impression so that the user feels "This resonates deeply w
 2. **Metaphors**: Use evocative metaphors (e.g., "Like a river finding its path to the sea...") to create emotional resonance.
 3. **Language**: Write ALL content in English.
 4. **Astro-First Structure**: Always present Astrology insights BEFORE Saju/Elemental Blueprint.
-5. **Length**: All descriptions must be **at least 150 words** to ensure sufficient depth.`;
+5. **Depth over Length**: Each field must fulfill all required analytical points. Avoid filler sentences.`;
   } else {
     // ===============================================================
     // [NEW] 개선된 Phase 1 프롬프트 (v2.0) - 심층 분석 버전
@@ -362,23 +379,156 @@ Create a strong first impression so that the user feels "This resonates deeply w
       "metal": 0-100 (사주 원국에서 金 기운의 비율),
       "water": 0-100 (사주 원국에서 水 기운의 비율)
     }
+  }
+}
+
+## 작성 규칙
+1. **Cold Reading**: "겉으로는 강해 보이지만 속은 여린 풀잎 같군요." 처럼 꿰뚫어 보는 화법 사용.
+2. **비유 활용**: "마치 폭주하는 기관차처럼..." 등 문학적 표현으로 몰입감 극대화.
+3. **근거 필수**: 모든 주요 주장 뒤에 (근거: [사주 글자 간 관계] 또는 [별자리 관계]) 형식으로 반드시 명시하십시오. **사용자 데이터에 없는 글자를 절대 지어내지 마십시오.**
+4. 모든 필드는 위에 명시된 논점 구조를 반드시 충족하십시오. 빈 말이나 같은 내용의 반복 대신, 각 논점마다 새로운 정보를 추가하십시오.
+5. **데이터 준수**: 반드시 제공된 <사주_원국>의 천간/지지 정보를 바탕으로 해석하십시오. 월주가 명시되어 있다면 그 월주를 절대적 기준으로 삼으십시오.`;
+  }
+
+  const user = buildUserContext(userData);
+  return { system, user };
+}
+
+// ============================================================================
+// Phase 1B: Astro Deep + Tarot Details + Numerology (분할된 심층 분석)
+// Phase 1A에서 분리하여 "Lost in the Middle" 방지
+// ============================================================================
+export function buildPhase1BPrompt(userData: UserData, previousData?: PremiumReportPartial | null): { system: string; user: string } {
+  const lang = userData.language || 'ko';
+
+  const [year, month, day] = userData.birthDate.split('-').map(Number);
+  const birthDateObj = new Date(year, month - 1, day);
+  const lifePathNumber = calculateLifePathNumber(birthDateObj);
+  const lifePathKeyword = getLifePathKeyword(lifePathNumber, lang);
+
+  let system = '';
+
+  if (lang === 'en') {
+    system = `## Persona
+You are continuing the deep analysis started in Phase 1A. You are a 'Life Strategist' blending Eastern and Western wisdom.
+Use the same tone and analytical framework as Phase 1A.
+
+<ASTRO_FIRST_STRATEGY>
+1. **Primary Framework (60%)**: Western Astrology
+2. **Intuitive Layer (30%)**: Tarot Cards
+3. **Secret Wisdom (10%)**: Eastern Elemental Blueprint (Soul Element)
+</ASTRO_FIRST_STRATEGY>
+
+## Phase 1B Mission: Deep Astrological Dive + Tarot + Numerology
+Focus on delivering deep, personalized astrological and tarot analysis. Each section must be rich with specific evidence.
+
+## Response Requirements (JSON)
+{
+  "astro_deep": {
+    "sun_moon_dynamic": {
+      "title": "☀️🌙 Sun-Moon Dynamic",
+      "content": "Analyze Sun (Outer Self) vs Moon (Inner Emotion). Structure in 3 parts: (1) Element relationship diagnosis, (2) Daily behavior manifestation, (3) Cross-reference with Soul Element."
+    },
+    "ascendant_influence": {
+      "title": "⬆️ Rising Sign (Your Social Mask)",
+      "content": "Must include: (1) The 'mask vs. core' gap, (2) Specific work/relationship context examples."
+    },
+    "dominant_element": {
+      "title": "🔥💧 Dominant Element",
+      "content": "Must include: (1) Core personality traits, (2) Risks of excess, (3) Balance strategy."
+    },
+    "planetary_warning": {
+      "title": "⚠️ Planetary Alert",
+      "content": "Must include: (1) Affected life areas, (2) Specific timing and coping strategies."
+    }
   },
+  "tarot_details": [
+    {
+      "position": "Past / Card 1",
+      "card_name": "Card Name",
+      "is_reversed": true/false,
+      "keywords": ["Keyword1", "Keyword2"],
+      "interpretation": "Must include: (1) How card resonates with past experiences, (2) Astrology/Soul Element evidence link.",
+      "saju_connection": "Connect to Soul Element.",
+      "advice": "Must include: (1) Action to take, (2) What to avoid."
+    },
+    {
+      "position": "Present / Card 2",
+      "card_name": "Card Name",
+      "is_reversed": true/false,
+      "keywords": ["Keyword1", "Keyword2"],
+      "interpretation": "Must include: (1) Current energy diagnosis, (2) Astrology cross-reference, (3) Key watch point.",
+      "saju_connection": "Soul Element connection",
+      "advice": "Advice"
+    },
+    {
+      "position": "Future / Card 3",
+      "card_name": "Card Name",
+      "is_reversed": true/false,
+      "keywords": ["Keyword1", "Keyword2"],
+      "interpretation": "Must include: (1) Future potential direction, (2) Planetary transit connection, (3) Concrete action.",
+      "saju_connection": "Soul Element connection",
+      "advice": "Advice"
+    }
+  ],
+  "numerology": {
+    "life_path": {
+      "number": ${lifePathNumber},
+      "title": "🔢 Life Path Number: ${lifePathNumber} - ${lifePathKeyword}",
+      "meaning": "Must include: (1) Core traits, (2) Life pattern manifestation, (3) Soul Element resonance.",
+      "saju_connection": "Fusion insight connecting this number to Soul Element."
+    },
+    "lucky_numbers": [0, 0, 0],
+    "lucky_day_advice": "Specific date/time advice using lucky numbers."
+  }
+}
+
+## Writing Rules
+1. **Language**: Write ALL content in English.
+2. **Depth over Length**: Fulfill all required analytical points. No filler.
+3. Reference Phase 1A's core analysis conclusions for consistency.`;
+  } else {
+    system = `## 페르소나
+Phase 1A에서 시작한 심층 분석을 이어갑니다. 당신은 '운명의 설계자(Fate Architect)'입니다.
+Phase 1A와 동일한 어조와 분석 프레임워크를 유지하십시오.
+
+<분석_가중치_원칙>
+1. **핵심 결론**: 사주(50%) + 점성술(30%) = 80% 비중
+2. **타로(20%)**: "현재 에너지/흐름"의 보조 참고
+3. **결론 충돌 시**: 사주/점성술 기반 해석을 우선
+</분석_가중치_원칙>
+
+## Phase 1B 임무: 점성술 심층 분석 + 타로 + 수비학
+Phase 1A에서 도출한 핵심 요약과 오행 균형을 바탕으로, 점성술/타로/수비학 심층 분석을 수행하십시오.
+
+<style_guide>
+**나쁜 예 (X):**
+- "태양이 물병자리라서 창의적입니다."
+- "타로에서 좋은 카드가 나왔습니다."
+
+**좋은 예 (O):**
+- "태양(물병자리)은 혁신을 갈구하지만, 달(게자리)은 안전을 원합니다. 이 내면의 줄다리기가 커리어에서 '아이디어는 넘치지만 실행이 늦어지는' 패턴으로 나타납니다. (근거: 태양-달 스퀘어 각도)"
+- "과거 카드 'The Tower'가 원국의 子午冲과 정확히 겹칩니다. 2024년경 예상치 못한 급변이 있었을 것이며, 이는 성장의 발판이 됩니다. (근거: 자오충 + Tower 상징 일치)"
+</style_guide>
+
+## 응답 요구사항 (JSON)
+{
   "astro_deep": {
     "sun_moon_dynamic": {
       "title": "☀️🌙 태양-달 역학 (Sun-Moon Dynamic)",
-      "content": "태양 별자리(외적 자아)와 달 별자리(내면의 감정)의 **조화 또는 갈등**을 분석하십시오. 같은 원소인지, 충돌하는 원소인지(예: 불-물)에 따라 내면 갈등 여부를 진단. 내용은 250자 이상으로 작성하십시오."
+      "content": "반드시 3단락 구조: (1) 두 별자리의 원소 관계와 핵심 긴장/조화, (2) 일상 행동 패턴으로의 발현, (3) 사주 일간과의 교차 비교 및 조언."
     },
     "ascendant_influence": {
       "title": "⬆️ 상승궁의 영향력 (Rising Sign Power)",
-      "content": "상승궁이 사회적 첫인상과 타인이 보는 나의 이미지에 어떤 영향을 주는지 분석하십시오. 태양 별자리와의 차이점도 설명. 내용은 200자 이상으로 작성하십시오."
+      "content": "반드시 포함: (1) 태양과 상승궁의 '겉과 속의 갭', (2) 직장/연애 등 특정 상황에서의 발현 예시."
     },
     "dominant_element": {
       "title": "🔥💧 지배 원소 분석 (Dominant Element)",
-      "content": "출생 차트에서 가장 강한 원소(불/흙/공기/물)를 분석하고, 이것이 성격과 행동 패턴에 어떻게 영향을 미치는지 설명하십시오. 내용은 200자 이상으로 작성하십시오."
+      "content": "반드시 포함: (1) 핵심 성격 특성, (2) 과잉 시 부작용, (3) 부족 원소와 균형 전략."
     },
     "planetary_warning": {
       "title": "⚠️ 행성 경고 (Planetary Alert)",
-      "content": "현재 **역행 중인 행성**(수성, 금성 등)이나 **긴장 각도(스퀘어, 오포지션)**가 있다면 주의 사항을 경고하십시오. 없다면 현재 유리한 행성 배치를 설명. 내용은 150자 이상으로 작성하십시오."
+      "content": "반드시 포함: (1) 영향 영역(커리어/연애/건강), (2) 구체적 시기와 대처법."
     }
   },
   "tarot_details": [
@@ -387,16 +537,16 @@ Create a strong first impression so that the user feels "This resonates deeply w
       "card_name": "뽑힌 카드 이름",
       "is_reversed": true/false,
       "keywords": ["키워드1", "키워드2", "키워드3"],
-      "interpretation": "이 카드가 사용자의 과거에 어떤 의미인지 **사주와 연결**하여 해석. 단순 카드 설명이 아닌 개인화된 메시지로 작성. 내용은 200자 이상으로 작성하십시오.",
-      "saju_connection": "이 카드가 사주의 어떤 요소(글자, 십성)와 연결되는지. 예: '월지 子의 수(水) 기운이 이 카드의 감정적 깊이와 공명합니다.'",
-      "advice": "이 카드가 주는 개인화된 조언. 내용은 100자 이상으로 작성하십시오."
+      "interpretation": "반드시 포함: (1) 카드 상징과 과거 경험의 공명, (2) 사주 원국 특정 글자와의 연결 근거.",
+      "saju_connection": "사주 요소와의 연결. 예: '월지 子의 수(水) 기운이 이 카드와 공명합니다.'",
+      "advice": "(1) 구체적 행동 지침, (2) 피해야 할 것."
     },
     {
       "position": "현재 (Present) / 2번 카드",
       "card_name": "카드 이름",
       "is_reversed": true/false,
       "keywords": ["키워드1", "키워드2"],
-      "interpretation": "현재 상황에 대한 해석 + 사주 교차 분석. 내용은 200자 이상으로 작성하십시오.",
+      "interpretation": "반드시 포함: (1) 현재 에너지 진단, (2) 사주 원국 교차점, (3) 지금 가장 주의할 한 가지.",
       "saju_connection": "사주와의 연결점",
       "advice": "조언"
     },
@@ -405,7 +555,7 @@ Create a strong first impression so that the user feels "This resonates deeply w
       "card_name": "카드 이름",
       "is_reversed": true/false,
       "keywords": ["키워드1", "키워드2"],
-      "interpretation": "미래 가능성에 대한 해석 + 사주 교차 분석. 내용은 200자 이상으로 작성하십시오.",
+      "interpretation": "반드시 포함: (1) 미래 잠재력 방향, (2) 대운/세운 연결, (3) 실현 위한 행동 제안.",
       "saju_connection": "사주와의 연결점",
       "advice": "조언"
     }
@@ -414,23 +564,21 @@ Create a strong first impression so that the user feels "This resonates deeply w
     "life_path": {
       "number": ${lifePathNumber},
       "title": "🔢 Life Path Number: ${lifePathNumber} - ${lifePathKeyword}",
-      "meaning": "숫자학으로 본 당신의 영혼의 목적과 삶의 여정을 설명하십시오. 내용은 150자 이상으로 작성하십시오.",
-      "saju_connection": "이 숫자의 특성이 사주의 어떤 글자(오행, 십성)와 공명하는지 연결하여 해석. (예: '숫자 7의 분석적인 성향은 사주의 편인(偏印)과 일맥상통합니다.')"
+      "meaning": "반드시 포함: (1) 이 숫자의 핵심 특성, (2) 삶에서의 발현 패턴, (3) 사주 오행과의 공명점.",
+      "saju_connection": "이 숫자와 사주 글자(오행, 십성)의 공명 해석."
     },
     "lucky_numbers": [0, 0, 0],
-    "lucky_day_advice": "당신의 행운의 숫자들을 활용할 수 있는 구체적인 날짜나 시간대 조언 (예: '매월 3일, 12일은 당신에게 유리한 날입니다.')"
+    "lucky_day_advice": "행운의 숫자를 활용할 구체적 날짜/시간대 조언."
   }
 }
 
 ## 작성 규칙
-1. **Cold Reading**: "겉으로는 강해 보이지만 속은 여린 풀잎 같군요." 처럼 꿰뚫어 보는 화법 사용.
-2. **비유 활용**: "마치 폭주하는 기관차처럼..." 등 문학적 표현으로 몰입감 극대화.
-3. **근거 필수**: 모든 주요 주장 뒤에 (근거: [사주 글자 간 관계] 또는 [별자리 관계]) 형식으로 반드시 명시하십시오. **사용자 데이터에 없는 글자를 절대 지어내지 마십시오.**
-4. 모든 설명은 최소 400자 이상 깊이 있게 서술.
-5. **데이터 준수**: 반드시 제공된 <사주_원국>의 천간/지지 정보를 바탕으로 해석하십시오. 월주가 명시되어 있다면 그 월주를 절대적 기준으로 삼으십시오.`;
+1. **근거 필수**: 모든 주장 뒤에 (근거: [별자리/사주 관계]) 형식 명시. 데이터에 없는 글자를 지어내지 마십시오.
+2. **논점 충족**: 각 필드의 구조 요구사항을 반드시 만족. 빈 말 반복 금지.
+3. Phase 1A의 핵심 분석 결론(오행 균형, 신뢰 점수 등)을 참조하여 일관성을 유지하십시오.`;
   }
 
-  const user = buildUserContext(userData);
+  const user = buildUserContext(userData) + buildPreviousPhaseContext(previousData, lang);
   return { system, user };
 }
 
@@ -452,22 +600,22 @@ Do not recite dictionary definitions like "This is Pyeon-jae". Show **how it man
     {
       "id": "day_master",
       "title": "📜 Innate Vessel (Day Master Analysis)",
-      "content": "The Day Master is the 'Essence of Me'. Compare the user to a natural object (giant forest, candle, solid rock, etc.) and analyze how they fight and reconcile with the world. (150+ words)"
+      "content": "The Day Master is the 'Essence of Me'. Compare the user to a natural object. Must include: (1) Core nature and metaphor, (2) How surrounding pillars support or suppress this master, (3) Real-life manifestation examples."
     },
     {
       "id": "strength",
       "title": "⚖️ Inner Energy (Strong/Weak)",
-      "content": "Strong can be self-righteous, weak can be swayed. Coolly analyze the pros and cons of the user's current energy level in social life. (130+ words)"
+      "content": "Strong can be self-righteous, weak can be swayed. Must include: (1) Evidence-based assessment (rooted/supported/seasonal), (2) Overall judgment (strong/neutral/weak), (3) How current Major Luck modifies this balance."
     },
     {
       "id": "ten_gods",
       "title": "🔮 Social Weapons (Ten Gods Analysis)",
-      "content": "Analyze what 'weapons' (e.g., eloquence of Sanggwan, business sense of Pyeonjae) the user is using to survive in the jungle of society, and teach them how to sharpen those weapons. (180+ words)"
+      "content": "Analyze what 'weapons' the user has for navigating society (e.g., eloquence of Sanggwan, business sense of Pyeonjae). Must include: (1) Key archetypes and their positions per pillar, (2) How pillar placement affects timing and domain, (3) Inter-pillar interactions (harmony/clash)."
     },
     {
       "id": "special_stars",
       "title": "✨ God's Gift and Punishment (Sign Analysis)",
-      "content": "Interpret special hidden codes such as Peach Blossom (Dohwasal), Moving Star (Yeokmasal), Nobleman (Cheoneulgwiin). Emphasize that it depends on the user's actions whether this becomes a curse or a blessing (Bonus). (150+ words)"
+      "content": "Interpret hidden codes such as Peach Blossom (Dohwasal), Moving Star (Yeokmasal), Nobleman (Cheoneulgwiin). Must include per star: (1) Which archetype it accompanies, (2) Conditions for fortune vs misfortune, (3) Specific user action. Emphasize that outcome depends on user choices."
     }
   ]
 }
@@ -508,22 +656,22 @@ Do not recite dictionary definitions like "This is Pyeon-jae". Show **how it man
     {
       "id": "day_master",
       "title": "📜 타고난 그릇 (일간 분석)",
-      "content": "일간(Day Master)은 '나의 본질'입니다. 자연물에 비유하되, **다른 글자들이 일간을 어떻게 돕거나(생) 억제(극)하는지** 구조적으로 분석하십시오. 내용은 600자 이상으로 작성하십시오."
+      "content": "일간(Day Master)은 '나의 본질'입니다. 자연물에 비유하되, **다른 글자들이 일간을 어떻게 돕거나(생) 억제(극)하는지** 구조적으로 분석하십시오. 반드시 포함: (1) 일간의 본질적 성격과 자연물 비유, (2) 월지/연지/시지와의 생극 관계 진단, (3) 이 에너지 구조가 삶에서 어떻게 발현되는지 구체적 상황 예시."
     },
     {
       "id": "strength",
       "title": "⚖️ 내면의 에너지 (신강/신약)",
-      "content": "신강/신약 판단의 **근거(득령/득지/득세 등)**를 명확히 밝히고, 현재 대운에서 이 에너지가 어떻게 조절되거나 강화되는지 분석하십시오. 내용은 500자 이상으로 작성하십시오."
+      "content": "신강/신약 판단의 **근거(득령/득지/득세 등)**를 명확히 밝히고, 현재 대운에서 이 에너지가 어떻게 조절되거나 강화되는지 분석하십시오. 반드시 포함: (1) 득령/득지/득세 각각의 판정과 근거, (2) 종합 판단(신강/중화/신약), (3) 현재 대운이 이 균형에 미치는 영향."
     },
     {
       "id": "ten_gods",
       "title": "🔮 사회적 무기 (십성 분석)",
-      "content": "십성을 **기둥별(연/월/일/시)**로 위치와 함께 분석하십시오. 어느 기둥에 있느냐에 따라 발현 시기와 영역이 다릅니다. 내용은 700자 이상으로 작성하십시오."
+      "content": "십성을 **기둥별(연/월/일/시)**로 위치와 함께 분석하십시오. 각 기둥별로 반드시 포함: (1) 해당 십성의 의미, (2) 이 기둥에 위치함으로써 발현되는 시기와 영역, (3) 다른 기둥의 십성과의 상호작용(합/충). 네 기둥 모두 빠짐없이 서술하십시오."
     },
     {
       "id": "special_stars",
       "title": "✨ 신의 선물과 형벌 (신살 분석)",
-      "content": "도화살, 역마살, 천을귀인 등을 **어느 십성과 함께 있는지** 분석하십시오. (예: 역마 + 편재 = 해외 사업운 / 역마 + 정관 = 해외 파견근무 가능성). 이것이 흉이 될지 길이 될지는 사용자 행동에 달렸음을 강조하십시오. 내용은 600자 이상으로 작성하십시오."
+      "content": "도화살, 역마살, 천을귀인 등을 **어느 십성과 함께 있는지** 분석하십시오. 각 신살별로 반드시 포함: (1) 어떤 십성과 동행하는지와 그 의미 (예: 역마 + 편재 = 해외 사업운), (2) 길신/흉신 판정의 조건, (3) 사용자가 취할 수 있는 구체적 행동. 이것이 흉이 될지 길이 될지는 사용자 행동에 달렸음을 강조하십시오."
     }
   ]
 }
@@ -539,7 +687,7 @@ Do not recite dictionary definitions like "This is Pyeon-jae". Show **how it man
 }
 
 // Phase 3: Fortune Flow
-export function buildPhase3Prompt(userData: UserData, _previousData?: PremiumReportPartial | null): { system: string; user: string } {
+export function buildPhase3Prompt(userData: UserData, previousData?: PremiumReportPartial | null): { system: string; user: string } {
   const lang = userData.language || 'ko';
   let system = '';
 
@@ -556,11 +704,11 @@ Users are most curious about "When will it get better?". Do not be vague saying 
     "major_luck": {
       "title": "🌊 Huge Waves of Life (Major Luck Analysis)",
       "period": "Current Major Luck (e.g., 32-41 years old)",
-      "content": "Define what chapter this 10-year period corresponds to in life (e.g., 'Sowing Season', 'Harvest Season'). Determine if current pain is for growth or a wrong path. (200+ words)"
+      "content": "Define this 10-year chapter (e.g., 'Sowing Season', 'Harvest Season'). Must include: (1) Specific Major Luck pillar interactions with natal chart, (2) Core theme definition, (3) Whether current pain is growth or wrong path (with evidence)."
     },
     "yearly_luck": {
       "title": "📅 2026 Fortune Forecast (Yearly Analysis)",
-      "content": "Analyze as if you peeked into the calendar of the upcoming year. Divide into quarters (Q1-Q4) and specifically forecast when to seize opportunities and when to lay low. (300+ words)"
+      "content": "Forecast the upcoming year by quarters (Q1-Q4). Must include: (1) Key yearly pillar interactions with natal chart, (2) Per-quarter opportunity/risk points with action guidance, (3) The single most decisive month and why."
     },
     "monthly_luck": [
       {
@@ -629,11 +777,11 @@ Users are most curious about "When will it get better?". Do not be vague saying 
     "major_luck": {
       "title": "🌊 인생의 거대한 파도 (대운 분석)",
       "period": "현재 대운 (예: 32세~41세)",
-      "content": "대운의 천간/지지가 원국의 **어느 글자와 충/합/형을 이루는지** 명시하고, 지금 10년이 인생에서 어떤 챕터(Chapter)에 해당하는지 정의하십시오. 내용은 800자 이상으로 작성하십시오."
+      "content": "대운의 천간/지지가 원국의 **어느 글자와 충/합/형을 이루는지** 명시하고, 지금 10년이 인생에서 어떤 챕터(Chapter)에 해당하는지 정의하십시오. 반드시 포함: (1) 대운 간지와 원국 글자의 구체적 상호작용 명시, (2) 이 10년의 핵심 테마(성장/수확/정리 등) 정의, (3) 지금 겪는 고통이 성장통인지 경로이탈인지 판단과 근거."
     },
     "yearly_luck": {
       "title": "📅 2026년 운세 예보 (세운 분석)",
-      "content": "올해 세운(병오년 등)이 원국의 어느 글자와 충/합하는지 분석하고, 분기별(Q1~Q4)로 나누어 언제 기회를 잡고 언제 몸을 사려야 하는지 구체적으로 예보하십시오. 내용은 1200자 이상으로 작성하십시오."
+      "content": "올해 세운(병오년 등)이 원국의 어느 글자와 충/합하는지 분석하십시오. 반드시 포함: (1) 세운 간지와 원국 글자의 핵심 상호작용, (2) 분기별(Q1~Q4) 운세 예보 — 각 분기마다 기회/위험 포인트와 행동 지침, (3) 올해 가장 결정적인 1개월과 그 이유."
     },
     "monthly_luck": [
       {
@@ -679,12 +827,12 @@ Users are most curious about "When will it get better?". Do not be vague saying 
 4. **데이터 준수**: 반드시 제공된 사주 원국의 월주 정보를 바탕으로 분석하십시오. 월주가 틀리면 전체 운세 흐름이 왜곡됩니다. 명문화된 데이터를 절대적으로 고수하십시오.`;
   }
 
-  const user = buildUserContext(userData);
+  const user = buildUserContext(userData) + buildPreviousPhaseContext(previousData, lang);
   return { system, user };
 }
 
 // Phase 4: Life Areas
-export function buildPhase4Prompt(userData: UserData, _previousData?: PremiumReportPartial | null): { system: string; user: string } {
+export function buildPhase4Prompt(userData: UserData, previousData?: PremiumReportPartial | null): { system: string; user: string } {
   const lang = userData.language || 'ko';
   let system = '';
 
@@ -710,24 +858,24 @@ No abstract well-wishing. Give **Hyper-Specific Advice** (e.g., "Index funds ove
       "title": "🏆 Honor and Achievement (Career)",
       "tag": "Hidden Talent",
       "subsections": ["Innate Job Aptitude", "Org Life vs Freelance", "Promotion/Move Timing"],
-      "content": "Analyze the optimal career path. Lead with the 10th House and its ruler. Add Tarot insight. Optionally mention Soul Element for depth. (180+ words)"
+      "content": "Analyze the optimal career path. Must include: (1) 10th House ruler analysis, (2) Tarot cross-reference for current career energy, (3) Organization vs freelance suitability with evidence."
     },
     "wealth": {
       "title": "💰 Algorithm of Wealth (Money)",
       "tag": "Money Flow",
       "subsections": ["How to accumulate wealth", "Loss Risks", "Recommended Investment"],
-      "content": "Analyze wealth potential via 2nd/8th House rulers. Use Tarot to gauge current financial energy. (180+ words)"
+      "content": "Analyze wealth potential. Must include: (1) 2nd/8th House rulers and Tarot Pentacles cross-reference, (2) Risk factors and defense strategies, (3) Specific investment direction recommendation."
     },
     "love": {
       "title": "💕 Magnetic Attraction (Love)",
       "tag": "Soulmate Code",
       "subsections": ["My Dating Style", "Best Partner Traits", "Love/Marriage Timing"],
-      "content": "Analyze Venus/Mars placements and the 7th House for relationship patterns. Use Tarot for current romantic energy. Suggest compatible Sun/Moon signs. (180+ words)"
+      "content": "Analyze relationship patterns. Must include: (1) Venus/Mars placements and 7th House analysis, (2) Compatible Sun/Moon sign suggestions with reasoning, (3) This year's love/marriage timing prediction."
     },
     "health": {
       "title": "🌿 Balance of Body and Mind (Health)",
       "subsections": ["Vulnerable Parts", "Recommended Exercise/Diet", "Mental Care"],
-      "content": "Warn of vulnerabilities from chart patterns (e.g., stressed Mars = inflammation). Add Soul Element for body type insight (e.g., Fire = heart/circulation). (150+ words)"
+      "content": "Warn of health vulnerabilities from chart patterns. Must include: (1) Vulnerable body area with chart evidence (e.g., stressed Mars = inflammation), (2) Specific exercise/diet recommendation, (3) Mental health care advice."
     },
     "soulmate": {
       "ideal_traits": ["Trait 1", "Trait 2", "Trait 3"],
@@ -798,24 +946,24 @@ No abstract well-wishing. Give **Hyper-Specific Advice** (e.g., "Index funds ove
       "title": "🏆 명예와 성취 (직업운)",
       "tag": "Hidden Talent",
       "subsections": ["타고난 직무 적성", "조직생활 vs 프리랜서", "올해의 승진/이직 타이밍"],
-      "content": "**정관/편관/식신/상관**의 위치와 상태를 분석하고, 타로 카드와의 교차점을 제시하십시오. 내용은 700자 이상으로 작성하십시오."
+      "content": "**정관/편관/식신/상관**의 위치와 상태를 분석하고, 타로 카드와의 교차점을 제시하십시오. 반드시 포함: (1) 핵심 십성으로 본 타고난 직무 적성, (2) 조직생활 vs 프리랜서 적합성 판단과 근거, (3) 올해 승진/이직 타이밍 예측."
     },
     "wealth": {
       "title": "💰 부의 알고리즘 (재물운)",
       "tag": "Money Flow",
       "subsections": ["재물을 모으는 방식", "주의해야 할 손재수", "재테크 추천 분야"],
-      "content": "**정재/편재**의 위치(어느 기둥)와 겁재/비겁과의 관계를 분석하십시오. 타로의 Pentacles 계열 카드와 교차 검증. 내용은 700자 이상으로 작성하십시오."
+      "content": "**정재/편재**의 위치(어느 기둥)와 겁재/비겁과의 관계를 분석하십시오. 타로의 Pentacles 계열 카드와 교차 검증. 반드시 포함: (1) 재물 유입/유출 패턴 분석, (2) 손재수 위험 요소와 방어법, (3) 구체적 재테크 방향 제안(예: '단독 투자 vs 동업')."
     },
     "love": {
       "title": "💕 운명적 이끌림 (애정운)",
       "tag": "Soulmate Code",
       "subsections": ["나의 연애 스타일", "잘 맞는 파트너 특징", "올해의 연애/결혼 타이밍"],
-      "content": "**도화살, 홍염살**의 유무 및 정관/정재의 상태를 분석하십시오. 타로의 Cups 계열 및 Lovers 카드와 교차 검증하여 궁합 치트키 제공. 내용은 700자 이상으로 작성하십시오."
+      "content": "**도화살, 홍염살**의 유무 및 정관/정재의 상태를 분석하십시오. 타로의 Cups 계열 및 Lovers 카드와 교차 검증. 반드시 포함: (1) 사주에서 본 연애 스타일과 매력 포인트, (2) 잘 맞는 파트너의 사주적 특징(띄/오행), (3) 올해 연애/결혼 타이밍 예측과 근거."
     },
     "health": {
       "title": "🌿 몸과 마음의 균형 (건강운)",
       "subsections": ["취약한 신체 부위", "추천 운동/식습관", "멘탈 관리법"],
-      "content": "**오행-장부 연결**(목=간담, 화=심장, 토=비위, 금=폐, 수=신장)에 기반하여 과다/부족 오행의 건강 영향을 분석하십시오. 내용은 600자 이상으로 작성하십시오."
+      "content": "**오행-장부 연결**(목=간담, 화=심장, 토=비위, 금=폐, 수=신장)에 기반하여 과다/부족 오행의 건강 영향을 분석하십시오. 반드시 포함: (1) 취약 장부와 사주 근거, (2) 구체적 운동/식습관 처방, (3) 멘탈 건강 관리법."
     },
     "soulmate": {
       "ideal_traits": ["일간 OO인 사람", "띠 OO인 사람", "성격/직업 특징"],
@@ -850,12 +998,12 @@ No abstract well-wishing. Give **Hyper-Specific Advice** (e.g., "Index funds ove
 3. 팩트 폭행과 희망 고문 사이의 균형 유지.`;
   }
 
-  const user = buildUserContext(userData);
+  const user = buildUserContext(userData) + buildPreviousPhaseContext(previousData, lang);
   return { system, user };
 }
 
 // Phase 5A: Special Analysis + Action Plan + Date Selection
-export function buildPhase5APrompt(userData: UserData, _previousData?: PremiumReportPartial | null): { system: string; user: string } {
+export function buildPhase5APrompt(userData: UserData, previousData?: PremiumReportPartial | null): { system: string; user: string } {
   const lang = userData.language || 'ko';
   let system = '';
 
@@ -871,15 +1019,15 @@ Reveal special singularities as 'Hidden Cards', and pinpoint important dates.
   "special_analysis": {
     "noble_person": {
       "title": "🤝 Noble People to Help You",
-      "content": "Describe characters of noble people vividly. (e.g., 'Mouse zodiac man with glasses'). (130+ words)"
+      "content": "Describe characters of noble people vividly. Must include: (1) Physical traits, profession, and where to meet them, (2) Timing prediction and astrological basis."
     },
     "charm": {
       "title": "✨ My Fatal Charm",
-      "content": "Discover hidden charm points (Peach Blossom, etc.). Give examples (Interview, Date). (130+ words)"
+      "content": "Discover hidden charm points (Peach Blossom, etc.). Must include: (1) Chart-based charm discovery, (2) Specific contexts to leverage it (Interview, Date, etc.)."
     },
     "conflicts": {
       "title": "⚡ Conflicts to Watch Out For",
-      "content": "Analyze recurring problem patterns (Punishment, Clash) and teach wisdom. (130+ words)"
+      "content": "Analyze recurring problem patterns (Punishment, Clash). Must include: (1) Chart pattern and its meaning, (2) Specific wisdom and coping strategies."
     }
   },
   "lucky_assets": {
@@ -945,15 +1093,15 @@ Reveal special singularities as 'Hidden Cards', and pinpoint important dates.
   "special_analysis": {
     "noble_person": {
       "title": "🤝 나를 돕는 귀인",
-      "content": "귀인의 **외모, 직업, 성씨, 만나는 장소**를 구체적으로 묘사. 150자 이상."
+      "content": "귀인의 **외모, 직업, 성씨, 만나는 장소**를 구체적으로 묘사. 반드시 포함: (1) 천을귀인의 사주적 근거와 귀인의 특징, (2) 만날 수 있는 시기와 장소 예측."
     },
     "charm": {
       "title": "✨ 나만의 치명적 매력",
-      "content": "관점의 전환을 적용하여 약점을 매력으로 승화. 150자 이상."
+      "content": "관점의 전환을 적용하여 약점을 매력으로 승화. 반드시 포함: (1) 사주에서 본 숨겨진 매력 포인트, (2) 이를 활용할 수 있는 구체적 상황(면접, 데이트 등)."
     },
     "conflicts": {
       "title": "⚡ 주의해야 할 충돌",
-      "content": "반복되는 문제 패턴과 회피 전략. 150자 이상."
+      "content": "반복되는 문제 패턴과 회피 전략. 반드시 포함: (1) 사주에서 보이는 충/형 패턴과 그 의미, (2) 이 패턴을 극복하기 위한 구체적 행동 지침."
     }
   },
   "lucky_assets": {
@@ -1002,12 +1150,12 @@ Reveal special singularities as 'Hidden Cards', and pinpoint important dates.
 2. "~하십시오"라고 강하게 이끄십시오.`;
   }
 
-  const user = buildUserContext(userData);
+  const user = buildUserContext(userData) + buildPreviousPhaseContext(previousData, lang);
   return { system, user };
 }
 
 // Phase 5B: Past Life + Glossary + Final Verdict
-export function buildPhase5BPrompt(userData: UserData, _previousData?: PremiumReportPartial | null): { system: string; user: string } {
+export function buildPhase5BPrompt(userData: UserData, previousData?: PremiumReportPartial | null): { system: string; user: string } {
   const lang = userData.language || 'ko';
   let system = '';
 
@@ -1028,23 +1176,23 @@ You are the 'Fate Architect' delivering the final synthesis and spiritual insigh
   "past_life": {
     "theme": {
       "title": "🌀 Past Life Theme",
-      "content": "Infer past life themes from Saju Nobleman/Artistic Star. (200+ words)"
+      "content": "Infer past life themes from Saju Nobleman/Artistic Star. Must include: (1) Key past life archetype, (2) How this manifests as recurring patterns in current life."
     },
     "sun_moon_dynamic": {
       "title": "☀️🌙 Sun-Moon Dynamic",
-      "content": "Analyze Sun (external self) and Moon (inner emotions) relationship. Include: 'Your Sun is [Sign] but your Moon is [Sign]...' (250+ words)"
+      "content": "Analyze Sun-Moon relationship as inner tension or harmony. Must include: (1) Specific sign combination and element clash/support, (2) How this affects emotional processing."
     },
     "ascendant_influence": {
       "title": "⬆️ Rising Sign (Social Mask)",
-      "content": "Explain how Ascendant differs from Sun sign as 'first impression'. (200+ words)"
+      "content": "Explain how Ascendant differs from Sun sign. Must include: (1) The 'first impression vs true self' dynamic, (2) Specific social situations where this gap is most visible."
     },
     "karma": {
       "title": "⚖️ Karma to Resolve",
-      "content": "Recurring patterns in this life connected to past life. Solutions. (200+ words)"
+      "content": "Recurring karmic patterns in this life connected to past life. Must include: (1) Specific patterns and their origin, (2) Practical solutions to break the cycle."
     },
     "soul_mission": {
       "title": "✨ Soul Mission",
-      "content": "Spiritual goal to achieve in this life. (150+ words)"
+      "content": "Spiritual goal to achieve in this life. Must include: (1) Core soul mission derived from chart, (2) How to align daily actions with this mission."
     }
   },
   "glossary": [
@@ -1087,23 +1235,23 @@ You are the 'Fate Architect' delivering the final synthesis and spiritual insigh
   "past_life": {
     "theme": {
       "title": "🌀 전생의 테마",
-      "content": "사주 신살과 타로로 전생 테마 유추. 200자 이상."
+      "content": "사주 신살과 타로로 전생 테마 유추. 반드시 포함: (1) 핵심 전생 원형, (2) 현생에서 반복되는 패턴으로의 연결."
     },
     "sun_moon_dynamic": {
       "title": "☀️🌙 태양과 달의 조화",
-      "content": "태양(자아)과 달(내면)의 관계. '당신의 태양은 [별자리]이지만, 달은 [별자리]입니다...' 형식 필수. 250자 이상."
+      "content": "태양(자아)과 달(내면)의 관계. 반드시 포함: (1) 두 별자리의 원소 관계와 긴장/조화, (2) 이것이 감정 처리 방식에 미치는 영향."
     },
     "ascendant_influence": {
       "title": "⬆️ 상승궁 (사회적 가면)",
-      "content": "상승궁이 태양과 다른 '첫인상/가면'임을 설명. 200자 이상."
+      "content": "상승궁이 태양과 다른 '첫인상/가면'임을 설명. 반드시 포함: (1) 겉과 속의 차이, (2) 이 차이가 가장 두드러지는 사회적 상황."
     },
     "karma": {
       "title": "⚖️ 해소해야 할 카르마",
-      "content": "현생의 반복 패턴과 전생 연결점. 해소 방법. 200자 이상."
+      "content": "현생의 반복 패턴과 전생 연결점. 반드시 포함: (1) 구체적 패턴과 그 기원, (2) 순환을 끔는 실질적 해소법."
     },
     "soul_mission": {
       "title": "✨ 이번 생의 영혼 미션",
-      "content": "이번 생의 영적 목표. 150자 이상."
+      "content": "이번 생의 영적 목표. 반드시 포함: (1) 차트에서 도출된 영혼의 핵심 미션, (2) 일상 행동을 이 미션에 정렬하는 방법."
     }
   },
   "glossary": [
@@ -1131,7 +1279,7 @@ You are the 'Fate Architect' delivering the final synthesis and spiritual insigh
 3. 타로는 "현재 흐름 참고"로만 언급.`;
   }
 
-  const user = buildUserContext(userData);
+  const user = buildUserContext(userData) + buildPreviousPhaseContext(previousData, lang);
   return { system, user };
 }
 
@@ -1143,9 +1291,10 @@ export function buildPhase5Prompt(userData: UserData, previousData?: PremiumRepo
 
 export const PHASE_LABELS = [
   { phase: 1, label: "운명의 서사(Narrative)를 구성하는 중...", icon: "✨", labelEn: "Composing Narrative..." },
-  { phase: 2, label: "사주의 뼈대를 정밀 스캔하는 중...", icon: "📜", labelEn: "Scanning Saju Skeleton..." },
-  { phase: 3, label: "인생의 사계절 기상도를 그리는 중...", icon: "🌊", labelEn: "Forecasting Life Seasons..." },
-  { phase: 4, label: "부와 명예, 사랑의 지도를 완성하는 중...", icon: "🎯", labelEn: "Mapping Wealth & Love..." },
-  { phase: 5, label: "특별 분석 중...", icon: "⚡", labelEn: "Special Analysis..." },
-  { phase: 6, label: "최종 결론 도출 중...", icon: "📌", labelEn: "Final Verdict..." },
+  { phase: 2, label: "점성술·타로 심층 분석 중...", icon: "🔮", labelEn: "Deep Astro & Tarot Dive..." },
+  { phase: 3, label: "사주의 뼈대를 정밀 스캔하는 중...", icon: "📜", labelEn: "Scanning Saju Skeleton..." },
+  { phase: 4, label: "인생의 사계절 기상도를 그리는 중...", icon: "🌊", labelEn: "Forecasting Life Seasons..." },
+  { phase: 5, label: "부와 명예, 사랑의 지도를 완성하는 중...", icon: "🎯", labelEn: "Mapping Wealth & Love..." },
+  { phase: 6, label: "특별 분석 중...", icon: "⚡", labelEn: "Special Analysis..." },
+  { phase: 7, label: "최종 결론 도출 중...", icon: "📌", labelEn: "Final Verdict..." },
 ];

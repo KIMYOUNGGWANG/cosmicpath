@@ -49,7 +49,7 @@ const ReadingRequestSchema = z.object({
     })).optional(),
     tier: z.enum(['free', 'basic', 'premium']).default('free'),
     language: z.enum(['ko', 'en']).optional().default('ko'),
-    phase: z.number().min(1).max(6).optional(), // for multi-step execution (5A/5B split)
+    phase: z.number().min(1).max(7).optional(), // for multi-step execution
     previousReport: z.object({}).passthrough().optional(), // previous phase data
     calendarType: z.enum(['solar', 'lunar']).default('solar'),
     unknownTime: z.boolean().default(false),

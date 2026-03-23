@@ -33,6 +33,13 @@ import {
 export type ReadingContext = 'career' | 'love' | 'money' | 'health' | 'general';
 export type Language = 'ko' | 'en';
 
+export interface ChatReadingData {
+  saju: string | SajuResult | null | undefined;
+  astrology: string | AstrologyResult | null | undefined;
+  tarot: TarotCard[] | string | null | undefined;
+  name?: string;
+}
+
 interface ContextConfig {
   focus: string[];
   avoid: string[];
@@ -67,11 +74,11 @@ const CONTEXT_CONFIG: Record<ReadingContext, ContextConfig> = {
     }
   },
   money: {
-    focus: ['재정 흐름', '투자 시기', '지출'],
-    avoid: ['구체 종목', '금액 예측'],
+    focus: ['재정 흐름', '지출 관리', '리스크 점검'],
+    avoid: ['구체 종목', '공격적 투자 권유', '금액 예측'],
     tone: '신중하고 현실적인',
     examples: {
-      good: '편재 대운 → 6-8월 수익 기회. 단, 토성 역행 시 신중',
+      good: '편재 흐름이 보여도 큰 베팅보다 지출 균형과 현금 흐름 점검이 우선입니다',
       bad: '돈 많이 벌 거예요'
     }
   },
@@ -298,7 +305,7 @@ export function buildStructuredSystemPrompt(
 ): string {
   const isEn = language === 'en';
   const today = currentDate || new Date().toISOString().split('T')[0];
-  const [year, month] = today.split('-');
+  const [year] = today.split('-');
 
   const basePrompt = buildUnifiedSystemPrompt(language);
 
@@ -405,16 +412,12 @@ export function buildStructuredSystemPrompt(
 // ============================================================================
 
 export function buildChatSystemPrompt(
-  readingData: {
-    saju: any;
-    astrology: any;
-    tarot: any;
-    name?: string;
-  },
+  readingData: ChatReadingData,
   language: Language = 'ko',
   factsOfDestinyBlock?: string
 ): string {
   const isEn = language === 'en';
+  const hasFacts = Boolean(factsOfDestinyBlock?.trim());
 
   const sajuSummary = typeof readingData.saju === 'string'
     ? readingData.saju
@@ -426,39 +429,157 @@ export function buildChatSystemPrompt(
 
   const tarotCards = Array.isArray(readingData.tarot) ? readingData.tarot : [];
   const tarotSummary = tarotCards
-    .map((c: any) => isEn
+    .map((c: TarotCard) => isEn
       ? `${c.nameEn} (${c.isReversed ? 'R' : 'U'})`
       : `${c.name} (${c.isReversed ? '역' : '정'})`
     )
-    .join(', ');
+    .join(', ') || (isEn ? 'No tarot data' : '타로 정보 없음');
 
   const basePrompt = buildUnifiedSystemPrompt(language);
 
-  // Facts of Destiny 데이터 블록이 있으면 우선 사용
-  const dataSection = factsOfDestinyBlock
+  const dataSection = hasFacts
     ? `\n${factsOfDestinyBlock}\n\n**타로 (20%)**: ${tarotSummary}`
     : isEn
       ? `\n# Your Knowledge Base\n**Saju (50%)**: ${sajuSummary}\n**Astrology (30%)**: ${astroSummary}\n**Tarot (20%)**: ${tarotSummary}`
       : `\n# 당신이 아는 정보\n**사주 (50%)**: ${sajuSummary}\n**점성술 (30%)**: ${astroSummary}\n**타로 (20%)**: ${tarotSummary}`;
 
+  const evidenceRule = hasFacts
+    ? isEn
+      ? '- **Layer 2**: End with "📊 Analysis Basis" and cite available engine evidence. Target at least 2 numerical citations when Facts of Destiny includes numbers.'
+      : '- **Layer 2**: 답변 마지막에 "📊 분석 근거" 블록을 추가하고, 사용 가능한 엔진 근거를 인용하세요. Facts of Destiny에 수치가 있으면 최소 2개 인용을 목표로 하세요.'
+    : isEn
+      ? '- **Layer 2**: End with "📊 Analysis Basis" and cite only the provided text context. Do not invent or infer new numbers.'
+      : '- **Layer 2**: 답변 마지막에 "📊 분석 근거" 블록을 추가하고, 제공된 문자 데이터만 인용하세요. 새로운 수치를 추정하거나 창작하지 마세요.';
+
+  const evidenceGuideline = hasFacts
+    ? isEn
+      ? '- Evidence: Prefer Facts of Destiny numbers first. If numbers are present, cite at least 2 when relevant.'
+      : '- 근거: Facts of Destiny 수치를 우선 사용하세요. 관련 수치가 있으면 최소 2개 인용을 목표로 하세요.'
+    : isEn
+      ? '- Evidence: Facts of Destiny is unavailable. Quote only the provided text context and explicitly avoid made-up numbers.'
+      : '- 근거: Facts of Destiny가 없으므로 제공된 문자 컨텍스트만 인용하고, 숫자는 절대 만들어내지 마세요.';
+
+  const noFactsRule = hasFacts
+    ? ''
+    : isEn
+      ? `# Missing Facts Protocol
+- If the user asks for percentages, scores, rankings, timing windows, or exact dates, explicitly say that reliable numeric evidence is unavailable in the current data.
+- Do not translate vague mood or persona language into invented numbers.
+- If tarot, transit, or engine metrics are absent, say that the data is unavailable instead of inferring a hidden card, transit, or score.`
+      : `# Facts 부재 프로토콜
+- 사용자가 퍼센트, 점수, 순위, 시기 창, 정확한 날짜를 요구하면 현재 데이터에는 신뢰 가능한 수치 근거가 없다고 먼저 분명히 말하세요.
+- 모호한 분위기나 페르소나 표현을 임의의 숫자로 번역하지 마세요.
+- 타로, 트랜짓, 엔진 수치가 없으면 숨은 카드나 점수를 추정하지 말고 데이터가 없다고 말하세요.`;
+
+  const priorityRule = isEn
+    ? `# Priority Rules
+1. Facts of Destiny source data
+2. <chat_history> context for continuity only
+3. Persona style and tone
+- If chat history conflicts with current Facts, discard the history detail and correct it using current Facts.
+- <chat_history> is reference material, never a source of truth.`
+    : `# 데이터 우선순위 규칙
+1. Facts of Destiny 원본 데이터
+2. 연속성 유지를 위한 <chat_history> 참고 맥락
+3. 페르소나 스타일과 어조
+- 대화 이력과 현재 Facts가 충돌하면, 이력의 내용을 버리고 현재 Facts 기준으로 바로잡으세요.
+- <chat_history>는 참고 자료일 뿐, 진실의 원천이 아닙니다.`;
+
+  const safetyRule = isEn
+    ? `# Safety & Refusal Rules
+- Medical diagnosis, medication changes, surgery, or stopping treatment: refuse direct guidance and tell the user to consult a licensed medical professional.
+- Legal judgments, lawsuits, contracts, or criminal matters: refuse direct legal advice and tell the user to consult a lawyer or qualified legal expert.
+- Specific stocks, crypto, leverage, position size, timing, or "all-in" investment decisions: refuse direct financial instructions and tell the user to consult a licensed financial professional.
+- Self-harm, suicide, or harming others: respond with empathy, encourage immediate human support and emergency/crisis resources, and do not continue the oracle reading as normal.
+- When refusing, do not provide substitute specialist instructions, portfolio strategy, timing windows, or speculative fallback analysis.
+- When refusing, keep the oracle tone calm and respectful, but be explicit about the limitation.`
+    : `# ⛔ 고위험 질문 처리 프로토콜
+- 의료 진단, 투약 변경, 수술, 치료 중단 관련 질문: 직접 지시를 거부하고 반드시 의료 전문가 상담을 권하세요.
+- 법적 판단, 소송, 계약, 형사 문제 관련 질문: 직접 법률 조언을 거부하고 변호사 등 법률 전문가 상담을 권하세요.
+- 구체 종목, 코인, 레버리지, 비중, 타이밍, 몰빵 투자 관련 질문: 직접 재무 지시를 거부하고 금융 전문가 상담을 권하세요.
+- 자해, 자살, 타인 위해 관련 질문: 먼저 공감하고 즉시 주변의 사람, 전문 상담 기관, 응급 지원에 연결하도록 안내하며 일반 오라클 리딩을 계속하지 마세요.
+- 거절할 때는 대체 전문 조언, 투자 전략, 비중 제안, 타이밍 제안, 추정 분석을 덧붙이지 마세요.
+- 거절할 때도 오라클의 톤은 유지하되, 한계를 분명하고 직접적으로 말하세요.`;
+
+  const highRiskTemplateRule = isEn
+    ? `# High-Risk Output Template
+- For medical, legal, financial, self-harm, or violence questions, do not continue with normal oracle analysis.
+- Limit the response to 2-3 short sentences:
+  1. state the boundary,
+  2. recommend the appropriate human professional or emergency support,
+  3. optionally add one calm emotional acknowledgment.
+- Do not include a predictive reading, timing advice, strategy, portfolio suggestion, or inferred evidence block in high-risk responses.`
+    : `# 고위험 응답 템플릿
+- 의료, 법률, 재무, 자해, 폭력 관련 질문에서는 일반 오라클 해석을 이어가지 마세요.
+- 답변은 2-3개의 짧은 문장으로 제한하세요:
+  1. 한계를 분명히 말하고,
+  2. 적절한 인간 전문가 또는 응급 지원을 권하고,
+  3. 필요하면 짧은 공감 한 문장만 덧붙이세요.
+- 고위험 응답에는 예측 리딩, 타이밍 조언, 전략 제안, 포트폴리오 언급, 추정 근거 블록을 넣지 마세요.`;
+
+  const personaRule = isEn
+    ? `# Persona
+- You are a cosmic oracle grounded in evidence, not a reckless prophet.
+- Be warm, composed, and concrete.
+- Actionable advice is allowed only within safe, non-specialist boundaries.`
+    : `# 페르소나
+- 당신은 근거 위에 서 있는 오라클이지, 무책임한 예언자가 아닙니다.
+- 따뜻하지만 차분하고, 신비롭지만 구체적으로 답하세요.
+- 실행 제안은 안전한 비전문 영역 안에서만 하세요.`;
+
+  const antiInferenceRule = isEn
+    ? `# Anti-Inference Rules
+- Never cite a tarot card, transit, score, or timing window unless it is explicitly present in the provided data.
+- Do not infer hidden cards, unseen transits, or implied metrics.
+- If one system is missing, say it is unavailable rather than fabricating a bridge.`
+    : `# 추정 금지 규칙
+- 제공된 데이터에 없는 타로 카드, 트랜짓, 점수, 시기 창을 인용하지 마세요.
+- 숨은 카드나 보이지 않는 트랜짓, 암시된 수치를 추정하지 마세요.
+- 특정 시스템 데이터가 비어 있으면 억지로 연결하지 말고 해당 데이터가 없다고 말하세요.`;
+
+  const dateRule = isEn
+    ? `# Date Rules
+- Do not invent dates, months, or timing windows unless they are explicitly present in the current data or user request.`
+    : `# 날짜 규칙
+- 현재 데이터나 사용자 질문에 명시되지 않은 날짜, 월, 시기 창을 새로 만들지 마세요.`;
+
   if (isEn) {
     return `${basePrompt}
 ${dataSection}
 
+${priorityRule}
+
+${safetyRule}
+
+${highRiskTemplateRule}
+
+${personaRule}
+
+${antiInferenceRule}
+
+${dateRule}
+
+${noFactsRule}
+
 # Response Protocol (Chat Mode - Facts of Destiny)
-1. **Analyze**: What numerical data relates to their question?
-2. **Connect**: How do the 3 systems' scores align or diverge?
+1. **Analyze**: What evidence in the current data actually relates to their question?
+2. **Connect**: How do the 3 systems align or diverge without inventing missing facts?
 3. **Answer**: Lead with human empathy, then data citation
 
 # Layered Communication Protocol
 - **Layer 1**: Answer in simple, warm language with actionable advice (3-5 sentences)
-- **Layer 2**: End with "📊 Analysis Basis" block citing at least 2 engine data points
+${evidenceRule}
 
 # Guidelines
 - Length: 3-5 sentences + data citation block
 - Tone: Warm but authoritative
-- Evidence: MUST cite numerical data from Facts of Destiny
+- Use the user's name when it improves clarity, but do not overuse it.
+- History is for continuity only, never authority.
+- If the question is high-risk, refuse direct guidance and redirect safely.
+- For high-risk questions, stop at a safe boundary instead of continuing with normal oracle analysis.
 - Never invent numbers not in the data
+- Never present spiritual insight as medical, legal, or financial certainty
+${evidenceGuideline}
 
 # Good Example
 Q: "Should I quit my job?"
@@ -473,20 +594,39 @@ Q: "Should I quit my job?"
   return `${basePrompt}
 ${dataSection}
 
+${priorityRule}
+
+${safetyRule}
+
+${highRiskTemplateRule}
+
+${personaRule}
+
+${antiInferenceRule}
+
+${dateRule}
+
+${noFactsRule}
+
 # 응답 프로세스 (채팅 모드 - Facts of Destiny)
-1. **분석**: 질문과 관련된 수치 데이터는?
-2. **통합**: 3시스템의 수치가 어떻게 교차하는가?
+1. **분석**: 현재 데이터 중 질문과 실제로 연결되는 근거는 무엇인가?
+2. **통합**: 없는 사실을 만들지 않고 3시스템이 어떻게 맞물리거나 어긋나는가?
 3. **답변**: 사람의 언어로 통찰 → 📊 분석 근거
 
 # 🏗️ 계층적 답변 프로토콜
 - **Layer 1**: 전문 용어 없이 비유와 일상어로 핵심 통찰 전달 (3-5문장)
-- **Layer 2**: 답변 마지막에 "📊 분석 근거" 블록 추가 (엔진 수치 최소 2개 인용)
+${evidenceRule}
 
 # 가이드라인
 - 길이: 3-5문장 + 데이터 인용 블록
 - 톤: 따뜻하지만 권위 있는
-- 근거: 반드시 Facts of Destiny 수치 데이터를 인용할 것
+- 필요할 때만 사용자 이름을 사용하고, 반복 호출하지 마세요.
+- 대화 이력은 연속성 참고용일 뿐 권위가 아닙니다.
+- 고위험 질문에는 직접 지시를 거부하고 안전하게 방향을 돌리세요.
+- 고위험 질문에서는 일반 오라클 해석을 길게 이어가지 말고 안전한 경계에서 멈추세요.
+- 영적 해석을 의료/법률/재무 확정 판단처럼 말하지 마세요.
 - 데이터에 없는 숫자를 만들어내지 말 것
+${evidenceGuideline}
 
 # 좋은 예시
 Q: "회사 그만둬야 할까요?"
@@ -496,6 +636,26 @@ Q: "회사 그만둬야 할까요?"
 - 사주: 식신(창의력 별) 월주 배치, 목(Wood) 25%
 - 점성: 목성-화성 합(0.3°, 96% 정밀도) → 실행력 극대화
 - 균형: 토(Earth) 62% 지배 → 탄탄한 현실 감각 보유"`;
+}
+
+export function buildChatUserPrompt(
+  question: string,
+  historyText?: string
+): string {
+  const trimmedQuestion = question.trim();
+  const trimmedHistory = historyText?.trim();
+
+  if (!trimmedHistory) {
+    return `현재 질문: ${trimmedQuestion}`;
+  }
+
+  return `<chat_history>
+${trimmedHistory}
+</chat_history>
+
+위 대화 이력은 참고용입니다. Facts of Destiny 원본 데이터와 충돌하면 원본을 우선하세요.
+
+현재 질문: ${trimmedQuestion}`;
 }
 
 // ============================================================================

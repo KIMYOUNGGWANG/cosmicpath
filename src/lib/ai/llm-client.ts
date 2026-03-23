@@ -186,7 +186,7 @@ async function callGoogle(
                 },
             ],
             generationConfig: {
-                temperature: 0.85,
+                temperature: 0.75, // 0.85 -> 0.75 for reduced hallucination in chat
                 maxOutputTokens: 4000,
             },
         }),

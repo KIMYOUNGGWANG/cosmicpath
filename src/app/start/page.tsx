@@ -447,20 +447,10 @@ function CosmicPathContent() {
 
               const report = pendingReportJson ? JSON.parse(pendingReportJson) : null;
 
-              const determineNextPhase = (r: any) => {
-                if (!r || !r.summary) return 1;
-                if (!r.saju_sections) return 2;
-                if (!r.fortune_flow) return 3;
-                if (!r.life_areas) return 4;
-                if (!r.special_analysis) return 5;
-                if (!r.final_verdict) return 6; // Phase 6 (conclusion)
-                return 7; // All complete
-              };
-
               // Only resume if not currently loading (to avoid double trigger on refresh)
               if (!isLoading) {
-                const nextPhase = determineNextPhase(report);
-                if (nextPhase <= 5) {
+                const nextPhase = determineNextPremiumPhase(report);
+                if (nextPhase <= TOTAL_PREMIUM_PHASES) {
                   console.log(`[Resume] Resuming analysis from phase ${nextPhase}`);
                   // Ensure we pass the data properly
                   startReading(data.tarotCards || [], true, data, report || undefined, nextPhase);
@@ -554,6 +544,19 @@ function CosmicPathContent() {
     setIsPaymentModalOpen(true);
   };
 
+  const TOTAL_PREMIUM_PHASES = 7;
+
+  const determineNextPremiumPhase = (report: any) => {
+    if (!report?.summary || !report?.traits || !report?.core_analysis) return 1;
+    if (!report?.astro_deep || !report?.tarot_details || !report?.numerology) return 2;
+    if (!report?.saju_sections) return 3;
+    if (!report?.fortune_flow) return 4;
+    if (!report?.life_areas) return 5;
+    if (!report?.special_analysis || !report?.action_plan || !report?.date_selection) return 6;
+    if (!report?.past_life || !report?.glossary || !report?.final_verdict) return 7;
+    return TOTAL_PREMIUM_PHASES + 1;
+  };
+
 
   const startReading = async (
     cards: any[],
@@ -571,26 +574,28 @@ function CosmicPathContent() {
       // If resuming, use existing report, otherwise start empty
       let accumulatedReport: any = initialReport || {};
       let accumulatedMetadata: any = metadata || {};
-      const totalPhases = 6;
+      const totalPhases = TOTAL_PREMIUM_PHASES;
 
       const labelsKo = [
         "",
-        "핵심 요약 분석 중... (1/6)",
-        "사주 기본 분석 중... (2/6)",
-        "운의 흐름 분석 중... (3/6)",
-        "영역별 상세 분석 중... (4/6)",
-        "특수 분석 & 액션 플랜 생성 중... (5/6)",
-        "최종 결론 도출 중... (6/6)"
+        "핵심 요약 분석 중... (1/7)",
+        "점성술·타로 심층 분석 중... (2/7)",
+        "사주 기본 분석 중... (3/7)",
+        "운의 흐름 분석 중... (4/7)",
+        "영역별 상세 분석 중... (5/7)",
+        "특수 분석 & 액션 플랜 생성 중... (6/7)",
+        "최종 결론 도출 중... (7/7)"
       ];
       // ... (labelsEn omitted for brevity, assuming existing code structure)
       const labelsEn = [
         "",
-        "Analyzing core summary... (1/6)",
-        "Analyzing Saju fundamentals... (2/6)",
-        "Analyzing fortune flow... (3/6)",
-        "Detailed area analysis... (4/6)",
-        "Generating action plan... (5/6)",
-        "Final verdict construction... (6/6)"
+        "Analyzing core summary... (1/7)",
+        "Deep Astro & Tarot Dive... (2/7)",
+        "Analyzing Saju fundamentals... (3/7)",
+        "Analyzing fortune flow... (4/7)",
+        "Detailed area analysis... (5/7)",
+        "Generating action plan... (6/7)",
+        "Final verdict construction... (7/7)"
       ];
       const labels = language === 'en' ? labelsEn : labelsKo;
 
@@ -599,7 +604,7 @@ function CosmicPathContent() {
       const maxPhase = (isPremium || isPremiumOverride) ? totalPhases : 1;
 
       // If we are just starting fresh free reading, phase 1 only.
-      // If we upgraded, we run 2-5 (assuming startPhase=2).
+      // If we upgraded, resume from the first missing premium phase.
 
       for (let phase = startPhase; phase <= maxPhase; phase++) {
         setLoadingPhase({ phase, label: labels[phase] });
@@ -679,7 +684,7 @@ function CosmicPathContent() {
       }
 
       // Save result to DB for sharing (Async) - Final save
-      const isComplete = maxPhase === 6;
+      const isComplete = maxPhase === 7;
       if (isComplete) {
         setIsPremium(true);
         saveToSessionAndBackup('is_premium_user', 'true');
@@ -1173,17 +1178,11 @@ function CosmicPathContent() {
                         price={dynamicPrice}
                         isLoading={isLoading}
                         onRetry={() => {
-                          const determineNextPhase = (r: any) => {
-                            if (!r || !r.summary) return 1;
-                            if (!r.saju_sections) return 2;
-                            if (!r.fortune_flow) return 3;
-                            if (!r.life_areas) return 4;
-                            if (!r.special_analysis) return 5;
-                            return 6; // All complete
-                          };
-                          const nextPhase = determineNextPhase(reportData);
+                          const nextPhase = determineNextPremiumPhase(reportData);
                           console.log('[Retry] Resuming from phase:', nextPhase);
-                          startReading(selectedCards, true, readingData!, reportData, nextPhase);
+                          if (nextPhase <= TOTAL_PREMIUM_PHASES) {
+                            startReading(selectedCards, true, readingData!, reportData, nextPhase);
+                          }
                         }}
                       />
                       {/* Oracle Chat Integration - Only show if readingId exists (saved) */}
@@ -1218,16 +1217,12 @@ function CosmicPathContent() {
                           setIsLoading(true);
                           setStreamContent('');
                           // Determine phase to resume from
-                          const determineNextPhase = (r: any) => {
-                            if (!r || !r.summary) return 1;
-                            if (!r.saju_sections) return 2;
-                            if (!r.fortune_flow) return 3;
-                            if (!r.life_areas) return 4;
-                            if (!r.special_analysis) return 5;
-                            return 6;
-                          };
-                          const nextPhase = determineNextPhase(reportData);
-                          startReading(selectedCards, true, readingData!, reportData, nextPhase);
+                          const nextPhase = determineNextPremiumPhase(reportData);
+                          if (nextPhase <= TOTAL_PREMIUM_PHASES) {
+                            startReading(selectedCards, true, readingData!, reportData, nextPhase);
+                            return;
+                          }
+                          setIsLoading(false);
                         }}
                         className="btn-primary px-8 py-3 text-sm font-medium tracking-widest uppercase hover:brightness-110 transition-all flex items-center gap-2"
                       >

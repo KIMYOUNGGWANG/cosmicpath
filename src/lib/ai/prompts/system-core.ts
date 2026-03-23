@@ -11,8 +11,13 @@ import { ASTRO_RULES } from './astro-rules';
 import { TAROT_RULES } from './tarot-rules';
 
 // ============ 가중치 설정 ============
+// Korean (default): 사주가 핵심축, 점성술로 시기 보완
+// English (phase-prompts.ts): Astro-First 전략 — 점성 60% / 타로 30% / 사주 10%
+//   → 글로벌 유저에게 "Saju"는 낯선 체계이므로,
+//     Astrology를 메인 프레임으로, Saju를 "Secret Eastern Wisdom"으로 포장
+//   → 이 역전은 의도적 설계이며, 같은 엔진 데이터를 프롬프트 레벨에서 재가중함
 export const WEIGHTS = {
-    saju: 0.50,      // 본질, 장기 운세
+    saju: 0.50,      // 본질, 장기 운세 (KO default)
     astrology: 0.30, // 시기, 트랜짓
     tarot: 0.20      // 현재 에너지
 };
