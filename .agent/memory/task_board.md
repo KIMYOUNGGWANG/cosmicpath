@@ -34,6 +34,21 @@
 
 ---
 
+## 🚀 [NEW] Sprint 0: Oracle Pivot Execution
+*목표: 포지셔닝 변경(1:1 오라클)을 반영한 홈 개편 및 데일리 챗 전환 퍼널 구축*
+- [ ] 홈 히어로 개편 (`src/components/landing/HeroSection.tsx`)
+- [ ] 데일리 리딩 확인 후 오라클 챗 유도 CTA 연동 (`src/components/daily/DailySealedWidget.tsx`)
+- [ ] 스레즈 기반 텍스트 공유 최적화 (`src/components/share/SharePanel.tsx`)
+
+## 🚀 [NEW] Sprint 1: Saju Career Viral Test (미끼 앱)
+*목표: 스레즈/인스타 바이럴을 위한 독립된 1페이지짜리 무가입 사주 직업 테스트 배포*
+- [ ] 기획 문서 완료 (PRD, TRD, API Spec, Screen Flow) 
+- [ ] 화면 UI 구현 (`/viral/career-test` 엔드트 및 결과 페이지)
+- [ ] 사주 오행 Rule-based 매핑 로직 및 JSON 에셋 구축
+- [ ] 공유용 동적 OG 이미지 및 스레즈 전용 텍스트 복사 처리 연동
+
+---
+
 ## 🟢 Phase A: 수익화 기반 및 리텐션 엔진 (Revenue Engine) [진행중]
 *목표: 유료 전환 Funnel 구축 및 자동 리마인드 시스템 완료*
 

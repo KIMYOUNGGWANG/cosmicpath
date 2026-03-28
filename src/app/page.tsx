@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 
 import { Navigation } from '@/components/landing/Navigation';
 import { HeroSection } from '@/components/landing/HeroSection';
@@ -12,17 +13,32 @@ import { ReviewCarousel } from '@/components/landing/ReviewCarousel';
 import { CrossroadsSection } from '@/components/landing/CrossroadsSection';
 import { Footer } from '@/components/landing/Footer';
 
-export const metadata: Metadata = {
-    title: 'CosmicPath | AI Astrology, Saju & Tarot',
-    description:
-        'Get your personalized destiny analysis with Saju, astrology, and tarot, powered by AI.',
-    openGraph: {
+export async function generateMetadata(): Promise<Metadata> {
+    const headersList = await headers();
+    const isKorean = (headersList.get('accept-language') || '').includes('ko');
+
+    if (isKorean) {
+        return {
+            title: 'CosmicPath | 1:1 한국형 오라클 & 데이터 기반 사주·타로',
+            description: '애매한 선택을 앞둔 순간, 가장 정확한 타이밍과 행동을 제안합니다. 사주·별자리·타로 교차 검증 오라클.',
+            openGraph: {
+                title: 'CosmicPath | 1:1 한국형 오라클 & 데이터 기반 사주·타로',
+                description: '애매한 선택을 앞둔 순간, 가장 정확한 타이밍과 행동을 제안합니다. 사주·별자리·타로 교차 검증 오라클.',
+                images: ['/og-image.png'],
+            },
+        };
+    }
+
+    return {
         title: 'CosmicPath | AI Astrology, Saju & Tarot',
-        description:
-            'Get your personalized destiny analysis with Saju, astrology, and tarot, powered by AI.',
-        images: ['/og-image.png'],
-    },
-};
+        description: 'Get your personalized destiny analysis with Saju, astrology, and tarot, powered by AI.',
+        openGraph: {
+            title: 'CosmicPath | AI Astrology, Saju & Tarot',
+            description: 'Get your personalized destiny analysis with Saju, astrology, and tarot, powered by AI.',
+            images: ['/og-image.png'],
+        },
+    };
+}
 
 export default function Home() {
     return (
