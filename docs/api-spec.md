@@ -67,35 +67,15 @@ interface DailyFortuneResponse {
   luckyDirection: string;
   areas: { love: number; money: number; career: number; health: number; };
   advice: string;          // 프리미엄 시 추가 인사이트 포함
+  // NEW: 통합된 타로 조언 카드
+  dailyTarot?: {
+    cardIndex: number;
+    cardName: string;
+    cardNameKo: string;
+    isReversed: boolean;
+    meaning: string;
+  };
   cachedUntil: string;     // ISO 8601
-  isPremium: boolean;
-}
-```
-
----
-
-### 2. 오늘의 타로 (Daily Tarot) 🆕 구현 필요
-
-| Method | Path | Auth | Cache |
-|:-------|:-----|:-----|:------|
-| `GET` | `/api/daily/tarot` | ❌ | 자정까지 |
-
-**Query**
-```
-birthday: string  // YYYY-MM-DD (Required) — Seed 생성에 사용
-```
-
-**Response**
-```typescript
-interface DailyTarotResponse {
-  date: string;
-  cardIndex: number;       // 0-77 (Major 22 / Minor 56)
-  cardName: string;        // e.g. "The Star"
-  cardNameKo: string;      // e.g. "별"
-  isReversed: boolean;
-  keywordKo: string;       // e.g. "희망, 영감, 평온"
-  meaning: string;         // 기본 해석 (무료)
-  advice: string;          // 구독자 전용 행동 가이드
   isPremium: boolean;
 }
 ```
@@ -111,8 +91,8 @@ interface DailyTarotResponse {
 **Response**
 ```typescript
 interface SubscriptionStatusResponse {
-  status: 'free' | 'pro' | 'couple';
-  plan: 'pro_weekly' | 'pro_monthly' | 'pro_yearly' | 'couple_monthly' | null;
+  status: 'free' | 'pro';
+  plan: 'pro_monthly' | 'pro_yearly' | null;
   expiresAt: string | null;
   stripeCustomerId: string | null;
 }
@@ -129,7 +109,7 @@ interface SubscriptionStatusResponse {
 **Request**
 ```typescript
 interface SubscriptionCreateRequest {
-  planType: 'WEEKLY' | 'MONTHLY' | 'ANNUAL';
+  planType: 'MONTHLY' | 'ANNUAL';
 }
 ```
 
@@ -169,7 +149,7 @@ interface SubscriptionCancelResponse {
 
 ---
 
-### 7. 친구 초대 가입 보상 (Referral Reward) 🆕 구현 필요
+### 7. 친구 초대 가입 보상 (Referral Reward) ✅ 구현됨
 
 | Method | Path | Auth |
 |:-------|:-----|:-----|
@@ -317,9 +297,98 @@ interface GrowthSummaryResponse {
 
 ## Task-to-Endpoint Mapping
 
-| Task (task_board.md) | Endpoint |
+| Task (task.md) | Endpoint |
 |:---------------------|:---------|
 | 구독 해지 버튼 | `POST /api/subscription/cancel` |
-| 데일리 타로 UI | `GET /api/daily/tarot` |
+| 오늘의 운세 + 타로 통합 | `GET /api/daily/fortune` |
 | 친구 초대 보상 | `POST /api/referral/reward` |
-| KPI 대시보드 | `GET /api/growth/summary` |
+
+---
+
+## 11. Career Oracle (Teaser & Unlock) 🆕
+
+커리어 오라클 기능을 위한 티저 및 잠금 해제 엔드포인트.
+
+### 11.1 커리어 티저 (Career Teaser)
+사용자의 고민형태와 기본 사주/점성술 데이터를 바탕으로 강렬한 후킹 1줄을 생성합니다.
+
+| Method | Path | Auth | Runtime |
+|:-------|:-----|:-----|:--------|
+| `POST` | `/api/reading/career/teaser` | ❌ | Edge |
+
+**Request**
+```typescript
+interface CareerTeaserRequest {
+  birthday: string;    // YYYY-MM-DD
+  birthtime: string;   // HH:mm
+  gender: 'M' | 'F';
+  worryType: 'transition' | 'first_job' | 'promotion' | 'burnout';
+}
+```
+
+**Response**
+```typescript
+interface CareerTeaserResponse {
+  hook: string; // LLM이 생성한 1~2줄 문구
+}
+```
+
+### 11.2 커리어 리포트 잠금 해제 (Career Unlock)
+Stripe 결제 완료 후 프리미엄 리포트를 생성하고 접근 권한을 부여합니다.
+
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `POST` | `/api/reading/career/unlock` | ✅ |
+
+**Request**
+```typescript
+interface CareerUnlockRequest {
+  sessionId: string;   // Stripe Checkout Session ID
+  birthday: string;
+  birthtime: string;
+  gender: 'M' | 'F';
+  worryType: 'transition' | 'first_job' | 'promotion' | 'burnout';
+  tarotCards?: number[];
+}
+```
+
+**Response**
+```typescript
+interface CareerUnlockResponse {
+  unlocked: true;
+  report: CareerPremiumReport; // 상세 분석 데이터
+  metadata: any;
+}
+```
+
+### 11.3 커리어 상세 분석 (Career Premium Report)
+PRO 구독자 또는 잠금 해제된 사용자를 위한 전체 데이터 생성.
+
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `POST` | `/api/reading/career` | ✅ (PRO/Payment) |
+
+**Response**
+```typescript
+interface CareerPremiumReport {
+  readingId: string;
+  sajuTiming: string;
+  astrologyTalent: string;
+  tarotAdvice: string;
+  actionPlan: string[];
+  snapshot: string; // Threads 공유용 문구
+  phase1_pastAnalysis: string;
+  phase2_timing: string;
+  phase3_keywords: string[];
+}
+```
+
+- [x] **[Frontend]** 카카오톡/스레드 공유 모듈 및 Snapshot 기능 연동
+
+## 🚀 [NEW] Sprint 1.5: Frontend Funnel Integration [진행 예정]
+*목표: 티저 -> 결제 -> 결과 확인으로 이어지는 사용자 경험 완성*
+- [ ] **[Frontend]** `/career` 랜딩 페이지 개편 (Teaser 애니메이션 추가)
+- [ ] **[Frontend]** `TeaserView` -> `PaymentModal` 전환 로직 고도화
+- [ ] **[Frontend]** `ResultView` 내 "봉인 해제" Glassmorphism UI 구현
+- [ ] **[Integration]** `/api/reading/career/unlock` 실제 연동 및 에러 핸들링
+```

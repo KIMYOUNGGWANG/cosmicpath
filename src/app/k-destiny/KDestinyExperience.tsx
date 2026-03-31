@@ -377,6 +377,7 @@ export function KDestinyExperience() {
                                     <input
                                         required
                                         type="date"
+                                        max="9999-12-31"
                                         value={form.birthDate}
                                         onChange={(event) =>
                                             setForm((current) => ({

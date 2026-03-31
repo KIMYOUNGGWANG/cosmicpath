@@ -27,12 +27,16 @@ export async function POST(request: Request) {
 
         let dataStr: string;
         let metaStr: string | null = null;
+        let parsedMeta: any = {};
 
         try {
             dataStr = typeof data === 'string' ? data : JSON.stringify(data);
             metaStr = metadata ? (typeof metadata === 'string' ? metadata : JSON.stringify(metadata)) : null;
+            if (metaStr) {
+                parsedMeta = JSON.parse(metaStr);
+            }
         } catch (stringifyError: any) {
-            devLog.error('Save API: JSON stringify failed:', stringifyError);
+            devLog.error('Save API: JSON stringify/parse failed:', stringifyError);
             return NextResponse.json({
                 error: 'JSON Serialization Failed',
                 details: stringifyError.message
@@ -49,13 +53,16 @@ export async function POST(request: Request) {
             userId: userId || 'anonymous'
         });
 
+        // Career Oracle: Check context and premium status
+        const isCareer = parsedMeta.context === 'career' || (typeof data === 'object' && data.context === 'career');
+        const isPremium = parsedMeta.isPremium || parsedMeta.paymentSource === 'promo';
+
         const result = id
             ? await prisma.readingResult.update({
                 where: { id },
                 data: {
                     data: dataStr,
                     metadata: metaStr,
-                    // 기존 기록에 userId가 없으면 연결 (선택 사항)
                     ...(userId ? { userId } : {})
                 },
             })
@@ -63,7 +70,12 @@ export async function POST(request: Request) {
                 data: {
                     data: dataStr,
                     metadata: metaStr,
-                    userId: userId // 로그인 상태라면 user_id 저장
+                    userId: userId,
+                    // Career Oracle: Initialize proxy counters
+                    ...(isCareer ? {
+                        proxyReadingCount: 0,
+                        maxProxyCount: isPremium ? 3 : 0 // Premium users get 3 proxy slots
+                    } : {})
                 },
             });
 
@@ -72,26 +84,25 @@ export async function POST(request: Request) {
         // [New] 서버사이드 이메일 발송 트리거
         // 프리미엄 리딩이고, 이메일이 있으며, 아직 발송되지 않은 경우
         // [MODIFIED] 중복 발송 방지: 'promo' 유저인 경우에만 여기서 발송 (Stripe는 Webhook이 담당)
-        const savedMeta = result.metadata ? JSON.parse(result.metadata) : {};
-        if (savedMeta.isPremium && savedMeta.email && !savedMeta.emailSent && savedMeta.paymentSource === 'promo') {
-            devLog.log('Save API: Triggering server-side email for', savedMeta.email);
+        if (parsedMeta.isPremium && parsedMeta.email && !parsedMeta.emailSent && parsedMeta.paymentSource === 'promo') {
+            devLog.log('Save API: Triggering server-side email for', parsedMeta.email);
 
             // 직접 함수 호출 (HTTP 요청 오버헤드 및 URL 문제 제거)
             try {
                 await sendResultEmail({
-                    email: savedMeta.email,
+                    email: parsedMeta.email,
                     resultId: result.id,
-                    title: savedMeta.userContext || '통합 분석 리포트',
-                    birthInfo: savedMeta.birthInfo,
-                    sajuSummary: savedMeta.sajuSummary,
-                    userContext: savedMeta.userContext
+                    title: parsedMeta.userContext || '통합 분석 리포트',
+                    birthInfo: parsedMeta.birthInfo,
+                    sajuSummary: parsedMeta.sajuSummary,
+                    userContext: parsedMeta.userContext
                 });
 
                 // 이메일 발송 완료 플래그 업데이트
                 await prisma.readingResult.update({
                     where: { id: result.id },
                     data: {
-                        metadata: JSON.stringify({ ...savedMeta, emailSent: true })
+                        metadata: JSON.stringify({ ...parsedMeta, emailSent: true })
                     }
                 });
 

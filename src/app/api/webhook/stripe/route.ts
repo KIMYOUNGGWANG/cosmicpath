@@ -64,9 +64,8 @@ function resolvePlanIdFromSubscription(subscription: Stripe.Subscription): Subsc
     return null;
 }
 
-function toSubscriptionStatus(planId: SubscriptionPlanId | null): 'free' | 'pro' | 'couple' {
-    if (!planId) return 'free';
-    return planId === 'couple_monthly' ? 'couple' : 'pro';
+function toSubscriptionStatus(planId: SubscriptionPlanId | null): 'free' | 'pro' {
+    return planId ? 'pro' : 'free';
 }
 
 function getCustomerIdFromSubscription(subscription: Stripe.Subscription): string | null {
@@ -168,7 +167,7 @@ async function resolveUserIdFromSubscription(subscription: Stripe.Subscription):
 
 async function updateSubscriptionState(params: {
     userId: string;
-    status: 'free' | 'pro' | 'couple';
+    status: 'free' | 'pro';
     expiresAt: string | null;
     stripeCustomerId: string | null;
     stripeSubscriptionId: string | null;

@@ -1,9 +1,23 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Sparkles, Star } from 'lucide-react';
 import { BirthDateInput } from '@/components/common/BirthDateInput';
 import { SubscriptionModal } from '@/components/payment/SubscriptionModal';
+import { trackClientGrowthEvent } from '@/lib/client-growth-events';
+
+interface DailyTarotResponse {
+    date: string;
+    cardIndex: number;
+    cardName: string;
+    cardNameKo: string;
+    isReversed: boolean;
+    keywordKo: string;
+    meaning: string;
+    advice: string;
+    isPremium: boolean;
+}
 
 interface DailyFortuneResponse {
     date: string;
@@ -22,18 +36,7 @@ interface DailyFortuneResponse {
     advice: string;
     cachedUntil: string;
     isPremium?: boolean;
-}
-
-interface DailyTarotResponse {
-    date: string;
-    cardIndex: number;
-    cardName: string;
-    cardNameKo: string;
-    isReversed: boolean;
-    keywordKo: string;
-    meaning: string;
-    advice: string;
-    isPremium: boolean;
+    dailyTarot?: DailyTarotResponse;
 }
 
 interface StoredBirthData {
@@ -76,6 +79,18 @@ function getAreaCardTone(area: keyof DailyFortuneResponse['areas']) {
     return 'from-emerald-400/16 to-transparent text-emerald-100';
 }
 
+function buildRecommendedPrompts(
+    strongestArea: [keyof DailyFortuneResponse['areas'], number],
+    weakestArea: [keyof DailyFortuneResponse['areas'], number],
+    tarot: DailyTarotResponse,
+) {
+    return [
+        `${areaLabelMap[strongestArea[0]]} 흐름 ${strongestArea[1]}점을 오늘 어떻게 성과로 연결하면 좋을까요?`,
+        `${areaLabelMap[weakestArea[0]]} 운이 ${weakestArea[1]}점인데 오늘 피해야 할 선택은 무엇인가요?`,
+        `${tarot.keywordKo} 카드가 나온 날, 지금 바로 해도 되는 행동과 미뤄야 할 행동을 알려주세요.`,
+    ];
+}
+
 export function DailySealedWidget() {
     const [forecast, setForecast] = useState<DailyFortuneResponse | null>(null);
     const [tarot, setTarot] = useState<DailyTarotResponse | null>(null);
@@ -87,6 +102,43 @@ export function DailySealedWidget() {
     const [inputDate, setInputDate] = useState('');
     const [inputTime, setInputTime] = useState('');
     const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+
+    const fetchDailyReadings = async (birthDate: string, birthTime?: string) => {
+        setIsLoading(true);
+        setErrorMessage(null);
+
+        try {
+            const params = new URLSearchParams({ birthday: birthDate });
+            if (birthTime) {
+                params.set('birthtime', birthTime);
+            }
+
+            const response = await fetch(`/api/daily/fortune?${params.toString()}`, {
+                cache: 'no-store',
+            });
+
+            const payload = (await response.json()) as DailyFortuneResponse & {
+                error?: { message?: string };
+            };
+
+            if (!response.ok) {
+                throw new Error(payload?.error?.message || '오늘의 운세를 불러오지 못했습니다.');
+            }
+
+            setForecast(payload);
+            if (payload.dailyTarot) {
+                setTarot(payload.dailyTarot);
+            }
+            setIsRevealed(false);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
+            setErrorMessage(message);
+            setForecast(null);
+            setTarot(null);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
         const storedData = localStorage.getItem('cosmic_user_data');
@@ -117,55 +169,6 @@ export function DailySealedWidget() {
             console.error('Failed to parse user data', error);
         }
     }, []);
-
-    const fetchDailyReadings = async (birthDate: string, birthTime?: string) => {
-        setIsLoading(true);
-        setErrorMessage(null);
-
-        try {
-            const fortuneParams = new URLSearchParams({ birthday: birthDate });
-            if (birthTime) {
-                fortuneParams.set('birthtime', birthTime);
-            }
-
-            const tarotParams = new URLSearchParams({ birthday: birthDate });
-
-            const [fortuneResponse, tarotResponse] = await Promise.all([
-                fetch(`/api/daily/fortune?${fortuneParams.toString()}`, {
-                    cache: 'no-store',
-                }),
-                fetch(`/api/daily/tarot?${tarotParams.toString()}`, {
-                    cache: 'no-store',
-                }),
-            ]);
-
-            const fortunePayload = (await fortuneResponse.json()) as DailyFortuneResponse & {
-                error?: { message?: string };
-            };
-            const tarotPayload = (await tarotResponse.json()) as DailyTarotResponse & {
-                error?: { message?: string };
-            };
-
-            if (!fortuneResponse.ok) {
-                throw new Error(fortunePayload?.error?.message || '오늘의 운세를 불러오지 못했습니다.');
-            }
-
-            if (!tarotResponse.ok) {
-                throw new Error(tarotPayload?.error?.message || '오늘의 타로를 불러오지 못했습니다.');
-            }
-
-            setForecast(fortunePayload);
-            setTarot(tarotPayload);
-            setIsRevealed(false);
-        } catch (error) {
-            const message = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
-            setErrorMessage(message);
-            setForecast(null);
-            setTarot(null);
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     const handleQuickSubmit = (event: React.FormEvent) => {
         event.preventDefault();
@@ -277,13 +280,25 @@ export function DailySealedWidget() {
     const strongestArea = getStrongestArea(forecast.areas);
     const weakestArea = getWeakestArea(forecast.areas);
     const isPremiumTheme = forecast.isPremium === true;
+    const recommendedPrompts = buildRecommendedPrompts(strongestArea, weakestArea, tarot);
+    const oracleHref = `/start?reset=true&source=daily&signal=${strongestArea[0]}`;
 
     return (
         <div className="w-full min-h-[620px] flex items-center justify-center relative perspective-1000">
             {!isRevealed ? (
                 <button
                     type="button"
-                    onClick={() => setIsRevealed(true)}
+                    onClick={() => {
+                        setIsRevealed(true);
+                        void trackClientGrowthEvent({
+                            event: 'daily_reveal_clicked',
+                            source: 'daily_widget',
+                            metadata: {
+                                strongestArea: strongestArea[0],
+                                tarotCard: tarot.cardNameKo,
+                            },
+                        });
+                    }}
                     className={`group relative flex h-[296px] w-[min(100%,25rem)] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[30px] border shadow-2xl transition-[transform,box-shadow,border-color] duration-300 hover:scale-[1.02] hover:-rotate-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acc-gold/70 ${
                         isPremiumTheme
                             ? 'border-acc-gold/30 bg-[#171117]'
@@ -539,6 +554,91 @@ export function DailySealedWidget() {
                                 </div>
                             )}
                         </section>
+                    </div>
+
+                    <div className="mt-12 border-t border-white/10 pt-10">
+                        <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+                            <div className="relative text-center lg:text-left">
+                                <div className="absolute -top-6 left-1/2 -translate-x-1/2 rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-acc-gold lg:left-0 lg:translate-x-0">
+                                    Decision Guide
+                                </div>
+                                <p className="pt-4 text-lg leading-relaxed text-starlight font-gowun-batang break-keep">
+                                    오늘의 운세와 카드를 바탕으로 <br />
+                                    <span className="font-bold text-white underline decoration-acc-gold/40 underline-offset-4">
+                                        구체적인 행동 전략
+                                    </span>
+                                    이 필요하신가요?
+                                </p>
+                                <p className="mt-3 text-sm text-starlight/50">
+                                    오라클은 당신의 사주 데이터를 기반으로 지금 바로 실천할 수 있는 답을 드립니다.
+                                </p>
+                                <div className="mt-5 flex flex-wrap justify-center gap-2 lg:justify-start">
+                                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-starlight/70">
+                                        {areaLabelMap[strongestArea[0]]} 강세 {strongestArea[1]}점
+                                    </span>
+                                    <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] text-cyan-100">
+                                        {tarot.keywordKo}
+                                    </span>
+                                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-starlight/70">
+                                        {areaLabelMap[weakestArea[0]]} 주의
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="rounded-[28px] border border-white/8 bg-white/[0.035] p-5">
+                                <p className="text-[11px] uppercase tracking-[0.24em] text-starlight/40">
+                                    Oracle Prompt Suggestions
+                                </p>
+                                <div className="mt-4 space-y-3">
+                                    {recommendedPrompts.map((prompt) => (
+                                        <div
+                                            key={prompt}
+                                            className="rounded-2xl border border-white/8 bg-black/20 px-4 py-3 text-sm leading-6 text-starlight/84"
+                                        >
+                                            {prompt}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                                    <Link
+                                        href={oracleHref}
+                                        onClick={() => {
+                                            void trackClientGrowthEvent({
+                                                event: 'daily_oracle_cta_clicked',
+                                                source: 'daily_widget',
+                                                metadata: {
+                                                    strongestArea: strongestArea[0],
+                                                    weakestArea: weakestArea[0],
+                                                    tarotCard: tarot.cardNameKo,
+                                                },
+                                            });
+                                        }}
+                                        className="group inline-flex flex-1 items-center justify-center gap-3 rounded-full bg-gradient-to-r from-acc-gold via-amber-300 to-acc-gold px-8 py-4 text-lg font-bold tracking-tight text-deep-navy shadow-[0_0_30px_rgba(212,175,55,0.3)] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_50px_rgba(212,175,55,0.5)]"
+                                    >
+                                        <Sparkles className="h-5 w-5 animate-pulse" />
+                                        <span>오라클에게 1:1 질문하기</span>
+                                    </Link>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setIsSubscriptionModalOpen(true);
+                                            void trackClientGrowthEvent({
+                                                event: 'daily_upgrade_cta_clicked',
+                                                source: 'daily_widget',
+                                            });
+                                        }}
+                                        className="inline-flex items-center justify-center rounded-full border border-white/12 bg-white/5 px-6 py-4 text-sm font-semibold text-starlight transition-colors hover:border-acc-gold/30 hover:text-white"
+                                    >
+                                        Pro로 행동 가이드 해제
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-5 text-center text-[11px] uppercase tracking-widest text-starlight/30">
+                            * 오늘 리딩을 보고 바로 질문하는 사용자가 가장 높은 전환율을 보입니다
+                        </div>
                     </div>
                 </div>
             )}

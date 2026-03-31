@@ -18,7 +18,12 @@ import {
     buildFallbackMessage,
     ReadingContext
 } from '@/lib/ai/prompt-builder';
-import { generateStructuredReport, ModelTier } from '@/lib/ai/llm-client';
+import {
+    generateStructuredReport,
+    getAIModelBusyMessage,
+    isAIModelBusyError,
+    ModelTier
+} from '@/lib/ai/llm-client';
 import { generatePremiumReport, generateSinglePhase } from '@/lib/ai/premium-reading-service';
 import { consumeDailyQuota } from '@/lib/plan-limits';
 import { trackGrowthEvent } from '@/lib/growth-events';
@@ -412,6 +417,17 @@ export async function POST(request: NextRequest) {
 
         } catch (aiError) {
             console.error('AI generation failed:', aiError);
+
+            if (isAIModelBusyError(aiError)) {
+                const busyMessage = getAIModelBusyMessage(language as 'ko' | 'en');
+                return NextResponse.json({
+                    success: false,
+                    isFallback: true,
+                    retryable: true,
+                    error: busyMessage,
+                    fallbackMessage: busyMessage,
+                }, { status: 503 });
+            }
 
             const fallbackMessage = buildFallbackMessage(context as ReadingContext, language as 'ko' | 'en');
 

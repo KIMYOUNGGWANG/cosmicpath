@@ -59,34 +59,26 @@ export const MATCH_PRODUCT = {
     price: 799, // $7.99 in cents
 } as const;
 
-export const SUBSCRIPTION_PLAN_IDS = ['pro_weekly', 'pro_monthly', 'pro_yearly', 'couple_monthly'] as const;
+export const SUBSCRIPTION_PLAN_IDS = ['pro_monthly', 'pro_yearly'] as const;
 export type SubscriptionPlanId = (typeof SUBSCRIPTION_PLAN_IDS)[number];
-export const SUBSCRIPTION_PLAN_TYPES = ['WEEKLY', 'MONTHLY', 'ANNUAL'] as const;
+export const SUBSCRIPTION_PLAN_TYPES = ['MONTHLY', 'ANNUAL'] as const;
 export type SubscriptionPlanType = (typeof SUBSCRIPTION_PLAN_TYPES)[number];
 
 export const SUBSCRIPTION_PRICE_IDS = {
-    pro_weekly: process.env.NODE_ENV === 'development'
-        ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY || 'price_pro_weekly_TBD')
-        : (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY || 'price_pro_weekly_TBD'),
     pro_monthly: process.env.NODE_ENV === 'development'
         ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY || 'price_1T7Ken0RiEHwZwUJ9BYSpD74')
         : (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY || 'price_1T7Ken0RiEHwZwUJ9BYSpD74'),
     pro_yearly: process.env.NODE_ENV === 'development'
         ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY || 'price_1T7Ken0RiEHwZwUJydDuq9Tq')
         : (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY || 'price_1T7Ken0RiEHwZwUJydDuq9Tq'),
-    couple_monthly: process.env.NODE_ENV === 'development'
-        ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY || 'price_1T7Keo0RiEHwZwUJVtCaF6Nn')
-        : (process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY || 'price_1T7Keo0RiEHwZwUJVtCaF6Nn'),
 } as const satisfies Record<SubscriptionPlanId, string>;
 
 export const SUBSCRIPTION_CHECKOUT_PLAN_MAP = {
-    WEEKLY: 'pro_weekly',
     MONTHLY: 'pro_monthly',
     ANNUAL: 'pro_yearly',
 } as const satisfies Record<SubscriptionPlanType, SubscriptionPlanId>;
 
 export const SUBSCRIPTION_CHECKOUT_PRICE_IDS = {
-    WEEKLY: SUBSCRIPTION_PRICE_IDS.pro_weekly,
     MONTHLY: SUBSCRIPTION_PRICE_IDS.pro_monthly,
     ANNUAL: SUBSCRIPTION_PRICE_IDS.pro_yearly,
 } as const satisfies Record<SubscriptionPlanType, string>;

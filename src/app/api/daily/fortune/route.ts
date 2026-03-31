@@ -4,6 +4,7 @@ import { calculateDailyForecast, calculateDayMaster, type DayMaster } from '@/li
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { isSubscriptionActive } from '@/lib/subscription';
+import { getDailyTarotReading, type DailyTarotResponse } from '@/lib/daily-tarot';
 
 interface DailyFortuneResponse {
     date: string;
@@ -20,6 +21,7 @@ interface DailyFortuneResponse {
         health: number;
     };
     advice: string;
+    dailyTarot?: DailyTarotResponse;
     cachedUntil: string;
     isPremium?: boolean;
 }
@@ -200,6 +202,8 @@ export async function GET(request: NextRequest) {
         (seed % 3)
     );
 
+    const dailyTarot = getDailyTarotReading(parsed.data.birthday, today, isPremium);
+
     const response: DailyFortuneResponse = {
         date: today,
         dayMaster: dayMasterLabel[dayMaster],
@@ -210,6 +214,7 @@ export async function GET(request: NextRequest) {
         luckyDirection: base.luckyDirection,
         areas: buildAreas(overallLuck, seed),
         advice: buildAdvice(seed, isPremium),
+        dailyTarot,
         cachedUntil: midnight.toISOString(),
         isPremium,
     };

@@ -6,6 +6,18 @@
 import { z } from 'zod';
 import { safeIncrementUsageCounter } from '@/lib/usage-metrics';
 
+export class AIModelBusyError extends Error {
+    status: number;
+    code: string;
+
+    constructor(message: string, status: number = 503) {
+        super(message);
+        this.name = 'AIModelBusyError';
+        this.status = status;
+        this.code = 'AI_MODEL_BUSY';
+    }
+}
+
 // 지원 모델 타입
 export type ModelProvider = 'openai' | 'anthropic' | 'google';
 export type ModelTier = 'free' | 'basic' | 'premium';
@@ -42,6 +54,34 @@ export interface LLMResponse {
         completionTokens: number;
         totalTokens: number;
     };
+}
+
+export function isAIModelBusyError(error: unknown): error is AIModelBusyError {
+    if (error instanceof AIModelBusyError) {
+        return true;
+    }
+
+    if (!(error instanceof Error)) {
+        return false;
+    }
+
+    const message = error.message.toLowerCase();
+    return (
+        message.includes('503') ||
+        message.includes('429') ||
+        message.includes('high demand') ||
+        message.includes('rate limit') ||
+        message.includes('resource exhausted') ||
+        message.includes('try again later')
+    );
+}
+
+export function getAIModelBusyMessage(language: 'ko' | 'en' = 'ko'): string {
+    if (language === 'en') {
+        return 'The Oracle is receiving unusually high demand right now. Please try again in a moment.';
+    }
+
+    return '지금 오라클 요청이 몰려 응답이 지연되고 있습니다. 잠시 후 다시 시도해주세요.';
 }
 
 /**
@@ -86,6 +126,10 @@ async function fetchWithRetry(
             console.warn(`[AI Client Retry] Attempt ${i + 1} failed (Status: ${message}). Retrying in ${delay}ms...`);
             await new Promise(resolve => setTimeout(resolve, delay));
         }
+    }
+
+    if (lastError && isAIModelBusyError(lastError)) {
+        throw new AIModelBusyError(lastError.message);
     }
 
     throw lastError || new Error('All retry attempts failed');

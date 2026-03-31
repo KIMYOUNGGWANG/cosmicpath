@@ -8,11 +8,13 @@
 ## 🔥 Rebased Execution Queue (2026-03-20)
 *기준: `07_implementation_gap_audit_20260320.md` 감사 결과 반영*
 
-- [x] **Now 1: Daily Tarot 완성**
-    - [x] `GET /api/daily/tarot` 엔드포인트 구현
-    - [x] `/daily` 또는 관련 위젯에 Daily Tarot UI 연결
-    - [x] 무료 해석 / 구독자 advice 노출 규칙 반영
-    - [x] 자정 기준 캐시 및 시드 고정 검증
+- [x] Step 1: Backend API (Teaser/Unlock endpoints implemented)
+- [x] Step 2: Frontend UI (Funnel logic, TeaserView, SealUnlockAnimation implemented with mocks)
+- [ ] Step 3: Integration (Merge frontend with real backend APIs)
+    - [ ] 3.1: Replace mock triggers with real fetch calls
+    - [ ] 3.2: Integrate PaymentModal for one-off purchase
+    - [ ] 3.3: Verify flow with Stripe test mode
+    - [ ] 3.4: Final QA & Bug fixes
 - [x] **Now 2: Referral Reward + Share Credit 정합화**
     - [x] `POST /api/referral/reward` 구현
     - [x] 친구 가입 완료 시 초대자 Credit +1 지급
@@ -36,16 +38,25 @@
 
 ## 🚀 [NEW] Sprint 0: Oracle Pivot Execution
 *목표: 포지셔닝 변경(1:1 오라클)을 반영한 홈 개편 및 데일리 챗 전환 퍼널 구축*
-- [ ] 홈 히어로 개편 (`src/components/landing/HeroSection.tsx`)
-- [ ] 데일리 리딩 확인 후 오라클 챗 유도 CTA 연동 (`src/components/daily/DailySealedWidget.tsx`)
-- [ ] 스레즈 기반 텍스트 공유 최적화 (`src/components/share/SharePanel.tsx`)
+- [x] 홈 히어로 개편 (`src/components/landing/HeroSection.tsx`)
+- [x] 데일리 리딩 확인 후 오라클 챗 유도 CTA 연동 (`src/components/daily/DailySealedWidget.tsx`)
+- [x] 스레즈 기반 텍스트 공유 최적화 (`src/components/share/SharePanel.tsx`)
 
-## 🚀 [NEW] Sprint 1: Saju Career Viral Test (미끼 앱)
-*목표: 스레즈/인스타 바이럴을 위한 독립된 1페이지짜리 무가입 사주 직업 테스트 배포*
-- [ ] 기획 문서 완료 (PRD, TRD, API Spec, Screen Flow) 
-- [ ] 화면 UI 구현 (`/viral/career-test` 엔드트 및 결과 페이지)
-- [ ] 사주 오행 Rule-based 매핑 로직 및 JSON 에셋 구축
-- [ ] 공유용 동적 OG 이미지 및 스레즈 전용 텍스트 복사 처리 연동
+## 🚀 [NEW] Sprint 1: Career Oracle Viral Test
+*목표: 스레즈/인스타 바이럴 대리 조회를 유도하는 직업/진로 추천 기능 배포*
+- [x] **[Backend]** `ReadingResult` 모델에 `proxyReadingCount`, `maxProxyCount` 마이그레이션 (`prisma/schema.prisma`)
+- [x] **[Backend]** `/api/career/proxy` 엔드포인트 구현 (대리 조회 결제/권한 검증)
+- [x] **[Backend]** `/api/career/snapshot` OG 생성을 위한 라우트 구축
+- [x] **[AI Core]** `PremiumReadingService` 내 사주/점성술 융합 Career 분석 프롬프트 분기 추가
+- [x] **[Frontend]** `/viral/career-test` UI (기본 폼, Glassmorphism 결과 뷰, 대리 조회 모달) 구현
+- [x] **[Frontend]** 카카오톡/스레드 공유 모듈 및 Snapshot 기능 연동
+
+## 🚀 [NEW] Sprint 1.5: Frontend Funnel Integration [진행 예정]
+*목표: 티저 -> 결제 -> 결과 확인으로 이어지는 사용자 경험 완성*
+- [ ] **[Frontend]** `/career` 랜딩 페이지 개편 (Teaser 애니메이션 추가)
+- [ ] **[Frontend]** `TeaserView` -> `PaymentModal` 전환 로직 고도화
+- [ ] **[Frontend]** `ResultView` 내 "봉인 해제" Glassmorphism UI 구현
+- [ ] **[Integration]** `/api/reading/career/unlock` 실제 연동 및 에러 핸들링
 
 ---
 

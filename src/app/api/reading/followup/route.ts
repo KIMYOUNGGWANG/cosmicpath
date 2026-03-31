@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { buildChatSystemPrompt, buildChatUserPrompt } from '@/lib/ai/prompt-builder';
-import { generateCompletion } from '@/lib/ai/llm-client';
+import {
+    generateCompletion,
+    getAIModelBusyMessage,
+    isAIModelBusyError
+} from '@/lib/ai/llm-client';
 import { buildFactsOfDestiny } from '@/lib/engines/intelligence-bridge';
 import { authorizeOracleAccess, OracleAccessError } from '@/lib/oracle-access';
 
@@ -146,6 +150,10 @@ export async function POST(request: NextRequest) {
     } catch (error: unknown) {
         if (error instanceof OracleAccessError) {
             return errorResponse(error.status, error.message, error.code);
+        }
+
+        if (isAIModelBusyError(error)) {
+            return errorResponse(503, getAIModelBusyMessage('ko'), 'AI_MODEL_BUSY');
         }
 
         const message = error instanceof Error ? error.message : String(error);

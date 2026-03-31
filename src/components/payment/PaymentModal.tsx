@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
+import { useBodyScrollLock } from '@/hooks/use-body-scroll-lock';
 import { READING_PRODUCT } from '@/lib/payment/payment-config';
 import { PromoCodeInput } from './PromoCodeInput';
 import { trackClientGrowthEvent } from '@/lib/client-growth-events';
@@ -23,6 +24,13 @@ interface PaymentModalProps {
     price?: string;
     trackingSource?: string;
     autoReferralCode?: string;
+    checkoutConfig?: {
+        productId?: string;
+        paymentType?: 'premium_reading' | 'career_report';
+        successPath?: string;
+        cancelPath?: string;
+        metadata?: Record<string, string>;
+    };
 }
 
 const modalSpring = {
@@ -42,6 +50,7 @@ export function PaymentModal({
     price,
     trackingSource = 'payment_modal',
     autoReferralCode,
+    checkoutConfig,
 }: PaymentModalProps) {
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState<string | null>(null);
@@ -50,6 +59,7 @@ export function PaymentModal({
     const [discount, setDiscount] = useState<number>(0);
     const [appliedReferralCode, setAppliedReferralCode] = useState<string | null>(null);
     const isEnglish = metadata?.language === 'en' || readingData?.language === 'en';
+    const resolvedProductId = checkoutConfig?.productId || READING_PRODUCT.productId;
 
     // Dynamic price from prop or fetched from API
     const [fetchedPrice, setFetchedPrice] = useState<string>('');
@@ -68,7 +78,7 @@ export function PaymentModal({
     // Fetch price from Stripe when modal opens (if not provided via prop)
     useEffect(() => {
         if (isOpen && !price) {
-            fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`)
+            fetch(`/api/payment/price?productId=${resolvedProductId}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.formattedPrice) {
@@ -77,7 +87,7 @@ export function PaymentModal({
                 })
                 .catch(err => console.error('Failed to fetch price:', err));
         }
-    }, [isOpen, price]);
+    }, [isOpen, price, resolvedProductId]);
 
     const resolvedAutoReferralCode = (() => {
         if (autoReferralCode?.trim()) return autoReferralCode.trim().toUpperCase();
@@ -108,6 +118,8 @@ export function PaymentModal({
             }),
         [appliedReferralCode, effectivePriceLabel, metadata, readingData, resolvedAutoReferralCode, trackingSource]
     );
+
+    useBodyScrollLock(isOpen);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -177,20 +189,25 @@ export function PaymentModal({
 
         setIsLoading(true);
         try {
+            const persistPendingValue = (key: string, value: string) => {
+                sessionStorage.setItem(key, value);
+                localStorage.setItem(key, value);
+            };
+
             // 1. 사전 처리 (데이터 저장)
             if (readingData) {
-                sessionStorage.setItem('pending_reading_data', JSON.stringify(readingData));
+                persistPendingValue('pending_reading_data', JSON.stringify(readingData));
             }
             if (currentReport) {
-                sessionStorage.setItem('pending_report_data', JSON.stringify(currentReport));
+                persistPendingValue('pending_report_data', JSON.stringify(currentReport));
             }
             if (metadata) {
-                sessionStorage.setItem('pending_metadata', JSON.stringify(metadata));
+                persistPendingValue('pending_metadata', JSON.stringify(metadata));
             }
             if (isDecisionAccepted) {
-                sessionStorage.setItem('decision_accepted', 'true');
+                persistPendingValue('decision_accepted', 'true');
             }
-            sessionStorage.setItem('is_session_active', 'true');
+            persistPendingValue('is_session_active', 'true');
             if (email) {
                 localStorage.setItem('user_email', email);
             }
@@ -209,7 +226,7 @@ export function PaymentModal({
                 referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
                 price: effectivePriceLabel !== '...' ? effectivePriceLabel : undefined,
                 readingId: readingId || undefined,
-                plan: isFreePromo ? 'promo_free_unlock' : READING_PRODUCT.id,
+                plan: isFreePromo ? 'promo_free_unlock' : (checkoutConfig?.paymentType || READING_PRODUCT.id),
                 metadata: {
                     emailProvided: Boolean(email),
                     discount,
@@ -296,12 +313,16 @@ export function PaymentModal({
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    productId: READING_PRODUCT.productId,
+                    productId: resolvedProductId,
                     email,
                     readingId: readingId || undefined,
                     referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
                     promoCodeId: promoCodeId || undefined,
                     discount: discount || undefined,
+                    successPath: checkoutConfig?.successPath,
+                    cancelPath: checkoutConfig?.cancelPath,
+                    paymentType: checkoutConfig?.paymentType,
+                    checkoutMetadata: checkoutConfig?.metadata,
                 }),
             });
 
@@ -325,7 +346,7 @@ export function PaymentModal({
                 referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
                 price: effectivePriceLabel !== '...' ? effectivePriceLabel : undefined,
                 readingId: sessionStorage.getItem('pending_reading_id') || undefined,
-                plan: isFreePromo ? 'promo_free_unlock' : READING_PRODUCT.id,
+                plan: isFreePromo ? 'promo_free_unlock' : (checkoutConfig?.paymentType || READING_PRODUCT.id),
                 metadata: {
                     message,
                 },
@@ -355,6 +376,7 @@ export function PaymentModal({
                         exit={{ scale: 0.95, opacity: 0, y: 20 }}
                         transition={modalSpring}
                         className="relative w-full max-w-xl overflow-hidden rounded-3xl border border-white/10 bg-[#0f0f23] shadow-[0_0_50px_rgba(161,132,255,0.2)]"
+                        data-lenis-prevent
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(161,132,255,0.16),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.05),transparent_28%)]" />

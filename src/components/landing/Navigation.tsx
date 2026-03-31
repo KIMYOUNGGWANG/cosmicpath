@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import Link from 'next/link';
-import { Menu, Search, Sparkles, Heart, Palette, BookOpen } from 'lucide-react';
+import { Menu, Search, Sparkles, Palette, Briefcase } from 'lucide-react';
 import { OrderLookupModal } from '@/components/orders/OrderLookupModal';
 import { MobileMenu } from '@/components/common/MobileMenu';
 import { User } from 'lucide-react';
@@ -45,11 +45,6 @@ export function Navigation() {
         };
     }, [isMobileMenuOpen]);
 
-    const toggleOrderModal = () => {
-        setIsOrderModalOpen(true);
-        setIsMobileMenuOpen(false);
-    };
-
     const trackKDestinyNavClick = (context: 'desktop' | 'mobile') => {
         void trackClientGrowthEvent({
             event: 'k_destiny_nav_click',
@@ -85,52 +80,40 @@ export function Navigation() {
                     </Link>
 
                     {/* Desktop Actions */}
-                    <div className="hidden xl:flex items-center gap-3 2xl:gap-5">
-                        <Link
-                            href="/match/new"
-                            className="shrink-0 whitespace-nowrap text-[11px] font-medium text-starlight transition-colors hover:text-acc-gold 2xl:text-xs font-cinzel tracking-[0.22em]"
-                        >
-                            COMPATIBILITY
-                        </Link>
+                    <div className="hidden xl:flex items-center gap-6 2xl:gap-8">
                         <Link
                             href="/daily"
-                            className="shrink-0 whitespace-nowrap text-[11px] font-medium text-starlight transition-colors hover:text-acc-gold 2xl:text-xs font-cinzel tracking-[0.22em] uppercase"
+                            className="shrink-0 whitespace-nowrap text-[12px] font-semibold text-starlight transition-colors hover:text-acc-gold font-cinzel tracking-[0.24em] uppercase"
                         >
-                            오늘의 운세
+                            DAILY HOROSCOPE
                         </Link>
                         <Link
-                            href="/blog"
-                            className="shrink-0 whitespace-nowrap text-[11px] font-medium text-starlight transition-colors hover:text-acc-gold 2xl:text-xs font-cinzel tracking-[0.22em] uppercase"
+                            href="/career"
+                            className="shrink-0 whitespace-nowrap text-[12px] font-semibold text-starlight transition-colors hover:text-acc-gold font-cinzel tracking-[0.24em] uppercase"
                         >
-                            BLOG
+                            CAREER ORACLE
                         </Link>
                         <Link
                             href="/k-destiny"
                             onClick={() => trackKDestinyNavClick('desktop')}
-                            className="shrink-0 whitespace-nowrap text-[11px] font-medium text-[#7FDBFF] transition-colors hover:text-[#FFD166] 2xl:text-xs font-cinzel tracking-[0.22em] uppercase"
+                            className="shrink-0 whitespace-nowrap text-[12px] font-medium text-[#7FDBFF] transition-colors hover:text-[#FFD166] font-cinzel tracking-[0.22em] uppercase"
                         >
                             K-DESTINY
                         </Link>
-                        <button
-                            onClick={toggleOrderModal}
-                            className="shrink-0 whitespace-nowrap text-[11px] font-medium text-starlight transition-colors hover:text-acc-gold 2xl:text-xs font-cinzel tracking-[0.22em] uppercase"
-                        >
-                            FIND ORDERS
-                        </button>
 
-                        <div className="mx-1 h-4 w-px bg-white/10 2xl:mx-2" /> {/* Divider */}
+                        <div className="mx-2 h-4 w-px bg-white/10" />
 
                         <UserMenu />
                         <button
                             onClick={() => setIsSubscriptionModalOpen(true)}
-                            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F2D479] px-4 py-2 font-cinzel text-[11px] font-bold uppercase tracking-[0.22em] text-black transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] 2xl:px-5 2xl:text-xs"
+                            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F2D479] px-5 py-2.5 font-cinzel text-[11px] font-bold uppercase tracking-[0.22em] text-black transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(212,175,55,0.4)]"
                         >
                             <Sparkles size={14} className="fill-current" />
                             PRO
                         </button>
                         <Link
                             href="/start?reset=true"
-                            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-white/20 px-4 py-2 font-cinzel text-[11px] font-bold uppercase tracking-[0.22em] text-white transition-all duration-300 hover:border-acc-gold hover:bg-acc-gold hover:text-deep-navy 2xl:px-5 2xl:text-xs"
+                            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-white/20 px-5 py-2.5 font-cinzel text-[11px] font-bold uppercase tracking-[0.22em] text-white transition-all duration-300 hover:border-acc-gold hover:bg-acc-gold hover:text-deep-navy"
                         >
                             Start Analysis
                         </Link>
@@ -184,22 +167,7 @@ export function Navigation() {
                         subLabel: 'Lookup past readings',
                         onClick: () => setIsOrderModalOpen(true),
                     },
-                    {
-                        type: 'link',
-                        icon: Heart,
-                        iconColorClass: 'group-hover:bg-pink-500/20 group-hover:text-pink-300',
-                        label: 'COMPATIBILITY',
-                        subLabel: 'Check relationship compatibility',
-                        href: '/match/new',
-                    },
-                    {
-                        type: 'link',
-                        icon: BookOpen,
-                        iconColorClass: 'group-hover:bg-amber-500/20 group-hover:text-amber-300',
-                        label: 'BLOG',
-                        subLabel: 'SEO guides and cosmic insights',
-                        href: '/blog',
-                    },
+
                     {
                         type: 'link',
                         icon: Palette,
@@ -211,9 +179,17 @@ export function Navigation() {
                     },
                     {
                         type: 'link',
+                        icon: Briefcase,
+                        iconColorClass: 'group-hover:bg-purple-500/20 group-hover:text-purple-300',
+                        label: 'CAREER ORACLE',
+                        subLabel: 'Find your cosmic career path',
+                        href: '/career',
+                    },
+                    {
+                        type: 'link',
                         icon: Sparkles,
                         iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
-                        label: '오늘의 운세',
+                        label: 'DAILY HOROSCOPE',
                         subLabel: '생년월일 기반 데일리 운세',
                         href: '/daily',
                     },

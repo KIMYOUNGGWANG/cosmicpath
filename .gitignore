@@ -63,3 +63,6 @@ docs/marketing/*.md
 # utility scripts
 convert_threads_posts.py
 .tmp/prompt-verify/
+.agents/
+.agent_backup_*/
+.claude/

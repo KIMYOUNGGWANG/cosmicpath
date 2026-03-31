@@ -3,12 +3,29 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "develop": "npm run dev",
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "npm run lint:target",
+    "typecheck": "tsc --noEmit",
     "lint:target": "eslint src/app/api/invite src/app/api/ops src/app/api/plan src/app/api/reading/route.ts src/app/api/webhook/stripe src/app/blog src/app/billing src/lib/ai/llm-client.ts src/lib/blog src/lib/email/sender.ts src/lib/followup-jobs.ts src/lib/growth-events.ts src/lib/ops-alert.ts src/lib/payment src/lib/plan-limits.ts src/lib/usage-metrics.ts src/components/blog src/components/oracle-chat/CreditPurchaseModal.tsx src/components/payment/SubscriptionModal.tsx src/components/Pricing/PricingSection.tsx src/components/Mirror/MirrorSection.tsx src/components/landing/Navigation.tsx src/app/sitemap.ts",
-    "lint:full": "eslint"
+    "lint:full": "eslint",
+    "test": "npm run lint && npm run typecheck && npm run build",
+    "verify": "npm test",
+    "orch": "node bin/orch.js",
+    "orch:status": "node bin/orch.js status",
+    "orch:watch": "node bin/orch.js watch",
+    "mission-control": "bash .agent/scripts/mission-control.sh",
+    "mission-control:dashboard": "bash .agent/scripts/mission-control.sh dashboard",
+    "mission-control:start": "bash .agent/scripts/mission-control.sh start",
+    "mission-control:continue": "bash .agent/scripts/mission-control.sh continue",
+    "mission-control:retry": "bash .agent/scripts/mission-control.sh retry",
+    "mission-control:stop": "bash .agent/scripts/mission-control.sh stop",
+    "mission-control:logs": "bash .agent/scripts/mission-control.sh logs",
+    "mission-control:github": "bash .agent/scripts/mission-control.sh github",
+    "check:codex": "bash .agent/scripts/codex-bridge.sh check",
+    "check:qa": "bash .agent/scripts/qa-server.sh check"
   },
   "dependencies": {
     "@auth/core": "^0.41.0",
@@ -55,5 +72,11 @@
     "prisma": "^5.22.0",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "pnpm": {
+    "supportedArchitectures": {
+      "os": ["darwin"],
+      "cpu": ["x64", "arm64"]
+    }
   }
 }

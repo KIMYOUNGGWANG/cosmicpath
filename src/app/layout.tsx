@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { headers } from "next/headers";
 import "./globals.css";
 import JsonLd from "@/components/seo/json-ld";
@@ -106,11 +107,11 @@ export default async function RootLayout({
             <Analytics />
           </LenisProvider>
         </SessionProvider>
-        <script
+        <Script
           src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
           crossOrigin="anonymous"
-          defer
-        ></script>
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );

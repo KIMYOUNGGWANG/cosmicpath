@@ -78,6 +78,14 @@ export function SharePanel({
         return `AI가 오늘 내 운세를 읽어줬는데 소름 돋았어요 🔮\n\n너도 해보기: ${url}\n#코스믹패스 #AI운세 #오늘의운세 #사주 #추천`;
     };
 
+    const buildThreadsTemplate = (url: string) => {
+        if (isEn) {
+            return `This AI destiny reading gave me a much clearer answer than I expected.\n\n${shareDescription}\n\nTry yours: ${url}\n#CosmicPath #AIFortune #ThreadsFinds`;
+        }
+
+        return `오늘 리딩에서 가장 소름이었던 포인트:\n${shareDescription}\n\n나도 해본 링크 ${url}\n#코스믹패스 #AI운세 #사주 #타로 #Threads추천`;
+    };
+
     const claimReward = useCallback(async () => {
         if (!readingId || !rewardStorageKey) return false;
 
@@ -237,9 +245,7 @@ export function SharePanel({
         if (typeof window === 'undefined') return;
 
         const url = resolveShareUrl();
-        const text = isEn
-            ? `I got my AI destiny reading from CosmicPath. This part was scary accurate.\n\n${url}`
-            : `CosmicPath에서 AI 운세를 봤는데 진짜 소름... 오늘의 결과 공유해요.\n\n${url}`;
+        const text = buildThreadsTemplate(url);
 
         const intentUrl = `https://threads.net/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
         window.open(intentUrl, '_blank', 'noopener,noreferrer');
@@ -268,13 +274,13 @@ export function SharePanel({
             {/* 공유 버튼 */}
             <motion.button
                 onClick={() => setIsOpen(!isOpen)}
-                whileHover={{ y: -2, boxShadow: '0 18px 36px rgba(168,85,247,0.18)' }}
+                whileHover={{ y: -2, boxShadow: '0 18px 36px rgba(212,175,55,0.16)' }}
                 whileTap={{ scale: 0.985 }}
                 className="relative flex items-center gap-2 rounded-xl px-5 py-3 font-medium transition-[transform,box-shadow,background-color,border-color] duration-300 hover:bg-violet-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/70"
                 style={{
-                    backgroundColor: 'rgba(139, 92, 246, 0.2)',
-                    color: '#a855f7',
-                    border: '1px solid rgba(139, 92, 246, 0.3)',
+                    backgroundColor: 'rgba(212, 175, 55, 0.12)',
+                    color: '#f4d88a',
+                    border: '1px solid rgba(212, 175, 55, 0.24)',
                 }}
             >
                 <div className="absolute -top-3 -right-2 flex items-center gap-1 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-lg shadow-rose-950/40">
@@ -295,22 +301,21 @@ export function SharePanel({
                         transition={{ duration: 0.22, ease: 'easeOut' }}
                         className="absolute right-0 z-50 mt-2 w-72 overflow-hidden rounded-2xl backdrop-blur-xl"
                         style={{
-                            background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-                            border: '1px solid rgba(139, 92, 246, 0.3)',
+                            background: 'linear-gradient(135deg, #15131b 0%, #101a24 100%)',
+                            border: '1px solid rgba(212, 175, 55, 0.18)',
                             boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
                         }}
                     >
-                        {/* Header */}
                         <div
                             className="px-4 py-3 flex items-center justify-between"
-                            style={{ borderBottom: '1px solid rgba(139, 92, 246, 0.2)' }}
+                            style={{ borderBottom: '1px solid rgba(212, 175, 55, 0.16)' }}
                         >
                             <div className="flex flex-col">
                                 <span className="font-medium text-white">
                                     {isEn ? 'Share Result' : '결과 공유하기'}
                                 </span>
-                                <span className="text-xs text-pink-400 font-medium mt-0.5">
-                                    {isEn ? 'Get 1 free question credit' : '공유하면 질문권 1개 무료'}
+                                <span className="text-xs font-medium mt-0.5 text-acc-gold">
+                                    {isEn ? 'Threads-first viral copy included' : 'Threads용 바이럴 문구 포함'}
                                 </span>
                             </div>
                             <button
@@ -322,15 +327,42 @@ export function SharePanel({
                             </button>
                         </div>
 
-                        {/* Options */}
                         <div className="p-2">
-                            {/* 카카오톡 */}
+                            <div className="mb-2 rounded-xl border border-white/8 bg-white/[0.035] px-3 py-2">
+                                <p className="text-[10px] uppercase tracking-[0.22em] text-starlight/40">
+                                    {isEn ? 'Recommended' : '추천 채널'}
+                                </p>
+                                <p className="mt-1 text-xs leading-5 text-starlight/68">
+                                    {isEn ? 'Threads is tuned for fast post-and-share loops.' : 'Threads는 지금 가장 빠르게 퍼지는 공유 루프에 맞춰 문구를 최적화했습니다.'}
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={handleThreadsShare}
+                                className="w-full rounded-xl px-4 py-3 text-left transition-[transform,background-color] duration-200 hover:translate-x-1 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/70"
+                            >
+                                <div
+                                    className="flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200 group-hover:scale-105"
+                                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}
+                                >
+                                    <AtSign size={20} style={{ color: '#ffffff' }} />
+                                </div>
+                                <div className="text-left">
+                                    <p className="font-medium" style={{ color: '#ffffff' }}>
+                                        {isEn ? 'Share to Threads' : 'Threads 공유'}
+                                    </p>
+                                    <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                                        {isEn ? 'Optimized viral caption included' : '바이럴 문구까지 자동 생성'}
+                                    </p>
+                                </div>
+                            </button>
+
                             <button
                                 onClick={handleKakaoShare}
                                 className="w-full rounded-xl px-4 py-3 text-left transition-[transform,background-color] duration-200 hover:translate-x-1 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/70"
                             >
                                 <div
-                                    className="flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200 group-hover:scale-105"
+                                    className="flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200"
                                     style={{ backgroundColor: '#FEE500' }}
                                 >
                                     <MessageCircle size={20} style={{ color: '#3C1E1E' }} />
@@ -341,27 +373,6 @@ export function SharePanel({
                                     </p>
                                     <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
                                         {isEn ? 'Share with friends' : '친구에게 결과 공유'}
-                                    </p>
-                                </div>
-                            </button>
-
-                            {/* Threads 공유 */}
-                            <button
-                                onClick={handleThreadsShare}
-                                className="w-full rounded-xl px-4 py-3 text-left transition-[transform,background-color] duration-200 hover:translate-x-1 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/70"
-                            >
-                                <div
-                                    className="flex h-10 w-10 items-center justify-center rounded-full transition-transform duration-200"
-                                    style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)' }}
-                                >
-                                    <AtSign size={20} style={{ color: '#ffffff' }} />
-                                </div>
-                                <div className="text-left">
-                                    <p className="font-medium" style={{ color: '#ffffff' }}>
-                                        {isEn ? 'Share to Threads' : 'Threads 공유'}
-                                    </p>
-                                    <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
-                                        {isEn ? 'Post with one tap' : '한 번에 Threads 게시'}
                                     </p>
                                 </div>
                             </button>

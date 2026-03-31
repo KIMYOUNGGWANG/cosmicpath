@@ -58,9 +58,8 @@ function resolvePlanIdFromSubscription(
     return null;
 }
 
-function toTierStatus(planId: SubscriptionPlanId | null): 'free' | 'pro' | 'couple' {
-    if (!planId) return 'free';
-    return planId === 'couple_monthly' ? 'couple' : 'pro';
+function toTierStatus(planId: SubscriptionPlanId | null): 'free' | 'pro' {
+    return planId ? 'pro' : 'free';
 }
 
 function getSubscriptionPeriodEnd(subscription: Stripe.Subscription): number | null {

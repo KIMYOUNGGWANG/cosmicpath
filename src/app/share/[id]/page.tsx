@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import { getReadingShareSummary } from '@/lib/reading-share';
 import { SharedPageRedirect } from '@/components/reading/shared-page-redirect';
+import { auth } from '@/lib/auth';
 
 import { SharedPageClient } from './SharedPageClient';
 
@@ -73,6 +74,7 @@ export default async function SharedPage({ params }: SharedPageProps) {
       id: true,
       data: true,
       metadata: true,
+      userId: true,
     },
   });
 
@@ -84,6 +86,9 @@ export default async function SharedPage({ params }: SharedPageProps) {
   const metadata = reading.metadata ? JSON.parse(reading.metadata) : {};
   const share = getReadingShareSummary(reading);
 
+  const session = await auth();
+  const isServerOwner = Boolean(session?.user?.id && reading.userId === session.user.id);
+
   return (
     <>
       <SharedPageRedirect id={id} />
@@ -92,6 +97,7 @@ export default async function SharedPage({ params }: SharedPageProps) {
         reportData={reportData}
         metadata={metadata}
         shareSummary={share}
+        isServerOwner={isServerOwner}
       />
     </>
   );

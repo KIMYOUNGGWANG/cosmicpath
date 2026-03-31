@@ -43,8 +43,6 @@ function resolveAppOrigin(request: NextRequest): string {
 
 function getTestPriceEnvKey(planType: z.infer<typeof createSubscriptionRequestSchema>['planType']): string {
     switch (planType) {
-        case 'WEEKLY':
-            return 'NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY_TEST';
         case 'MONTHLY':
             return 'NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY_TEST';
         case 'ANNUAL':

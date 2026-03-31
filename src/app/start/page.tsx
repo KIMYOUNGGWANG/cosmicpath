@@ -624,13 +624,19 @@ function CosmicPathContent() {
         });
 
         if (!response.ok) {
-          throw new Error(`Phase ${phase} failed: ${response.statusText}`);
+          const errorPayload = await response.json().catch(() => null);
+          const errorMessage =
+            errorPayload?.fallbackMessage ||
+            errorPayload?.error?.message ||
+            errorPayload?.error ||
+            `Phase ${phase} failed: ${response.statusText}`;
+          throw new Error(errorMessage);
         }
 
         const result = await response.json();
 
         if (!result.success) {
-          throw new Error(result.error || `Phase ${phase} validation failed`);
+          throw new Error(result.fallbackMessage || result.error || `Phase ${phase} validation failed`);
         }
 
         console.log(`Phase ${phase} complete:`, result.report);

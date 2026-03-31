@@ -50,43 +50,43 @@ export async function generatePremiumReport(
         onProgress?.(1, PHASE_LABELS[0].label, PHASE_LABELS[0].icon);
         const phase1 = await generateSinglePhase(1, userData, null, apiKey);
         if (!phase1.success) throw new Error(`Phase 1 failed: ${phase1.error}`);
-        Object.assign(results, phase1.data);
+        Object.assign(results, phase1.data!);
 
         // Phase 1B: Astro Deep + Tarot + Numerology
         onProgress?.(2, PHASE_LABELS[1].label, PHASE_LABELS[1].icon);
         const phase1B = await generateSinglePhase(2, userData, results, apiKey);
         if (!phase1B.success) throw new Error(`Phase 1B failed: ${phase1B.error}`);
-        Object.assign(results, phase1B.data);
+        Object.assign(results, phase1B.data!);
 
         // Phase 2: Saju Basics
         onProgress?.(3, PHASE_LABELS[2].label, PHASE_LABELS[2].icon);
         const phase2 = await generateSinglePhase(3, userData, results, apiKey);
         if (!phase2.success) throw new Error(`Phase 2 failed: ${phase2.error}`);
-        Object.assign(results, phase2.data);
+        Object.assign(results, phase2.data!);
 
         // Phase 3: Fortune Flow
         onProgress?.(4, PHASE_LABELS[3].label, PHASE_LABELS[3].icon);
         const phase3 = await generateSinglePhase(4, userData, results, apiKey);
         if (!phase3.success) throw new Error(`Phase 3 failed: ${phase3.error}`);
-        Object.assign(results, phase3.data);
+        Object.assign(results, phase3.data!);
 
         // Phase 4: Life Areas
         onProgress?.(5, PHASE_LABELS[4].label, PHASE_LABELS[4].icon);
         const phase4 = await generateSinglePhase(5, userData, results, apiKey);
         if (!phase4.success) throw new Error(`Phase 4 failed: ${phase4.error}`);
-        Object.assign(results, phase4.data);
+        Object.assign(results, phase4.data!);
 
         // Phase 5A: Special Analysis + Action Plan + Date Selection
         onProgress?.(6, PHASE_LABELS[5].label, PHASE_LABELS[5].icon);
         const phase5A = await generateSinglePhase(6, userData, results, apiKey);
         if (!phase5A.success) throw new Error(`Phase 5A failed: ${phase5A.error}`);
-        Object.assign(results, phase5A.data);
+        Object.assign(results, phase5A.data!);
 
         // Phase 5B (7): Past Life + Glossary + Final Verdict
         onProgress?.(7, PHASE_LABELS[6].label, PHASE_LABELS[6].icon);
         const phase5B = await generateSinglePhase(7, userData, results, apiKey);
         if (!phase5B.success) throw new Error(`Phase 5B failed: ${phase5B.error}`);
-        Object.assign(results, phase5B.data);
+        Object.assign(results, phase5B.data!);
 
         return { success: true, report: results };
 
@@ -94,7 +94,7 @@ export async function generatePremiumReport(
         console.error('[PremiumReading] Error:', error);
         return {
             success: false,
-            report: results, // Return partial results
+            report: results, 
             error: error instanceof Error ? error.message : 'Unknown error'
         };
     }
@@ -109,6 +109,18 @@ export async function generateSinglePhase(
     previousData: PremiumReportPartial | null,
     apiKey: string
 ): Promise<PhaseResult> {
+
+    // Career Oracle specific handling
+    if (userData.context === 'career' && phaseNumber === 1) {
+        const { buildCareerPhase1Prompt } = await import('./prompts/career-phase');
+        const { buildUnifiedSystemPrompt, buildDataContext } = await import('./prompts/system-core');
+        
+        const system = buildCareerPhase1Prompt(userData.language);
+        const user = buildUnifiedSystemPrompt(userData.language) + 
+                     buildDataContext(userData.sajuData, userData.astroData, userData.tarotCards || [], userData.language);
+        
+        return executePhase(phaseNumber, system, user, apiKey);
+    }
 
     // Get the appropriate prompt builder
     let promptBuilder: (userData: UserData, prev?: PremiumReportPartial | null) => { system: string; user: string };
@@ -140,10 +152,21 @@ export async function generateSinglePhase(
     }
 
     const { system, user } = promptBuilder(userData, previousData);
+    return executePhase(phaseNumber, system, user, apiKey);
+}
 
+/**
+ * Actually execute the API call to LLM
+ */
+export async function executePhase(
+    phaseNumber: number,
+    system: string,
+    user: string,
+    apiKey: string
+): Promise<PhaseResult> {
     // Retry logic
     let retries = 0;
-    const maxRetries = 5; // 3회 -> 5회로 증가
+    const maxRetries = 5; 
     let lastError: Error | null = null;
 
     while (retries <= maxRetries) {
@@ -181,7 +204,7 @@ export async function generateSinglePhase(
 
                 // 429 Rate Limit - Wait and Retry
                 if (response.status === 429) {
-                    lastError = new Error(errorMsg); // 429 에러도 기록
+                    lastError = new Error(errorMsg); 
                     const waitTime = Math.pow(2, retries) * 4000;
                     console.warn(`[Phase ${phaseNumber}] Rate limited (429). Waiting ${waitTime / 1000}s... (Attempt ${retries + 1}/${maxRetries + 1})`);
                     await new Promise(resolve => setTimeout(resolve, waitTime));
@@ -189,7 +212,6 @@ export async function generateSinglePhase(
                     continue;
                 }
 
-                // 503이나 500 에러도 재시도 대상
                 if (response.status >= 500) {
                     lastError = new Error(errorMsg);
                     console.warn(`[Phase ${phaseNumber}] Server Error (${response.status}). Retrying...`);
@@ -207,15 +229,8 @@ export async function generateSinglePhase(
             // Extract text from response
             let text = result.candidates?.[0]?.content?.parts?.[0]?.text;
 
-            // Log raw result for debugging (Gemini 3 compatibility check)
             if (!text) {
-                const finishReason = result.candidates?.[0]?.finishReason;
-                const safetyRatings = result.candidates?.[0]?.safetyRatings;
-                console.warn(`[Phase ${phaseNumber}] Empty content. FinishReason: ${finishReason}`, { safetyRatings, rawResult: JSON.stringify(result) });
-
-                lastError = new Error(`Empty content. FinishReason: ${finishReason}`);
-
-                // If finishReason is OTHER or similar, it might be a transient glitch.
+                lastError = new Error(`Empty content. FinishReason: ${result.candidates?.[0]?.finishReason}`);
                 retries++;
                 continue;
             }
@@ -227,27 +242,17 @@ export async function generateSinglePhase(
             let data;
             try {
                 data = JSON.parse(text);
+                return { phase: phaseNumber, success: true, data };
             } catch (e) {
-                console.error(`[Phase ${phaseNumber}] JSON Parse Error. Raw text:`, text.substring(0, 200) + '...');
+                console.error(`[Phase ${phaseNumber}] JSON Parse Error.`);
                 lastError = new Error(`Failed to parse JSON: ${e}`);
-
-                // JSON 파싱 에러는 재시도해볼만 함 (잘린 응답일 수 있음)
                 retries++;
                 continue;
             }
 
-            console.log(`[Phase ${phaseNumber}] Success:`, Object.keys(data));
-            return { phase: phaseNumber, success: true, data };
-
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            console.error(`[Phase ${phaseNumber}] Attempt ${retries + 1} Error:`, errorMessage);
             lastError = error instanceof Error ? error : new Error(String(error));
-
-            if (retries >= maxRetries) {
-                break;
-            }
-
+            if (retries >= maxRetries) break;
             const waitTime = 2000 * (retries + 1);
             await new Promise(resolve => setTimeout(resolve, waitTime));
             retries++;

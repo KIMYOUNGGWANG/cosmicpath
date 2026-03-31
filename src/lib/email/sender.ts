@@ -222,7 +222,7 @@ export async function sendVerificationEmail({ email, token }: SendVerificationEm
 interface SendFollowUpNudgeEmailParams {
     email: string;
     readingId: string;
-    stage: 'D2_DISCOUNT' | 'D5_COSMIC_WINDOW' | 'H48' | 'D7';
+    stage: 'D1_RETENTION';
     readingUrl: string;
     promoCode?: string;
     discount?: number;
@@ -243,64 +243,18 @@ export async function sendFollowUpNudgeEmail({
     stage,
     readingUrl,
     promoCode,
-    discount,
     offerUrl,
-    expiresAt,
-    phase4Url,
-    cosmicWindow,
 }: SendFollowUpNudgeEmailParams) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email)) {
         throw new Error('Invalid email format');
     }
 
-    const isDiscountStage = stage === 'D2_DISCOUNT' || stage === 'H48';
-    const isCosmicWindowStage = stage === 'D5_COSMIC_WINDOW';
-    const isArchiveStage = stage === 'D7';
-    if (isDiscountStage && (!promoCode || !offerUrl || typeof discount !== 'number')) {
-        throw new Error('Discount follow-up email requires offer details');
-    }
-    if (isCosmicWindowStage && (!cosmicWindow || !phase4Url)) {
-        throw new Error('Cosmic window follow-up email requires phase 4 details');
-    }
-    const resolvedCosmicWindow = cosmicWindow ?? null;
-
-    const expiryLabel = expiresAt
-        ? new Intl.DateTimeFormat('ko-KR', {
-            month: 'long',
-            day: 'numeric',
-        }).format(new Date(expiresAt))
-        : null;
-
-    const subject = isDiscountStage
-        ? '💫 리딩 어떠셨어요? 20% 할인 코드를 준비했어요'
-        : isCosmicWindowStage
-            ? '🪐 이번 주 하늘의 흐름, Phase 4에서 확인해보세요'
-            : isArchiveStage
-                ? '⏳ 분석 보관 처리 전에, 꼭 다시 확인해보세요'
-                : '🌙 일주일 후, 다시 보는 나의 흐름';
-    const title = isDiscountStage
-        ? '리딩 어떠셨어요?'
-        : isCosmicWindowStage
-            ? resolvedCosmicWindow?.title || '이번 주 하늘의 포인트'
-            : isArchiveStage
-                ? '분석 보관 전에, 핵심 흐름을 다시 확인해보세요'
-                : '일주일 후, 다시 보는 나의 흐름';
-    const bodyCopy = isDiscountStage
-        ? '아직 전체 리포트를 열지 않으셨다면, 이번 주에만 쓸 수 있는 20% 할인 코드로 이어서 확인해보세요.'
-        : isCosmicWindowStage
-            ? resolvedCosmicWindow?.summary || '지금은 인생 영역별 우선순위를 다시 정리해보기 좋은 구간입니다.'
-            : isArchiveStage
-                ? '리딩을 생성한 지 일주일이 지났습니다. 보관함으로 넘기기 전에 지금 다시 열어 두면, 처음엔 놓쳤던 문장과 지금 바로 써야 할 힌트를 더 선명하게 정리할 수 있습니다.'
-                : '지난 리딩 이후 시간이 흘렀습니다. 지금 다시 보면 더 선명하게 보이는 포인트가 있습니다.';
-    const primaryUrl = isDiscountStage ? offerUrl : isCosmicWindowStage ? phase4Url : readingUrl;
-    const primaryLabel = isDiscountStage
-        ? '20% 할인 적용해서 이어보기'
-        : isCosmicWindowStage
-            ? 'Phase 4 열기'
-            : isArchiveStage
-                ? '보관 전에 다시 열기'
-                : '내 리딩 다시 열기';
+    const subject = '💫 리딩 어떠셨어요? 20% 할인 코드를 준비했어요';
+    const title = '리딩 어떠셨어요?';
+    const bodyCopy = '아직 전체 리포트를 열지 않으셨다면, 이번 주에만 쓸 수 있는 20% 할인 코드로 이어서 확인해보세요.';
+    const primaryUrl = offerUrl || readingUrl;
+    const primaryLabel = '20% 할인 적용해서 이어보기';
 
     try {
         const { data, error } = await resend.emails.send({
@@ -322,60 +276,22 @@ export async function sendFollowUpNudgeEmail({
                         <p style="margin:0 0 18px 0;line-height:1.7;color:#cbd5e1;">
                             ${bodyCopy}
                         </p>
-                        ${isDiscountStage ? `
-                            <div style="margin:0 0 20px 0;padding:18px;border-radius:16px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.18);">
-                                <p style="margin:0 0 8px 0;font-size:12px;letter-spacing:1.5px;color:#a78bfa;text-transform:uppercase;">20% Discount Code</p>
-                                <p style="margin:0;font-size:28px;font-weight:800;letter-spacing:2px;color:#fff;">${promoCode}</p>
-                                <p style="margin:10px 0 0 0;font-size:13px;color:#94a3b8;">
-                                    상세 리포트 결제 시 자동 적용됩니다.${expiryLabel ? ` ${expiryLabel}까지 사용 가능해요.` : ''}
-                                </p>
-                            </div>
-                        ` : ''}
-                        ${isCosmicWindowStage ? `
-                            <div style="margin:0 0 20px 0;padding:18px;border-radius:16px;background:rgba(99,102,241,.10);border:1px solid rgba(99,102,241,.22);">
-                                <p style="margin:0 0 8px 0;font-size:12px;letter-spacing:1.5px;color:#a5b4fc;text-transform:uppercase;">Cosmic Window</p>
-                                <p style="margin:0 0 8px 0;font-size:22px;font-weight:800;color:#fff;">${resolvedCosmicWindow?.seasonLabel}</p>
-                                <p style="margin:0;font-size:13px;line-height:1.7;color:#cbd5e1;">
-                                    ${resolvedCosmicWindow?.highlight}
-                                </p>
-                            </div>
-                        ` : ''}
-                        ${isArchiveStage ? `
-                            <div style="margin:0 0 20px 0;padding:18px;border-radius:16px;background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.24);">
-                                <p style="margin:0 0 8px 0;font-size:12px;letter-spacing:1.5px;color:#fbbf24;text-transform:uppercase;">Archive Notice</p>
-                                <p style="margin:0 0 10px 0;font-size:18px;font-weight:800;color:#fff;">지금 다시 보면 놓친 포인트가 보입니다</p>
-                                <p style="margin:0;font-size:13px;line-height:1.7;color:#fde68a;">
-                                    관계, 일, 돈 중 지금 가장 먼저 움직여야 할 영역과 다음 질문 포인트를 보관 전에 다시 정리해두세요.
-                                </p>
-                            </div>
-                        ` : ''}
+                        <div style="margin:0 0 20px 0;padding:18px;border-radius:16px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.18);">
+                            <p style="margin:0 0 8px 0;font-size:12px;letter-spacing:1.5px;color:#a78bfa;text-transform:uppercase;">20% Discount Code</p>
+                            <p style="margin:0;font-size:28px;font-weight:800;letter-spacing:2px;color:#fff;">${promoCode}</p>
+                            <p style="margin:10px 0 0 0;font-size:13px;color:#94a3b8;">
+                                상세 리포트 결제 시 자동 적용됩니다.
+                            </p>
+                        </div>
                         <a href="${primaryUrl}" style="display:inline-block;background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;text-decoration:none;padding:13px 18px;border-radius:12px;font-weight:700;">
                             ${primaryLabel}
                         </a>
-                        ${isDiscountStage ? `
-                            <p style="margin:16px 0 0 0;line-height:1.6;color:#94a3b8;font-size:13px;">
-                                이미 링크를 열어보셨다면 아래에서 기존 리딩도 다시 확인할 수 있습니다.
-                            </p>
-                            <a href="${readingUrl}" style="display:inline-block;margin-top:10px;color:#c4b5fd;text-decoration:none;font-size:14px;">
-                                기존 리딩 다시 보기
-                            </a>
-                        ` : ''}
-                        ${isCosmicWindowStage ? `
-                            <p style="margin:16px 0 0 0;line-height:1.6;color:#94a3b8;font-size:13px;">
-                                Phase 4는 커리어, 재물, 연애, 건강의 흐름을 한 번에 정리해주는 구간입니다.
-                            </p>
-                            <a href="${readingUrl}" style="display:inline-block;margin-top:10px;color:#c4b5fd;text-decoration:none;font-size:14px;">
-                                기존 리딩 다시 보기
-                            </a>
-                        ` : ''}
-                        ${isArchiveStage ? `
-                            <p style="margin:16px 0 0 0;line-height:1.6;color:#94a3b8;font-size:13px;">
-                                다시 열어보실 때는 핵심 문장 1-2개와 지금 가장 궁금한 질문을 함께 메모해두시면 다음 행동으로 이어지기 쉽습니다.
-                            </p>
-                            <a href="${readingUrl}" style="display:inline-block;margin-top:10px;color:#fcd34d;text-decoration:none;font-size:14px;">
-                                내 리딩 링크 다시 확인하기
-                            </a>
-                        ` : ''}
+                        <p style="margin:16px 0 0 0;line-height:1.6;color:#94a3b8;font-size:13px;">
+                            이미 링크를 열어보셨다면 아래에서 기존 리딩도 다시 확인할 수 있습니다.
+                        </p>
+                        <a href="${readingUrl}" style="display:inline-block;margin-top:10px;color:#c4b5fd;text-decoration:none;font-size:14px;">
+                            기존 리딩 다시 보기
+                        </a>
                         <p style="margin:22px 0 0 0;font-size:12px;color:#64748b;">
                             Reading ID: ${readingId}
                         </p>

@@ -20,6 +20,7 @@ interface SharedPageClientProps {
     mainCardName: string;
     language: 'ko' | 'en';
   };
+  isServerOwner?: boolean;
 }
 
 const sectionReveal = {
@@ -37,16 +38,20 @@ export function SharedPageClient({
   reportData,
   metadata,
   shareSummary,
+  isServerOwner,
 }: SharedPageClientProps) {
   const [isOwner, setIsOwner] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
+    // Check if the user is the owner via server-side auth or client-side session storage (fallback for guest buyers)
     const storedId = sessionStorage.getItem('pending_reading_id');
     const paymentCompleted = sessionStorage.getItem('payment_completed') === 'true';
-    setIsOwner(Boolean(storedId && storedId === id && paymentCompleted));
+    const isClientOwner = Boolean(storedId && storedId === id && paymentCompleted);
+    
+    setIsOwner(Boolean(isServerOwner || isClientOwner));
     setIsReady(true);
-  }, [id]);
+  }, [id, isServerOwner]);
 
   const shareUrl = useMemo(() => {
     if (typeof window === 'undefined') {

@@ -28,6 +28,7 @@ export function BirthDateInput({
                 <input
                     type="date"
                     required
+                    max="9999-12-31"
                     value={date}
                     onChange={(e) => onDateChange(e.target.value)}
                     className="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-starlight focus:border-acc-gold outline-none transition-colors"

@@ -145,6 +145,7 @@ export function DraftProposal({
                                         <label className="block text-xs text-gray-500 mb-1">{isEn ? 'Date' : '날짜'}</label>
                                         <input
                                             type="date"
+                                            max="9999-12-31"
                                             value={data.date}
                                             onChange={(e) => setData({ ...data, date: e.target.value })}
                                             className="w-full bg-black/20 border border-white/10 rounded-lg p-3 text-white focus:border-gold outline-none transition-colors"

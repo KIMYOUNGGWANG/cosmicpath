@@ -876,6 +876,44 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 />
             )}
 
+            {/* 1:1 상담 유도 섹션 (전역 통합) */}
+            <div className={`mt-12 mb-8 px-4 md:px-0 animate-fade-in-up ${isPremium ? 'block' : 'hidden md:block'}`}>
+              <div className="relative overflow-hidden rounded-[32px] border border-acc-gold/20 bg-[linear-gradient(110deg,rgba(212,175,55,0.08),rgba(99,102,241,0.12))] p-8 text-center shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+                <div className="absolute -top-10 -left-10 w-32 h-32 bg-acc-gold/10 blur-3xl" />
+                <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-indigo-500/10 blur-3xl" />
+                
+                <span className="inline-flex items-center gap-2 rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-acc-gold mb-4">
+                  Deep Dive
+                </span>
+                
+                <h3 className="text-2xl font-gowun-batang text-white mb-4">
+                  {isEn ? (
+                    <>Still have unanswered questions <br /> <span className="bg-gradient-to-r from-acc-gold to-white bg-clip-text text-transparent">about your destiny?</span></>
+                  ) : (
+                    <>이 리포트만으로 해소되지 않는<br />
+                    <span className="bg-gradient-to-r from-acc-gold to-white bg-clip-text text-transparent">더 깊은 고민이 있으신가요?</span></>
+                  )}
+                </h3>
+                
+                <p className="text-sm text-starlight/60 max-w-md mx-auto mb-8 leading-relaxed whitespace-pre-line">
+                  {isEn ? (
+                    "\"Which career path fits my birth chart best?\", \"When is the luckiest time to move?\"\nGet personalized answers through a 1:1 live chat with the Oracle."
+                  ) : (
+                    "\"내 사주에 가장 잘 맞는 직업은?\", \"언제 이동하는 것이 가장 좋을까요?\"\n오라클과 1:1 실시간 대화로 개인 맞춤형 해답을 받으세요."
+                  )}
+                </p>
+                
+                <a 
+                  href="/start" 
+                  className="group relative inline-flex items-center justify-center px-10 py-5 bg-gradient-to-r from-acc-gold via-amber-300 to-acc-gold bg-[length:200%_auto] text-deep-navy font-bold text-lg tracking-tight rounded-full shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:shadow-[0_0_40px_rgba(212,175,55,0.6)] hover:scale-105 transition-all duration-300"
+                >
+                  <span className="relative z-10 flex items-center gap-2">
+                    🔮 {isEn ? "Ask Oracle 1:1 Details" : "오라클에게 1:1 디테일 질문하기"}
+                  </span>
+                </a>
+              </div>
+            </div>
+
         </div>
     );
 }

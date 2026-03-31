@@ -4,11 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { useBodyScrollLock } from '@/hooks/use-body-scroll-lock';
 import {
     ArrowRight,
     CalendarDays,
     Check,
-    Clock3,
     Crown,
     MessageCircle,
     Palette,
@@ -56,19 +56,7 @@ interface PaywallSegmentConfig {
 const RETURN_OFFER_STORAGE_KEY = 'cosmicpath.subscription.return-offer-expiry';
 const RETURN_OFFER_WINDOW_MS = 24 * 60 * 60 * 1000;
 
-const PLAN_OPTIONS: Record<SubscriptionPlanType, PlanOption> = {
-    WEEKLY: {
-        id: 'WEEKLY',
-        eyebrow: 'Starter Entry',
-        name: '주간 스타터',
-        description: '가장 낮은 진입 가격으로 7일 동안 집중 체험하고 흐름을 확인할 수 있습니다.',
-        priceLabel: '$3.99 / week',
-        billingLabel: 'Lowest entry price',
-        valueLabel: '첫 결제 부담이 가장 낮은 스타터 플랜',
-        supportingLabel: '닫았다가 돌아온 사용자를 위한 24시간 리턴 오퍼와 가장 잘 맞습니다.',
-        benefits: ['7일 무제한 Oracle Chat', 'Daily Tarot premium advice', '가볍게 시작 후 월간/연간 전환 검토'],
-        commitmentNote: '특가성 진입 카드로 가장 낮은 비용에서 리추얼 루틴을 붙여볼 수 있습니다.',
-    },
+const PLAN_OPTIONS: Record<Exclude<SubscriptionPlanType, 'WEEKLY' | 'COUPLE'>, PlanOption> = {
     MONTHLY: {
         id: 'MONTHLY',
         eyebrow: 'Flexible Start',
@@ -77,7 +65,7 @@ const PLAN_OPTIONS: Record<SubscriptionPlanType, PlanOption> = {
         priceLabel: '$9.99 / month',
         billingLabel: 'Cancel anytime',
         valueLabel: '짧은 검증과 루틴 형성에 가장 무난한 옵션',
-        supportingLabel: '주간보다 긴 호흡으로 유지하고 싶은 사용자에게 적합',
+        supportingLabel: '연료비보다 저렴한 비용으로 개인 비서를 고용하세요.',
         benefits: ['무제한 Oracle Chat', '프리미엄 테마', '월간 인사이트 업데이트'],
         commitmentNote: '이번 달 바로 시작하고, 흐름이 맞는지 유연하게 확인할 수 있습니다.',
     },
@@ -89,7 +77,7 @@ const PLAN_OPTIONS: Record<SubscriptionPlanType, PlanOption> = {
         priceLabel: '$49.99 / year',
         billingLabel: 'About $4.17 / month',
         valueLabel: '월간 대비 $69.89 절약, 연간 기준 월 환산 약 $4.17',
-        supportingLabel: '1주 비용으로 비교해도 약 $0.96 수준의 장기 효율',
+        supportingLabel: '1개월 비용으로 약 5개월을 더 사용하는 압도적 효율',
         benefits: ['월간 대비 $69.89 절약', '무제한 Oracle Chat', '프리미엄 테마 + 월간 리포트'],
         commitmentNote: '가장 낮은 총비용으로 핵심 기능을 오래 유지하려면 연간이 가장 유리합니다.',
     },
@@ -102,7 +90,7 @@ const SEGMENT_CONFIGS: Record<Exclude<PaywallSource, 'default'> | 'default', Pay
         headline: 'CosmicPath의 흐름을 끊기지 않게 유지하세요',
         body: '무료 사용량 이후에도 무제한 Oracle Chat, 프리미엄 테마, Daily Tarot premium advice를 계속 사용할 수 있습니다. 연간은 가장 큰 절약폭을, 월간은 가장 빠른 정착을 제공합니다.',
         recommendedPlan: 'ANNUAL',
-        planOrder: ['ANNUAL', 'MONTHLY', 'WEEKLY'],
+        planOrder: ['ANNUAL', 'MONTHLY'],
         insightLabel: 'Value Frame',
         insightBody: '연간은 월 환산 약 $4.17로 월간 대비 절반 이하 비용입니다. 루틴이 붙을수록 가장 큰 효율을 만듭니다.',
     },
@@ -112,7 +100,7 @@ const SEGMENT_CONFIGS: Record<Exclude<PaywallSource, 'default'> | 'default', Pay
         headline: '첫 프리미엄 루틴을 가장 자연스럽게 시작하세요',
         body: '랜딩에서 바로 구독을 여는 사용자는 보통 리포트 이후 다음 행동을 원합니다. 월간은 진입 장벽을 낮추면서도 충분한 사용 기간을 제공합니다.',
         recommendedPlan: 'MONTHLY',
-        planOrder: ['MONTHLY', 'ANNUAL', 'WEEKLY'],
+        planOrder: ['MONTHLY', 'ANNUAL'],
         insightLabel: 'Landing Fit',
         insightBody: '처음 방문한 사용자는 너무 긴 commitment보다 30일 체험이 더 설득력 있습니다. 이후 retained cohort에 연간 전환을 걸 수 있습니다.',
     },
@@ -122,7 +110,7 @@ const SEGMENT_CONFIGS: Record<Exclude<PaywallSource, 'default'> | 'default', Pay
         headline: '매일 돌아오게 만드는 리추얼 레이어를 잠금 해제하세요',
         body: 'Daily Fortune과 Tarot은 하루치로 끝나지 않습니다. 자정 리셋과 premium advice를 계속 붙이는 사용자는 장기 유지 구조가 더 잘 맞습니다.',
         recommendedPlan: 'ANNUAL',
-        planOrder: ['ANNUAL', 'MONTHLY', 'WEEKLY'],
+        planOrder: ['ANNUAL', 'MONTHLY'],
         insightLabel: 'Ritual Fit',
         insightBody: '데일리 루틴형 사용자는 반복 접속 빈도가 높아 연간 플랜의 월 환산 효율과 가장 잘 맞습니다.',
     },
@@ -132,7 +120,7 @@ const SEGMENT_CONFIGS: Record<Exclude<PaywallSource, 'default'> | 'default', Pay
         headline: '대화 흐름이 끊기기 전에 Oracle을 계속 이어가세요',
         body: '질문 의도가 이미 높은 상태입니다. 즉시 무제한 Oracle Chat을 여는 것이 가장 직접적인 전환 포인트이며, 월간이 가장 자연스러운 선택지입니다.',
         recommendedPlan: 'MONTHLY',
-        planOrder: ['MONTHLY', 'ANNUAL', 'WEEKLY'],
+        planOrder: ['MONTHLY', 'ANNUAL'],
         insightLabel: 'Chat Conversion Fit',
         insightBody: '오라클 챗 진입자는 즉시성 가치가 높습니다. 월간을 전면에 두고, 장기 사용 의도가 강한 경우에만 연간을 업셀하는 구성이 유리합니다.',
     },
@@ -142,7 +130,7 @@ const SEGMENT_CONFIGS: Record<Exclude<PaywallSource, 'default'> | 'default', Pay
         headline: '이미 쌓은 리포트와 루틴을 더 길게 유지하세요',
         body: '내 계정에서 구독을 여는 사용자는 재방문 의도가 높습니다. 연간 플랜을 먼저 보여 주면 저장된 리포트와 데일리 루틴 유지 가치를 더 강하게 전달할 수 있습니다.',
         recommendedPlan: 'ANNUAL',
-        planOrder: ['ANNUAL', 'MONTHLY', 'WEEKLY'],
+        planOrder: ['ANNUAL', 'MONTHLY'],
         insightLabel: 'Retention Fit',
         insightBody: '기존 계정 사용자는 장기 유지 가능성이 높아 annual framing의 효율이 더 잘 작동합니다.',
     },
@@ -152,20 +140,19 @@ const RETURN_SEGMENT: PaywallSegmentConfig = {
     key: 'return_offer',
     badge: '24h Return Offer',
     headline: '가장 가볍게 다시 시작할 수 있는 창이 아직 열려 있습니다',
-    body: '모달을 닫았다가 돌아온 사용자를 위해 주간 스타터를 우선 노출했습니다. 가장 낮은 시작 비용에서 다시 흐름을 붙일 수 있는 24시간 재진입 창입니다.',
-    recommendedPlan: 'WEEKLY',
-    planOrder: ['WEEKLY', 'MONTHLY', 'ANNUAL'],
+    body: '모달을 닫았다가 돌아온 사용자를 위해 월간 멤버십의 특별 혜택을 준비했습니다. 가장 대중적인 시작 비용에서 다시 흐름을 붙일 수 있는 24시간 재진입 창입니다.',
+    recommendedPlan: 'MONTHLY',
+    planOrder: ['MONTHLY', 'ANNUAL'],
     insightLabel: 'Return Offer Logic',
-    insightBody: '이 구간은 장기 설득보다 재진입 마찰을 낮추는 것이 핵심입니다. 주간 플랜을 전면에 두고 checkout 재개를 유도합니다.',
+    insightBody: '이 구간은 장기 설득보다 재진입 마찰을 낮추는 것이 핵심입니다. 월간 플랜을 전면에 두고 checkout 재개를 유도합니다.',
 };
 
 const BENEFIT_ICONS = [MessageCircle, Palette, CalendarDays] as const;
 
 const PLAN_ICONS = {
-    WEEKLY: Clock3,
     MONTHLY: Sparkles,
     ANNUAL: Crown,
-} as const satisfies Record<SubscriptionPlanType, typeof Sparkles>;
+} as const satisfies Record<Exclude<SubscriptionPlanType, 'WEEKLY' | 'COUPLE'>, typeof Sparkles>;
 
 const TRUST_SIGNALS = [
     {
@@ -180,7 +167,7 @@ const TRUST_SIGNALS = [
     },
     {
         title: 'Premium routine',
-        description: '세그먼트에 맞는 진입 구조로 주간, 월간, 연간을 다르게 제안합니다.',
+        description: '세그먼트에 맞는 진입 구조로 월간, 연간을 최적으로 제안합니다.',
         Icon: Crown,
     },
 ] as const;
@@ -313,32 +300,31 @@ export function SubscriptionModal({
         onClose();
     }, [isLoading, onClose]);
 
+    useBodyScrollLock(isOpen, { reserveScrollBarGap: true });
+
     useEffect(() => {
         if (!isOpen) return undefined;
 
-        const previousOverflow = document.body.style.overflow;
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape' && !isLoading) {
                 handleDismiss();
             }
         };
 
-        document.body.style.overflow = 'hidden';
         window.addEventListener('keydown', handleKeyDown);
 
         return () => {
-            document.body.style.overflow = previousOverflow;
             window.removeEventListener('keydown', handleKeyDown);
         };
     }, [handleDismiss, isLoading, isOpen]);
 
     const orderedPlans = useMemo(
-        () => activeSegment.planOrder.map((planType) => PLAN_OPTIONS[planType]),
+        () => activeSegment.planOrder.map((planType) => PLAN_OPTIONS[planType as Exclude<SubscriptionPlanType, 'WEEKLY' | 'COUPLE'>]),
         [activeSegment]
     );
 
     const selectedPlan = useMemo(
-        () => PLAN_OPTIONS[selectedPlanType] ?? orderedPlans[0],
+        () => PLAN_OPTIONS[selectedPlanType as Exclude<SubscriptionPlanType, 'WEEKLY' | 'COUPLE'>] ?? orderedPlans[0],
         [orderedPlans, selectedPlanType]
     );
 
@@ -431,6 +417,7 @@ export function SubscriptionModal({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(2,6,23,0.82)] p-3 backdrop-blur-md sm:p-4"
+                    data-lenis-prevent
                     onClick={handleDismiss}
                 >
                     <motion.div
@@ -442,6 +429,7 @@ export function SubscriptionModal({
                         aria-modal="true"
                         aria-labelledby="subscription-modal-title"
                         className="relative max-h-[92vh] w-full max-w-6xl overflow-hidden rounded-[32px] border border-[#f0d487]/20 bg-[radial-gradient(circle_at_top_left,rgba(244,216,138,0.16),transparent_30%),radial-gradient(circle_at_85%_15%,rgba(99,102,241,0.22),transparent_26%),linear-gradient(155deg,#060914,#0d1322_48%,#0a0f1d)] shadow-[0_32px_120px_rgba(0,0,0,0.52)] overscroll-contain"
+                        data-lenis-prevent
                         onClick={(event) => event.stopPropagation()}
                     >
                         <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-[#f4d88a]/70 to-transparent" />
@@ -533,7 +521,7 @@ export function SubscriptionModal({
                                     <div className="grid gap-4 md:grid-cols-3">
                                         {orderedPlans.map((plan, index) => {
                                             const isSelected = selectedPlanType === plan.id;
-                                            const Icon = PLAN_ICONS[plan.id];
+                                            const Icon = PLAN_ICONS[plan.id as Exclude<SubscriptionPlanType, 'WEEKLY' | 'COUPLE'>];
                                             const isRecommended = plan.id === activeSegment.recommendedPlan;
 
                                             return (
@@ -600,7 +588,7 @@ export function SubscriptionModal({
                                                             {plan.priceLabel}
                                                         </p>
                                                         <p className="mt-2 text-xs font-semibold uppercase tracking-[0.22em] text-white/50">
-                                                            {plan.billingLabel}
+                                                            {plan.id === 'MONTHLY' ? 'Auto-renews monthly' : 'Auto-renews annually'}
                                                         </p>
                                                     </div>
 
@@ -705,7 +693,8 @@ export function SubscriptionModal({
                                         </div>
 
                                         <p className="mt-4 text-center text-xs leading-6 text-white/45">
-                                            결제는 Stripe Checkout으로 이동해 진행됩니다. 선택한 플랜만 서버에 전송되며, 현재 계약은 USD 기준으로 유지됩니다.
+                                            결제는 Stripe Checkout으로 이동해 진행됩니다. 선택한 플랜만 서버에 전송되며, 현재 계약은 USD 기준으로 유지됩니다. 
+                                            언제든 해지가 가능합니다.
                                         </p>
                                     </div>
                                 </div>

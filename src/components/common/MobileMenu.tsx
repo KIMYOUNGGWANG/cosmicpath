@@ -40,7 +40,7 @@ export function MobileMenu({ isOpen, onClose, menuItems }: MobileMenuProps) {
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                        className="fixed top-0 right-0 z-[9999] flex h-full w-[280px] flex-col border-l border-white/10 bg-[#0f0f15] shadow-2xl xl:hidden sm:w-[320px]"
+                        className="fixed top-3 right-3 bottom-3 z-[9999] flex w-[280px] sm:w-[320px] flex-col border border-white/10 rounded-3xl bg-[#0a0a0c]/60 backdrop-blur-3xl shadow-[0_0_40px_rgba(0,0,0,0.8)] xl:hidden overflow-hidden"
                     >
                         {/* Menu Header */}
                         <div className="flex items-center justify-between p-6 border-b border-white/5">

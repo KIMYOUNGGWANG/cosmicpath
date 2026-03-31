@@ -1,15 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { createCheckoutSession, verifyCheckoutSession } from '@/lib/payment/stripe';
 import { READING_PRODUCT } from '@/lib/payment/payment-config';
 import { validatePromotionCodeForCheckout } from '@/lib/promo-codes';
+
+const PaymentInitRequestSchema = z.object({
+    productId: z.string().min(1).optional(),
+    email: z.string().email().optional().or(z.literal('')),
+    readingId: z.string().min(1).optional(),
+    referralCode: z.string().min(1).optional(),
+    promoCodeId: z.string().min(1).optional(),
+    discount: z.number().int().min(0).max(100).optional(),
+    successPath: z.string().min(1).optional(),
+    cancelPath: z.string().min(1).optional(),
+    paymentType: z.enum(['premium_reading', 'career_report']).optional(),
+    checkoutMetadata: z.record(z.string(), z.string()).optional(),
+});
+
+function resolveAppUrl(origin: string, path: string | undefined, fallbackPath: string) {
+    if (!path) {
+        return new URL(fallbackPath, origin).toString();
+    }
+
+    if (!path.startsWith('/')) {
+        throw new Error('리다이렉트 경로는 "/"로 시작해야 합니다.');
+    }
+
+    return new URL(path, origin).toString();
+}
 
 /**
  * POST /api/payment - 결제 세션 생성 (Stripe)
  */
 export async function POST(request: NextRequest) {
     try {
-        const body = await request.json();
-        const { productId, email, readingId, referralCode, promoCodeId, discount } = body;
+        const rawBody = await request.json();
+        const parsedBody = PaymentInitRequestSchema.safeParse(rawBody);
+
+        if (!parsedBody.success) {
+            return NextResponse.json(
+                { error: '입력값이 올바르지 않습니다.', details: parsedBody.error.flatten() },
+                { status: 400 }
+            );
+        }
+
+        const {
+            productId,
+            email,
+            readingId,
+            referralCode,
+            promoCodeId,
+            discount,
+            successPath,
+            cancelPath,
+            paymentType,
+            checkoutMetadata,
+        } = parsedBody.data;
         const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
         let appliedDiscount = 0;
         let appliedPromoCodeId = '';
@@ -33,15 +79,24 @@ export async function POST(request: NextRequest) {
         }
 
         const origin = request.headers.get('origin') || 'http://localhost:3000';
+        const resolvedSuccessUrl = resolveAppUrl(
+            origin,
+            successPath,
+            `/payment/success?session_id={CHECKOUT_SESSION_ID}&reading_id=${readingId || ''}`
+        );
+        const resolvedCancelUrl = resolveAppUrl(origin, cancelPath, '/start?canceled=true');
+        const resolvedProductId = productId || READING_PRODUCT.productId;
+        const resolvedPaymentType = paymentType || 'premium_reading';
 
         const session = await createCheckoutSession({
-            productId: productId || READING_PRODUCT.productId,
-            successUrl: `${origin}/payment/success?session_id={CHECKOUT_SESSION_ID}&reading_id=${readingId || ''}`,
-            cancelUrl: `${origin}/start?canceled=true`,
+            productId: resolvedProductId,
+            successUrl: resolvedSuccessUrl,
+            cancelUrl: resolvedCancelUrl,
             discountPercent: appliedDiscount || undefined,
             metadata: {
-                type: 'premium_reading',
-                productId: productId || READING_PRODUCT.productId,
+                ...(checkoutMetadata || {}),
+                type: resolvedPaymentType,
+                productId: resolvedProductId,
                 email: normalizedEmail,
                 readingId: readingId || '',
                 referralCode: referralCode || '',

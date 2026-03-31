@@ -21,6 +21,7 @@ export function InputBirthdate({ onDateSelect, label }: InputBirthdateProps) {
             <div className="relative w-full">
                 <input
                     type="date"
+                    max="9999-12-31"
                     onChange={(e) => onDateSelect(e.target.value)}
                     onFocus={() => setIsFocused(true)}
                     onBlur={() => setIsFocused(false)}
