@@ -113,6 +113,14 @@ function formatPercent(value: number) {
     return `${Math.round(value)}%`;
 }
 
+function getModerationLabel(isApproved: boolean) {
+    return isApproved ? '승인됨' : '승인 대기';
+}
+
+function getConnectionLabel(readingId: string | null) {
+    return readingId ? '리딩 연결' : '리딩 미연결';
+}
+
 export function ReviewOpsDashboard({ initialReviews }: ReviewOpsDashboardProps) {
     const [reviews, setReviews] = useState(initialReviews);
     const [filter, setFilter] = useState<ReviewFilter>('pending');
@@ -217,23 +225,23 @@ export function ReviewOpsDashboard({ initialReviews }: ReviewOpsDashboardProps) 
 
                     <div className="mt-6 flex flex-wrap gap-3">
                         <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white/72">
-                            <span className="text-white/42">Queue Pressure</span>
+                            <span className="text-white/42">대기 비중</span>
                             <strong className="ml-2 text-white">{formatPercent(pendingShare)}</strong>
                         </div>
                         <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white/72">
-                            <span className="text-white/42">Promo Mix</span>
+                            <span className="text-white/42">프로모션 비중</span>
                             <strong className="ml-2 text-white">{formatPercent(promoShare)}</strong>
                         </div>
                         <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white/72">
-                            <span className="text-white/42">High Signal</span>
-                            <strong className="ml-2 text-white">{highSignalCount} reviews</strong>
+                            <span className="text-white/42">고평점 리뷰</span>
+                            <strong className="ml-2 text-white">{highSignalCount}건</strong>
                         </div>
                     </div>
                 </div>
 
                 <div className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-6 shadow-[0_28px_80px_rgba(2,6,23,0.24)] backdrop-blur-xl">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[hsl(42_79%_74%)]">
-                        Queue Snapshot
+                        큐 스냅샷
                     </p>
                     <div className="mt-5 space-y-3">
                         <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
@@ -270,7 +278,7 @@ export function ReviewOpsDashboard({ initialReviews }: ReviewOpsDashboardProps) 
                         </div>
                         <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
                             <p className="text-xs uppercase tracking-[0.24em] text-white/42">
-                                Latest Voice
+                                최신 후기
                             </p>
                             <div className="mt-3 flex items-start justify-between gap-4">
                                 <div className="min-w-0">
@@ -290,25 +298,25 @@ export function ReviewOpsDashboard({ initialReviews }: ReviewOpsDashboardProps) 
 
             <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <ReviewStatCard
-                    label="Pending"
+                    label="승인 대기"
                     value={pendingCount.toLocaleString()}
                     caption="바로 검수해야 할 신규 리뷰 수입니다."
                     glowClassName="bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.18),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]"
                 />
                 <ReviewStatCard
-                    label="Approved"
+                    label="승인됨"
                     value={approvedCount.toLocaleString()}
                     caption="공개 가능한 후기 풀입니다."
                     glowClassName="bg-[radial-gradient(circle_at_top_right,rgba(110,231,183,0.18),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]"
                 />
                 <ReviewStatCard
-                    label="Avg Rating"
+                    label="평균 평점"
                     value={averageRating}
                     caption="현재 누적 만족도 평균입니다."
                     glowClassName="bg-[radial-gradient(circle_at_top_right,rgba(245,196,81,0.18),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]"
                 />
                 <ReviewStatCard
-                    label="Promo Linked"
+                    label="프로모션 연결"
                     value={promoCount.toLocaleString()}
                     caption="보상 루프와 연결된 후기 수입니다."
                     glowClassName="bg-[radial-gradient(circle_at_top_right,rgba(125,211,252,0.18),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]"
@@ -319,7 +327,7 @@ export function ReviewOpsDashboard({ initialReviews }: ReviewOpsDashboardProps) 
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                     <div className="max-w-2xl">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                            Review Queue
+                            리뷰 큐
                         </p>
                         <h2 className="mt-3 font-[var(--font-outfit)] text-3xl font-semibold tracking-[-0.05em] text-white">
                             스캔이 쉬운 카드 보드로 검수 흐름을 정리했습니다
@@ -330,9 +338,9 @@ export function ReviewOpsDashboard({ initialReviews }: ReviewOpsDashboardProps) 
                     </div>
 
                     <div className="flex flex-wrap gap-3">
-                        <ReviewFilterButton label="Pending" value={pendingCount.toString()} isActive={filter === 'pending'} onClick={() => setFilter('pending')} />
-                        <ReviewFilterButton label="Approved" value={approvedCount.toString()} isActive={filter === 'approved'} onClick={() => setFilter('approved')} />
-                        <ReviewFilterButton label="All" value={reviews.length.toString()} isActive={filter === 'all'} onClick={() => setFilter('all')} />
+                        <ReviewFilterButton label="승인 대기" value={pendingCount.toString()} isActive={filter === 'pending'} onClick={() => setFilter('pending')} />
+                        <ReviewFilterButton label="승인됨" value={approvedCount.toString()} isActive={filter === 'approved'} onClick={() => setFilter('approved')} />
+                        <ReviewFilterButton label="전체" value={reviews.length.toString()} isActive={filter === 'all'} onClick={() => setFilter('all')} />
                     </div>
                 </div>
 
@@ -367,13 +375,16 @@ export function ReviewOpsDashboard({ initialReviews }: ReviewOpsDashboardProps) 
                                                     ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200'
                                                     : 'border-amber-400/20 bg-amber-400/10 text-amber-200'
                                             }`}>
-                                                {review.isApproved ? 'Approved' : 'Pending'}
+                                                {getModerationLabel(review.isApproved)}
                                             </span>
                                             {review.isPromoUser ? (
                                                 <span className="rounded-full border border-sky-400/20 bg-sky-400/10 px-3 py-1 text-xs text-sky-200">
-                                                    Promo Linked
+                                                    프로모션 연결
                                                 </span>
                                             ) : null}
+                                            <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs text-white/64">
+                                                {getConnectionLabel(review.readingId)}
+                                            </span>
                                         </div>
 
                                         <div className="mt-5 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -390,7 +401,7 @@ export function ReviewOpsDashboard({ initialReviews }: ReviewOpsDashboardProps) 
                                                     <RatingStars rating={review.rating} />
                                                     <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-white/40">
                                                         <MessageSquareQuote className="h-3.5 w-3.5" />
-                                                        Voice Signal
+                                                        후기 시그널
                                                     </div>
                                                 </div>
                                             </div>
@@ -415,7 +426,7 @@ export function ReviewOpsDashboard({ initialReviews }: ReviewOpsDashboardProps) 
                                     <div className="flex flex-col gap-3 xl:w-[220px]">
                                         <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
                                             <p className="text-[11px] uppercase tracking-[0.28em] text-white/42">
-                                                Action Panel
+                                                운영 액션
                                             </p>
                                             <p className="mt-2 text-sm leading-6 text-white/58">
                                                 {review.isApproved

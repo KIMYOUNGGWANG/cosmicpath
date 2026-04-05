@@ -24,7 +24,7 @@ import { SoulmateSection, SoulmateData } from './SoulmateSection';
 import { LuckyAssetsGrid, LuckyAssetsData } from './LuckyAssetsGrid';
 import { GlossarySection } from './GlossarySection';
 import { PaymentModal } from '../payment/PaymentModal';
-import { READING_PRODUCT } from '@/lib/payment/payment-config';
+import { getReadingFallbackPriceLabel, normalizePriceLabel, READING_PRODUCT } from '@/lib/payment/payment-config';
 import { ElementHarmony } from './ElementHarmony';
 import { ActionChecklist } from './ActionChecklist';
 import { FinalVerdictCard } from './FinalVerdictCard';
@@ -386,23 +386,32 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
     });
 
     // Dynamic price from prop or fetched from API
-    const [fetchedPrice, setFetchedPrice] = useState<string>('');
-    const dynamicPrice = price || fetchedPrice || '...';
+    const fallbackPriceLabel = getReadingFallbackPriceLabel();
+    const resolvedPriceProp = normalizePriceLabel(price);
+    const [fetchedPrice, setFetchedPrice] = useState<string | null>(null);
+    const dynamicPrice = resolvedPriceProp || normalizePriceLabel(fetchedPrice) || fallbackPriceLabel;
     const originalPrice = '$19.90';
 
     // Fetch price from Stripe when component mounts (if not provided via prop)
     useEffect(() => {
-        if (!price) {
-            fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.formattedPrice) {
-                        setFetchedPrice(data.formattedPrice);
-                    }
-                })
-                .catch(err => console.error('Failed to fetch price:', err));
-        }
-    }, [price]);
+        if (resolvedPriceProp) return;
+
+        let isMounted = true;
+
+        fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`, { cache: 'no-store' })
+            .then(async (response) => {
+                const data = await response.json();
+
+                if (isMounted && response.ok && normalizePriceLabel(data.formattedPrice)) {
+                    setFetchedPrice(data.formattedPrice);
+                }
+            })
+            .catch(err => console.error('Failed to fetch price:', err));
+
+        return () => {
+            isMounted = false;
+        };
+    }, [resolvedPriceProp]);
 
     const handleUnlock = () => {
         if (onUnlock) {
@@ -913,6 +922,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 currentReport={report}
                 metadata={metadata}
                 readingData={(metadata as MetadataWithReadingData)?.readingData}
+                price={dynamicPrice}
                 trackingSource="shared_report_unlock"
             />
 

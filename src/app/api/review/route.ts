@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
@@ -46,7 +47,7 @@ export async function GET() {
 
         return NextResponse.json({ reviews });
     } catch {
-        return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 });
+        return NextResponse.json({ error: '리뷰를 불러오지 못했습니다.' }, { status: 500 });
     }
 }
 
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
             });
 
             if (!reading) {
-                return NextResponse.json({ error: 'Reading not found' }, { status: 404 });
+                return NextResponse.json({ error: '리딩을 찾을 수 없습니다.' }, { status: 404 });
             }
 
             const canReview = hasReadingAccess({
@@ -82,17 +83,17 @@ export async function POST(request: NextRequest) {
             });
 
             if (!canReview) {
-                return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+                return NextResponse.json({ error: '이 리딩에 대한 후기 권한이 없습니다.' }, { status: 403 });
             }
 
-            const existingReview = await prisma.review.findFirst({
+            const existingReview = await prisma.review.findUnique({
                 where: { readingId: data.readingId },
                 select: { id: true },
             });
 
             if (existingReview) {
                 return NextResponse.json(
-                    { error: 'Review already submitted for this reading' },
+                    { error: '이미 이 리딩에 대한 후기가 등록되어 있습니다.' },
                     { status: 409 }
                 );
             }
@@ -125,9 +126,19 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true, ...result });
     } catch (error) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json({ error: 'Invalid review payload' }, { status: 400 });
+            return NextResponse.json({ error: '리뷰 입력이 올바르지 않습니다.' }, { status: 400 });
         }
 
-        return NextResponse.json({ error: 'Failed to create review' }, { status: 400 });
+        if (
+            error instanceof Prisma.PrismaClientKnownRequestError &&
+            error.code === 'P2002'
+        ) {
+            return NextResponse.json(
+                { error: '이미 이 리딩에 대한 후기가 등록되어 있습니다.' },
+                { status: 409 }
+            );
+        }
+
+        return NextResponse.json({ error: '리뷰 등록에 실패했습니다.' }, { status: 400 });
     }
 }

@@ -152,7 +152,7 @@ model PromoRedemption {
 
 model Review {
   id          String   @id @default(uuid())
-  readingId   String?
+  readingId   String?  @unique
   nickname    String
   rating      Int
   content     String
@@ -234,6 +234,7 @@ model GrowthEvent {
   metadata     String?
   createdAt    DateTime @default(now())
 
+  @@index([createdAt])
   @@index([event, createdAt])
   @@index([readingId])
   @@index([referralCode])

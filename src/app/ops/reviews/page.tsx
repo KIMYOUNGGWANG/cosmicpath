@@ -61,19 +61,19 @@ export default async function ReviewOpsPage() {
 
                         <div className="flex flex-wrap gap-3">
                             <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white/72">
-                                <span className="text-white/44">Mode</span>
-                                <strong className="ml-2 text-white">Review Moderation</strong>
+                                <span className="text-white/44">모드</span>
+                                <strong className="ml-2 text-white">리뷰 검수</strong>
                             </div>
                             <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white/72">
-                                <span className="text-white/44">Queue</span>
-                                <strong className="ml-2 text-white">{serializedReviews.length} reviews</strong>
+                                <span className="text-white/44">리뷰 수</span>
+                                <strong className="ml-2 text-white">{serializedReviews.length}건</strong>
                             </div>
                             <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white/72">
-                                <span className="text-white/44">Pending</span>
+                                <span className="text-white/44">승인 대기</span>
                                 <strong className="ml-2 text-white">{pendingCount}</strong>
                             </div>
                             <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white/72">
-                                <span className="text-white/44">Promo Mix</span>
+                                <span className="text-white/44">프로모션 연결</span>
                                 <strong className="ml-2 text-white">{promoCount}</strong>
                             </div>
                         </div>

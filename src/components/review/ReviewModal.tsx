@@ -18,6 +18,7 @@ export function ReviewModal({ isOpen, onClose, readingId, accessKey }: ReviewMod
     const [content, setContent] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
     // Handle browser back button - close modal
     useEffect(() => {
@@ -38,6 +39,11 @@ export function ReviewModal({ isOpen, onClose, readingId, accessKey }: ReviewMod
         };
     }, [isOpen, onClose]);
 
+    useEffect(() => {
+        if (!isOpen) return;
+        setSubmitError(null);
+    }, [isOpen]);
+
     // Handle close button click
     const handleClose = useCallback(() => {
         onClose();
@@ -56,6 +62,7 @@ export function ReviewModal({ isOpen, onClose, readingId, accessKey }: ReviewMod
                 : undefined);
 
         setIsSubmitting(true);
+        setSubmitError(null);
         try {
             const response = await fetch('/api/review', {
                 method: 'POST',
@@ -74,9 +81,28 @@ export function ReviewModal({ isOpen, onClose, readingId, accessKey }: ReviewMod
                 setIsSubmitted(true);
                 localStorage.setItem('review_submitted', 'true');
                 setTimeout(onClose, 2000);
+                return;
             }
+
+            const payload = await response.json().catch(() => null);
+            const fallbackMessage = '후기 등록에 실패했습니다. 잠시 후 다시 시도해주세요.';
+
+            if (response.status === 409) {
+                setSubmitError('이미 이 리딩에 대한 후기가 등록되어 있습니다.');
+                return;
+            }
+
+            if (response.status === 403) {
+                setSubmitError('이 리딩에 대한 후기 권한을 확인할 수 없습니다.');
+                return;
+            }
+
+            setSubmitError(
+                typeof payload?.error === 'string' ? payload.error : fallbackMessage
+            );
         } catch (error) {
             console.error('Failed to submit review', error);
+            setSubmitError('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
         } finally {
             setIsSubmitting(false);
         }
@@ -166,6 +192,11 @@ export function ReviewModal({ isOpen, onClose, readingId, accessKey }: ReviewMod
                                 >
                                     {isSubmitting ? '등록 중...' : '후기 등록하기'}
                                 </button>
+                                {submitError ? (
+                                    <p className="text-sm text-rose-300 text-center">
+                                        {submitError}
+                                    </p>
+                                ) : null}
                             </div>
                         </>
                     )}

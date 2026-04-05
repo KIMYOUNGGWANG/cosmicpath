@@ -51,9 +51,9 @@ export default function BillingSuccessPage() {
             : payload?.plan === 'pro_monthly'
                 ? 'CosmicPath Pro Monthly'
                 : payload?.plan === 'pro_weekly'
-                    ? 'CosmicPath Pro Weekly'
+                    ? 'CosmicPath Legacy Pro Plan'
                     : payload?.plan === 'couple_monthly'
-                        ? 'CosmicPath Couple Monthly'
+                        ? 'CosmicPath Legacy Couple Plan'
                         : 'Subscription sync in progress';
 
     return (

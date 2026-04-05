@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
 import Link from 'next/link';
-import { Menu, Search, Sparkles, Palette } from 'lucide-react';
+import { Menu, Search, Sparkles } from 'lucide-react';
 import { OrderLookupModal } from '@/components/orders/OrderLookupModal';
 import { MobileMenu } from '@/components/common/MobileMenu';
 import { User } from 'lucide-react';
@@ -11,7 +11,6 @@ import UserMenu from '@/components/layout/UserMenu';
 import { LoginModal, useLoginModal } from '@/components/auth/LoginModal';
 import { useSession } from 'next-auth/react';
 import { SubscriptionModal } from '@/components/payment/SubscriptionModal';
-import { trackClientGrowthEvent } from '@/lib/client-growth-events';
 
 export function Navigation() {
     const { status } = useSession();
@@ -50,17 +49,6 @@ export function Navigation() {
         setIsMobileMenuOpen(false);
     };
 
-    const trackKDestinyNavClick = (context: 'desktop' | 'mobile') => {
-        void trackClientGrowthEvent({
-            event: 'k_destiny_nav_click',
-            source: 'navigation',
-            context,
-            metadata: {
-                authenticated: status === 'authenticated',
-            },
-        });
-    };
-
     return (
         <>
             <motion.nav
@@ -89,13 +77,6 @@ export function Navigation() {
                             className="shrink-0 whitespace-nowrap rounded-full border border-transparent px-2 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-starlight transition-colors hover:text-acc-gold 2xl:text-xs"
                         >
                             오늘의 운세
-                        </Link>
-                        <Link
-                            href="/k-destiny"
-                            onClick={() => trackKDestinyNavClick('desktop')}
-                            className="shrink-0 whitespace-nowrap rounded-full border border-transparent px-2 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-[#7FDBFF] transition-colors hover:text-[#FFD166] 2xl:text-xs"
-                        >
-                            K-DESTINY
                         </Link>
                         <button
                             onClick={toggleOrderModal}
@@ -169,15 +150,6 @@ export function Navigation() {
                         label: 'FIND ORDERS',
                         subLabel: 'Lookup past readings',
                         onClick: () => setIsOrderModalOpen(true),
-                    },
-                    {
-                        type: 'link',
-                        icon: Palette,
-                        iconColorClass: 'group-hover:bg-cyan-500/20 group-hover:text-cyan-300',
-                        label: 'K-DESTINY',
-                        subLabel: 'Generate your aura card',
-                        href: '/k-destiny',
-                        onClick: () => trackKDestinyNavClick('mobile'),
                     },
                     {
                         type: 'link',

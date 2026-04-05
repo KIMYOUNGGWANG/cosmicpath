@@ -1,15 +1,9 @@
 import type { Metadata } from 'next';
-
-import { StructuredData } from '@/components/seo/StructuredData';
-
-import MatchNewClient from './MatchNewClient';
-
-const pageUrl = 'https://cosmicpath.app/match/new';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: '궁합 초대 링크 만들기 | CosmicPath',
-    description: '이름과 생년월일로 궁합 초대 링크를 만들고 상대방과 공유하세요. 사주, 타로, 관계 시그널을 함께 보는 궁합 진입 페이지입니다.',
-    keywords: ['궁합', '궁합 테스트', '사주 궁합', '연애 궁합', '커플 궁합', '타로 궁합', '운세 궁합'],
+    title: '궁합 실험실은 지금 보관 중입니다 | CosmicPath',
+    description: '현재 CosmicPath의 메인 경험은 오라클 리딩과 데일리 루틴입니다. 궁합 실험실은 직접 링크 기반 보관 모드로 유지됩니다.',
     robots: {
         index: false,
         follow: false,
@@ -18,35 +12,63 @@ export const metadata: Metadata = {
         canonical: '/match/new',
     },
     openGraph: {
-        title: '궁합 초대 링크 만들기 | CosmicPath',
-        description: '상대방에게 바로 보낼 수 있는 궁합 초대 링크를 만들고, 함께 사주와 타로 기반 궁합 분석을 시작하세요.',
-        url: pageUrl,
+        title: '궁합 실험실은 지금 보관 중입니다 | CosmicPath',
+        description: '메인 오라클 리딩과 데일리 루틴에 집중하기 위해 궁합 생성 진입은 잠시 보관 모드로 유지됩니다.',
+        url: 'https://cosmicpath.app/match/new',
         type: 'website',
         images: ['/og-image.png'],
     },
     twitter: {
         card: 'summary_large_image',
-        title: '궁합 초대 링크 만들기 | CosmicPath',
-        description: '사주와 타로 기반 궁합 분석을 시작하는 가장 빠른 초대 링크 생성 페이지.',
+        title: '궁합 실험실은 지금 보관 중입니다 | CosmicPath',
+        description: 'CosmicPath는 현재 오라클 리딩과 데일리 루틴에 집중하고 있습니다.',
         images: ['/og-image.png'],
     },
 };
 
 export default function MatchNewPage() {
-    const structuredData = {
-        '@context': 'https://schema.org',
-        '@type': 'WebPage',
-        name: '궁합 초대 링크 만들기',
-        url: pageUrl,
-        description: '상대방에게 보낼 수 있는 궁합 초대 링크를 만들고 관계 궁합 분석을 시작하는 페이지.',
-        inLanguage: 'ko-KR',
-        about: ['궁합', '사주 궁합', '타로 궁합', '연애 궁합'],
-    };
-
     return (
-        <>
-            <StructuredData data={structuredData} />
-            <MatchNewClient />
-        </>
+        <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#04060d] px-4 py-20 text-starlight">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(64,96,196,0.12)_0%,transparent_70%)]" />
+            <div className="relative z-10 w-full max-w-2xl space-y-8 rounded-[32px] border border-white/10 bg-white/[0.04] p-8 text-center shadow-[0_32px_120px_rgba(0,0,0,0.35)] backdrop-blur-xl md:p-12">
+                <div className="space-y-4">
+                    <p className="text-[11px] uppercase tracking-[0.34em] text-[#F4D88A]">
+                        Match Lab Archive
+                    </p>
+                    <h1 className="text-4xl font-semibold leading-tight text-white md:text-5xl">
+                        궁합 실험실은
+                        <br />
+                        지금 보관 중입니다
+                    </h1>
+                    <p className="mx-auto max-w-xl text-base leading-8 text-white/70">
+                        현재 CosmicPath의 메인 경험은 오라클 리딩과 데일리 루틴입니다.
+                        궁합 생성 진입은 신규 확장 대신 보관 모드로 유지하고, 기존 공유 링크 흐름만 안정적으로 관리합니다.
+                    </p>
+                </div>
+
+                <div className="rounded-[24px] border border-white/10 bg-black/20 p-6 text-left">
+                    <p className="text-sm leading-7 text-white/68">
+                        새로운 궁합 링크 생성 대신, 지금은 결정과 타이밍 질문에 더 직접적인
+                        <span className="text-white"> 메인 오라클 리딩</span>과
+                        <span className="text-white"> 데일리 루틴</span>에 집중하는 것이 가장 빠른 경로입니다.
+                    </p>
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row">
+                    <Link
+                        href="/start?reset=true"
+                        className="inline-flex min-h-12 flex-1 items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F2D479] px-6 py-3 text-sm font-semibold text-[#0A0D16] transition-colors hover:bg-[#E7C867]"
+                    >
+                        오라클 리딩 시작하기
+                    </Link>
+                    <Link
+                        href="/daily"
+                        className="inline-flex min-h-12 flex-1 items-center justify-center rounded-full border border-white/15 bg-white/[0.03] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/[0.06]"
+                    >
+                        오늘의 운세 보기
+                    </Link>
+                </div>
+            </div>
+        </main>
     );
 }

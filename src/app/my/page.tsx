@@ -61,13 +61,13 @@ function parseReadingMetadata(metadata: string | null): ParsedReadingMetadata {
 function getPlanLabel(plan: SubscriptionPlan): string {
     switch (plan) {
         case "pro_weekly":
-            return "Pro Weekly";
+            return "Legacy Pro Plan";
         case "pro_monthly":
             return "Pro Monthly";
         case "pro_yearly":
             return "Pro Annual";
         case "couple_monthly":
-            return "Couple Monthly";
+            return "Legacy Couple Plan";
         default:
             return "Free Plan";
     }
@@ -78,7 +78,7 @@ function getTierBadge(status: SubscriptionTier): string {
         case "pro":
             return "Pro Member";
         case "couple":
-            return "Couple Member";
+            return "Premium Member";
         default:
             return "Free Member";
     }
@@ -89,7 +89,7 @@ function getMembershipSummary(subscription: SubscriptionStatusPayload): string {
         case "pro":
             return "무제한 Oracle Chat과 프리미엄 테마, 월간 인사이트가 활성화되어 있습니다.";
         case "couple":
-            return "커플 전용 리포트와 프리미엄 기능이 활성화되어 있습니다.";
+            return "기존 관계형 멤버십이 유지 중이며, 현재는 프리미엄 혜택 범주로 안정적으로 관리되고 있습니다.";
         default:
             return "현재 무료 플랜입니다. 구독을 시작하면 프리미엄 리포트와 Oracle 혜택을 계속 사용할 수 있습니다.";
     }
@@ -100,7 +100,7 @@ function getBadgeClasses(status: SubscriptionTier): string {
         case "pro":
             return "border-emerald-400/30 bg-emerald-400/15 text-emerald-200";
         case "couple":
-            return "border-pink-400/30 bg-pink-400/15 text-pink-100";
+            return "border-emerald-400/30 bg-emerald-400/15 text-emerald-200";
         default:
             return "border-white/10 bg-white/5 text-white/70";
     }

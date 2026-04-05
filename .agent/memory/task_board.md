@@ -42,6 +42,15 @@
 - [x] **Step I: Question-Linked Daily Loop** — `/daily`를 독립 운세가 아니라 최근 오라클 질문 영역과 연결된 리텐션 루프로 재설계
 - [x] **Step J: Trust & Activation Instrumentation** — `first_result_view`, `followup_start`, `daily_return_after_reading` 같은 코어 activation 이벤트를 운영 지표에 추가
 
+## 🧱 Post-Ship Stability Block (2026-04-04 Night)
+*원칙: ship 직후에는 신규 surface 확장보다 전환 신뢰, 리뷰 무결성, 운영 성능을 먼저 고정한다.*
+
+- [x] **Step K: Paywall Price Reliability** — `PaymentModal`과 관련 결제 surface에서 Stripe price fetch 실패 시 `...`가 남지 않도록 fallback price, loading skeleton, graceful copy를 고정
+- [x] **Step L: Review Integrity at DB Layer** — `Review.readingId` 단위 1회 제출/1회 보상을 DB 제약까지 내려서 중복 리뷰/중복 크레딧 가능성을 제거
+- [x] **Step M: Review Contract & Moderation States** — `/api/review`, `/api/review/admin`의 accessKey/owner 규칙, 409 conflict, 승인 상태를 `docs/api-spec.md`에 승격하고 운영 화면과 같은 언어로 맞춤
+- [x] **Step N: Growth Summary Performance Guard** — `GrowthEvent.createdAt` 중심 인덱스와 요약 query shape를 정리해 `/api/growth/summary`와 `/ops/growth` 응답 시간을 이벤트 증가 후에도 안정화
+- [x] **Step O: Regression Verification** — paywall price fallback, duplicate review, review accessKey ownership, growth summary 응답 shape에 대한 테스트/검증 경로를 추가
+
 ---
 
 ## 🔥 Rebased Execution Queue (2026-03-20)

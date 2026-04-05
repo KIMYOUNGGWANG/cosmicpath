@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { auth } from '@/lib/auth';
@@ -32,7 +33,7 @@ export async function GET() {
         });
         return NextResponse.json({ reviews });
     } catch {
-        return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 });
+        return NextResponse.json({ error: '리뷰 목록을 불러오지 못했습니다.' }, { status: 500 });
     }
 }
 
@@ -56,8 +57,19 @@ export async function PATCH(request: NextRequest) {
         });
 
         return NextResponse.json({ success: true });
-    } catch {
-        return NextResponse.json({ error: 'Failed to update review' }, { status: 400 });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return NextResponse.json({ error: '리뷰 상태 변경 요청이 올바르지 않습니다.' }, { status: 400 });
+        }
+
+        if (
+            error instanceof Prisma.PrismaClientKnownRequestError &&
+            error.code === 'P2025'
+        ) {
+            return NextResponse.json({ error: '리뷰를 찾을 수 없습니다.' }, { status: 404 });
+        }
+
+        return NextResponse.json({ error: '리뷰 상태를 변경하지 못했습니다.' }, { status: 400 });
     }
 }
 
@@ -79,7 +91,18 @@ export async function DELETE(request: NextRequest) {
         });
 
         return NextResponse.json({ success: true });
-    } catch {
-        return NextResponse.json({ error: 'Failed to delete review' }, { status: 400 });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return NextResponse.json({ error: '리뷰 삭제 요청이 올바르지 않습니다.' }, { status: 400 });
+        }
+
+        if (
+            error instanceof Prisma.PrismaClientKnownRequestError &&
+            error.code === 'P2025'
+        ) {
+            return NextResponse.json({ error: '리뷰를 찾을 수 없습니다.' }, { status: 404 });
+        }
+
+        return NextResponse.json({ error: '리뷰를 삭제하지 못했습니다.' }, { status: 400 });
     }
 }

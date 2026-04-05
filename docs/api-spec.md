@@ -65,6 +65,12 @@ interface ErrorResponse {
 > - `/api/reading`의 무료 결과는 이제 `free_focus` 블록을 항상 정규화해, 화면 첫 구간에서 `행동 결론 1개 + 근거 요약 1개 + 다음 질문 1개`를 안정적으로 노출한다.
 > - `/daily` surface는 독립 위젯이 아니라 최근 `/api/reading` metadata를 읽어 `질문 영역 -> 오늘의 연결 영역 -> 다시 돌아갈 오라클 thread`를 보여주는 retention loop로 동작한다.
 > - Growth activation instrumentation은 이제 `first_result_view`, `followup_start`, `daily_return_after_reading`를 별도 canonical event로 수집해, `/ops/growth`에서 trust/activation loop를 직접 읽을 수 있게 한다.
+>
+> **Planned Stability Delta (2026-04-04 Night)**:
+> - 다음 사이클은 신규 consumer surface 확장보다 `paywall price reliability`, `review integrity`, `growth summary performance`를 우선한다.
+> - `GET /api/payment/price`, `GET|POST /api/review`, `GET|PATCH|DELETE /api/review/admin`를 명시적 계약으로 승격한다.
+> - 리뷰 보상 루프는 API-level check뿐 아니라 DB-level uniqueness로 강화해 `readingId`당 1회 제출/1회 보상을 보장한다.
+> - `/api/growth/summary`는 response shape를 유지하되, 저장소 인덱스와 query shape만 조정하는 non-breaking hardening으로 다룬다.
 
 ### 1. 오늘의 운세 (Daily Fortune) ✅ 구현됨
 
@@ -386,6 +392,162 @@ interface GrowthSummaryResponse {
 - `401` 로그인 필요
 - `403` 관리자 권한 필요
 
+**Implementation Note (2026-04-04)**
+- `/api/growth/summary`는 response shape를 유지한 채 `GrowthEvent.createdAt` 중심 인덱스와 narrow column select를 사용하도록 hardening되었다.
+
+---
+
+### 11. 결제 가격 조회 (Payment Price Lookup) ✅ 구현됨
+
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `GET` | `/api/payment/price` | ❌ |
+
+**Query**
+```
+productId?: string // optional, 기본값은 oracle reading product
+```
+
+**Response**
+```typescript
+interface PaymentPriceResponse {
+  productId: string;
+  priceId: string;
+  amount: number;
+  currency: string;
+  formattedPrice: string;
+  metadata: Record<string, string>;
+}
+```
+
+**Implementation Notes**
+- paywall surface는 이 endpoint를 primary source로 사용하되, fetch 실패 시에도 placeholder(`...`)에 머무르지 않는 fallback label을 가져야 한다.
+- `PaymentModal`과 result paywall surface는 fallback label을 먼저 보여주고, live lookup 중에는 loading skeleton, 실패 시에는 graceful fallback copy를 함께 노출한다.
+
+**Error**
+- `400` product ID 누락 또는 잘못된 요청
+- `500` Stripe 가격 조회 실패
+
+---
+
+### 12. 공개 리뷰 목록 & 리뷰 등록 (Review Public) ✅ 구현됨
+
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `GET` | `/api/review` | ❌ |
+| `POST` | `/api/review` | Optional |
+
+**GET Response**
+```typescript
+interface PublicReviewItem {
+  id: string;
+  nickname: string;   // 공개 응답에서는 mask 처리
+  rating: number;
+  content: string;
+  createdAt: string;
+}
+
+interface PublicReviewListResponse {
+  reviews: PublicReviewItem[];
+}
+```
+
+**POST Request**
+```typescript
+interface ReviewCreateRequest {
+  readingId?: string;
+  accessKey?: string;   // anonymous reading일 때 owner proof
+  nickname: string;
+  rating: number;       // 1-5
+  content: string;      // 10-500 chars
+  isPromoUser?: boolean;
+}
+```
+
+**POST Response**
+```typescript
+interface ReviewCreateResponse {
+  success: true;
+  review: {
+    id: string;
+    readingId?: string | null;
+    nickname: string;
+    rating: number;
+    content: string;
+    isPromoUser: boolean;
+    isApproved: boolean; // false=승인 대기, true=승인됨
+    createdAt: string;
+  };
+  rewardGranted: boolean;
+}
+```
+
+**Business Rules**
+- `readingId`가 포함되면 현재 로그인 사용자 또는 해당 reading의 `accessKey` 보유자만 리뷰를 남길 수 있다.
+- `readingId`당 리뷰는 최대 1회만 허용하며, API precheck와 DB-level unique constraint가 함께 이를 보장한다.
+- reward credit은 review 생성과 같은 트랜잭션에서 1회만 지급되어야 한다.
+- 리뷰 등록 직후 기본 상태는 `isApproved === false`이며, 운영 화면에서는 이를 `승인 대기`로 표시한다.
+
+**Error**
+- `400` 잘못된 payload
+- `403` reading ownership 또는 accessKey 불일치
+- `404` reading 없음
+- `409` 이미 해당 reading에 대한 리뷰가 존재함
+
+---
+
+### 13. 리뷰 운영 (Review Admin) ✅ 구현됨
+
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `GET` | `/api/review/admin` | ✅ ADMIN |
+| `PATCH` | `/api/review/admin` | ✅ ADMIN |
+| `DELETE` | `/api/review/admin` | ✅ ADMIN |
+
+**GET Response**
+```typescript
+interface ReviewAdminListResponse {
+  reviews: Array<{
+    id: string;
+    readingId?: string | null;
+    nickname: string;
+    rating: number;
+    content: string;
+    isApproved: boolean; // false=승인 대기, true=승인됨
+    isPromoUser: boolean;
+    createdAt: string;
+  }>;
+}
+```
+
+**PATCH Request**
+```typescript
+interface ReviewAdminUpdateRequest {
+  id: string;
+  isApproved: boolean;
+}
+```
+
+**DELETE Request**
+```typescript
+interface ReviewAdminDeleteRequest {
+  id: string;
+}
+```
+
+**Response**
+```typescript
+interface ReviewAdminMutationResponse {
+  success: true;
+}
+```
+
+**Error**
+- `401` 로그인 필요
+- `403` 관리자 권한 필요
+- `404` 리뷰 없음
+- `400` 잘못된 payload 또는 처리 실패
+
 ---
 
 ## Database Tables (관련 테이블)
@@ -395,8 +557,9 @@ interface GrowthSummaryResponse {
 | `User` | `referralCode`, `stripeSubscriptionId`, `subscriptionStatus` | 초대 코드 관리 |
 | `Referral` | `referralCode`, `inviterUserId`, `inviteeUserId` | 중복 방지 `@@unique` |
 | `ChatSession` | `credits`, `shareRewardClaimed`, `characterId` | 전문 상담가/선택 상태 유지 (`characterId` wire key 유지) |
+| `Review` | `readingId`, `rating`, `isApproved`, `isPromoUser` | `readingId` 단위 1회 제출/1회 보상을 partial unique index로 고정 |
 | `FollowUpJob` | `stage`, `status`, `scheduledFor` | 드립 이메일 관리 |
-| `GrowthEvent` | `event`, `channel`, `metadata`, `createdAt` | 퍼널/리텐션/바이럴 계측 |
+| `GrowthEvent` | `event`, `channel`, `metadata`, `createdAt` | 퍼널/리텐션/바이럴 계측, `createdAt` 중심 조회 성능 하드닝 적용 |
 
 ---
 
@@ -408,3 +571,5 @@ interface GrowthSummaryResponse {
 | 데일리 타로 UI | `GET /api/daily/tarot` |
 | 친구 초대 보상 | `POST /api/referral/reward` |
 | KPI 대시보드 | `GET /api/growth/summary` |
+| Paywall price reliability | `GET /api/payment/price` |
+| Review integrity & moderation | `GET|POST /api/review`, `GET|PATCH|DELETE /api/review/admin` |

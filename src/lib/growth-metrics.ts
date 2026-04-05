@@ -16,6 +16,13 @@ interface GrowthSourcePoint {
     count: number;
 }
 
+interface GrowthEventSummaryRow {
+    createdAt: Date;
+    event: string;
+    channel: string | null;
+    metadata: string | null;
+}
+
 interface GrowthActivationSnapshot {
     firstResultViews: number;
     followupStarts: number;
@@ -72,12 +79,19 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
                 gte: rangeStart,
             },
         },
-        orderBy: { createdAt: 'asc' },
-    });
+        // Growth summary only needs a narrow column set; avoid fetching unused identifiers.
+        select: {
+            createdAt: true,
+            event: true,
+            channel: true,
+            metadata: true,
+        },
+    }) as GrowthEventSummaryRow[];
 
     const seriesMap = new Map<string, GrowthSeriesPoint>();
     const sourceCounter = new Map<string, number>();
     const activeUsersByDay = new Map<string, Set<string>>();
+    const activeUsersAcrossRange = new Set<string>();
     const dailyActiveDaysBySession = new Map<string, Set<string>>();
 
     for (let index = 0; index < safeDays; index += 1) {
@@ -124,6 +138,7 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
 
         if (sessionId) {
             activeUsersByDay.get(dayKey)?.add(sessionId);
+            activeUsersAcrossRange.add(sessionId);
             if (canonicalEvent === 'daily_active') {
                 const existingDays = dailyActiveDaysBySession.get(sessionId) ?? new Set<string>();
                 existingDays.add(dayKey);
@@ -180,9 +195,7 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
         activeUsers: activeUsersByDay.get(point.date)?.size ?? 0,
     }));
 
-    const activeUsers = new Set(
-        Array.from(activeUsersByDay.values()).flatMap((sessions) => Array.from(sessions))
-    ).size;
+    const activeUsers = activeUsersAcrossRange.size;
 
     const returningUsers = Array.from(dailyActiveDaysBySession.values()).filter(
         (daysSet) => daysSet.size >= 2

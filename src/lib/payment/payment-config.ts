@@ -11,6 +11,7 @@ export const READING_PRODUCT = {
     name: 'CosmicPath 통합 운명 리포트',
     description: '사주 + 점성술 + 타로 통합 분석 프리미엄 결과지',
     currency: 'USD',
+    price: 999, // $9.99 fallback label when live lookup is delayed
     followUpQuestions: 0,
 } as const;
 
@@ -104,6 +105,15 @@ export function formatUsdFromCents(cents: number): string {
         style: 'currency',
         currency: 'USD',
     }).format(cents / 100);
+}
+
+export function normalizePriceLabel(value?: string | null): string | null {
+    const trimmed = typeof value === 'string' ? value.trim() : '';
+    return trimmed && trimmed !== '...' ? trimmed : null;
+}
+
+export function getReadingFallbackPriceLabel(): string {
+    return formatUsdFromCents(READING_PRODUCT.price);
 }
 
 export type ProductType = typeof READING_PRODUCT | typeof FOLLOW_UP_PRODUCT | typeof MATCH_PRODUCT;

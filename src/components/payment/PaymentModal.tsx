@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, ScrollText, ShieldCheck, Sparkles, X } from 'lucide-react';
-import { READING_PRODUCT } from '@/lib/payment/payment-config';
+import { Skeleton } from '@/components/ui/skeleton';
+import { getReadingFallbackPriceLabel, normalizePriceLabel, READING_PRODUCT } from '@/lib/payment/payment-config';
 import { PromoCodeInput } from './PromoCodeInput';
 import { trackClientGrowthEvent } from '@/lib/client-growth-events';
 
@@ -58,9 +59,12 @@ export function PaymentModal({
         );
     };
 
-    // Dynamic price from prop or fetched from API
-    const [fetchedPrice, setFetchedPrice] = useState<string>('');
-    const dynamicPrice = price || fetchedPrice || '...';
+    const fallbackPriceLabel = getReadingFallbackPriceLabel();
+    const resolvedPriceProp = normalizePriceLabel(price);
+    const [fetchedPrice, setFetchedPrice] = useState<string | null>(null);
+    const [isPriceLoading, setIsPriceLoading] = useState(false);
+    const [hasPriceFetchError, setHasPriceFetchError] = useState(false);
+    const dynamicPrice = resolvedPriceProp || normalizePriceLabel(fetchedPrice) || fallbackPriceLabel;
     const numericDynamicPrice = Number.parseFloat(dynamicPrice.replace(/[^0-9.]/g, ''));
     const discountedPriceLabel =
         discount > 0 && discount < 100 && Number.isFinite(numericDynamicPrice)
@@ -72,19 +76,48 @@ export function PaymentModal({
     const effectivePriceLabel =
         discount === 100 ? 'FREE' : discountedPriceLabel || dynamicPrice;
 
-    // Fetch price from Stripe when modal opens (if not provided via prop)
+    // Fetch live price when the modal opens, but keep a stable fallback label.
     useEffect(() => {
-        if (isOpen && !price) {
-            fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.formattedPrice) {
-                        setFetchedPrice(data.formattedPrice);
-                    }
-                })
-                .catch(err => console.error('Failed to fetch price:', err));
+        if (!isOpen) return;
+        if (resolvedPriceProp) {
+            setFetchedPrice(null);
+            setIsPriceLoading(false);
+            setHasPriceFetchError(false);
+            return;
         }
-    }, [isOpen, price]);
+
+        let isMounted = true;
+        setIsPriceLoading(true);
+        setHasPriceFetchError(false);
+
+        fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`, { cache: 'no-store' })
+            .then(async (response) => {
+                const data = await response.json();
+
+                if (!response.ok || !normalizePriceLabel(data.formattedPrice)) {
+                    throw new Error('Failed to load reading price');
+                }
+
+                if (isMounted) {
+                    setFetchedPrice(data.formattedPrice);
+                }
+            })
+            .catch((error) => {
+                if (isMounted) {
+                    setHasPriceFetchError(true);
+                }
+                console.error('Failed to fetch price:', error);
+            })
+            .finally(() => {
+                if (isMounted) {
+                    setIsPriceLoading(false);
+                }
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [isOpen, resolvedPriceProp]);
 
     const resolvedAutoReferralCode = (() => {
         if (autoReferralCode?.trim()) return autoReferralCode.trim().toUpperCase();
@@ -109,7 +142,7 @@ export function PaymentModal({
                 context: readingData?.context as string | undefined,
                 invitationMode: Boolean(metadata?.inviteCode),
                 referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
-                price: effectivePriceLabel !== '...' ? effectivePriceLabel : undefined,
+                price: effectivePriceLabel,
                 readingId: sessionStorage.getItem('pending_reading_id') || undefined,
                 plan: READING_PRODUCT.id,
             }),
@@ -127,7 +160,7 @@ export function PaymentModal({
             context: readingData?.context as string | undefined,
             invitationMode: Boolean(metadata?.inviteCode),
             referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
-            price: effectivePriceLabel !== '...' ? effectivePriceLabel : undefined,
+            price: effectivePriceLabel,
             readingId:
                 sessionStorage.getItem('pending_reading_id') ||
                 (typeof metadata?.readingId === 'string' ? metadata.readingId : undefined),
@@ -214,7 +247,7 @@ export function PaymentModal({
                 context: readingData?.context as string | undefined,
                 invitationMode: Boolean(metadata?.inviteCode),
                 referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
-                price: effectivePriceLabel !== '...' ? effectivePriceLabel : undefined,
+                price: effectivePriceLabel,
                 readingId: readingId || undefined,
                 plan: isFreePromo ? 'promo_free_unlock' : READING_PRODUCT.id,
                 metadata: {
@@ -337,7 +370,7 @@ export function PaymentModal({
                 context: readingData?.context as string | undefined,
                 invitationMode: Boolean(metadata?.inviteCode),
                 referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
-                price: effectivePriceLabel !== '...' ? effectivePriceLabel : undefined,
+                price: effectivePriceLabel,
                 readingId: sessionStorage.getItem('pending_reading_id') || undefined,
                 plan: isFreePromo ? 'promo_free_unlock' : READING_PRODUCT.id,
                 metadata: {
@@ -351,6 +384,8 @@ export function PaymentModal({
     };
 
     const isFreePromo = discount === 100 && promoCodeId;
+    const showPriceLoadingState = !resolvedPriceProp && isPriceLoading;
+    const showPriceFallbackCopy = !resolvedPriceProp && hasPriceFetchError;
     const unlockBenefits = isEnglish
         ? [
             {
@@ -455,11 +490,30 @@ export function PaymentModal({
                                         <span className="text-[#A184FF] font-bold text-xl">{effectivePriceLabel}</span>
                                     )}
                                 </div>
-                                {discountedPriceLabel ? (
-                                    <p className="mt-3 text-xs font-medium text-emerald-300">
-                                        {discount}% 할인 코드가 적용되었습니다.
-                                    </p>
-                                ) : null}
+                                <div className="mt-3 min-h-10 space-y-2">
+                                    {showPriceLoadingState ? (
+                                        <div className="flex items-center justify-center gap-2 text-xs text-white/45">
+                                            <Skeleton className="h-2 w-14 rounded-full bg-white/10" />
+                                            <span>
+                                                {isEnglish
+                                                    ? 'Syncing live Stripe price...'
+                                                    : 'Stripe 실시간 가격을 확인하는 중입니다.'}
+                                            </span>
+                                        </div>
+                                    ) : null}
+                                    {showPriceFallbackCopy ? (
+                                        <p className="text-xs text-white/45">
+                                            {isEnglish
+                                                ? 'Live pricing is delayed, so the base launch price is shown for now.'
+                                                : '실시간 가격 확인이 지연되어 기본 런치 가격으로 먼저 표시합니다.'}
+                                        </p>
+                                    ) : null}
+                                    {discountedPriceLabel ? (
+                                        <p className="text-xs font-medium text-emerald-300">
+                                            {discount}% 할인 코드가 적용되었습니다.
+                                        </p>
+                                    ) : null}
+                                </div>
                             </motion.div>
 
                             <motion.div

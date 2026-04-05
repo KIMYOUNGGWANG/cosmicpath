@@ -65,13 +65,13 @@ const panelClassName =
 function getPlanLabel(plan: SubscriptionPlan): string {
     switch (plan) {
         case 'pro_weekly':
-            return 'Pro Weekly';
+            return 'Legacy Pro Plan';
         case 'pro_monthly':
             return 'Pro Monthly';
         case 'pro_yearly':
             return 'Pro Annual';
         case 'couple_monthly':
-            return 'Couple Monthly';
+            return 'Legacy Couple Plan';
         default:
             return 'Free Plan';
     }
@@ -82,7 +82,7 @@ function getTierLabel(status: SubscriptionTier): string {
         case 'pro':
             return 'Premium';
         case 'couple':
-            return 'Couple';
+            return 'Premium';
         default:
             return 'Free';
     }
@@ -93,7 +93,7 @@ function getTierDescription(status: SubscriptionTier): string {
         case 'pro':
             return '개인 해석, 리텐션 플로우, Oracle 무제한 이용이 활성화된 상태입니다.';
         case 'couple':
-            return '관계 중심 리포트와 커플 경험이 활성화된 상태입니다.';
+            return '기존 관계형 멤버십이 유지 중이며, 현재는 프리미엄 혜택 범주로 안정적으로 관리됩니다.';
         default:
             return '현재는 무료 티어입니다. 프리미엄 기능은 결제 후 즉시 열립니다.';
     }
