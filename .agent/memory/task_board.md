@@ -106,14 +106,14 @@
 ## 🔴 Phase B: 데일리 루틴 및 바이럴 루프 (Growth & Daily)
 *목표: 매일 접속하는 이유를 만들고 공유를 통한 무료 유입 가속화*
 
-- [ ] **Sprint 5: Daily Routine (Fortune & Tarot)**
+- [x] **Sprint 5: Daily Routine (Fortune & Tarot)**
     - [x] 오늘의 운세(Daily Fortune) 위젯 및 봉인(Seal) 해제 애니메이션
     - [x] `GET /api/daily/tarot` 계약 스펙 구현
     - [x] Daily Tarot 카드/위젯 UI 추가
     - [x] 무료 `meaning` / 구독자 `advice` 분기 연결
     - [x] 자정 캐시 및 birthday seed 재현성 검증
     - [x] 프리미엄 사용자를 위한 상세 Advice(Premium Insight) 노출
-- [ ] **Sprint 6: Sharing & Viral Loop**
+- [x] **Sprint 6: Sharing & Viral Loop**
     - [x] 쓰레드(Threads) / X 공유 전용 카드 UI
     - [x] 링크 복사 기반 친구 초대 UI
     - [x] `POST /api/referral/reward` 구현

@@ -107,7 +107,7 @@ interface DailyFortuneResponse {
 
 ---
 
-### 2. 오늘의 타로 (Daily Tarot) 🆕 구현 필요
+### 2. 오늘의 타로 (Daily Tarot) ✅ 구현됨
 
 | Method | Path | Auth | Cache |
 |:-------|:-----|:-----|:------|
@@ -178,7 +178,7 @@ interface SubscriptionCreateRequest {
 
 ---
 
-### 5. 구독 해지 (Subscription Cancel) 🆕 구현 필요
+### 5. 구독 해지 (Subscription Cancel) ✅ 구현됨
 
 | Method | Path | Auth |
 |:-------|:-----|:-----|
@@ -210,7 +210,7 @@ interface SubscriptionCancelResponse {
 
 ---
 
-### 7. 친구 초대 가입 보상 (Referral Reward) 🆕 구현 필요
+### 7. 친구 초대 가입 보상 (Referral Reward) ✅ 구현됨
 
 | Method | Path | Auth |
 |:-------|:-----|:-----|
@@ -329,7 +329,7 @@ interface GrowthTrackRequest {
 
 ---
 
-### 10. 성장 KPI 요약 (Growth Summary) 🆕 구현 필요
+### 10. 성장 KPI 요약 (Growth Summary) ✅ 구현됨
 
 | Method | Path | Auth |
 |:-------|:-----|:-----|
