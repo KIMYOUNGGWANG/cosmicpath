@@ -13,9 +13,14 @@ import { ReviewCarousel } from '@/components/landing/ReviewCarousel';
 import { CrossroadsSection } from '@/components/landing/CrossroadsSection';
 import { Footer } from '@/components/landing/Footer';
 
-export async function generateMetadata(): Promise<Metadata> {
+async function getLandingLanguage(): Promise<'ko' | 'en'> {
     const headersList = await headers();
-    const isKorean = (headersList.get('accept-language') || '').includes('ko');
+    return (headersList.get('accept-language') || '').includes('ko') ? 'ko' : 'en';
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+    const language = await getLandingLanguage();
+    const isKorean = language === 'ko';
 
     if (isKorean) {
         return {
@@ -30,23 +35,25 @@ export async function generateMetadata(): Promise<Metadata> {
     }
 
     return {
-        title: 'CosmicPath | AI Astrology, Saju & Tarot',
-        description: 'Get your personalized destiny analysis with Saju, astrology, and tarot, powered by AI.',
+        title: 'CosmicPath | Decision Timing Oracle',
+        description: 'Read the timing, risk, and next move behind your relationship, career, wealth, or daily decisions.',
         openGraph: {
-            title: 'CosmicPath | AI Astrology, Saju & Tarot',
-            description: 'Get your personalized destiny analysis with Saju, astrology, and tarot, powered by AI.',
+            title: 'CosmicPath | Decision Timing Oracle',
+            description: 'Read the timing, risk, and next move behind your relationship, career, wealth, or daily decisions.',
             images: ['/og-image.png'],
         },
     };
 }
 
-export default function Home() {
+export default async function Home() {
+    const language = await getLandingLanguage();
+
     return (
         <main className="w-full min-h-screen bg-void text-starlight selection:bg-acc-gold selection:text-bg-void">
             <Navigation />
             <div className="cosmic-dust" />
 
-            <HeroSection />
+            <HeroSection language={language} />
             <RitualSection />
             <DiagnosisSection />
             <ReviewCarousel />

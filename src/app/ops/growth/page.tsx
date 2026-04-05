@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth';
 import { getGrowthSummary } from '@/lib/growth-metrics';
 import { GrowthDashboard } from '@/components/ops/GrowthDashboard';
 import { OpsAccessState } from '@/components/ops/OpsAccessState';
+import { OpsNav } from '@/components/ops/OpsNav';
 
 export default async function GrowthOpsPage() {
     const session = await auth();
@@ -32,6 +33,8 @@ export default async function GrowthOpsPage() {
     return (
         <main className="min-h-screen bg-[linear-gradient(180deg,#050816_0%,#0B1023_42%,#120C29_100%)] px-6 py-10 text-white">
             <div className="mx-auto max-w-7xl">
+                <OpsNav active="growth" />
+
                 <div className="mb-10 rounded-[36px] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-8 shadow-[0_28px_90px_rgba(2,6,23,0.34)] backdrop-blur-xl">
                     <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                         <div className="max-w-3xl">
@@ -42,8 +45,8 @@ export default async function GrowthOpsPage() {
                                 Core Growth Dashboard
                             </h1>
                             <p className="mt-4 text-sm leading-7 text-white/64">
-                                최근 {summary.dateRange.days}일 기준 핵심 4지표인 install, daily active, share, paid conversion만 먼저 봅니다.
-                                운영 판단에 바로 연결되는 신호를 위로 올리고, 퍼널/소스 지표는 보조 레이어로 축소했습니다.
+                                최근 {summary.dateRange.days}일 기준 오라클 코어 루프의 핵심 4지표인 first result, follow-up, daily return, paid conversion을 먼저 봅니다.
+                                브라우저 단위 유입 신호는 보조 레이어로 내리고, 실제 제품 경험이 이어지는 신호를 위로 올렸습니다.
                             </p>
                         </div>
 

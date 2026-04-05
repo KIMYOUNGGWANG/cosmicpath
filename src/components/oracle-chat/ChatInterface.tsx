@@ -148,7 +148,6 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
     // 공유 보상 실시간 반영 (SharePanel에서 발생시키는 이벤트 수신)
     useEffect(() => {
         const handleCreditUpdate = () => {
-            console.log('[ChatInterface] Credit update event received, refreshing...');
             fetchStatus();
         };
 

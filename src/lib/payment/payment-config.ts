@@ -13,6 +13,11 @@ export const READING_PRODUCT = {
     currency: 'USD',
     price: 999, // $9.99 fallback label when live lookup is delayed
     followUpQuestions: 0,
+    stripeConfigured: Boolean(
+        process.env.NODE_ENV === 'development'
+            ? (process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID_TEST || process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID)
+            : process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID
+    ),
 } as const;
 
 export const FOLLOW_UP_PRODUCT = {
@@ -24,6 +29,11 @@ export const FOLLOW_UP_PRODUCT = {
     description: '1 Additional Question for Oracle Chat',
     currency: 'USD',
     followUpQuestions: 1,
+    stripeConfigured: Boolean(
+        process.env.NODE_ENV === 'development'
+            ? (process.env.NEXT_PUBLIC_STRIPE_FOLLOWUP_PRODUCT_ID_TEST || process.env.NEXT_PUBLIC_STRIPE_FOLLOWUP_PRODUCT_ID)
+            : process.env.NEXT_PUBLIC_STRIPE_FOLLOWUP_PRODUCT_ID
+    ),
 } as const;
 
 // Chat Credit Products (Upsell Options)
@@ -36,6 +46,11 @@ export const CHAT_CREDIT_SINGLE = {
     description: 'Oracle Chat 1 Question',
     price: 199, // $1.99 in cents
     credits: 1,
+    stripeConfigured: Boolean(
+        process.env.NODE_ENV === 'development'
+            ? (process.env.NEXT_PUBLIC_STRIPE_CREDIT_SINGLE_ID_TEST || process.env.NEXT_PUBLIC_STRIPE_CREDIT_SINGLE_ID)
+            : process.env.NEXT_PUBLIC_STRIPE_CREDIT_SINGLE_ID
+    ),
 } as const;
 
 export const CHAT_CREDIT_PACK = {
@@ -47,6 +62,11 @@ export const CHAT_CREDIT_PACK = {
     description: 'Oracle Chat 3 Questions (33% OFF)',
     price: 399, // $3.99 in cents
     credits: 3,
+    stripeConfigured: Boolean(
+        process.env.NODE_ENV === 'development'
+            ? (process.env.NEXT_PUBLIC_STRIPE_CREDIT_PACK_ID_TEST || process.env.NEXT_PUBLIC_STRIPE_CREDIT_PACK_ID)
+            : process.env.NEXT_PUBLIC_STRIPE_CREDIT_PACK_ID
+    ),
 } as const;
 
 export const MATCH_PRODUCT = {
@@ -58,12 +78,23 @@ export const MATCH_PRODUCT = {
     description: '사주 + 점성술 기반 상세 궁합 분석 리포트',
     currency: 'USD',
     price: 799, // $7.99 in cents
+    stripeConfigured: Boolean(
+        process.env.NODE_ENV === 'development'
+            ? (process.env.NEXT_PUBLIC_STRIPE_MATCH_PRODUCT_ID_TEST || process.env.NEXT_PUBLIC_STRIPE_MATCH_PRODUCT_ID)
+            : process.env.NEXT_PUBLIC_STRIPE_MATCH_PRODUCT_ID
+    ),
 } as const;
 
 export const SUBSCRIPTION_PLAN_IDS = ['pro_weekly', 'pro_monthly', 'pro_yearly', 'couple_monthly'] as const;
 export type SubscriptionPlanId = (typeof SUBSCRIPTION_PLAN_IDS)[number];
 export const SUBSCRIPTION_PLAN_TYPES = ['WEEKLY', 'MONTHLY', 'ANNUAL'] as const;
 export type SubscriptionPlanType = (typeof SUBSCRIPTION_PLAN_TYPES)[number];
+export type ConsumerSubscriptionPlanType = Extract<SubscriptionPlanType, 'MONTHLY' | 'ANNUAL'>;
+
+export const SUBSCRIPTION_FALLBACK_AMOUNTS = {
+    MONTHLY: 9.99,
+    ANNUAL: 49.99,
+} as const satisfies Record<ConsumerSubscriptionPlanType, number>;
 
 export const SUBSCRIPTION_PRICE_IDS = {
     pro_weekly: process.env.NODE_ENV === 'development'
@@ -79,6 +110,29 @@ export const SUBSCRIPTION_PRICE_IDS = {
         ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY || 'price_1T7Keo0RiEHwZwUJVtCaF6Nn')
         : (process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY || 'price_1T7Keo0RiEHwZwUJVtCaF6Nn'),
 } as const satisfies Record<SubscriptionPlanId, string>;
+
+export const SUBSCRIPTION_PRICE_CONFIGURED = {
+    pro_weekly: Boolean(
+        process.env.NODE_ENV === 'development'
+            ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY)
+            : process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY
+    ),
+    pro_monthly: Boolean(
+        process.env.NODE_ENV === 'development'
+            ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY)
+            : process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY
+    ),
+    pro_yearly: Boolean(
+        process.env.NODE_ENV === 'development'
+            ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY)
+            : process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY
+    ),
+    couple_monthly: Boolean(
+        process.env.NODE_ENV === 'development'
+            ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY)
+            : process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY
+    ),
+} as const satisfies Record<SubscriptionPlanId, boolean>;
 
 export const SUBSCRIPTION_CHECKOUT_PLAN_MAP = {
     WEEKLY: 'pro_weekly',
@@ -100,11 +154,15 @@ export function getSubscriptionPriceIdForPlanType(planType: SubscriptionPlanType
     return SUBSCRIPTION_CHECKOUT_PRICE_IDS[planType];
 }
 
-export function formatUsdFromCents(cents: number): string {
+export function formatUsdAmount(amount: number): string {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
-    }).format(cents / 100);
+    }).format(amount);
+}
+
+export function formatUsdFromCents(cents: number): string {
+    return formatUsdAmount(cents / 100);
 }
 
 export function normalizePriceLabel(value?: string | null): string | null {
@@ -114,6 +172,10 @@ export function normalizePriceLabel(value?: string | null): string | null {
 
 export function getReadingFallbackPriceLabel(): string {
     return formatUsdFromCents(READING_PRODUCT.price);
+}
+
+export function getSubscriptionFallbackPriceLabel(planType: ConsumerSubscriptionPlanType): string {
+    return formatUsdAmount(SUBSCRIPTION_FALLBACK_AMOUNTS[planType]);
 }
 
 export type ProductType = typeof READING_PRODUCT | typeof FOLLOW_UP_PRODUCT | typeof MATCH_PRODUCT;

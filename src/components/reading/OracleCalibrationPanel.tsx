@@ -173,43 +173,43 @@ export function OracleCalibrationPanel({
     <div className={`relative overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.12),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] backdrop-blur-2xl ${containerSize}`}>
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(109,141,255,0.18),transparent_28%),radial-gradient(circle_at_80%_30%,rgba(212,175,55,0.14),transparent_26%),radial-gradient(circle_at_50%_90%,rgba(110,231,255,0.08),transparent_30%)]" />
 
-      <div className={`relative z-10 ${compact ? 'space-y-5' : 'grid gap-8 lg:grid-cols-[1.1fr_0.9fr]'}`}>
+      <div className={`relative z-10 ${compact ? 'space-y-5' : 'grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:gap-8'}`}>
         <div className="space-y-5">
-          <div className="flex items-center justify-between gap-4">
-            <div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
               <p className="text-[11px] uppercase tracking-[0.32em] text-acc-gold/80">
                 {copy.label}
               </p>
-              <h3 className={`${compact ? 'text-xl' : 'text-2xl md:text-3xl'} font-cinzel text-starlight`}>
+              <h3 className={`${compact ? 'text-xl' : 'text-2xl md:text-3xl'} font-cinzel leading-tight text-starlight`}>
                 {hasPrecision && showPrecisionDetails ? copy.readyTitle : copy.pendingTitle}
               </h3>
             </div>
-            <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-white/55">
+            <div className="max-w-full self-start rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-white/55 sm:text-[11px] sm:tracking-[0.24em]">
               {showPrecisionDetails ? persona.name : (language === 'en' ? 'Oracle Read' : '오라클 리딩')}
             </div>
           </div>
 
-          <div className="relative flex items-center justify-center py-6">
+          <div className="relative flex items-center justify-center py-4 md:py-6">
             <motion.div
-              className="absolute h-40 w-40 rounded-full border border-acc-gold/20"
+              className="absolute h-32 w-32 rounded-full border border-acc-gold/20 md:h-40 md:w-40"
               animate={{ rotate: 360 }}
               transition={{ repeat: Infinity, duration: 10, ease: 'linear' }}
             />
             <motion.div
-              className="absolute h-28 w-28 rounded-full border border-sky-300/20"
+              className="absolute h-24 w-24 rounded-full border border-sky-300/20 md:h-28 md:w-28"
               animate={{ rotate: -360 }}
               transition={{ repeat: Infinity, duration: 8, ease: 'linear' }}
             />
             <motion.div
-              className="absolute h-16 w-16 rounded-full bg-acc-gold/10 blur-xl"
+              className="absolute h-14 w-14 rounded-full bg-acc-gold/10 blur-xl md:h-16 md:w-16"
               animate={{ scale: [0.88, 1.08, 0.88], opacity: [0.45, 0.9, 0.45] }}
               transition={{ repeat: Infinity, duration: 2.8, ease: 'easeInOut' }}
             />
-            <div className="relative flex h-24 w-24 flex-col items-center justify-center rounded-full border border-white/10 bg-black/30 px-3 text-center">
-              <div className="font-cinzel text-base tracking-[0.16em] text-starlight">
+            <div className="relative flex h-20 w-20 flex-col items-center justify-center rounded-full border border-white/10 bg-black/30 px-2 text-center md:h-24 md:w-24 md:px-3">
+              <div className="font-cinzel text-sm tracking-[0.12em] text-starlight md:text-base md:tracking-[0.16em]">
                 {persona.name}
               </div>
-              <div className="mt-1 text-[10px] uppercase tracking-[0.22em] text-white/40">
+              <div className="mt-1 text-[9px] uppercase tracking-[0.14em] text-white/40 md:text-[10px] md:tracking-[0.22em]">
                 {showPrecisionDetails
                   ? persona.title
                   : (language === 'en' ? persona.toneEn : persona.toneKo)}
@@ -250,7 +250,7 @@ export function OracleCalibrationPanel({
                       ? 'bg-sky-300'
                       : 'bg-white/20'
                     }`} />
-                  <span className="text-sm tracking-[0.08em]">{stage}</span>
+                  <span className="text-sm tracking-[0.04em] sm:tracking-[0.08em]">{stage}</span>
                 </div>
               );
             })}
@@ -258,7 +258,7 @@ export function OracleCalibrationPanel({
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-3xl border border-white/10 bg-black/20 p-5">
+          <div className="rounded-3xl border border-white/10 bg-black/20 p-4 md:p-5">
             <p className="text-[11px] uppercase tracking-[0.28em] text-white/40">
               {copy.snapshotLabel}
             </p>

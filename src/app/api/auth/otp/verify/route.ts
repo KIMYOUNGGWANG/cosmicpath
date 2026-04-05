@@ -3,11 +3,11 @@ import { prisma } from '@/lib/prisma';
 import { SignJWT } from 'jose';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
-
-const secret = new TextEncoder().encode(process.env.AUTH_SECRET || 'default_secret_please_change');
+import { requireAuthSecret } from '@/lib/auth/auth-secret';
 
 export async function POST(request: Request) {
     try {
+        const secret = requireAuthSecret('OTP verification');
         const body = await request.json();
         const { email, token } = z.object({
             email: z.string().email(),
@@ -60,10 +60,11 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ success: true });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('OTP Verify Error:', error);
+        const message = error instanceof Error ? error.message : 'Internal Server Error';
         return NextResponse.json(
-            { error: error.message || 'Internal Server Error' },
+            { error: message },
             { status: 500 }
         );
     }

@@ -27,6 +27,47 @@ interface CachedPrice {
 const priceCache = new Map<string, { data: CachedPrice, timestamp: number }>();
 const CACHE_TTL = 3600 * 1000; // 1 hour
 
+function isRecoverableStripeLookupError(error: unknown) {
+    if (error instanceof Stripe.errors.StripeInvalidRequestError) {
+        return true;
+    }
+
+    if (!(error instanceof Error)) {
+        return false;
+    }
+
+    return /No such (product|price)|resource_missing|STRIPE_SECRET_KEY is not configured|Price is not active/i.test(error.message);
+}
+
+function getCachedPrice(cacheKey: string) {
+    const cached = priceCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+        return cached.data;
+    }
+
+    return null;
+}
+
+function buildCachedPrice(input: {
+    productId: string;
+    price: Stripe.Price;
+    metadata: Stripe.Metadata;
+}): CachedPrice {
+    return {
+        productId: input.productId,
+        priceId: input.price.id,
+        amount: input.price.unit_amount ? input.price.unit_amount / 100 : 0,
+        currency: input.price.currency.toUpperCase(),
+        formattedPrice: input.price.unit_amount
+            ? new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: input.price.currency,
+            }).format(input.price.unit_amount / 100)
+            : 'Free',
+        metadata: input.metadata,
+    };
+}
+
 /**
  * 상품 ID로 현재 활성화된 가격 정보를 가져옵니다.
  * 특정 통화(currency)를 우선적으로 찾습니다.
@@ -36,10 +77,8 @@ export async function getProductPrice(productId: string, targetCurrency: string 
 
     // 0. Cache Check
     const cacheKey = `${productId}-${targetCurrency}`;
-    const cached = priceCache.get(cacheKey);
-    if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
-        return cached.data;
-    }
+    const cached = getCachedPrice(cacheKey);
+    if (cached) return cached;
 
     try {
         // 1. 상품 정보 가져오기 (기본 가격 확인용)
@@ -79,26 +118,77 @@ export async function getProductPrice(productId: string, targetCurrency: string 
 
         devLog.log(`[Stripe] Resolved price: ${price.unit_amount} ${price.currency} for product ${productId}`);
 
-        const result = {
+        const result = buildCachedPrice({
             productId: product.id,
-            priceId: price.id,
-            amount: price.unit_amount ? price.unit_amount / 100 : 0,
-            currency: price.currency.toUpperCase(),
-            formattedPrice: price.unit_amount
-                ? new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: price.currency
-                }).format(price.unit_amount / 100)
-                : 'Free',
-            metadata: product.metadata
-        };
+            price,
+            metadata: product.metadata,
+        });
 
         // Update Cache
         priceCache.set(cacheKey, { data: result, timestamp: Date.now() });
 
         return result;
     } catch (error) {
-        devLog.error('Error fetching product price:', error);
+        if (isRecoverableStripeLookupError(error)) {
+            devLog.log(`[Stripe] Using fallback price label for product lookup: ${productId}`);
+        } else {
+            devLog.error('Error fetching product price:', error);
+        }
+        throw error;
+    }
+}
+
+export async function getPriceById(priceId: string, targetCurrency: string = 'USD') {
+    const stripe = getStripe();
+    const cacheKey = `${priceId}-${targetCurrency}`;
+    const cached = getCachedPrice(cacheKey);
+    if (cached) return cached;
+
+    try {
+        const price = await stripe.prices.retrieve(priceId, {
+            expand: ['product'],
+        });
+
+        await safeIncrementUsageCounter({
+            provider: 'stripe',
+            metric: 'api_requests',
+            count: 1,
+            metadata: { action: 'get_price_by_id', priceId },
+        });
+
+        if (!price.active) {
+            throw new Error('Price is not active');
+        }
+
+        const expandedProduct =
+            typeof price.product === 'string' || price.product.deleted
+                ? null
+                : price.product;
+        const productId = expandedProduct?.id || (typeof price.product === 'string' ? price.product : price.product.id);
+
+        if (!productId) {
+            throw new Error('Price product is missing');
+        }
+
+        if (targetCurrency && price.currency.toUpperCase() !== targetCurrency.toUpperCase()) {
+            devLog.log(`[Stripe] Price ${priceId} currency ${price.currency} differs from target ${targetCurrency}`);
+        }
+
+        const result = buildCachedPrice({
+            productId,
+            price,
+            metadata: expandedProduct?.metadata ?? {},
+        });
+
+        priceCache.set(cacheKey, { data: result, timestamp: Date.now() });
+
+        return result;
+    } catch (error) {
+        if (isRecoverableStripeLookupError(error)) {
+            devLog.log(`[Stripe] Using fallback price label for price lookup: ${priceId}`);
+        } else {
+            devLog.error('Error fetching price by id:', error);
+        }
         throw error;
     }
 }

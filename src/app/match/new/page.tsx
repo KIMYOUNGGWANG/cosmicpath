@@ -1,28 +1,31 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+const compatibilityOgImage =
+    '/api/og/aura?variant=match&name=Cosmic%20Compatibility&colors=%23F59E0B%2C%23EC4899&keywords=chemistry%2Ctiming%2Cresonance&catchphrase=Share%20a%20compatibility%20reading%20built%20for%20relationship%20discovery.';
+
 export const metadata: Metadata = {
-    title: '궁합 실험실은 지금 보관 중입니다 | CosmicPath',
-    description: '현재 CosmicPath의 메인 경험은 오라클 리딩과 데일리 루틴입니다. 궁합 실험실은 직접 링크 기반 보관 모드로 유지됩니다.',
+    title: 'Cosmic Compatibility Readings | CosmicPath',
+    description: 'Discover CosmicPath compatibility readings powered by Saju, astrology, and tarot.',
     robots: {
-        index: false,
-        follow: false,
+        index: true,
+        follow: true,
     },
     alternates: {
         canonical: '/match/new',
     },
     openGraph: {
-        title: '궁합 실험실은 지금 보관 중입니다 | CosmicPath',
-        description: '메인 오라클 리딩과 데일리 루틴에 집중하기 위해 궁합 생성 진입은 잠시 보관 모드로 유지됩니다.',
+        title: 'Cosmic Compatibility Readings | CosmicPath',
+        description: 'Explore relationship chemistry through Saju, astrology, and tarot on CosmicPath.',
         url: 'https://cosmicpath.app/match/new',
         type: 'website',
-        images: ['/og-image.png'],
+        images: [compatibilityOgImage],
     },
     twitter: {
         card: 'summary_large_image',
-        title: '궁합 실험실은 지금 보관 중입니다 | CosmicPath',
-        description: 'CosmicPath는 현재 오라클 리딩과 데일리 루틴에 집중하고 있습니다.',
-        images: ['/og-image.png'],
+        title: 'Cosmic Compatibility Readings | CosmicPath',
+        description: 'Explore CosmicPath compatibility readings powered by Saju, astrology, and tarot.',
+        images: [compatibilityOgImage],
     },
 };
 

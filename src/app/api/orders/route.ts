@@ -2,20 +2,11 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
-function getSecret() {
-    const secretKey = process.env.AUTH_SECRET;
-    if (!secretKey) {
-        if (process.env.NODE_ENV === 'production') {
-            throw new Error('AUTH_SECRET environment variable is not defined');
-        }
-        console.warn('WARNING: AUTH_SECRET is not defined, using unsafe default for development only.');
-    }
-    return new TextEncoder().encode(secretKey || 'default_secret_please_change');
-}
+import { requireAuthSecret } from '@/lib/auth/auth-secret';
 
-export async function GET(request: Request) {
+export async function GET() {
     try {
-        const secret = getSecret();
+        const secret = requireAuthSecret('Order lookup');
         const cookieStore = await cookies();
         const token = cookieStore.get('auth-token')?.value;
 
@@ -82,10 +73,11 @@ export async function GET(request: Request) {
             orders: allOrders
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Orders Fetch Error:', error);
+        const message = error instanceof Error ? error.message : 'Internal Server Error';
         return NextResponse.json(
-            { error: error.message || 'Internal Server Error' },
+            { error: message },
             { status: 500 }
         );
     }

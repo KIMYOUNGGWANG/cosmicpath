@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, ScrollText, ShieldCheck, Sparkles, X } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -44,6 +45,8 @@ export function PaymentModal({
     trackingSource = 'payment_modal',
     autoReferralCode,
 }: PaymentModalProps) {
+    const closeTriggeredByUiRef = useRef(false);
+    const [isMounted, setIsMounted] = useState(false);
     const [email, setEmail] = useState('');
     const [emailError, setEmailError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
@@ -75,6 +78,10 @@ export function PaymentModal({
             : null;
     const effectivePriceLabel =
         discount === 100 ? 'FREE' : discountedPriceLabel || dynamicPrice;
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     // Fetch live price when the modal opens, but keep a stable fallback label.
     useEffect(() => {
@@ -176,6 +183,11 @@ export function PaymentModal({
         window.history.pushState(modalState, '');
 
         const handlePopState = () => {
+            if (closeTriggeredByUiRef.current) {
+                closeTriggeredByUiRef.current = false;
+                return;
+            }
+
             if (isOpen) {
                 void trackPaywallClose('back');
                 onClose();
@@ -186,15 +198,62 @@ export function PaymentModal({
         return () => window.removeEventListener('popstate', handlePopState);
     }, [isOpen, onClose, trackPaywallClose]);
 
+    useEffect(() => {
+        if (!isOpen) return undefined;
+
+        const scrollY = window.scrollY;
+        const previousBodyOverflow = document.body.style.overflow;
+        const previousBodyPosition = document.body.style.position;
+        const previousBodyTop = document.body.style.top;
+        const previousBodyWidth = document.body.style.width;
+        const previousBodyLeft = document.body.style.left;
+        const previousBodyRight = document.body.style.right;
+        const previousHtmlOverflow = document.documentElement.style.overflow;
+
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.left = '0';
+        document.body.style.right = '0';
+        document.body.style.width = '100%';
+
+        return () => {
+            document.documentElement.style.overflow = previousHtmlOverflow;
+            document.body.style.overflow = previousBodyOverflow;
+            document.body.style.position = previousBodyPosition;
+            document.body.style.top = previousBodyTop;
+            document.body.style.width = previousBodyWidth;
+            document.body.style.left = previousBodyLeft;
+            document.body.style.right = previousBodyRight;
+            window.scrollTo({ top: scrollY });
+        };
+    }, [isOpen]);
+
     // Handle close with history cleanup
     const handleClose = useCallback(() => {
+        closeTriggeredByUiRef.current = true;
+        void trackPaywallClose();
+        onClose();
+
         if (window.history.state?.modalType === 'payment') {
             window.history.back();
-        } else {
-            void trackPaywallClose();
-            onClose();
+            return;
         }
     }, [onClose, trackPaywallClose]);
+
+    useEffect(() => {
+        if (!isOpen) return undefined;
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape' && !isLoading) {
+                handleClose();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [handleClose, isLoading, isOpen]);
 
     const handlePayment = async () => {
         // 이메일 유효성 검사 (프로모션 100% 할인이 아닐 때만 필수)
@@ -261,7 +320,6 @@ export function PaymentModal({
             // we MUST save to DB first to generate an ID. Otherwise, the webhook has nothing to link to.
             if (!readingId && currentReport) {
                 try {
-                    console.log('PaymentModal: No readingId found, saving pre-payment state to DB...');
                     const saveRes = await fetch('/api/reading/save', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -288,7 +346,6 @@ export function PaymentModal({
                             readingId = saved.id;
                             sessionStorage.setItem('pending_reading_id', saved.id);
                             localStorage.setItem('pending_reading_id', saved.id);
-                            console.log('PaymentModal: Generated new readingId:', saved.id);
                         }
                     }
                 } catch (saveErr) {
@@ -422,7 +479,9 @@ export function PaymentModal({
             },
         ];
 
-    return (
+    if (!isMounted) return null;
+
+    return createPortal(
         <AnimatePresence>
             {isOpen && (
                 <motion.div
@@ -430,212 +489,216 @@ export function PaymentModal({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.22 }}
-                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+                    className="fixed inset-0 z-[10010] overflow-y-auto overscroll-contain bg-black/82 backdrop-blur-md"
                     onClick={handleClose}
                 >
-                    <motion.div
-                        initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                        animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                        transition={modalSpring}
-                        className="relative w-full max-w-xl overflow-hidden rounded-3xl border border-white/10 bg-[#0f0f23] shadow-[0_0_50px_rgba(161,132,255,0.2)]"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(161,132,255,0.16),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.05),transparent_28%)]" />
-
-                        {/* Close button */}
-                        <motion.button
-                            onClick={handleClose}
-                            whileHover={{ y: -1, backgroundColor: 'rgba(255,255,255,0.12)' }}
-                            whileTap={{ scale: 0.97 }}
-                            className="absolute right-6 top-6 z-10 rounded-full p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A184FF]/70"
+                    <div className="flex min-h-[100dvh] items-center justify-center px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-[calc(env(safe-area-inset-top)+1rem)] sm:px-6 md:pb-8 md:pt-8">
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            transition={modalSpring}
+                            className="relative flex max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-2rem)] w-full max-w-xl flex-col overflow-hidden rounded-[28px] border border-white/10 bg-[#0f0f23] shadow-[0_0_50px_rgba(161,132,255,0.2)] md:max-h-[calc(100dvh-4rem)]"
+                            onClick={(e) => e.stopPropagation()}
                         >
-                            <X size={20} className="text-white/40" />
-                        </motion.button>
+                            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(161,132,255,0.16),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.05),transparent_28%)]" />
 
-                        <div className="relative p-8 md:p-12">
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.35, delay: 0.05 }}
-                                className="text-center mb-10"
-                            >
-                                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#A184FF]/20 bg-[#A184FF]/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.26em] text-[#cbb5ff]">
-                                    <Lock className="h-4 w-4" />
-                                    {isEnglish ? 'Next Move Unlock' : '다음 행동 열기'}
-                                </div>
-                                <h3 className="text-2xl font-bold text-white mb-3">
-                                    {isEnglish ? 'Open Your Full Decision Reading' : '전체 결정 리딩 열기'}
-                                </h3>
-                                <p className="text-white/60 text-sm leading-relaxed">
-                                    {isEnglish ? (
-                                        <>
-                                            The free summary ends here.<br />
-                                            Your guide opens the deeper decision reading below.
-                                        </>
-                                    ) : (
-                                        <>
-                                            무료 요약은 여기까지입니다.<br />
-                                            이제부터 오라클 가이드가 읽은 깊은 결정 리딩이 열립니다.
-                                        </>
-                                    )}
-                                </p>
-                                <div className="mt-6 inline-block rounded-full border border-[#A184FF]/20 bg-[#A184FF]/10 px-4 py-2 shadow-[0_0_24px_rgba(161,132,255,0.14)]">
-                                    {discountedPriceLabel ? (
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-sm text-white/35 line-through">{dynamicPrice}</span>
-                                            <span className="text-[#A184FF] font-bold text-xl">{discountedPriceLabel}</span>
-                                        </div>
-                                    ) : (
-                                        <span className="text-[#A184FF] font-bold text-xl">{effectivePriceLabel}</span>
-                                    )}
-                                </div>
-                                <div className="mt-3 min-h-10 space-y-2">
-                                    {showPriceLoadingState ? (
-                                        <div className="flex items-center justify-center gap-2 text-xs text-white/45">
-                                            <Skeleton className="h-2 w-14 rounded-full bg-white/10" />
-                                            <span>
-                                                {isEnglish
-                                                    ? 'Syncing live Stripe price...'
-                                                    : 'Stripe 실시간 가격을 확인하는 중입니다.'}
-                                            </span>
-                                        </div>
-                                    ) : null}
-                                    {showPriceFallbackCopy ? (
-                                        <p className="text-xs text-white/45">
-                                            {isEnglish
-                                                ? 'Live pricing is delayed, so the base launch price is shown for now.'
-                                                : '실시간 가격 확인이 지연되어 기본 런치 가격으로 먼저 표시합니다.'}
-                                        </p>
-                                    ) : null}
-                                    {discountedPriceLabel ? (
-                                        <p className="text-xs font-medium text-emerald-300">
-                                            {discount}% 할인 코드가 적용되었습니다.
-                                        </p>
-                                    ) : null}
-                                </div>
-                            </motion.div>
-
-                            <motion.div
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.35, delay: 0.1 }}
-                                className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-[transform,border-color,background-color] duration-300 hover:-translate-y-1 hover:border-white/15 hover:bg-white/[0.045]"
-                            >
-                                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#A184FF]">
-                                    {isEnglish ? 'What Opens Next' : '결제 후 열리는 판단 흐름'}
-                                </p>
-                                <ul className="space-y-2 text-sm text-white/75">
-                                    <li>{isEnglish ? 'The strongest action window behind your current question' : '현재 질문 뒤에서 가장 강하게 열리는 행동의 창'}</li>
-                                    <li>{isEnglish ? 'A cross-domain reading spanning relationship, career, money, and daily flow' : '관계, 커리어, 재물, 일상 흐름을 함께 읽는 교차 리딩'}</li>
-                                    <li>{isEnglish ? 'A next-move guide where saju, astrology, and tarot converge' : '사주, 점성술, 타로가 겹치는 지점에서 도출한 다음 행동 가이드'}</li>
-                                </ul>
-                            </motion.div>
-
-                            <motion.div
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.35, delay: 0.12 }}
-                                className="mb-6 grid gap-3 sm:grid-cols-3"
-                            >
-                                {unlockBenefits.map(({ title, description, Icon }) => (
-                                    <div
-                                        key={title}
-                                        className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left"
-                                    >
-                                        <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[#A184FF]/20 bg-[#A184FF]/10 text-[#cbb5ff]">
-                                            <Icon className="h-4 w-4" />
-                                        </div>
-                                        <p className="text-sm font-semibold text-white">{title}</p>
-                                        <p className="mt-2 text-xs leading-6 text-white/56">{description}</p>
-                                    </div>
-                                ))}
-                            </motion.div>
-
-                            {/* Email Input */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.35, delay: 0.14 }}
-                                className="mb-6"
-                            >
-                                <label className="block text-xs font-semibold text-[#A184FF] mb-3 ml-1 uppercase tracking-widest">
-                                    {isEnglish ? 'Email for your oracle link' : '오라클 링크를 받아볼 이메일'}
-                                    {isFreePromo ? <span className="text-red-400 ml-1">*</span> : <span className="text-white/30 ml-2 normal-case">(optional)</span>}
-                                </label>
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => {
-                                        setEmail(e.target.value);
-                                        if (emailError) setEmailError(null);
-                                    }}
-                                    placeholder={isFreePromo
-                                        ? 'name@example.com'
-                                        : (isEnglish
-                                            ? 'Optional: receive your oracle link by email'
-                                            : '선택: 결제 후 오라클 링크를 이메일로 받기')}
-                                    className={`w-full rounded-2xl border bg-white/5 px-5 py-4 font-light text-white placeholder:text-gray-600 transition-[border-color,box-shadow,background-color] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A184FF]/40 ${emailError
-                                        ? 'border-red-500 focus:border-red-500'
-                                        : 'border-white/10 focus:border-[#A184FF]/50 hover:border-white/15 hover:bg-white/[0.06]'
-                                        }`}
-                                />
-                                {emailError && (
-                                    <p className="text-red-400 text-xs mt-2 ml-1 animate-pulse">
-                                        {emailError}
-                                    </p>
-                                )}
-                            </motion.div>
-
-                            {/* Promo Code Input */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.35, delay: 0.18 }}
-                                className="mb-8"
-                            >
-                                <PromoCodeInput
-                                    email={email}
-                                    initialCode={resolvedAutoReferralCode || undefined}
-                                    autoApply={isOpen}
-                                    onApply={(id, discount, code) => {
-                                        setPromoCodeId(id);
-                                        setDiscount(discount);
-                                        setAppliedReferralCode(code);
-                                        // 무료 쿠폰 적용 시 에러 클리어
-                                        if (discount === 100) setEmailError(null);
-                                    }}
-                                    disabled={isLoading}
-                                />
-                            </motion.div>
-
+                            {/* Close button */}
                             <motion.button
-                                onClick={handlePayment}
-                                disabled={isLoading}
-                                whileHover={isLoading ? undefined : { y: -2, boxShadow: Number(discount) === 100 ? '0 18px 44px rgba(16,185,129,0.28)' : '0 18px 44px rgba(139,92,246,0.28)' }}
-                                whileTap={isLoading ? undefined : { scale: 0.985 }}
-                                className={`w-full py-4 font-bold rounded-2xl hover:opacity-90 disabled:opacity-50 transition-all shadow-lg
-                                    ${Number(discount) === 100
-                                        ? 'bg-gradient-to-r from-emerald-500 to-green-500 shadow-emerald-500/30'
-                                        : 'bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] shadow-[#8B5CF6]/30'
-                                    } text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-[#A184FF]/60`}
+                                onClick={handleClose}
+                                whileHover={{ y: -1, backgroundColor: 'rgba(255,255,255,0.12)' }}
+                                whileTap={{ scale: 0.97 }}
+                                className="absolute right-4 top-4 z-10 rounded-full p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A184FF]/70 md:right-6 md:top-6"
                             >
-                                {isLoading
-                                    ? (isEnglish ? 'Processing...' : '처리 중...')
-                                    : (Number(discount) === 100
-                                        ? (isEnglish ? 'Open for Free' : '무료로 오라클 열기')
-                                        : (isEnglish ? 'Open Full Decision Reading' : '전체 결정 리딩 열기'))}
+                                <X size={20} className="text-white/40" />
                             </motion.button>
 
-                            <p className="mt-4 text-center text-xs text-white/35">
-                                {isEnglish
-                                    ? 'Checkout is handled by Stripe. Your reading stays saved, so your decision path is still here when you return.'
-                                    : '결제는 Stripe에서 안전하게 처리되며, 나중에 다시 와도 현재 질문의 리딩 경로는 그대로 유지됩니다.'}
-                            </p>
-                        </div>
-                    </motion.div>
+                            <div className="relative overflow-y-auto px-5 pb-6 pt-14 sm:px-6 md:px-10 md:pb-10 md:pt-10">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.35, delay: 0.05 }}
+                                    className="mb-8 text-center md:mb-10"
+                                >
+                                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#A184FF]/20 bg-[#A184FF]/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.26em] text-[#cbb5ff]">
+                                        <Lock className="h-4 w-4" />
+                                        {isEnglish ? 'Next Move Unlock' : '다음 행동 열기'}
+                                    </div>
+                                    <h3 className="mb-3 text-xl font-bold text-white md:text-2xl">
+                                        {isEnglish ? 'Open Your Full Decision Reading' : '전체 결정 리딩 열기'}
+                                    </h3>
+                                    <p className="text-sm leading-relaxed text-white/60">
+                                        {isEnglish ? (
+                                            <>
+                                                The free summary ends here.<br />
+                                                Your guide opens the deeper decision reading below.
+                                            </>
+                                        ) : (
+                                            <>
+                                                무료 요약은 여기까지입니다.<br />
+                                                이제부터 오라클 가이드가 읽은 깊은 결정 리딩이 열립니다.
+                                            </>
+                                        )}
+                                    </p>
+                                    <div className="mt-6 inline-block rounded-full border border-[#A184FF]/20 bg-[#A184FF]/10 px-4 py-2 shadow-[0_0_24px_rgba(161,132,255,0.14)]">
+                                        {discountedPriceLabel ? (
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-sm text-white/35 line-through">{dynamicPrice}</span>
+                                                <span className="text-lg font-bold text-[#A184FF] md:text-xl">{discountedPriceLabel}</span>
+                                            </div>
+                                        ) : (
+                                            <span className="text-lg font-bold text-[#A184FF] md:text-xl">{effectivePriceLabel}</span>
+                                        )}
+                                    </div>
+                                    <div className="mt-3 min-h-10 space-y-2">
+                                        {showPriceLoadingState ? (
+                                            <div className="flex items-center justify-center gap-2 text-xs text-white/45">
+                                                <Skeleton className="h-2 w-14 rounded-full bg-white/10" />
+                                                <span>
+                                                    {isEnglish
+                                                        ? 'Syncing live Stripe price...'
+                                                        : 'Stripe 실시간 가격을 확인하는 중입니다.'}
+                                                </span>
+                                            </div>
+                                        ) : null}
+                                        {showPriceFallbackCopy ? (
+                                            <p className="text-xs text-white/45">
+                                                {isEnglish
+                                                    ? 'Live pricing is delayed, so the base launch price is shown for now.'
+                                                    : '실시간 가격 확인이 지연되어 기본 런치 가격으로 먼저 표시합니다.'}
+                                            </p>
+                                        ) : null}
+                                        {discountedPriceLabel ? (
+                                            <p className="text-xs font-medium text-emerald-300">
+                                                {discount}% 할인 코드가 적용되었습니다.
+                                            </p>
+                                        ) : null}
+                                    </div>
+                                </motion.div>
+
+                                <motion.div
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.35, delay: 0.1 }}
+                                    className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-[transform,border-color,background-color] duration-300 hover:-translate-y-1 hover:border-white/15 hover:bg-white/[0.045]"
+                                >
+                                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#A184FF]">
+                                        {isEnglish ? 'What Opens Next' : '결제 후 열리는 판단 흐름'}
+                                    </p>
+                                    <ul className="space-y-2 text-sm text-white/75">
+                                        <li>{isEnglish ? 'The strongest action window behind your current question' : '현재 질문 뒤에서 가장 강하게 열리는 행동의 창'}</li>
+                                        <li>{isEnglish ? 'A cross-domain reading spanning relationship, career, money, and daily flow' : '관계, 커리어, 재물, 일상 흐름을 함께 읽는 교차 리딩'}</li>
+                                        <li>{isEnglish ? 'A next-move guide where saju, astrology, and tarot converge' : '사주, 점성술, 타로가 겹치는 지점에서 도출한 다음 행동 가이드'}</li>
+                                    </ul>
+                                </motion.div>
+
+                                <motion.div
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.35, delay: 0.12 }}
+                                    className="mb-6 grid gap-3 sm:grid-cols-3"
+                                >
+                                    {unlockBenefits.map(({ title, description, Icon }) => (
+                                        <div
+                                            key={title}
+                                            className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left"
+                                        >
+                                            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[#A184FF]/20 bg-[#A184FF]/10 text-[#cbb5ff]">
+                                                <Icon className="h-4 w-4" />
+                                            </div>
+                                            <p className="text-sm font-semibold text-white">{title}</p>
+                                            <p className="mt-2 text-xs leading-6 text-white/56">{description}</p>
+                                        </div>
+                                    ))}
+                                </motion.div>
+
+                                {/* Email Input */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.35, delay: 0.14 }}
+                                    className="mb-6"
+                                >
+                                    <label className="mb-3 ml-1 block text-xs font-semibold uppercase tracking-widest text-[#A184FF]">
+                                        {isEnglish ? 'Email for your oracle link' : '오라클 링크를 받아볼 이메일'}
+                                        {isFreePromo ? <span className="ml-1 text-red-400">*</span> : <span className="ml-2 text-white/30 normal-case">(optional)</span>}
+                                    </label>
+                                    <input
+                                        type="email"
+                                        value={email}
+                                        onChange={(e) => {
+                                            setEmail(e.target.value);
+                                            if (emailError) setEmailError(null);
+                                        }}
+                                        placeholder={isFreePromo
+                                            ? 'name@example.com'
+                                            : (isEnglish
+                                                ? 'Optional: receive your oracle link by email'
+                                                : '선택: 결제 후 오라클 링크를 이메일로 받기')}
+                                        className={`w-full rounded-2xl border bg-white/5 px-5 py-4 font-light text-white placeholder:text-gray-600 transition-[border-color,box-shadow,background-color] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A184FF]/40 ${emailError
+                                            ? 'border-red-500 focus:border-red-500'
+                                            : 'border-white/10 focus:border-[#A184FF]/50 hover:border-white/15 hover:bg-white/[0.06]'
+                                            }`}
+                                    />
+                                    {emailError && (
+                                        <p className="ml-1 mt-2 animate-pulse text-xs text-red-400">
+                                            {emailError}
+                                        </p>
+                                    )}
+                                </motion.div>
+
+                                {/* Promo Code Input */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.35, delay: 0.18 }}
+                                    className="mb-8"
+                                >
+                                    <PromoCodeInput
+                                        email={email}
+                                        initialCode={resolvedAutoReferralCode || undefined}
+                                        autoApply={isOpen}
+                                        onApply={(id, discount, code) => {
+                                            setPromoCodeId(id);
+                                            setDiscount(discount);
+                                            setAppliedReferralCode(code);
+                                            // 무료 쿠폰 적용 시 에러 클리어
+                                            if (discount === 100) setEmailError(null);
+                                        }}
+                                        disabled={isLoading}
+                                    />
+                                </motion.div>
+
+                                <motion.button
+                                    onClick={handlePayment}
+                                    disabled={isLoading}
+                                    whileHover={isLoading ? undefined : { y: -2, boxShadow: Number(discount) === 100 ? '0 18px 44px rgba(16,185,129,0.28)' : '0 18px 44px rgba(139,92,246,0.28)' }}
+                                    whileTap={isLoading ? undefined : { scale: 0.985 }}
+                                    className={`w-full rounded-2xl py-4 font-bold transition-all shadow-lg hover:opacity-90 disabled:opacity-50
+                                        ${Number(discount) === 100
+                                            ? 'bg-gradient-to-r from-emerald-500 to-green-500 shadow-emerald-500/30'
+                                            : 'bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] shadow-[#8B5CF6]/30'
+                                        } text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-[#A184FF]/60`}
+                                >
+                                    {isLoading
+                                        ? (isEnglish ? 'Processing...' : '처리 중...')
+                                        : (Number(discount) === 100
+                                            ? (isEnglish ? 'Open for Free' : '무료로 오라클 열기')
+                                            : (isEnglish ? 'Open Full Decision Reading' : '전체 결정 리딩 열기'))}
+                                </motion.button>
+
+                                <p className="mt-4 text-center text-xs text-white/35">
+                                    {isEnglish
+                                        ? 'Checkout is handled by Stripe. Your reading stays saved, so your decision path is still here when you return.'
+                                        : '결제는 Stripe에서 안전하게 처리되며, 나중에 다시 와도 현재 질문의 리딩 경로는 그대로 유지됩니다.'}
+                                </p>
+                            </div>
+                        </motion.div>
+                    </div>
                 </motion.div>
             )}
         </AnimatePresence>
+        ,
+        document.body
     );
 }

@@ -8,6 +8,9 @@ interface GrowthSeriesPoint {
     shares: number;
     invites: number;
     inviteConversions: number;
+    firstResultViews: number;
+    followupStarts: number;
+    dailyReturnsAfterReading: number;
     paidConversions: number;
 }
 
@@ -29,6 +32,7 @@ interface GrowthActivationSnapshot {
     dailyReturnsAfterReading: number;
     resultToFollowupRate: number;
     resultToDailyReturnRate: number;
+    resultToPaidConversionRate: number;
 }
 
 export interface GrowthSummary {
@@ -104,6 +108,9 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
             shares: 0,
             invites: 0,
             inviteConversions: 0,
+            firstResultViews: 0,
+            followupStarts: 0,
+            dailyReturnsAfterReading: 0,
             paidConversions: 0,
         });
         activeUsersByDay.set(dayKey, new Set<string>());
@@ -157,12 +164,15 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
                 break;
             case 'first_result_view':
                 firstResultViews += 1;
+                if (series) series.firstResultViews += 1;
                 break;
             case 'followup_start':
                 followupStarts += 1;
+                if (series) series.followupStarts += 1;
                 break;
             case 'daily_return_after_reading':
                 dailyReturnsAfterReading += 1;
+                if (series) series.dailyReturnsAfterReading += 1;
                 break;
             case 'invite':
                 invites += 1;
@@ -239,6 +249,9 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
                 : 0,
             resultToDailyReturnRate: firstResultViews > 0
                 ? Number(((dailyReturnsAfterReading / firstResultViews) * 100).toFixed(1))
+                : 0,
+            resultToPaidConversionRate: firstResultViews > 0
+                ? Number(((paidConversions / firstResultViews) * 100).toFixed(1))
                 : 0,
         },
         series,

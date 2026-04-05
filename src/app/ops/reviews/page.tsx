@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { OpsAccessState } from '@/components/ops/OpsAccessState';
 import { ReviewOpsDashboard } from '@/components/ops/ReviewOpsDashboard';
+import { OpsNav } from '@/components/ops/OpsNav';
 
 export default async function ReviewOpsPage() {
     const session = await auth();
@@ -44,6 +45,8 @@ export default async function ReviewOpsPage() {
     return (
         <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(245,196,81,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.14),transparent_26%),linear-gradient(180deg,#050816_0%,#0B1023_42%,#120C29_100%)] px-6 py-10 text-white">
             <div className="mx-auto max-w-7xl">
+                <OpsNav active="reviews" />
+
                 <div className="mb-10 rounded-[38px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(245,196,81,0.12),transparent_26%),linear-gradient(145deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] p-8 shadow-[0_28px_90px_rgba(2,6,23,0.34)] backdrop-blur-xl">
                     <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
                         <div className="max-w-3xl">

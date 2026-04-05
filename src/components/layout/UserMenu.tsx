@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, LogOut, FileText, MessageSquareQuote, Settings, Sparkles } from "lucide-react";
+import { User, LogOut, FileText, LayoutDashboard, MessageSquareQuote, Settings, Sparkles } from "lucide-react";
 import { useLoginModal } from "@/components/auth/LoginModal";
 import Link from "next/link";
 
@@ -46,11 +46,9 @@ export default function UserMenu() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ readingLinks, linkByEmail: true }),
-            }).then(async (res) => {
+            }).then((res) => {
                 if (res.ok) {
                     localStorage.removeItem("cosmic_guest_readings");
-                    const data = await res.json();
-                    console.log("Linked readings count:", data.count);
                 }
             }).catch(e => console.error("Link failed", e));
         }
@@ -140,6 +138,16 @@ export default function UserMenu() {
 
                                 {session?.user?.role === 'ADMIN' && (
                                     <>
+                                        <Link
+                                            href="/ops"
+                                            className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all group"
+                                        >
+                                            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
+                                                <LayoutDashboard className="w-4 h-4 text-amber-300" />
+                                            </div>
+                                            <span className="font-medium">Ops Hub</span>
+                                        </Link>
+
                                         <Link
                                             href="/ops/growth"
                                             className="flex items-center gap-3 px-3 py-2.5 text-sm text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all group"

@@ -10,11 +10,17 @@ interface StickyCTAProps {
     originalPrice: string;
     onUnlock: () => void;
     language: 'ko' | 'en';
+    isSuppressed?: boolean;
 }
 
-export function StickyCTA({ price, originalPrice, onUnlock, language }: StickyCTAProps) {
+export function StickyCTA({ price, originalPrice, onUnlock, language, isSuppressed = false }: StickyCTAProps) {
     const [isVisible, setIsVisible] = useState(false);
     const isEn = language === 'en';
+    const headline = isEn ? 'Open your next move' : '지금 필요한 다음 행동 열기';
+    const supportingCopy = isEn
+        ? 'Full reading across relationship, career, wealth, and timing.'
+        : '관계·커리어·재물·타이밍 전체 리딩을 엽니다.';
+    const buttonLabel = isEn ? 'Open My Decision Reading' : '내 결정 리딩 열기';
 
     useEffect(() => {
         const handleScroll = () => {
@@ -28,52 +34,63 @@ export function StickyCTA({ price, originalPrice, onUnlock, language }: StickyCT
 
     return (
         <AnimatePresence>
-            {isVisible && (
+            {isVisible && !isSuppressed && (
                 <motion.div
                     initial={{ y: 100, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: 100, opacity: 0 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className="safe-area-bottom fixed bottom-5 left-4 right-4 z-50 md:left-1/2 md:w-auto md:min-w-[460px] md:-translate-x-1/2"
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    className="safe-area-bottom fixed bottom-3 left-3 right-3 z-50 md:bottom-5 md:left-1/2 md:w-auto md:min-w-[520px] md:-translate-x-1/2"
                 >
-                    <div className="overflow-hidden rounded-[28px] border border-acc-gold/22 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.18),transparent_28%),linear-gradient(180deg,rgba(8,12,24,0.92),rgba(5,8,22,0.96))] p-2 shadow-[0_16px_50px_rgba(0,0,0,0.46)] backdrop-blur-2xl">
-                        <div className="flex flex-col gap-3 rounded-[22px] border border-white/8 bg-black/20 px-4 py-4 md:flex-row md:items-center md:justify-between md:gap-5 md:px-5">
-                            <div className="flex min-w-0 items-start gap-3">
-                                <div className="mt-1 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-acc-gold/20 bg-acc-gold/10 text-acc-gold">
-                                    <Lock className="h-5 w-5" />
+                    <div className="overflow-hidden rounded-[30px] border border-[#f0d487]/16 bg-[radial-gradient(circle_at_top_left,rgba(244,216,138,0.18),transparent_32%),linear-gradient(180deg,rgba(8,12,24,0.94),rgba(5,8,22,0.98))] p-2 shadow-[0_24px_70px_rgba(0,0,0,0.5)] backdrop-blur-2xl">
+                        <div className="rounded-[24px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] px-4 py-4 md:px-5">
+                            <div className="flex items-start gap-3">
+                                <div className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-acc-gold/18 bg-acc-gold/10 text-acc-gold md:h-11 md:w-11">
+                                    <Lock className="h-4 w-4 md:h-5 md:w-5" />
                                 </div>
-                                <div className="min-w-0">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <span className="text-[10px] uppercase tracking-[0.24em] text-acc-gold/80">
-                                            {isEn ? 'Next Move Unlock' : '다음 행동 열기'}
-                                        </span>
-                                        <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-white/45">
-                                            {isEn ? 'Premium Path' : '프리미엄 경로'}
-                                        </span>
-                                    </div>
-                                    <p className="mt-2 text-sm leading-6 text-white/78">
-                                        {isEn
-                                            ? 'Open the full reading and sharpen the next move across relationship, career, wealth, and timing.'
-                                            : '전체 리딩을 열고, 관계·커리어·재물·타이밍 중 지금 필요한 다음 행동의 창을 더 선명하게 확인하세요.'}
-                                    </p>
-                                    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
-                                        <ScarcityTimer language={language} />
-                                        <div className="flex items-baseline gap-2">
-                                            <span className="text-xs font-serif text-gray-500 line-through">{originalPrice}</span>
-                                            <span className="font-cinzel text-lg font-bold text-acc-gold">{price}</span>
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <span className="text-[10px] uppercase tracking-[0.24em] text-acc-gold/80">
+                                                    {isEn ? 'Next Move Unlock' : '다음 행동 열기'}
+                                                </span>
+                                                <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-white/45">
+                                                    {isEn ? 'Premium Path' : '프리미엄 경로'}
+                                                </span>
+                                            </div>
+                                            <p className="mt-2 text-sm font-semibold leading-5 text-white md:text-base">
+                                                {headline}
+                                            </p>
+                                            <p className="mt-1 hidden text-sm leading-6 text-white/62 md:block">
+                                                {supportingCopy}
+                                            </p>
+                                        </div>
+                                        <div className="shrink-0 text-right">
+                                            <div className="text-[11px] font-serif text-white/28 line-through md:text-xs">{originalPrice}</div>
+                                            <div className="font-cinzel text-2xl font-bold leading-none text-acc-gold md:text-[1.75rem]">
+                                                {price}
+                                            </div>
                                         </div>
                                     </div>
+
+                                    <div className="mt-3 flex items-center justify-between gap-3">
+                                        <ScarcityTimer language={language} compact />
+                                        <div className="text-xs text-white/42 md:hidden">
+                                            {isEn ? 'Next Move Unlock' : '다음 행동 열기'}
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={onUnlock}
+                                        className="mt-3 inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-acc-gold via-[#F3C96C] to-[#D98300] px-5 py-3 text-sm font-bold text-black shadow-[0_18px_40px_rgba(217,131,0,0.28)] transition-all duration-300 hover:brightness-105 md:min-h-[52px]"
+                                    >
+                                        <Sparkles className="h-4 w-4" />
+                                        <span>{buttonLabel}</span>
+                                        <ArrowRight className="h-4 w-4" />
+                                    </button>
                                 </div>
                             </div>
-
-                            <button
-                                onClick={onUnlock}
-                            className="inline-flex min-h-[52px] shrink-0 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-acc-gold to-amber-600 px-6 py-3 text-sm font-bold text-black shadow-lg transition-all duration-300 hover:scale-[1.02]"
-                        >
-                            <Sparkles className="h-4 w-4" />
-                            <span>{isEn ? "Open My Decision Reading" : "내 결정 리딩 열기"}</span>
-                            <ArrowRight className="h-4 w-4" />
-                        </button>
                         </div>
                     </div>
                 </motion.div>

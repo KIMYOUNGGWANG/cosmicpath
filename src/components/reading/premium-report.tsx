@@ -933,6 +933,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     originalPrice={originalPrice}
                     onUnlock={handleUnlock}
                     language={language}
+                    isSuppressed={isCheckoutOpen}
                 />
             )}
 
@@ -1637,7 +1638,7 @@ function ActionPlanSection({ actionPlan, trustScore, language }: {
                         description={item.description}
                         confidence={trustScore * 20}
                         language={language}
-                        onConfirm={(data) => console.log('Action Confirmed:', data)}
+                        onConfirm={() => { }}
                         onCancel={() => { }}
                     />
                 ))}

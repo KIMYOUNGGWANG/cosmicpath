@@ -12,8 +12,6 @@ import {
 import {
     Activity,
     CircleDollarSign,
-    Compass,
-    Share2,
     Sparkles,
     TrendingUp,
 } from 'lucide-react';
@@ -116,6 +114,25 @@ function average(values: number[]) {
     return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
+function formatSeriesLabel(dataKey?: string) {
+    switch (dataKey) {
+        case 'firstResultViews':
+            return 'first result';
+        case 'followupStarts':
+            return 'follow-up';
+        case 'dailyReturnsAfterReading':
+            return 'daily return';
+        case 'paidConversions':
+            return 'paid conversion';
+        case 'installs':
+            return 'new visitor';
+        case 'activeUsers':
+            return 'active sessions';
+        default:
+            return dataKey ?? 'signal';
+    }
+}
+
 function TooltipCard({
     active,
     label,
@@ -146,7 +163,7 @@ function TooltipCard({
                                 className="h-2.5 w-2.5 rounded-full"
                                 style={{ backgroundColor: entry.color }}
                             />
-                            <span>{entry.dataKey}</span>
+                            <span>{formatSeriesLabel(entry.dataKey)}</span>
                         </div>
                         <strong className="text-white">
                             {typeof entry.value === 'number'
@@ -183,18 +200,15 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
     const sharePerInstall = summary.totals.installs > 0
         ? (summary.totals.shares / summary.totals.installs) * 100
         : 0;
-    const paidPerInstall = summary.totals.installs > 0
-        ? (summary.totals.paidConversions / summary.totals.installs) * 100
-        : 0;
     const topSources = summary.topSources.slice(0, 4);
     const latestPulse = latestPoint
-        ? latestPoint.installs + latestPoint.activeUsers + latestPoint.shares + latestPoint.paidConversions
+        ? latestPoint.firstResultViews + latestPoint.followupStarts + latestPoint.dailyReturnsAfterReading + latestPoint.paidConversions
         : 0;
     const strongestSource = topSources[0]?.source ?? 'source pending';
     const hasPrimaryData = summary.series.some((point) =>
-        point.installs > 0 ||
-        point.activeUsers > 0 ||
-        point.shares > 0 ||
+        point.firstResultViews > 0 ||
+        point.followupStarts > 0 ||
+        point.dailyReturnsAfterReading > 0 ||
         point.paidConversions > 0
     );
     const hasActivationData =
@@ -205,28 +219,28 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
 
     const metrics = [
         {
-            label: 'Installs',
-            value: summary.totals.installs.toLocaleString(),
-            caption: `${summary.dateRange.days}일 누적 신규 유입입니다.`,
-            icon: Compass,
+            label: 'First Result Views',
+            value: summary.activation.firstResultViews.toLocaleString(),
+            caption: '무료 결과 첫 화면까지 실제로 도달한 횟수입니다.',
+            icon: Sparkles,
             iconClassName: 'text-sky-200',
             surfaceClassName:
                 'bg-[radial-gradient(circle_at_top_right,rgba(125,211,252,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]',
         },
         {
-            label: 'Daily Active',
-            value: avgDailyActive.toLocaleString(),
-            caption: `일평균 활성 세션입니다. 최근 7일 평균은 ${avgTrailingDailyActive.toLocaleString()}입니다.`,
+            label: 'Follow-up Starts',
+            value: summary.activation.followupStarts.toLocaleString(),
+            caption: `첫 결과 대비 ${formatPercent(summary.activation.resultToFollowupRate)}가 추가 질문으로 이어졌습니다.`,
             icon: Activity,
             iconClassName: 'text-violet-200',
             surfaceClassName:
                 'bg-[radial-gradient(circle_at_top_right,rgba(196,181,253,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]',
         },
         {
-            label: 'Shares',
-            value: summary.totals.shares.toLocaleString(),
-            caption: `공유 이벤트 누적입니다. install 대비 ${formatPercent(sharePerInstall)}입니다.`,
-            icon: Share2,
+            label: 'Daily Returns',
+            value: summary.activation.dailyReturnsAfterReading.toLocaleString(),
+            caption: `첫 결과 대비 ${formatPercent(summary.activation.resultToDailyReturnRate)}가 linked daily로 복귀했습니다.`,
+            icon: TrendingUp,
             iconClassName: 'text-blue-200',
             surfaceClassName:
                 'bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]',
@@ -234,7 +248,7 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
         {
             label: 'Paid Conversions',
             value: summary.totals.paidConversions.toLocaleString(),
-            caption: `결제 완료 누적입니다. install 대비 ${formatPercent(paidPerInstall)}입니다.`,
+            caption: `첫 결과 대비 ${formatPercent(summary.activation.resultToPaidConversionRate)}가 결제로 이어졌습니다.`,
             icon: CircleDollarSign,
             iconClassName: 'text-amber-200',
             surfaceClassName:
@@ -254,8 +268,8 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
                             오늘의 운영 상태를 한 번에 읽는 패널
                         </h2>
                         <p className="mt-4 text-sm leading-7 text-white/58 sm:text-base">
-                            핵심 4지표와 마지막 펄스, 강한 유입원을 같은 시야 안에 두었습니다.
-                            세부 퍼널을 뒤지기 전에 지금 무엇이 움직이고 있는지 먼저 읽도록 정렬했습니다.
+                            브라우저 단위 보조 신호보다 실제 오라클 코어 루프가 얼마나 이어지는지를 먼저 보이도록 정렬했습니다.
+                            첫 결과 도달, follow-up 시작, daily 복귀, 결제 완료를 같은 시야 안에서 읽을 수 있습니다.
                         </p>
                     </div>
 
@@ -285,22 +299,22 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
                 <div className="rounded-[34px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.12),transparent_22%),linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-6 shadow-[0_28px_80px_rgba(2,6,23,0.28)] sm:p-7">
                     <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                            Core Pulse
+                            Core Loop
                         </p>
 
                         <div className="flex flex-wrap gap-2.5">
-                            <SignalChip label="installs" value={formatCompact(summary.totals.installs)} />
-                            <SignalChip label="active" value={formatCompact(avgDailyActive)} />
-                            <SignalChip label="shares" value={formatCompact(summary.totals.shares)} />
+                            <SignalChip label="results" value={formatCompact(summary.activation.firstResultViews)} />
+                            <SignalChip label="follow-up" value={formatCompact(summary.activation.followupStarts)} />
+                            <SignalChip label="daily return" value={formatCompact(summary.activation.dailyReturnsAfterReading)} />
                             <SignalChip label="paid" value={formatCompact(summary.totals.paidConversions)} />
                         </div>
                     </div>
 
                     <h2 className="font-[var(--font-outfit)] text-2xl font-semibold tracking-[-0.04em] text-white">
-                        install / daily active / share / paid conversion
+                        first result / follow-up / daily return / paid conversion
                     </h2>
                     <p className="mt-3 max-w-2xl text-sm leading-7 text-white/55">
-                        운영 판단에 직접 쓰는 4개 신호만 같은 축에서 봅니다. 데이터가 조용한 날도 빈 화면 대신 현재 상태를 설명해주는 패널이 먼저 뜹니다.
+                        사용자 여정의 실제 전개를 같은 축에서 봅니다. 유입량보다 무료 결과 이후에 제품이 이어지는지 먼저 읽도록 만든 트렌드 패널입니다.
                     </p>
 
                     <div className="mt-6 rounded-[28px] border border-white/8 bg-black/15 p-4">
@@ -322,9 +336,9 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
                                             width={44}
                                         />
                                         <Tooltip content={<TooltipCard />} />
-                                        <Line type="monotone" dataKey="installs" stroke="#7DD3FC" strokeWidth={2.75} dot={false} activeDot={{ r: 4 }} />
-                                        <Line type="monotone" dataKey="activeUsers" stroke="#C4B5FD" strokeWidth={2.75} dot={false} activeDot={{ r: 4 }} />
-                                        <Line type="monotone" dataKey="shares" stroke="#60A5FA" strokeWidth={2.75} dot={false} activeDot={{ r: 4 }} />
+                                        <Line type="monotone" dataKey="firstResultViews" stroke="#7DD3FC" strokeWidth={2.75} dot={false} activeDot={{ r: 4 }} />
+                                        <Line type="monotone" dataKey="followupStarts" stroke="#C4B5FD" strokeWidth={2.75} dot={false} activeDot={{ r: 4 }} />
+                                        <Line type="monotone" dataKey="dailyReturnsAfterReading" stroke="#60A5FA" strokeWidth={2.75} dot={false} activeDot={{ r: 4 }} />
                                         <Line type="monotone" dataKey="paidConversions" stroke="#F5C451" strokeWidth={2.75} dot={false} activeDot={{ r: 4 }} />
                                     </LineChart>
                                 </ResponsiveContainer>
@@ -338,8 +352,8 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
                                     아직 수집된 코어 펄스가 없습니다
                                 </h3>
                                 <p className="mt-3 max-w-md text-sm leading-7 text-white/52">
-                                    install, daily active, share, paid conversion 이벤트가 쌓이기 시작하면 여기서 추세가 바로 보입니다.
-                                    지금은 계측은 살아 있지만 관찰 구간이 조용한 상태입니다.
+                                    first result, follow-up, daily return, paid conversion 이벤트가 쌓이기 시작하면 여기서 추세가 바로 보입니다.
+                                    지금은 계측은 살아 있지만 코어 루프 관찰 구간이 아직 조용한 상태입니다.
                                 </p>
                             </div>
                         )}
@@ -354,7 +368,7 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
                                     Operator Notes
                                 </p>
                                 <h3 className="mt-3 font-[var(--font-outfit)] text-2xl font-semibold tracking-[-0.04em] text-white">
-                                    지금 읽어야 할 보조 신호
+                                    참고용 유입·세션 신호
                                 </h3>
                             </div>
 
@@ -365,24 +379,29 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
 
                         <div className="mt-5 space-y-3">
                             <InsightRow
-                                label="Latest Daily Active"
-                                value={latestPoint ? latestPoint.activeUsers.toLocaleString() : '0'}
-                                caption="마지막 집계일 기준 활성 세션입니다."
+                                label="New Visitor Signals"
+                                value={summary.totals.installs.toLocaleString()}
+                                caption="localStorage 1회 기준으로 잡힌 신규 브라우저 유입 proxy입니다."
                             />
                             <InsightRow
-                                label="Retention"
-                                value={formatPercent(summary.rates.retentionRate)}
-                                caption="2일 이상 재방문한 세션 비율입니다."
+                                label="Avg Daily Active Sessions"
+                                value={`${avgDailyActive.toLocaleString()} · 최근 7일 ${avgTrailingDailyActive.toLocaleString()}`}
+                                caption="로그인 유저 수가 아니라 이벤트를 남긴 일평균 활성 세션 수입니다."
+                            />
+                            <InsightRow
+                                label="Shares"
+                                value={`${summary.totals.shares.toLocaleString()} · ${formatPercent(sharePerInstall)}`}
+                                caption="신규 유입 proxy 대비 얼마나 공유가 붙는지 보는 보조 신호입니다."
+                            />
+                            <InsightRow
+                                label="Returning Sessions"
+                                value={`${summary.totals.returningUsers.toLocaleString()} · ${formatPercent(summary.rates.retentionRate)}`}
+                                caption="2일 이상 다시 찍힌 daily_active 세션 수와 비율입니다."
                             />
                             <InsightRow
                                 label="Checkout Conversion"
                                 value={formatPercent(summary.rates.checkoutConversionRate)}
                                 caption="체크아웃 시작 대비 실제 결제 완료 비율입니다."
-                            />
-                            <InsightRow
-                                label="Share to Paid Gap"
-                                value={formatPercent(Math.max(0, sharePerInstall - paidPerInstall))}
-                                caption="공유량 대비 결제 전환까지 남아 있는 격차를 빠르게 읽기 위한 보조값입니다."
                             />
                         </div>
                     </div>
@@ -418,6 +437,11 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
                                 label="Daily Returns"
                                 value={`${summary.activation.dailyReturnsAfterReading.toLocaleString()} · ${formatPercent(summary.activation.resultToDailyReturnRate)}`}
                                 caption="최근 리딩을 가진 사용자가 /daily로 다시 돌아온 연결 수와 전환율입니다."
+                            />
+                            <InsightRow
+                                label="Paid from Result"
+                                value={`${summary.totals.paidConversions.toLocaleString()} · ${formatPercent(summary.activation.resultToPaidConversionRate)}`}
+                                caption="첫 결과를 본 뒤 실제 결제 완료까지 이어진 수와 전환율입니다."
                             />
                         </div>
 

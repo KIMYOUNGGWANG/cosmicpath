@@ -15,7 +15,16 @@ import {
     Sparkles,
     X,
 } from 'lucide-react';
-import type { SubscriptionPlanType } from '@/lib/payment/payment-config';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+    SUBSCRIPTION_CHECKOUT_PRICE_IDS,
+    SUBSCRIPTION_FALLBACK_AMOUNTS,
+    formatUsdAmount,
+    getSubscriptionFallbackPriceLabel,
+    normalizePriceLabel,
+    type ConsumerSubscriptionPlanType,
+    type SubscriptionPlanType,
+} from '@/lib/payment/payment-config';
 
 export type PaywallSource = 'default' | 'landing' | 'daily' | 'oracle_chat' | 'my';
 
@@ -27,7 +36,7 @@ interface SubscriptionModalProps {
     onCheckoutStart?: (planType: SubscriptionPlanType) => void;
 }
 
-type ConsumerPlanType = Extract<SubscriptionPlanType, 'MONTHLY' | 'ANNUAL'>;
+type ConsumerPlanType = ConsumerSubscriptionPlanType;
 
 interface PlanOption {
     id: ConsumerPlanType;
@@ -40,6 +49,11 @@ interface PlanOption {
     supportingLabel: string;
     benefits: string[];
     commitmentNote: string;
+}
+
+interface LiveSubscriptionPrice {
+    amount: number;
+    formattedPrice: string;
 }
 
 const DISPLAYED_PLAN_ORDER: ConsumerPlanType[] = ['MONTHLY', 'ANNUAL'];
@@ -106,6 +120,34 @@ const TRUST_SIGNALS = [
     },
 ] as const;
 
+function buildPlanOptions(
+    livePrices: Partial<Record<ConsumerPlanType, LiveSubscriptionPrice>>
+): Record<ConsumerPlanType, PlanOption> {
+    const monthlyAmount = livePrices.MONTHLY?.amount ?? SUBSCRIPTION_FALLBACK_AMOUNTS.MONTHLY;
+    const annualAmount = livePrices.ANNUAL?.amount ?? SUBSCRIPTION_FALLBACK_AMOUNTS.ANNUAL;
+    const annualMonthlyEquivalent = annualAmount / 12;
+    const annualSavings = Math.max((monthlyAmount * 12) - annualAmount, 0);
+    const monthlyPriceLabel = livePrices.MONTHLY?.formattedPrice ?? getSubscriptionFallbackPriceLabel('MONTHLY');
+    const annualPriceLabel = livePrices.ANNUAL?.formattedPrice ?? getSubscriptionFallbackPriceLabel('ANNUAL');
+
+    return {
+        MONTHLY: {
+            ...PLAN_OPTIONS.MONTHLY,
+            priceLabel: `${monthlyPriceLabel} / month`,
+        },
+        ANNUAL: {
+            ...PLAN_OPTIONS.ANNUAL,
+            priceLabel: `${annualPriceLabel} / year`,
+            billingLabel: `About ${formatUsdAmount(annualMonthlyEquivalent)} / month`,
+            valueLabel: `월간 대비 ${formatUsdAmount(annualSavings)} 절약, 연간 기준 월 환산 약 ${formatUsdAmount(annualMonthlyEquivalent)}`,
+            benefits: [
+                `월간 대비 ${formatUsdAmount(annualSavings)} 절약`,
+                ...PLAN_OPTIONS.ANNUAL.benefits.slice(1),
+            ],
+        },
+    };
+}
+
 function resolveInitialPlanType(defaultPlanType?: SubscriptionPlanType): ConsumerPlanType {
     if (defaultPlanType === 'ANNUAL') {
         return 'ANNUAL';
@@ -162,6 +204,9 @@ export function SubscriptionModal({
     const [selectedPlanType, setSelectedPlanType] = useState<ConsumerPlanType>('MONTHLY');
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [livePrices, setLivePrices] = useState<Partial<Record<ConsumerPlanType, LiveSubscriptionPrice>>>({});
+    const [isPriceLoading, setIsPriceLoading] = useState(false);
+    const [hasPriceFetchError, setHasPriceFetchError] = useState(false);
     const shouldReduceMotion = useReducedMotion();
     const displayName = getDisplayName(session?.user?.name);
     const resolvedDefaultPlanType = resolveInitialPlanType(defaultPlanType);
@@ -173,6 +218,71 @@ export function SubscriptionModal({
         setErrorMessage(null);
         setIsLoading(false);
     }, [isOpen, resolvedDefaultPlanType]);
+
+    useEffect(() => {
+        if (!isOpen) return;
+
+        let isMounted = true;
+        setIsPriceLoading(true);
+        setHasPriceFetchError(false);
+
+        const fetchPlanPrice = async (planType: ConsumerPlanType) => {
+            const priceId = SUBSCRIPTION_CHECKOUT_PRICE_IDS[planType];
+            const response = await fetch(`/api/payment/price?priceId=${encodeURIComponent(priceId)}`, {
+                cache: 'no-store',
+            });
+            const payload = await response.json();
+
+            if (!response.ok || typeof payload.amount !== 'number' || !normalizePriceLabel(payload.formattedPrice)) {
+                throw new Error(`Failed to load ${planType} subscription price`);
+            }
+
+            return [
+                planType,
+                {
+                    amount: payload.amount,
+                    formattedPrice: payload.formattedPrice,
+                },
+            ] as const;
+        };
+
+        Promise.allSettled(DISPLAYED_PLAN_ORDER.map(fetchPlanPrice))
+            .then((results) => {
+                if (!isMounted) return;
+
+                const nextPrices: Partial<Record<ConsumerPlanType, LiveSubscriptionPrice>> = {};
+                let hasAnyError = false;
+
+                results.forEach((result) => {
+                    if (result.status === 'fulfilled') {
+                        const [planType, price] = result.value;
+                        nextPrices[planType] = price;
+                        return;
+                    }
+
+                    hasAnyError = true;
+                });
+
+                if (Object.keys(nextPrices).length > 0) {
+                    setLivePrices((current) => ({ ...current, ...nextPrices }));
+                }
+                setHasPriceFetchError(hasAnyError);
+            })
+            .catch(() => {
+                if (isMounted) {
+                    setHasPriceFetchError(true);
+                }
+            })
+            .finally(() => {
+                if (isMounted) {
+                    setIsPriceLoading(false);
+                }
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [isOpen]);
 
     const handleDismiss = useCallback(() => {
         if (isLoading) return;
@@ -198,15 +308,19 @@ export function SubscriptionModal({
         };
     }, [handleDismiss, isLoading, isOpen]);
 
+    const planOptions = useMemo(() => buildPlanOptions(livePrices), [livePrices]);
+
     const orderedPlans = useMemo(
-        () => DISPLAYED_PLAN_ORDER.map((planType) => PLAN_OPTIONS[planType]),
-        []
+        () => DISPLAYED_PLAN_ORDER.map((planType) => planOptions[planType]),
+        [planOptions]
     );
 
     const selectedPlan = useMemo(
-        () => PLAN_OPTIONS[selectedPlanType] ?? orderedPlans[0],
-        [orderedPlans, selectedPlanType]
+        () => planOptions[selectedPlanType] ?? orderedPlans[0],
+        [orderedPlans, planOptions, selectedPlanType]
     );
+    const showPriceLoadingState = isPriceLoading && DISPLAYED_PLAN_ORDER.some((planType) => !livePrices[planType]);
+    const showPriceFallbackCopy = hasPriceFetchError;
 
     const trackOpenEvent = useCallback(async () => {
         const viewSignature = `${source}:membership:${pathname}:${resolvedDefaultPlanType}`;
@@ -368,6 +482,7 @@ export function SubscriptionModal({
                                             const isSelected = selectedPlanType === plan.id;
                                             const Icon = PLAN_ICONS[plan.id];
                                             const isRecommended = plan.id === RECOMMENDED_PLAN_TYPE;
+                                            const isPlanPricePending = !livePrices[plan.id] && isPriceLoading;
 
                                             return (
                                                 <motion.button
@@ -429,12 +544,21 @@ export function SubscriptionModal({
                                                     </div>
 
                                                     <div className="mb-5">
-                                                        <p className="text-3xl font-semibold tracking-tight text-[#f4d88a]">
-                                                            {plan.priceLabel}
-                                                        </p>
-                                                        <p className="mt-2 text-xs font-semibold uppercase tracking-[0.22em] text-white/50">
-                                                            {plan.billingLabel}
-                                                        </p>
+                                                        {isPlanPricePending ? (
+                                                            <div className="space-y-3">
+                                                                <Skeleton className="h-8 w-40 rounded-full bg-[#f4d88a]/15" />
+                                                                <Skeleton className="h-3 w-28 rounded-full bg-white/10" />
+                                                            </div>
+                                                        ) : (
+                                                            <>
+                                                                <p className="text-3xl font-semibold tracking-tight text-[#f4d88a]">
+                                                                    {plan.priceLabel}
+                                                                </p>
+                                                                <p className="mt-2 text-xs font-semibold uppercase tracking-[0.22em] text-white/50">
+                                                                    {plan.billingLabel}
+                                                                </p>
+                                                            </>
+                                                        )}
                                                     </div>
 
                                                     <p className="mb-3 text-sm leading-7 text-white/72">{plan.description}</p>
@@ -445,6 +569,20 @@ export function SubscriptionModal({
                                                 </motion.button>
                                             );
                                         })}
+                                    </div>
+
+                                    <div className="mt-4 min-h-10 space-y-2">
+                                        {showPriceLoadingState ? (
+                                            <div className="flex items-center gap-2 text-xs text-white/48">
+                                                <Skeleton className="h-2 w-16 rounded-full bg-white/10" />
+                                                <span>Stripe 실시간 가격을 확인하는 중입니다.</span>
+                                            </div>
+                                        ) : null}
+                                        {showPriceFallbackCopy ? (
+                                            <p className="text-xs text-white/48">
+                                                실시간 가격 확인이 일부 지연되어 기본 구독 가격으로 먼저 표시합니다.
+                                            </p>
+                                        ) : null}
                                     </div>
                                 </div>
 

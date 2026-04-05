@@ -3,43 +3,87 @@ import { NextRequest } from 'next/server';
 
 export const runtime = 'nodejs';
 
-const DEFAULT_COLORS = ['#0F8A5F', '#2D7FF9'] as const;
-const DEFAULT_KEYWORDS = ['magnetic', 'lucid', 'iconic'] as const;
+type OgVariant = 'aura' | 'match';
 
-function parseColors(rawValue: string | null): [string, string] {
+const DEFAULT_COLORS: Record<OgVariant, readonly [string, string]> = {
+    aura: ['#0F8A5F', '#2D7FF9'],
+    match: ['#F59E0B', '#EC4899'],
+} as const;
+
+const DEFAULT_KEYWORDS: Record<OgVariant, readonly [string, string, string]> = {
+    aura: ['magnetic', 'lucid', 'iconic'],
+    match: ['chemistry', 'timing', 'resonance'],
+} as const;
+
+const VARIANT_COPY: Record<
+    OgVariant,
+    {
+        brandLabel: string;
+        eyebrow: string;
+        spectrumLabel: string;
+        defaultName: string;
+        defaultCatchphrase: string;
+    }
+> = {
+    aura: {
+        brandLabel: 'CosmicPath Aura',
+        eyebrow: 'K-Astrology Aura Card',
+        spectrumLabel: 'Aura Spectrum',
+        defaultName: 'Cosmic Aura',
+        defaultCatchphrase: 'Share your K-Astrology identity, distilled by CosmicPath.',
+    },
+    match: {
+        brandLabel: 'CosmicPath Match',
+        eyebrow: 'Compatibility Share Card',
+        spectrumLabel: 'Chemistry Spectrum',
+        defaultName: 'Cosmic Compatibility',
+        defaultCatchphrase:
+            'Share a compatibility reading built from Saju, astrology, and tarot.',
+    },
+};
+
+function parseVariant(rawValue: string | null): OgVariant {
+    return rawValue === 'match' ? 'match' : 'aura';
+}
+
+function parseColors(rawValue: string | null, variant: OgVariant): [string, string] {
+    const defaults = DEFAULT_COLORS[variant];
     const values = (rawValue ?? '')
         .split(',')
         .map((value) => value.trim())
         .filter((value) => /^#[0-9a-fA-F]{6}$/.test(value));
 
     return [
-        values[0] ?? DEFAULT_COLORS[0],
-        values[1] ?? values[0] ?? DEFAULT_COLORS[1],
+        values[0] ?? defaults[0],
+        values[1] ?? values[0] ?? defaults[1],
     ];
 }
 
-function parseKeywords(rawValue: string | null): [string, string, string] {
+function parseKeywords(rawValue: string | null, variant: OgVariant): [string, string, string] {
+    const defaults = DEFAULT_KEYWORDS[variant];
     const values = (rawValue ?? '')
         .split(',')
         .map((value) => value.trim())
         .filter(Boolean);
 
     return [
-        values[0] ?? DEFAULT_KEYWORDS[0],
-        values[1] ?? DEFAULT_KEYWORDS[1],
-        values[2] ?? DEFAULT_KEYWORDS[2],
+        values[0] ?? defaults[0],
+        values[1] ?? defaults[1],
+        values[2] ?? defaults[2],
     ];
 }
 
 export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
-        const [primaryColor, secondaryColor] = parseColors(searchParams.get('colors'));
-        const keywords = parseKeywords(searchParams.get('keywords'));
-        const name = searchParams.get('name')?.trim() || 'Cosmic Aura';
+        const variant = parseVariant(searchParams.get('variant'));
+        const copy = VARIANT_COPY[variant];
+        const [primaryColor, secondaryColor] = parseColors(searchParams.get('colors'), variant);
+        const keywords = parseKeywords(searchParams.get('keywords'), variant);
+        const name = searchParams.get('name')?.trim() || copy.defaultName;
         const catchphrase =
             searchParams.get('catchphrase')?.trim() ||
-            'Share your K-Astrology identity, distilled by CosmicPath.';
+            copy.defaultCatchphrase;
 
         return new ImageResponse(
             (
@@ -106,7 +150,7 @@ export async function GET(request: NextRequest) {
                                         fontFamily: 'Helvetica Neue, Arial, sans-serif',
                                     }}
                                 >
-                                    CosmicPath Aura
+                                    {copy.brandLabel}
                                 </div>
                             </div>
                             <div
@@ -153,7 +197,7 @@ export async function GET(request: NextRequest) {
                                     fontFamily: 'Helvetica Neue, Arial, sans-serif',
                                 }}
                             >
-                                K-Astrology Aura Card
+                                {copy.eyebrow}
                             </div>
                             <div
                                 style={{
@@ -200,7 +244,7 @@ export async function GET(request: NextRequest) {
                                         fontFamily: 'Helvetica Neue, Arial, sans-serif',
                                     }}
                                 >
-                                    Aura Spectrum
+                                    {copy.spectrumLabel}
                                 </div>
                                 <div
                                     style={{

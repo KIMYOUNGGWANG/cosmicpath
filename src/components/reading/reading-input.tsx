@@ -4,7 +4,7 @@
  * 리딩 입력 컴포넌트 - Ethereal Brutalism Style
  */
 
-import { useEffect, useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ReadingContext } from '@/lib/ai/prompt-builder';
 import {
@@ -16,6 +16,7 @@ import {
     type OracleCharacterId,
     type OracleQuestionIntent,
 } from '@/lib/ai/oracle-personas';
+import { OracleSelectCard } from '@/components/reading/OracleSelectCard';
 
 interface ReadingInputProps {
     onSubmit: (data: ReadingData) => void;
@@ -158,7 +159,7 @@ const contexts: ContextOption[] = [
 ];
 
 const sectionShellClass =
-    'relative overflow-hidden rounded-[30px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.08),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-6 shadow-[0_18px_50px_rgba(2,6,23,0.22)] backdrop-blur-xl md:p-8';
+    'relative overflow-hidden rounded-[26px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.08),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-5 shadow-[0_18px_50px_rgba(2,6,23,0.22)] backdrop-blur-xl md:p-6';
 
 export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteCode }: ReadingInputProps) {
     const [name, setName] = useState('');
@@ -169,7 +170,7 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
     const [unknownTime, setUnknownTime] = useState(false);
     const [characterId, setCharacterId] = useState<OracleCharacterId>('general_orion');
     const [selectionMode, setSelectionMode] = useState<'auto' | 'manual'>('auto');
-    const [showDetailedAdvisors, setShowDetailedAdvisors] = useState(false);
+    const [showPrecisionFields, setShowPrecisionFields] = useState(Boolean(inviteCode));
     const [context, setContext] = useState<ReadingContext>(inviteCode ? 'love' : 'general');
     const [question, setQuestion] = useState('');
     const [language, setLanguage] = useState<'ko' | 'en'>('ko');
@@ -180,6 +181,7 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
     const [partnerBirthDate, setPartnerBirthDate] = useState('');
     const [partnerBirthTime, setPartnerBirthTime] = useState('12:00');
     const [partnerGender, setPartnerGender] = useState<'male' | 'female'>('male');
+    const questionFieldRef = useRef<HTMLTextAreaElement | null>(null);
 
     const isEn = language === 'en';
     const inferredQuestionIntent = inferQuestionIntent({
@@ -195,31 +197,27 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
         partnerName,
         questionIntent: inferredQuestionIntent,
     });
-    const activePersona = getOraclePersona(characterId);
-    const recommendedPersona = getOraclePersona(recommendedCharacterId);
+    const selectedCharacterId = selectionMode === 'auto' ? recommendedCharacterId : characterId;
+    const activePersona = getOraclePersona(selectedCharacterId);
     const activeContext = contexts.find((item) => item.value === context) ?? contexts[contexts.length - 1];
     const activeContextLabel = isEn ? activeContext.labelEn : activeContext.labelKo;
-    const activeContextEyebrow = isEn ? activeContext.eyebrowEn : activeContext.eyebrowKo;
-    const activeContextSummary = isEn ? activeContext.summaryEn : activeContext.summaryKo;
     const activeQuestionSuggestions = isEn
         ? activeContext.questionSuggestionsEn
         : activeContext.questionSuggestionsKo;
-    const routePersona = selectionMode === 'manual' ? activePersona : recommendedPersona;
-
-    useEffect(() => {
-        if (selectionMode !== 'auto') return;
-        setCharacterId(recommendedCharacterId);
-    }, [recommendedCharacterId, selectionMode]);
-
-    useEffect(() => {
-        if (!inviteCode || question.trim()) return;
-        const loveContext = contexts.find((item) => item.value === 'love');
-        if (!loveContext) return;
-
-        setQuestion(
-            isEn ? loveContext.questionSuggestionsEn[0] : loveContext.questionSuggestionsKo[0]
-        );
-    }, [inviteCode, isEn, question]);
+    const visibleQuestionSuggestions = activeQuestionSuggestions.slice(0, 2);
+    const routePersona = activePersona;
+    const essentialFieldsComplete = Boolean(name.trim() && birthDate);
+    const precisionSignals = [
+        calendarType === 'solar'
+            ? (isEn ? 'Solar Calendar' : '양력')
+            : (isEn ? 'Lunar Calendar' : '음력'),
+        unknownTime
+            ? (isEn ? 'Time Unknown' : '시간 모름')
+            : `${isEn ? 'Birth Time' : '생시'} ${birthTime}`,
+        selectionMode === 'auto'
+            ? `${isEn ? 'Auto Guide' : '자동 가이드'} ${activePersona.name}`
+            : `${isEn ? 'Manual Guide' : '직접 선택'} ${activePersona.name}`,
+    ];
 
     // 포맷팅 헬퍼 함수
     const handleDateChange = (val: string, setter: (v: string) => void) => {
@@ -243,6 +241,22 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
         setter(formatted);
     };
 
+    const focusQuestionField = () => {
+        requestAnimationFrame(() => {
+            const field = questionFieldRef.current;
+            if (!field) return;
+
+            const nextCaret = field.value.length;
+            field.focus();
+            field.setSelectionRange(nextCaret, nextCaret);
+        });
+    };
+
+    const applyQuestionSuggestion = (suggestion: string) => {
+        setQuestion(suggestion);
+        focusQuestionField();
+    };
+
     const handleContextSelect = (nextContext: ReadingContext) => {
         const nextContextOption = contexts.find((item) => item.value === nextContext);
 
@@ -252,7 +266,7 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
         }
 
         if (!nextContextOption || question.trim()) return;
-        setQuestion(
+        applyQuestionSuggestion(
             isEn ? nextContextOption.questionSuggestionsEn[0] : nextContextOption.questionSuggestionsKo[0]
         );
     };
@@ -260,7 +274,7 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSubmit({
-            name, gender, birthDate, birthTime, characterId, questionIntent: inferredQuestionIntent, selectionMode, context, question, language, calendarType, unknownTime,
+            name: name.trim(), gender, birthDate, birthTime, characterId: selectedCharacterId, questionIntent: inferredQuestionIntent, selectionMode, context, question: question.trim(), language, calendarType, unknownTime,
             // 상대방 정보 (입력된 경우에만 포함)
             ...(showPartnerInfo && partnerBirthDate ? {
                 partnerName: partnerName || undefined,
@@ -278,10 +292,10 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             onSubmit={handleSubmit}
-            className="w-full max-w-2xl mx-auto space-y-12"
+            className="w-full max-w-2xl mx-auto space-y-8"
         >
             {/* Header / Language */}
-            <div className="border-b border-white/5 pb-6">
+            <div className="border-b border-white/5 pb-4">
                 <div className="flex items-center justify-between gap-4">
                     <span className="text-xs font-mono text-dim tracking-widest uppercase">
                         {isEn ? 'Oracle Intake Protocol' : 'Oracle Intake Protocol'}
@@ -305,7 +319,7 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
                     </div>
                 </div>
 
-                <div className="mt-6 rounded-[26px] border border-white/10 bg-black/20 p-5 md:p-6">
+                <div className="mt-5 rounded-[24px] border border-white/10 bg-black/20 p-4 md:p-5">
                     <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-acc-gold">
                             {isEn ? 'First Reading Free' : '첫 리딩 무료'}
@@ -314,15 +328,15 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
                             {isEn ? 'Decision Timing Oracle' : '결정과 타이밍 오라클'}
                         </span>
                     </div>
-                    <h2 className="mt-4 font-cinzel text-2xl text-starlight md:text-3xl">
+                    <h2 className="mt-3 font-cinzel text-xl text-starlight md:text-2xl">
                         {isEn ? 'Choose the domain first, then give the oracle one real question.' : '먼저 고민 영역을 고르고, 그다음 진짜 질문 하나를 넘겨주세요.'}
                     </h2>
-                    <p className="mt-3 text-sm leading-7 text-white/62">
+                    <p className="mt-2 text-sm leading-6 text-white/62">
                         {isEn
-                            ? 'Start from the decision itself. Once the oracle knows the domain and the question, your birth timing can sharpen the route across relationship, career, wealth, or daily flow.'
-                            : '결정 그 자체에서 시작합니다. 고민 영역과 질문을 먼저 정하면, 생년월일시는 그 리딩을 더 정교하게 벼리는 좌표가 됩니다.'}
+                            ? 'Start from the decision itself. Once the oracle knows the domain and the question, three core fields are enough to open the first route. Precision controls can sharpen it later.'
+                            : '결정 그 자체에서 시작합니다. 고민 영역과 질문을 먼저 정하면, 이름·생일·성별 3개만으로 첫 리딩을 열 수 있고, 더 정밀한 설정은 그다음에 더하면 됩니다.'}
                     </p>
-                    <div className="mt-5 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.22em] text-white/45">
+                    <div className="mt-4 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.22em] text-white/45">
                         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
                             {isEn ? '1. Pick Domain' : '1. 영역 선택'}
                         </span>
@@ -330,23 +344,26 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
                             {isEn ? '2. Write Question' : '2. 질문 입력'}
                         </span>
                         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                            {isEn ? '3. Add Coordinates' : '3. 좌표 입력'}
+                            {isEn ? '3. Core Fields' : '3. 기본 3필드'}
+                        </span>
+                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                            {isEn ? '4. Precision Optional' : '4. 정밀 설정 선택'}
                         </span>
                     </div>
                 </div>
             </div>
 
             {/* Input Grid */}
-            <div className="space-y-12">
+            <div className="flex flex-col gap-8">
 
                 {/* 1. Inquiry Vector */}
-                <div className={sectionShellClass}>
-                    <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                <div className={`${sectionShellClass} order-1`}>
+                    <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                         <div>
                             <label className="block text-xs text-acc-gold tracking-widest uppercase">
                                 {isEn ? '01. Decision Domain' : '01. Decision Domain (고민 영역)'}
                             </label>
-                            <p className="mt-3 text-sm leading-7 text-white/58">
+                            <p className="mt-2 text-sm leading-6 text-white/58">
                                 {isEn
                                     ? 'Start with the question before the coordinates. Once the oracle knows what you are trying to decide, your birth timing can sharpen the route.'
                                     : '좌표보다 질문부터 정합니다. 무엇을 결정하려는지 먼저 알려주면, 생년월일시는 그 질문을 더 정밀하게 읽는 기준이 됩니다.'}
@@ -357,7 +374,7 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
                         </span>
                     </div>
 
-                    <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div className="mt-5 grid grid-cols-2 gap-2 md:grid-cols-3">
                         {contexts.map((ctx) => {
                             const isSelected = context === ctx.value;
                             return (
@@ -365,7 +382,7 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
                                     key={ctx.value}
                                     type="button"
                                     onClick={() => handleContextSelect(ctx.value)}
-                                    className={`rounded-[24px] border p-5 text-left transition-all duration-300 ${isSelected
+                                    className={`rounded-[20px] border px-4 py-3 text-left transition-all duration-300 ${isSelected
                                         ? 'border-acc-gold bg-acc-gold/10 shadow-[0_0_30px_rgba(212,175,55,0.12)]'
                                         : 'border-white/10 bg-white/[0.03] hover:border-white/25 hover:bg-white/[0.06]'
                                         }`}
@@ -373,66 +390,51 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
                                     <p className="text-[10px] uppercase tracking-[0.24em] text-white/38">
                                         {isEn ? ctx.eyebrowEn : ctx.eyebrowKo}
                                     </p>
-                                    <h3 className={`mt-3 font-cinzel text-lg ${isSelected ? 'text-acc-gold' : 'text-starlight'}`}>
+                                    <h3 className={`mt-2 font-cinzel text-sm md:text-base ${isSelected ? 'text-acc-gold' : 'text-starlight'}`}>
                                         {isEn ? ctx.labelEn : ctx.labelKo}
                                     </h3>
-                                    <p className="mt-3 text-sm leading-6 text-white/62">
-                                        {isEn ? ctx.summaryEn : ctx.summaryKo}
-                                    </p>
                                 </button>
                             );
                         })}
                     </div>
 
-                    <div className="mt-6 rounded-[24px] border border-white/10 bg-black/20 p-5 md:p-6">
-                        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                            <div className="max-w-2xl">
-                                <p className="text-[11px] uppercase tracking-[0.24em] text-acc-gold">
-                                    {activeContextEyebrow}
-                                </p>
-                                <p className="mt-3 text-sm leading-7 text-white/62">
-                                    {activeContextSummary}
-                                </p>
-                            </div>
-                            <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 md:min-w-[230px]">
-                                <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">
-                                    {isEn ? 'Aligned Route' : '정렬된 오라클 경로'}
-                                </p>
-                                <div className="mt-2 text-base font-cinzel text-starlight">
-                                    {routePersona.name}
-                                </div>
-                                <div className="mt-1 text-xs uppercase tracking-[0.22em] text-white/45">
-                                    {isEn ? getOracleIntentLabel(inferredQuestionIntent, 'en') : getOracleIntentLabel(inferredQuestionIntent, 'ko')}
-                                </div>
-                                <p className="mt-2 text-xs leading-5 text-white/45">
-                                    {activeContextLabel}
-                                </p>
-                            </div>
+                    <div className="mt-5 rounded-[22px] border border-white/10 bg-black/20 p-4 md:p-5">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-acc-gold">
+                                {activeContextLabel}
+                            </span>
+                            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
+                                {routePersona.name}
+                            </span>
+                            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
+                                {isEn ? getOracleIntentLabel(inferredQuestionIntent, 'en') : getOracleIntentLabel(inferredQuestionIntent, 'ko')}
+                            </span>
                         </div>
 
-                        <label className="mt-6 block text-xs uppercase tracking-[0.24em] text-white/38">
+                        <label className="mt-4 block text-xs uppercase tracking-[0.24em] text-white/38">
                             {isEn ? 'Your Real Question' : '지금 가장 궁금한 질문'}
                         </label>
                         <textarea
+                            ref={questionFieldRef}
                             value={question}
                             onChange={(e) => setQuestion(e.target.value)}
                             placeholder={activeQuestionSuggestions[0]}
                             required
-                            className="mt-3 h-32 w-full resize-none border border-white/20 bg-white/5 p-4 text-base leading-relaxed text-starlight transition-colors placeholder:text-white/30 focus:border-acc-gold/80 focus:bg-white/10 focus:outline-none md:text-sm"
+                            className="mt-3 h-24 w-full resize-none rounded-[20px] border border-white/20 bg-white/5 p-4 text-base leading-relaxed text-starlight transition-colors placeholder:text-white/30 focus:border-acc-gold/80 focus:bg-white/10 focus:outline-none md:text-sm"
                         />
-                        <div className="mt-4 flex flex-wrap gap-2">
-                            {activeQuestionSuggestions.map((suggestion) => (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                            {visibleQuestionSuggestions.map((suggestion) => (
                                 <button
                                     key={suggestion}
                                     type="button"
-                                    onClick={() => setQuestion(suggestion)}
-                                    className="min-h-[40px] rounded-full border border-white/12 bg-white/[0.03] px-4 py-2 text-left text-[11px] leading-5 text-white/68 transition-all hover:border-white/28 hover:text-white"
+                                    onClick={() => applyQuestionSuggestion(suggestion)}
+                                    className="min-h-[36px] rounded-full border border-white/12 bg-white/[0.03] px-3 py-1.5 text-left text-[11px] leading-5 text-white/68 transition-all hover:border-white/28 hover:text-white"
                                 >
                                     {suggestion}
                                 </button>
                             ))}
                         </div>
-                        <p className="mt-3 text-[11px] leading-6 text-white/38">
+                        <p className="mt-2 text-[11px] leading-5 text-white/38">
                             {isEn
                                 ? 'A concrete question makes the action window, follow-up guidance, and premium upgrade feel much sharper from the first reading.'
                                 : '질문이 구체적일수록 첫 리딩부터 행동 결론, follow-up 질문, 프리미엄 심화 가이드가 더 선명해집니다.'}
@@ -440,210 +442,45 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
                     </div>
                 </div>
 
-                {/* 2. Oracle Guide Selection */}
-                <div className={sectionShellClass}>
-                    <label className="block text-xs text-acc-gold tracking-widest uppercase mb-4">
-                        {isEn ? '02. Oracle Guide' : '02. 오라클 가이드'}
-                    </label>
-                    <div className="space-y-4">
-                        <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5">
-                            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                                <div className="space-y-2">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <span className="rounded-full border border-acc-gold/25 bg-acc-gold/10 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-acc-gold">
-                                            {selectionMode === 'auto'
-                                                ? (isEn ? 'Auto Matched' : '자동 매칭')
-                                                : (isEn ? 'Manual Pick' : '직접 선택')}
-                                        </span>
-                                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-white/55">
-                                            {isEn ? getOracleIntentLabel(inferredQuestionIntent, 'en') : getOracleIntentLabel(inferredQuestionIntent, 'ko')}
-                                        </span>
-                                        {selectionMode === 'manual' && (
-                                            <span className="text-[11px] uppercase tracking-[0.2em] text-white/35">
-                                                {isEn ? `Auto Match: ${recommendedPersona.name}` : `자동 매칭: ${recommendedPersona.name}`}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div>
-                                        <p className="text-lg text-starlight md:text-xl">
-                                            {selectionMode === 'auto'
-                                                ? (isEn ? 'We aligned the oracle guide that best matches this question.' : '질문 흐름에 맞춰 가장 잘 맞는 오라클 가이드를 먼저 정렬해두었어요.')
-                                                : (isEn ? 'Your reading will follow the oracle guide you chose.' : '직접 고른 오라클 가이드의 시선으로 리딩을 진행할게요.')}
-                                        </p>
-                                        <p className="mt-2 text-sm leading-relaxed text-white/60">
-                                            {selectionMode === 'auto'
-                                                ? (isEn
-                                                    ? `${recommendedPersona.name} is matched to ${recommendedPersona.specialty} questions and reads through ${recommendedPersona.archetype}.`
-                                                    : `${recommendedPersona.description}`)
-                                                : (isEn
-                                                    ? `${activePersona.name} will read this through a ${activePersona.specialty} framework.`
-                                                    : `${activePersona.description}`)}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 md:min-w-[220px]">
-                                    <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">
-                                        {isEn ? 'Current Guide' : '현재 가이드'}
-                                    </p>
-                                    <div className="mt-2 text-base font-cinzel text-starlight">
-                                        {activePersona.name}
-                                    </div>
-                                    <div className="text-xs uppercase tracking-[0.22em] text-white/40">
-                                        {isEn ? getOracleIntentLabel(activePersona.specialty, 'en') : getOracleIntentLabel(activePersona.specialty, 'ko')}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="mt-4 flex flex-wrap gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setSelectionMode('auto');
-                                        setCharacterId(recommendedCharacterId);
-                                    }}
-                                    className={`min-h-[44px] rounded-full border px-4 py-2 text-xs uppercase tracking-[0.22em] transition-all ${selectionMode === 'auto'
-                                        ? 'border-acc-gold bg-acc-gold text-bg-void'
-                                        : 'border-white/15 text-white/70 hover:border-white/30 hover:text-white'
-                                        }`}
-                                >
-                                    {isEn ? 'Use Auto Match' : '오라클 자동 매칭'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowDetailedAdvisors((value) => !value)}
-                                    className="min-h-[44px] rounded-full border border-white/15 px-4 py-2 text-xs uppercase tracking-[0.22em] text-white/70 transition-all hover:border-white/30 hover:text-white"
-                                >
-                                    {showDetailedAdvisors
-                                        ? (isEn ? 'Hide Detailed Options' : '상세 선택 닫기')
-                                        : (isEn ? 'Browse Other Guides' : '다른 가이드 보기')}
-                                </button>
-                            </div>
-                        </div>
-
-                        {showDetailedAdvisors && (
-                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                                {ORACLE_CHARACTER_IDS.map((id) => {
-                                    const persona = getOraclePersona(id);
-                                    const isSelected = characterId === id;
-                                    const isRecommended = recommendedCharacterId === id;
-                                    return (
-                                        <button
-                                            key={id}
-                                            type="button"
-                                            onClick={() => {
-                                                setCharacterId(id);
-                                                setSelectionMode('manual');
-                                            }}
-                                            className={`group rounded-2xl border px-4 py-4 text-left transition-all duration-300 ${isSelected
-                                                ? 'border-acc-gold bg-acc-gold/10 shadow-[0_0_30px_rgba(212,175,55,0.12)]'
-                                                : 'border-white/10 bg-white/[0.03] hover:border-white/25 hover:bg-white/[0.06]'
-                                                }`}
-                                        >
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div>
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <p className={`font-cinzel text-base tracking-[0.12em] uppercase ${isSelected ? 'text-acc-gold' : 'text-starlight'}`}>
-                                                            {persona.name}
-                                                        </p>
-                                                        {isRecommended && (
-                                                            <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-white/45">
-                                                                {isEn ? 'Auto Match' : '자동 매칭'}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <p className="mt-1 text-[11px] uppercase tracking-[0.24em] text-white/40">
-                                                        {persona.title}
-                                                    </p>
-                                                </div>
-                                                <div className={`mt-1 h-2.5 w-2.5 rounded-full transition-colors ${isSelected ? 'bg-acc-gold' : 'bg-white/20 group-hover:bg-white/40'}`} />
-                                            </div>
-                                            <p className="mt-3 text-sm leading-relaxed text-white/70">
-                                                {persona.description}
-                                            </p>
-                                            <p className="mt-2 text-xs leading-relaxed text-white/45">
-                                                {isEn
-                                                    ? `Priority: ${persona.evidencePriority.join(' > ')}`
-                                                    : `근거 우선순위: ${persona.evidencePriority.join(' > ')}`}
-                                            </p>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* 3. Identity */}
-                <div className={sectionShellClass}>
-                    <label className="block text-xs text-acc-gold tracking-widest uppercase mb-4">
-                        {inviterName
-                            ? (isEn ? `03. Your Identity (${inviterName} invited you)` : `03. Your Identity (${inviterName}님의 초대)`)
-                            : (isEn ? '03. Subject Identity' : '03. Subject Identity (신원 정보)')}
-                    </label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* 2. Essential Coordinates */}
+                <div className={`${sectionShellClass} order-2`}>
+                    <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                         <div>
+                            <label className="block text-xs text-acc-gold tracking-widest uppercase">
+                                {inviterName
+                                    ? (isEn ? `02. Core Profile (${inviterName} invited you)` : `02. Core Profile (${inviterName}님의 초대)`)
+                                    : (isEn ? '02. Core Profile' : '02. 핵심 프로필')}
+                            </label>
+                            <p className="mt-2 text-sm leading-6 text-white/58">
+                                {isEn
+                                    ? 'Keep the first step light: name, birth date, and gender are enough to open the first route. Precision controls stay folded until you want them.'
+                                    : '첫 진입은 가볍게 갑니다. 이름, 생일, 성별만으로도 첫 경로를 열 수 있고, 더 세밀한 설정은 필요할 때만 펼치면 됩니다.'}
+                            </p>
+                        </div>
+                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
+                            {isEn ? '3 Core Fields First' : '기본 3필드 먼저'}
+                        </span>
+                    </div>
+
+                    <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-[1.2fr_1fr_0.9fr]">
+                        <div>
+                            <label className="block text-[11px] uppercase tracking-[0.22em] text-white/40">
+                                {isEn ? 'Name' : '이름'}
+                            </label>
                             <input
                                 type="text"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                placeholder={isEn ? 'NAME (OPTIONAL)' : '이름 / 닉네임 (선택)'}
-                                className="w-full bg-transparent border-b border-white/10 py-3 text-base md:text-lg text-starlight focus:outline-none focus:border-acc-gold transition-colors placeholder:text-white/10 font-cinzel"
+                                placeholder={isEn ? 'Your name or nickname' : '이름 또는 닉네임'}
+                                required
+                                className="mt-3 block min-h-[48px] w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-starlight transition-colors placeholder:text-white/25 focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none"
                             />
-                            <p className="mt-2 text-[11px] leading-6 text-white/38">
-                                {isEn
-                                    ? 'A name helps the oracle personalize the reading tone, but you can leave this empty.'
-                                    : '이름은 리딩 어조를 더 개인화하는 데만 쓰이므로 비워도 됩니다.'}
-                            </p>
                         </div>
-                        <div className="flex gap-8 items-end pb-3">
-                            <button
-                                type="button"
-                                onClick={() => setGender('male')}
-                                className={`text-sm tracking-widest uppercase transition-colors ${gender === 'male' ? 'text-starlight border-b border-starlight' : 'text-dim hover:text-moonlight border-b border-transparent'}`}
-                            >
-                                {isEn ? 'Male' : '남성'}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setGender('female')}
-                                className={`text-sm tracking-widest uppercase transition-colors ${gender === 'female' ? 'text-starlight border-b border-starlight' : 'text-dim hover:text-moonlight border-b border-transparent'}`}
-                            >
-                                {isEn ? 'Female' : '여성'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
 
-                {/* 4. Temporal Coordinates */}
-                <div className={sectionShellClass}>
-                    <label className="block text-xs text-acc-gold tracking-widest uppercase mb-4">
-                        {isEn ? '04. Temporal Coordinates' : '04. Temporal Coordinates (생년월일시)'}
-                    </label>
-                    <p className="mb-6 text-sm leading-7 text-white/58">
-                        {isEn
-                            ? 'Now add the coordinates that let the oracle refine the question into timing, structure, and evidence.'
-                            : '이제 질문을 더 정밀하게 읽을 좌표를 넣습니다. 이 단계에서 행동 시기와 근거 구조가 더 선명해집니다.'}
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <div className="flex gap-6 mb-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setCalendarType('solar')}
-                                    className={`text-xs tracking-widest uppercase transition-colors pb-1 ${calendarType === 'solar' ? 'text-starlight border-b border-starlight' : 'text-dim hover:text-moonlight border-b border-transparent'}`}
-                                >
-                                    {isEn ? 'Solar' : '양력'}
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setCalendarType('lunar')}
-                                    className={`text-xs tracking-widest uppercase transition-colors pb-1 ${calendarType === 'lunar' ? 'text-starlight border-b border-starlight' : 'text-dim hover:text-moonlight border-b border-transparent'}`}
-                                >
-                                    {isEn ? 'Lunar' : '음력'}
-                                </button>
-                            </div>
-
+                            <label className="block text-[11px] uppercase tracking-[0.22em] text-white/40">
+                                {isEn ? 'Birth Date' : '생년월일'}
+                            </label>
                             <input
                                 type="text"
                                 inputMode="numeric"
@@ -651,150 +488,361 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
                                 onChange={(e) => handleDateChange(e.target.value, setBirthDate)}
                                 placeholder="YYYY-MM-DD"
                                 maxLength={10}
-                                className="w-full bg-transparent border-b border-white/20 py-4 text-lg text-starlight focus:outline-none focus:border-acc-gold transition-colors font-mono uppercase min-h-[50px] block"
+                                className="mt-3 block min-h-[48px] w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-starlight transition-colors placeholder:text-white/25 focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none font-mono uppercase"
                                 required
                             />
                             <p className="mt-2 text-[10px] text-dim font-mono tracking-widest">YYYY-MM-DD</p>
                         </div>
-                        <div>
-                            <input
-                                type="text"
-                                inputMode="numeric"
-                                value={birthTime}
-                                onChange={(e) => handleTimeChange(e.target.value, setBirthTime)}
-                                placeholder="HH:MM"
-                                maxLength={5}
-                                disabled={unknownTime}
-                                className={`w-full bg-transparent border-b border-white/20 py-4 text-lg text-starlight focus:outline-none focus:border-acc-gold transition-colors font-mono min-h-[50px] block ${unknownTime ? 'opacity-30 cursor-not-allowed' : ''}`}
-                            />
-                            <p className="mt-2 text-[10px] text-dim font-mono tracking-widest mb-4">{isEn ? 'HH:MM (LOCAL TIME)' : 'HH:MM (태어난 시간)'}</p>
 
-                            <div
-                                className="flex items-start gap-3 cursor-pointer group/check"
-                                onClick={() => {
-                                    const newState = !unknownTime;
-                                    setUnknownTime(newState);
-                                    if (newState) setBirthTime('12:00');
-                                }}
-                            >
-                                <div className={`mt-0.5 flex h-4 w-4 items-center justify-center border transition-colors ${unknownTime ? 'border-acc-gold bg-acc-gold/10' : 'border-white/20 group-hover/check:border-white/40'}`}>
-                                    {unknownTime && (
-                                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M1 4L3.5 6.5L9 1" stroke="#E2E8F0" strokeWidth="1.5" strokeLinecap="square" />
-                                        </svg>
-                                    )}
-                                </div>
-                                <label className="cursor-pointer select-none pt-0.5 text-[10px] leading-tight text-dim transition-colors group-hover/check:text-moonlight">
-                                    {isEn
-                                        ? 'Unknown Time (Assume 12:00 PM - Accuracy may decrease)'
-                                        : '시간 모름 (낮 12:00 기준으로 분석하며, 정확도가 다소 떨어질 수 있습니다)'}
-                                </label>
+                        <div>
+                            <label className="block text-[11px] uppercase tracking-[0.22em] text-white/40">
+                                {isEn ? 'Gender' : '성별'}
+                            </label>
+                            <div className="mt-3 flex min-h-[48px] gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setGender('male')}
+                                    className={`flex-1 rounded-[18px] border px-4 py-3 text-sm uppercase tracking-[0.22em] transition-all ${
+                                        gender === 'male'
+                                            ? 'border-acc-gold bg-acc-gold/10 text-acc-gold'
+                                            : 'border-white/15 bg-white/[0.03] text-white/62 hover:border-white/30 hover:text-white'
+                                    }`}
+                                >
+                                    {isEn ? 'Male' : '남성'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setGender('female')}
+                                    className={`flex-1 rounded-[18px] border px-4 py-3 text-sm uppercase tracking-[0.22em] transition-all ${
+                                        gender === 'female'
+                                            ? 'border-acc-gold bg-acc-gold/10 text-acc-gold'
+                                            : 'border-white/15 bg-white/[0.03] text-white/62 hover:border-white/30 hover:text-white'
+                                    }`}
+                                >
+                                    {isEn ? 'Female' : '여성'}
+                                </button>
                             </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-5 rounded-[22px] border border-white/10 bg-black/20 p-4 md:p-5">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-acc-gold">
+                                {essentialFieldsComplete
+                                    ? (isEn ? 'Core Fields Ready' : '기본 3필드 준비됨')
+                                    : (isEn ? '3 Core Fields' : '기본 3필드')}
+                            </span>
+                            {precisionSignals.map((signal) => (
+                                <span
+                                    key={signal}
+                                    className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-white/45"
+                                >
+                                    {signal}
+                                </span>
+                            ))}
+                        </div>
+
+                        <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                            <p className="max-w-2xl text-sm leading-6 text-white/58">
+                                {isEn
+                                    ? 'Birth time, calendar type, partner data, and manual guide selection stay under one precision toggle so the first reading opens faster.'
+                                    : '생시, 음양력, 상대 정보, 오라클 직접 선택은 모두 하나의 정밀 토글 안에 넣어 두었습니다. 그래서 첫 리딩은 더 빠르게 열리고, 필요할 때만 깊이를 더할 수 있습니다.'}
+                            </p>
+                            <button
+                                type="button"
+                                onClick={() => setShowPrecisionFields((value) => !value)}
+                                className="min-h-[42px] rounded-full border border-white/15 px-5 py-2 text-xs uppercase tracking-[0.22em] text-white/72 transition-all hover:border-white/30 hover:text-white"
+                            >
+                                {showPrecisionFields
+                                    ? (isEn ? 'Hide Precision Controls' : '기본 입력만 보기')
+                                    : (isEn ? 'Open Precision Controls' : '더 정밀하게 읽기')}
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                {/* 5. Partner Info (Love/Relationship Only) */}
-                {context === 'love' && (
-                    <div className={sectionShellClass}>
-                        <div className="flex items-center justify-between mb-4">
-                            <label className="block text-xs text-acc-gold tracking-widest uppercase">
-                                {isEn ? '05. Partner Information (Optional)' : '05. 상대방 정보 (선택사항)'}
+                {showPrecisionFields && (
+                    <>
+                        {/* 3. Precision Controls */}
+                        <div className={`${sectionShellClass} order-3`}>
+                            <label className="block text-xs text-acc-gold tracking-widest uppercase mb-4">
+                                {isEn ? '03. Precision Controls' : '03. 더 정밀하게'}
                             </label>
-                            <button
-                                type="button"
-                                onClick={() => setShowPartnerInfo(!showPartnerInfo)}
-                                className={`text-xs tracking-widest uppercase transition-colors ${showPartnerInfo ? 'text-acc-gold' : 'text-dim hover:text-moonlight'}`}
-                            >
-                                {showPartnerInfo ? (isEn ? 'HIDE' : '접기') : (isEn ? 'EXPAND' : '펼치기')}
-                            </button>
-                        </div>
-
-                        {showPartnerInfo && (
-                            <div className="space-y-6 p-4 border border-white/10 bg-white/5">
-                                <p className="text-xs text-dim mb-4">
-                                    {isEn
-                                        ? "Enter partner's birth info for accurate compatibility analysis. Without this, AI cannot calculate partner's Saju accurately."
-                                        : "상대방 생년월일을 입력하면 정확한 궁합/재회 분석이 가능합니다. 미입력 시 AI가 상대방 사주를 정확히 계산할 수 없습니다."}
-                                </p>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Partner Name */}
-                                    <div>
-                                        <input
-                                            type="text"
-                                            value={partnerName}
-                                            onChange={(e) => setPartnerName(e.target.value)}
-                                            placeholder={isEn ? "Partner's Name (Optional)" : "상대방 이름 (선택)"}
-                                            className="w-full bg-transparent border-b border-white/10 py-3 text-base md:text-sm text-starlight focus:outline-none focus:border-acc-gold transition-colors placeholder:text-white/20"
-                                        />
-                                    </div>
-
-                                    {/* Partner Gender */}
-                                    <div className="flex gap-6 items-end pb-3">
-                                        <button
-                                            type="button"
-                                            onClick={() => setPartnerGender('male')}
-                                            className={`text-xs tracking-widest uppercase transition-colors ${partnerGender === 'male' ? 'text-starlight border-b border-starlight' : 'text-dim hover:text-moonlight border-b border-transparent'}`}
-                                        >
-                                            {isEn ? 'Male' : '남성'}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setPartnerGender('female')}
-                                            className={`text-xs tracking-widest uppercase transition-colors ${partnerGender === 'female' ? 'text-starlight border-b border-starlight' : 'text-dim hover:text-moonlight border-b border-transparent'}`}
-                                        >
-                                            {isEn ? 'Female' : '여성'}
-                                        </button>
-                                    </div>
+                            <p className="mb-4 text-sm leading-6 text-white/58">
+                                {isEn
+                                    ? 'Open the deeper layer only when you want tighter timing windows, alternate calendar input, or a more deliberate guide selection.'
+                                    : '시기 창을 더 좁히거나, 음양력을 바꾸거나, 오라클 가이드를 직접 고르고 싶을 때만 펼치면 됩니다.'}
+                            </p>
+                            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                                <div>
+                                    <label className="block text-[11px] uppercase tracking-[0.22em] text-white/40">
+                                        {isEn ? 'Birth Time' : '태어난 시간'}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={birthTime}
+                                        onChange={(e) => handleTimeChange(e.target.value, setBirthTime)}
+                                        placeholder="HH:MM"
+                                        maxLength={5}
+                                        disabled={unknownTime}
+                                        className={`mt-3 block min-h-[48px] w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-starlight transition-colors placeholder:text-white/25 focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none font-mono ${
+                                            unknownTime ? 'cursor-not-allowed opacity-30' : ''
+                                        }`}
+                                    />
+                                    <p className="mt-2 text-[10px] text-dim font-mono tracking-widest">
+                                        {isEn ? 'HH:MM (LOCAL TIME)' : 'HH:MM (현지 시간)'}
+                                    </p>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {/* Partner Birth Date */}
-                                    <div>
-                                        <input
-                                            type="text"
-                                            inputMode="numeric"
-                                            value={partnerBirthDate}
-                                            onChange={(e) => handleDateChange(e.target.value, setPartnerBirthDate)}
-                                            placeholder="YYYY-MM-DD"
-                                            maxLength={10}
-                                            className="w-full bg-transparent border-b border-white/20 py-3 text-sm text-starlight focus:outline-none focus:border-acc-gold transition-colors font-mono"
-                                        />
-                                        <p className="mt-2 text-[10px] text-dim font-mono tracking-widest">
-                                            {isEn ? "PARTNER'S BIRTH DATE" : "상대방 생년월일"}
-                                        </p>
+                                <div>
+                                    <label className="block text-[11px] uppercase tracking-[0.22em] text-white/40">
+                                        {isEn ? 'Calendar Type' : '달력 기준'}
+                                    </label>
+                                    <div className="mt-3 flex gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setCalendarType('solar')}
+                                            className={`flex-1 rounded-[18px] border px-4 py-3 text-sm uppercase tracking-[0.22em] transition-all ${
+                                                calendarType === 'solar'
+                                                    ? 'border-acc-gold bg-acc-gold/10 text-acc-gold'
+                                                    : 'border-white/15 bg-white/[0.03] text-white/62 hover:border-white/30 hover:text-white'
+                                            }`}
+                                        >
+                                            {isEn ? 'Solar' : '양력'}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setCalendarType('lunar')}
+                                            className={`flex-1 rounded-[18px] border px-4 py-3 text-sm uppercase tracking-[0.22em] transition-all ${
+                                                calendarType === 'lunar'
+                                                    ? 'border-acc-gold bg-acc-gold/10 text-acc-gold'
+                                                    : 'border-white/15 bg-white/[0.03] text-white/62 hover:border-white/30 hover:text-white'
+                                            }`}
+                                        >
+                                            {isEn ? 'Lunar' : '음력'}
+                                        </button>
                                     </div>
 
-                                    {/* Partner Birth Time */}
-                                    <div>
-                                        <input
-                                            type="text"
-                                            inputMode="numeric"
-                                            value={partnerBirthTime}
-                                            onChange={(e) => handleTimeChange(e.target.value, setPartnerBirthTime)}
-                                            placeholder="HH:MM"
-                                            maxLength={5}
-                                            className="w-full bg-transparent border-b border-white/20 py-3 text-sm text-starlight focus:outline-none focus:border-acc-gold transition-colors font-mono"
-                                        />
-                                        <p className="mt-2 text-[10px] text-dim font-mono tracking-widest">
-                                            {isEn ? "PARTNER'S BIRTH TIME (Optional)" : "상대방 생시 (선택)"}
-                                        </p>
-                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const newState = !unknownTime;
+                                            setUnknownTime(newState);
+                                            if (newState) setBirthTime('12:00');
+                                        }}
+                                        className="mt-4 flex items-start gap-3 text-left"
+                                    >
+                                        <div
+                                            className={`mt-0.5 flex h-4 w-4 items-center justify-center border transition-colors ${
+                                                unknownTime
+                                                    ? 'border-acc-gold bg-acc-gold/10'
+                                                    : 'border-white/20'
+                                            }`}
+                                        >
+                                            {unknownTime && (
+                                                <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M1 4L3.5 6.5L9 1" stroke="#E2E8F0" strokeWidth="1.5" strokeLinecap="square" />
+                                                </svg>
+                                            )}
+                                        </div>
+                                        <span className="pt-0.5 text-[10px] leading-tight text-dim">
+                                            {isEn
+                                                ? 'Unknown time: use 12:00 PM as a safe midpoint.'
+                                                : '시간을 모르면 낮 12:00을 안전한 기준점으로 사용합니다.'}
+                                        </span>
+                                    </button>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* 4. Partner Info (Love/Relationship Only) */}
+                        {context === 'love' && (
+                            <div className={`${sectionShellClass} order-4`}>
+                                <div className="flex items-center justify-between mb-4">
+                                    <label className="block text-xs text-acc-gold tracking-widest uppercase">
+                                        {isEn ? '04. Partner Information (Optional)' : '04. 상대방 정보 (선택)'}
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPartnerInfo(!showPartnerInfo)}
+                                        className={`text-xs tracking-widest uppercase transition-colors ${
+                                            showPartnerInfo ? 'text-acc-gold' : 'text-dim hover:text-moonlight'
+                                        }`}
+                                    >
+                                        {showPartnerInfo ? (isEn ? 'Hide' : '접기') : (isEn ? 'Expand' : '펼치기')}
+                                    </button>
+                                </div>
+
+                                {showPartnerInfo && (
+                                    <div className="space-y-5 rounded-[22px] border border-white/10 bg-white/[0.03] p-4 md:p-5">
+                                        <p className="text-xs leading-6 text-white/52">
+                                            {isEn
+                                                ? "Add your partner's birth info if you want the compatibility or reunion layer to be grounded in both charts."
+                                                : '궁합이나 재회 가능성을 두 사람의 차트 기준으로 읽고 싶다면 상대방 정보까지 함께 넣어주세요.'}
+                                        </p>
+
+                                        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                                            <div>
+                                                <input
+                                                    type="text"
+                                                    value={partnerName}
+                                                    onChange={(e) => setPartnerName(e.target.value)}
+                                                    placeholder={isEn ? "Partner's name" : '상대방 이름'}
+                                                    className="w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-starlight transition-colors placeholder:text-white/20 focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none"
+                                                />
+                                            </div>
+
+                                            <div className="flex gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setPartnerGender('male')}
+                                                    className={`flex-1 rounded-[18px] border px-4 py-3 text-sm uppercase tracking-[0.22em] transition-all ${
+                                                        partnerGender === 'male'
+                                                            ? 'border-acc-gold bg-acc-gold/10 text-acc-gold'
+                                                            : 'border-white/15 bg-white/[0.03] text-white/62 hover:border-white/30 hover:text-white'
+                                                    }`}
+                                                >
+                                                    {isEn ? 'Male' : '남성'}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setPartnerGender('female')}
+                                                    className={`flex-1 rounded-[18px] border px-4 py-3 text-sm uppercase tracking-[0.22em] transition-all ${
+                                                        partnerGender === 'female'
+                                                            ? 'border-acc-gold bg-acc-gold/10 text-acc-gold'
+                                                            : 'border-white/15 bg-white/[0.03] text-white/62 hover:border-white/30 hover:text-white'
+                                                    }`}
+                                                >
+                                                    {isEn ? 'Female' : '여성'}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                                            <div>
+                                                <input
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    value={partnerBirthDate}
+                                                    onChange={(e) => handleDateChange(e.target.value, setPartnerBirthDate)}
+                                                    placeholder="YYYY-MM-DD"
+                                                    maxLength={10}
+                                                    className="w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-starlight transition-colors placeholder:text-white/20 focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none font-mono"
+                                                />
+                                                <p className="mt-2 text-[10px] text-dim font-mono tracking-widest">
+                                                    {isEn ? "PARTNER'S BIRTH DATE" : '상대방 생년월일'}
+                                                </p>
+                                            </div>
+
+                                            <div>
+                                                <input
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    value={partnerBirthTime}
+                                                    onChange={(e) => handleTimeChange(e.target.value, setPartnerBirthTime)}
+                                                    placeholder="HH:MM"
+                                                    maxLength={5}
+                                                    className="w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-starlight transition-colors placeholder:text-white/20 focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none font-mono"
+                                                />
+                                                <p className="mt-2 text-[10px] text-dim font-mono tracking-widest">
+                                                    {isEn ? "PARTNER'S BIRTH TIME" : '상대방 생시'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         )}
-                    </div>
+
+                        {/* 5. Oracle Guide */}
+                        <div className={`${sectionShellClass} order-5`}>
+                            <label className="block text-xs text-acc-gold tracking-widest uppercase mb-4">
+                                {isEn ? '05. Oracle Guide' : '05. 오라클 가이드'}
+                            </label>
+
+                            <div className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4 md:p-5">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className="rounded-full border border-acc-gold/25 bg-acc-gold/10 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-acc-gold">
+                                        {selectionMode === 'auto'
+                                            ? (isEn ? 'Auto Matched' : '자동 매칭')
+                                            : (isEn ? 'Manual Pick' : '직접 선택')}
+                                    </span>
+                                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-white/55">
+                                        {activePersona.name}
+                                    </span>
+                                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-white/55">
+                                        {isEn
+                                            ? getOracleIntentLabel(inferredQuestionIntent, 'en')
+                                            : getOracleIntentLabel(inferredQuestionIntent, 'ko')}
+                                    </span>
+                                </div>
+
+                                <p className="mt-3 text-sm leading-6 text-white/58">
+                                    {isEn
+                                        ? 'Auto match stays as the default. If you want a different lens, pick one of the seven specialists below and the reading will switch to that advisor.'
+                                        : '기본값은 자동 매칭입니다. 다른 시선으로 읽고 싶다면 아래 7인의 상담가 카드 중 하나를 직접 골라 리딩 렌즈를 바꿀 수 있습니다.'}
+                                </p>
+
+                                <div className="mt-4 flex flex-wrap gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectionMode('auto')}
+                                        className={`min-h-[38px] rounded-full border px-4 py-2 text-xs uppercase tracking-[0.22em] transition-all ${
+                                            selectionMode === 'auto'
+                                                ? 'border-acc-gold bg-acc-gold text-bg-void'
+                                                : 'border-white/15 text-white/70 hover:border-white/30 hover:text-white'
+                                        }`}
+                                    >
+                                        {isEn ? 'Use Auto Match' : '오라클 자동 매칭'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectionMode('manual')}
+                                        className={`min-h-[38px] rounded-full border px-4 py-2 text-xs uppercase tracking-[0.22em] transition-all ${
+                                            selectionMode === 'manual'
+                                                ? 'border-acc-gold bg-acc-gold text-bg-void'
+                                                : 'border-white/15 text-white/70 hover:border-white/30 hover:text-white'
+                                        }`}
+                                    >
+                                        {isEn ? 'Pick Manually' : '직접 고르기'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                                {ORACLE_CHARACTER_IDS.map((id) => {
+                                    const persona = getOraclePersona(id);
+                                    const isSelected = characterId === id;
+                                    const isRecommended = recommendedCharacterId === id;
+
+                                    return (
+                                        <OracleSelectCard
+                                            key={id}
+                                            language={language}
+                                            persona={persona}
+                                            selected={selectionMode === 'auto' ? isRecommended : isSelected}
+                                            recommended={isRecommended}
+                                            onSelect={() => {
+                                                setCharacterId(id);
+                                                setSelectionMode('manual');
+                                            }}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </>
                 )}
 
             </div>
 
             {/* Action */}
-            <div className="flex flex-col items-center justify-center gap-4 pt-4">
+            <div className="flex flex-col items-center justify-center gap-3 pt-1">
                 <button
                     type="submit"
-                    disabled={!birthDate || !question.trim() || isLoading}
-                    className={`group relative overflow-hidden rounded-full border border-acc-gold/30 bg-gradient-to-r from-acc-gold via-[#f1cf74] to-[#c98d2d] px-12 py-4 text-deep-navy shadow-[0_18px_36px_rgba(212,175,55,0.18)] transition-all duration-300 hover:scale-[1.01] hover:shadow-[0_22px_46px_rgba(212,175,55,0.24)] ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
+                    disabled={!name.trim() || !birthDate || !question.trim() || isLoading}
+                    className={`group relative overflow-hidden rounded-full border border-acc-gold/30 bg-gradient-to-r from-acc-gold via-[#f1cf74] to-[#c98d2d] px-10 py-3.5 text-deep-navy shadow-[0_18px_36px_rgba(212,175,55,0.18)] transition-all duration-300 hover:scale-[1.01] hover:shadow-[0_22px_46px_rgba(212,175,55,0.24)] ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
                 >
                     <span className="relative z-10 font-cinzel text-sm font-bold uppercase tracking-[0.3em]">
                         {isLoading
@@ -807,7 +855,7 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
                     </span>
                     <div className="absolute inset-0 bg-white/12 translate-y-full transition-transform duration-500 ease-in-out group-hover:translate-y-0" />
                 </button>
-                <p className="text-center text-xs tracking-[0.18em] text-white/38 uppercase">
+                <p className="text-center text-[11px] tracking-[0.16em] text-white/38 uppercase">
                     {isEn
                         ? 'Your first oracle path opens as soon as the question and coordinates are set.'
                         : '질문과 좌표가 정리되면 첫 오라클 리딩이 바로 열립니다.'}

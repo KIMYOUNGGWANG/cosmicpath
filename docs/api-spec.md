@@ -248,29 +248,58 @@ interface ReferralRewardResponse {
 
 ---
 
-### 8. 오라클 챗 (Oracle Chat) ✅ 구현됨 (v2.0 업데이트 예정)
+### 8. 오라클 Follow-up Chat ✅ 구현됨
 
 | Method | Path | Auth |
 |:-------|:-----|:-----|
-| `POST` | `/api/chat/message` | ✅ |
+| `POST` | `/api/reading/followup` | ❌ |
+| `GET` | `/api/reading/followup` | ❌ |
+| `POST` | `/api/reading/followup/stream` | ❌ |
 
-**Request (추가 파라미터)**
+**POST Request**
 ```typescript
-interface OracleChatMessageRequest {
-  message: string;
-  birthDate?: string;
-  birthTime?: string;
-  cityName?: string;     // 진태양시 보정용 추가 (e.g. '서울')
-  longitude?: number;    // 진태양시 보정용 추가 (e.g. 127.0)
-  characterId?: string;  // v3.1 전문 상담가 ID (e.g. 'general_orion', 'compatibility_cassio', 'wealth_midas', 'timing_selene', 'reunion_nova', 'career_lyra', 'business_draco')
-  questionIntent?: 'general' | 'compatibility' | 'reunion' | 'wealth' | 'timing' | 'career' | 'business';
-  selectionMode?: 'auto' | 'manual';
+interface ReadingFollowUpRequest {
+  readingId: string;
+  accessKey?: string;    // anonymous reading owner proof
+  question: string;
 }
 ```
 
-**Logic**: 
-- 구독자 → 무제한 | 무료 → Credit 소진 시 차단
-- (New) `saju-engine.ts` 호출 → 진태양시 보정된 4주 8자, 십신 데이터 도출 후 프롬프트 주입
+**POST Response**
+```typescript
+interface ReadingFollowUpResponse {
+  answer: string;
+  creditsLeft: number;
+  isUnlimited: boolean;
+  success: true;
+}
+```
+
+**GET Query**
+```
+readingId: string   // required
+accessKey?: string  // anonymous reading owner proof
+```
+
+**GET Response**
+```typescript
+interface ReadingFollowUpStatusResponse {
+  creditsLeft: number;
+  isUnlimited: boolean;
+  messages: Array<{
+    id: string;
+    role: 'user' | 'assistant';
+    content: string;
+    createdAt: string;
+  }>;
+}
+```
+
+**Logic**:
+- reading owner 또는 server-issued `accessKey` 보유자만 follow-up chat에 접근할 수 있다.
+- 구독자 → 무제한, 무료/프로모션 사용자 → `ChatSession.credits` 차감 방식으로 처리한다.
+- 첫 follow-up 시작 시 `followup_start` canonical event를 기록한다.
+- stream route는 같은 access/credit contract를 유지하고, 응답 전송 후 메시지 저장과 메타데이터 갱신을 이어간다.
 
 **Shared Oracle Advisor Contract (v3.1 Active)**:
 ```typescript
@@ -374,6 +403,7 @@ interface GrowthSummaryResponse {
     dailyReturnsAfterReading: number;
     resultToFollowupRate: number;
     resultToDailyReturnRate: number;
+    resultToPaidConversionRate: number;
   };
   series: Array<{
     date: string;
@@ -382,6 +412,9 @@ interface GrowthSummaryResponse {
     shares: number;
     invites: number;
     inviteConversions: number;
+    firstResultViews: number;
+    followupStarts: number;
+    dailyReturnsAfterReading: number;
     paidConversions: number;
   }>;
   topSources: Array<{ source: string; count: number }>;
@@ -394,6 +427,7 @@ interface GrowthSummaryResponse {
 
 **Implementation Note (2026-04-04)**
 - `/api/growth/summary`는 response shape를 유지한 채 `GrowthEvent.createdAt` 중심 인덱스와 narrow column select를 사용하도록 hardening되었다.
+- 대시보드 display layer는 now-default로 `firstResultViews`, `followupStarts`, `dailyReturnsAfterReading`, `paidConversions`를 코어 루프 신호로 우선 노출하고, `installs`, `activeUsers`, `shares`는 보조 운영 신호로 해석한다.
 
 ---
 
@@ -406,6 +440,7 @@ interface GrowthSummaryResponse {
 **Query**
 ```
 productId?: string // optional, 기본값은 oracle reading product
+priceId?: string   // optional, recurring subscription price lookup용 Stripe price ID
 ```
 
 **Response**
@@ -422,6 +457,7 @@ interface PaymentPriceResponse {
 
 **Implementation Notes**
 - paywall surface는 이 endpoint를 primary source로 사용하되, fetch 실패 시에도 placeholder(`...`)에 머무르지 않는 fallback label을 가져야 한다.
+- one-time reading paywall은 `productId`, subscription paywall은 `priceId` 기반 live lookup을 사용할 수 있다.
 - `PaymentModal`과 result paywall surface는 fallback label을 먼저 보여주고, live lookup 중에는 loading skeleton, 실패 시에는 graceful fallback copy를 함께 노출한다.
 
 **Error**

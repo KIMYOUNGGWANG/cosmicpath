@@ -6,15 +6,16 @@ import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw } from 'lucide-react';
 import { ReadingInput, ReadingData } from '@/components/reading/reading-input';
-import { ReadingSession, createSession } from '@/lib/session/reading-session';
-import { StickyCTA } from '@/components/common/sticky-cta';
+import type { PremiumReportData } from '@/components/reading/premium-report';
+import { createSession } from '@/lib/session/reading-session';
 import { trackClientGrowthEvent } from '@/lib/client-growth-events';
 import { OracleCalibrationPanel } from '@/components/reading/OracleCalibrationPanel';
+import { ProductShell } from '@/components/common/ProductShell';
 
 import { Footer } from '@/components/landing/Footer';
-import { GlobalHeader } from '@/components/common/GlobalHeader';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { UnifiedReadingDisplay } from '@/components/cosmic/UnifiedReadingDisplay'; // Integration
+import type { CosmicTag, UnifiedReadingResult } from '@/lib/cosmic/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // 🚀 Dynamic Imports - 초기 번들 크기 최적화
@@ -36,45 +37,72 @@ const RevealContainer = dynamic(() => import('@/components/reading/RevealContain
 });
 const ShareCardModal = dynamic(() => import('@/components/share/ShareCardModal').then(mod => mod.ShareCardModal));
 
+type TarotSelection = { name: string; isReversed: boolean };
+type PremiumReportState = Partial<PremiumReportData> & {
+  summary?: PremiumReportData['summary'] & { keywords?: string[] };
+};
+type StartReadingFn = (
+  cards: TarotSelection[],
+  isPremiumOverride?: boolean,
+  readingDataOverride?: ReadingData,
+  initialReport?: PremiumReportState,
+  startPhaseOverride?: number
+) => Promise<void>;
+type KeyTheme = string | { tag?: string };
+type SourceSummaryRecord = Record<string, unknown> & { summary?: string };
+type ReadingMetadata = {
+  tarot?: TarotSelection[] | SourceSummaryRecord;
+  tarotCards?: TarotSelection[];
+  radarScores?: { saju: number; astrology: number; tarot: number };
+  precisionMetadata?: {
+    inputDate: string;
+    inputTime: string;
+    tstOffset: number;
+    correctedDate: string;
+    correctedTime: string;
+    lon: number;
+    hourPillar: string;
+  };
+  oracleCouncil?: { convergenceScore: number; ziweiSummary: string; natalSummary: string };
+  characterId?: string;
+  oraclePersona?: { id: string; name: string; title: string };
+  language?: 'ko' | 'en';
+  isPremium?: boolean;
+  keyThemes?: KeyTheme[];
+  saju?: { fullSaju?: string };
+  sajuResult?: SourceSummaryRecord;
+  astrology?: SourceSummaryRecord;
+  [key: string]: unknown;
+};
+
+function getSourceSummary(value: unknown, fallback: string) {
+  if (!value || typeof value !== 'object') {
+    return fallback;
+  }
+
+  const summary = (value as SourceSummaryRecord).summary;
+  return typeof summary === 'string' && summary.trim() ? summary : fallback;
+}
+
+function hasPremiumReportContent(report: PremiumReportState | null): report is PremiumReportData {
+  return Boolean(report?.summary && report?.traits);
+}
+
 function CosmicPathContent() {
   const [step, setStep] = useState<'input' | 'mirror' | 'tarot' | 'reveal' | 'result'>('input');
   const [readingData, setReadingData] = useState<ReadingData | null>(null);
-  const [selectedCards, setSelectedCards] = useState<{ name: string; isReversed: boolean }[]>([]);
+  const [selectedCards, setSelectedCards] = useState<TarotSelection[]>([]);
 
   // 결과 상태
-  const [reportData, setReportData] = useState<any>(null); // TODO: 구체적인 타입 정의 필요 (CosmicReport 또는 PremiumReportData)
+  const [reportData, setReportData] = useState<PremiumReportState | null>(null);
   const [streamContent, setStreamContent] = useState(''); // Fallback용
   const [isLoading, setIsLoading] = useState(false);
   const [loadingPhase, setLoadingPhase] = useState<{ phase: number; label: string }>({ phase: 0, label: '' });
-  const [metadata, setMetadata] = useState<{
-    tarot?: { name: string; isReversed: boolean }[];
-    radarScores?: { saju: number; astrology: number; tarot: number };
-    precisionMetadata?: {
-      inputDate: string;
-      inputTime: string;
-      tstOffset: number;
-      correctedDate: string;
-      correctedTime: string;
-      lon: number;
-      hourPillar: string;
-    };
-    oracleCouncil?: { convergenceScore: number; ziweiSummary: string; natalSummary: string };
-    characterId?: string;
-    oraclePersona?: { id: string; name: string; title: string };
-    language?: 'ko' | 'en';
-    isPremium?: boolean;
-    [key: string]: unknown;
-  } | undefined>(undefined);
+  const [metadata, setMetadata] = useState<ReadingMetadata | undefined>(undefined);
   const [language, setLanguage] = useState<'ko' | 'en'>('ko');
-
-  // Convergence Animation State
-  const [isConverging, setIsConverging] = useState(false);
 
   // Decision Guard State
   const [isDecisionAccepted, setIsDecisionAccepted] = useState(false);
-
-  // Follow-up Chat Session State
-  const [session, setSession] = useState<ReadingSession | null>(null);
 
   // Share URL State
   const [shareUrl, setShareUrl] = useState<string | undefined>(undefined);
@@ -103,6 +131,10 @@ function CosmicPathContent() {
   const hasTrackedLandingView = useRef(false);
   const hasTrackedFreeResult = useRef(false);
   const hasTrackedReportComplete = useRef(false);
+  const initialSearchParamsKeyRef = useRef(searchParams.toString());
+  const isLoadingRef = useRef(isLoading);
+  const startReadingRef = useRef<StartReadingFn | null>(null);
+  isLoadingRef.current = isLoading;
 
 
 
@@ -263,16 +295,17 @@ function CosmicPathContent() {
 
   // Review Modal Trigger - Scroll-based
   const hasReportSummary = !!reportData?.summary;
+  const reviewTrustScore = reportData?.summary?.trust_score ?? 3;
+  const paidFromSearchParams = searchParams.get('paid') === 'true';
   useEffect(() => {
-    const isPaidSession = searchParams.get('paid') === 'true' || sessionStorage.getItem('payment_completed') === 'true';
+    const isPaidSession = paidFromSearchParams || sessionStorage.getItem('payment_completed') === 'true';
     const hasReviewed = localStorage.getItem('review_submitted') === 'true';
     const isPromoUser = sessionStorage.getItem('promo_user') === 'true';
     const isPremiumStatus = sessionStorage.getItem('is_premium_user') === 'true';
 
     if (!hasReportSummary) return;
 
-    const trustScore = reportData?.summary?.trust_score ?? 3;
-    const isGuardPassed = trustScore > 2 || isDecisionAccepted;
+    const isGuardPassed = reviewTrustScore > 2 || isDecisionAccepted;
 
     const shouldShow =
       (isPaidSession || isPromoUser || isPremiumStatus) &&
@@ -305,7 +338,7 @@ function CosmicPathContent() {
         window.removeEventListener('scroll', handleScroll);
       };
     }
-  }, [step, isLoading, isDecisionAccepted, hasReportSummary, hasDismissedReview]);
+  }, [step, isLoading, isDecisionAccepted, hasReportSummary, hasDismissedReview, paidFromSearchParams, reviewTrustScore]);
 
   // Resume Reading after Payment
   const isProcessingResume = useRef(false);
@@ -314,27 +347,24 @@ function CosmicPathContent() {
     const checkResume = async () => {
       // Prevent double-execution (React Strict Mode or rapid updates)
       if (isProcessingResume.current) {
-        console.log('[Resume] Already processing, skipping...');
         return;
       }
       // Lock immediately to prevent any duplicate calls
       isProcessingResume.current = true;
 
-      const paid = searchParams.get('paid');
-      const canceled = searchParams.get('canceled');
-      const readingIdFromUrl = searchParams.get('reading_id');
-
-      console.log('[Resume] Starting checkResume...', { paid, canceled, readingIdFromUrl });
+      const params = new URLSearchParams(initialSearchParamsKeyRef.current);
+      const paid = params.get('paid');
+      const canceled = params.get('canceled');
+      const readingIdFromUrl = params.get('reading_id');
 
       // Small delay ONLY if we don't have explicit URL flags (relying on sessionStorage only)
       if (!paid && !canceled && !readingIdFromUrl) {
         await new Promise(resolve => setTimeout(resolve, 100));
       }
-      const reset = searchParams.get('reset') === 'true';
+      const reset = params.get('reset') === 'true';
       const isSessionActive = sessionStorage.getItem('is_session_active') === 'true';
 
       if (reset) {
-        console.log('[Resume] Reset flag detected. Clearing session and backup.');
         clearSessionAndBackup();
         setHasCheckedResume(true);
         return;
@@ -377,15 +407,6 @@ function CosmicPathContent() {
         setHasCheckedResume(true);
         return;
       }
-
-      console.log('[Resume] Entering restore mode...', {
-        readingId,
-        paid,
-        canceled,
-        isSessionActive,
-        hasSessionResume,
-        hasBackupResume,
-      });
 
       if (readingId && !hasStoredPayload(sessionStorage.getItem('pending_reading_id'))) {
         sessionStorage.setItem('pending_reading_id', readingId);
@@ -450,7 +471,6 @@ function CosmicPathContent() {
 
       if (readingId && !hasStoredPayload(pendingData)) {
         try {
-          console.log('[Resume] Fetching reading from DB:', readingId);
           const params = new URLSearchParams({ id: readingId });
           const accessKey = pendingReadingAccessKey || getStoredReadingAccessKey();
           if (accessKey) {
@@ -492,8 +512,6 @@ function CosmicPathContent() {
 
       if (hasAnyRestorablePayload) {
         try {
-          console.log('[Resume] Restoring session state...', { paid, canceled, isSessionActive });
-
           const restoredReport = hasStoredPayload(pendingReportJson)
             ? JSON.parse(pendingReportJson as string)
             : null;
@@ -551,19 +569,16 @@ function CosmicPathContent() {
               saveToSessionAndBackup('payment_completed', 'true');
             }
 
-            if (!isLoading) {
+            if (!isLoadingRef.current) {
               const nextPhase = determineNextPremiumPhase(restoredReport);
               if (nextPhase <= TOTAL_PREMIUM_PHASES) {
-                console.log(`[Resume] Resuming analysis from phase ${nextPhase}`);
-                startReading(
+                await startReadingRef.current?.(
                   (restoredReadingData as ReadingData & { tarotCards?: { name: string; isReversed: boolean }[] }).tarotCards || [],
                   true,
                   restoredReadingData,
                   restoredReport || undefined,
                   nextPhase
                 );
-              } else {
-                console.log('[Resume] Analysis already complete. Skipping resumption.');
               }
             }
           }
@@ -651,7 +666,7 @@ function CosmicPathContent() {
 
   const TOTAL_PREMIUM_PHASES = 7;
 
-  const determineNextPremiumPhase = (report: any) => {
+  const determineNextPremiumPhase = (report: PremiumReportState | null | undefined) => {
     if (!report?.summary || !report?.traits || !report?.core_analysis) return 1;
     if (!report?.astro_deep || !report?.tarot_details || !report?.numerology) return 2;
     if (!report?.saju_sections) return 3;
@@ -664,10 +679,10 @@ function CosmicPathContent() {
 
 
   const startReading = async (
-    cards: any[],
+    cards: TarotSelection[],
     isPremiumOverride = false,
     readingDataOverride?: ReadingData,
-    initialReport?: any,
+    initialReport?: PremiumReportState,
     startPhaseOverride?: number
   ) => {
     const dataToUse = readingDataOverride || readingData;
@@ -677,8 +692,8 @@ function CosmicPathContent() {
       setIsLoading(true);
 
       // If resuming, use existing report, otherwise start empty
-      let accumulatedReport: any = initialReport || {};
-      let accumulatedMetadata: any = metadata || {};
+      let accumulatedReport: PremiumReportState = initialReport || {};
+      let accumulatedMetadata: ReadingMetadata = metadata || {};
       const totalPhases = TOTAL_PREMIUM_PHASES;
 
       const labelsKo = [
@@ -737,8 +752,6 @@ function CosmicPathContent() {
         if (!result.success) {
           throw new Error(result.error || `Phase ${phase} validation failed`);
         }
-
-        console.log(`Phase ${phase} complete:`, result.report);
 
         // Merge results
         accumulatedReport = { ...accumulatedReport, ...result.report };
@@ -806,7 +819,7 @@ function CosmicPathContent() {
           // Prepare Email Metadata
           const userEmail = localStorage.getItem('user_email');
           const birthInfoStr = `${dataToUse.birthDate} ${dataToUse.birthTime}생`;
-          const sajuStr = (accumulatedMetadata as any)?.saju?.fullSaju || '';
+          const sajuStr = accumulatedMetadata.saju?.fullSaju || '';
           const contextMap: Record<string, string> = {
             career: '커리어/직업',
             love: '연애/결혼',
@@ -878,8 +891,7 @@ function CosmicPathContent() {
       })();
 
       // Create session for follow-up chat (바이럴 모드: 기본 0회, 공유 시 추가)
-      const newSession = createSession('free_session', accumulatedReport, 0);
-      setSession(newSession);
+      createSession('free_session', accumulatedReport, 0);
 
     } catch (error) {
       console.error('Reading failed:', error);
@@ -888,10 +900,11 @@ function CosmicPathContent() {
       setIsLoading(false);
     }
   };
+  startReadingRef.current = startReading;
 
   // --- Integration: Helper to map Korean text tags to CosmicTagEnum ---
-  const mapTagToEnum = (tag: string): any => { // Returns CosmicTagEnum or undefined
-    const map: Record<string, string> = {
+  const mapTagToEnum = (tag: string): CosmicTag => {
+    const map: Record<string, CosmicTag> = {
       // Wealth
       '#재물운': 'WEALTH_WINDFALL', '#횡재': 'WEALTH_WINDFALL', '#투자': 'WEALTH_WINDFALL',
       '#손재': 'WEALTH_LOSS', '#절약': 'WEALTH_STEADY', '#안정': 'WEALTH_STEADY',
@@ -914,36 +927,39 @@ function CosmicPathContent() {
   };
 
   // --- Integration: Construct Unified Result from Metadata ---
-  const getUnifiedResult = () => {
+  const getUnifiedResult = (): UnifiedReadingResult | null => {
     if (!reportData || !metadata) return null;
 
     // 1. Map Tags from keyThemes (passed from API)
-    const rawTags = (metadata as any).keyThemes || [];
-    const mappedTags = rawTags.map((t: any) => mapTagToEnum(t.tag || t));
-    const uniqueTags: any[] = Array.from(new Set(mappedTags)); // Deduplicate
+    const rawTags = metadata.keyThemes || [];
+    const mappedTags = rawTags.map((theme) => {
+      const rawTag = typeof theme === 'string' ? theme : theme.tag || '';
+      return mapTagToEnum(rawTag);
+    });
+    const uniqueTags = Array.from(new Set(mappedTags)) as CosmicTag[];
 
     // 2. Build Source Results (Simulated from Metadata)
-    const sources = [];
-    if ((metadata as any).sajuResult) {
+    const sources: UnifiedReadingResult['sources'] = [];
+    if (metadata.sajuResult) {
       sources.push({
         source: 'SAJU',
-        originalText: (metadata as any).sajuResult?.summary || "사주 원국 분석",
+        originalText: getSourceSummary(metadata.sajuResult, "사주 원국 분석"),
         detectedTags: uniqueTags.slice(0, 2),
         confidence: ((metadata.radarScores?.saju || 80) / 100)
       });
     }
-    if ((metadata as any).astrology) {
+    if (metadata.astrology) {
       sources.push({
         source: 'ASTROLOGY',
-        originalText: (metadata as any).astrology?.summary || "천체 배치 분석",
+        originalText: getSourceSummary(metadata.astrology, "천체 배치 분석"),
         detectedTags: uniqueTags.slice(1, 3),
         confidence: ((metadata.radarScores?.astrology || 75) / 100)
       });
     }
-    if ((metadata as any).tarot) {
+    if (metadata.tarot) {
       sources.push({
         source: 'TAROT',
-        originalText: (metadata as any).tarot?.summary || "타로 카드 리딩",
+        originalText: getSourceSummary(metadata.tarot, "타로 카드 리딩"),
         detectedTags: uniqueTags.slice(2, 4),
         confidence: ((metadata.radarScores?.tarot || 85) / 100)
       });
@@ -962,13 +978,23 @@ function CosmicPathContent() {
   const hasPreciseBirthLocation = Boolean(
     readingData?.cityName || typeof readingData?.longitude === 'number'
   );
+  const unifiedResult = getUnifiedResult();
+  const premiumReportData = hasPremiumReportContent(reportData) ? reportData : null;
+  const premiumReportMetadata = metadata
+    ? {
+        tarot: Array.isArray(metadata.tarot) ? metadata.tarot : undefined,
+        radarScores: metadata.radarScores,
+        precisionMetadata: metadata.precisionMetadata,
+        oracleCouncil: metadata.oracleCouncil,
+        characterId: metadata.characterId,
+        oraclePersona: metadata.oraclePersona,
+        language: metadata.language,
+        isPremium: metadata.isPremium,
+      }
+    : undefined;
 
   return (
-    <main className="min-h-screen relative overflow-hidden text-foreground selection:bg-accent-gold selection:text-bg-void font-outfit">
-      {/* Conversion-Focused Background */}
-      <div className="aurora-bg fixed inset-0 z-0" />
-      <div className="noise-overlay" />
-
+    <ProductShell language={language} showBackButton={step === 'input' || step === 'result'}>
       {/* Step 0: Initial Loading/Resume Check */}
       {!hasCheckedResume && (
         <div className="flex flex-col items-center justify-center min-h-screen relative z-20">
@@ -981,11 +1007,7 @@ function CosmicPathContent() {
         </div>
       )}
 
-      <GlobalHeader language={language} showBackButton={step === 'input' || step === 'result'} />
-
-      {/* Main Container */}
-      <div className="container-cosmic relative z-10 safe-area-top">
-        <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait">
           {/* Step 1: Input (The Ritual) */}
           {hasCheckedResume && step === 'input' && (
             <motion.div
@@ -1011,8 +1033,8 @@ function CosmicPathContent() {
                   </h1>
                   <p className="mx-auto max-w-2xl text-sm leading-7 text-white/60">
                     {language === 'en'
-                      ? 'Choose the domain first, write one real question, and then add the coordinates that sharpen the reading across relationship, career, wealth, or daily flow.'
-                      : '먼저 고민 영역을 고르고, 진짜 질문 하나를 적은 뒤, 리딩을 정밀하게 벼려줄 좌표를 더합니다. 그러면 오라클이 관계, 커리어, 재물, 일상 흐름 중 가장 맞는 경로를 엽니다.'}
+                      ? 'Choose the domain first, write one real question, and then open the reading with three core fields. Precision controls stay folded until you want a tighter route.'
+                      : '먼저 고민 영역을 고르고, 진짜 질문 하나를 적은 뒤, 이름·생일·성별 3개만으로 첫 리딩을 엽니다. 더 세밀한 설정은 필요할 때만 펼치면 됩니다.'}
                   </p>
                   <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-[10px] uppercase tracking-[0.22em] text-white/45">
                     <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
@@ -1022,7 +1044,10 @@ function CosmicPathContent() {
                       {language === 'en' ? 'Write Question' : '질문 입력'}
                     </span>
                     <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                      {language === 'en' ? 'Add Coordinates' : '좌표 입력'}
+                      {language === 'en' ? '3 Core Fields' : '기본 3필드'}
+                    </span>
+                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                      {language === 'en' ? 'Precision Optional' : '정밀 설정 선택'}
                     </span>
                   </div>
                 </div>
@@ -1118,11 +1143,11 @@ function CosmicPathContent() {
 
           {/* Step 4: Result (Deep Dive) */}
           {step === 'result' && (
-            <motion.div
+          <motion.div
               key="result"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 1.2, delay: isConverging ? 1.5 : 0 }}
+              transition={{ duration: 1.2 }}
             >
               {isLoading ? (
                 <div className="flex min-h-[500px] items-center justify-center px-4 py-16">
@@ -1150,7 +1175,7 @@ function CosmicPathContent() {
                     <ErrorBoundary>
                       {/* Integrated Unified Display (Cross-Validation UI) */}
                       <div className="mb-8 px-4 md:px-0">
-                        <UnifiedReadingDisplay result={getUnifiedResult() as any} />
+                        {unifiedResult ? <UnifiedReadingDisplay result={unifiedResult} /> : null}
 
                         {/* Viral Loop Actions */}
                         <div className="flex flex-col items-center gap-4 mt-8">
@@ -1288,23 +1313,24 @@ function CosmicPathContent() {
                         </div>
                       </div>
 
-                      <PremiumReport
-                        report={reportData}
-                        metadata={metadata}
-                        language={language}
-                        shareUrl={shareUrl}
-                        onUnlock={handleUpgrade}
-                        isPremium={isPremium}
-                        price={dynamicPrice}
-                        isLoading={isLoading}
-                        onRetry={() => {
-                          const nextPhase = determineNextPremiumPhase(reportData);
-                          console.log('[Retry] Resuming from phase:', nextPhase);
-                          if (nextPhase <= TOTAL_PREMIUM_PHASES) {
-                            startReading(selectedCards, true, readingData!, reportData, nextPhase);
-                          }
-                        }}
-                      />
+                      {premiumReportData ? (
+                        <PremiumReport
+                          report={premiumReportData}
+                          metadata={premiumReportMetadata}
+                          language={language}
+                          shareUrl={shareUrl}
+                          onUnlock={handleUpgrade}
+                          isPremium={isPremium}
+                          price={dynamicPrice}
+                          isLoading={isLoading}
+                          onRetry={() => {
+                            const nextPhase = determineNextPremiumPhase(reportData);
+                            if (nextPhase <= TOTAL_PREMIUM_PHASES) {
+                              startReading(selectedCards, true, readingData!, reportData ?? undefined, nextPhase);
+                            }
+                          }}
+                        />
+                      ) : null}
                       {/* Oracle Chat Integration - Only show if readingId exists (saved) */}
                       {shareUrl && (
                         <div className="container mx-auto px-4 mt-12 mb-20 relative z-10">
@@ -1339,7 +1365,7 @@ function CosmicPathContent() {
                           // Determine phase to resume from
                           const nextPhase = determineNextPremiumPhase(reportData);
                           if (nextPhase <= TOTAL_PREMIUM_PHASES) {
-                            startReading(selectedCards, true, readingData!, reportData, nextPhase);
+                            startReading(selectedCards, true, readingData!, reportData ?? undefined, nextPhase);
                             return;
                           }
                           setIsLoading(false);
@@ -1363,7 +1389,6 @@ function CosmicPathContent() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
 
       {/* Ambient Footer */}
       <Footer />
@@ -1371,9 +1396,6 @@ function CosmicPathContent() {
       <PaymentModal
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
-        onPaymentStart={() => {
-          console.log('Payment started');
-        }}
         readingData={readingData ? { ...readingData, tarotCards: selectedCards, language } : undefined}
         currentReport={reportData}
         metadata={metadata}
@@ -1408,7 +1430,7 @@ function CosmicPathContent() {
         />
       )}
 
-    </main >
+    </ProductShell>
 
   );
 }

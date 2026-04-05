@@ -26,8 +26,8 @@ export async function generateMetadata({
 
     if (!session) {
         return {
-            title: 'CosmicPath Match',
-            description: 'Compatibility reading powered by Saju, astrology, and tarot.',
+            title: 'Cosmic Compatibility Reading | CosmicPath',
+            description: 'Explore a compatibility reading powered by Saju, astrology, and tarot on CosmicPath.',
             robots: {
                 index: false,
                 follow: false,
@@ -43,8 +43,8 @@ export async function generateMetadata({
         title: `${share.title} | CosmicPath`,
         description: share.description,
         robots: {
-            index: false,
-            follow: false,
+            index: true,
+            follow: true,
         },
         alternates: {
             canonical: canonicalUrl,

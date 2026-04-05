@@ -172,8 +172,8 @@ export function ResultStream({
                                     time={draftData.time}
                                     description={draftData.description}
                                     confidence={draftData.confidence}
-                                    onConfirm={(data) => console.log('Confirmed:', data)}
-                                    onCancel={() => console.log('Cancelled')}
+                                    onConfirm={() => { }}
+                                    onCancel={() => { }}
                                 />
                             </motion.div>
                         )}
