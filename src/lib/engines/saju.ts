@@ -845,11 +845,11 @@ export interface AuthenticShinSalResult {
  * 신살 계산 메인 함수
  * @param result 사주 결과 (SajuResult)
  */
-export function calculateShinSal(result: any): AuthenticShinSalResult[] {
+export function calculateShinSal(result: SajuResult): AuthenticShinSalResult[] {
   const list: AuthenticShinSalResult[] = [];
 
   // 기준점 추출
-  const yearBranch = result.yeonPillar?.branch || result.yearPillar?.branch;
+  const yearBranch = result.yeonPillar?.branch;
   const dayBranch = result.dayPillar?.branch;
   const dayStem = result.dayPillar?.stem;
   const monthBranch = result.monthPillar?.branch; // Added for Cheondeok/Woldeok
@@ -857,14 +857,14 @@ export function calculateShinSal(result: any): AuthenticShinSalResult[] {
   if (!yearBranch || !dayBranch || !dayStem) return [];
 
   const allBranches = [
-    result.yeonPillar?.branch || result.yearPillar?.branch,
+    result.yeonPillar?.branch,
     result.monthPillar?.branch,
     result.dayPillar?.branch,
     result.hourPillar?.branch
   ].filter(Boolean);
 
   const allStems = [
-    result.yeonPillar?.stem || result.yearPillar?.stem,
+    result.yeonPillar?.stem,
     result.monthPillar?.stem,
     result.dayPillar?.stem,
     result.hourPillar?.stem
@@ -1585,6 +1585,9 @@ export interface SajuResult {
   sewoonMultiYear?: SewoonResult[];  // 다년 세운 (향후 5년 등)
   // Phase 9: 월운 추가
   wolwoon?: WolwoonResult[];   // 올해 12개월 월운
+  // Dr.Saju High-Accuracy Engine Data
+  oraclePromptBlock?: string;
+  raw?: any;
 }
 
 // =====================================
@@ -2997,17 +3000,22 @@ export function countTenGodGroups(tenGods: Record<string, string>): Record<keyof
  * korean-lunar-calendar 라이브러리를 사용하여 KARI 표준 기반 정확한 간지 계산
  * @param longitude - 출생지 경도 (기본값: 서울 126.9780)
  */
+export interface CalculateSajuOptions {
+  skipLongitudeCorrection?: boolean;
+}
+
 export function calculateSaju(
   birthDate: Date,
   birthHour: number = 12,
   birthMinute: number = 0,
   isLunar: boolean = false,
   gender: 'male' | 'female' = 'male',
-  longitude: number = 126.9780  // 서울 기본값
+  longitude: number = 126.9780,  // 서울 기본값
+  options: CalculateSajuOptions = {},
 ): SajuResult {
   // 1. 경도 기반 시간 보정 (지역시 → 진태양시)
   // KST는 동경 135도 기준, 출생지 경도와의 차이 × 4분/도
-  const timeCorrectionMinutes = Math.round((135 - longitude) * 4);
+  const timeCorrectionMinutes = options.skipLongitudeCorrection ? 0 : Math.round((135 - longitude) * 4);
   const adjDate = new Date(birthDate);
   adjDate.setHours(birthHour, birthMinute);
   adjDate.setMinutes(adjDate.getMinutes() - timeCorrectionMinutes);
@@ -3415,4 +3423,3 @@ export function diagnoseElementBalance(saju: SajuResult): {
     balanced: excessive.length === 0 && lacking.length === 0,
   };
 }
-

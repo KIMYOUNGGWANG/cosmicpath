@@ -18,15 +18,15 @@ test.describe('SEO Landing Pages', () => {
         await page.goto('/k-destiny');
 
         await expect(page).toHaveTitle(/K-Destiny/i);
-        await expect(page.getByText(/K-Destiny/i).first()).toBeVisible();
+        await expect(page.getByRole('heading', { name: /K-Destiny Aura/i })).toBeVisible();
         await expectStructuredData(page, 'https://cosmicpath.app/k-destiny');
     });
 
     test('blog page has title and collection structured data', async ({ page }) => {
         await page.goto('/blog');
 
-        await expect(page).toHaveTitle(/CosmicPath Blog/i);
-        await expect(page.getByRole('heading', { name: /CosmicPath Blog/i })).toBeVisible();
+        await expect(page).toHaveTitle(/CosmicPath Archive/i);
+        await expect(page.getByRole('heading', { name: /참고 글 모음/i })).toBeVisible();
         await expectStructuredData(page, 'CollectionPage');
     });
 

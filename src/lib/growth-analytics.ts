@@ -3,6 +3,9 @@ type GrowthMetadata = Record<string, unknown>;
 export type CanonicalGrowthEvent =
     | 'install'
     | 'daily_active'
+    | 'first_result_view'
+    | 'followup_start'
+    | 'daily_return_after_reading'
     | 'share'
     | 'invite'
     | 'invite_conversion'
@@ -19,6 +22,10 @@ const EVENT_ALIASES: Record<string, CanonicalGrowthEvent> = {
     first_visit: 'install',
     daily_active: 'daily_active',
     session_active: 'daily_active',
+    first_result_view: 'first_result_view',
+    free_result_shown: 'first_result_view',
+    followup_start: 'followup_start',
+    daily_return_after_reading: 'daily_return_after_reading',
     share_clicked: 'share',
     share_kakao_clicked: 'share',
     share_link_copied: 'share',

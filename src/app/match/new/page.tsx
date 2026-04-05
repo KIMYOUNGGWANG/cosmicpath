@@ -10,6 +10,10 @@ export const metadata: Metadata = {
     title: '궁합 초대 링크 만들기 | CosmicPath',
     description: '이름과 생년월일로 궁합 초대 링크를 만들고 상대방과 공유하세요. 사주, 타로, 관계 시그널을 함께 보는 궁합 진입 페이지입니다.',
     keywords: ['궁합', '궁합 테스트', '사주 궁합', '연애 궁합', '커플 궁합', '타로 궁합', '운세 궁합'],
+    robots: {
+        index: false,
+        follow: false,
+    },
     alternates: {
         canonical: '/match/new',
     },

@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 import { NextRequest } from 'next/server';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 const DEFAULT_COLORS = ['#0F8A5F', '#2D7FF9'] as const;
 const DEFAULT_KEYWORDS = ['magnetic', 'lucid', 'iconic'] as const;

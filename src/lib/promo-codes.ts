@@ -1,6 +1,11 @@
 import { randomBytes } from 'crypto';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+import {
+  attachReadingAccessKey,
+  extractReadingAccessKey,
+  normalizeReadingMetadata,
+} from '@/lib/reading-access';
 
 const MAX_CREATE_ATTEMPTS = 6;
 
@@ -10,6 +15,10 @@ function isExpired(expiresAt: Date, now: Date = new Date()): boolean {
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+function stringifyMetadata(metadata: Record<string, unknown>): string {
+  return JSON.stringify(metadata);
 }
 
 function isUniqueConstraintError(error: unknown): boolean {
@@ -161,14 +170,30 @@ export async function redeemPromotionCode(params: {
         tx.user.findUnique({ where: { email: normalizedEmail } }),
         tx.readingResult.findUnique({
           where: { id: params.readingId },
-          select: { id: true, userId: true },
+          select: { id: true, userId: true, metadata: true },
         }),
       ]);
 
-      if (user && reading && !reading.userId) {
+      if (reading) {
+        const existingMetadata = normalizeReadingMetadata(reading.metadata);
+        const accessKey = reading.userId ? null : extractReadingAccessKey(existingMetadata);
+        const premiumMetadata = {
+          ...existingMetadata,
+          isPremium: true,
+          paymentVerifiedAt: new Date().toISOString(),
+          paymentSource: 'promo_redemption',
+          email: normalizedEmail,
+        };
+        const nextMetadata = accessKey
+          ? attachReadingAccessKey(premiumMetadata, accessKey)
+          : premiumMetadata;
+
         await tx.readingResult.update({
           where: { id: reading.id },
-          data: { userId: user.id },
+          data: {
+            metadata: stringifyMetadata(nextMetadata),
+            ...(user && !reading.userId ? { userId: user.id } : {}),
+          },
         });
       }
     }

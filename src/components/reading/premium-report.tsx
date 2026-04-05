@@ -34,6 +34,34 @@ import { GhostDetectorSection } from '../dashboard/GhostDetectorSection';
 
 // 새로운 Premium Report 타입 (기존 CosmicReport 대체)
 export interface PremiumReportData {
+    precisionMetadata?: {
+        inputDate: string;
+        inputTime: string;
+        tstOffset: number;
+        correctedDate: string;
+        correctedTime: string;
+        lon: number;
+        hourPillar: string;
+    };
+    oracleCouncil?: {
+        convergenceScore: number;
+        ziweiSummary: string;
+        natalSummary: string;
+    };
+    characterId?: string;
+    oraclePersona?: {
+        id: string;
+        name: string;
+        title: string;
+    };
+    free_focus?: {
+        action_conclusion: string;
+        evidence_summary: string;
+        next_question: string;
+    };
+    questionIntent?: string;
+    selectionMode?: string;
+    advisorEvidenceSummary?: string;
     summary: {
         title: string;
         content: string;
@@ -216,6 +244,21 @@ interface PremiumReportProps {
             astrology: number;
             tarot: number;
         };
+        precisionMetadata?: {
+            inputDate: string;
+            inputTime: string;
+            tstOffset: number;
+            correctedDate: string;
+            correctedTime: string;
+            lon: number;
+            hourPillar: string;
+        };
+        oracleCouncil?: {
+            convergenceScore: number;
+            ziweiSummary: string;
+            natalSummary: string;
+        };
+        characterId?: string;
     };
     language?: 'ko' | 'en';
     shareUrl?: string;
@@ -385,6 +428,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
     if (!report) return null;
 
     const tarotCards = metadata?.tarot || [];
+    const freeFocus = report.free_focus;
 
     // Auth & Save Logic
     const { data: session, status } = useSession();
@@ -408,6 +452,12 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     language={language}
                 />
             )}
+
+            <FreeFocusSection
+                freeFocus={freeFocus}
+                language={language}
+                isPremium={Boolean(isPremium)}
+            />
 
             {/* Hidden Print Layout */}
             <div className="hidden">
@@ -460,7 +510,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     ) : report.core_analysis ? (
                         // 실제 데이터가 있으면 블러 처리로 미리보기
                         <BlurredPreviewSection
-                            title={isEn ? "Core Energy Analysis" : "핵심 에너지 분석"}
+                            title={isEn ? "Oracle Core Reading" : "오라클 코어 리딩"}
                             subtitle={isEn ? "⚠️ Critical Element Imbalance Detected" : "⚠️ 사주 오행의 심각한 불균형 감지"}
                             onUnlock={handleUnlock}
                             language={language}
@@ -470,7 +520,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     ) : (
                         // 데이터가 없으면 기존 TeaserCard fallback
                         <TeaserCard
-                            title={isEn ? "Core Energy Analysis" : "핵심 에너지 분석"}
+                            title={isEn ? "Oracle Core Reading" : "오라클 코어 리딩"}
                             hook={isEn ? "⚠️ Critical Element Imbalance Detected in your chart foundation." : "⚠️ 사주 오행의 심각한 불균형이 감지되었습니다."}
                             type="danger"
                             onUnlock={handleUnlock}
@@ -695,10 +745,10 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                         <div className="px-4 md:px-6">
                             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                 <Zap size={18} className="text-gold" />
-                                {isEn ? 'Special Analysis' : '특수/심화 분석'}
+                                {isEn ? 'Oracle Edge Insight' : '오라클 심화 인사이트'}
                             </h2>
                             <TeaserCard
-                                title={isEn ? 'Special Analysis' : '특수 분석'}
+                                title={isEn ? 'Oracle Edge Insight' : '오라클 심화 인사이트'}
                                 hook={isEn ? "⚡ Confirm your hidden 'Noble Person' and 'Danger Zones'." : "⚡ 당신을 도울 '천을귀인'과 피해야 할 '공망'을 확인하세요."}
                                 type="money"
                                 onUnlock={handleUnlock}
@@ -788,7 +838,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 {/* Visual Share Card */}
                 <div className="mb-12">
                     <h2 className="text-xl font-cinzel text-white mb-6">
-                        {language === 'en' ? 'Claim Your Destiny' : '운명 봉인 해제'}
+                        {language === 'en' ? 'Seal Your Oracle Card' : '오라클 카드 봉인하기'}
                     </h2>
                     <p className="text-white/60 text-sm mb-8 font-light">
                         {language === 'en'
@@ -980,6 +1030,68 @@ function HeaderSection({ summary, language }: { summary: PremiumReportData['summ
                         </div>
                     </div>
                 )}
+            </div>
+        </motion.section>
+    );
+}
+
+function FreeFocusSection({
+    freeFocus,
+    language,
+    isPremium,
+}: {
+    freeFocus?: PremiumReportData['free_focus'];
+    language: 'ko' | 'en';
+    isPremium: boolean;
+}) {
+    const isEn = language === 'en';
+
+    if (!freeFocus) {
+        return null;
+    }
+
+    return (
+        <motion.section
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08, duration: 0.45, ease: 'easeOut' }}
+            className="px-4 md:px-6 mt-6"
+        >
+            <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(10,12,24,0.55))] p-5 md:p-6 shadow-[0_24px_80px_rgba(8,12,28,0.35)] backdrop-blur-xl">
+                <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                    <div>
+                        <div className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-gold/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.26em] text-gold/80">
+                            <Sparkles size={12} />
+                            {isEn ? 'First Oracle Answer' : '첫 오라클 결론'}
+                        </div>
+                        <h2 className="mt-3 text-lg font-semibold text-white md:text-2xl">
+                            {isEn
+                                ? 'Read the shortest clear answer before you dive deeper.'
+                                : '더 깊이 들어가기 전에, 지금 가장 분명한 답부터 읽어보세요.'}
+                        </h2>
+                    </div>
+                    <p className="max-w-md text-sm leading-relaxed text-white/60">
+                        {isPremium
+                            ? (isEn
+                                ? 'This is the current high-signal reading distilled into one move, one basis, and one next prompt.'
+                                : '지금 흐름에서 가장 신호가 강한 결론을 행동, 근거, 다음 질문으로 압축한 블록입니다.')
+                            : (isEn
+                                ? 'Free users see the highest-confidence direction first, so the reading feels useful immediately.'
+                                : '무료 결과에서도 바로 쓸 수 있는 방향을 먼저 보여줘서, 첫 화면에서 바로 도움이 되게 만들었습니다.')}
+                    </p>
+                </div>
+
+                <div className="mt-6 grid gap-4 md:grid-cols-3">
+                    <InsightCard title={isEn ? 'Next Move' : '지금 붙잡을 행동'} icon={Target} delay={0}>
+                        <p>{freeFocus.action_conclusion}</p>
+                    </InsightCard>
+                    <InsightCard title={isEn ? 'Why This Reads True' : '왜 이렇게 읽혔는가'} icon={Shield} delay={0.08}>
+                        <p>{freeFocus.evidence_summary}</p>
+                    </InsightCard>
+                    <InsightCard title={isEn ? 'Ask This Next' : '이어서 물어볼 질문'} icon={ScrollText} delay={0.16}>
+                        <p>{freeFocus.next_question}</p>
+                    </InsightCard>
+                </div>
             </div>
         </motion.section>
     );
@@ -1456,7 +1568,7 @@ function SpecialAnalysisSection({ data, language }: { data: NonNullable<PremiumR
         <section className="mt-6 px-4 md:px-6">
             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <Zap size={18} className="text-gold" />
-                {isEn ? 'Special Analysis' : '특수 분석'}
+                {isEn ? 'Oracle Edge Insight' : '오라클 심화 인사이트'}
             </h2>
             <div className="space-y-3">
                 {specials.map((item) => (
@@ -1502,7 +1614,7 @@ function ActionPlanSection({ actionPlan, trustScore, language }: {
         <section className="mt-8 md:mt-10 px-4 md:px-6">
             <h2 className="text-base md:text-lg font-bold text-white mb-3 md:mb-4 flex items-center gap-2">
                 <Calendar size={18} className="text-gold" />
-                {isEn ? 'Action Plan (Super Days)' : '액션 플랜 (Super Days)'}
+                {isEn ? 'Action Window (Super Days)' : '행동의 창 (Super Days)'}
             </h2>
 
             <div className="grid gap-3">

@@ -2,12 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
+import { extractReadingAccessKey, hasReadingAccess } from "@/lib/reading-access";
 
-// Extend schema to allow optional email linking flag
+const ReadingLinkSchema = z.object({
+    id: z.string(),
+    accessKey: z.string().optional(),
+});
+
 const LinkGuestDataSchema = z.object({
     readingIds: z.array(z.string()).optional(),
+    readingLinks: z.array(ReadingLinkSchema).optional(),
     linkByEmail: z.boolean().optional(),
 });
+
+type ReadingLinkInput = z.infer<typeof ReadingLinkSchema>;
 
 export async function POST(req: NextRequest) {
     const session = await auth();
@@ -17,15 +25,42 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await req.json();
-        const { readingIds, linkByEmail } = LinkGuestDataSchema.parse(body);
+        const { readingIds, readingLinks, linkByEmail } = LinkGuestDataSchema.parse(body);
 
         let linkedCount = 0;
+        const explicitLinks: ReadingLinkInput[] = [
+            ...(readingLinks ?? []),
+            ...((readingIds ?? []).map((id) => ({ id }))),
+        ];
 
-        // 1. Link specific IDs (LocalStorage)
-        if (readingIds && readingIds.length > 0) {
+        for (const link of explicitLinks) {
+            const reading = await prisma.readingResult.findUnique({
+                where: { id: link.id },
+                select: {
+                    id: true,
+                    userId: true,
+                    metadata: true,
+                },
+            });
+
+            if (!reading || reading.userId) {
+                continue;
+            }
+
+            const canLink = hasReadingAccess({
+                readingUserId: reading.userId,
+                sessionUserId: session.user.id,
+                storedAccessKey: extractReadingAccessKey(reading.metadata),
+                providedAccessKey: link.accessKey,
+            });
+
+            if (!canLink) {
+                continue;
+            }
+
             const result = await prisma.readingResult.updateMany({
                 where: {
-                    id: { in: readingIds },
+                    id: reading.id,
                     userId: null,
                 },
                 data: {
@@ -37,12 +72,8 @@ export async function POST(req: NextRequest) {
 
         // 2. Link by Email (Retroactive)
         if (linkByEmail && session.user.email) {
-            // Prisma doesn't support JSON deep search easily on all DBs, 
-            // but since metadata is a stringified JSON in our schema (String type),
-            // we can use string contains. 
-            // WARNING: This is a loose check. "email":"foo@bar.com" 
-
-            const emailQuery = `"${session.user.email}"`; // Simple check for quoted email
+            const normalizedEmail = session.user.email.trim().toLowerCase();
+            const emailQuery = `"email":"${normalizedEmail}"`;
 
             const result = await prisma.readingResult.updateMany({
                 where: {

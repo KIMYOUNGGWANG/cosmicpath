@@ -28,6 +28,10 @@ export async function generateMetadata({
         return {
             title: 'CosmicPath Match',
             description: 'Compatibility reading powered by Saju, astrology, and tarot.',
+            robots: {
+                index: false,
+                follow: false,
+            },
         };
     }
 
@@ -38,6 +42,10 @@ export async function generateMetadata({
     return {
         title: `${share.title} | CosmicPath`,
         description: share.description,
+        robots: {
+            index: false,
+            follow: false,
+        },
         alternates: {
             canonical: canonicalUrl,
         },

@@ -2,16 +2,17 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Star, X } from 'lucide-react';
 
 interface ReviewModalProps {
     isOpen: boolean;
     onClose: () => void;
     readingId?: string;
+    accessKey?: string;
 }
 
-export function ReviewModal({ isOpen, onClose, readingId }: ReviewModalProps) {
+export function ReviewModal({ isOpen, onClose, readingId, accessKey }: ReviewModalProps) {
     const [rating, setRating] = useState(5);
     const [nickname, setNickname] = useState('');
     const [content, setContent] = useState('');
@@ -47,6 +48,13 @@ export function ReviewModal({ isOpen, onClose, readingId }: ReviewModalProps) {
     const handleSubmit = async () => {
         if (!content.trim() || !nickname.trim()) return;
 
+        const resolvedAccessKey =
+            accessKey ||
+            (typeof window !== 'undefined'
+                ? window.sessionStorage.getItem('pending_reading_access_key') ||
+                window.localStorage.getItem('pending_reading_access_key')
+                : undefined);
+
         setIsSubmitting(true);
         try {
             const response = await fetch('/api/review', {
@@ -54,6 +62,7 @@ export function ReviewModal({ isOpen, onClose, readingId }: ReviewModalProps) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     readingId,
+                    accessKey: resolvedAccessKey,
                     nickname,
                     rating,
                     content,

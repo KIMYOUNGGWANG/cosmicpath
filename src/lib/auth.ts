@@ -39,10 +39,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }),
     ],
     callbacks: {
-        session({ session, user }) {
+        async session({ session, user }) {
             if (session.user) {
                 session.user.id = user.id
-                session.user.role = user.role || "USER"
+
+                try {
+                    const latestUser = await prisma.user.findUnique({
+                        where: { id: user.id },
+                        select: {
+                            role: true,
+                            email: true,
+                            name: true,
+                        },
+                    })
+
+                    session.user.role = latestUser?.role || user.role || "USER"
+                    session.user.email = latestUser?.email ?? session.user.email ?? null
+                    session.user.name = latestUser?.name ?? session.user.name ?? null
+                } catch (error) {
+                    console.error("Error refreshing session role:", error)
+                    session.user.role = user.role || "USER"
+                }
             }
             return session
         },

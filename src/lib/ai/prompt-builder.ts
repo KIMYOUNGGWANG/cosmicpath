@@ -19,6 +19,13 @@ import { SajuResult, formatSaju } from '../engines/saju';
 import { AstrologyResult, formatAstrology } from '../engines/astrology';
 import { TarotCard } from '../engines/tarot';
 import {
+  buildOraclePersonaBlock,
+  type OracleAdvisorProfile,
+  type OracleCharacterId,
+  type OracleQuestionIntent,
+  type OracleSelectionMode,
+} from './oracle-personas';
+import {
   buildUnifiedSystemPrompt,
   buildDataContext,
   getOutputInstructions,
@@ -38,6 +45,11 @@ export interface ChatReadingData {
   astrology: string | AstrologyResult | null | undefined;
   tarot: TarotCard[] | string | null | undefined;
   name?: string;
+  characterId?: OracleCharacterId;
+  questionIntent?: OracleQuestionIntent;
+  selectionMode?: OracleSelectionMode;
+  advisorProfile?: OracleAdvisorProfile;
+  advisorEvidenceSummary?: string;
 }
 
 interface ContextConfig {
@@ -199,11 +211,35 @@ export function buildUserPrompt(
   language: Language = 'ko',
   currentDate?: string,
   partnerSaju?: SajuResult | null,   // Added
-  partnerName?: string               // Added
+  partnerName?: string,              // Added
+  characterId?: OracleCharacterId,
+  promptContext?: {
+    questionIntent?: OracleQuestionIntent;
+    selectionMode?: OracleSelectionMode;
+    advisorEvidenceSummary?: string;
+    isPremium?: boolean;
+  }
 ): string {
   const config = CONTEXT_CONFIG[context];
   const isEn = language === 'en';
   const today = currentDate || new Date().toISOString().split('T')[0];
+  const personaBlock = buildOraclePersonaBlock(characterId, language, {
+    questionIntent: promptContext?.questionIntent,
+    selectionMode: promptContext?.selectionMode,
+  });
+  const advisorEvidenceBlock = promptContext?.advisorEvidenceSummary?.trim()
+    ? `\n${promptContext.advisorEvidenceSummary.trim()}`
+    : '';
+  const depthRule = isEn
+    ? (promptContext?.isPremium
+      ? 'Premium depth rule: you may go section by section, but every section must stay anchored in evidence and remain useful.'
+      : 'Free depth rule: stay concise and decisive. Prioritize 2-3 strong insights over exhaustive coverage. `free_focus` must clearly contain one next move, one evidence summary, and one follow-up question.')
+    : (promptContext?.isPremium
+      ? '프리미엄 깊이 규칙: 섹션별로 더 깊게 들어가도 되지만, 모든 단락은 근거에 고정하고 실제 도움이 되게 유지하세요.'
+      : '무료 깊이 규칙: 길게 늘어놓기보다 2-3개의 강한 통찰을 우선하세요. `free_focus`에 다음 행동 1개, 근거 요약 1개, 다음 질문 1개를 분명하게 넣으세요.');
+  const hanjaRule = isEn
+    ? 'If you use traditional East Asian terms, explain them once as 漢字(reading, plain meaning).'
+    : '한자나 전통 명리 용어를 쓰면 반드시 한자(독음, 쉬운 뜻) 형식으로 한 번 풀어 설명하세요.';
 
   // 데이터 요약
   const sajuData = formatSaju(saju);
@@ -227,6 +263,12 @@ export function buildUserPrompt(
 **Astrology (${Math.round(WEIGHTS.astrology * 100)}%)**: ${astroData}
 **Tarot (${Math.round(WEIGHTS.tarot * 100)}%)**: ${tarotData}
 
+${personaBlock}
+${advisorEvidenceBlock}
+
+${depthRule}
+${hanjaRule}
+
 # Cross-Validation
 - Confidence: ${guide.confidence.score}/5 (${guide.confidence.percentage}%)
 - Matching Level: ${guide.matching.level}
@@ -246,6 +288,9 @@ Include:
 □ 1+ from Tarot (20% weight)
 □ Specific date/period (YYYY-MM format)
 □ Actionable advice
+□ free_focus.action_conclusion = one concrete next move
+□ free_focus.evidence_summary = 1-2 lines grounded in evidence
+□ free_focus.next_question = one precise follow-up question
 
 Focus: ${config.focus.join(', ')}
 Avoid: ${config.avoid.join(', ')}
@@ -263,6 +308,12 @@ ${guide.warnings.length > 0 ? `⚠️ Warnings: ${guide.warnings.join('; ')}` : 
 **사용자 사주 (${Math.round(WEIGHTS.saju * 100)}%)**: ${sajuData}${partnerInfo}
 **점성술 (${Math.round(WEIGHTS.astrology * 100)}%)**: ${astroData}
 **타로 (${Math.round(WEIGHTS.tarot * 100)}%)**: ${tarotData}
+
+${personaBlock}
+${advisorEvidenceBlock}
+
+${depthRule}
+${hanjaRule}
 
 # 교차 검증
 - 신뢰도: ${guide.confidence.score}/5 (${guide.confidence.percentage}%)
@@ -282,6 +333,9 @@ ${guide.warnings.length > 0 ? `⚠️ Warnings: ${guide.warnings.join('; ')}` : 
 □ 타로 데이터 1개 이상 (20% 가중치)
 □ 구체적 날짜/기간 (YYYY-MM 형식)
 □ 실행 가능 조언
+□ free_focus.action_conclusion = 바로 붙잡을 다음 행동 1개
+□ free_focus.evidence_summary = 근거 기반 1-2줄 요약
+□ free_focus.next_question = 바로 이어서 물어볼 질문 1개
 
 집중: ${config.focus.join(', ')}
 회피: ${config.avoid.join(', ')}
@@ -301,13 +355,33 @@ ${guide.warnings.length > 0 ? `⚠️ 주의: ${guide.warnings.join('; ')}` : ''
 
 export function buildStructuredSystemPrompt(
   language: Language = 'ko',
-  currentDate?: string
+  currentDate?: string,
+  options?: {
+    characterId?: OracleCharacterId;
+    questionIntent?: OracleQuestionIntent;
+    selectionMode?: OracleSelectionMode;
+    isPremium?: boolean;
+  }
 ): string {
   const isEn = language === 'en';
   const today = currentDate || new Date().toISOString().split('T')[0];
   const [year] = today.split('-');
 
   const basePrompt = buildUnifiedSystemPrompt(language);
+  const personaBlock = buildOraclePersonaBlock(options?.characterId, language, {
+    questionIntent: options?.questionIntent,
+    selectionMode: options?.selectionMode,
+  });
+  const depthRule = isEn
+    ? (options?.isPremium
+      ? '# Premium Depth Rule\n- Premium outputs may go deeper section by section, but every section must still cite evidence and stay decision-useful.'
+      : '# Free Depth Rule\n- This is a free reading. Deliver the clearest high-signal summary first and avoid exhaustive sub-analysis.\n- `free_focus` must always contain one decisive next move, one compact evidence summary, and one precise follow-up question.')
+    : (options?.isPremium
+      ? '# 프리미엄 깊이 규칙\n- 프리미엄 출력은 더 깊게 들어갈 수 있지만, 모든 섹션은 근거 인용과 실제 의사결정 도움을 유지해야 합니다.'
+      : '# 무료 깊이 규칙\n- 이것은 무료 리딩입니다. 가장 해상도 높은 요약을 먼저 주고, 과도한 세부 분해는 피하세요.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 다음 질문 1개를 반드시 넣으세요.');
+  const hanjaRule = isEn
+    ? '# Traditional Term Rule\n- If you use traditional East Asian terms, explain them once as 漢字(reading, plain meaning).'
+    : '# 한자 용어 규칙\n- 한자나 전통 명리 용어를 쓰면 반드시 한자(독음, 쉬운 뜻) 형식으로 한 번 풀어 설명하세요.';
 
   // 간소화된 JSON 스키마
   const schema = isEn ? `
@@ -315,6 +389,11 @@ export function buildStructuredSystemPrompt(
 
 \`\`\`json
 {
+  "free_focus": {
+    "action_conclusion": "One concrete next move",
+    "evidence_summary": "1-2 lines grounded in Saju/Astro/Tarot evidence",
+    "next_question": "One precise follow-up question"
+  },
   "summary": {
     "title": "Memorable headline (10-20 words)",
     "content": "Core insight integrating 3 systems (5+ sentences)",
@@ -353,6 +432,11 @@ export function buildStructuredSystemPrompt(
 
 \`\`\`json
 {
+  "free_focus": {
+    "action_conclusion": "지금 붙잡을 행동 결론 1개",
+    "evidence_summary": "사주/점성/타로 근거 기반 1-2줄 요약",
+    "next_question": "바로 이어서 물어볼 다음 질문 1개"
+  },
   "summary": {
     "title": "기억에 남는 헤드라인 (15-30자)",
     "content": "3원 통합 핵심 통찰 (5문장 이상)",
@@ -395,6 +479,7 @@ export function buildStructuredSystemPrompt(
 3. Each section must cite at least 1 source (Saju/Astro/Tarot)
 4. No vague phrases: "soon", "maybe", "probably"
 5. final_verdict.core_message MUST cite Saju + Astrology primarily
+6. free_focus MUST be present and each field must be a single clear sentence
 ` : `
 # 검증 규칙
 1. 모든 날짜는 ${today} 이후여야 함
@@ -402,9 +487,18 @@ export function buildStructuredSystemPrompt(
 3. 각 섹션은 최소 1개 출처(사주/점성/타로) 인용
 4. 애매한 표현 금지: "곧", "아마", "~할 수도"
 5. final_verdict.core_message는 반드시 사주 + 점성술 기반
+6. free_focus는 반드시 포함하고, 각 필드는 한눈에 읽히는 한 문장이어야 함
 `;
 
-  return basePrompt + '\n' + schema + '\n' + validationRules + '\n' + (isEn ? FEW_SHOT_EXAMPLES.en : FEW_SHOT_EXAMPLES.ko);
+  return [
+    basePrompt,
+    personaBlock,
+    depthRule,
+    hanjaRule,
+    schema,
+    validationRules,
+    isEn ? FEW_SHOT_EXAMPLES.en : FEW_SHOT_EXAMPLES.ko,
+  ].join('\n\n');
 }
 
 // ============================================================================
@@ -414,10 +508,19 @@ export function buildStructuredSystemPrompt(
 export function buildChatSystemPrompt(
   readingData: ChatReadingData,
   language: Language = 'ko',
-  factsOfDestinyBlock?: string
+  factsOfDestinyBlock?: string,
+  supplementalContextBlock?: string
 ): string {
   const isEn = language === 'en';
   const hasFacts = Boolean(factsOfDestinyBlock?.trim());
+  const extraBlock = supplementalContextBlock?.trim();
+  const personaBlock = buildOraclePersonaBlock(readingData.characterId, language, {
+    questionIntent: readingData.questionIntent,
+    selectionMode: readingData.selectionMode,
+  });
+  const advisorEvidenceBlock = readingData.advisorEvidenceSummary?.trim()
+    ? `\n\n${readingData.advisorEvidenceSummary.trim()}`
+    : '';
 
   const sajuSummary = typeof readingData.saju === 'string'
     ? readingData.saju
@@ -438,10 +541,10 @@ export function buildChatSystemPrompt(
   const basePrompt = buildUnifiedSystemPrompt(language);
 
   const dataSection = hasFacts
-    ? `\n${factsOfDestinyBlock}\n\n**타로 (20%)**: ${tarotSummary}`
+    ? `\n${factsOfDestinyBlock}${extraBlock ? `\n\n${extraBlock}` : ''}\n\n${personaBlock}${advisorEvidenceBlock}\n\n**타로 (20%)**: ${tarotSummary}`
     : isEn
-      ? `\n# Your Knowledge Base\n**Saju (50%)**: ${sajuSummary}\n**Astrology (30%)**: ${astroSummary}\n**Tarot (20%)**: ${tarotSummary}`
-      : `\n# 당신이 아는 정보\n**사주 (50%)**: ${sajuSummary}\n**점성술 (30%)**: ${astroSummary}\n**타로 (20%)**: ${tarotSummary}`;
+      ? `\n# Your Knowledge Base\n**Saju (50%)**: ${sajuSummary}${typeof readingData.saju === 'object' && readingData.saju?.oraclePromptBlock ? `\n\n<SAJU_PRECISION_DATA>\n${readingData.saju.oraclePromptBlock}\n</SAJU_PRECISION_DATA>` : ''}\n**Astrology (30%)**: ${astroSummary}\n**Tarot (20%)**: ${tarotSummary}${extraBlock ? `\n\n${extraBlock}` : ''}\n\n${personaBlock}${advisorEvidenceBlock}`
+      : `\n# 당신이 아는 정보\n**사주 (50%)**: ${sajuSummary}${typeof readingData.saju === 'object' && readingData.saju?.oraclePromptBlock ? `\n\n<사주_정밀_데이터>\n${readingData.saju.oraclePromptBlock}\n</사주_정밀_데이터>` : ''}\n**점성술 (30%)**: ${astroSummary}\n**타로 (20%)**: ${tarotSummary}${extraBlock ? `\n\n${extraBlock}` : ''}\n\n${personaBlock}${advisorEvidenceBlock}`;
 
   const evidenceRule = hasFacts
     ? isEn
@@ -580,6 +683,7 @@ ${evidenceRule}
 - Never invent numbers not in the data
 - Never present spiritual insight as medical, legal, or financial certainty
 ${evidenceGuideline}
+- If you use traditional East Asian terms, explain them once as 漢字(reading, plain meaning).
 
 # Good Example
 Q: "Should I quit my job?"
@@ -627,6 +731,7 @@ ${evidenceRule}
 - 영적 해석을 의료/법률/재무 확정 판단처럼 말하지 마세요.
 - 데이터에 없는 숫자를 만들어내지 말 것
 ${evidenceGuideline}
+- 한자나 전통 명리 용어를 쓰면 반드시 한자(독음, 쉬운 뜻) 형식으로 한 번 풀어 설명하세요.
 
 # 좋은 예시
 Q: "회사 그만둬야 할까요?"

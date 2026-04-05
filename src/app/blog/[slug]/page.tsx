@@ -36,6 +36,10 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
         title: `${post.title} | CosmicPath Blog`,
         description: post.description,
         keywords: post.keywords,
+        robots: {
+            index: false,
+            follow: false,
+        },
         openGraph: {
             title: post.title,
             description: post.description,
@@ -106,7 +110,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                         href="/blog"
                         className="inline-flex min-h-11 items-center rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-white/70 transition-colors hover:border-white/20 hover:text-white"
                     >
-                        ← Blog home
+                        ← Archive home
                     </Link>
 
                     <div className="mt-6 rounded-[36px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.16),transparent_38%),linear-gradient(145deg,#090c15,#101726)] p-8 shadow-[0_32px_120px_rgba(0,0,0,0.35)] md:p-12">

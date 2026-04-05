@@ -64,7 +64,7 @@ export function BlindSpotTeaser({ title, previewText, hiddenText, language, isLo
                                 className="flex items-center gap-2 bg-gradient-to-r from-gold to-yellow-600 text-black font-bold text-xs px-4 py-2 rounded-full shadow-lg hover:shadow-gold/20 transition-all"
                             >
                                 <Lock size={12} fill="currentColor" />
-                                {isEn ? 'Unlock Deep Insight' : '숨겨진 깊은 통찰 읽기'}
+                                {isEn ? 'Read the Hidden Oracle Signal' : '숨겨진 오라클 신호 읽기'}
                             </motion.button>
                         </div>
                     )}

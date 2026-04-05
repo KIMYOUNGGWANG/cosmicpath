@@ -6,7 +6,8 @@ import { buildChatSystemPrompt, type ChatReadingData } from './prompt-builder';
  */
 export function buildOracleChatSystemPrompt(
     readingData: ChatReadingData,
-    factsOfDestinyBlock?: string
+    factsOfDestinyBlock?: string,
+    supplementalContextBlock?: string
 ): string {
-    return buildChatSystemPrompt(readingData, 'ko', factsOfDestinyBlock);
+    return buildChatSystemPrompt(readingData, 'ko', factsOfDestinyBlock, supplementalContextBlock);
 }

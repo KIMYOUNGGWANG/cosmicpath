@@ -3,6 +3,45 @@
 > 기준일: 2026-03-19 | 리서치: `RESEARCH/CosmicPath_Analysis_20260318`
 > 목표: **3개월 내 MAU 3,000 / 월 수익 500만원 / k-factor 1.5**
 
+## 🧭 Focus Reset (2026-04-04)
+*원칙: 오라클 코어 루프를 강화하고, 운영 복잡도는 줄인다.*
+
+- [x] **Keep 1: Oracle Reading Core** — `/start` 무료 리딩 → 결과 → follow-up chat → 결제 루프를 최우선 제품 경험으로 유지
+- [x] **Keep 2: Daily Retention** — `/daily` 데일리 운세/타로를 리텐션 진입점으로 유지
+- [x] **Keep 3: Specialist Advisors** — `Sprint 8.5` 전문 상담가 체계는 핵심 차별화 요소로 계속 투자
+- [x] **Keep 4: KPI Dashboard** — `/ops/growth`는 운영용 최소 지표 대시보드로 유지
+- [x] **Freeze 1: Segmented Paywall Expansion** — 세그먼트별 카피/플랜 순서/리턴 오퍼 실험의 신규 확장은 중단하고, 결제 표면은 단순화
+- [x] **Freeze 2: Side Product Expansion** — `/match`, `/viral/career-test`, 블로그 확장은 신규 투자 보류
+- [x] **Freeze 3: Heavy Lifecycle Automation** — 신규 다단계 드립/복잡한 실험 퍼널 확장은 중단하고, 현재 D+2/D+5/D+7 리텐션 레이어만 유지
+
+## 🚧 Next Planning Block (2026-04-04)
+*현 시점 MVP 재정렬 기준 5단계*
+
+- [x] **Step A: Paywall Simplification** — 월간/연간 기본 구조로 정리하고, 주간/세그먼트 실험은 legacy 또는 숨김 처리
+- [x] **Step B: Specialist Advisors v1** — 전문 상담가 카탈로그, 질문 의도 추론, 자동 추천 규칙 설계
+- [x] **Step C: Evidence-First Prompting** — `saju-engine.ts` 기반 근거 요약기와 3층 시스템 프롬프트(안전/근거 + 전문 프레임워크 + 상담가 어조) 정리
+- [x] **Step D: Core KPI Dashboard Trim** — install, daily_active, share, paid_conversion 중심으로 운영 지표를 축소 정리
+- [x] **Step E: Side Surface De-emphasis** — `/match`, `/viral`, 블로그, 복잡한 실험 UI는 비노출/저우선순위 처리
+
+## 🎯 Product Direction Lock (2026-04-04 PM)
+*소비자 관점에서 지금 가장 강한 문제 정의를 기준으로 방향 고정*
+
+- [x] **Lock 1: Core Promise** — CosmicPath를 "사주+타로+점성술 AI"보다 "다음 행동과 타이밍을 읽어주는 개인 오라클"로 설명한다
+- [x] **Lock 2: Primary JTBD** — 사용자의 핵심 문제를 `지금 움직여도 되는지 / 더 기다려야 하는지 / 무엇을 먼저 선택해야 하는지` 같은 결정·타이밍 질문으로 둔다
+- [x] **Lock 3: Domain Framing** — 관계는 강한 use case로 유지하되, 제품 전체는 관계·커리어·재물·일상 흐름을 다루는 multi-domain oracle로 포지셔닝한다
+- [x] **Lock 4: ICP Narrowing** — 한국어권 20~35세 성인 중 중요한 선택을 앞두고 불확실성을 줄이고 싶은 사용자를 primary segment로 둔다
+- [x] **Lock 5: Paid Value Framing** — 유료는 더 많은 기능이 아니라 더 선명한 근거, 타이밍, 행동 가이드 깊이로 판매한다
+- [x] **Lock 6: Growth Order** — 공유/바이럴보다 activation, trust, retention 최적화를 먼저 한다
+
+## 🚦 Next Execution Block (2026-04-04 PM)
+*새 기능 확장보다 코어 루프를 더 날카롭게 만드는 실행 블록*
+
+- [x] **Step F: Decision Timing Messaging** — 랜딩, `/start`, 결과, paywall 카피를 `결정과 타이밍 오라클` 톤으로 통일하고 관계/커리어/재물 사례를 함께 노출
+- [x] **Step G: Intent-Led First Reading** — `/start`에서 사용자가 먼저 고민 영역을 고르고 질문 중심으로 진입하게 해 초기 입력 마찰을 줄임
+- [x] **Step H: Free Result Aha Moment** — 무료 결과에 `행동 결론 1개 + 근거 요약 1개 + 다음 질문 제안 1개`를 영역별로 보장하는 구조 설계
+- [x] **Step I: Question-Linked Daily Loop** — `/daily`를 독립 운세가 아니라 최근 오라클 질문 영역과 연결된 리텐션 루프로 재설계
+- [x] **Step J: Trust & Activation Instrumentation** — `first_result_view`, `followup_start`, `daily_return_after_reading` 같은 코어 activation 이벤트를 운영 지표에 추가
+
 ---
 
 ## 🔥 Rebased Execution Queue (2026-03-20)
@@ -34,11 +73,14 @@
 
 ---
 
-## 🚀 [NEW] Sprint 0: Oracle Pivot Execution
-*목표: 포지셔닝 변경(1:1 오라클)을 반영한 홈 개편 및 데일리 챗 전환 퍼널 구축*
-- [ ] 홈 히어로 개편 (`src/components/landing/HeroSection.tsx`)
-- [ ] 데일리 리딩 확인 후 오라클 챗 유도 CTA 연동 (`src/components/daily/DailySealedWidget.tsx`)
-- [ ] 스레즈 기반 텍스트 공유 최적화 (`src/components/share/SharePanel.tsx`)
+
+## 🚀 [NEW] Sprint 0.5: Saju Engine Core Integration (Dr.Saju Benchmarking)
+*목표: 환각 방지 및 신뢰도 향상을 위한 로컬 만세력/진태양시 계산 엔진 도입*
+- [x] `manseryeok` 패키지 설치 및 유틸리티 설정
+- [x] 출생지 경도 기반 진태양시 보정 로직(`true-solar-time.ts`) 포팅
+- [x] 사주 원국(4주 8자), 십신, 12운성 계산 래퍼(`saju-engine.ts`) 구현
+- [x] 기존 오라클/데일리 챗봇 프롬프트에 계산된 사주 데이터 주입 연동
+- [x] **Precision Guardrail Hotfix (2026-04-04)** — 이미 진태양시 보정된 시각이 `calculateSaju`에서 다시 경도 보정되지 않도록 차트 경로를 분리하고, calibration UI에 입력 시각 → 보정 시각 → 최종 시주를 노출
 
 ---
 
@@ -78,23 +120,21 @@
     - [x] 친구 가입 완료 시 초대자 Credit +1 지급
     - [x] 공유 시 보상 크레딧(1 Credit) 지급 백엔드 로직
     - [x] 기존 invite / redeem / track 로직과 중복 방지 정합화
-- [ ] **Sprint 7: Growth Optimization**
-    - [x] 리서치 기반 K-Destiny 소셜 카드(성격/성향) OG 이미지 고도화
-    - [x] 궁합 결과 OG 이미지 카드 고도화
-    - [x] Kakao 공유 루프와 OG 카드 연결 검증
-    - [x] MAU/매출 핵심 지표 트래킹 (PostHog/Mixpanel)
-    - [x] share / invite / paid conversion KPI 대시보드 정의
-
-## ⚪️ Phase C: 브랜드 강화 및 플랫폼 확장 (Scale)
-- [ ] **Sprint 8: Local UX (Kakao)**
-    - [ ] 카카오톡 로그인 QA 및 사용자 플로우 마감
-    - [ ] 알림톡/친구톡 기반 리마인드 채널 확장
-- [ ] **Sprint 9: Content & SEO**
-    - [ ] 리서치 제안 '운세 활용법' 블로그 포스팅 10건 발행
-    - [ ] 주요 검색 키워드(사주, 타로, 궁합) SEO 최적화
-- [ ] **Sprint 10: Final Polish & Launch**
-    - [ ] 전 채널 버그 픽스 및 성능 최적화
-    - [ ] 정식 버전 v2.0 배포 및 마케팅 캠페인 시작
+- [x] **Sprint 8: Precision & Personality (v3.0) — High-Level Plan**
+    - [x] **Step 1: Engine Calibration** — `saju-engine.ts` 내 진태양시 보정 고도화 및 자미/점성 요약 추출기(`getTriOracleSummary`) 설계
+    - [x] **Step 2: Persona Strategy** — 8종 캐릭터(Orion, Selene 등) 페르소나 정의 및 `prompt-builder.ts` 주입 로직 설계
+    - [x] **Step 3: Data Enrichment** — `/api/reading` 결과에 `precisionMetadata` 및 `oracleCouncil` 데이터 주입 (Async 대응)
+    - [x] **Step 4: UI/UX Lifecycle** — 결과 로딩 시 '진태양시 보정' 애니메이션 컴포넌트 및 캐릭터 선택 UI 연동
+- [x] **Sprint 8.1: Oracle Trust Hotfix**
+    - [x] `/start` 무료 리딩 결과 새로고침 시 restore 조건 완화 및 결과 화면 복구
+    - [x] 출생지 미입력 상태에서는 '진태양시 보정' 패널을 축소/조건부 노출하고 카피를 정직하게 다운그레이드
+    - [x] 현재 8종 캐릭터 선택 UI를 '자동 추천 + 상세 선택' 구조로 축소해 진입 장벽 완화
+- [x] **Sprint 8.5: Specialist Oracle Advisors (v3.1)**
+    - [x] 톤 중심 `oracle-personas.ts`를 분야 특화 상담가 카탈로그로 재설계 (`general`, `compatibility`, `reunion`, `wealth`, `timing`, `career`, `business`)
+    - [x] 질문/컨텍스트 기반 `questionIntent` 추론 및 상담가 자동 매칭 규칙 설계
+    - [x] `prompt-builder.ts` / `phase-prompts.ts`에 분야별 분석 프레임워크, 한자 독음+뜻 풀이, free/paid depth 차등 규칙 반영
+    - [x] `saju-engine.ts` 기반 분야별 evidence summary builder 추가 (사주/자미/점성 교차 검증 우선순위 포함)
+    - [x] `/api/reading` 및 follow-up metadata에 `advisorProfile`, `questionIntent`, `selectionMode(auto|manual)` 저장
 
 ## 🟡 Revenue Experiments Backlog
 *리서치 P0/P1 수익화 항목 별도 추적*

@@ -7,11 +7,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getClientIp } from '@/lib/audit-logger';
 import { rateLimit } from '@/lib/rate-limiter';
-import { calculateSaju } from '@/lib/engines/saju';
+import { prisma } from '@/lib/prisma';
 import { calculateAstrology, ZODIAC_SIGNS } from '@/lib/engines/astrology';
 import { drawCards, TarotCard } from '@/lib/engines/tarot';
 import { extractAllTags } from '@/lib/core/tag-engine';
 import { generateInterpretationGuide } from '@/lib/core/conflict-resolver';
+import {
+    buildOracleSajuPromptBlock,
+    buildOracleAdvisorEvidenceSummary,
+    calculateOracleSajuProfile,
+    OracleSajuProfile
+} from '@/lib/saju/saju-engine';
+import {
+    buildOracleAdvisorProfile,
+    getRecommendedOracleCharacterId,
+    inferQuestionIntent,
+    ORACLE_QUESTION_INTENTS,
+    resolveOracleCharacterId,
+    type OracleQuestionIntent,
+    type OracleSelectionMode,
+} from '@/lib/ai/oracle-personas';
 import {
     buildStructuredSystemPrompt,
     buildUserPrompt,
@@ -53,10 +68,276 @@ const ReadingRequestSchema = z.object({
     previousReport: z.object({}).passthrough().optional(), // previous phase data
     calendarType: z.enum(['solar', 'lunar']).default('solar'),
     unknownTime: z.boolean().default(false),
+    cityName: z.string().optional(),
+    longitude: z.number().optional(),
+    latitude: z.number().optional(),
+    questionIntent: z.enum(ORACLE_QUESTION_INTENTS).optional(),
+    selectionMode: z.enum(['auto', 'manual']).optional().default('auto'),
+    characterId: z.string().optional(),
     isPaid: z.boolean().default(false),
     inviteCode: z.string().optional(),
     readingId: z.string().optional(),
 });
+
+type ReadingLanguage = 'ko' | 'en';
+
+interface FreeFocusPayload {
+    action_conclusion: string;
+    evidence_summary: string;
+    next_question: string;
+}
+
+function sanitizeText(value: unknown): string {
+    return typeof value === 'string' ? value.trim() : '';
+}
+
+function takeLeadSentences(text: string, maxLength = 160): string {
+    const normalized = text.replace(/\s+/g, ' ').trim();
+    if (!normalized) return '';
+
+    const sentences = normalized
+        .split(/(?<=[.!?。])\s+/)
+        .map((sentence) => sentence.trim())
+        .filter(Boolean);
+
+    if (sentences.length === 0) {
+        return normalized.slice(0, maxLength).trim();
+    }
+
+    let collected = '';
+    for (const sentence of sentences) {
+        const candidate = collected ? `${collected} ${sentence}` : sentence;
+        if (candidate.length > maxLength && collected) {
+            break;
+        }
+        collected = candidate.slice(0, maxLength).trim();
+        if (candidate.length >= maxLength) {
+            break;
+        }
+    }
+
+    return collected || normalized.slice(0, maxLength).trim();
+}
+
+function buildFallbackActionConclusion(
+    questionIntent: OracleQuestionIntent,
+    language: ReadingLanguage
+): string {
+    const fallbackMap: Record<OracleQuestionIntent, Record<ReadingLanguage, string>> = {
+        general: {
+            ko: '지금은 감정 반응보다 패턴을 먼저 읽고 다음 한 수를 정리하세요.',
+            en: 'Read the pattern first instead of reacting emotionally, then decide your next move.',
+        },
+        compatibility: {
+            ko: '상대를 바꾸려 하기보다 지금은 소통 방식부터 조정하는 쪽이 유리합니다.',
+            en: 'Instead of trying to change the other person, adjust your communication pattern first.',
+        },
+        reunion: {
+            ko: '재회를 서두르기보다 먼저 흐름을 안정시키고 반응 신호를 확인하세요.',
+            en: 'Instead of rushing reunion, stabilize the flow first and confirm response signals.',
+        },
+        wealth: {
+            ko: '확장보다 현금 흐름과 리스크 관리부터 먼저 정리하세요.',
+            en: 'Prioritize cash flow and risk control before expansion.',
+        },
+        timing: {
+            ko: '지금은 밀어붙이기보다 움직일 시점과 기다릴 시점을 분리해 판단하세요.',
+            en: 'Separate move-now moments from wait-longer moments before pushing ahead.',
+        },
+        career: {
+            ko: '결정을 서두르기보다 커리어 신호를 먼저 확인하고 준비를 정리하세요.',
+            en: 'Before making the decision, confirm the career signals and tighten your preparation.',
+        },
+        business: {
+            ko: '확장보다 병목과 수익 구조를 먼저 검증하는 쪽이 맞습니다.',
+            en: 'Validate the bottleneck and revenue structure before trying to expand.',
+        },
+    };
+
+    return fallbackMap[questionIntent][language];
+}
+
+function buildFallbackNextQuestion(
+    questionIntent: OracleQuestionIntent,
+    language: ReadingLanguage
+): string {
+    const questionMap: Record<OracleQuestionIntent, Record<ReadingLanguage, string>> = {
+        general: {
+            ko: '지금 흐름에서 먼저 멈춰야 할 것과 밀어야 할 것을 더 구체적으로 알려줘.',
+            en: 'Tell me more specifically what I should stop forcing and what I should push forward now.',
+        },
+        compatibility: {
+            ko: '이 관계에서 내가 먼저 조정해야 할 소통 패턴은 뭐야?',
+            en: 'What communication pattern should I adjust first in this relationship?',
+        },
+        reunion: {
+            ko: '재회를 원한다면 지금 내 쪽에서 먼저 바꿔야 할 행동은 뭐야?',
+            en: 'If I want reunion, what should I change on my side first?',
+        },
+        wealth: {
+            ko: '이번 달엔 확장과 방어 중 어디에 더 무게를 둬야 해?',
+            en: 'This month, should I lean more toward expansion or protection?',
+        },
+        timing: {
+            ko: '지금 움직여야 할 시기와 더 기다려야 할 시기를 나눠서 말해줘.',
+            en: 'Break down when I should move now and when I should wait longer.',
+        },
+        career: {
+            ko: '이직을 밀어붙이기 전에 확인해야 할 신호 한 가지는 뭐야?',
+            en: 'What is the one signal I should confirm before pushing this career move?',
+        },
+        business: {
+            ko: '이 사업에서 가장 먼저 검증해야 할 병목은 뭐야?',
+            en: 'What bottleneck should I validate first in this business?',
+        },
+    };
+
+    return questionMap[questionIntent][language];
+}
+
+function buildFreeFocusFallback(
+    report: Record<string, unknown>,
+    params: {
+        questionIntent: OracleQuestionIntent;
+        language: ReadingLanguage;
+        advisorEvidenceSummary: string;
+    }
+): FreeFocusPayload {
+    const summary = report.summary && typeof report.summary === 'object'
+        ? report.summary as Record<string, unknown>
+        : {};
+    const finalVerdict = report.final_verdict && typeof report.final_verdict === 'object'
+        ? report.final_verdict as Record<string, unknown>
+        : {};
+
+    const actionSource =
+        sanitizeText((report.free_focus as Record<string, unknown> | undefined)?.action_conclusion) ||
+        takeLeadSentences(sanitizeText(finalVerdict.core_message), 120) ||
+        buildFallbackActionConclusion(params.questionIntent, params.language);
+
+    const evidenceSource = takeLeadSentences(
+        sanitizeText((report.free_focus as Record<string, unknown> | undefined)?.evidence_summary) ||
+        params.advisorEvidenceSummary ||
+        sanitizeText(summary.trust_reason) ||
+        sanitizeText(summary.content),
+        170
+    );
+
+    return {
+        action_conclusion: actionSource,
+        evidence_summary: evidenceSource || buildFallbackActionConclusion(params.questionIntent, params.language),
+        next_question:
+            sanitizeText((report.free_focus as Record<string, unknown> | undefined)?.next_question) ||
+            buildFallbackNextQuestion(params.questionIntent, params.language),
+    };
+}
+
+function normalizeFreeFocus(
+    report: Record<string, unknown>,
+    params: {
+        questionIntent: OracleQuestionIntent;
+        language: ReadingLanguage;
+        advisorEvidenceSummary: string;
+    }
+): FreeFocusPayload {
+    const fallback = buildFreeFocusFallback(report, params);
+    const existingFreeFocus =
+        report.free_focus && typeof report.free_focus === 'object' && !Array.isArray(report.free_focus)
+            ? report.free_focus as Record<string, unknown>
+            : {};
+
+    return {
+        action_conclusion: sanitizeText(existingFreeFocus.action_conclusion) || fallback.action_conclusion,
+        evidence_summary: sanitizeText(existingFreeFocus.evidence_summary) || fallback.evidence_summary,
+        next_question: sanitizeText(existingFreeFocus.next_question) || fallback.next_question,
+    };
+}
+
+function buildOracleReportEnrichment(
+    report: unknown,
+    params: {
+        characterId: string;
+        questionIntent: OracleQuestionIntent;
+        selectionMode: OracleSelectionMode;
+        language: ReadingLanguage;
+        advisorProfile: ReturnType<typeof buildOracleAdvisorProfile>;
+        advisorEvidenceSummary: string;
+        sajuProfile: OracleSajuProfile;
+    }
+) {
+    const baseReport =
+        report && typeof report === 'object' && !Array.isArray(report)
+            ? report as Record<string, unknown>
+            : {};
+
+    return {
+        ...baseReport,
+        free_focus: normalizeFreeFocus(baseReport, {
+            questionIntent: params.questionIntent,
+            language: params.language,
+            advisorEvidenceSummary: params.advisorEvidenceSummary,
+        }),
+        characterId: params.characterId,
+        questionIntent: params.questionIntent,
+        selectionMode: params.selectionMode,
+        precisionMetadata: params.sajuProfile.precisionMetadata,
+        oracleCouncil: params.sajuProfile.oracleCouncil,
+        advisorProfile: params.advisorProfile,
+        advisorEvidenceSummary: params.advisorEvidenceSummary,
+        oraclePersona: {
+            id: params.advisorProfile.id,
+            name: params.advisorProfile.name,
+            title: params.advisorProfile.title,
+        },
+    };
+}
+
+function buildReadingMetadata(params: {
+    guide: ReturnType<typeof generateInterpretationGuide>;
+    saju: ReturnType<typeof mapToLegacySaju>;
+    astrology: ReturnType<typeof calculateAstrology>;
+    cards: TarotCard[];
+    characterId: string;
+    questionIntent: OracleQuestionIntent;
+    selectionMode: OracleSelectionMode;
+    advisorProfile: ReturnType<typeof buildOracleAdvisorProfile>;
+    advisorEvidenceSummary: string;
+    sajuProfile: OracleSajuProfile;
+}) {
+    return {
+        confidence: params.guide.confidence,
+        matching: params.guide.matching,
+        radarScores: params.guide.radarScores,
+        keyThemes: params.guide.keyThemes,
+        saju: {
+            yeonPillar: `${params.saju.yeonPillar.stem}${params.saju.yeonPillar.branch}`,
+            dayMaster: params.saju.dayMaster,
+            fullSaju: `${params.saju.yeonPillar.stem}${params.saju.yeonPillar.branch}년 ${params.saju.monthPillar.stem}${params.saju.monthPillar.branch}월 ${params.saju.dayPillar.stem}${params.saju.dayPillar.branch}일 ${params.saju.hourPillar.stem}${params.saju.hourPillar.branch}시`,
+        },
+        sajuResult: params.saju,
+        astrology: {
+            sunSign: params.astrology.sunSign,
+            moonSign: params.astrology.moonSign,
+            ascendant: params.astrology.ascendant,
+        },
+        astrologyResult: params.astrology,
+        tarot: params.cards.map((card) => ({ name: card.name, isReversed: card.isReversed })),
+        tarotCards: params.cards,
+        characterId: params.characterId,
+        questionIntent: params.questionIntent,
+        selectionMode: params.selectionMode,
+        advisorProfile: params.advisorProfile,
+        advisorEvidenceSummary: params.advisorEvidenceSummary,
+        oraclePersona: {
+            id: params.advisorProfile.id,
+            name: params.advisorProfile.name,
+            title: params.advisorProfile.title,
+        },
+        precisionMetadata: params.sajuProfile.precisionMetadata,
+        precision: params.sajuProfile.precisionMetadata,
+        oracleCouncil: params.sajuProfile.oracleCouncil,
+    };
+}
 
 export async function POST(request: NextRequest) {
     // 0. Rate Limiting
@@ -86,8 +367,15 @@ export async function POST(request: NextRequest) {
             phase,
             previousReport,
             calendarType,
+            unknownTime,
             inviteCode,
             readingId,
+            cityName,
+            longitude,
+            latitude,
+            characterId,
+            questionIntent: requestedQuestionIntent,
+            selectionMode,
         } = validationResult.data;
         let {
             context,
@@ -186,19 +474,58 @@ export async function POST(request: NextRequest) {
         // 실제 생시 반영된 Date 객체
         const exactBirthDateTime = new Date(yearPart, monthPart - 1, dayPart, hours, minutes || 0, 0);
 
-        // 2. Parallel Calculations (Saju, Partner Saju, Astrology)
-        const [saju, partnerSaju, astrology] = await Promise.all([
-            Promise.resolve(calculateSaju(exactBirthDateTime, hours, minutes || 0, calendarType === 'lunar', gender)),
+        // 2. Parallel Calculations (Saju Engine Core + Astrology)
+        // Using the new Dr.Saju engine for improved accuracy and true solar time correction
+        const sajuProfile = await calculateOracleSajuProfile({
+            birthDate,
+            birthTime,
+            gender,
+            cityName,
+            longitude,
+            latitude,
+            isLunar: calendarType === 'lunar',
+            unknownTime: unknownTime || false
+        });
+
+        // Map new engine result to legacy format for tag engine compatibility
+        const saju = mapToLegacySaju(sajuProfile);
+
+        const [partnerSaju, astrology] = await Promise.all([
             partnerBirthDate
                 ? (async () => {
-                    const [pYear, pMonth, pDay] = partnerBirthDate.split('-').map(Number);
-                    const [pHours, pMinutes] = partnerBirthTime ? partnerBirthTime.split(':').map(Number) : [12, 0];
-                    const partnerDateTime = new Date(pYear, pMonth - 1, pDay, pHours, pMinutes || 0, 0);
-                    return calculateSaju(partnerDateTime, pHours, pMinutes || 0, false, partnerGender || 'male');
+                    const profile = await calculateOracleSajuProfile({
+                        birthDate: partnerBirthDate,
+                        birthTime: partnerBirthTime || '12:00',
+                        gender: partnerGender || 'male',
+                        unknownTime: !partnerBirthTime
+                    });
+                    return mapToLegacySaju(profile);
                 })()
                 : Promise.resolve(null),
             Promise.resolve(calculateAstrology(exactBirthDateTime, birthTime))
         ]);
+        const resolvedQuestionIntent = requestedQuestionIntent ?? inferQuestionIntent({
+            context,
+            question,
+            partnerBirthDate,
+            partnerName,
+        });
+        const resolvedCharacterId = selectionMode === 'manual'
+            ? resolveOracleCharacterId(characterId)
+            : getRecommendedOracleCharacterId({
+                context,
+                question,
+                partnerBirthDate,
+                partnerName,
+                questionIntent: resolvedQuestionIntent,
+            });
+        const advisorProfile = buildOracleAdvisorProfile(resolvedCharacterId, selectionMode);
+        const advisorEvidenceSummary = buildOracleAdvisorEvidenceSummary({
+            profile: sajuProfile,
+            questionIntent: resolvedQuestionIntent,
+            evidencePriority: advisorProfile.evidencePriority,
+            language: language as 'ko' | 'en',
+        });
 
         // 3. 타로 카드 (전달받거나 자동 선택)
         const cards = (tarotCards || drawCards(1)) as TarotCard[];
@@ -211,23 +538,23 @@ export async function POST(request: NextRequest) {
 
         // ===== Premium Mode: Multi-Turn API =====
         if (tier === 'premium') {
-            // 🔒 결제 검증: Phase 2 이상은 DB에서 실제 결제 여부 확인
-            const currentPhase = validationResult.data.phase || 1;
+            // Free users can access phase 1 only. Any deeper premium path must be verified server-side.
+            const currentPhase = phase || 1;
+            const requiresPremiumVerification = !phase || currentPhase > 1;
 
-            if (currentPhase >= 2) {
+            if (requiresPremiumVerification) {
                 let isVerified = false;
 
-                // 1. readingId로 DB 조회
                 if (readingId) {
-                    const reading = await import('@/lib/prisma').then(m => m.prisma.readingResult.findUnique({
-                        where: { id: readingId }
-                    }));
+                    const reading = await prisma.readingResult.findUnique({
+                        where: { id: readingId },
+                        select: { metadata: true },
+                    });
 
-                    if (reading) {
+                    if (reading?.metadata) {
                         try {
-                            const meta = JSON.parse(reading.metadata || '{}');
-                            // Webhook이나 Save API에서 결제 완료 시 isPremium: true로 설정함
-                            if (meta.isPremium || meta.emailSent) {
+                            const meta = JSON.parse(reading.metadata) as Record<string, unknown>;
+                            if (meta.isPremium === true) {
                                 isVerified = true;
                             }
                         } catch (e) {
@@ -236,23 +563,15 @@ export async function POST(request: NextRequest) {
                     }
                 }
 
-                // 2. 초대 코드(Viral)로 인한 무료 업그레이드인 경우
-                if (isPaid && inviteCode) {
-                    // 이미 앞단 Viral Loop 로직에서 isPaid=true로 설정됨 (신뢰 가능: 서버 로직 내에서 설정됨)
+                if (inviteCode) {
                     isVerified = true;
                 }
 
                 if (!isVerified) {
-                    // [Special Case] For users who just updated their session but DB hasn't synced yet
-                    // If isPaid is true (trusted client-side flag for now, verified by DB eventually)
-                    if (isPaid) {
-                        isVerified = true;
-                    } else {
-                        return NextResponse.json(
-                            { error: '결제 정보가 확인되지 않습니다.', code: 'PAYMENT_REQUIRED' },
-                            { status: 402 }
-                        );
-                    }
+                    return NextResponse.json(
+                        { error: '결제 정보가 확인되지 않습니다.', code: 'PAYMENT_REQUIRED' },
+                        { status: 402 }
+                    );
                 }
             }
 
@@ -269,6 +588,11 @@ export async function POST(request: NextRequest) {
                 gender,
                 birthDate,
                 birthTime,
+                characterId: resolvedCharacterId,
+                selectionMode,
+                questionIntent: resolvedQuestionIntent,
+                advisorProfile,
+                advisorEvidenceSummary,
                 context,
                 question,
                 sajuData: saju,
@@ -303,26 +627,28 @@ export async function POST(request: NextRequest) {
                     return NextResponse.json({
                         success: true,
                         phase: phase,
-                        report: phaseResult.data,
+                        report: buildOracleReportEnrichment(phaseResult.data, {
+                            characterId: resolvedCharacterId,
+                            questionIntent: resolvedQuestionIntent,
+                            selectionMode,
+                            language: language as ReadingLanguage,
+                            advisorProfile,
+                            advisorEvidenceSummary,
+                            sajuProfile,
+                        }),
                         isPremium: true,
-                        metadata: {
-                            confidence: guide.confidence,
-                            matching: guide.matching,
-                            radarScores: guide.radarScores,
-                            keyThemes: guide.keyThemes,
-                            saju: {
-                                yeonPillar: `${saju.yeonPillar.stem}${saju.yeonPillar.branch}`,
-                                dayMaster: saju.dayMaster,
-                                fullSaju: `${saju.yeonPillar.stem}${saju.yeonPillar.branch}년 ${saju.monthPillar.stem}${saju.monthPillar.branch}월 ${saju.dayPillar.stem}${saju.dayPillar.branch}일 ${saju.hourPillar.stem}${saju.hourPillar.branch}시`,
-                            },
-                            sajuResult: saju,
-                            astrology: {
-                                sunSign: astrology.sunSign,
-                                moonSign: astrology.moonSign,
-                                ascendant: astrology.ascendant,
-                            },
-                            tarot: cards.map(c => ({ name: c.name, isReversed: c.isReversed })),
-                        }
+                        metadata: buildReadingMetadata({
+                            guide,
+                            saju,
+                            astrology,
+                            cards,
+                            characterId: resolvedCharacterId,
+                            questionIntent: resolvedQuestionIntent,
+                            selectionMode,
+                            advisorProfile,
+                            advisorEvidenceSummary,
+                            sajuProfile,
+                        }),
                     });
                 }
 
@@ -331,27 +657,29 @@ export async function POST(request: NextRequest) {
 
                 return NextResponse.json({
                     success: premiumResult.success,
-                    report: premiumResult.report,
+                    report: buildOracleReportEnrichment(premiumResult.report, {
+                        characterId: resolvedCharacterId,
+                        questionIntent: resolvedQuestionIntent,
+                        selectionMode,
+                        language: language as ReadingLanguage,
+                        advisorProfile,
+                        advisorEvidenceSummary,
+                        sajuProfile,
+                    }),
                     error: premiumResult.error, // 에러 메시지 포함
                     isPremium: true,
-                    metadata: {
-                        confidence: guide.confidence,
-                        matching: guide.matching,
-                        radarScores: guide.radarScores,
-                        keyThemes: guide.keyThemes,
-                        saju: {
-                            yeonPillar: `${saju.yeonPillar.stem}${saju.yeonPillar.branch}`,
-                            dayMaster: saju.dayMaster,
-                            fullSaju: `${saju.yeonPillar.stem}${saju.yeonPillar.branch}년 ${saju.monthPillar.stem}${saju.monthPillar.branch}월 ${saju.dayPillar.stem}${saju.dayPillar.branch}일 ${saju.hourPillar.stem}${saju.hourPillar.branch}시`,
-                        },
-                        sajuResult: saju,
-                        astrology: {
-                            sunSign: astrology.sunSign,
-                            moonSign: astrology.moonSign,
-                            ascendant: astrology.ascendant,
-                        },
-                        tarot: cards.map(c => ({ name: c.name, isReversed: c.isReversed })),
-                    }
+                    metadata: buildReadingMetadata({
+                        guide,
+                        saju,
+                        astrology,
+                        cards,
+                        characterId: resolvedCharacterId,
+                        questionIntent: resolvedQuestionIntent,
+                        selectionMode,
+                        advisorProfile,
+                        advisorEvidenceSummary,
+                        sajuProfile,
+                    }),
                 });
             } catch (premiumError) {
                 console.error('Premium generation failed:', premiumError);
@@ -366,7 +694,16 @@ export async function POST(request: NextRequest) {
             day: '2-digit'
         }).replace(/\. /g, '-').replace(/\./g, '');
 
-        const systemPrompt = buildStructuredSystemPrompt(language as 'ko' | 'en');
+        const systemPrompt = buildStructuredSystemPrompt(
+            language as 'ko' | 'en',
+            currentDate,
+            {
+                characterId: resolvedCharacterId,
+                questionIntent: resolvedQuestionIntent,
+                selectionMode,
+                isPremium: false,
+            }
+        );
         const userPrompt = buildUserPrompt(
             guide,
             saju,
@@ -377,7 +714,14 @@ export async function POST(request: NextRequest) {
             language as 'ko' | 'en',
             currentDate,
             partnerSaju,
-            partnerName
+            partnerName,
+            resolvedCharacterId,
+            {
+                questionIntent: resolvedQuestionIntent,
+                selectionMode,
+                advisorEvidenceSummary,
+                isPremium: false,
+            }
         );
 
         try {
@@ -389,25 +733,28 @@ export async function POST(request: NextRequest) {
 
             return NextResponse.json({
                 success: true,
-                report: report,
+                report: buildOracleReportEnrichment(report, {
+                    characterId: resolvedCharacterId,
+                    questionIntent: resolvedQuestionIntent,
+                    selectionMode,
+                    language: language as ReadingLanguage,
+                    advisorProfile,
+                    advisorEvidenceSummary,
+                    sajuProfile,
+                }),
                 isPremium: false,
-                metadata: {
-                    confidence: guide.confidence,
-                    matching: guide.matching,
-                    radarScores: guide.radarScores,
-                    keyThemes: guide.keyThemes,
-                    saju: {
-                        yeonPillar: `${saju.yeonPillar.stem}${saju.yeonPillar.branch}`,
-                        dayMaster: saju.dayMaster,
-                        fullSaju: `${saju.yeonPillar.stem}${saju.yeonPillar.branch}년 ${saju.monthPillar.stem}${saju.monthPillar.branch}월 ${saju.dayPillar.stem}${saju.dayPillar.branch}일 ${saju.hourPillar.stem}${saju.hourPillar.branch}시`,
-                    },
-                    sajuResult: saju,
-                    astrology: {
-                        sunSign: astrology.sunSign,
-                        moonSign: astrology.moonSign,
-                    },
-                    tarot: cards.map(c => ({ name: c.name, isReversed: c.isReversed })),
-                }
+                metadata: buildReadingMetadata({
+                    guide,
+                    saju,
+                    astrology,
+                    cards,
+                    characterId: resolvedCharacterId,
+                    questionIntent: resolvedQuestionIntent,
+                    selectionMode,
+                    advisorProfile,
+                    advisorEvidenceSummary,
+                    sajuProfile,
+                }),
             });
 
         } catch (aiError) {
@@ -440,4 +787,48 @@ export async function GET() {
         version: '2.0.0',
         features: ['saju', 'astrology', 'tarot', 'ai-interpretation', 'premium-multi-turn'],
     });
+}
+/**
+ * Adapter to map the new OracleSajuProfile to legacy SajuResult format 
+ * used by the Tag Engine and existing reporting logic.
+ */
+function mapToLegacySaju(profile: OracleSajuProfile) {
+    const raw = profile.raw;
+    const pillars = raw.pillars; // [hour, day, month, year]
+
+    // Convert new pillars structure to legacy format
+    const legacyPillars = {
+        hour: { stem: pillars[0].pillar.fullStem, branch: pillars[0].pillar.fullBranch },
+        day: { stem: pillars[1].pillar.fullStem, branch: pillars[1].pillar.fullBranch },
+        month: { stem: pillars[2].pillar.fullStem, branch: pillars[2].pillar.fullBranch },
+        year: { stem: pillars[3].pillar.fullStem, branch: pillars[3].pillar.fullBranch },
+    };
+
+    return {
+        ...legacyPillars,
+        yeonPillar: legacyPillars.year,
+        monthPillar: legacyPillars.month,
+        dayPillar: legacyPillars.day,
+        hourPillar: legacyPillars.hour,
+        dayMaster: pillars[1].pillar.fullStem,
+        elements: pillars.map((pillarEntry: typeof pillars[number]) => ({
+            stem: pillarEntry.pillar.stemElement,
+            branch: pillarEntry.pillar.branchElement,
+        })).reverse(), // Back to [year, month, day, hour] order for legacy
+        tenGods: {
+            yeonStem: pillars[3].stemSipsin,
+            monthStem: pillars[2].stemSipsin,
+            dayStem: pillars[1].stemSipsin, 
+            hourStem: pillars[0].stemSipsin,
+            yeonBranch: pillars[3].branchSipsin,
+            monthBranch: pillars[2].branchSipsin,
+            dayBranch: pillars[1].branchSipsin,
+            hourBranch: pillars[0].branchSipsin,
+        },
+        // Injection block for LLM prompt
+        oraclePromptBlock: profile.raw.pillars ? buildOracleSajuPromptBlock(profile) : '',
+        precisionMetadata: profile.precisionMetadata,
+        oracleCouncil: profile.oracleCouncil,
+        raw: profile 
+    };
 }

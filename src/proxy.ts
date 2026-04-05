@@ -1,6 +1,6 @@
 /**
- * Next.js Middleware - Security Headers & Request Processing
- * 
+ * Next.js Proxy - Security Headers & Request Processing
+ *
  * Applied to all requests. Adds security headers to all responses.
  */
 
@@ -49,7 +49,7 @@ const securityHeaders = [
     },
 ];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     // Clone the response
     const response = NextResponse.next();
 

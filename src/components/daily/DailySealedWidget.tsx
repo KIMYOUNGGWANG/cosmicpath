@@ -1,9 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Sparkles, Star } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
+import { ChevronRight, Sparkles, Star } from 'lucide-react';
 import { BirthDateInput } from '@/components/common/BirthDateInput';
 import { SubscriptionModal } from '@/components/payment/SubscriptionModal';
+import { trackClientGrowthEvent } from '@/lib/client-growth-events';
+import {
+    getDailyLinkedLabel,
+    parseDailyLinkedOracleContext,
+    resolveDailyLinkedArea,
+    type DailyLinkedOracleContext,
+} from '@/lib/daily/daily-linked-context';
 
 interface DailyFortuneResponse {
     date: string;
@@ -76,47 +84,162 @@ function getAreaCardTone(area: keyof DailyFortuneResponse['areas']) {
     return 'from-emerald-400/16 to-transparent text-emerald-100';
 }
 
-export function DailySealedWidget() {
+function getStoredBirthData(): StoredBirthData | null {
+    const storedData = localStorage.getItem('cosmic_user_data');
+    if (!storedData) {
+        return null;
+    }
+
+    try {
+        const parsed = JSON.parse(storedData) as {
+            birthDate?: string;
+            birthTime?: string;
+        };
+
+        return parsed.birthDate
+            ? {
+                birthDate: parsed.birthDate,
+                birthTime: parsed.birthTime,
+            }
+            : null;
+    } catch (error) {
+        console.error('Failed to parse user data', error);
+        return null;
+    }
+}
+
+function getStoredLinkedOracleContext(): DailyLinkedOracleContext | null {
+    const metadata =
+        sessionStorage.getItem('pending_metadata') ||
+        localStorage.getItem('pending_metadata');
+    const report =
+        sessionStorage.getItem('pending_report_data') ||
+        localStorage.getItem('pending_report_data');
+    const readingId =
+        sessionStorage.getItem('pending_reading_id') ||
+        localStorage.getItem('pending_reading_id') ||
+        undefined;
+
+    return parseDailyLinkedOracleContext({
+        readingId,
+        metadata,
+        data: report,
+    });
+}
+
+function buildLinkedOrbitMessage(params: {
+    linkedArea: keyof DailyFortuneResponse['areas'] | null;
+    linkedAreaScore: number | null;
+    strongestArea: [keyof DailyFortuneResponse['areas'], number];
+}) {
+    const strongestAreaLabel = areaLabelMap[params.strongestArea[0]];
+
+    if (!params.linkedArea || params.linkedAreaScore === null) {
+        return `${strongestAreaLabel} 흐름이 오늘 가장 강합니다. 지난 질문도 이 축에서 다시 보면 해석이 더 선명해집니다.`;
+    }
+
+    const linkedAreaLabel = areaLabelMap[params.linkedArea];
+
+    if (params.linkedAreaScore >= 75) {
+        return `${linkedAreaLabel} 흐름이 ${params.linkedAreaScore}점으로 강하게 열려 있습니다. 지난 질문을 오늘 다시 움직여볼 만한 타이밍입니다.`;
+    }
+
+    if (params.linkedAreaScore >= 55) {
+        return `${linkedAreaLabel} 흐름이 ${params.linkedAreaScore}점으로 안정권입니다. 큰 결론보다 작은 확인 액션을 붙이기 좋은 날입니다.`;
+    }
+
+    return `${linkedAreaLabel} 흐름이 ${params.linkedAreaScore}점으로 낮게 깔려 있습니다. 오늘은 밀어붙이기보다 준비와 관찰을 우선하세요.`;
+}
+
+interface DailySealedWidgetProps {
+    linkedOracleContext?: DailyLinkedOracleContext | null;
+}
+
+export function DailySealedWidget({ linkedOracleContext }: DailySealedWidgetProps) {
     const [forecast, setForecast] = useState<DailyFortuneResponse | null>(null);
     const [tarot, setTarot] = useState<DailyTarotResponse | null>(null);
     const [isRevealed, setIsRevealed] = useState(false);
     const [userData, setUserData] = useState<StoredBirthData | null>(null);
+    const [resolvedLinkedOracleContext, setResolvedLinkedOracleContext] = useState<DailyLinkedOracleContext | null>(linkedOracleContext ?? null);
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const [inputDate, setInputDate] = useState('');
     const [inputTime, setInputTime] = useState('');
     const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+    const trackedDailyReturnKeyRef = useRef<string | null>(null);
 
     useEffect(() => {
-        const storedData = localStorage.getItem('cosmic_user_data');
-        if (!storedData) {
+        const storedLinkedContext = getStoredLinkedOracleContext();
+        const activeLinkedContext = storedLinkedContext ?? linkedOracleContext ?? null;
+
+        if (activeLinkedContext) {
+            setResolvedLinkedOracleContext(activeLinkedContext);
+        }
+
+        const storedBirthData = getStoredBirthData();
+        const nextUserData = storedBirthData ?? (
+            activeLinkedContext?.birthDate
+                ? {
+                    birthDate: activeLinkedContext.birthDate,
+                    birthTime: activeLinkedContext.birthTime,
+                }
+                : null
+        );
+
+        if (!nextUserData) {
             return;
         }
 
-        try {
-            const parsed = JSON.parse(storedData) as {
-                birthDate?: string;
-                birthTime?: string;
-            };
+        if (!storedBirthData) {
+            localStorage.setItem('cosmic_user_data', JSON.stringify(nextUserData));
+        }
 
-            if (!parsed.birthDate) {
+        setUserData(nextUserData);
+        setInputDate(nextUserData.birthDate);
+        setInputTime(nextUserData.birthTime ?? '');
+        void fetchDailyReadings(nextUserData.birthDate, nextUserData.birthTime);
+    }, [linkedOracleContext]);
+
+    useEffect(() => {
+        const readingId = resolvedLinkedOracleContext?.readingId;
+        if (!readingId) {
+            return;
+        }
+
+        const todayKey = new Date().toISOString().slice(0, 10);
+        const storageKey = `cosmicpath.daily_return_after_reading:${readingId}:${todayKey}`;
+
+        if (trackedDailyReturnKeyRef.current === storageKey) {
+            return;
+        }
+
+        trackedDailyReturnKeyRef.current = storageKey;
+
+        try {
+            if (localStorage.getItem(storageKey) === 'true') {
                 return;
             }
 
-            const normalized = {
-                birthDate: parsed.birthDate,
-                birthTime: parsed.birthTime,
-            };
-
-            setUserData(normalized);
-            setInputDate(normalized.birthDate);
-            setInputTime(normalized.birthTime ?? '');
-            void fetchDailyReadings(normalized.birthDate, normalized.birthTime);
-        } catch (error) {
-            console.error('Failed to parse user data', error);
+            localStorage.setItem(storageKey, 'true');
+        } catch {
+            // Ignore storage access issues and continue with a best-effort track call.
         }
-    }, []);
+
+        const linkedArea = resolveDailyLinkedArea(resolvedLinkedOracleContext);
+
+        void trackClientGrowthEvent({
+            event: 'daily_return_after_reading',
+            source: 'daily_linked_loop',
+            readingId,
+            context: resolvedLinkedOracleContext.context,
+            metadata: {
+                linkedArea,
+                linkedLabel: getDailyLinkedLabel(resolvedLinkedOracleContext),
+                questionIntent: resolvedLinkedOracleContext.questionIntent,
+            },
+        });
+    }, [resolvedLinkedOracleContext]);
 
     const fetchDailyReadings = async (birthDate: string, birthTime?: string) => {
         setIsLoading(true);
@@ -277,59 +400,120 @@ export function DailySealedWidget() {
     const strongestArea = getStrongestArea(forecast.areas);
     const weakestArea = getWeakestArea(forecast.areas);
     const isPremiumTheme = forecast.isPremium === true;
+    const linkedLabel = resolvedLinkedOracleContext
+        ? getDailyLinkedLabel(resolvedLinkedOracleContext, 'ko')
+        : null;
+    const linkedArea = resolveDailyLinkedArea(resolvedLinkedOracleContext);
+    const linkedAreaScore = linkedArea ? forecast.areas[linkedArea] : null;
+    const linkedOrbitMessage = buildLinkedOrbitMessage({
+        linkedArea,
+        linkedAreaScore,
+        strongestArea,
+    });
 
     return (
         <div className="w-full min-h-[620px] flex items-center justify-center relative perspective-1000">
             {!isRevealed ? (
-                <button
-                    type="button"
-                    onClick={() => setIsRevealed(true)}
-                    className={`group relative flex h-[296px] w-[min(100%,25rem)] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[30px] border shadow-2xl transition-[transform,box-shadow,border-color] duration-300 hover:scale-[1.02] hover:-rotate-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acc-gold/70 ${
-                        isPremiumTheme
-                            ? 'border-acc-gold/30 bg-[#171117]'
-                            : 'border-white/10 bg-[#121624]'
-                    }`}
-                    style={{
-                        backgroundImage: isPremiumTheme
-                            ? 'radial-gradient(circle at top, rgba(212,175,55,0.24) 0%, #171117 62%)'
-                            : 'radial-gradient(circle at top, rgba(90,124,155,0.24) 0%, #121624 62%)',
-                        boxShadow: '0 24px 60px -16px rgba(0, 0, 0, 0.55)',
-                    }}
-                >
-                    <div className="absolute inset-x-6 top-6 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                    <div className="absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-acc-gold/10 blur-3xl transition-opacity duration-500 group-hover:opacity-100" />
-                    <div className="absolute inset-5 rounded-[24px] border border-white/6" />
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),transparent_38%)] opacity-60" />
-                    <div
-                        className={`relative z-10 mb-5 flex h-20 w-20 items-center justify-center rounded-full border-4 shadow-lg transition-transform duration-300 group-hover:scale-110 ${
-                            isPremiumTheme
-                                ? 'border-amber-950/40 bg-gradient-to-br from-acc-gold to-amber-700'
-                                : 'border-cyan-950/40 bg-gradient-to-br from-cyan-500 to-slate-800'
-                        }`}
-                    >
-                        <Star className="h-8 w-8 fill-white text-white" />
-                    </div>
+                <div className="w-full max-w-5xl">
+                    {resolvedLinkedOracleContext ? (
+                        <div className="mb-6 rounded-[28px] border border-emerald-300/14 bg-[linear-gradient(180deg,rgba(52,211,153,0.08),rgba(255,255,255,0.03))] p-5 shadow-[0_20px_60px_rgba(0,0,0,0.24)] backdrop-blur-xl">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-100">
+                                    Linked Oracle Loop
+                                </span>
+                                {linkedLabel ? (
+                                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-starlight/72">
+                                        {linkedLabel}
+                                    </span>
+                                ) : null}
+                                {resolvedLinkedOracleContext.advisorName ? (
+                                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-starlight/60">
+                                        {resolvedLinkedOracleContext.advisorName}
+                                    </span>
+                                ) : null}
+                            </div>
 
-                    <p className="text-center font-cinzel text-sm font-bold tracking-[0.28em] text-acc-gold">
-                        DAILY SEAL
-                    </p>
-                    <p className="mt-2 text-center text-xs text-starlight/55">
-                        오늘의 운세와 타로가 함께 봉인되어 있습니다
-                    </p>
-                    <div className="mt-5 flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-starlight/40">
-                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Fortune</span>
-                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Tarot</span>
-                    </div>
-                    <span className="mt-4 text-[10px] uppercase tracking-[0.24em] text-starlight/35 opacity-0 transition-opacity group-hover:opacity-100">
-                        Touch To Reveal
-                    </span>
+                            <h3 className="mt-4 text-xl font-semibold text-white">
+                                최근 오라클 질문에서 오늘의 리추얼로 바로 이어집니다.
+                            </h3>
+                            {resolvedLinkedOracleContext.question ? (
+                                <p className="mt-2 text-sm leading-7 text-starlight/72 break-keep">
+                                    최근 질문: &ldquo;{resolvedLinkedOracleContext.question}&rdquo;
+                                </p>
+                            ) : null}
+                            {resolvedLinkedOracleContext.actionConclusion ? (
+                                <p className="mt-3 text-sm leading-7 text-starlight/62 break-keep">
+                                    마지막 결론: {resolvedLinkedOracleContext.actionConclusion}
+                                </p>
+                            ) : null}
 
-                    {isPremiumTheme ? (
-                        <span className="mt-4 rounded-full border border-acc-gold/25 bg-acc-gold/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-acc-gold">
-                            Pro Theme
-                        </span>
+                            {resolvedLinkedOracleContext.readingId ? (
+                                <Link
+                                    href={`/start?reading_id=${resolvedLinkedOracleContext.readingId}`}
+                                    className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/12 bg-white/5 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                                >
+                                    마지막 오라클 다시 보기
+                                    <ChevronRight className="h-4 w-4" />
+                                </Link>
+                            ) : null}
+                        </div>
                     ) : null}
-                </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setIsRevealed(true)}
+                        className={`group relative mx-auto flex h-[296px] w-[min(100%,25rem)] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[30px] border shadow-2xl transition-[transform,box-shadow,border-color] duration-300 hover:scale-[1.02] hover:-rotate-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acc-gold/70 ${
+                            isPremiumTheme
+                                ? 'border-acc-gold/30 bg-[#171117]'
+                                : 'border-white/10 bg-[#121624]'
+                        }`}
+                        style={{
+                            backgroundImage: isPremiumTheme
+                                ? 'radial-gradient(circle at top, rgba(212,175,55,0.24) 0%, #171117 62%)'
+                                : 'radial-gradient(circle at top, rgba(90,124,155,0.24) 0%, #121624 62%)',
+                            boxShadow: '0 24px 60px -16px rgba(0, 0, 0, 0.55)',
+                        }}
+                    >
+                        <div className="absolute inset-x-6 top-6 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                        <div className="absolute -top-16 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-acc-gold/10 blur-3xl transition-opacity duration-500 group-hover:opacity-100" />
+                        <div className="absolute inset-5 rounded-[24px] border border-white/6" />
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),transparent_38%)] opacity-60" />
+                        <div
+                            className={`relative z-10 mb-5 flex h-20 w-20 items-center justify-center rounded-full border-4 shadow-lg transition-transform duration-300 group-hover:scale-110 ${
+                                isPremiumTheme
+                                    ? 'border-amber-950/40 bg-gradient-to-br from-acc-gold to-amber-700'
+                                    : 'border-cyan-950/40 bg-gradient-to-br from-cyan-500 to-slate-800'
+                            }`}
+                        >
+                            <Star className="h-8 w-8 fill-white text-white" />
+                        </div>
+
+                        <p className="text-center font-cinzel text-sm font-bold tracking-[0.28em] text-acc-gold">
+                            DAILY SEAL
+                        </p>
+                        <p className="mt-2 text-center text-xs text-starlight/55">
+                            오늘의 운세와 타로가 함께 봉인되어 있습니다
+                        </p>
+                        <div className="mt-5 flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-starlight/40">
+                            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Fortune</span>
+                            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">Tarot</span>
+                            {linkedLabel ? (
+                                <span className="rounded-full border border-emerald-300/15 bg-emerald-300/10 px-3 py-1 text-emerald-100">
+                                    {linkedLabel}
+                                </span>
+                            ) : null}
+                        </div>
+                        <span className="mt-4 text-[10px] uppercase tracking-[0.24em] text-starlight/35 opacity-0 transition-opacity group-hover:opacity-100">
+                            Touch To Reveal
+                        </span>
+
+                        {isPremiumTheme ? (
+                            <span className="mt-4 rounded-full border border-acc-gold/25 bg-acc-gold/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-acc-gold">
+                                Pro Theme
+                            </span>
+                        ) : null}
+                    </button>
+                </div>
             ) : (
                 <div
                     className={`w-full max-w-5xl overflow-hidden rounded-[32px] border p-5 shadow-2xl animate-fade-in-up md:p-8 ${
@@ -352,8 +536,68 @@ export function DailySealedWidget() {
                             <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold text-cyan-100">
                                 Tarot #{tarot.cardIndex}
                             </span>
+                            {linkedLabel ? (
+                                <span className="rounded-full border border-emerald-300/15 bg-emerald-300/10 px-3 py-1 text-[11px] font-semibold text-emerald-100">
+                                    Linked to {linkedLabel}
+                                </span>
+                            ) : null}
                         </div>
                     </div>
+
+                    {resolvedLinkedOracleContext ? (
+                        <div className="mb-6 rounded-[28px] border border-emerald-300/12 bg-[linear-gradient(180deg,rgba(52,211,153,0.07),rgba(255,255,255,0.03))] p-5 backdrop-blur-xl">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-100">
+                                    Question-Linked Orbit
+                                </span>
+                                {linkedLabel ? (
+                                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-starlight/70">
+                                        {linkedLabel}
+                                    </span>
+                                ) : null}
+                                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-starlight/60">
+                                    오늘 연결 영역: {linkedArea ? areaLabelMap[linkedArea] : areaLabelMap[strongestArea[0]]}
+                                    {linkedAreaScore !== null ? ` ${linkedAreaScore}점` : ` ${strongestArea[1]}점`}
+                                </span>
+                            </div>
+
+                            <div className="mt-4 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+                                <div className="rounded-2xl border border-white/8 bg-black/15 p-4">
+                                    <p className="text-[11px] uppercase tracking-[0.18em] text-starlight/42">
+                                        Recent Oracle Thread
+                                    </p>
+                                    <p className="mt-3 text-base leading-7 text-white break-keep">
+                                        {resolvedLinkedOracleContext.question
+                                            ? `“${resolvedLinkedOracleContext.question}”`
+                                            : '최근 오라클 질문 흐름을 기준으로 오늘의 데일리 리딩을 연결했습니다.'}
+                                    </p>
+                                    {resolvedLinkedOracleContext.actionConclusion ? (
+                                        <p className="mt-3 text-sm leading-7 text-starlight/66 break-keep">
+                                            마지막 결론: {resolvedLinkedOracleContext.actionConclusion}
+                                        </p>
+                                    ) : null}
+                                </div>
+
+                                <div className="rounded-2xl border border-white/8 bg-black/15 p-4">
+                                    <p className="text-[11px] uppercase tracking-[0.18em] text-starlight/42">
+                                        Today&apos;s Linked Signal
+                                    </p>
+                                    <p className="mt-3 text-sm leading-7 text-starlight/85 break-keep">
+                                        {linkedOrbitMessage}
+                                    </p>
+                                    {resolvedLinkedOracleContext.readingId ? (
+                                        <Link
+                                            href={`/start?reading_id=${resolvedLinkedOracleContext.readingId}`}
+                                            className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-full border border-white/12 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+                                        >
+                                            이 질문으로 다시 돌아가기
+                                            <ChevronRight className="h-4 w-4" />
+                                        </Link>
+                                    ) : null}
+                                </div>
+                            </div>
+                        </div>
+                    ) : null}
 
                     <div className="grid gap-6 lg:grid-cols-[1.35fr_0.95fr]">
                         <section className="rounded-2xl border border-white/8 bg-white/[0.03] p-5 md:p-6">

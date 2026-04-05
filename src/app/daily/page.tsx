@@ -3,6 +3,12 @@ import type { Metadata } from 'next';
 import { Navigation } from '@/components/landing/Navigation';
 import { DailySealedWidget } from '@/components/daily/DailySealedWidget';
 import { StructuredData } from '@/components/seo/StructuredData';
+import { auth } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+import {
+    getDailyLinkedLabel,
+    parseDailyLinkedOracleContext,
+} from '@/lib/daily/daily-linked-context';
 
 export const metadata: Metadata = {
     title: '오늘의 운세 & 타로 | CosmicPath',
@@ -26,7 +32,31 @@ export const metadata: Metadata = {
     },
 };
 
-export default function DailyPage() {
+export default async function DailyPage() {
+    const session = await auth();
+    const latestReading = session?.user?.id
+        ? await prisma.readingResult.findFirst({
+            where: { userId: session.user.id },
+            orderBy: { createdAt: 'desc' },
+            select: {
+                id: true,
+                createdAt: true,
+                metadata: true,
+                data: true,
+            },
+        })
+        : null;
+
+    const linkedOracleContext = latestReading
+        ? parseDailyLinkedOracleContext({
+            readingId: latestReading.id,
+            createdAt: latestReading.createdAt,
+            metadata: latestReading.metadata,
+            data: latestReading.data,
+        })
+        : null;
+    const linkedLabel = linkedOracleContext ? getDailyLinkedLabel(linkedOracleContext, 'ko') : null;
+
     const structuredData = [
         {
             '@context': 'https://schema.org',
@@ -84,17 +114,24 @@ export default function DailyPage() {
                             <span className="rounded-full border border-cyan-300/15 bg-cyan-300/10 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-cyan-100">
                                 Fortune + Tarot
                             </span>
+                            {linkedLabel ? (
+                                <span className="rounded-full border border-emerald-300/15 bg-emerald-300/10 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-emerald-100">
+                                    Linked to {linkedLabel}
+                                </span>
+                            ) : null}
                         </div>
 
                         <h1 className="mb-4 font-cinzel text-4xl text-transparent bg-clip-text bg-gradient-to-b from-acc-gold via-white to-white/50 md:text-6xl">
                             오늘의 운세 & 타로
                         </h1>
                         <p className="mx-auto max-w-2xl text-lg leading-8 text-starlight/60">
-                            생년월일 기반으로 오늘의 에너지와 한 장의 타로 메시지를 확인하세요.
+                            {linkedOracleContext?.question
+                                ? `최근 오라클 질문 "${linkedOracleContext.question}"과 이어서, 오늘의 에너지와 한 장의 타로 메시지를 다시 읽어보세요.`
+                                : '생년월일 기반으로 오늘의 에너지와 한 장의 타로 메시지를 확인하세요.'}
                         </p>
                     </header>
 
-                    <DailySealedWidget />
+                    <DailySealedWidget linkedOracleContext={linkedOracleContext} />
                 </div>
             </div>
         </main>

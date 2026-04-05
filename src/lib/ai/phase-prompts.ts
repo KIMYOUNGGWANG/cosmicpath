@@ -6,6 +6,13 @@
 import type { SajuResult } from '../engines/saju';
 import type { TarotCard } from '../engines/tarot';
 import { calculateLifePathNumber, getLifePathKeyword } from '../engines/numerology';
+import {
+  buildOraclePersonaBlock,
+  type OracleAdvisorProfile,
+  type OracleCharacterId,
+  type OracleQuestionIntent,
+  type OracleSelectionMode,
+} from './oracle-personas';
 
 // Astro data 타입 정의
 export interface AstroData {
@@ -21,6 +28,11 @@ export interface UserData {
   gender?: string;
   birthDate: string;
   birthTime: string;
+  characterId?: OracleCharacterId;
+  selectionMode?: OracleSelectionMode;
+  questionIntent?: OracleQuestionIntent;
+  advisorProfile?: OracleAdvisorProfile;
+  advisorEvidenceSummary?: string;
   context: string;
   question: string;
   sajuData?: SajuResult;
@@ -50,6 +62,19 @@ export interface PremiumReportPartial {
 function buildUserContext(userData: UserData): string {
   const lang = userData.language || 'ko';
   const isEn = lang === 'en';
+  const personaBlock = buildOraclePersonaBlock(userData.characterId, lang, {
+    questionIntent: userData.questionIntent,
+    selectionMode: userData.selectionMode,
+  });
+  const advisorEvidenceBlock = userData.advisorEvidenceSummary?.trim()
+    ? `\n${userData.advisorEvidenceSummary.trim()}\n`
+    : '';
+  const premiumDepthRule = isEn
+    ? 'Premium depth rule: each section may go deep, but every paragraph must remain evidence-led and decision-useful.'
+    : '프리미엄 깊이 규칙: 각 섹션은 깊게 들어가되, 모든 단락은 근거 중심이고 실제 의사결정에 도움이 되어야 합니다.';
+  const hanjaRule = isEn
+    ? 'If you use traditional East Asian terms, explain them once as 漢字(reading, plain meaning).'
+    : '한자나 전통 용어를 쓰면 반드시 한자(독음, 쉬운 뜻) 형식으로 한 번 풀어 설명하세요.';
 
   const nameStr = userData.name ? (isEn ? `${userData.name}` : `${userData.name}님`) : (isEn ? 'User' : '사용자님');
   const genderStr = userData.gender === 'male' ? (isEn ? 'Male' : '남성(乾命)') : (isEn ? 'Female' : '여성(坤命)');
@@ -94,7 +119,12 @@ Question: ${userData.question || 'General Reading'}
 Today's Date: ${userData.currentDate || new Date().toISOString().split('T')[0]}
 </USER_INFO>
 
-${userData.sajuData ? `<SAJU_DATA>\n${JSON.stringify(userData.sajuData, null, 2)}\n</SAJU_DATA>` : ''}
+${personaBlock}
+${advisorEvidenceBlock}
+${premiumDepthRule}
+${hanjaRule}
+
+${userData.sajuData ? `<SAJU_DATA>\n${JSON.stringify(userData.sajuData, null, 2)}\n</SAJU_DATA>${userData.sajuData.oraclePromptBlock ? `\n\n<SAJU_PRECISION_DATA>\n${userData.sajuData.oraclePromptBlock}\n</SAJU_PRECISION_DATA>` : ''}` : ''}
 ${userData.astroData ? `<ASTRO_DATA>\n${JSON.stringify(userData.astroData, null, 2)}\n</ASTRO_DATA>` : ''}
 ${tarotContext ? tarotContext : (userData.tarotCards ? `<TAROT_CARDS>\n${JSON.stringify(userData.tarotCards, null, 2)}\n</TAROT_CARDS>` : '')}
 `;
@@ -111,7 +141,12 @@ ${tarotContext ? tarotContext : (userData.tarotCards ? `<TAROT_CARDS>\n${JSON.st
 오늘의 날짜: ${userData.currentDate || new Date().toISOString().split('T')[0]} (현재 시점 기준의 운세를 정확히 판단할 것)
 </사용자_정보>
 
-${userData.sajuData ? `<사주_원국>\n${JSON.stringify(userData.sajuData, null, 2)}\n</사주_원국>` : ''}
+${personaBlock}
+${advisorEvidenceBlock}
+${premiumDepthRule}
+${hanjaRule}
+
+${userData.sajuData ? `<사주_원국>\n${JSON.stringify(userData.sajuData, null, 2)}\n</사주_원국>${userData.sajuData.oraclePromptBlock ? `\n\n<사주_정밀_데이터>\n${userData.sajuData.oraclePromptBlock}\n</사주_정밀_데이터>` : ''}` : ''}
 ${userData.astroData ? `<점성술_데이터>\n${JSON.stringify(userData.astroData, null, 2)}\n</점성술_데이터>` : ''}
 ${tarotContext ? tarotContext : (userData.tarotCards ? `<타로_카드>\n${JSON.stringify(userData.tarotCards, null, 2)}\n</타로_카드>` : '')}
 ${userData.partnerSajuData ? `

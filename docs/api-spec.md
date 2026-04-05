@@ -42,6 +42,29 @@ interface ErrorResponse {
 
 > **Spec Update Note (2026-03-20)**: `Sprint 7: Growth Metrics` 구현을 위해 내부 운영용 분석 엔드포인트 2종을 추가함.
 > 제품 기능 계약(`Daily Tarot`, `Referral Reward`)은 유지하고, 계측/운영 목적의 endpoint만 확장함.
+>
+> **Planned Contract Delta (2026-04-04)**: 오라클 캐릭터를 단순 말투 페르소나에서 분야 특화 상담가 체계로 전환한다.
+> 하위 호환성을 위해 wire key는 당분간 `characterId`를 유지하되, 의미는 `전문 상담가 ID`로 확장한다.
+>
+> **MVP Focus Reset (2026-04-04)**:
+> - 활성 소비자 제품 표면은 `/start` 오라클 리딩, `/daily`, Stripe 구독, `/ops/growth` 운영 대시보드에 집중한다.
+> - `Sprint 8.5 Specialist Oracle Advisors`는 핵심 투자 영역으로 유지한다.
+> - 세그먼트형 paywall 카피/추천 순서/리턴 오퍼 실험은 당분간 신규 확장을 중단한다.
+> - `/api/match/*`, `/api/viral/*`, 블로그/SEO 확장 관련 신규 계약 증설은 현재 MVP 범위 밖으로 둔다.
+> - 소비자-facing 메시지의 1순위 JTBD는 `지금 어떻게 움직이는 게 맞는가`에 대한 결정/타이밍 질문이며, 관계/커리어/재물/일상 흐름을 모두 다루되 브랜드는 하나의 오라클 경험으로 유지한다.
+> - 신규 다단계 드립/복잡한 lifecycle automation 계약은 추가하지 않고, 현재 `POST /api/email/drip/schedule` 범위만 유지한다.
+>
+> **Implementation Note (2026-04-04)**:
+> - `Sprint 8.5 Specialist Oracle Advisors v1`가 `/api/reading` 및 follow-up metadata 흐름에 반영되었다.
+> - `questionIntent`는 질문 기준으로 추론되고, `selectionMode === 'auto'`일 때는 follow-up에서도 상담가 재추천이 가능하다.
+> - `characterId` wire key는 유지하되, 실제 의미는 분야 특화 상담가 ID로 동작한다.
+> - display layer는 CosmicPath 세계관 기준 `Orion / Cassio / Nova / Midas / Selene / Lyra / Draco` 가이드로 브랜딩되며, 이전 ID 값은 legacy mapping으로 흡수한다.
+> - 무료 결과 experience는 점차 `행동 결론 + 근거 요약 + follow-up 확장` 구조를 기본 형태로 고도화한다.
+> - `/start` 및 결과 layer는 특정 연애 use case에만 고정되지 않고, 질문 영역 선택과 intent routing을 통해 multi-domain decision support 경험으로 확장될 수 있어야 한다.
+> - `/start` intake UI는 이제 birth form보다 `고민 영역 선택 + 질문 입력`을 먼저 노출해, 동일 contract를 유지한 채 intent-led first reading 흐름으로 진입한다.
+> - `/api/reading`의 무료 결과는 이제 `free_focus` 블록을 항상 정규화해, 화면 첫 구간에서 `행동 결론 1개 + 근거 요약 1개 + 다음 질문 1개`를 안정적으로 노출한다.
+> - `/daily` surface는 독립 위젯이 아니라 최근 `/api/reading` metadata를 읽어 `질문 영역 -> 오늘의 연결 영역 -> 다시 돌아갈 오라클 thread`를 보여주는 retention loop로 동작한다.
+> - Growth activation instrumentation은 이제 `first_result_view`, `followup_start`, `daily_return_after_reading`를 별도 canonical event로 수집해, `/ops/growth`에서 trust/activation loop를 직접 읽을 수 있게 한다.
 
 ### 1. 오늘의 운세 (Daily Fortune) ✅ 구현됨
 
@@ -69,6 +92,16 @@ interface DailyFortuneResponse {
   advice: string;          // 프리미엄 시 추가 인사이트 포함
   cachedUntil: string;     // ISO 8601
   isPremium: boolean;
+  precisionMetadata?: {    // 진태양시 정밀 보정 데이터 (v3.0)
+    tstOffset: number;     // 보정된 분 (e.g. -32)
+    correctedTime: string; // 보정 후 시간 (HH:mm)
+    lon: number;           // 사용된 경도
+  };
+  oracleCouncil?: {        // 3중 오라클 합일 데이터 (v3.0)
+    convergenceScore: number; // 0-100
+    ziweiSummary: string;
+    natalSummary: string;
+  };
 }
 ```
 
@@ -118,6 +151,10 @@ interface SubscriptionStatusResponse {
 }
 ```
 
+**Implementation Note (2026-04-04)**:
+- `pro_weekly`, `couple_monthly`는 레거시/실험 값으로 남아 있을 수 있다.
+- 현재 소비자 paywall UI는 `pro_monthly`, `pro_yearly`를 기본 merchandising 경로로 사용한다.
+
 ---
 
 ### 4. 구독 세션 생성 (Checkout Create) ✅ 구현됨
@@ -134,6 +171,10 @@ interface SubscriptionCreateRequest {
 ```
 
 **Response**: `{ checkoutUrl: string }`
+
+**Implementation Note (2026-04-04)**:
+- `MONTHLY`, `ANNUAL`은 현재 기본 CTA 경로다.
+- `WEEKLY`는 레거시 실험 플랜으로 유지 가능하지만, 기본 paywall surface에서는 숨김 처리한다.
 
 ---
 
@@ -201,15 +242,49 @@ interface ReferralRewardResponse {
 
 ---
 
-### 8. 오라클 챗 (Oracle Chat) ✅ 구현됨
+### 8. 오라클 챗 (Oracle Chat) ✅ 구현됨 (v2.0 업데이트 예정)
 
 | Method | Path | Auth |
 |:-------|:-----|:-----|
 | `POST` | `/api/chat/message` | ✅ |
 
-**Logic**: 구독자 → 무제한 | 무료 → Credit 소진 시 차단
+**Request (추가 파라미터)**
+```typescript
+interface OracleChatMessageRequest {
+  message: string;
+  birthDate?: string;
+  birthTime?: string;
+  cityName?: string;     // 진태양시 보정용 추가 (e.g. '서울')
+  longitude?: number;    // 진태양시 보정용 추가 (e.g. 127.0)
+  characterId?: string;  // v3.1 전문 상담가 ID (e.g. 'general_orion', 'compatibility_cassio', 'wealth_midas', 'timing_selene', 'reunion_nova', 'career_lyra', 'business_draco')
+  questionIntent?: 'general' | 'compatibility' | 'reunion' | 'wealth' | 'timing' | 'career' | 'business';
+  selectionMode?: 'auto' | 'manual';
+}
+```
 
----
+**Logic**: 
+- 구독자 → 무제한 | 무료 → Credit 소진 시 차단
+- (New) `saju-engine.ts` 호출 → 진태양시 보정된 4주 8자, 십신 데이터 도출 후 프롬프트 주입
+
+**Shared Oracle Advisor Contract (v3.1 Active)**:
+```typescript
+interface OracleAdvisorProfile {
+  id: string;
+  name: string;                // e.g. 'Orion'
+  title: string;               // e.g. '궤도의 해석자'
+  specialty: 'general' | 'compatibility' | 'reunion' | 'wealth' | 'timing' | 'career' | 'business';
+  description: string;         // 사용자가 고를 때 읽는 1문장 설명
+  recommendedContexts: Array<'general' | 'love' | 'money' | 'career' | 'health'>;
+  evidencePriority: Array<'saju' | 'ziwei' | 'natal' | 'tarot'>;
+  selectionMode: 'auto' | 'manual';
+}
+```
+
+**Prompting Rules (v3.1 Active)**:
+- 시스템 프롬프트는 `안전/근거 규칙` + `분야별 전문 프레임워크` + `상담가 어조` 3층 구조로 조합한다.
+- 상담가는 말투보다 `분석 도메인`이 우선이며, 질문 의도가 바뀌면 follow-up에서도 상담가 재추천이 가능해야 한다.
+- 한자/전통 용어를 쓸 때는 반드시 `한자(독음, 쉬운 뜻)`으로 풀어서 설명한다.
+- 전문 상담가 체계는 active investment 범위이며, 세그먼트형 paywall 실험보다 높은 우선순위를 가진다.
 
 ### 9. 성장 이벤트 수집 (Growth Track) ✅ 구현됨
 
@@ -244,6 +319,9 @@ interface GrowthTrackRequest {
 **Canonical KPI Events**
 - `install`
 - `daily_active` → retention 계산용
+- `first_result_view`
+- `followup_start`
+- `daily_return_after_reading`
 - `share`
 - `invite`
 - `invite_conversion`
@@ -284,6 +362,13 @@ interface GrowthSummaryResponse {
     checkoutConversionRate: number;
     viralCoefficientProxy: number;
   };
+  activation: {
+    firstResultViews: number;
+    followupStarts: number;
+    dailyReturnsAfterReading: number;
+    resultToFollowupRate: number;
+    resultToDailyReturnRate: number;
+  };
   series: Array<{
     date: string;
     installs: number;
@@ -309,7 +394,7 @@ interface GrowthSummaryResponse {
 |:------|:---------|:-----|
 | `User` | `referralCode`, `stripeSubscriptionId`, `subscriptionStatus` | 초대 코드 관리 |
 | `Referral` | `referralCode`, `inviterUserId`, `inviteeUserId` | 중복 방지 `@@unique` |
-| `ChatSession` | `credits`, `shareRewardClaimed` | Credit 지급 대상 |
+| `ChatSession` | `credits`, `shareRewardClaimed`, `characterId` | 전문 상담가/선택 상태 유지 (`characterId` wire key 유지) |
 | `FollowUpJob` | `stage`, `status`, `scheduledFor` | 드립 이메일 관리 |
 | `GrowthEvent` | `event`, `channel`, `metadata`, `createdAt` | 퍼널/리텐션/바이럴 계측 |
 

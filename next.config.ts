@@ -4,6 +4,19 @@ const nextConfig: NextConfig = {
   // Security: Disable x-powered-by header
   poweredByHeader: false,
 
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.kakaocdn.net',
+      },
+    ],
+  },
+
   // Security headers for API routes (CORS)
   async headers() {
     return [

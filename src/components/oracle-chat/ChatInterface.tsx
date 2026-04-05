@@ -42,10 +42,24 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
 
     const searchParams = useSearchParams();
 
+    const getReadingAccessKey = useCallback(() => {
+        if (typeof window === 'undefined') return null;
+        return (
+            window.sessionStorage.getItem('pending_reading_access_key') ||
+            window.localStorage.getItem('pending_reading_access_key')
+        );
+    }, []);
+
 
     const fetchStatus = useCallback(async () => {
         try {
-            const res = await fetch(`/api/reading/followup?readingId=${readingId}`);
+            const params = new URLSearchParams({ readingId });
+            const accessKey = getReadingAccessKey();
+            if (accessKey) {
+                params.set('accessKey', accessKey);
+            }
+
+            const res = await fetch(`/api/reading/followup?${params.toString()}`);
             const payload = (await res.json().catch(() => ({}))) as ChatStatusResponse & ErrorPayload;
 
             if (!res.ok) {
@@ -72,7 +86,7 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
         } catch (error) {
             console.error('Failed to load chat status:', error);
         }
-    }, [readingId]);
+    }, [getReadingAccessKey, readingId]);
 
     // 초기 상태 로드
     useEffect(() => {
@@ -190,6 +204,7 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     readingId,
+                    accessKey: getReadingAccessKey(),
                     question: userMessage,
                 }),
             });

@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { isSubscriptionActive } from '@/lib/subscription';
+import { extractReadingAccessKey, hasReadingAccess } from '@/lib/reading-access';
 
 export class OracleAccessError extends Error {
     status: number;
@@ -24,7 +25,10 @@ export interface AuthorizedOracleContext {
     isUnlimited: boolean;
 }
 
-export async function authorizeOracleAccess(readingId: string): Promise<AuthorizedOracleContext> {
+export async function authorizeOracleAccess(
+    readingId: string,
+    accessKey?: string | null
+): Promise<AuthorizedOracleContext> {
     const session = await auth();
     const userId = session?.user?.id;
 
@@ -47,6 +51,17 @@ export async function authorizeOracleAccess(readingId: string): Promise<Authoriz
     }
 
     if (!reading.userId) {
+        const canClaimAnonymousReading = hasReadingAccess({
+            readingUserId: reading.userId,
+            sessionUserId: userId,
+            storedAccessKey: extractReadingAccessKey(reading.metadata),
+            providedAccessKey: accessKey,
+        });
+
+        if (!canClaimAnonymousReading) {
+            throw new OracleAccessError(403, 'FORBIDDEN', 'You do not have access to this reading');
+        }
+
         const claimResult = await prisma.readingResult.updateMany({
             where: {
                 id: readingId,

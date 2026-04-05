@@ -9,6 +9,7 @@ import { ReadingInput, ReadingData } from '@/components/reading/reading-input';
 import { ReadingSession, createSession } from '@/lib/session/reading-session';
 import { StickyCTA } from '@/components/common/sticky-cta';
 import { trackClientGrowthEvent } from '@/lib/client-growth-events';
+import { OracleCalibrationPanel } from '@/components/reading/OracleCalibrationPanel';
 
 import { Footer } from '@/components/landing/Footer';
 import { GlobalHeader } from '@/components/common/GlobalHeader';
@@ -48,6 +49,21 @@ function CosmicPathContent() {
   const [metadata, setMetadata] = useState<{
     tarot?: { name: string; isReversed: boolean }[];
     radarScores?: { saju: number; astrology: number; tarot: number };
+    precisionMetadata?: {
+      inputDate: string;
+      inputTime: string;
+      tstOffset: number;
+      correctedDate: string;
+      correctedTime: string;
+      lon: number;
+      hourPillar: string;
+    };
+    oracleCouncil?: { convergenceScore: number; ziweiSummary: string; natalSummary: string };
+    characterId?: string;
+    oraclePersona?: { id: string; name: string; title: string };
+    language?: 'ko' | 'en';
+    isPremium?: boolean;
+    [key: string]: unknown;
   } | undefined>(undefined);
   const [language, setLanguage] = useState<'ko' | 'en'>('ko');
 
@@ -102,10 +118,27 @@ function CosmicPathContent() {
     }
   };
 
+  const hasStoredPayload = (value: string | null | undefined) => {
+    return Boolean(value && value !== 'null' && value !== 'undefined');
+  };
+
+  const getStoredReadingAccessKey = () => {
+    if (typeof window === 'undefined') return null;
+    return (
+      sessionStorage.getItem('pending_reading_access_key') ||
+      localStorage.getItem('pending_reading_access_key')
+    );
+  };
+
+  const syncReadingAccessKey = (accessKey?: string | null) => {
+    if (!accessKey) return;
+    saveToSessionAndBackup('pending_reading_access_key', accessKey);
+  };
+
   const clearSessionAndBackup = () => {
     const keys = [
       'pending_reading_data', 'pending_report_data', 'pending_metadata',
-      'pending_reading_id', 'payment_completed', 'decision_accepted',
+      'pending_reading_id', 'pending_reading_access_key', 'payment_completed', 'decision_accepted',
       'is_session_active'
     ];
     keys.forEach(key => {
@@ -175,7 +208,7 @@ function CosmicPathContent() {
 
     hasTrackedFreeResult.current = true;
     void trackClientGrowthEvent({
-      event: 'free_result_shown',
+      event: 'first_result_view',
       source: 'start_result',
       step,
       language,
@@ -302,171 +335,244 @@ function CosmicPathContent() {
 
       if (reset) {
         console.log('[Resume] Reset flag detected. Clearing session and backup.');
-        sessionStorage.clear();
-        // Also clear localStorage backup to prevent restoration
-        localStorage.removeItem('backup_reading_data');
-        localStorage.removeItem('backup_report_data');
-        localStorage.removeItem('backup_metadata');
-        localStorage.removeItem('backup_reading_id');
-        localStorage.removeItem('backup_timestamp');
+        clearSessionAndBackup();
         setHasCheckedResume(true);
         return;
       }
 
-      const readingId = readingIdFromUrl || sessionStorage.getItem('pending_reading_id');
-      const hasPendingReport = sessionStorage.getItem('pending_report_data') && sessionStorage.getItem('pending_report_data') !== 'null';
+      const sessionReadingId = sessionStorage.getItem('pending_reading_id');
+      const sessionReadingAccessKey = sessionStorage.getItem('pending_reading_access_key');
+      const sessionPendingData = sessionStorage.getItem('pending_reading_data');
+      const sessionPendingReport = sessionStorage.getItem('pending_report_data');
+      const sessionPendingMetadata = sessionStorage.getItem('pending_metadata');
 
-      // Only enter restore mode if:
-      // 1. There's a readingId in URL, OR
-      // 2. Payment just completed, OR
-      // 3. Payment was canceled, OR
-      // 4. Session is active AND there's actual pending report (not just form input)
-      if (readingId || paid === 'true' || canceled === 'true' || (isSessionActive && hasPendingReport)) {
-        console.log('[Resume] Entering restore mode...', { readingId, paid, canceled, isSessionActive, hasPendingReport });
-        if (readingId && !sessionStorage.getItem('pending_reading_id')) {
-          sessionStorage.setItem('pending_reading_id', readingId);
+      const localTimestampRaw = localStorage.getItem('backup_timestamp');
+      const localTimestamp = Number(localTimestampRaw);
+      const oneDay = 24 * 60 * 60 * 1000;
+      const hasFreshBackup =
+        Number.isFinite(localTimestamp) &&
+        Date.now() - localTimestamp < oneDay;
+
+      const backupReadingId = hasFreshBackup ? localStorage.getItem('pending_reading_id') : null;
+      const backupReadingAccessKey = hasFreshBackup ? localStorage.getItem('pending_reading_access_key') : null;
+      const backupPendingData = hasFreshBackup ? localStorage.getItem('pending_reading_data') : null;
+      const backupPendingReport = hasFreshBackup ? localStorage.getItem('pending_report_data') : null;
+      const backupPendingMetadata = hasFreshBackup ? localStorage.getItem('pending_metadata') : null;
+
+      const hasSessionResume =
+        hasStoredPayload(sessionReadingId) ||
+        hasStoredPayload(sessionReadingAccessKey) ||
+        hasStoredPayload(sessionPendingData) ||
+        hasStoredPayload(sessionPendingReport) ||
+        hasStoredPayload(sessionPendingMetadata);
+      const hasBackupResume =
+        hasStoredPayload(backupReadingId) ||
+        hasStoredPayload(backupReadingAccessKey) ||
+        hasStoredPayload(backupPendingData) ||
+        hasStoredPayload(backupPendingReport) ||
+        hasStoredPayload(backupPendingMetadata);
+      const readingId = readingIdFromUrl || sessionReadingId || backupReadingId;
+
+      if (!(readingId || paid === 'true' || canceled === 'true' || hasSessionResume || hasBackupResume)) {
+        setHasCheckedResume(true);
+        return;
+      }
+
+      console.log('[Resume] Entering restore mode...', {
+        readingId,
+        paid,
+        canceled,
+        isSessionActive,
+        hasSessionResume,
+        hasBackupResume,
+      });
+
+      if (readingId && !hasStoredPayload(sessionStorage.getItem('pending_reading_id'))) {
+        sessionStorage.setItem('pending_reading_id', readingId);
+      }
+
+      let pendingData = sessionPendingData;
+      let pendingReportJson = sessionPendingReport;
+      let pendingMetadataJson = sessionPendingMetadata;
+      let pendingReadingId = sessionReadingId || backupReadingId;
+      let pendingReadingAccessKey = sessionReadingAccessKey || backupReadingAccessKey;
+
+      if (hasBackupResume) {
+        if (!hasStoredPayload(pendingReadingAccessKey) && hasStoredPayload(backupReadingAccessKey)) {
+          pendingReadingAccessKey = backupReadingAccessKey;
         }
+        if (!hasStoredPayload(pendingData) && hasStoredPayload(backupPendingData)) {
+          pendingData = backupPendingData;
+        }
+        if (!hasStoredPayload(pendingReportJson) && hasStoredPayload(backupPendingReport)) {
+          pendingReportJson = backupPendingReport;
+        }
+        if (!hasStoredPayload(pendingMetadataJson) && hasStoredPayload(backupPendingMetadata)) {
+          pendingMetadataJson = backupPendingMetadata;
+        }
+        if (!hasStoredPayload(pendingReadingId) && hasStoredPayload(backupReadingId)) {
+          pendingReadingId = backupReadingId;
+        }
+      }
 
-        // 2. Check SessionStorage (Active session)
-        let pendingData = sessionStorage.getItem('pending_reading_data');
-        let pendingReportJson = sessionStorage.getItem('pending_report_data');
-        let pendingMetadataJson = sessionStorage.getItem('pending_metadata');
-        // isSessionActive already declared at line 175
-        let pendingReadingId = sessionStorage.getItem('pending_reading_id');
+      if (hasStoredPayload(pendingReadingId)) {
+        sessionStorage.setItem('pending_reading_id', pendingReadingId as string);
+      }
+      if (hasStoredPayload(pendingReadingAccessKey)) {
+        sessionStorage.setItem('pending_reading_access_key', pendingReadingAccessKey as string);
+      }
+      if (hasStoredPayload(pendingData)) {
+        sessionStorage.setItem('pending_reading_data', pendingData as string);
+      }
+      if (hasStoredPayload(pendingReportJson)) {
+        sessionStorage.setItem('pending_report_data', pendingReportJson as string);
+      }
+      if (hasStoredPayload(pendingMetadataJson)) {
+        sessionStorage.setItem('pending_metadata', pendingMetadataJson as string);
+      }
+      if (isSessionActive) {
+        sessionStorage.setItem('is_session_active', 'true');
+      }
 
-        // 3. Fallback to LocalStorage (Backup for accidental close/refresh)
-        // Only use if sessionStorage is empty
-        if (!pendingData) {
-          const localTimestamp = localStorage.getItem('backup_timestamp');
-          const now = Date.now();
-          const ONE_DAY = 24 * 60 * 60 * 1000;
+      let parsedMetadata: Record<string, unknown> | null = null;
+      if (hasStoredPayload(pendingMetadataJson)) {
+        try {
+          parsedMetadata = JSON.parse(pendingMetadataJson as string) as Record<string, unknown>;
+        } catch (error) {
+          console.error('[Resume] Failed to parse metadata backup:', error);
+        }
+      }
 
-          if (localTimestamp && (now - parseInt(localTimestamp) < ONE_DAY)) {
-            console.log('[Resume] Recovering session from LocalStorage backup...');
-            pendingData = localStorage.getItem('pending_reading_data');
-            pendingReportJson = localStorage.getItem('pending_report_data');
-            pendingMetadataJson = localStorage.getItem('pending_metadata');
-            // isSessionActive is already determined at line 175, no need to override
+      if (!hasStoredPayload(pendingData) && parsedMetadata?.readingData) {
+        pendingData = JSON.stringify(parsedMetadata.readingData);
+        sessionStorage.setItem('pending_reading_data', pendingData);
+      }
 
-            if (!pendingReadingId) {
-              const backupId = localStorage.getItem('pending_reading_id');
-              if (backupId) {
-                pendingReadingId = backupId;
-                sessionStorage.setItem('pending_reading_id', backupId);
-              }
-            }
-
-            // Restore to sessionStorage to keep them in sync
-            if (pendingData) sessionStorage.setItem('pending_reading_data', pendingData);
-            if (pendingReportJson) sessionStorage.setItem('pending_report_data', pendingReportJson);
-            if (pendingMetadataJson) sessionStorage.setItem('pending_metadata', pendingMetadataJson);
-            if (isSessionActive) sessionStorage.setItem('is_session_active', 'true');
-          } else {
-            // Clear expired backup
-            clearSessionAndBackup();
+      if (readingId && !hasStoredPayload(pendingData)) {
+        try {
+          console.log('[Resume] Fetching reading from DB:', readingId);
+          const params = new URLSearchParams({ id: readingId });
+          const accessKey = pendingReadingAccessKey || getStoredReadingAccessKey();
+          if (accessKey) {
+            params.set('accessKey', accessKey);
           }
-        }
+          const response = await fetch(`/api/reading/save?${params.toString()}`);
+          if (response.ok) {
+            const saved = await response.json();
+            if (saved.success) {
+              const restoredData = saved.metadata?.readingData || null;
+              const restoredReport = saved.data || null;
+              const restoredMetadata = saved.metadata || null;
 
-        if (readingId && (!pendingData || pendingData === 'null')) {
-          try {
-            console.log('[Resume] Fetching reading from DB:', readingId);
-            const response = await fetch(`/api/reading/save?id=${readingId}`);
-            if (response.ok) {
-              const saved = await response.json();
-              if (saved.success) {
-                const rData = saved.metadata?.readingData || null;
-                const rReport = saved.data || null;
-                const rMeta = saved.metadata || null;
-
-                pendingData = JSON.stringify(rData);
-                pendingReportJson = JSON.stringify(rReport);
-                pendingMetadataJson = JSON.stringify(rMeta);
-
-                // Persist back to sessionStorage for future refreshes
-                if (rData) sessionStorage.setItem('pending_reading_data', pendingData);
-                if (rReport) sessionStorage.setItem('pending_report_data', pendingReportJson);
-                if (rMeta) sessionStorage.setItem('pending_metadata', pendingMetadataJson);
-                sessionStorage.setItem('backup_timestamp', Date.now().toString()); // Update timestamp
+              if (restoredData) {
+                pendingData = JSON.stringify(restoredData);
+                sessionStorage.setItem('pending_reading_data', pendingData);
               }
+              if (restoredReport) {
+                pendingReportJson = JSON.stringify(restoredReport);
+                sessionStorage.setItem('pending_report_data', pendingReportJson);
+              }
+              if (restoredMetadata) {
+                pendingMetadataJson = JSON.stringify(restoredMetadata);
+                sessionStorage.setItem('pending_metadata', pendingMetadataJson);
+                parsedMetadata = restoredMetadata;
+              }
+              localStorage.setItem('backup_timestamp', Date.now().toString());
             }
-          } catch (err) {
-            console.error('[Resume] DB fetch failed:', err);
           }
+        } catch (err) {
+          console.error('[Resume] DB fetch failed:', err);
         }
+      }
 
-        if (pendingData && pendingData !== 'null') {
-          try {
-            console.log('[Resume] Restoring session state...', { paid, canceled, isSessionActive });
-            const data = JSON.parse(pendingData);
-            setReadingData(data);
-            setLanguage(data.language as 'ko' | 'en');
+      const hasAnyRestorablePayload =
+        hasStoredPayload(pendingData) ||
+        hasStoredPayload(pendingReportJson) ||
+        hasStoredPayload(pendingMetadataJson);
 
-            if (data.tarotCards) {
-              setSelectedCards(data.tarotCards);
-            }
+      if (hasAnyRestorablePayload) {
+        try {
+          console.log('[Resume] Restoring session state...', { paid, canceled, isSessionActive });
 
-            if (pendingReportJson && pendingReportJson !== 'null') {
-              setReportData(JSON.parse(pendingReportJson));
+          const restoredReport = hasStoredPayload(pendingReportJson)
+            ? JSON.parse(pendingReportJson as string)
+            : null;
+          const restoredReadingData = hasStoredPayload(pendingData)
+            ? JSON.parse(pendingData as string)
+            : (parsedMetadata?.readingData as ReadingData | null) || null;
+
+          if (restoredReadingData) {
+            setReadingData(restoredReadingData);
+            setLanguage(restoredReadingData.language as 'ko' | 'en');
+
+            if ((restoredReadingData as ReadingData & { tarotCards?: { name: string; isReversed: boolean }[] }).tarotCards) {
+              setSelectedCards((restoredReadingData as ReadingData & { tarotCards?: { name: string; isReversed: boolean }[] }).tarotCards || []);
             }
-            if (pendingMetadataJson && pendingMetadataJson !== 'null') {
-              const meta = JSON.parse(pendingMetadataJson);
-              setMetadata(meta);
-              if (meta.language) setLanguage(meta.language as 'ko' | 'en');
-              if (meta.isPremium) setIsPremium(true);
+          }
+
+          if (restoredReport) {
+            setReportData(restoredReport);
+          }
+
+          if (parsedMetadata) {
+            setMetadata(parsedMetadata);
+            if (parsedMetadata.language) {
+              setLanguage(parsedMetadata.language as 'ko' | 'en');
             }
-            if (sessionStorage.getItem('decision_accepted') === 'true') {
-              setIsDecisionAccepted(true);
-            }
-            if (sessionStorage.getItem('is_premium_user') === 'true') {
+            if (parsedMetadata.isPremium) {
               setIsPremium(true);
             }
-
-            // Persistence: Always go to result if we have data
-            setStep('result');
-
-            // If we have a saved ID, sync the URL
-            const pendingId = sessionStorage.getItem('pending_reading_id');
-            if (pendingId) {
-              const origin = window.location.origin;
-              const appUrl = origin.endsWith('/') ? origin.slice(0, -1) : origin;
-              setShareUrl(`${appUrl}/share/${pendingId}`);
-
-              const currentUrl = new URL(window.location.href);
-              currentUrl.searchParams.set('reading_id', pendingId);
-              // Note: invite param should already be there from initial load if present
-              window.history.replaceState({ readingId: pendingId }, '', currentUrl.toString());
-            }
-
-            // Success Flow: If explicitly paid OR previously marked as paid, trigger premium logic
-            const isPaymentCompleted = sessionStorage.getItem('payment_completed') === 'true';
-            if (paid === 'true' || isPaymentCompleted) {
-              setIsPremium(true);
-              if (paid === 'true') {
-                saveToSessionAndBackup('payment_completed', 'true'); // Ensure it's saved
-              }
-
-              const report = pendingReportJson ? JSON.parse(pendingReportJson) : null;
-
-              // Only resume if not currently loading (to avoid double trigger on refresh)
-              if (!isLoading) {
-                const nextPhase = determineNextPremiumPhase(report);
-                if (nextPhase <= TOTAL_PREMIUM_PHASES) {
-                  console.log(`[Resume] Resuming analysis from phase ${nextPhase}`);
-                  // Ensure we pass the data properly
-                  startReading(data.tarotCards || [], true, data, report || undefined, nextPhase);
-                } else {
-                  console.log('[Resume] Analysis already complete. Skipping resumption.');
-                }
-              }
-            }
-
-            // Cleanup query params ONLY, keeping sessionStorage for refresh-resilience
-            if (paid === 'true' || canceled === 'true') {
-              window.history.replaceState({}, '', window.location.pathname);
-            }
-          } catch (e) {
-            console.error("[Resume] Failure during restoration:", e);
           }
+
+          if (sessionStorage.getItem('decision_accepted') === 'true') {
+            setIsDecisionAccepted(true);
+          }
+          if (sessionStorage.getItem('is_premium_user') === 'true') {
+            setIsPremium(true);
+          }
+
+          setStep('result');
+
+          const pendingId = sessionStorage.getItem('pending_reading_id');
+          if (pendingId) {
+            const origin = window.location.origin;
+            const appUrl = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+            setShareUrl(`${appUrl}/share/${pendingId}`);
+
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('reading_id', pendingId);
+            window.history.replaceState({ readingId: pendingId }, '', currentUrl.toString());
+          }
+
+          const isPaymentCompleted = sessionStorage.getItem('payment_completed') === 'true';
+          if ((paid === 'true' || isPaymentCompleted) && restoredReadingData) {
+            setIsPremium(true);
+            if (paid === 'true') {
+              saveToSessionAndBackup('payment_completed', 'true');
+            }
+
+            if (!isLoading) {
+              const nextPhase = determineNextPremiumPhase(restoredReport);
+              if (nextPhase <= TOTAL_PREMIUM_PHASES) {
+                console.log(`[Resume] Resuming analysis from phase ${nextPhase}`);
+                startReading(
+                  (restoredReadingData as ReadingData & { tarotCards?: { name: string; isReversed: boolean }[] }).tarotCards || [],
+                  true,
+                  restoredReadingData,
+                  restoredReport || undefined,
+                  nextPhase
+                );
+              } else {
+                console.log('[Resume] Analysis already complete. Skipping resumption.');
+              }
+            }
+          }
+
+          if (paid === 'true' || canceled === 'true') {
+            window.history.replaceState({}, '', window.location.pathname);
+          }
+        } catch (error) {
+          console.error('[Resume] Failure during restoration:', error);
         }
       }
 
@@ -485,7 +591,6 @@ function CosmicPathContent() {
     hasTrackedFreeResult.current = false;
     hasTrackedReportComplete.current = false;
 
-    setReadingData(data);
     setReadingData(data);
     setLanguage(data.language);
     localStorage.setItem('user_language', data.language);
@@ -578,24 +683,24 @@ function CosmicPathContent() {
 
       const labelsKo = [
         "",
-        "핵심 요약 분석 중... (1/7)",
-        "점성술·타로 심층 분석 중... (2/7)",
-        "사주 기본 분석 중... (3/7)",
-        "운의 흐름 분석 중... (4/7)",
-        "영역별 상세 분석 중... (5/7)",
-        "특수 분석 & 액션 플랜 생성 중... (6/7)",
-        "최종 결론 도출 중... (7/7)"
+        "오라클 가이드 정렬 중... (1/7)",
+        "점성·타로 신호를 교차 확인 중... (2/7)",
+        "사주 원국과 기질 축을 계산 중... (3/7)",
+        "운의 흐름과 변곡점을 정렬 중... (4/7)",
+        "삶의 영역별 신호를 엮는 중... (5/7)",
+        "행동의 창과 타이밍 지도를 여는 중... (6/7)",
+        "최종 오라클 결론을 봉인 해제 중... (7/7)"
       ];
       // ... (labelsEn omitted for brevity, assuming existing code structure)
       const labelsEn = [
         "",
-        "Analyzing core summary... (1/7)",
-        "Deep Astro & Tarot Dive... (2/7)",
-        "Analyzing Saju fundamentals... (3/7)",
-        "Analyzing fortune flow... (4/7)",
-        "Detailed area analysis... (5/7)",
-        "Generating action plan... (6/7)",
-        "Final verdict construction... (7/7)"
+        "Aligning your oracle guide... (1/7)",
+        "Cross-checking star and tarot signals... (2/7)",
+        "Calculating your saju foundation... (3/7)",
+        "Mapping the flow and turning points... (4/7)",
+        "Weaving signals across life areas... (5/7)",
+        "Opening your action window and timing map... (6/7)",
+        "Unsealing the final oracle verdict... (7/7)"
       ];
       const labels = language === 'en' ? labelsEn : labelsKo;
 
@@ -658,18 +763,23 @@ function CosmicPathContent() {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 id: sessionStorage.getItem('pending_reading_id') || undefined,
+                accessKey: getStoredReadingAccessKey() || undefined,
                 data: accumulatedReport,
                 metadata: {
                   ...accumulatedMetadata,
                   isPremium: false, // Will be set to true by webhook/sync
+                  readingData: dataToUse,
+                  tarotCards: cards,
+                  language,
                   paymentSource: isPremiumOverride ? 'override' : 'pending'
                 }
               })
             });
             if (saveRes.ok) {
               const saved = await saveRes.json();
+              syncReadingAccessKey(saved.accessKey);
               if (saved.id && !sessionStorage.getItem('pending_reading_id')) {
-                sessionStorage.setItem('pending_reading_id', saved.id);
+                saveToSessionAndBackup('pending_reading_id', saved.id);
               }
             }
           } catch (e) {
@@ -711,6 +821,7 @@ function CosmicPathContent() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               id: existingId || undefined,
+              accessKey: getStoredReadingAccessKey() || undefined,
               data: accumulatedReport,
 
               metadata: {
@@ -737,17 +848,19 @@ function CosmicPathContent() {
             return;
           }
 
-          const { id } = await response.json();
-          if (id) {
-            saveToSessionAndBackup('pending_reading_id', id);
+          const savedPayload = await response.json().catch(() => null);
+          syncReadingAccessKey(savedPayload?.accessKey);
+          const savedId = savedPayload?.id;
+          if (savedId) {
+            saveToSessionAndBackup('pending_reading_id', savedId);
             const origin = window.location.origin;
             const appUrl = origin.endsWith('/') ? origin.slice(0, -1) : origin;
-            const shareUrlPath = `/share/${id}`;
+            const shareUrlPath = `/share/${savedId}`;
             setShareUrl(`${appUrl}${shareUrlPath}`);
 
             // 브라우저 주소창 동기화 (새로고침 시 결과 유지 - /share로 이동하지 않음)
             const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('reading_id', id);
+            currentUrl.searchParams.set('reading_id', savedId);
             // inviteCode가 있다면 유지하여 리프레시 시에도 초대 모드 유지
             if (inviteCode) {
               currentUrl.searchParams.set('invite', inviteCode);
@@ -755,7 +868,7 @@ function CosmicPathContent() {
             if (autoReferralCode) {
               currentUrl.searchParams.set('referralCode', autoReferralCode);
             }
-            window.history.replaceState({ readingId: id }, '', currentUrl.toString());
+            window.history.replaceState({ readingId: savedId }, '', currentUrl.toString());
 
             // Client-side email trigger REMOVED (Moved to Server-side in /api/reading/save)
           }
@@ -846,6 +959,10 @@ function CosmicPathContent() {
     };
   };
 
+  const hasPreciseBirthLocation = Boolean(
+    readingData?.cityName || typeof readingData?.longitude === 'number'
+  );
+
   return (
     <main className="min-h-screen relative overflow-hidden text-foreground selection:bg-accent-gold selection:text-bg-void font-outfit">
       {/* Conversion-Focused Background */}
@@ -859,7 +976,7 @@ function CosmicPathContent() {
           <p className="text-white/60 text-sm animate-pulse tracking-widest font-cinzel">
             {searchParams.get('paid') === 'true'
               ? (language === 'en' ? 'PAYMENT VERIFIED! PREPARING PREMIUM REPORT...' : '결제 확인 완료! 프리미엄 리포트를 준비 중입니다...')
-              : 'CALIBRATING...'}
+              : (language === 'en' ? 'ALIGNING YOUR ORACLE PATH...' : '오라클 경로를 정렬하는 중...')}
           </p>
         </div>
       )}
@@ -879,13 +996,36 @@ function CosmicPathContent() {
               transition={{ duration: 0.8 }}
               className="w-full max-w-4xl mx-auto py-20 px-6"
             >
-              <div className="text-center mb-20">
-                <h1 className="font-cinzel text-4xl md:text-5xl text-starlight mb-4">
-                  BEGIN SEQUENCE
-                </h1>
-                <p className="text-dim text-sm tracking-[0.2em] uppercase">
-                  Enter your coordinates
-                </p>
+              <div className="mb-16 text-center">
+                <div className="mx-auto max-w-3xl rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.1),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] px-6 py-8 shadow-[0_24px_70px_rgba(2,6,23,0.24)] backdrop-blur-xl md:px-10">
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <span className="rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-acc-gold">
+                      {language === 'en' ? 'Decision Timing Oracle' : '결정과 타이밍 오라클'}
+                    </span>
+                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
+                      {language === 'en' ? 'Free First Reading' : '첫 리딩 무료'}
+                    </span>
+                  </div>
+                  <h1 className="mb-4 mt-5 font-cinzel text-4xl text-starlight md:text-5xl">
+                    {language === 'en' ? 'Map Your Decision Orbit' : '결정의 좌표 입력'}
+                  </h1>
+                  <p className="mx-auto max-w-2xl text-sm leading-7 text-white/60">
+                    {language === 'en'
+                      ? 'Choose the domain first, write one real question, and then add the coordinates that sharpen the reading across relationship, career, wealth, or daily flow.'
+                      : '먼저 고민 영역을 고르고, 진짜 질문 하나를 적은 뒤, 리딩을 정밀하게 벼려줄 좌표를 더합니다. 그러면 오라클이 관계, 커리어, 재물, 일상 흐름 중 가장 맞는 경로를 엽니다.'}
+                  </p>
+                  <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-[10px] uppercase tracking-[0.22em] text-white/45">
+                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                      {language === 'en' ? 'Pick Domain' : '영역 선택'}
+                    </span>
+                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                      {language === 'en' ? 'Write Question' : '질문 입력'}
+                    </span>
+                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
+                      {language === 'en' ? 'Add Coordinates' : '좌표 입력'}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               <ReadingInput
@@ -915,17 +1055,19 @@ function CosmicPathContent() {
               transition={{ duration: 0.7, ease: "easeOut" }}
               className="w-full max-w-5xl mx-auto py-20"
             >
-              <div className="text-center mb-12">
-                <h2 className="text-3xl md:text-4xl font-bold mb-4 font-cinzel text-glow-purple tracking-wide">
+              <div className="mb-12 text-center">
+                <div className="mx-auto max-w-3xl rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(139,92,246,0.08),rgba(255,255,255,0.02))] px-6 py-8 backdrop-blur-xl">
+                <h2 className="mb-4 text-3xl font-bold tracking-wide text-glow-purple md:text-4xl font-cinzel">
                   {language === 'en' ? 'Select Your Sacred Major Arcana' : '운명의 대아르카나를 선택하세요'}
                 </h2>
                 <div className="h-0.5 w-24 bg-gradient-to-r from-transparent via-tarot-purple/50 to-transparent mx-auto mb-6" />
-                <p className="text-white/70 text-lg font-light tracking-wide italic">
+                <p className="text-lg font-light italic tracking-wide text-white/70">
                   {language === 'en'
                     ? "Close your eyes, breathe, and let your spirit guide your hand."
                     : "숨을 가다듬고, 당신의 영혼이 손을 이끌게 하세요."
                   }
                 </p>
+                </div>
               </div>
 
               <div className="relative px-4">
@@ -949,28 +1091,26 @@ function CosmicPathContent() {
             >
               <div className="text-center mb-12">
                 <h2 className="text-2xl md:text-3xl font-cinzel text-starlight mb-4">
-                  {language === 'en' ? 'The Stars Are Aligned' : '별들의 배치가 끝났습니다'}
+                  {language === 'en' ? 'The Oracle Gate Is Open' : '오라클의 문이 열렸습니다'}
                 </h2>
                 <p className="text-acc-gold/80 text-sm tracking-widest uppercase">
-                  {language === 'en' ? 'Your destiny is sealed within' : '당신의 운명이 봉인되어 있습니다'}
+                  {language === 'en' ? 'Your clearest next move is sealed within' : '지금 가장 선명한 다음 행동이 안에 봉인되어 있습니다'}
                 </p>
               </div>
 
               <RevealContainer onReveal={handleRevealComplete}>
                 {/* Back of the card (Visual Result Summary) */}
-                <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-[#0A0A0C]">
-                  <div className="w-16 h-16 rounded-full bg-acc-gold/10 flex items-center justify-center mb-6">
-                    <span className="text-3xl">✨</span>
-                  </div>
-                  <h3 className="font-cinzel text-xl text-white mb-2">
-                    {language === 'en' ? 'Destiny Unsealed' : '봉인 해제 완료'}
-                  </h3>
-                  <p className="text-sm text-gray-400 mb-8 max-w-[200px]">
-                    {language === 'en' ? 'Your cosmic blueprint is ready.' : '당신의 우주 설계도가 준비되었습니다.'}
-                  </p>
-                  <div className="text-xs text-acc-gold animate-pulse tracking-widest uppercase">
-                    {language === 'en' ? 'Entering Dashboard...' : '대시보드로 진입 중...'}
-                  </div>
+                <div className="flex h-full w-full items-center justify-center bg-[#0A0A0C] p-4">
+                  <OracleCalibrationPanel
+                    compact
+                    language={language}
+                    loadingLabel={language === 'en' ? 'Unsealing your oracle path...' : '오라클 경로의 봉인을 푸는 중...'}
+                    loadingPhase={loadingPhase.phase}
+                    characterId={readingData?.characterId}
+                    precisionMetadata={metadata?.precisionMetadata ?? reportData?.precisionMetadata}
+                    oracleCouncil={metadata?.oracleCouncil ?? reportData?.oracleCouncil}
+                    hasPreciseBirthLocation={hasPreciseBirthLocation}
+                  />
                 </div>
               </RevealContainer>
             </motion.div>
@@ -985,35 +1125,16 @@ function CosmicPathContent() {
               transition={{ duration: 1.2, delay: isConverging ? 1.5 : 0 }}
             >
               {isLoading ? (
-                <div className="flex flex-col items-center justify-center min-h-[500px] text-gray-400">
-                  <div className="relative w-24 h-24 mb-10">
-                    <div className="absolute inset-0 border-t-2 border-accent-gold rounded-full animate-[spin_1.5s_linear_infinite]" />
-                    <div className="absolute inset-2 border-r-2 border-saju-blue rounded-full animate-[spin_2s_linear_infinite]" />
-                    <div className="absolute inset-4 border-l-2 border-tarot-purple rounded-full animate-[spin_3s_linear_infinite]" />
-                    <div className="absolute inset-0 bg-white/5 blur-xl rounded-full animate-pulse" />
-                  </div>
-
-                  <div className="text-center space-y-4 max-w-sm px-6">
-                    <p className="text-2xl font-cinzel text-white tracking-[0.15em] animate-pulse drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
-                      {loadingPhase.label || (language === 'en' ? "weaving tapestry..." : "운명의 실타래를 엮는 중...")}
-                    </p>
-
-                    {loadingPhase.phase > 0 && (
-                      <div className="space-y-2">
-                        <div className="w-64 h-[1px] bg-white/10 rounded-full overflow-hidden mx-auto">
-                          <motion.div
-                            className="h-full bg-gradient-to-r from-saju-blue via-accent-gold to-tarot-purple"
-                            initial={{ width: "0%" }}
-                            animate={{ width: `${(loadingPhase.phase / 5) * 100}%` }}
-                            transition={{ duration: 0.5 }}
-                          />
-                        </div>
-                        <p className="text-xs text-gray-500 uppercase tracking-widest font-medium">
-                          {language === 'en' ? `Phase ${loadingPhase.phase} of 5` : `심층 분석 ${loadingPhase.phase}단계`}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                <div className="flex min-h-[500px] items-center justify-center px-4 py-16">
+                  <OracleCalibrationPanel
+                    language={language}
+                    loadingLabel={loadingPhase.label || (language === 'en' ? 'Weaving your oracle path...' : '당신의 오라클 경로를 엮는 중...')}
+                    loadingPhase={loadingPhase.phase}
+                    characterId={metadata?.characterId ?? readingData?.characterId}
+                    precisionMetadata={metadata?.precisionMetadata ?? reportData?.precisionMetadata}
+                    oracleCouncil={metadata?.oracleCouncil ?? reportData?.oracleCouncil}
+                    hasPreciseBirthLocation={hasPreciseBirthLocation}
+                  />
                 </div>
               ) : reportData && reportData.summary ? (
                 <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 py-12 pt-32">
@@ -1106,13 +1227,12 @@ function CosmicPathContent() {
                                   alert('Error creating invite link');
                                 }
                               }}
-                              className="relative group overflow-hidden rounded-xl bg-gradient-to-r from-acc-gold to-[#F59E0B] px-8 py-4 font-bold text-bg-void shadow-[0_14px_32px_rgba(212,175,55,0.14)] transition-[transform,box-shadow,filter] duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(212,175,55,0.28)] hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acc-gold/70"
+                            className="group relative overflow-hidden rounded-[20px] bg-gradient-to-r from-acc-gold to-[#F59E0B] px-8 py-4 font-bold text-bg-void shadow-[0_14px_32px_rgba(212,175,55,0.14)] transition-[transform,box-shadow,filter] duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(212,175,55,0.28)] hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acc-gold/70"
                             >
                               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
                               <div className="relative flex items-center gap-2">
-                                <span className="text-xl">🎟️</span>
                                 <span className="font-cinzel tracking-wider">
-                                  {language === 'en' ? 'SEND GOLDEN TICKET' : '친구 초대하고 궁합 무료로 보기'}
+                                  {language === 'en' ? 'Send Oracle Invitation' : '친구 초대하고 궁합 무료로 보기'}
                                 </span>
                               </div>
                             </button>
@@ -1120,23 +1240,23 @@ function CosmicPathContent() {
 
                           {/* CASE B: Invited Guest -> Upsell */}
                           {isInvitationMode && (
-                            <div className="w-full max-w-md bg-white/5 border border-acc-gold/30 rounded-xl p-6 text-center animate-in fade-in slide-in-from-bottom-4">
-                              <div className="text-acc-gold text-xs font-bold tracking-widest uppercase mb-2">
-                                🎁 Special Offer
+                            <div className="animate-in fade-in slide-in-from-bottom-4 w-full max-w-md rounded-[26px] border border-acc-gold/30 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.12),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-6 text-center backdrop-blur-xl">
+                              <div className="mb-2 text-xs font-bold uppercase tracking-widest text-acc-gold">
+                                {language === 'en' ? 'Oracle Invitation' : '오라클 초대'}
                               </div>
                               <h3 className="text-white text-lg font-cinzel mb-4 leading-relaxed">
                                 {language === 'en'
-                                  ? `Curious about your 2026 Fortune?`
-                                  : `${inviterName || '친구'}님과의 궁합은 어떠셨나요?\n나의 2026년 운세도 확인해보세요.`}
+                                  ? 'Ready to open your own oracle path?'
+                                  : `방금 본 오라클 흐름은 어떠셨나요?\n이제 내 질문도 직접 열어보세요.`}
                               </h3>
                               <button
                             onClick={() => {
                               setPaymentTrackingSource('invite_upsell');
                               setIsPaymentModalOpen(true);
                             }}
-                            className="w-full rounded-lg border border-white/20 bg-white/10 py-3 font-bold text-starlight transition-[transform,background-color,border-color,color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-transparent hover:bg-acc-gold hover:text-bg-void hover:shadow-[0_16px_32px_rgba(212,175,55,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acc-gold/70"
+                            className="w-full rounded-xl border border-white/20 bg-white/10 py-3 font-bold text-starlight transition-[transform,background-color,border-color,color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-transparent hover:bg-acc-gold hover:text-bg-void hover:shadow-[0_16px_32px_rgba(212,175,55,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acc-gold/70"
                           >
-                                {language === 'en' ? 'Unlock My Fortune (30% OFF)' : '내 신년운세 확인하기 (30% 할인)'}
+                                {language === 'en' ? 'Open My Decision Reading (30% OFF)' : '내 결정 리딩 열기 (30% 할인)'}
                               </button>
                             </div>
                           )}
@@ -1234,7 +1354,7 @@ function CosmicPathContent() {
                         onClick={() => window.location.href = '/start?reset=true'}
                         className="btn-secondary px-8 py-3 text-sm font-medium tracking-widest uppercase hover:bg-white/5 transition-all"
                       >
-                        {language === 'en' ? 'Start New Journey' : '처음부터 다시하기'}
+                        {language === 'en' ? 'Re-enter Your Orbit' : '좌표 다시 입력하기'}
                       </button>
                     )}
                   </div>

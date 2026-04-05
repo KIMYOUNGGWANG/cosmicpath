@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { Lock, ScrollText, ShieldCheck, Sparkles, X } from 'lucide-react';
 import { READING_PRODUCT } from '@/lib/payment/payment-config';
 import { PromoCodeInput } from './PromoCodeInput';
 import { trackClientGrowthEvent } from '@/lib/client-growth-events';
@@ -50,6 +50,13 @@ export function PaymentModal({
     const [discount, setDiscount] = useState<number>(0);
     const [appliedReferralCode, setAppliedReferralCode] = useState<string | null>(null);
     const isEnglish = metadata?.language === 'en' || readingData?.language === 'en';
+    const getStoredReadingAccessKey = () => {
+        if (typeof window === 'undefined') return null;
+        return (
+            sessionStorage.getItem('pending_reading_access_key') ||
+            localStorage.getItem('pending_reading_access_key')
+        );
+    };
 
     // Dynamic price from prop or fetched from API
     const [fetchedPrice, setFetchedPrice] = useState<string>('');
@@ -227,8 +234,10 @@ export function PaymentModal({
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             data: currentReport,
+                            accessKey: getStoredReadingAccessKey() || undefined,
                             metadata: {
                                 ...metadata,
+                                readingData,
                                 isPremium: false, // Not premium yet
                                 email: email, // Capture email early
                                 paymentSource: 'stripe_pending'
@@ -238,9 +247,14 @@ export function PaymentModal({
 
                     if (saveRes.ok) {
                         const saved = await saveRes.json();
+                        if (saved.accessKey) {
+                            sessionStorage.setItem('pending_reading_access_key', saved.accessKey);
+                            localStorage.setItem('pending_reading_access_key', saved.accessKey);
+                        }
                         if (saved.id) {
                             readingId = saved.id;
                             sessionStorage.setItem('pending_reading_id', saved.id);
+                            localStorage.setItem('pending_reading_id', saved.id);
                             console.log('PaymentModal: Generated new readingId:', saved.id);
                         }
                     }
@@ -337,6 +351,41 @@ export function PaymentModal({
     };
 
     const isFreePromo = discount === 100 && promoCodeId;
+    const unlockBenefits = isEnglish
+        ? [
+            {
+                title: 'Decision Deep Reading',
+                description: 'Unlock the full interpretation across timing, pressure points, and your next action.',
+                Icon: ScrollText,
+            },
+            {
+                title: 'Saved Return Path',
+                description: 'Your reading stays connected when you come back after checkout.',
+                Icon: Sparkles,
+            },
+            {
+                title: 'Stripe-secured',
+                description: 'Checkout and card data are handled safely through Stripe.',
+                Icon: ShieldCheck,
+            },
+        ]
+        : [
+            {
+                title: '심화 결정 리딩',
+                description: '타이밍, 핵심 압력, 다음 행동까지 이어지는 전체 해석을 엽니다.',
+                Icon: ScrollText,
+            },
+            {
+                title: '리딩 경로 보관',
+                description: '결제 후 돌아와도 지금 질문의 리딩 경로가 그대로 이어집니다.',
+                Icon: Sparkles,
+            },
+            {
+                title: 'Stripe 안전 결제',
+                description: '결제와 카드 정보는 Stripe Checkout에서 안전하게 처리됩니다.',
+                Icon: ShieldCheck,
+            },
+        ];
 
     return (
         <AnimatePresence>
@@ -376,19 +425,23 @@ export function PaymentModal({
                                 transition={{ duration: 0.35, delay: 0.05 }}
                                 className="text-center mb-10"
                             >
+                                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#A184FF]/20 bg-[#A184FF]/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.26em] text-[#cbb5ff]">
+                                    <Lock className="h-4 w-4" />
+                                    {isEnglish ? 'Next Move Unlock' : '다음 행동 열기'}
+                                </div>
                                 <h3 className="text-2xl font-bold text-white mb-3">
-                                    {isEnglish ? 'Unlock Your Full Cosmic Report' : '전체 Cosmic Report 열기'}
+                                    {isEnglish ? 'Open Your Full Decision Reading' : '전체 결정 리딩 열기'}
                                 </h3>
                                 <p className="text-white/60 text-sm leading-relaxed">
                                     {isEnglish ? (
                                         <>
                                             The free summary ends here.<br />
-                                            The detailed reading starts below.
+                                            Your guide opens the deeper decision reading below.
                                         </>
                                     ) : (
                                         <>
                                             무료 요약은 여기까지입니다.<br />
-                                            이제부터 실제로 도움이 되는 상세 리딩이 열립니다.
+                                            이제부터 오라클 가이드가 읽은 깊은 결정 리딩이 열립니다.
                                         </>
                                     )}
                                 </p>
@@ -416,13 +469,33 @@ export function PaymentModal({
                                 className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-[transform,border-color,background-color] duration-300 hover:-translate-y-1 hover:border-white/15 hover:bg-white/[0.045]"
                             >
                                 <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#A184FF]">
-                                    {isEnglish ? 'What Opens After Payment' : '결제 후 열리는 내용'}
+                                    {isEnglish ? 'What Opens Next' : '결제 후 열리는 판단 흐름'}
                                 </p>
                                 <ul className="space-y-2 text-sm text-white/75">
-                                    <li>{isEnglish ? '2026 overall flow and timing' : '2026 전체 운의 흐름과 타이밍'}</li>
-                                    <li>{isEnglish ? 'Career, love, money, and health deep dive' : '커리어, 연애, 재물, 건강 상세 분석'}</li>
-                                    <li>{isEnglish ? 'Action guide from Saju, astrology, and tarot overlap' : '사주, 점성술, 타로가 겹치는 지점 기반 액션 가이드'}</li>
+                                    <li>{isEnglish ? 'The strongest action window behind your current question' : '현재 질문 뒤에서 가장 강하게 열리는 행동의 창'}</li>
+                                    <li>{isEnglish ? 'A cross-domain reading spanning relationship, career, money, and daily flow' : '관계, 커리어, 재물, 일상 흐름을 함께 읽는 교차 리딩'}</li>
+                                    <li>{isEnglish ? 'A next-move guide where saju, astrology, and tarot converge' : '사주, 점성술, 타로가 겹치는 지점에서 도출한 다음 행동 가이드'}</li>
                                 </ul>
+                            </motion.div>
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.35, delay: 0.12 }}
+                                className="mb-6 grid gap-3 sm:grid-cols-3"
+                            >
+                                {unlockBenefits.map(({ title, description, Icon }) => (
+                                    <div
+                                        key={title}
+                                        className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left"
+                                    >
+                                        <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[#A184FF]/20 bg-[#A184FF]/10 text-[#cbb5ff]">
+                                            <Icon className="h-4 w-4" />
+                                        </div>
+                                        <p className="text-sm font-semibold text-white">{title}</p>
+                                        <p className="mt-2 text-xs leading-6 text-white/56">{description}</p>
+                                    </div>
+                                ))}
                             </motion.div>
 
                             {/* Email Input */}
@@ -433,7 +506,7 @@ export function PaymentModal({
                                 className="mb-6"
                             >
                                 <label className="block text-xs font-semibold text-[#A184FF] mb-3 ml-1 uppercase tracking-widest">
-                                    {isEnglish ? 'Email for your result link' : '결과를 받아볼 이메일'}
+                                    {isEnglish ? 'Email for your oracle link' : '오라클 링크를 받아볼 이메일'}
                                     {isFreePromo ? <span className="text-red-400 ml-1">*</span> : <span className="text-white/30 ml-2 normal-case">(optional)</span>}
                                 </label>
                                 <input
@@ -446,8 +519,8 @@ export function PaymentModal({
                                     placeholder={isFreePromo
                                         ? 'name@example.com'
                                         : (isEnglish
-                                            ? 'Optional: receive the result link by email'
-                                            : '선택: 결제 후 결과 링크를 이메일로 받기')}
+                                            ? 'Optional: receive your oracle link by email'
+                                            : '선택: 결제 후 오라클 링크를 이메일로 받기')}
                                     className={`w-full rounded-2xl border bg-white/5 px-5 py-4 font-light text-white placeholder:text-gray-600 transition-[border-color,box-shadow,background-color] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A184FF]/40 ${emailError
                                         ? 'border-red-500 focus:border-red-500'
                                         : 'border-white/10 focus:border-[#A184FF]/50 hover:border-white/15 hover:bg-white/[0.06]'
@@ -496,14 +569,14 @@ export function PaymentModal({
                                 {isLoading
                                     ? (isEnglish ? 'Processing...' : '처리 중...')
                                     : (Number(discount) === 100
-                                        ? (isEnglish ? 'Unlock for Free' : '무료로 결과 확인하기')
-                                        : (isEnglish ? 'Unlock Full Report' : '전체 리포트 열기'))}
+                                        ? (isEnglish ? 'Open for Free' : '무료로 오라클 열기')
+                                        : (isEnglish ? 'Open Full Decision Reading' : '전체 결정 리딩 열기'))}
                             </motion.button>
 
                             <p className="mt-4 text-center text-xs text-white/35">
                                 {isEnglish
-                                    ? 'Checkout is handled by Stripe. Your reading stays saved even if you come back later.'
-                                    : '결제는 Stripe에서 안전하게 처리되며, 나중에 다시 와도 현재 리딩 상태는 유지됩니다.'}
+                                    ? 'Checkout is handled by Stripe. Your reading stays saved, so your decision path is still here when you return.'
+                                    : '결제는 Stripe에서 안전하게 처리되며, 나중에 다시 와도 현재 질문의 리딩 경로는 그대로 유지됩니다.'}
                             </p>
                         </div>
                     </motion.div>

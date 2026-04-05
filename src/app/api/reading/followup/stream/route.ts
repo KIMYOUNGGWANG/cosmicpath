@@ -1,9 +1,13 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { buildChatSystemPrompt, buildChatUserPrompt } from '@/lib/ai/prompt-builder';
+import { buildChatSystemPrompt, buildChatUserPrompt, type ChatReadingData } from '@/lib/ai/prompt-builder';
+import { mergeFollowUpMetadata, resolveFollowUpAdvisorContext } from '@/lib/ai/oracle-followup-context';
 import { generateStreamingCompletion } from '@/lib/ai/llm-client';
 import { buildFactsOfDestiny } from '@/lib/engines/intelligence-bridge';
+import type { AstrologyResult } from '@/lib/engines/astrology';
+import type { SajuResult } from '@/lib/engines/saju';
 import { authorizeOracleAccess, OracleAccessError } from '@/lib/oracle-access';
+import { trackGrowthEvent } from '@/lib/growth-events';
 
 function errorResponse(status: number, message: string, code: string) {
     return new Response(
@@ -20,6 +24,23 @@ function errorResponse(status: number, message: string, code: string) {
     );
 }
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+    return value && typeof value === 'object' && !Array.isArray(value)
+        ? value as Record<string, unknown>
+        : null;
+}
+
+function getLanguage(metadata: Record<string, unknown> | null): 'ko' | 'en' {
+    const readingData = asRecord(metadata?.readingData);
+    const value = metadata?.language ?? readingData?.language;
+    return value === 'en' ? 'en' : 'ko';
+}
+
+function getString(record: Record<string, unknown> | null, key: string): string | undefined {
+    const value = record?.[key];
+    return typeof value === 'string' ? value : undefined;
+}
+
 /**
  * POST /api/reading/followup/stream
  * 상담권(Chat) 기능: 스트리밍 버전 추가 질문 처리
@@ -28,13 +49,14 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json().catch(() => null);
         const readingId = typeof body?.readingId === 'string' ? body.readingId : '';
+        const accessKey = typeof body?.accessKey === 'string' ? body.accessKey : null;
         const question = typeof body?.question === 'string' ? body.question.trim() : '';
 
         if (!readingId || !question) {
             return errorResponse(400, 'Missing required fields', 'BAD_REQUEST');
         }
 
-        const { reading, isUnlimited } = await authorizeOracleAccess(readingId);
+        const { reading, isUnlimited } = await authorizeOracleAccess(readingId, accessKey);
 
         // 2. 채팅 세션 확인 및 생성
         let session = await prisma.chatSession.findUnique({
@@ -60,6 +82,8 @@ export async function POST(request: NextRequest) {
             });
         }
 
+        const isFirstFollowUp = session.messages.every((message) => message.role !== 'user');
+
         // 3. 크레딧 확인
         if (!isUnlimited && session.credits <= 0) {
             return errorResponse(402, 'Not enough credits', 'PAYMENT_REQUIRED');
@@ -67,30 +91,55 @@ export async function POST(request: NextRequest) {
 
         // 4. AI 컨텍스트 구성
         const reportData = JSON.parse(reading.data);
-        const metadata = reading.metadata ? JSON.parse(reading.metadata) : null;
-        const chatContext = {
-            saju: metadata?.saju || reportData.saju_sections?.overview || '사주 정보 없음',
-            astrology: metadata?.astrology || reportData.summary?.astro_anchor || '점성술 정보 없음',
-            tarot: metadata?.tarotCards || metadata?.tarot || [],
-            name: metadata?.readingData?.name
+        const parsedMetadata = reading.metadata ? JSON.parse(reading.metadata) : null;
+        const metadata = asRecord(parsedMetadata);
+        const readingData = asRecord(metadata?.readingData);
+        const chatLanguage = getLanguage(metadata);
+        const advisorContext = resolveFollowUpAdvisorContext({
+            metadata,
+            question,
+            language: chatLanguage,
+        });
+        const chatContext: ChatReadingData = {
+            saju: (metadata?.saju as ChatReadingData['saju']) || reportData.saju_sections?.overview || '사주 정보 없음',
+            astrology: (metadata?.astrology as ChatReadingData['astrology']) || reportData.summary?.astro_anchor || '점성술 정보 없음',
+            tarot: Array.isArray(metadata?.tarotCards)
+                ? metadata.tarotCards as ChatReadingData['tarot']
+                : Array.isArray(metadata?.tarot)
+                    ? metadata.tarot as ChatReadingData['tarot']
+                    : [],
+            name: getString(readingData, 'name'),
+            characterId: advisorContext.characterId,
+            questionIntent: advisorContext.questionIntent,
+            selectionMode: advisorContext.selectionMode,
+            advisorProfile: advisorContext.advisorProfile,
+            advisorEvidenceSummary: advisorContext.advisorEvidenceSummary,
         };
 
         // Facts of Destiny: 원천 데이터가 있으면 정량화된 데이터 블록 생성
         let factsOfDestinyBlock: string | undefined;
         try {
-            const rawSaju = metadata?.sajuResult || metadata?.saju;
-            const rawAstro = metadata?.astrologyResult || metadata?.astrology;
+            const rawSaju = asRecord(metadata?.sajuResult);
+            const rawAstro = asRecord(metadata?.astrologyResult);
             const hasAstroPlanets = Array.isArray(rawAstro?.planets) && rawAstro.planets.length > 0;
-            if (rawSaju && typeof rawSaju === 'object' && rawSaju.dayMaster &&
-                rawAstro && typeof rawAstro === 'object' && rawAstro.sunSign !== undefined && hasAstroPlanets) {
-                const factsData = buildFactsOfDestiny(rawSaju, rawAstro);
+            if (rawSaju?.dayMaster && rawAstro?.sunSign !== undefined && hasAstroPlanets) {
+                const factsData = buildFactsOfDestiny(
+                    rawSaju as unknown as SajuResult,
+                    rawAstro as unknown as AstrologyResult
+                );
                 factsOfDestinyBlock = factsData.fullDataBlock;
             }
         } catch (bridgeError) {
             console.warn('[Facts of Destiny] Bridge generation skipped:', bridgeError);
         }
 
-        const systemPrompt = buildChatSystemPrompt(chatContext, 'ko', factsOfDestinyBlock);
+        const localSajuPromptBlock = advisorContext.localSajuPromptBlock;
+        const systemPrompt = buildChatSystemPrompt(
+            chatContext,
+            chatLanguage,
+            factsOfDestinyBlock,
+            localSajuPromptBlock
+        );
 
         // 이전 대화 내역 (최근 6개 참조)
         const historyText = session.messages.slice(-6).map((m: { role: string; content: string }) =>
@@ -115,6 +164,7 @@ export async function POST(request: NextRequest) {
         const decoder = new TextDecoder();
         let fullResponse = '';
         let sseBuffer = '';
+        const nextMetadata = mergeFollowUpMetadata(metadata, advisorContext);
 
         const parseGeminiSseLine = (line: string): string => {
             const trimmed = line.trim();
@@ -187,7 +237,25 @@ export async function POST(request: NextRequest) {
                                 data: { credits: { decrement: 1 } },
                             });
                         }
+
+                        await transaction.readingResult.update({
+                            where: { id: readingId },
+                            data: { metadata: JSON.stringify(nextMetadata) },
+                        });
                     });
+
+                    if (isFirstFollowUp) {
+                        await trackGrowthEvent({
+                            event: 'followup_start',
+                            readingId,
+                            channel: 'oracle_followup_stream',
+                            metadata: {
+                                sessionId: session!.id,
+                                questionIntent: advisorContext.questionIntent,
+                                selectionMode: advisorContext.selectionMode,
+                            },
+                        });
+                    }
                 } catch (dbError) {
                     console.error('[Oracle Stream DB Update Error]', dbError);
                 }

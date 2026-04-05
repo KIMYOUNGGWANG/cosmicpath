@@ -1,80 +1,133 @@
-
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
 import { rateLimit } from '@/lib/rate-limiter';
+import {
+    extractReadingAccessKey,
+    hasReadingAccess,
+} from '@/lib/reading-access';
 
 const createReviewSchema = z.object({
     readingId: z.string().optional(),
+    accessKey: z.string().optional(),
     nickname: z.string().min(1).max(20),
     rating: z.number().int().min(1).max(5),
     content: z.string().min(10).max(500),
     isPromoUser: z.boolean().default(false),
 });
 
-export async function GET(request: NextRequest) {
+function maskNickname(name: string): string {
+    if (!name) return 'Anonymous';
+    if (name.length <= 2) return `${name[0]}*`;
+    if (name.includes(' ')) return `${name.split(' ')[0]} **`;
+    return `${name[0]}${'*'.repeat(Math.max(1, name.length - 2))}${name[name.length - 1]}`;
+}
+
+export async function GET() {
     try {
         const rawReviews = await prisma.review.findMany({
             where: { isApproved: true },
             orderBy: { createdAt: 'desc' },
-            take: 20
+            take: 20,
+            select: {
+                id: true,
+                nickname: true,
+                rating: true,
+                content: true,
+                createdAt: true,
+            },
         });
 
-        // 서버 사이드 마스킹 (개인정보 보호)
-        const reviews = rawReviews.map(review => ({
+        const reviews = rawReviews.map((review) => ({
             ...review,
-            nickname: maskNickname(review.nickname)
+            nickname: maskNickname(review.nickname),
         }));
 
         return NextResponse.json({ reviews });
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 });
     }
 }
 
-function maskNickname(name: string) {
-    if (!name) return 'Anonymous';
-    if (name.length <= 2) return name[0] + '*';
-    if (name.includes(' ')) return name.split(' ')[0] + ' **';
-    return name[0] + '*'.repeat(Math.max(1, name.length - 2)) + name[name.length - 1];
-}
-
 export async function POST(request: NextRequest) {
-    // Rate limit: IP당 1분에 3회 제한 (스팸 리뷰 방지)
     const rateLimitResponse = await rateLimit(request, { limit: 3, windowMs: 60000 });
     if (rateLimitResponse) return rateLimitResponse;
 
     try {
         const body = await request.json();
         const data = createReviewSchema.parse(body);
+        const session = await auth();
+        const sessionUserId = session?.user?.id ?? null;
 
-        const review = await prisma.review.create({
-            data: {
-                ...data,
-                isApproved: false // Requires admin approval
-            }
-        });
-
-        // 🎁 REWARD LOGIC: Grant +1 Credit for valid review
-        let rewardGranted = false;
         if (data.readingId) {
-            try {
-                // Find and update the chat session linked to this reading
-                const updatedSession = await prisma.chatSession.update({
-                    where: { readingResultId: data.readingId },
-                    data: {
-                        credits: { increment: 1 } // Give 1 free question
-                    }
-                });
-                if (updatedSession) rewardGranted = true;
-            } catch (err) {
-                console.error("Failed to grant reward:", err);
-                // Don't fail the review creation just because reward failed, but log it
+            const reading = await prisma.readingResult.findUnique({
+                where: { id: data.readingId },
+                select: {
+                    id: true,
+                    userId: true,
+                    metadata: true,
+                },
+            });
+
+            if (!reading) {
+                return NextResponse.json({ error: 'Reading not found' }, { status: 404 });
+            }
+
+            const canReview = hasReadingAccess({
+                readingUserId: reading.userId,
+                sessionUserId,
+                storedAccessKey: extractReadingAccessKey(reading.metadata),
+                providedAccessKey: data.accessKey,
+            });
+
+            if (!canReview) {
+                return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+            }
+
+            const existingReview = await prisma.review.findFirst({
+                where: { readingId: data.readingId },
+                select: { id: true },
+            });
+
+            if (existingReview) {
+                return NextResponse.json(
+                    { error: 'Review already submitted for this reading' },
+                    { status: 409 }
+                );
             }
         }
 
-        return NextResponse.json({ success: true, review, rewardGranted });
+        const result = await prisma.$transaction(async (tx) => {
+            const review = await tx.review.create({
+                data: {
+                    readingId: data.readingId,
+                    nickname: data.nickname,
+                    rating: data.rating,
+                    content: data.content,
+                    isPromoUser: data.isPromoUser,
+                    isApproved: false,
+                },
+            });
+
+            let rewardGranted = false;
+            if (data.readingId) {
+                const updatedSession = await tx.chatSession.updateMany({
+                    where: { readingResultId: data.readingId },
+                    data: { credits: { increment: 1 } },
+                });
+                rewardGranted = updatedSession.count > 0;
+            }
+
+            return { review, rewardGranted };
+        });
+
+        return NextResponse.json({ success: true, ...result });
     } catch (error) {
+        if (error instanceof z.ZodError) {
+            return NextResponse.json({ error: 'Invalid review payload' }, { status: 400 });
+        }
+
         return NextResponse.json({ error: 'Failed to create review' }, { status: 400 });
     }
 }

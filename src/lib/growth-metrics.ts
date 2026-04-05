@@ -16,6 +16,14 @@ interface GrowthSourcePoint {
     count: number;
 }
 
+interface GrowthActivationSnapshot {
+    firstResultViews: number;
+    followupStarts: number;
+    dailyReturnsAfterReading: number;
+    resultToFollowupRate: number;
+    resultToDailyReturnRate: number;
+}
+
 export interface GrowthSummary {
     dateRange: {
         from: string;
@@ -40,6 +48,7 @@ export interface GrowthSummary {
         checkoutConversionRate: number;
         viralCoefficientProxy: number;
     };
+    activation: GrowthActivationSnapshot;
     series: GrowthSeriesPoint[];
     topSources: GrowthSourcePoint[];
 }
@@ -94,6 +103,9 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
     let checkoutStarts = 0;
     let paywallViews = 0;
     let landingViews = 0;
+    let firstResultViews = 0;
+    let followupStarts = 0;
+    let dailyReturnsAfterReading = 0;
 
     for (const event of events) {
         const dayKey = toDayKey(event.createdAt);
@@ -127,6 +139,15 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
             case 'share':
                 shares += 1;
                 if (series) series.shares += 1;
+                break;
+            case 'first_result_view':
+                firstResultViews += 1;
+                break;
+            case 'followup_start':
+                followupStarts += 1;
+                break;
+            case 'daily_return_after_reading':
+                dailyReturnsAfterReading += 1;
                 break;
             case 'invite':
                 invites += 1;
@@ -195,6 +216,17 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
             landingToCheckoutRate: landingViews > 0 ? Number(((checkoutStarts / landingViews) * 100).toFixed(1)) : 0,
             checkoutConversionRate: checkoutStarts > 0 ? Number(((paidConversions / checkoutStarts) * 100).toFixed(1)) : 0,
             viralCoefficientProxy: installs > 0 ? Number((inviteConversions / installs).toFixed(2)) : 0,
+        },
+        activation: {
+            firstResultViews,
+            followupStarts,
+            dailyReturnsAfterReading,
+            resultToFollowupRate: firstResultViews > 0
+                ? Number(((followupStarts / firstResultViews) * 100).toFixed(1))
+                : 0,
+            resultToDailyReturnRate: firstResultViews > 0
+                ? Number(((dailyReturnsAfterReading / firstResultViews) * 100).toFixed(1))
+                : 0,
         },
         series,
         topSources,

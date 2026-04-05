@@ -69,12 +69,12 @@ export function BlurredPreviewSection({
                         className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#D4AF37] to-[#B4941F] text-black font-bold rounded-full shadow-lg shadow-[#D4AF37]/20 transition-all hover:shadow-[#D4AF37]/40 z-10"
                     >
                         <Lock size={16} />
-                        <span>{isEn ? 'Unlock Full Analysis' : '전체 분석 잠금 해제'}</span>
+                        <span>{isEn ? 'Open Full Decision Reading' : '전체 결정 리딩 열기'}</span>
                     </motion.button>
                     <p className="text-xs text-white/40 mt-3 text-center max-w-[200px]">
                         {isEn
-                            ? 'Your personalized insight is ready'
-                            : '당신만을 위한 분석이 준비되어 있습니다'}
+                            ? 'Your oracle guide has already prepared the next layer of this question'
+                            : '오라클 가이드가 지금 질문의 다음 층위 해석을 이미 준비했습니다'}
                     </p>
                 </div>
 

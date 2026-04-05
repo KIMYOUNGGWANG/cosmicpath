@@ -93,8 +93,8 @@ export function TeaserCard({ title, hook, language, type = 'general', onUnlock, 
                     </p>
                     <p className="text-sm text-gray-300">
                         {isEn
-                            ? "Specifically, the interaction between your Day Master and the yearly energy suggests a need for caution in financial matters."
-                            : "구체적으로, 일간(Day Master)과 세운의 에너지 상호작용은 재물 문제에 있어 신중함이 필요함을 시사하고 있습니다."}
+                            ? "Beneath this question sits a timing gap, a pressure point, and a next move the oracle is already narrowing down."
+                            : "이 질문 뒤에는 타이밍의 어긋남, 지금 눌리는 핵심 포인트, 그리고 먼저 정리해야 할 다음 행동이 숨어 있습니다."}
                     </p>
                     <div className="h-20 w-full bg-white/20 rounded-lg mt-4" />
                 </div>
@@ -107,10 +107,10 @@ export function TeaserCard({ title, hook, language, type = 'general', onUnlock, 
                         className="group flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-acc-gold to-amber-600 text-black font-bold rounded-full shadow-lg shadow-acc-gold/20"
                     >
                         <Lock size={16} />
-                        <span>{isEn ? "Unlock Now" : "잠금 해제하고 확인하기"}</span>
+                        <span>{isEn ? "Open Decision Insight" : "다음 결정 인사이트 열기"}</span>
                     </motion.button>
                     <p className="text-xs text-white/40 mt-3 font-light">
-                        {isEn ? "Detailed analysis awaits inside" : "상세 분석 내용이 기다리고 있습니다"}
+                        {isEn ? "The next layer of this question is waiting inside" : "지금 질문의 다음 층위가 안에서 기다리고 있습니다"}
                     </p>
                 </div>
             </div>
