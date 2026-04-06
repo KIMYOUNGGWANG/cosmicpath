@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 
 import { Navigation } from '@/components/landing/Navigation';
+import { EnglishGuideSection } from '@/components/landing/EnglishGuideSection';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { RitualSection } from '@/components/landing/RitualSection';
 import { DiagnosisSection } from '@/components/landing/DiagnosisSection';
@@ -50,10 +51,11 @@ export default async function Home() {
 
     return (
         <main className="w-full min-h-screen bg-void text-starlight selection:bg-acc-gold selection:text-bg-void">
-            <Navigation />
+            <Navigation language={language} />
             <div className="cosmic-dust" />
 
             <HeroSection language={language} />
+            {language === 'en' ? <EnglishGuideSection /> : null}
             <RitualSection />
             <DiagnosisSection />
             <ReviewCarousel />
@@ -63,7 +65,7 @@ export default async function Home() {
             <VerdictSection />
             <CrossroadsSection />
 
-            <Footer />
+            <Footer language={language} />
         </main>
     );
 }

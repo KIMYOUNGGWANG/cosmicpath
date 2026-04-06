@@ -4,9 +4,11 @@
  * 리딩 입력 컴포넌트 - Ethereal Brutalism Style
  */
 
+import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ReadingContext } from '@/lib/ai/prompt-builder';
+import { ENGLISH_GUIDES } from '@/lib/english-guides';
 import {
     getOracleIntentLabel,
     ORACLE_CHARACTER_IDS,
@@ -23,6 +25,7 @@ interface ReadingInputProps {
     isLoading?: boolean;
     inviterName?: string;
     inviteCode?: string;
+    initialLanguage?: 'ko' | 'en';
 }
 
 export interface ReadingData {
@@ -161,7 +164,13 @@ const contexts: ContextOption[] = [
 const sectionShellClass =
     'relative overflow-hidden rounded-[26px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.08),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-5 shadow-[0_18px_50px_rgba(2,6,23,0.22)] backdrop-blur-xl md:p-6';
 
-export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteCode }: ReadingInputProps) {
+export function ReadingInput({
+    onSubmit,
+    isLoading = false,
+    inviterName,
+    inviteCode,
+    initialLanguage = 'ko',
+}: ReadingInputProps) {
     const [name, setName] = useState('');
     const [gender, setGender] = useState<'male' | 'female'>('male');
     const [birthDate, setBirthDate] = useState('');
@@ -173,7 +182,7 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
     const [showPrecisionFields, setShowPrecisionFields] = useState(Boolean(inviteCode));
     const [context, setContext] = useState<ReadingContext>(inviteCode ? 'love' : 'general');
     const [question, setQuestion] = useState('');
-    const [language, setLanguage] = useState<'ko' | 'en'>('ko');
+    const [languageOverride, setLanguageOverride] = useState<'ko' | 'en' | null>(null);
 
     // 상대방 정보 state (궁합/재회 분석용)
     const [showPartnerInfo, setShowPartnerInfo] = useState(Boolean(inviteCode));
@@ -183,6 +192,7 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
     const [partnerGender, setPartnerGender] = useState<'male' | 'female'>('male');
     const questionFieldRef = useRef<HTMLTextAreaElement | null>(null);
 
+    const language = languageOverride ?? initialLanguage;
     const isEn = language === 'en';
     const inferredQuestionIntent = inferQuestionIntent({
         context,
@@ -303,7 +313,7 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
                     <div className="flex gap-4 text-xs font-mono">
                         <button
                             type="button"
-                            onClick={() => setLanguage('ko')}
+                            onClick={() => setLanguageOverride('ko')}
                             className={`transition-colors ${language === 'ko' ? 'text-acc-gold' : 'text-dim hover:text-white'}`}
                         >
                             KR
@@ -311,7 +321,7 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
                         <span className="text-dim">/</span>
                         <button
                             type="button"
-                            onClick={() => setLanguage('en')}
+                            onClick={() => setLanguageOverride('en')}
                             className={`transition-colors ${language === 'en' ? 'text-acc-gold' : 'text-dim hover:text-white'}`}
                         >
                             EN
@@ -325,17 +335,17 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
                             {isEn ? 'First Reading Free' : '첫 리딩 무료'}
                         </span>
                         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
-                            {isEn ? 'Decision Timing Oracle' : '결정과 타이밍 오라클'}
+                            {isEn ? 'Korean Saju Decision Timing' : '결정과 타이밍 오라클'}
                         </span>
                     </div>
                     <h2 className="mt-3 font-cinzel text-xl text-starlight md:text-2xl">
                         {isEn ? 'Choose the domain first, then give the oracle one real question.' : '먼저 고민 영역을 고르고, 그다음 진짜 질문 하나를 넘겨주세요.'}
                     </h2>
-                    <p className="mt-2 text-sm leading-6 text-white/62">
-                        {isEn
-                            ? 'Start from the decision itself. Once the oracle knows the domain and the question, three core fields are enough to open the first route. Precision controls can sharpen it later.'
-                            : '결정 그 자체에서 시작합니다. 고민 영역과 질문을 먼저 정하면, 이름·생일·성별 3개만으로 첫 리딩을 열 수 있고, 더 정밀한 설정은 그다음에 더하면 됩니다.'}
-                    </p>
+                        <p className="mt-2 text-sm leading-6 text-white/62">
+                            {isEn
+                                ? 'Start from the decision itself. Once the oracle knows the domain and the question, three core fields are enough to open the first Korean saju route. Precision controls can sharpen it later.'
+                                : '결정 그 자체에서 시작합니다. 고민 영역과 질문을 먼저 정하면, 이름·생일·성별 3개만으로 첫 리딩을 열 수 있고, 더 정밀한 설정은 그다음에 더하면 됩니다.'}
+                        </p>
                     <div className="mt-4 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.22em] text-white/45">
                         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
                             {isEn ? '1. Pick Domain' : '1. 영역 선택'}
@@ -350,6 +360,47 @@ export function ReadingInput({ onSubmit, isLoading = false, inviterName, inviteC
                             {isEn ? '4. Precision Optional' : '4. 정밀 설정 선택'}
                         </span>
                     </div>
+
+                    {isEn ? (
+                        <div className="mt-5 rounded-[20px] border border-white/10 bg-white/[0.03] p-4">
+                            <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                                <div>
+                                    <p className="text-[10px] uppercase tracking-[0.28em] text-[#F4D88A]">
+                                        Starter Guides
+                                    </p>
+                                    <p className="mt-2 text-sm leading-6 text-white/64">
+                                        If this is your first Korean saju reading, skim the route that matches your question before you submit.
+                                    </p>
+                                </div>
+                                <Link
+                                    href="/guides"
+                                    className="text-[11px] uppercase tracking-[0.24em] text-white/58 transition-colors hover:text-white"
+                                >
+                                    Browse all three
+                                </Link>
+                            </div>
+
+                            <div className="mt-4 grid gap-3 md:grid-cols-3">
+                                {ENGLISH_GUIDES.map((guide) => (
+                                    <Link
+                                        key={guide.slug}
+                                        href={`/guides/${guide.slug}`}
+                                        className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 transition-colors hover:border-white/20 hover:bg-white/[0.04]"
+                                    >
+                                        <p className="text-[10px] uppercase tracking-[0.24em] text-white/40">
+                                            {guide.eyebrow}
+                                        </p>
+                                        <p className="mt-2 text-sm font-semibold text-white">
+                                            {guide.title}
+                                        </p>
+                                        <p className="mt-2 text-sm leading-6 text-white/58">
+                                            {guide.readTime}
+                                        </p>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    ) : null}
                 </div>
             </div>
 

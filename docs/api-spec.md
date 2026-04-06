@@ -71,6 +71,14 @@ interface ErrorResponse {
 > - `GET /api/payment/price`, `GET|POST /api/review`, `GET|PATCH|DELETE /api/review/admin`를 명시적 계약으로 승격한다.
 > - 리뷰 보상 루프는 API-level check뿐 아니라 DB-level uniqueness로 강화해 `readingId`당 1회 제출/1회 보상을 보장한다.
 > - `/api/growth/summary`는 response shape를 유지하되, 저장소 인덱스와 query shape만 조정하는 non-breaking hardening으로 다룬다.
+>
+> **Implementation Note (2026-04-05) — Global Validation Foundation**:
+> - 이번 사이클의 목표는 `광범위한 글로벌 확장`이 아니라 `Korea-first PMF + English-speaking niche validation`이다.
+> - 첫 글로벌 검증 단계에서는 **새 public API를 추가하지 않는다**. 기존 `/api/reading`, `/api/reading/followup*`, `/api/growth/track`, `/api/growth/summary`, `/api/payment/price` 계약을 재사용한다.
+> - 영문 실험에서 핵심 분기 값은 `language`이며, 퍼널 비교를 위해 `source`, `path`, `metadata.landingVariant` 같은 attribution 필드를 기존 growth contract 안에서 함께 보낸다.
+> - 영문 약관/정책 요약, 로그인 제공자 우선순위, 공유 surface 재배치는 presentation-layer 변경으로 다루고 API response shape는 유지한다.
+> - 로그인 및 auth error display layer는 `Accept-Language` 기준으로 영문 카피를 우선 보여줄 수 있으며, 영어권에서는 Google을 기본 경로로 먼저 제안한다.
+> - 영어권 acquisition readiness는 `/guides`, `/guides/[slug]`, `/start` onboarding explainer 같은 presentation-layer surface로 제공되며, onward flow는 기존 `/api/reading` 및 `/api/growth/track` 계약을 그대로 사용한다.
 
 ### 1. 오늘의 운세 (Daily Fortune) ✅ 구현됨
 
@@ -351,6 +359,10 @@ interface GrowthTrackRequest {
 - `canonicalEvent`를 metadata에 함께 기록
 - 환경변수 설정 시 PostHog / Mixpanel로 미러 전송
 
+**Implementation Note (2026-04-05)**
+- 영어권 검증 사이클에서는 `language`, `source`, `path`를 가능한 한 항상 채우고, 실험 카피 구분은 `metadata.landingVariant`에 기록한다.
+- 필요 시 `metadata.entryLocale`, `metadata.icp`, `metadata.shareSurface` 같은 추가 attribution을 넣을 수 있지만, 기존 request shape를 깨지 않도록 모두 optional metadata로 유지한다.
+
 **Canonical KPI Events**
 - `install`
 - `daily_active` → retention 계산용
@@ -609,3 +621,7 @@ interface ReviewAdminMutationResponse {
 | KPI 대시보드 | `GET /api/growth/summary` |
 | Paywall price reliability | `GET /api/payment/price` |
 | Review integrity & moderation | `GET|POST /api/review`, `GET|PATCH|DELETE /api/review/admin` |
+| English-ready reading path | `POST /api/reading`, `POST|GET /api/reading/followup`, `POST /api/reading/followup/stream` |
+| Language-split funnel instrumentation | `POST /api/growth/track`, `GET /api/growth/summary` |
+| English paywall pricing parity | `GET /api/payment/price` |
+| English acquisition guides & onboarding explainer | Presentation layer only, onward flow via `POST /api/reading` and `POST /api/growth/track` |

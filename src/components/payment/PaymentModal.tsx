@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getReadingFallbackPriceLabel, normalizePriceLabel, READING_PRODUCT } from '@/lib/payment/payment-config';
 import { PromoCodeInput } from './PromoCodeInput';
 import { trackClientGrowthEvent } from '@/lib/client-growth-events';
+import { getLandingVariant } from '@/lib/language-preference';
 
 interface PaymentModalProps {
     isOpen: boolean;
@@ -54,6 +55,8 @@ export function PaymentModal({
     const [discount, setDiscount] = useState<number>(0);
     const [appliedReferralCode, setAppliedReferralCode] = useState<string | null>(null);
     const isEnglish = metadata?.language === 'en' || readingData?.language === 'en';
+    const eventLanguage = isEnglish ? 'en' : 'ko';
+    const landingVariant = getLandingVariant(eventLanguage);
     const getStoredReadingAccessKey = () => {
         if (typeof window === 'undefined') return null;
         return (
@@ -152,8 +155,11 @@ export function PaymentModal({
                 price: effectivePriceLabel,
                 readingId: sessionStorage.getItem('pending_reading_id') || undefined,
                 plan: READING_PRODUCT.id,
+                metadata: {
+                    landingVariant,
+                },
             }),
-        [appliedReferralCode, effectivePriceLabel, metadata, readingData, resolvedAutoReferralCode, trackingSource]
+        [appliedReferralCode, effectivePriceLabel, landingVariant, metadata, readingData, resolvedAutoReferralCode, trackingSource]
     );
 
     useEffect(() => {
@@ -172,8 +178,11 @@ export function PaymentModal({
                 sessionStorage.getItem('pending_reading_id') ||
                 (typeof metadata?.readingId === 'string' ? metadata.readingId : undefined),
             plan: READING_PRODUCT.id,
+            metadata: {
+                landingVariant,
+            },
         });
-    }, [appliedReferralCode, effectivePriceLabel, isOpen, metadata, readingData, resolvedAutoReferralCode, trackingSource]);
+    }, [appliedReferralCode, effectivePriceLabel, isOpen, landingVariant, metadata, readingData, resolvedAutoReferralCode, trackingSource]);
 
     // Handle browser back button - close modal instead of navigating away
     useEffect(() => {
@@ -259,18 +268,24 @@ export function PaymentModal({
         // 이메일 유효성 검사 (프로모션 100% 할인이 아닐 때만 필수)
         const isFreePromo = discount === 100 && promoCodeId;
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const requiredEmailMessage = isEnglish
+            ? 'An email address is required to unlock a free promo.'
+            : '무료 쿠폰 사용 시 이메일 주소가 필요합니다.';
+        const invalidEmailMessage = isEnglish
+            ? 'Please enter a valid email address.'
+            : '올바른 이메일 형식이 아닙니다.';
 
         if (isFreePromo) {
             if (!email) {
-                setEmailError('무료 쿠폰 사용 시 이메일 주소가 필요합니다.');
+                setEmailError(requiredEmailMessage);
                 return;
             }
             if (!emailRegex.test(email)) {
-                setEmailError('올바른 이메일 형식이 아닙니다.');
+                setEmailError(invalidEmailMessage);
                 return;
             }
         } else if (email && !emailRegex.test(email)) {
-            setEmailError('올바른 이메일 형식이 아닙니다.');
+            setEmailError(invalidEmailMessage);
             return;
         }
 
@@ -310,6 +325,7 @@ export function PaymentModal({
                 readingId: readingId || undefined,
                 plan: isFreePromo ? 'promo_free_unlock' : READING_PRODUCT.id,
                 metadata: {
+                    landingVariant,
                     emailProvided: Boolean(email),
                     discount,
                     promoCodeId,
@@ -387,6 +403,9 @@ export function PaymentModal({
                     price: 'FREE',
                     readingId: readingId || undefined,
                     plan: 'promo_free_unlock',
+                    metadata: {
+                        landingVariant,
+                    },
                 });
 
                 // 모달 닫고 페이지 이동
@@ -431,10 +450,11 @@ export function PaymentModal({
                 readingId: sessionStorage.getItem('pending_reading_id') || undefined,
                 plan: isFreePromo ? 'promo_free_unlock' : READING_PRODUCT.id,
                 metadata: {
+                    landingVariant,
                     message,
                 },
             });
-            alert(`결제 오류: ${message}`);
+            alert(isEnglish ? `Payment error: ${message}` : `결제 오류: ${message}`);
         } finally {
             setIsLoading(false);
         }
@@ -446,7 +466,7 @@ export function PaymentModal({
     const unlockBenefits = isEnglish
         ? [
             {
-                title: 'Decision Deep Reading',
+                title: 'Korean Saju Deep Reading',
                 description: 'Unlock the full interpretation across timing, pressure points, and your next action.',
                 Icon: ScrollText,
             },
@@ -522,16 +542,16 @@ export function PaymentModal({
                                 >
                                     <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#A184FF]/20 bg-[#A184FF]/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.26em] text-[#cbb5ff]">
                                         <Lock className="h-4 w-4" />
-                                        {isEnglish ? 'Next Move Unlock' : '다음 행동 열기'}
+                                        {isEnglish ? 'Korean Saju Unlock' : '다음 행동 열기'}
                                     </div>
                                     <h3 className="mb-3 text-xl font-bold text-white md:text-2xl">
-                                        {isEnglish ? 'Open Your Full Decision Reading' : '전체 결정 리딩 열기'}
+                                        {isEnglish ? 'Open Your Full Korean Saju Decision Reading' : '전체 결정 리딩 열기'}
                                     </h3>
                                     <p className="text-sm leading-relaxed text-white/60">
                                         {isEnglish ? (
                                             <>
                                                 The free summary ends here.<br />
-                                                Your guide opens the deeper decision reading below.
+                                                Your guide opens the deeper Korean saju decision reading below.
                                             </>
                                         ) : (
                                             <>
@@ -570,7 +590,9 @@ export function PaymentModal({
                                         ) : null}
                                         {discountedPriceLabel ? (
                                             <p className="text-xs font-medium text-emerald-300">
-                                                {discount}% 할인 코드가 적용되었습니다.
+                                                {isEnglish
+                                                    ? `${discount}% discount applied to this unlock.`
+                                                    : `${discount}% 할인 코드가 적용되었습니다.`}
                                             </p>
                                         ) : null}
                                     </div>
@@ -588,7 +610,7 @@ export function PaymentModal({
                                     <ul className="space-y-2 text-sm text-white/75">
                                         <li>{isEnglish ? 'The strongest action window behind your current question' : '현재 질문 뒤에서 가장 강하게 열리는 행동의 창'}</li>
                                         <li>{isEnglish ? 'A cross-domain reading spanning relationship, career, money, and daily flow' : '관계, 커리어, 재물, 일상 흐름을 함께 읽는 교차 리딩'}</li>
-                                        <li>{isEnglish ? 'A next-move guide where saju, astrology, and tarot converge' : '사주, 점성술, 타로가 겹치는 지점에서 도출한 다음 행동 가이드'}</li>
+                                        <li>{isEnglish ? 'A next-move guide where Korean saju, astrology, and tarot converge' : '사주, 점성술, 타로가 겹치는 지점에서 도출한 다음 행동 가이드'}</li>
                                     </ul>
                                 </motion.div>
 
@@ -684,7 +706,7 @@ export function PaymentModal({
                                         ? (isEnglish ? 'Processing...' : '처리 중...')
                                         : (Number(discount) === 100
                                             ? (isEnglish ? 'Open for Free' : '무료로 오라클 열기')
-                                            : (isEnglish ? 'Open Full Decision Reading' : '전체 결정 리딩 열기'))}
+                                            : (isEnglish ? 'Open Full Korean Saju Reading' : '전체 결정 리딩 열기'))}
                                 </motion.button>
 
                                 <p className="mt-4 text-center text-xs text-white/35">

@@ -11,6 +11,7 @@ import { createSession } from '@/lib/session/reading-session';
 import { trackClientGrowthEvent } from '@/lib/client-growth-events';
 import { OracleCalibrationPanel } from '@/components/reading/OracleCalibrationPanel';
 import { ProductShell } from '@/components/common/ProductShell';
+import { getLandingVariant, readPreferredClientLanguage, USER_LANGUAGE_STORAGE_KEY } from '@/lib/language-preference';
 
 import { Footer } from '@/components/landing/Footer';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
@@ -99,7 +100,9 @@ function CosmicPathContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingPhase, setLoadingPhase] = useState<{ phase: number; label: string }>({ phase: 0, label: '' });
   const [metadata, setMetadata] = useState<ReadingMetadata | undefined>(undefined);
-  const [language, setLanguage] = useState<'ko' | 'en'>('ko');
+  const [language, setLanguage] = useState<'ko' | 'en'>(() =>
+    typeof window !== 'undefined' ? readPreferredClientLanguage() : 'ko'
+  );
 
   // Decision Guard State
   const [isDecisionAccepted, setIsDecisionAccepted] = useState(false);
@@ -194,11 +197,6 @@ function CosmicPathContent() {
     };
     fetchPrice();
 
-    // P3-3: Language Persistence
-    const savedLang = localStorage.getItem('user_language');
-    if (savedLang === 'ko' || savedLang === 'en') {
-      setLanguage(savedLang);
-    }
   }, []);
 
   useEffect(() => {
@@ -213,6 +211,9 @@ function CosmicPathContent() {
       invitationMode: Boolean(searchParams.get('invite')),
       referralCode: autoReferralCode,
       price: dynamicPrice || undefined,
+      metadata: {
+        landingVariant: getLandingVariant(language),
+      },
     });
   }, [autoReferralCode, dynamicPrice, language, searchParams, step]);
 
@@ -248,6 +249,9 @@ function CosmicPathContent() {
       invitationMode: isInvitationMode,
       price: dynamicPrice || undefined,
       readingId: sessionStorage.getItem('pending_reading_id') || undefined,
+      metadata: {
+        landingVariant: getLandingVariant(language),
+      },
     });
   }, [dynamicPrice, isInvitationMode, isPremium, language, readingData, reportData, step]);
 
@@ -608,7 +612,7 @@ function CosmicPathContent() {
 
     setReadingData(data);
     setLanguage(data.language);
-    localStorage.setItem('user_language', data.language);
+    localStorage.setItem(USER_LANGUAGE_STORAGE_KEY, data.language);
     void trackClientGrowthEvent({
       event: 'analysis_start',
       source: 'reading_input',
@@ -1054,6 +1058,7 @@ function CosmicPathContent() {
               </div>
 
               <ReadingInput
+                initialLanguage={language}
                 onSubmit={(data) => {
                   handleInputSubmit({
                     ...data,
@@ -1391,7 +1396,7 @@ function CosmicPathContent() {
         </AnimatePresence>
 
       {/* Ambient Footer */}
-      <Footer />
+      <Footer language={language} />
 
       <PaymentModal
         isOpen={isPaymentModalOpen}

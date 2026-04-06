@@ -1,6 +1,8 @@
 import Link from 'next/link';
+import { headers } from 'next/headers';
 
 import { AuthEntryCard } from '@/components/auth/AuthEntryCard';
+import { resolvePreferredLanguage } from '@/lib/language-preference';
 
 interface AuthErrorPageProps {
     searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -20,6 +22,9 @@ export default async function AuthErrorPage({ searchParams }: AuthErrorPageProps
     const params = searchParams ? await searchParams : {};
     const callbackUrl = getParam(params, 'callbackUrl');
     const error = getParam(params, 'error');
+    const headerStore = await headers();
+    const language = resolvePreferredLanguage(headerStore.get('accept-language'));
+    const isEnglish = language === 'en';
 
     return (
         <main className='relative flex min-h-screen items-center justify-center overflow-hidden bg-[#050505] px-4 py-10 text-white'>
@@ -36,8 +41,13 @@ export default async function AuthErrorPage({ searchParams }: AuthErrorPageProps
                 <AuthEntryCard
                     callbackUrl={callbackUrl}
                     error={error}
-                    title='로그인 흐름을 다시 연결합니다'
-                    description='카카오 인증 중에 흐름이 끊겼습니다. 아래 버튼으로 같은 페이지 흐름을 다시 이어가세요.'
+                    language={language}
+                    title={isEnglish ? 'Reconnect the sign-in flow' : '로그인 흐름을 다시 연결합니다'}
+                    description={
+                        isEnglish
+                            ? 'Authentication was interrupted before we could return you to the same page. Use the provider below to reconnect the flow.'
+                            : '카카오 인증 중에 흐름이 끊겼습니다. 아래 버튼으로 같은 페이지 흐름을 다시 이어가세요.'
+                    }
                 />
             </div>
         </main>

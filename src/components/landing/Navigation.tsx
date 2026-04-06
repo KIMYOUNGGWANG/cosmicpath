@@ -12,7 +12,11 @@ import { LoginModal, useLoginModal } from '@/components/auth/LoginModal';
 import { useSession } from 'next-auth/react';
 import { SubscriptionModal } from '@/components/payment/SubscriptionModal';
 
-export function Navigation() {
+interface NavigationProps {
+    language?: 'ko' | 'en';
+}
+
+export function Navigation({ language = 'ko' }: NavigationProps) {
     const { status } = useSession();
     const { openLoginModal } = useLoginModal();
     const { scrollY } = useScroll();
@@ -21,6 +25,7 @@ export function Navigation() {
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
+    const isEnglish = language === 'en';
 
     useMotionValueEvent(scrollY, "change", (latest) => {
         const previous = prevScroll;
@@ -76,8 +81,16 @@ export function Navigation() {
                             href="/daily"
                             className="shrink-0 whitespace-nowrap rounded-full border border-transparent px-2 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-starlight transition-colors hover:text-acc-gold 2xl:text-xs"
                         >
-                            오늘의 운세
+                            {isEnglish ? 'Daily Signals' : '오늘의 운세'}
                         </Link>
+                        {isEnglish ? (
+                            <Link
+                                href="/guides"
+                                className="shrink-0 whitespace-nowrap rounded-full border border-transparent px-2 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-starlight transition-colors hover:text-acc-gold 2xl:text-xs"
+                            >
+                                Starter Guides
+                            </Link>
+                        ) : null}
                         <button
                             onClick={toggleOrderModal}
                             className="shrink-0 whitespace-nowrap rounded-full border border-transparent px-2 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-starlight transition-colors hover:text-acc-gold 2xl:text-xs"
@@ -122,7 +135,7 @@ export function Navigation() {
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
                             className="rounded-full p-2 text-white transition-colors hover:bg-white/10"
-                            aria-label="메뉴 열기"
+                            aria-label={isEnglish ? 'Open menu' : '메뉴 열기'}
                         >
                             <Menu size={24} />
                         </button>
@@ -148,23 +161,31 @@ export function Navigation() {
                         icon: Search,
                         iconColorClass: 'group-hover:bg-purple-500/20 group-hover:text-purple-300',
                         label: 'FIND ORDERS',
-                        subLabel: 'Lookup past readings',
+                        subLabel: isEnglish ? 'Lookup past readings' : '지난 리딩 찾아보기',
                         onClick: () => setIsOrderModalOpen(true),
                     },
                     {
                         type: 'link',
                         icon: Sparkles,
                         iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
-                        label: '오늘의 운세',
-                        subLabel: '생년월일 기반 데일리 운세',
+                        label: isEnglish ? 'DAILY SIGNALS' : '오늘의 운세',
+                        subLabel: isEnglish ? 'Birth-based daily guidance' : '생년월일 기반 데일리 운세',
                         href: '/daily',
                     },
+                    ...(isEnglish ? [{
+                        type: 'link' as const,
+                        icon: Sparkles,
+                        iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
+                        label: 'STARTER GUIDES',
+                        subLabel: 'Learn Korean Saju first',
+                        href: '/guides',
+                    }] : []),
                     {
                         type: 'link',
                         icon: Sparkles,
                         iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
                         label: 'START ANALYSIS',
-                        subLabel: 'Begin your cosmic journey',
+                        subLabel: isEnglish ? 'Begin your cosmic journey' : '오라클 리딩 시작하기',
                         href: '/start?reset=true',
                     },
                 ]}

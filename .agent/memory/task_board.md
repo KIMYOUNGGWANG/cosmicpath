@@ -51,6 +51,19 @@
 - [x] **Step N: Growth Summary Performance Guard** — `GrowthEvent.createdAt` 중심 인덱스와 요약 query shape를 정리해 `/api/growth/summary`와 `/ops/growth` 응답 시간을 이벤트 증가 후에도 안정화
 - [x] **Step O: Regression Verification** — paywall price fallback, duplicate review, review accessKey ownership, growth summary 응답 shape에 대한 테스트/검증 경로를 추가
 
+## 🌍 Global Validation Block (2026-04-05)
+*원칙: 한국 PMF를 흔들지 않고, 영어권 니치 수요를 작은 범위에서 검증한다.*
+
+- Current status:
+  - 제품 엔진, Stripe USD 결제, `ko/en` 리딩 경로는 이미 존재한다.
+  - 반면 trust/legal copy, 공유 우선순위, 획득 메시지는 아직 한국 중심이다.
+  - 따라서 이번 블록은 `글로벌 확장`이 아니라 `영어권 실험 레이어 추가`를 목표로 한다.
+- [x] **Step P: English Positioning Lock** — 랜딩, `/start`, paywall, share surface의 영문 메인 카피를 `Korean Saju for decision timing` 축으로 고정한다
+- [x] **Step Q: Trust & Policy Parity** — 영문 약관/환불/면책/결제 설명을 추가해 영어권 사용자가 구매와 결과 활용 범위를 이해할 수 있게 한다
+- [x] **Step R: Overseas-Friendly Entry Paths** — 영어권 기준 로그인 기본 경로를 Google 중심으로 정리하고, 공유 surface는 `Copy Link / Threads / TikTok` 우선으로 재정렬한다
+- [x] **Step S: Language-Split Funnel Instrumentation** — `landing_view -> first_result_view -> paywall_open -> paid_conversion` 퍼널을 `language/source/path/landingVariant` 기준으로 분리 계측한다
+- [x] **Step T: Narrow English Acquisition Readiness** — `What is Korean Saju`, `Saju vs BaZi`, `Decision timing reading` 같은 영어 진입 페이지와 온보딩 설명 레이어를 준비한다
+
 ---
 
 ## 🔥 Rebased Execution Queue (2026-03-20)

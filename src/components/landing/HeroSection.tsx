@@ -10,7 +10,7 @@ export function HeroSection({ language }: HeroSectionProps) {
     const isKo = language === 'ko';
     const trustBadges = isKo
         ? ['결정과 타이밍 리딩', '전문 오라클 가이드', '첫 리딩 무료']
-        : ['Decision Timing Reading', 'Specialist Oracle Guide', 'Free First Reading'];
+        : ['Korean Saju Reading', 'Decision Timing Oracle', 'Free First Reading'];
     const decisionSignals = isKo
         ? ['관계', '커리어', '재물', '타이밍']
         : ['Relationship', 'Career', 'Wealth', 'Timing'];
@@ -53,7 +53,7 @@ export function HeroSection({ language }: HeroSectionProps) {
                         </>
                     ) : (
                         <>
-                            A 1:1 oracle grounded in saju, tarot, and astrology cross-checks <br className="hidden md:block" />
+                            A 1:1 oracle grounded in Korean saju, tarot, and astrology cross-checks <br className="hidden md:block" />
                             helps you read the timing, risk, and next move behind the decision in front of you.
                         </>
                     )}
@@ -115,6 +115,15 @@ export function HeroSection({ language }: HeroSectionProps) {
                                 : 'Your first reading opens right away, then extends into a deeper decision path if you want more clarity.'}
                         </p>
                     </div>
+
+                    {!isKo ? (
+                        <Link
+                            href="/guides"
+                            className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/12 bg-white/[0.03] px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/70 transition-colors hover:border-white/24 hover:bg-white/[0.06] hover:text-white"
+                        >
+                            New to Korean Saju? Read the Starter Guides
+                        </Link>
+                    ) : null}
                 </div>
             </div>
         </HeroScene>

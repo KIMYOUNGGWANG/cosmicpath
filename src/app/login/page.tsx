@@ -1,8 +1,10 @@
 import Link from 'next/link';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { auth } from '@/lib/auth';
 import { AuthEntryCard } from '@/components/auth/AuthEntryCard';
+import { resolvePreferredLanguage } from '@/lib/language-preference';
 
 interface LoginPageProps {
     searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -22,6 +24,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     const params = searchParams ? await searchParams : {};
     const callbackUrl = getServerCallbackUrl(params.callbackUrl);
     const error = Array.isArray(params.error) ? params.error[0] : params.error;
+    const headerStore = await headers();
+    const language = resolvePreferredLanguage(headerStore.get('accept-language'));
+    const isEnglish = language === 'en';
     const session = await auth();
 
     if (session) {
@@ -49,8 +54,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 <AuthEntryCard
                     callbackUrl={callbackUrl}
                     error={error}
-                    title='로그인으로 흐름을 이어가세요'
-                    description='카카오 로그인 후 현재 보던 화면으로 돌아갑니다. 저장된 리딩, 결제 상태, 추천 보상까지 같은 흐름으로 이어집니다.'
+                    language={language}
+                    title={isEnglish ? 'Reconnect your reading path' : '로그인으로 흐름을 이어가세요'}
+                    description={
+                        isEnglish
+                            ? 'Use Google to jump back into your saved reading, payment state, and invite rewards. Kakao stays available if that is already part of your routine.'
+                            : '카카오 로그인 후 현재 보던 화면으로 돌아갑니다. 저장된 리딩, 결제 상태, 추천 보상까지 같은 흐름으로 이어집니다.'
+                    }
                 />
             </div>
         </main>

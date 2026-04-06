@@ -6,6 +6,7 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { ShaderGradientCanvas, ShaderGradient } from 'shadergradient';
 
 import { trackClientGrowthEvent } from '@/lib/client-growth-events';
+import { getLandingVariant } from '@/lib/language-preference';
 
 interface HeroSceneProps {
     language: 'ko' | 'en';
@@ -32,6 +33,9 @@ export function HeroScene({ language, children }: HeroSceneProps) {
                 event: 'landing_view',
                 source: 'landing_page_hero',
                 language,
+                metadata: {
+                    landingVariant: getLandingVariant(language),
+                },
             });
         }
 

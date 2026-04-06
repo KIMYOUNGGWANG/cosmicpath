@@ -1,10 +1,13 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { Suspense, useEffect, useState, useSyncExternalStore } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { CheckCircle2, ArrowRight, XCircle, Home, RefreshCw } from 'lucide-react';
 import { trackClientGrowthEvent } from '@/lib/client-growth-events';
+import { getLandingVariant, readPreferredClientLanguage, type SupportedLanguage } from '@/lib/language-preference';
+
+const subscribeToLanguagePreference = () => () => {};
 
 function PaymentSuccessContent() {
     const searchParams = useSearchParams();
@@ -14,18 +17,28 @@ function PaymentSuccessContent() {
 
     const sessionId = searchParams.get('session_id');
     const readingId = searchParams.get('reading_id');
+    const language = useSyncExternalStore<SupportedLanguage>(
+        subscribeToLanguagePreference,
+        readPreferredClientLanguage,
+        () => 'ko'
+    );
+    const isEnglish = language === 'en';
 
     useEffect(() => {
         const verifyPayment = async () => {
             if (!sessionId) {
                 setStatus('error');
-                setErrorMsg('세션 ID가 누락되었습니다.');
+                setErrorMsg(language === 'en' ? 'Missing checkout session ID.' : '세션 ID가 누락되었습니다.');
                 void trackClientGrowthEvent({
                     event: 'checkout_failure',
                     source: 'payment_success_page',
                     step: 'payment_verification',
+                    language,
                     readingId: readingId || undefined,
-                    metadata: { reason: 'missing_session_id' },
+                    metadata: {
+                        reason: 'missing_session_id',
+                        landingVariant: getLandingVariant(language),
+                    },
                 });
                 return;
             }
@@ -41,10 +54,12 @@ function PaymentSuccessContent() {
                         event: 'checkout_success',
                         source: 'payment_success_page',
                         step: 'payment_verification',
+                        language,
                         readingId: readingId || undefined,
                         plan: result.payment_type || 'premium_reading',
                         metadata: {
                             sessionId,
+                            landingVariant: getLandingVariant(language),
                         },
                     });
                     // Mark payment completed in storage for start/page.tsx to pick up
@@ -55,37 +70,41 @@ function PaymentSuccessContent() {
                     }, 1000);
                 } else {
                     setStatus('error');
-                    setErrorMsg('결제가 완료되지 않았습니다.');
+                    setErrorMsg(language === 'en' ? 'The payment was not completed.' : '결제가 완료되지 않았습니다.');
                     void trackClientGrowthEvent({
                         event: 'checkout_failure',
                         source: 'payment_success_page',
                         step: 'payment_verification',
+                        language,
                         readingId: readingId || undefined,
                         metadata: {
                             sessionId,
                             status: result.status || 'unknown',
+                            landingVariant: getLandingVariant(language),
                         },
                     });
                 }
             } catch (error) {
                 console.error('Payment verification error:', error);
                 setStatus('error');
-                setErrorMsg('결제 검증 중 오류가 발생했습니다.');
+                setErrorMsg(language === 'en' ? 'An error occurred while verifying your payment.' : '결제 검증 중 오류가 발생했습니다.');
                 void trackClientGrowthEvent({
                     event: 'checkout_failure',
                     source: 'payment_success_page',
                     step: 'payment_verification',
+                    language,
                     readingId: readingId || undefined,
                     metadata: {
                         sessionId,
                         reason: error instanceof Error ? error.message : 'payment_verification_error',
+                        landingVariant: getLandingVariant(language),
                     },
                 });
             }
         };
 
         verifyPayment();
-    }, [readingId, router, sessionId]);
+    }, [language, readingId, router, sessionId]);
 
     return (
         <motion.div
@@ -94,10 +113,10 @@ function PaymentSuccessContent() {
             className="w-full max-w-md bg-white/5 border border-white/10 p-8 rounded-3xl text-center"
         >
             {status === 'loading' && (
-                <div className="space-y-4">
-                    <div className="w-12 h-12 border-4 border-[#A184FF] border-t-transparent rounded-full animate-spin mx-auto" />
-                    <h1 className="text-xl font-bold text-white">결제 승인 중...</h1>
-                    <p className="text-white/60 text-sm">잠시만 기다려 주세요.</p>
+                    <div className="space-y-4">
+                        <div className="w-12 h-12 border-4 border-[#A184FF] border-t-transparent rounded-full animate-spin mx-auto" />
+                    <h1 className="text-xl font-bold text-white">{isEnglish ? 'Confirming your checkout...' : '결제 승인 중...'}</h1>
+                    <p className="text-white/60 text-sm">{isEnglish ? 'Please wait a moment.' : '잠시만 기다려 주세요.'}</p>
                 </div>
             )}
 
@@ -107,17 +126,26 @@ function PaymentSuccessContent() {
                         <CheckCircle2 size={32} className="text-green-500" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-white mb-2">결제가 완료되었습니다!</h1>
+                        <h1 className="text-2xl font-bold text-white mb-2">{isEnglish ? 'Payment complete!' : '결제가 완료되었습니다!'}</h1>
                         <p className="text-white/60 text-sm leading-relaxed">
-                            운명의 설계자가 당신만을 위한 통합 리포트를<br />
-                            정교하게 다듬고 있습니다. 곧 결과로 안내합니다.
+                            {isEnglish ? (
+                                <>
+                                    Your Korean saju decision reading is being prepared now.<br />
+                                    We will move you back to the result in a moment.
+                                </>
+                            ) : (
+                                <>
+                                    운명의 설계자가 당신만을 위한 통합 리포트를<br />
+                                    정교하게 다듬고 있습니다. 곧 결과로 안내합니다.
+                                </>
+                            )}
                         </p>
                     </div>
                     <button
                         onClick={() => router.replace(`/start?paid=true${readingId ? `&reading_id=${readingId}` : ''}`)}
                         className="w-full py-4 bg-[#A184FF] text-white font-bold rounded-2xl flex items-center justify-center gap-2"
                     >
-                        결과 확인하기 <ArrowRight size={18} />
+                        {isEnglish ? 'See My Reading' : '결과 확인하기'} <ArrowRight size={18} />
                     </button>
                 </div>
             )}
@@ -128,9 +156,9 @@ function PaymentSuccessContent() {
                         <XCircle size={32} className="text-red-500" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-white mb-2">결제 처리 실패</h1>
+                        <h1 className="text-2xl font-bold text-white mb-2">{isEnglish ? 'Checkout failed' : '결제 처리 실패'}</h1>
                         <p className="text-white/60 text-sm">
-                            {errorMsg || '문제가 발생했습니다. 다시 시도해 주세요.'}
+                            {errorMsg || (isEnglish ? 'Something went wrong. Please try again.' : '문제가 발생했습니다. 다시 시도해 주세요.')}
                         </p>
                     </div>
                     <div className="flex flex-col gap-3">
@@ -138,13 +166,13 @@ function PaymentSuccessContent() {
                             onClick={() => router.replace(`/start${readingId ? `?reading_id=${readingId}` : ''}`)}
                             className="w-full py-4 bg-[#A184FF] text-white font-bold rounded-2xl flex items-center justify-center gap-2"
                         >
-                            <RefreshCw size={18} /> 결과로 돌아가기
+                            <RefreshCw size={18} /> {isEnglish ? 'Back to reading' : '결과로 돌아가기'}
                         </button>
                         <button
                             onClick={() => router.push('/')}
                             className="w-full py-4 bg-white/5 text-white/40 font-bold rounded-2xl flex items-center justify-center gap-2 hover:bg-white/10 transition-colors"
                         >
-                            <Home size={18} /> 홈으로
+                            <Home size={18} /> {isEnglish ? 'Go Home' : '홈으로'}
                         </button>
                     </div>
                 </div>
@@ -160,7 +188,7 @@ export default function PaymentSuccessPage() {
                 <div className="w-full max-w-md bg-white/5 border border-white/10 p-8 rounded-3xl text-center">
                     <div className="space-y-4">
                         <div className="w-12 h-12 border-4 border-[#A184FF] border-t-transparent rounded-full animate-spin mx-auto" />
-                        <h1 className="text-xl font-bold text-white">결제 정보 로드 중...</h1>
+                        <h1 className="text-xl font-bold text-white">결제 정보 로드 중... / Loading payment details...</h1>
                     </div>
                 </div>
             }>

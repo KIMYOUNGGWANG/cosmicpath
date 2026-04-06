@@ -1,19 +1,23 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import { LoaderCircle, MessageCircle } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 
 import { resolveAuthErrorMessage, resolveCallbackUrl } from '@/components/auth/auth-flow';
+import { readPreferredClientLanguage, type SupportedLanguage } from '@/lib/language-preference';
 
 type AuthProvider = 'kakao' | 'google';
+
+const subscribeToLanguagePreference = () => () => {};
 
 interface AuthEntryCardProps {
     callbackUrl?: string | null;
     error?: string | null;
     title?: string;
     description?: string;
+    language?: SupportedLanguage;
 }
 
 function GoogleMark() {
@@ -42,11 +46,18 @@ function GoogleMark() {
 export function AuthEntryCard({
     callbackUrl,
     error,
-    title = 'CosmicPath에 연결',
-    description = '카카오로 빠르게 로그인하고 읽은 운세를 저장하세요. 기기 변경 후에도 결과, 결제, 초대 보상이 자연스럽게 이어집니다.',
+    title,
+    description,
+    language,
 }: AuthEntryCardProps) {
     const [pendingProvider, setPendingProvider] = useState<AuthProvider | null>(null);
-    const errorMessage = resolveAuthErrorMessage(error);
+    const resolvedLanguage = useSyncExternalStore(
+        subscribeToLanguagePreference,
+        () => language ?? readPreferredClientLanguage(),
+        () => language ?? 'ko'
+    );
+    const errorMessage = resolveAuthErrorMessage(error, resolvedLanguage);
+    const isEnglish = resolvedLanguage === 'en';
 
     const handleSignIn = async (provider: AuthProvider) => {
         if (pendingProvider) {
@@ -65,18 +76,35 @@ export function AuthEntryCard({
     };
 
     const isPending = pendingProvider !== null;
+    const resolvedTitle = title || (isEnglish ? 'Continue your reading path' : 'CosmicPath에 연결');
+    const resolvedDescription = description || (
+        isEnglish
+            ? 'Use Google for the fastest English-friendly sign-in path. Your saved readings, payment state, and invite rewards stay connected when you come back.'
+            : '카카오로 빠르게 로그인하고 읽은 운세를 저장하세요. 기기 변경 후에도 결과, 결제, 초대 보상이 자연스럽게 이어집니다.'
+    );
+    const signInNote = isEnglish
+        ? 'Google is the fastest path for English-speaking users. Kakao still works if that is already part of your flow.'
+        : '카카오 로그인이 가장 안정적인 기본 경로입니다. 인증 후에는 현재 보고 있던 페이지로 바로 돌아갑니다.';
+    const providerOrder = useMemo<AuthProvider[]>(
+        () => (isEnglish ? ['google', 'kakao'] : ['kakao', 'google']),
+        [isEnglish]
+    );
+    const providerCopy = {
+        google: isEnglish ? 'Continue with Google' : 'Google로 계속하기',
+        kakao: isEnglish ? 'Continue with Kakao' : '카카오로 계속하기',
+    } as const;
 
     return (
         <div className='rounded-[28px] border border-white/12 bg-[#111111]/95 p-6 shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:p-8'>
             <div className='mb-6 space-y-3'>
                 <p className='text-xs font-semibold uppercase tracking-[0.3em] text-[#D4AF37]/80'>
-                    Local Sign-In Flow
+                    {isEnglish ? 'Global Sign-In Flow' : 'Local Sign-In Flow'}
                 </p>
                 <h1 className='font-cinzel text-3xl text-white sm:text-4xl'>
-                    {title}
+                    {resolvedTitle}
                 </h1>
                 <p className='text-sm leading-6 text-white/65 sm:text-base'>
-                    {description}
+                    {resolvedDescription}
                 </p>
             </div>
 
@@ -87,49 +115,42 @@ export function AuthEntryCard({
             ) : null}
 
             <div className='space-y-3'>
-                <button
-                    type='button'
-                    onClick={() => void handleSignIn('kakao')}
-                    disabled={isPending}
-                    className='flex h-[52px] w-full items-center justify-center gap-3 rounded-2xl bg-[#FEE500] px-4 font-semibold text-[#341d1d] transition-transform active:scale-[0.99] disabled:cursor-wait disabled:opacity-70'
-                >
-                    {pendingProvider === 'kakao' ? (
-                        <LoaderCircle className='h-5 w-5 animate-spin' />
-                    ) : (
-                        <MessageCircle className='h-5 w-5 fill-current' />
-                    )}
-                    <span>카카오로 계속하기</span>
-                </button>
-
-                <button
-                    type='button'
-                    onClick={() => void handleSignIn('google')}
-                    disabled={isPending}
-                    className='flex h-[52px] w-full items-center justify-center gap-3 rounded-2xl border border-white/12 bg-white px-4 font-semibold text-black transition-transform active:scale-[0.99] disabled:cursor-wait disabled:opacity-70'
-                >
-                    {pendingProvider === 'google' ? (
-                        <LoaderCircle className='h-5 w-5 animate-spin' />
-                    ) : (
-                        <GoogleMark />
-                    )}
-                    <span>Google로 계속하기</span>
-                </button>
+                {providerOrder.map((provider) => (
+                    <button
+                        key={provider}
+                        type='button'
+                        onClick={() => void handleSignIn(provider)}
+                        disabled={isPending}
+                        className={provider === 'kakao'
+                            ? 'flex h-[52px] w-full items-center justify-center gap-3 rounded-2xl bg-[#FEE500] px-4 font-semibold text-[#341d1d] transition-transform active:scale-[0.99] disabled:cursor-wait disabled:opacity-70'
+                            : 'flex h-[52px] w-full items-center justify-center gap-3 rounded-2xl border border-white/12 bg-white px-4 font-semibold text-black transition-transform active:scale-[0.99] disabled:cursor-wait disabled:opacity-70'}
+                    >
+                        {pendingProvider === provider ? (
+                            <LoaderCircle className='h-5 w-5 animate-spin' />
+                        ) : provider === 'kakao' ? (
+                            <MessageCircle className='h-5 w-5 fill-current' />
+                        ) : (
+                            <GoogleMark />
+                        )}
+                        <span>{providerCopy[provider]}</span>
+                    </button>
+                ))}
             </div>
 
             <div className='mt-6 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3 text-sm text-white/55'>
-                카카오 로그인이 가장 안정적인 기본 경로입니다. 인증 후에는 현재 보고 있던 페이지로 바로 돌아갑니다.
+                {signInNote}
             </div>
 
             <p className='mt-5 text-center text-xs leading-5 text-white/35'>
-                계속하면{' '}
+                {isEnglish ? 'By continuing, you agree to the ' : '계속하면 '}
                 <Link href='/terms' className='text-white/55 underline underline-offset-4'>
-                    이용약관
+                    {isEnglish ? 'Terms of Service' : '이용약관'}
                 </Link>
-                {' '}및{' '}
+                {isEnglish ? ' and ' : ' 및 '}
                 <Link href='/privacy' className='text-white/55 underline underline-offset-4'>
-                    개인정보처리방침
+                    {isEnglish ? 'Privacy Policy' : '개인정보처리방침'}
                 </Link>
-                에 동의하게 됩니다.
+                {isEnglish ? '.' : '에 동의하게 됩니다.'}
             </p>
         </div>
     );
