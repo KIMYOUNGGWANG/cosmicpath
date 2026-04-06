@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, useScroll, useMotionValueEvent } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { motion, useMotionValueEvent, useScroll } from 'framer-motion';
 import Link from 'next/link';
-import { Menu, Search, Sparkles } from 'lucide-react';
-import { OrderLookupModal } from '@/components/orders/OrderLookupModal';
-import { MobileMenu } from '@/components/common/MobileMenu';
-import { User } from 'lucide-react';
-import UserMenu from '@/components/layout/UserMenu';
-import { LoginModal, useLoginModal } from '@/components/auth/LoginModal';
+import { Menu, Search, Sparkles, User } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+
+import { LoginModal, useLoginModal } from '@/components/auth/LoginModal';
+import { MobileMenu } from '@/components/common/MobileMenu';
+import UserMenu from '@/components/layout/UserMenu';
+import { OrderLookupModal } from '@/components/orders/OrderLookupModal';
 import { SubscriptionModal } from '@/components/payment/SubscriptionModal';
 
 interface NavigationProps {
@@ -27,23 +27,21 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
     const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
     const isEnglish = language === 'en';
 
-    useMotionValueEvent(scrollY, "change", (latest) => {
+    useMotionValueEvent(scrollY, 'change', (latest) => {
         const previous = prevScroll;
+
         if (latest > previous && latest > 150) {
             setHidden(true);
         } else {
             setHidden(false);
         }
+
         setPrevScroll(latest);
     });
 
-    // Lock body scroll when menu is open
     useEffect(() => {
-        if (isMobileMenuOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
-        }
+        document.body.style.overflow = isMobileMenuOpen ? 'hidden' : 'unset';
+
         return () => {
             document.body.style.overflow = 'unset';
         };
@@ -59,77 +57,76 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
             <motion.nav
                 variants={{
                     visible: { y: 0 },
-                    hidden: { y: "-100%" },
+                    hidden: { y: '-100%' },
                 }}
-                animate={hidden ? "hidden" : "visible"}
-                transition={{ duration: 0.35, ease: "easeInOut" }}
-                className="fixed left-0 right-0 top-0 z-[9999] px-3 py-4 text-white sm:px-4 md:px-5 xl:px-6"
+                animate={hidden ? 'hidden' : 'visible'}
+                transition={{ duration: 0.35, ease: 'easeInOut' }}
+                className="fixed left-0 right-0 top-0 z-[9999] px-4 py-4 text-white sm:px-4 md:px-5 xl:px-6"
             >
-                <div className="relative mx-auto flex max-w-7xl items-center justify-between rounded-full border border-white/10 bg-[#050816]/72 px-4 py-3 shadow-[0_20px_50px_rgba(2,6,23,0.28)] backdrop-blur-xl sm:px-5 xl:px-6">
-                    {/* Logo */}
+                <div className="absolute inset-0 border-b border-white/5 bg-[#050505]/80 backdrop-blur-md noise-overlay" />
+
+                <div className="relative mx-auto flex max-w-7xl items-center justify-between">
                     <Link
                         href="/"
-                        className="z-20 shrink-0 font-cinzel text-base font-bold tracking-[0.24em] text-starlight transition-opacity hover:opacity-80 sm:text-lg xl:text-xl"
+                        className="z-20 shrink-0 truncate font-cinzel text-lg font-bold tracking-widest text-starlight transition-opacity hover:opacity-80 md:text-xl"
                     >
                         <span className="hidden sm:inline">COSMIC PATH</span>
                         <span className="sm:hidden">COSMIC</span>
                     </Link>
 
-                    {/* Desktop Actions */}
-                    <div className="hidden xl:flex items-center gap-3 2xl:gap-5">
+                    <div className="hidden items-center gap-4 md:flex xl:gap-6">
                         <Link
                             href="/daily"
-                            className="shrink-0 whitespace-nowrap rounded-full border border-transparent px-2 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-starlight transition-colors hover:text-acc-gold 2xl:text-xs"
+                            className="shrink-0 whitespace-nowrap font-cinzel text-xs font-medium uppercase tracking-widest text-starlight transition-colors hover:text-acc-gold"
                         >
                             {isEnglish ? 'Daily Signals' : '오늘의 운세'}
                         </Link>
                         {isEnglish ? (
                             <Link
                                 href="/guides"
-                                className="shrink-0 whitespace-nowrap rounded-full border border-transparent px-2 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-starlight transition-colors hover:text-acc-gold 2xl:text-xs"
+                                className="shrink-0 whitespace-nowrap font-cinzel text-xs font-medium uppercase tracking-widest text-starlight transition-colors hover:text-acc-gold"
                             >
                                 Starter Guides
                             </Link>
                         ) : null}
                         <button
                             onClick={toggleOrderModal}
-                            className="shrink-0 whitespace-nowrap rounded-full border border-transparent px-2 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-starlight transition-colors hover:text-acc-gold 2xl:text-xs"
+                            className="shrink-0 whitespace-nowrap font-cinzel text-xs font-medium uppercase tracking-widest text-starlight transition-colors hover:text-acc-gold"
                         >
-                            FIND ORDERS
+                            {isEnglish ? 'Find Orders' : '결제 내역 조회'}
                         </button>
 
-                        <div className="mx-1 h-4 w-px bg-white/10 2xl:mx-2" />
+                        <div className="mx-2 h-4 w-px bg-white/10" />
 
                         <UserMenu />
                         <button
                             onClick={() => setIsSubscriptionModalOpen(true)}
-                            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F2D479] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-black transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] 2xl:px-5 2xl:text-xs"
+                            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F2D479] px-5 py-2 font-cinzel text-xs font-bold uppercase tracking-widest text-black transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(212,175,55,0.4)]"
                         >
                             <Sparkles size={14} className="fill-current" />
-                            Membership
+                            PRO
                         </button>
                         <Link
                             href="/start?reset=true"
-                            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition-all duration-300 hover:border-acc-gold hover:bg-acc-gold hover:text-deep-navy 2xl:px-5 2xl:text-xs"
+                            className="inline-flex shrink-0 items-center justify-center rounded-full border border-white/20 px-5 py-2 font-cinzel text-xs font-bold uppercase tracking-widest text-white transition-all duration-300 hover:border-acc-gold hover:bg-acc-gold hover:text-deep-navy"
                         >
-                            Start Oracle
+                            {isEnglish ? 'Start Oracle' : '오라클 시작'}
                         </Link>
                     </div>
 
-                    {/* Compact Navigation */}
-                    <div className="z-20 flex items-center gap-2 xl:hidden">
+                    <div className="z-20 flex items-center gap-2 md:hidden">
                         <button
                             onClick={() => setIsSubscriptionModalOpen(true)}
-                            className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F2D479] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-black transition-all duration-300 hover:shadow-[0_0_10px_rgba(212,175,55,0.4)] sm:px-4 sm:tracking-[0.26em]"
+                            className="mr-1 inline-flex items-center justify-center gap-1 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F2D479] px-4 py-1.5 font-cinzel text-[10px] font-bold uppercase tracking-widest text-black transition-all duration-300 hover:shadow-[0_0_10px_rgba(212,175,55,0.4)]"
                         >
                             <Sparkles size={12} className="fill-current" />
-                            Pro
+                            PRO
                         </button>
                         <Link
                             href="/start?reset=true"
-                            className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white transition-all duration-300 hover:border-acc-gold hover:text-acc-gold sm:px-4 sm:tracking-[0.26em]"
+                            className="inline-flex items-center justify-center gap-1 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 font-cinzel text-[10px] font-bold uppercase tracking-widest text-white transition-all duration-300 hover:border-acc-gold hover:text-acc-gold"
                         >
-                            Oracle
+                            {isEnglish ? 'Oracle' : '오라클'}
                         </Link>
 
                         <button
@@ -143,25 +140,28 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                 </div>
             </motion.nav>
 
-            {/* Mobile Menu */}
             <MobileMenu
                 isOpen={isMobileMenuOpen}
                 onClose={() => setIsMobileMenuOpen(false)}
                 menuItems={[
-                    ...(status === 'unauthenticated' ? [{
-                        type: 'button' as const,
-                        icon: User,
-                        iconColorClass: 'group-hover:bg-white/10 group-hover:text-white',
-                        label: 'LOGIN',
-                        subLabel: 'Save your destiny',
-                        onClick: openLoginModal,
-                    }] : []),
+                    ...(status === 'unauthenticated'
+                        ? [
+                            {
+                                type: 'button' as const,
+                                icon: User,
+                                iconColorClass: 'group-hover:bg-white/10 group-hover:text-white',
+                                label: isEnglish ? 'LOGIN' : '로그인',
+                                subLabel: isEnglish ? 'Save your reading path' : '나의 운명을 저장하세요',
+                                onClick: openLoginModal,
+                            },
+                        ]
+                        : []),
                     {
                         type: 'button',
                         icon: Search,
                         iconColorClass: 'group-hover:bg-purple-500/20 group-hover:text-purple-300',
-                        label: 'FIND ORDERS',
-                        subLabel: isEnglish ? 'Lookup past readings' : '지난 리딩 찾아보기',
+                        label: isEnglish ? 'FIND ORDERS' : '결제 내역 조회',
+                        subLabel: isEnglish ? 'Lookup past readings' : '과거 리딩 내역 확인',
                         onClick: () => setIsOrderModalOpen(true),
                     },
                     {
@@ -172,20 +172,24 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                         subLabel: isEnglish ? 'Birth-based daily guidance' : '생년월일 기반 데일리 운세',
                         href: '/daily',
                     },
-                    ...(isEnglish ? [{
-                        type: 'link' as const,
-                        icon: Sparkles,
-                        iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
-                        label: 'STARTER GUIDES',
-                        subLabel: 'Learn Korean Saju first',
-                        href: '/guides',
-                    }] : []),
+                    ...(isEnglish
+                        ? [
+                            {
+                                type: 'link' as const,
+                                icon: Sparkles,
+                                iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
+                                label: 'STARTER GUIDES',
+                                subLabel: 'Learn Korean Saju first',
+                                href: '/guides',
+                            },
+                        ]
+                        : []),
                     {
                         type: 'link',
                         icon: Sparkles,
                         iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
-                        label: 'START ANALYSIS',
-                        subLabel: isEnglish ? 'Begin your cosmic journey' : '오라클 리딩 시작하기',
+                        label: isEnglish ? 'START ANALYSIS' : '오라클 시작',
+                        subLabel: isEnglish ? 'Begin your cosmic journey' : '코스믹 여정을 시작하세요',
                         href: '/start?reset=true',
                     },
                 ]}

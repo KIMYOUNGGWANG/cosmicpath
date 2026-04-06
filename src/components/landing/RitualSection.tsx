@@ -52,7 +52,7 @@ export function RitualSection() {
                     initial={{ opacity: 0, y: 10 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 1.5 }}
-                    className="font-cinzel text-3xl md:text-7xl text-starlight mb-10 tracking-[0.2em] md:tracking-[0.3em]"
+                    className="font-cinzel text-2xl sm:text-3xl md:text-7xl text-starlight mb-10 tracking-[0.1em] sm:tracking-[0.2em] md:tracking-[0.3em]"
                 >
                     THE RITUAL
                 </motion.h2>
@@ -69,14 +69,14 @@ export function RitualSection() {
                 </motion.p>
 
                 {/* Chronos Dial: Color Hierarchy Refined */}
-                <div className="relative flex items-center justify-center w-80 h-80 md:w-[560px] md:h-[560px]">
+                <div className="relative flex items-center justify-center w-72 h-72 sm:w-80 sm:h-80 md:w-[560px] md:h-[560px] mx-auto">
 
                     {/* Outer Mechanism: Cold Silver (High Precision) */}
                     <motion.div
                         style={{
                             rotate: rotateBase,
-                            x: mousePos.x * 20,
-                            y: mousePos.y * 20,
+                            x: mousePos.x * 15,
+                            y: mousePos.y * 15,
                         }}
                         className="absolute inset-0 rounded-full border border-white/5 flex items-center justify-center"
                     >
@@ -95,10 +95,10 @@ export function RitualSection() {
                     <motion.div
                         style={{
                             rotate: useTransform(scrollYProgress, [0, 1], [0, -180]),
-                            x: mousePos.x * 40,
-                            y: mousePos.y * 40,
+                            x: mousePos.x * 25,
+                            y: mousePos.y * 25,
                         }}
-                        className="absolute inset-16 md:inset-24 rounded-full border border-white/5 flex items-center justify-center"
+                        className="absolute inset-14 md:inset-24 rounded-full border border-white/5 flex items-center justify-center"
                     >
                         {[...Array(10)].map((_, i) => (
                             <div
@@ -127,10 +127,10 @@ export function RitualSection() {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             style={{
-                                x: mousePos.x * 60,
-                                y: mousePos.y * 60,
+                                x: mousePos.x * 30,
+                                y: mousePos.y * 30,
                             }}
-                            className="relative w-40 h-40 md:w-60 md:h-60 rounded-full bg-void border border-acc-gold/40 flex flex-col items-center justify-center overflow-hidden transition-all duration-500 shadow-[0_0_40px_rgba(0,0,0,0.9)] group-hover:border-acc-gold"
+                            className="relative w-36 h-36 sm:w-40 sm:h-40 md:w-60 md:h-60 rounded-full bg-void border border-acc-gold/40 flex flex-col items-center justify-center overflow-hidden transition-all duration-500 shadow-[0_0_40px_rgba(0,0,0,0.9)] group-hover:border-acc-gold"
                         >
                             {/* Inner Hot Surface */}
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.2)_0%,transparent_70%)] opacity-30 group-hover:opacity-80 transition-opacity duration-700" />

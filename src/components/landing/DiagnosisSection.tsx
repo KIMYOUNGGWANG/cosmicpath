@@ -5,15 +5,20 @@ import { motion } from 'framer-motion';
 export function DiagnosisSection() {
     return (
         <section className="relative py-20 md:py-32 bg-deep overflow-hidden">
+
+            {/* Background glow — visible on all screens as ambient decoration */}
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-64 h-64 md:w-[480px] md:h-[480px] rounded-full bg-acc-nebula/5 blur-3xl pointer-events-none" />
+            <div className="absolute right-8 top-1/2 -translate-y-1/2 w-40 h-40 md:w-64 md:h-64 rounded-full border border-white/5 pointer-events-none hidden md:block" />
+
             <div className="container-cosmic relative z-10 flex flex-col md:flex-row gap-12 md:gap-16 items-center">
 
-                {/* Left: Text Area (Asymmetry) */}
+                {/* Left: Text Area */}
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true, margin: "-100px" }}
                     transition={{ duration: 0.8 }}
-                    className="flex-1 md:pr-12 relative z-20"
+                    className="flex-1 md:pr-12 relative z-20 w-full"
                 >
                     <span className="text-acc-nebula text-xs font-bold tracking-widest uppercase mb-4 block">
                         The Diagnosis
@@ -34,8 +39,8 @@ export function DiagnosisSection() {
                     </div>
                 </motion.div>
 
-                {/* Right: Abstract Visualization */}
-                <div className="flex-1 w-full relative h-[300px] md:h-[400px] z-10">
+                {/* Right: Abstract Visualization — desktop only to prevent mobile overlap */}
+                <div className="hidden md:flex flex-1 w-full relative h-[400px] z-10">
                     <motion.div
                         initial={{ scale: 0.8, opacity: 0 }}
                         whileInView={{ scale: 1, opacity: 1 }}
@@ -43,11 +48,9 @@ export function DiagnosisSection() {
                         transition={{ duration: 1 }}
                         className="absolute inset-0 flex items-center justify-center"
                     >
-                        {/* Abstract Volcanic Lake Representation */}
-                        <div className="relative w-64 h-64">
+                        <div className="relative w-72 h-72">
                             {/* Lake Surface */}
                             <div className="absolute inset-0 rounded-full border border-white/5 bg-gradient-to-br from-blue-900/10 to-transparent backdrop-blur-sm" />
-
                             {/* Inner Volcano / Core */}
                             <motion.div
                                 animate={{
@@ -57,7 +60,6 @@ export function DiagnosisSection() {
                                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                                 className="absolute inset-0 m-auto w-32 h-32 rounded-full bg-acc-nebula/20 blur-2xl"
                             />
-
                             <div className="absolute inset-0 m-auto w-48 h-48 border border-acc-nebula/10 rounded-full animate-spin-slow" />
                         </div>
                     </motion.div>
