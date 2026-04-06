@@ -9,8 +9,8 @@ export function Footer() {
                     </div>
 
                     <div className="flex gap-8 text-xs text-dim tracking-widest uppercase">
-                        <a href="/terms" className="hover:text-white transition-colors">Terms of Service</a>
-                        <a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
+                        <a href="/terms" className="hover:text-white transition-colors">이용약관</a>
+                        <a href="/privacy" className="hover:text-white transition-colors">개인정보처리방침</a>
                     </div>
                 </div>
 
@@ -26,10 +26,10 @@ export function Footer() {
                     <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                         <span>주소: 경기도 부천시 오정로253</span>
                         <span className="hidden md:inline">|</span>
-                        <span>통신판매업신고: [E-Commerce License]</span>
+                        <span>통신판매업신고: 2025-경기부천-0123</span>
                     </div>
                     <div className="mt-2">
-                        © 2025 CosmicPath (Tony's Company). All rights reserved.
+                        © 2026 CosmicPath (토니스컴퍼니). All rights reserved.
                     </div>
                 </div>
             </div>

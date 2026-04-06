@@ -403,6 +403,7 @@ export function SubscriptionModal({
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(2,6,23,0.82)] p-3 backdrop-blur-md sm:p-4"
+                    style={{ touchAction: 'none' }}
                     onClick={handleDismiss}
                 >
                     <motion.div
@@ -413,7 +414,7 @@ export function SubscriptionModal({
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby="subscription-modal-title"
-                        className="relative max-h-[92vh] w-full max-w-6xl overflow-hidden rounded-[32px] border border-[#f0d487]/20 bg-[radial-gradient(circle_at_top_left,rgba(244,216,138,0.16),transparent_30%),radial-gradient(circle_at_85%_15%,rgba(99,102,241,0.22),transparent_26%),linear-gradient(155deg,#060914,#0d1322_48%,#0a0f1d)] shadow-[0_32px_120px_rgba(0,0,0,0.52)] overscroll-contain"
+                        className="relative max-h-[92vh] w-full max-w-6xl overflow-hidden rounded-[32px] border border-[#f0d487]/20 bg-[radial-gradient(circle_at_top_left,rgba(244,216,138,0.16),transparent_30%),radial-gradient(circle_at_85%_15%,rgba(99,102,241,0.22),transparent_26%),linear-gradient(155deg,#060914,#0d1322_48%,#0a0f1d)] shadow-[0_32px_120px_rgba(0,0,0,0.52)]"
                         onClick={(event) => event.stopPropagation()}
                     >
                         <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-[#f4d88a]/70 to-transparent" />
@@ -439,7 +440,11 @@ export function SubscriptionModal({
                             <X size={18} />
                         </button>
 
-                        <div className="max-h-[92vh] overflow-y-auto p-5 sm:p-7 md:p-8 lg:p-10">
+                        <div
+                            className="max-h-[92vh] overflow-y-auto p-5 sm:p-7 md:p-8 lg:p-10"
+                            style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}
+                            onClick={(event) => event.stopPropagation()}
+                        >
                             <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.85fr)] xl:gap-8">
                                 <div>
                                     <div className="mb-6 max-w-4xl">

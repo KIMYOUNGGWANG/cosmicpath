@@ -3,12 +3,13 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
 
-// Static orbital data for deterministic rendering
-const ORBITAL_PATHS = [
-    { radius: 80, duration: 20, startAngle: 0 },
-    { radius: 120, duration: 28, startAngle: 45 },
-    { radius: 160, duration: 35, startAngle: 90 },
-    { radius: 200, duration: 45, startAngle: 180 },
+// Responsive orbital data — radius is a fraction of the container size
+// Will be multiplied by a scale factor based on screen size
+const ORBITAL_BASE = [
+    { radiusFraction: 0.18, duration: 20, startAngle: 0 },
+    { radiusFraction: 0.27, duration: 28, startAngle: 45 },
+    { radiusFraction: 0.36, duration: 35, startAngle: 90 },
+    { radiusFraction: 0.44, duration: 45, startAngle: 180 },
 ];
 
 const DATA_NODES = [
@@ -22,6 +23,9 @@ const DATA_NODES = [
 
 export function EngineSection() {
     const containerRef = useRef<HTMLDivElement>(null);
+    const orbitalRef = useRef<HTMLDivElement>(null);
+    const [orbitalSize, setOrbitalSize] = useState(480); // default desktop
+
     const { scrollYProgress } = useScroll({
         target: containerRef,
         offset: ["start end", "end start"],
@@ -34,6 +38,19 @@ export function EngineSection() {
     const pointsRef = useRef<HTMLDivElement>(null);
     const targetPoints = 214;
 
+    // Measure container to compute responsive orbit radii
+    useEffect(() => {
+        const measure = () => {
+            if (orbitalRef.current) {
+                setOrbitalSize(orbitalRef.current.clientWidth);
+            }
+        };
+        measure();
+        const resizeObserver = new ResizeObserver(measure);
+        if (orbitalRef.current) resizeObserver.observe(orbitalRef.current);
+        return () => resizeObserver.disconnect();
+    }, []);
+
     useEffect(() => {
         let start = 0;
         const duration = 2000; // ms
@@ -43,7 +60,7 @@ export function EngineSection() {
             const progress = Math.min((timestamp - start) / duration, 1);
             const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
 
-            // Direct DOM update
+            // Direct DOM update — no React re-render
             if (pointsRef.current) {
                 pointsRef.current.textContent = String(Math.floor(eased * targetPoints));
             }
@@ -69,6 +86,12 @@ export function EngineSection() {
 
         return () => observer.disconnect();
     }, []);
+
+    // Compute actual pixel radii from current container size
+    const orbitalPaths = ORBITAL_BASE.map((base) => ({
+        radius: Math.floor((orbitalSize / 2) * base.radiusFraction * 2),
+        duration: base.duration,
+    }));
 
     return (
         <section
@@ -101,7 +124,7 @@ export function EngineSection() {
                     <span className="text-acc-logic text-xs font-bold tracking-[0.3em] uppercase block mb-4">
                         Cosmic Intelligence
                     </span>
-                    <h2 className="font-cinzel text-2xl md:text-5xl text-starlight mb-6 leading-tight">
+                    <h2 className="font-cinzel text-2xl md:text-4xl text-starlight mb-6 leading-tight">
                         모호한 운세는 그만.<br className="md:hidden" />
                         <span className="text-acc-gold">데이터</span>로 증명합니다.
                     </h2>
@@ -111,10 +134,11 @@ export function EngineSection() {
                     </p>
                 </motion.div>
 
-                {/* Engine Visualization */}
+                {/* Engine Visualization — overflow-hidden prevents mobile scroll */}
                 <motion.div
-                    style={{ rotate, scale }}
-                    className="relative w-full max-w-lg mx-auto aspect-square mb-12"
+                    ref={orbitalRef}
+                    style={{ rotate, scale, willChange: 'transform' }}
+                    className="relative w-full max-w-lg mx-auto aspect-square mb-12 overflow-hidden"
                 >
                     {/* Central Core */}
                     <motion.div
@@ -134,8 +158,8 @@ export function EngineSection() {
                         </div>
                     </motion.div>
 
-                    {/* Orbital Paths */}
-                    {ORBITAL_PATHS.map((orbit, i) => (
+                    {/* Orbital Paths — radius now computed from container size */}
+                    {orbitalPaths.map((orbit, i) => (
                         <motion.div
                             key={i}
                             className="absolute top-1/2 left-1/2 rounded-full border border-white/5"
@@ -144,6 +168,7 @@ export function EngineSection() {
                                 height: orbit.radius * 2,
                                 marginLeft: -orbit.radius,
                                 marginTop: -orbit.radius,
+                                willChange: 'transform',
                             }}
                             animate={{ rotate: 360 }}
                             transition={{
@@ -154,11 +179,12 @@ export function EngineSection() {
                         >
                             {/* Nodes on this orbit */}
                             {DATA_NODES.filter(n => n.orbit === i).map((node, nodeIdx) => {
-                                const angle = (360 / DATA_NODES.filter(n => n.orbit === i).length) * nodeIdx;
+                                const nodesOnOrbit = DATA_NODES.filter(n => n.orbit === i).length;
+                                const angle = (360 / nodesOnOrbit) * nodeIdx;
                                 return (
                                     <motion.div
                                         key={node.id}
-                                        className="absolute w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-sm md:text-base font-bold border border-white/20 backdrop-blur-sm cursor-pointer group"
+                                        className="absolute w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-xs md:text-sm font-bold border border-white/20 backdrop-blur-sm cursor-pointer group"
                                         style={{
                                             top: '50%',
                                             left: '50%',
@@ -166,16 +192,17 @@ export function EngineSection() {
                                             backgroundColor: `${node.color}20`,
                                             color: node.color,
                                             boxShadow: `0 0 15px ${node.color}40`,
+                                            willChange: 'transform',
                                         }}
                                         whileHover={{ scale: 1.2, zIndex: 50 }}
-                                        animate={{ rotate: -360 }} // Counter-rotate to keep upright
+                                        animate={{ rotate: -360 }}
                                         transition={{
                                             rotate: { duration: orbit.duration, repeat: Infinity, ease: 'linear' },
                                         }}
                                     >
                                         {node.icon}
                                         {/* Tooltip */}
-                                        <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[11px] text-white/90 bg-black/80 px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                                        <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-white/90 bg-black/80 px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
                                             {node.label}
                                         </span>
                                     </motion.div>

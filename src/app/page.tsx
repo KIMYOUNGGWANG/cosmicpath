@@ -14,8 +14,16 @@ import { CrossroadsSection } from '@/components/landing/CrossroadsSection';
 import { Footer } from '@/components/landing/Footer';
 
 async function getLandingLanguage(): Promise<'ko' | 'en'> {
-    const headersList = await headers();
-    return (headersList.get('accept-language') || '').includes('ko') ? 'ko' : 'en';
+    try {
+        const headersList = await headers();
+        const acceptLang = headersList.get('accept-language') || '';
+        if (acceptLang.includes('en') && !acceptLang.includes('ko')) {
+            return 'en';
+        }
+        return 'ko';
+    } catch {
+        return 'ko';
+    }
 }
 
 export async function generateMetadata(): Promise<Metadata> {

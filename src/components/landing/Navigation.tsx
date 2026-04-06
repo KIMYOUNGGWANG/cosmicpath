@@ -58,63 +58,65 @@ export function Navigation() {
                 }}
                 animate={hidden ? "hidden" : "visible"}
                 transition={{ duration: 0.35, ease: "easeInOut" }}
-                className="fixed left-0 right-0 top-0 z-[9999] px-3 py-4 text-white sm:px-4 md:px-5 xl:px-6"
+                className="fixed left-0 right-0 top-0 z-[9999] px-4 py-4 text-white sm:px-4 md:px-5 xl:px-6"
             >
-                <div className="relative mx-auto flex max-w-7xl items-center justify-between rounded-full border border-white/10 bg-[#050816]/72 px-4 py-3 shadow-[0_20px_50px_rgba(2,6,23,0.28)] backdrop-blur-xl sm:px-5 xl:px-6">
+                <div className="absolute inset-0 border-b border-white/5 bg-[#050505]/80 backdrop-blur-md noise-overlay" />
+
+                <div className="relative mx-auto flex max-w-7xl items-center justify-between">
                     {/* Logo */}
                     <Link
                         href="/"
-                        className="z-20 shrink-0 font-cinzel text-base font-bold tracking-[0.24em] text-starlight transition-opacity hover:opacity-80 sm:text-lg xl:text-xl"
+                        className="z-20 shrink-0 truncate font-cinzel text-lg font-bold tracking-widest text-starlight transition-opacity hover:opacity-80 md:text-xl"
                     >
                         <span className="hidden sm:inline">COSMIC PATH</span>
                         <span className="sm:hidden">COSMIC</span>
                     </Link>
 
                     {/* Desktop Actions */}
-                    <div className="hidden xl:flex items-center gap-3 2xl:gap-5">
+                    <div className="hidden md:flex items-center gap-4 xl:gap-6">
                         <Link
                             href="/daily"
-                            className="shrink-0 whitespace-nowrap rounded-full border border-transparent px-2 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-starlight transition-colors hover:text-acc-gold 2xl:text-xs"
+                            className="shrink-0 whitespace-nowrap font-cinzel text-xs font-medium uppercase tracking-widest text-starlight transition-colors hover:text-acc-gold"
                         >
                             오늘의 운세
                         </Link>
                         <button
                             onClick={toggleOrderModal}
-                            className="shrink-0 whitespace-nowrap rounded-full border border-transparent px-2 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-starlight transition-colors hover:text-acc-gold 2xl:text-xs"
+                            className="shrink-0 whitespace-nowrap font-cinzel text-xs font-medium uppercase tracking-widest text-starlight transition-colors hover:text-acc-gold"
                         >
-                            FIND ORDERS
+                            결제 내역 조회
                         </button>
 
-                        <div className="mx-1 h-4 w-px bg-white/10 2xl:mx-2" />
+                        <div className="mx-2 h-4 w-px bg-white/10" />
 
                         <UserMenu />
                         <button
                             onClick={() => setIsSubscriptionModalOpen(true)}
-                            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F2D479] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-black transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] 2xl:px-5 2xl:text-xs"
+                            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F2D479] px-5 py-2 font-cinzel text-xs font-bold uppercase tracking-widest text-black transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(212,175,55,0.4)]"
                         >
                             <Sparkles size={14} className="fill-current" />
-                            Membership
+                            PRO
                         </button>
                         <Link
                             href="/start?reset=true"
-                            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition-all duration-300 hover:border-acc-gold hover:bg-acc-gold hover:text-deep-navy 2xl:px-5 2xl:text-xs"
+                            className="inline-flex shrink-0 items-center justify-center rounded-full border border-white/20 px-5 py-2 font-cinzel text-xs font-bold uppercase tracking-widest text-white transition-all duration-300 hover:border-acc-gold hover:bg-acc-gold hover:text-deep-navy"
                         >
-                            Start Oracle
+                            오라클 시작
                         </Link>
                     </div>
 
-                    {/* Compact Navigation */}
-                    <div className="z-20 flex items-center gap-2 xl:hidden">
+                    {/* Mobile Navigation */}
+                    <div className="z-20 flex items-center gap-2 md:hidden">
                         <button
                             onClick={() => setIsSubscriptionModalOpen(true)}
-                            className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F2D479] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-black transition-all duration-300 hover:shadow-[0_0_10px_rgba(212,175,55,0.4)] sm:px-4 sm:tracking-[0.26em]"
+                            className="mr-1 inline-flex items-center justify-center gap-1 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F2D479] px-4 py-1.5 font-cinzel text-[10px] font-bold uppercase tracking-widest text-black transition-all duration-300 hover:shadow-[0_0_10px_rgba(212,175,55,0.4)]"
                         >
                             <Sparkles size={12} className="fill-current" />
-                            Pro
+                            PRO
                         </button>
                         <Link
                             href="/start?reset=true"
-                            className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.22em] text-white transition-all duration-300 hover:border-acc-gold hover:text-acc-gold sm:px-4 sm:tracking-[0.26em]"
+                            className="inline-flex items-center justify-center gap-1 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 font-cinzel text-[10px] font-bold uppercase tracking-widest text-white transition-all duration-300 hover:border-acc-gold hover:text-acc-gold"
                         >
                             Oracle
                         </Link>
@@ -139,16 +141,16 @@ export function Navigation() {
                         type: 'button' as const,
                         icon: User,
                         iconColorClass: 'group-hover:bg-white/10 group-hover:text-white',
-                        label: 'LOGIN',
-                        subLabel: 'Save your destiny',
+                        label: '로그인',
+                        subLabel: '나의 운명을 저장하세요',
                         onClick: openLoginModal,
                     }] : []),
                     {
                         type: 'button',
                         icon: Search,
                         iconColorClass: 'group-hover:bg-purple-500/20 group-hover:text-purple-300',
-                        label: 'FIND ORDERS',
-                        subLabel: 'Lookup past readings',
+                        label: '결제 내역 조회',
+                        subLabel: '과거 리딩 내역 확인',
                         onClick: () => setIsOrderModalOpen(true),
                     },
                     {
@@ -163,8 +165,8 @@ export function Navigation() {
                         type: 'link',
                         icon: Sparkles,
                         iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
-                        label: 'START ANALYSIS',
-                        subLabel: 'Begin your cosmic journey',
+                        label: '오라클 시작',
+                        subLabel: '코스믹 여정을 시작하세요',
                         href: '/start?reset=true',
                     },
                 ]}
