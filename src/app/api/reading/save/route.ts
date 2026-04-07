@@ -168,10 +168,13 @@ export async function POST(request: Request) {
                     await sendResultEmail({
                         email: savedEmail,
                         resultId: result.id,
+                        language: savedMeta.language === 'en' ? 'en' : 'ko',
                         title:
                             typeof savedMeta.userContext === 'string'
                                 ? savedMeta.userContext
-                                : '통합 분석 리포트',
+                                : savedMeta.language === 'en'
+                                    ? 'Your reading'
+                                    : '통합 분석 리포트',
                         birthInfo:
                             typeof savedMeta.birthInfo === 'string'
                                 ? savedMeta.birthInfo

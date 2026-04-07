@@ -27,6 +27,12 @@ interface FollowUpJobMetadata {
   phase4Url?: string;
 }
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
+}
+
 type CosmicSeasonKey =
   | 'CAPRICORN'
   | 'AQUARIUS'
@@ -136,6 +142,19 @@ function parseJobMetadata(raw: string | null | undefined): FollowUpJobMetadata {
   }
 
   return {};
+}
+
+function getReadingLanguage(raw: string | null | undefined): 'ko' | 'en' {
+  if (!raw) {
+    return 'ko';
+  }
+
+  try {
+    const parsed = asRecord(JSON.parse(raw));
+    return parsed?.language === 'en' ? 'en' : 'ko';
+  } catch {
+    return 'ko';
+  }
 }
 
 function getAppUrl(): string {
@@ -368,9 +387,11 @@ export async function runDueFollowUps({
       const isArchiveStage = stage === 'D7';
       const offer = isDiscountStage ? await ensureDiscountOffer(job) : null;
       const cosmicWindow = isCosmicWindowStage ? getCosmicWindowContent(job.scheduledFor) : null;
+      const readingLanguage = getReadingLanguage(reading.metadata);
       const phase4Url = isCosmicWindowStage
         ? `${appUrl}/start?reading_id=${encodeURIComponent(job.readingId)}`
         : undefined;
+      const dailyUrl = readingLanguage === 'ko' ? `${appUrl}/daily` : undefined;
       const subjectHint = isDiscountStage
         ? 'D+2 discount offer'
         : isCosmicWindowStage
@@ -383,6 +404,7 @@ export async function runDueFollowUps({
         email: job.email,
         readingId: job.readingId,
         stage,
+        language: readingLanguage,
         readingUrl,
         promoCode: offer?.promoCode,
         discount: offer?.discount,
@@ -390,6 +412,7 @@ export async function runDueFollowUps({
         expiresAt: offer?.expiresAt,
         cosmicWindow: cosmicWindow ?? undefined,
         phase4Url,
+        dailyUrl,
       });
 
       const existingMetadata = parseJobMetadata(job.metadata);
@@ -423,6 +446,7 @@ export async function runDueFollowUps({
         metadata: {
           stage: isDiscountStage ? 'D2_DISCOUNT' : stage,
           sourceStage: stage,
+          language: readingLanguage,
           discount: offer?.discount,
           cosmicWindow: cosmicWindow?.seasonLabel,
         },

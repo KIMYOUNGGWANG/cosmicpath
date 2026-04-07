@@ -649,7 +649,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     ) : (
                         <div className="px-4 md:px-6">
                             <BlindSpotTeaser
-                                title={isEn ? "⚠️ UPCOMING FATE ALERT" : "⚠️ 다가오는 운명의 경고"}
+                                title={isEn ? "⚠️ WHAT TO WATCH NEXT" : "⚠️ 곧 주의해서 볼 흐름"}
                                 previewText={getTeaserText('flow')}
                                 hiddenText={isEn
                                     ? "This period brings a rare alignment of Jupiter and Saturn, signaling a massive shift in your career path. Without preparation, you may miss this 12-year cycle opportunity."
@@ -697,10 +697,10 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                         <div className="px-4 md:px-6">
                             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                 <Target size={18} className="text-gold" />
-                                {isEn ? 'Life Areas & Soulmate' : '인생 영역 & 소울메이트'}
+                                {isEn ? 'Life Areas & Soulmate' : '분야별 해석 & 인연'}
                             </h2>
                             <BlindSpotTeaser
-                                title={isEn ? "🔒 DETAILED LIFE ANALYSIS" : "🔒 영역별 정밀 분석"}
+                                title={isEn ? "🔒 MORE DETAILED READING" : "🔒 더 자세한 해석"}
                                 previewText={getTeaserText('life')}
                                 hiddenText={isEn
                                     ? "Your wealth luck flows strongly in the northeast direction this year. A crucial romantic encounter is waiting in late autumn."
@@ -754,10 +754,10 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                         <div className="px-4 md:px-6">
                             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                 <Zap size={18} className="text-gold" />
-                                {isEn ? 'Oracle Edge Insight' : '오라클 심화 인사이트'}
+                                {isEn ? 'More Detailed Insight' : '더 자세한 분석'}
                             </h2>
                             <TeaserCard
-                                title={isEn ? 'Oracle Edge Insight' : '오라클 심화 인사이트'}
+                                title={isEn ? 'More Detailed Insight' : '더 자세한 분석'}
                                 hook={isEn ? "⚡ Confirm your hidden 'Noble Person' and 'Danger Zones'." : "⚡ 당신을 도울 '천을귀인'과 피해야 할 '공망'을 확인하세요."}
                                 type="money"
                                 onUnlock={handleUnlock}
@@ -789,7 +789,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     ) : (
                         <div className="px-4 md:px-6">
                             <BlindSpotTeaser
-                                title={isEn ? "🎯 CRITICAL ACTION REQUIRED" : "🎯 긴급 행동 지침"}
+                                title={isEn ? "🎯 YOUR NEXT ACTION" : "🎯 지금 필요한 다음 행동"}
                                 previewText={isEn ? "To avoid the approaching crisis, you must act on..." : "다가오는 위기를 피하기 위해, 반드시 실행해야 할 행동은..."}
                                 hiddenText={isEn
                                     ? "On the 15th, avoid signing any contracts. Instead, focus on reconnecting with a past ally who holds the key to your next breakthrough."
@@ -847,12 +847,12 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 {/* Visual Share Card */}
                 <div className="mb-12">
                     <h2 className="text-xl font-cinzel text-white mb-6">
-                        {language === 'en' ? 'Seal Your Oracle Card' : '오라클 카드 봉인하기'}
+                        {language === 'en' ? 'Save Your Result Card' : '결과 카드 저장하기'}
                     </h2>
                     <p className="text-white/60 text-sm mb-8 font-light">
                         {language === 'en'
-                            ? "Save this card as a talisman, or share it to complete the ritual."
-                            : "이 카드를 부적처럼 저장하거나, 공유하여 리추얼을 완성하세요."}
+                            ? "Save this card for later, or share it if you want to keep the result close."
+                            : "결과 카드를 저장해두거나, 필요하면 공유해서 다시 보기 쉽게 남겨두세요."}
                     </p>
 
 

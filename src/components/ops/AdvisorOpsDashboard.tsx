@@ -32,6 +32,21 @@ interface AdvisorOpsDashboardProps {
     summary: AdvisorOpsSummary;
 }
 
+function formatSeriesLabel(label: string | undefined) {
+    switch (label) {
+        case 'readings':
+            return '리딩';
+        case 'manualSelections':
+            return '직접 고름';
+        case 'followups':
+            return '추가 질문';
+        case 'paidReadings':
+            return '결제';
+        default:
+            return label ?? '숫자';
+    }
+}
+
 function TooltipCard({
     active,
     label,
@@ -62,7 +77,7 @@ function TooltipCard({
                                 className="h-2.5 w-2.5 rounded-full"
                                 style={{ backgroundColor: entry.color }}
                             />
-                            <span>{entry.dataKey}</span>
+                            <span>{formatSeriesLabel(entry.dataKey)}</span>
                         </div>
                         <strong className="text-white">
                             {typeof entry.value === 'number'
@@ -88,41 +103,41 @@ export function AdvisorOpsDashboard({ summary }: AdvisorOpsDashboardProps) {
     const manualShare = summary.totals.readings > 0
         ? (summary.totals.manualSelections / summary.totals.readings) * 100
         : 0;
-    const topIntent = summary.intentRows[0]?.label ?? 'general';
-    const topAdvisor = summary.advisorRows[0]?.label ?? 'advisor pending';
+    const topIntent = summary.intentRows[0]?.label ?? '아직 없음';
+    const topAdvisor = summary.advisorRows[0]?.label ?? '아직 없음';
 
     const metrics = [
         {
-            label: 'Reads by Intent',
+            label: '질문별 리딩 수',
             value: summary.totals.readings.toLocaleString(),
-            caption: '의도 라우팅이 실제로 발생한 reading 볼륨입니다.',
+            caption: '질문에 맞춰 추천이 붙은 리딩 수입니다.',
             icon: Compass,
             iconClassName: 'text-sky-200',
             surfaceClassName:
                 'bg-[radial-gradient(circle_at_top_right,rgba(125,211,252,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]',
         },
         {
-            label: 'Manual Share',
+            label: '직접 고른 비율',
             value: formatPercent(manualShare),
-            caption: `${summary.totals.manualSelections.toLocaleString()} manual / ${summary.totals.autoSelections.toLocaleString()} auto`,
+            caption: `${summary.totals.manualSelections.toLocaleString()}건 직접 선택 / ${summary.totals.autoSelections.toLocaleString()}건 자동 추천`,
             icon: Target,
             iconClassName: 'text-violet-200',
             surfaceClassName:
                 'bg-[radial-gradient(circle_at_top_right,rgba(196,181,253,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]',
         },
         {
-            label: 'Follow-up Rate',
+            label: '추가 질문 비율',
             value: formatPercent(overallFollowupRate),
-            caption: `${summary.totals.followupReadings.toLocaleString()} reading이 follow-up으로 이어졌습니다.`,
+            caption: `${summary.totals.followupReadings.toLocaleString()}건이 추가 질문으로 이어졌습니다.`,
             icon: Sparkles,
             iconClassName: 'text-blue-200',
             surfaceClassName:
                 'bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]',
         },
         {
-            label: 'Paid Rate',
+            label: '결제 비율',
             value: formatPercent(overallPaidRate),
-            caption: `${summary.totals.paidReadings.toLocaleString()} reading이 premium으로 이어졌습니다.`,
+            caption: `${summary.totals.paidReadings.toLocaleString()}건이 결제로 이어졌습니다.`,
             icon: Crown,
             iconClassName: 'text-amber-200',
             surfaceClassName:
@@ -136,21 +151,21 @@ export function AdvisorOpsDashboard({ summary }: AdvisorOpsDashboardProps) {
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                     <div className="max-w-2xl">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                            Advisor Command
+                            가이드 추천
                         </p>
                         <h2 className="mt-3 font-[var(--font-outfit)] text-3xl font-semibold tracking-[-0.05em] text-white sm:text-4xl">
-                            어떤 질문 의도와 상담가가 실제 전환을 만드는지 읽는 패널
+                            어떤 추천이 잘 맞는지 보는 화면
                         </h2>
                         <p className="mt-4 text-sm leading-7 text-white/58 sm:text-base">
-                            intent routing과 advisor assignment를 운영 관점에서 봅니다.
-                            단순 볼륨이 아니라 follow-up, daily return, paid outcome까지 함께 비교할 수 있도록 묶었습니다.
+                            어떤 질문에 어떤 가이드를 붙였을 때 반응이 좋은지 봅니다.
+                            단순히 많이 열렸는지보다, 추가 질문과 결제까지 이어졌는지를 같이 봅니다.
                         </p>
                     </div>
 
                     <div className="flex flex-wrap gap-3">
-                        <OpsSignalChip label="Window" value={windowLabel} />
-                        <OpsSignalChip label="Top Intent" value={topIntent} />
-                        <OpsSignalChip label="Top Advisor" value={topAdvisor} />
+                        <OpsSignalChip label="기간" value={windowLabel} />
+                        <OpsSignalChip label="가장 많은 질문" value={topIntent} />
+                        <OpsSignalChip label="가장 많이 쓰인 가이드" value={topAdvisor} />
                     </div>
                 </div>
             </section>
@@ -173,21 +188,21 @@ export function AdvisorOpsDashboard({ summary }: AdvisorOpsDashboardProps) {
                 <div className="rounded-[34px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.12),transparent_22%),linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-6 shadow-[0_28px_80px_rgba(2,6,23,0.28)] sm:p-7">
                     <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                            Intent Timeline
+                            추천 흐름
                         </p>
 
                         <div className="flex flex-wrap gap-2.5">
-                            <OpsSignalChip label="reads" value={summary.totals.readings.toLocaleString()} />
-                            <OpsSignalChip label="manual" value={summary.totals.manualSelections.toLocaleString()} />
-                            <OpsSignalChip label="paid" value={summary.totals.paidReadings.toLocaleString()} />
+                            <OpsSignalChip label="리딩" value={summary.totals.readings.toLocaleString()} />
+                            <OpsSignalChip label="직접 선택" value={summary.totals.manualSelections.toLocaleString()} />
+                            <OpsSignalChip label="결제" value={summary.totals.paidReadings.toLocaleString()} />
                         </div>
                     </div>
 
                     <h2 className="font-[var(--font-outfit)] text-2xl font-semibold tracking-[-0.04em] text-white">
-                        readings / manual selections / follow-ups / paid
+                        리딩 / 직접 선택 / 추가 질문 / 결제
                     </h2>
                     <p className="mt-3 max-w-2xl text-sm leading-7 text-white/55">
-                        reading 생성량만 보는 대신 실제로 이어지는 manual 선택과 paid outcome을 한 번에 비교합니다.
+                        단순히 많이 열렸는지보다, 직접 고른 경우와 결제까지 이어진 경우를 같이 봅니다.
                     </p>
 
                     <div className="mt-6 rounded-[28px] border border-white/8 bg-black/15 p-4">
@@ -208,8 +223,8 @@ export function AdvisorOpsDashboard({ summary }: AdvisorOpsDashboardProps) {
                             </div>
                         ) : (
                             <OpsEmptyState
-                                title="아직 advisor 데이터가 충분하지 않습니다"
-                                description="intent와 advisor metadata가 누적되면 어떤 질문이 실제 전환을 만드는지 이 패널에서 읽을 수 있습니다."
+                                title="아직 추천 데이터가 많지 않습니다"
+                                description="질문과 추천 기록이 더 쌓이면, 어떤 조합이 잘 맞는지 여기서 볼 수 있습니다."
                             />
                         )}
                     </div>
@@ -219,10 +234,10 @@ export function AdvisorOpsDashboard({ summary }: AdvisorOpsDashboardProps) {
                     <div className="mb-5 flex items-center justify-between gap-4">
                         <div>
                             <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                                Intent Conversion
+                                질문별 결과
                             </p>
                             <h3 className="mt-3 font-[var(--font-outfit)] text-2xl font-semibold tracking-[-0.04em] text-white">
-                                의도별 follow-up / paid
+                                질문별 추가 질문 / 결제
                             </h3>
                         </div>
                     </div>
@@ -247,10 +262,10 @@ export function AdvisorOpsDashboard({ summary }: AdvisorOpsDashboardProps) {
                     <div className="mb-5 flex items-center justify-between gap-4">
                         <div>
                             <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                                Intent Table
+                                질문별 보기
                             </p>
                             <h3 className="mt-3 font-[var(--font-outfit)] text-2xl font-semibold tracking-[-0.04em] text-white">
-                                intent breakdown
+                                질문별 정리
                             </h3>
                         </div>
                     </div>
@@ -260,8 +275,8 @@ export function AdvisorOpsDashboard({ summary }: AdvisorOpsDashboardProps) {
                             <OpsInsightRow
                                 key={row.key}
                                 label={row.label}
-                                value={`${row.readings.toLocaleString()} reads · ${formatPercent(row.paidRate)}`}
-                                caption={`follow-up ${formatPercent(row.followupRate)} · manual ${formatPercent(row.manualShare)}`}
+                                value={`${row.readings.toLocaleString()}건 · 결제 ${formatPercent(row.paidRate)}`}
+                                caption={`추가 질문 ${formatPercent(row.followupRate)} · 직접 선택 ${formatPercent(row.manualShare)}`}
                             />
                         ))}
                     </div>
@@ -271,10 +286,10 @@ export function AdvisorOpsDashboard({ summary }: AdvisorOpsDashboardProps) {
                     <div className="mb-5 flex items-center justify-between gap-4">
                         <div>
                             <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                                Advisor Table
+                                가이드별 보기
                             </p>
                             <h3 className="mt-3 font-[var(--font-outfit)] text-2xl font-semibold tracking-[-0.04em] text-white">
-                                advisor breakdown
+                                가이드별 정리
                             </h3>
                         </div>
                     </div>
@@ -284,8 +299,8 @@ export function AdvisorOpsDashboard({ summary }: AdvisorOpsDashboardProps) {
                             <OpsInsightRow
                                 key={row.key}
                                 label={row.label}
-                                value={`${row.readings.toLocaleString()} reads · ${formatPercent(row.paidRate)}`}
-                                caption={`follow-up ${formatPercent(row.followupRate)} · manual ${formatPercent(row.manualShare)}`}
+                                value={`${row.readings.toLocaleString()}건 · 결제 ${formatPercent(row.paidRate)}`}
+                                caption={`추가 질문 ${formatPercent(row.followupRate)} · 직접 선택 ${formatPercent(row.manualShare)}`}
                             />
                         ))}
                     </div>

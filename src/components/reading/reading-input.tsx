@@ -16,6 +16,7 @@ import {
     getRecommendedOracleCharacterId,
     inferQuestionIntent,
     type OracleCharacterId,
+    type OraclePersonaProfile,
     type OracleQuestionIntent,
 } from '@/lib/ai/oracle-personas';
 import { OracleSelectCard } from '@/components/reading/OracleSelectCard';
@@ -162,7 +163,61 @@ const contexts: ContextOption[] = [
 ];
 
 const sectionShellClass =
-    'relative overflow-hidden rounded-[26px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.08),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-5 shadow-[0_18px_50px_rgba(2,6,23,0.22)] backdrop-blur-xl md:p-6';
+    'relative overflow-hidden rounded-[24px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.08),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-4 shadow-[0_18px_50px_rgba(2,6,23,0.22)] backdrop-blur-xl md:rounded-[26px] md:p-6';
+
+const getGuideFitCopy = (
+    specialty: OracleQuestionIntent,
+    guideName: string,
+    language: 'ko' | 'en'
+) => {
+    const copy = {
+        general: {
+            ko: `${guideName}는 질문 전체 흐름을 한 번에 정리하고, 지금 먼저 잡아야 할 한 가지를 또렷하게 보여줍니다.`,
+            en: `${guideName} helps sort the whole picture first and shows the one move that matters most right now.`,
+        },
+        compatibility: {
+            ko: `${guideName}는 두 사람의 감정 온도와 맞는 리듬을 같이 봐서, 관계가 실제로 잘 굴러갈지를 더 자세히 읽습니다.`,
+            en: `${guideName} looks at emotional chemistry and daily rhythm together, so the relationship fit reads more clearly.`,
+        },
+        reunion: {
+            ko: `${guideName}는 다시 이어질 가능성과, 다시 만나도 반복될 문제를 같이 봐서 재회 질문에 특히 강합니다.`,
+            en: `${guideName} is strong when you need to read reconnection odds and the pattern that could repeat after reunion.`,
+        },
+        wealth: {
+            ko: `${guideName}는 기대감보다 돈의 흐름과 손실 위험을 먼저 봐서, 금전 질문을 더 차분하게 정리합니다.`,
+            en: `${guideName} checks money flow and downside first, so financial questions stay grounded instead of hype-driven.`,
+        },
+        timing: {
+            ko: `${guideName}는 지금 밀어붙일 때인지 기다릴 때인지에 집중해서, 행동 타이밍을 더 선명하게 보여줍니다.`,
+            en: `${guideName} focuses on whether this is the moment to move or wait, which makes the timing feel much clearer.`,
+        },
+        career: {
+            ko: `${guideName}는 지금 역할이 맞는지, 옮길지 버틸지를 현실적으로 봐서 커리어 질문에 잘 맞습니다.`,
+            en: `${guideName} is strong for career questions because it stays practical about role fit, moving, or holding your ground.`,
+        },
+        business: {
+            ko: `${guideName}는 확장 욕심보다 구조와 검증 순서를 먼저 봐서, 사업과 부업 질문에 특히 잘 맞습니다.`,
+            en: `${guideName} is especially useful for business questions because it looks at structure and validation before expansion.`,
+        },
+    } satisfies Record<OracleQuestionIntent, { ko: string; en: string }>;
+
+    return language === 'en' ? copy[specialty].en : copy[specialty].ko;
+};
+
+const getGuideAlternativeScore = (
+    persona: OraclePersonaProfile,
+    context: ReadingContext,
+    intent: OracleQuestionIntent,
+    recommendedId: OracleCharacterId
+) => {
+    let score = 0;
+
+    if (persona.id === recommendedId) score += 6;
+    if (persona.specialty === intent) score += 4;
+    if (persona.recommendedContexts.includes(context)) score += 3;
+
+    return score;
+};
 
 export function ReadingInput({
     onSubmit,
@@ -191,6 +246,7 @@ export function ReadingInput({
     const [partnerBirthTime, setPartnerBirthTime] = useState('12:00');
     const [partnerGender, setPartnerGender] = useState<'male' | 'female'>('male');
     const questionFieldRef = useRef<HTMLTextAreaElement | null>(null);
+    const guideSectionRef = useRef<HTMLDivElement | null>(null);
 
     const language = languageOverride ?? initialLanguage;
     const isEn = language === 'en';
@@ -216,17 +272,34 @@ export function ReadingInput({
         : activeContext.questionSuggestionsKo;
     const visibleQuestionSuggestions = activeQuestionSuggestions.slice(0, 2);
     const routePersona = activePersona;
-    const essentialFieldsComplete = Boolean(name.trim() && birthDate);
-    const precisionSignals = [
+    const guideStrengths = isEn ? activePersona.strengthsEn : activePersona.strengthsKo;
+    const isUsingRecommendedGuide = selectedCharacterId === recommendedCharacterId;
+    const guideFitCopy = getGuideFitCopy(routePersona.specialty, routePersona.name, language);
+    const alternativeGuides = ORACLE_CHARACTER_IDS
+        .map((id, order) => {
+            const persona = getOraclePersona(id);
+            return {
+                id,
+                order,
+                persona,
+                strength: isEn ? persona.strengthsEn[0] : persona.strengthsKo[0],
+                score: getGuideAlternativeScore(persona, context, inferredQuestionIntent, recommendedCharacterId),
+            };
+        })
+        .filter((item) => item.id !== selectedCharacterId)
+        .sort((left, right) => {
+            if (right.score !== left.score) return right.score - left.score;
+            return left.order - right.order;
+        })
+        .slice(0, 2);
+    const coreFieldsComplete = Boolean(birthDate && (unknownTime || birthTime) && question.trim());
+    const coreSignals = [
         calendarType === 'solar'
             ? (isEn ? 'Solar Calendar' : '양력')
             : (isEn ? 'Lunar Calendar' : '음력'),
         unknownTime
             ? (isEn ? 'Time Unknown' : '시간 모름')
             : `${isEn ? 'Birth Time' : '생시'} ${birthTime}`,
-        selectionMode === 'auto'
-            ? `${isEn ? 'Auto Guide' : '자동 가이드'} ${activePersona.name}`
-            : `${isEn ? 'Manual Guide' : '직접 선택'} ${activePersona.name}`,
     ];
 
     // 포맷팅 헬퍼 함수
@@ -296,13 +369,25 @@ export function ReadingInput({
         });
     };
 
+    const openGuideSelection = () => {
+        setShowPrecisionFields(true);
+        setSelectionMode('manual');
+
+        window.setTimeout(() => {
+            guideSectionRef.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+            });
+        }, 80);
+    };
+
     return (
         <motion.form
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             onSubmit={handleSubmit}
-            className="w-full max-w-2xl mx-auto space-y-8"
+            className="mx-auto w-full max-w-2xl space-y-6 md:space-y-8"
         >
             {/* Header / Language */}
             <div className="border-b border-white/5 pb-4">
@@ -328,84 +413,35 @@ export function ReadingInput({
                         </button>
                     </div>
                 </div>
-
-                <div className="mt-5 rounded-[24px] border border-white/10 bg-black/20 p-4 md:p-5">
-                    <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-acc-gold">
-                            {isEn ? 'First Reading Free' : '첫 리딩 무료'}
-                        </span>
-                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
-                            {isEn ? 'Korean Saju Decision Timing' : '결정과 타이밍 오라클'}
-                        </span>
-                    </div>
-                    <h2 className="mt-3 font-cinzel text-xl text-starlight md:text-2xl">
-                        {isEn ? 'Choose the domain first, then give the oracle one real question.' : '먼저 고민 영역을 고르고, 그다음 진짜 질문 하나를 넘겨주세요.'}
-                    </h2>
+                <div className="mt-4 flex flex-col gap-3 rounded-[22px] border border-white/10 bg-black/20 p-4 md:mt-5 md:flex-row md:items-end md:justify-between md:rounded-[24px] md:p-5">
+                    <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-acc-gold">
+                                {isEn ? 'First Reading Free' : '첫 리딩 무료'}
+                            </span>
+                            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
+                                {isEn ? 'Question + Birth Data + Result' : '질문 + 사주 정보 + 무료 결과'}
+                            </span>
+                        </div>
                         <p className="mt-2 text-sm leading-6 text-white/62">
                             {isEn
-                                ? 'Start from the decision itself. Once the oracle knows the domain and the question, three core fields are enough to open the first Korean saju route. Precision controls can sharpen it later.'
-                                : '결정 그 자체에서 시작합니다. 고민 영역과 질문을 먼저 정하면, 이름·생일·성별 3개만으로 첫 리딩을 열 수 있고, 더 정밀한 설정은 그다음에 더하면 됩니다.'}
+                                ? 'Keep the depth in the saju itself, not in extra steps. Ask one real question, add your birth details, and go straight to the first result.'
+                                : '깊이는 단계 수가 아니라 사주 해석에 남겨둡니다. 질문 하나와 생년월일시를 입력하면 바로 첫 결과로 넘어갑니다.'}
                         </p>
-                    <div className="mt-4 flex flex-wrap gap-2 text-[10px] uppercase tracking-[0.22em] text-white/45">
-                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                            {isEn ? '1. Pick Domain' : '1. 영역 선택'}
-                        </span>
-                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                            {isEn ? '2. Write Question' : '2. 질문 입력'}
-                        </span>
-                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                            {isEn ? '3. Core Fields' : '3. 기본 3필드'}
-                        </span>
-                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                            {isEn ? '4. Precision Optional' : '4. 정밀 설정 선택'}
-                        </span>
                     </div>
-
                     {isEn ? (
-                        <div className="mt-5 rounded-[20px] border border-white/10 bg-white/[0.03] p-4">
-                            <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-                                <div>
-                                    <p className="text-[10px] uppercase tracking-[0.28em] text-[#F4D88A]">
-                                        Starter Guides
-                                    </p>
-                                    <p className="mt-2 text-sm leading-6 text-white/64">
-                                        If this is your first Korean saju reading, skim the route that matches your question before you submit.
-                                    </p>
-                                </div>
-                                <Link
-                                    href="/guides"
-                                    className="text-[11px] uppercase tracking-[0.24em] text-white/58 transition-colors hover:text-white"
-                                >
-                                    Browse all three
-                                </Link>
-                            </div>
-
-                            <div className="mt-4 grid gap-3 md:grid-cols-3">
-                                {ENGLISH_GUIDES.map((guide) => (
-                                    <Link
-                                        key={guide.slug}
-                                        href={`/guides/${guide.slug}`}
-                                        className="rounded-[18px] border border-white/10 bg-black/20 px-4 py-3 transition-colors hover:border-white/20 hover:bg-white/[0.04]"
-                                    >
-                                        <p className="text-[10px] uppercase tracking-[0.24em] text-white/40">
-                                            {guide.eyebrow}
-                                        </p>
-                                        <p className="mt-2 text-sm font-semibold text-white">
-                                            {guide.title}
-                                        </p>
-                                        <p className="mt-2 text-sm leading-6 text-white/58">
-                                            {guide.readTime}
-                                        </p>
-                                    </Link>
-                                ))}
-                            </div>
-                        </div>
+                        <Link
+                            href={ENGLISH_GUIDES[0] ? `/guides/${ENGLISH_GUIDES[0].slug}` : '/guides'}
+                            className="text-[11px] uppercase tracking-[0.24em] text-white/58 transition-colors hover:text-white"
+                        >
+                            {isEn ? 'New here? Read the quick guide' : '빠른 가이드 보기'}
+                        </Link>
                     ) : null}
                 </div>
             </div>
 
             {/* Input Grid */}
-            <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-6 md:gap-8">
 
                 {/* 1. Inquiry Vector */}
                 <div className={`${sectionShellClass} order-1`}>
@@ -425,7 +461,7 @@ export function ReadingInput({
                         </span>
                     </div>
 
-                    <div className="mt-5 grid grid-cols-2 gap-2 md:grid-cols-3">
+                    <div className="mt-4 grid grid-cols-2 gap-2 md:mt-5 md:grid-cols-3">
                         {contexts.map((ctx) => {
                             const isSelected = context === ctx.value;
                             return (
@@ -433,15 +469,15 @@ export function ReadingInput({
                                     key={ctx.value}
                                     type="button"
                                     onClick={() => handleContextSelect(ctx.value)}
-                                    className={`rounded-[20px] border px-4 py-3 text-left transition-all duration-300 ${isSelected
+                                    className={`rounded-[18px] border px-3 py-3 text-left transition-all duration-300 md:rounded-[20px] md:px-4 ${isSelected
                                         ? 'border-acc-gold bg-acc-gold/10 shadow-[0_0_30px_rgba(212,175,55,0.12)]'
                                         : 'border-white/10 bg-white/[0.03] hover:border-white/25 hover:bg-white/[0.06]'
                                         }`}
                                 >
-                                    <p className="text-[10px] uppercase tracking-[0.24em] text-white/38">
+                                    <p className="hidden text-[10px] uppercase tracking-[0.24em] text-white/38 md:block">
                                         {isEn ? ctx.eyebrowEn : ctx.eyebrowKo}
                                     </p>
-                                    <h3 className={`mt-2 font-cinzel text-sm md:text-base ${isSelected ? 'text-acc-gold' : 'text-starlight'}`}>
+                                    <h3 className={`font-cinzel text-[13px] leading-5 md:mt-2 md:text-base ${isSelected ? 'text-acc-gold' : 'text-starlight'}`}>
                                         {isEn ? ctx.labelEn : ctx.labelKo}
                                     </h3>
                                 </button>
@@ -493,56 +529,217 @@ export function ReadingInput({
                     </div>
                 </div>
 
+                <div className={sectionShellClass}>
+                    <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                        <div>
+                            <label className="block text-xs text-acc-gold tracking-widest uppercase">
+                                {isEn ? 'Recommended Guide' : '이번 질문의 추천 가이드'}
+                            </label>
+                            <p className="mt-2 text-sm leading-6 text-white/58">
+                                {isEn
+                                    ? 'This is one of the core parts of the product. We first attach the guide that fits the question best, then let you switch right away if you want another lens.'
+                                    : '이 가이드는 우리 서비스의 핵심입니다. 질문에 맞는 상담가를 먼저 붙여주고, 원하면 바로 다른 가이드로 바꿔서 볼 수 있게 합니다.'}
+                            </p>
+                        </div>
+                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
+                            {selectionMode === 'auto'
+                                ? (isEn ? 'Best Match First' : '기본은 추천 가이드')
+                                : (isEn ? 'Custom Guide On' : '직접 고른 가이드')}
+                        </span>
+                    </div>
+
+                    <div className="mt-4 rounded-[22px] border border-white/10 bg-black/20 p-4 md:p-5">
+                        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                            <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <span className="rounded-full border border-acc-gold/25 bg-acc-gold/10 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-acc-gold">
+                                        {routePersona.name}
+                                    </span>
+                                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-white/55">
+                                        {isEn ? getOracleIntentLabel(inferredQuestionIntent, 'en') : getOracleIntentLabel(inferredQuestionIntent, 'ko')}
+                                    </span>
+                                </div>
+
+                                <p className="mt-3 text-sm uppercase tracking-[0.22em] text-white/40">
+                                    {routePersona.title}
+                                </p>
+
+                                <div className="mt-4 rounded-[18px] border border-white/10 bg-white/[0.04] p-4">
+                                    <p className="text-[11px] uppercase tracking-[0.22em] text-white/42">
+                                        {isUsingRecommendedGuide
+                                            ? (isEn ? 'Why this guide came first' : '왜 이 가이드가 먼저 나왔나요')
+                                            : (isEn ? 'What changes with this guide' : '이 가이드로 바꾸면')}
+                                    </p>
+                                    <p className="mt-2 text-sm leading-6 text-white/72">
+                                        {guideFitCopy}
+                                    </p>
+                                </div>
+
+                                <p className="mt-4 text-sm leading-6 text-white/68">
+                                    {routePersona.description}
+                                </p>
+
+                                <div className="mt-4 flex flex-wrap gap-2">
+                                    {guideStrengths.slice(0, 2).map((strength) => (
+                                        <p
+                                            key={strength}
+                                            className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs leading-5 text-white/55"
+                                        >
+                                            {strength}
+                                        </p>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="flex flex-col gap-2 md:min-w-[210px]">
+                                <button
+                                    type="button"
+                                    onClick={openGuideSelection}
+                                    className="min-h-[44px] rounded-full border border-white/15 px-4 py-2 text-xs uppercase tracking-[0.22em] text-white/78 transition-all hover:border-white/30 hover:text-white"
+                                >
+                                    {isEn ? 'See All Guides' : '전체 가이드 보기'}
+                                </button>
+                                <p className="text-[11px] leading-5 text-white/38">
+                                    {isEn
+                                        ? 'Keep the best match, or open the full list below when you want another reading style.'
+                                        : '추천 가이드를 그대로 써도 되고, 원하면 아래 전체 목록에서 다른 가이드로 바꿀 수 있습니다.'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {alternativeGuides.length > 0 ? (
+                        <div className="mt-4 rounded-[22px] border border-white/10 bg-white/[0.03] p-4 md:p-5">
+                            <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                                <div>
+                                    <p className="text-xs uppercase tracking-[0.22em] text-white/40">
+                                        {isEn ? 'Other guides you can try fast' : '다른 가이드도 바로 바꿔볼 수 있어요'}
+                                    </p>
+                                    <p className="mt-2 text-sm leading-6 text-white/58">
+                                        {isEn
+                                            ? 'If the default guide feels slightly off, switch with one tap before you even open the full list.'
+                                            : '기본 추천이 조금 다르게 느껴지면, 전체 목록을 열기 전에도 여기서 바로 바꿔볼 수 있습니다.'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                                {alternativeGuides.map(({ id, persona, strength }) => (
+                                    <button
+                                        key={id}
+                                        type="button"
+                                        onClick={() => {
+                                            setCharacterId(id);
+                                            setSelectionMode('manual');
+                                        }}
+                                        className="rounded-[20px] border border-white/10 bg-black/20 p-4 text-left transition-all hover:border-white/25 hover:bg-white/[0.04]"
+                                    >
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <span className="rounded-full border border-white/12 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-white/75">
+                                                {persona.name}
+                                            </span>
+                                            <span className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-white/45">
+                                                {isEn
+                                                    ? getOracleIntentLabel(persona.specialty, 'en')
+                                                    : getOracleIntentLabel(persona.specialty, 'ko')}
+                                            </span>
+                                            {id === recommendedCharacterId ? (
+                                                <span className="rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-acc-gold">
+                                                    {isEn ? 'Default Pick' : '기본 추천'}
+                                                </span>
+                                            ) : null}
+                                        </div>
+
+                                        <p className="mt-3 text-sm uppercase tracking-[0.22em] text-white/40">
+                                            {persona.title}
+                                        </p>
+                                        <p className="mt-3 text-sm leading-6 text-white/64">
+                                            {strength}
+                                        </p>
+                                        <p className="mt-3 text-[11px] uppercase tracking-[0.22em] text-white/45">
+                                            {isEn ? 'Tap to switch to this guide' : '누르면 이 가이드로 바로 바뀝니다'}
+                                        </p>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    ) : null}
+                </div>
+
                 {/* 2. Essential Coordinates */}
                 <div className={`${sectionShellClass} order-2`}>
                     <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                         <div>
                             <label className="block text-xs text-acc-gold tracking-widest uppercase">
                                 {inviterName
-                                    ? (isEn ? `02. Core Profile (${inviterName} invited you)` : `02. Core Profile (${inviterName}님의 초대)`)
-                                    : (isEn ? '02. Core Profile' : '02. 핵심 프로필')}
+                                    ? (isEn ? `02. Saju Essentials (${inviterName} invited you)` : `02. 핵심 사주 입력 (${inviterName}님의 초대)`)
+                                    : (isEn ? '02. Saju Essentials' : '02. 핵심 사주 입력')}
                             </label>
                             <p className="mt-2 text-sm leading-6 text-white/58">
                                 {isEn
-                                    ? 'Keep the first step light: name, birth date, and gender are enough to open the first route. Precision controls stay folded until you want them.'
-                                    : '첫 진입은 가볍게 갑니다. 이름, 생일, 성별만으로도 첫 경로를 열 수 있고, 더 세밀한 설정은 필요할 때만 펼치면 됩니다.'}
+                                    ? 'These are the fields that actually affect the first saju read: birth date, birth time or time unknown, gender, and solar/lunar calendar.'
+                                    : '여기는 첫 사주 결과의 질에 직접 쓰이는 값만 받습니다. 생년월일, 태어난 시간 또는 시간 모름, 성별, 양력/음력까지가 핵심입니다.'}
                             </p>
                         </div>
                         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
-                            {isEn ? '3 Core Fields First' : '기본 3필드 먼저'}
+                            {isEn ? 'Quality First' : '퀄리티 우선'}
                         </span>
                     </div>
 
-                    <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-[1.2fr_1fr_0.9fr]">
-                        <div>
-                            <label className="block text-[11px] uppercase tracking-[0.22em] text-white/40">
-                                {isEn ? 'Name' : '이름'}
-                            </label>
-                            <input
-                                type="text"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                placeholder={isEn ? 'Your name or nickname' : '이름 또는 닉네임'}
-                                required
-                                className="mt-3 block min-h-[48px] w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-starlight transition-colors placeholder:text-white/25 focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none"
-                            />
-                        </div>
-
+                        <div className="mt-4 grid grid-cols-1 gap-4 md:mt-5 md:grid-cols-2">
                         <div>
                             <label className="block text-[11px] uppercase tracking-[0.22em] text-white/40">
                                 {isEn ? 'Birth Date' : '생년월일'}
                             </label>
                             <input
-                                type="text"
-                                inputMode="numeric"
+                                type="date"
                                 value={birthDate}
-                                onChange={(e) => handleDateChange(e.target.value, setBirthDate)}
-                                placeholder="YYYY-MM-DD"
-                                maxLength={10}
-                                className="mt-3 block min-h-[48px] w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-starlight transition-colors placeholder:text-white/25 focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none font-mono uppercase"
+                                onChange={(e) => setBirthDate(e.target.value)}
                                 required
+                                className="mt-3 block min-h-[48px] w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-starlight transition-colors focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none"
                             />
                             <p className="mt-2 text-[10px] text-dim font-mono tracking-widest">YYYY-MM-DD</p>
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] uppercase tracking-[0.22em] text-white/40">
+                                {isEn ? 'Birth Time' : '태어난 시간'}
+                            </label>
+                            <input
+                                type="time"
+                                step={60}
+                                value={birthTime}
+                                onChange={(e) => setBirthTime(e.target.value)}
+                                disabled={unknownTime}
+                                className={`mt-3 block min-h-[48px] w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-starlight transition-colors focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none ${
+                                    unknownTime ? 'cursor-not-allowed opacity-40' : ''
+                                }`}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const nextUnknown = !unknownTime;
+                                    setUnknownTime(nextUnknown);
+                                    if (nextUnknown) setBirthTime('12:00');
+                                }}
+                                className="mt-3 flex items-start gap-3 text-left"
+                            >
+                                <div
+                                    className={`mt-0.5 flex h-4 w-4 items-center justify-center border transition-colors ${
+                                        unknownTime ? 'border-acc-gold bg-acc-gold/10' : 'border-white/20'
+                                    }`}
+                                >
+                                    {unknownTime && (
+                                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M1 4L3.5 6.5L9 1" stroke="#E2E8F0" strokeWidth="1.5" strokeLinecap="square" />
+                                        </svg>
+                                    )}
+                                </div>
+                                <span className="pt-0.5 text-[10px] leading-tight text-dim">
+                                    {isEn
+                                        ? 'I do not know the birth time. Use 12:00 as a midpoint.'
+                                        : '태어난 시간을 모르겠어요. 이 경우 낮 12:00을 기준점으로 씁니다.'}
+                                </span>
+                            </button>
                         </div>
 
                         <div>
@@ -574,16 +771,58 @@ export function ReadingInput({
                                 </button>
                             </div>
                         </div>
+
+                        <div>
+                            <label className="block text-[11px] uppercase tracking-[0.22em] text-white/40">
+                                {isEn ? 'Calendar Type' : '달력 기준'}
+                            </label>
+                            <div className="mt-3 flex gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setCalendarType('solar')}
+                                    className={`flex-1 rounded-[18px] border px-4 py-3 text-sm uppercase tracking-[0.22em] transition-all ${
+                                        calendarType === 'solar'
+                                            ? 'border-acc-gold bg-acc-gold/10 text-acc-gold'
+                                            : 'border-white/15 bg-white/[0.03] text-white/62 hover:border-white/30 hover:text-white'
+                                    }`}
+                                >
+                                    {isEn ? 'Solar' : '양력'}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setCalendarType('lunar')}
+                                    className={`flex-1 rounded-[18px] border px-4 py-3 text-sm uppercase tracking-[0.22em] transition-all ${
+                                        calendarType === 'lunar'
+                                            ? 'border-acc-gold bg-acc-gold/10 text-acc-gold'
+                                            : 'border-white/15 bg-white/[0.03] text-white/62 hover:border-white/30 hover:text-white'
+                                    }`}
+                                >
+                                    {isEn ? 'Lunar' : '음력'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-5">
+                        <button
+                            type="button"
+                            onClick={() => setShowPrecisionFields((value) => !value)}
+                            className="min-h-[48px] w-full rounded-full border border-white/15 px-5 py-2 text-xs uppercase tracking-[0.22em] text-white/72 transition-all hover:border-white/30 hover:text-white md:w-auto"
+                        >
+                            {showPrecisionFields
+                                ? (isEn ? 'Hide Extra Options' : '추가 입력 닫기')
+                                : (isEn ? 'Open Extra Options' : '추가 입력 열기')}
+                        </button>
                     </div>
 
                     <div className="mt-5 rounded-[22px] border border-white/10 bg-black/20 p-4 md:p-5">
                         <div className="flex flex-wrap items-center gap-2">
                             <span className="rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-acc-gold">
-                                {essentialFieldsComplete
-                                    ? (isEn ? 'Core Fields Ready' : '기본 3필드 준비됨')
-                                    : (isEn ? '3 Core Fields' : '기본 3필드')}
+                                {coreFieldsComplete
+                                    ? (isEn ? 'Ready For First Result' : '무료 결과 준비됨')
+                                    : (isEn ? 'Saju Essentials' : '핵심 사주 입력')}
                             </span>
-                            {precisionSignals.map((signal) => (
+                            {coreSignals.map((signal) => (
                                 <span
                                     key={signal}
                                     className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-white/45"
@@ -596,123 +835,44 @@ export function ReadingInput({
                         <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                             <p className="max-w-2xl text-sm leading-6 text-white/58">
                                 {isEn
-                                    ? 'Birth time, calendar type, partner data, and manual guide selection stay under one precision toggle so the first reading opens faster.'
-                                    : '생시, 음양력, 상대 정보, 오라클 직접 선택은 모두 하나의 정밀 토글 안에 넣어 두었습니다. 그래서 첫 리딩은 더 빠르게 열리고, 필요할 때만 깊이를 더할 수 있습니다.'}
+                                    ? 'The first result now uses the quality-critical saju fields first. Extra inputs are only for compatibility, manual guide choice, or a more custom path.'
+                                    : '이제 무료 결과는 품질에 직접 쓰이는 사주 입력부터 받고 바로 엽니다. 추가 입력은 궁합, 가이드 직접 선택, 더 세밀한 경로가 필요할 때만 씁니다.'}
                             </p>
-                            <button
-                                type="button"
-                                onClick={() => setShowPrecisionFields((value) => !value)}
-                                className="min-h-[42px] rounded-full border border-white/15 px-5 py-2 text-xs uppercase tracking-[0.22em] text-white/72 transition-all hover:border-white/30 hover:text-white"
-                            >
-                                {showPrecisionFields
-                                    ? (isEn ? 'Hide Precision Controls' : '기본 입력만 보기')
-                                    : (isEn ? 'Open Precision Controls' : '더 정밀하게 읽기')}
-                            </button>
                         </div>
                     </div>
                 </div>
 
                 {showPrecisionFields && (
                     <>
-                        {/* 3. Precision Controls */}
                         <div className={`${sectionShellClass} order-3`}>
                             <label className="block text-xs text-acc-gold tracking-widest uppercase mb-4">
-                                {isEn ? '03. Precision Controls' : '03. 더 정밀하게'}
+                                {isEn ? '03. Extra Inputs' : '03. 추가 입력'}
                             </label>
-                            <p className="mb-4 text-sm leading-6 text-white/58">
-                                {isEn
-                                    ? 'Open the deeper layer only when you want tighter timing windows, alternate calendar input, or a more deliberate guide selection.'
-                                    : '시기 창을 더 좁히거나, 음양력을 바꾸거나, 오라클 가이드를 직접 고르고 싶을 때만 펼치면 됩니다.'}
-                            </p>
-                            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                                <div>
-                                    <label className="block text-[11px] uppercase tracking-[0.22em] text-white/40">
-                                        {isEn ? 'Birth Time' : '태어난 시간'}
-                                    </label>
-                                    <input
-                                        type="text"
-                                        inputMode="numeric"
-                                        value={birthTime}
-                                        onChange={(e) => handleTimeChange(e.target.value, setBirthTime)}
-                                        placeholder="HH:MM"
-                                        maxLength={5}
-                                        disabled={unknownTime}
-                                        className={`mt-3 block min-h-[48px] w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-starlight transition-colors placeholder:text-white/25 focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none font-mono ${
-                                            unknownTime ? 'cursor-not-allowed opacity-30' : ''
-                                        }`}
-                                    />
-                                    <p className="mt-2 text-[10px] text-dim font-mono tracking-widest">
-                                        {isEn ? 'HH:MM (LOCAL TIME)' : 'HH:MM (현지 시간)'}
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <label className="block text-[11px] uppercase tracking-[0.22em] text-white/40">
-                                        {isEn ? 'Calendar Type' : '달력 기준'}
-                                    </label>
-                                    <div className="mt-3 flex gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={() => setCalendarType('solar')}
-                                            className={`flex-1 rounded-[18px] border px-4 py-3 text-sm uppercase tracking-[0.22em] transition-all ${
-                                                calendarType === 'solar'
-                                                    ? 'border-acc-gold bg-acc-gold/10 text-acc-gold'
-                                                    : 'border-white/15 bg-white/[0.03] text-white/62 hover:border-white/30 hover:text-white'
-                                            }`}
-                                        >
-                                            {isEn ? 'Solar' : '양력'}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setCalendarType('lunar')}
-                                            className={`flex-1 rounded-[18px] border px-4 py-3 text-sm uppercase tracking-[0.22em] transition-all ${
-                                                calendarType === 'lunar'
-                                                    ? 'border-acc-gold bg-acc-gold/10 text-acc-gold'
-                                                    : 'border-white/15 bg-white/[0.03] text-white/62 hover:border-white/30 hover:text-white'
-                                            }`}
-                                        >
-                                            {isEn ? 'Lunar' : '음력'}
-                                        </button>
-                                    </div>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            const newState = !unknownTime;
-                                            setUnknownTime(newState);
-                                            if (newState) setBirthTime('12:00');
-                                        }}
-                                        className="mt-4 flex items-start gap-3 text-left"
-                                    >
-                                        <div
-                                            className={`mt-0.5 flex h-4 w-4 items-center justify-center border transition-colors ${
-                                                unknownTime
-                                                    ? 'border-acc-gold bg-acc-gold/10'
-                                                    : 'border-white/20'
-                                            }`}
-                                        >
-                                            {unknownTime && (
-                                                <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M1 4L3.5 6.5L9 1" stroke="#E2E8F0" strokeWidth="1.5" strokeLinecap="square" />
-                                                </svg>
-                                            )}
-                                        </div>
-                                        <span className="pt-0.5 text-[10px] leading-tight text-dim">
-                                            {isEn
-                                                ? 'Unknown time: use 12:00 PM as a safe midpoint.'
-                                                : '시간을 모르면 낮 12:00을 안전한 기준점으로 사용합니다.'}
-                                        </span>
-                                    </button>
-                                </div>
+                            <div>
+                                <label className="block text-[11px] uppercase tracking-[0.22em] text-white/40">
+                                    {isEn ? 'Name (Optional)' : '이름 또는 닉네임 (선택)'}
+                                </label>
+                                <input
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder={isEn ? 'Only if you want it reflected in the reading' : '리딩에 이름을 반영하고 싶을 때만 적어주세요'}
+                                    className="mt-3 block min-h-[48px] w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-starlight transition-colors placeholder:text-white/25 focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none"
+                                />
+                                <p className="mt-2 text-[11px] leading-5 text-white/42">
+                                    {isEn
+                                        ? 'You can skip this. It is only used for a more personal tone in the result.'
+                                        : '건너뛰어도 됩니다. 결과 문장을 조금 더 개인적으로 보여줄 때만 씁니다.'}
+                                </p>
                             </div>
                         </div>
 
-                        {/* 4. Partner Info (Love/Relationship Only) */}
+                        {/* 3. Partner Info (Love/Relationship Only) */}
                         {context === 'love' && (
                             <div className={`${sectionShellClass} order-4`}>
                                 <div className="flex items-center justify-between mb-4">
                                     <label className="block text-xs text-acc-gold tracking-widest uppercase">
-                                        {isEn ? '04. Partner Information (Optional)' : '04. 상대방 정보 (선택)'}
+                                        {isEn ? 'Partner Information (Optional)' : '상대 정보 (선택)'}
                                     </label>
                                     <button
                                         type="button"
@@ -806,10 +966,10 @@ export function ReadingInput({
                             </div>
                         )}
 
-                        {/* 5. Oracle Guide */}
-                        <div className={`${sectionShellClass} order-5`}>
+                        {/* 4. Oracle Guide */}
+                        <div ref={guideSectionRef} className={`${sectionShellClass} order-5`}>
                             <label className="block text-xs text-acc-gold tracking-widest uppercase mb-4">
-                                {isEn ? '05. Oracle Guide' : '05. 오라클 가이드'}
+                                {isEn ? 'All Guides' : '전체 가이드 보기'}
                             </label>
 
                             <div className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4 md:p-5">
@@ -831,8 +991,8 @@ export function ReadingInput({
 
                                 <p className="mt-3 text-sm leading-6 text-white/58">
                                     {isEn
-                                        ? 'Auto match stays as the default. If you want a different lens, pick one of the seven specialists below and the reading will switch to that advisor.'
-                                        : '기본값은 자동 매칭입니다. 다른 시선으로 읽고 싶다면 아래 7인의 상담가 카드 중 하나를 직접 골라 리딩 렌즈를 바꿀 수 있습니다.'}
+                                        ? 'The guide changes how the question is read. Keep the best match if it feels right, or switch here when you want another point of view.'
+                                        : '가이드는 결과 말투가 아니라 질문을 읽는 관점을 바꿉니다. 기본 추천이 맞으면 그대로 쓰고, 다른 시선이 필요하면 여기서 바꾸면 됩니다.'}
                                 </p>
 
                                 <div className="mt-4 flex flex-wrap gap-2">
@@ -845,7 +1005,7 @@ export function ReadingInput({
                                                 : 'border-white/15 text-white/70 hover:border-white/30 hover:text-white'
                                         }`}
                                     >
-                                        {isEn ? 'Use Auto Match' : '오라클 자동 매칭'}
+                                        {isEn ? 'Use Best Match' : '추천 가이드 쓰기'}
                                     </button>
                                     <button
                                         type="button"
@@ -861,27 +1021,35 @@ export function ReadingInput({
                                 </div>
                             </div>
 
-                            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-                                {ORACLE_CHARACTER_IDS.map((id) => {
-                                    const persona = getOraclePersona(id);
-                                    const isSelected = characterId === id;
-                                    const isRecommended = recommendedCharacterId === id;
+                            {selectionMode === 'manual' ? (
+                                <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                                    {ORACLE_CHARACTER_IDS.map((id) => {
+                                        const persona = getOraclePersona(id);
+                                        const isSelected = characterId === id;
+                                        const isRecommended = recommendedCharacterId === id;
 
-                                    return (
-                                        <OracleSelectCard
-                                            key={id}
-                                            language={language}
-                                            persona={persona}
-                                            selected={selectionMode === 'auto' ? isRecommended : isSelected}
-                                            recommended={isRecommended}
-                                            onSelect={() => {
-                                                setCharacterId(id);
-                                                setSelectionMode('manual');
-                                            }}
-                                        />
-                                    );
-                                })}
-                            </div>
+                                        return (
+                                            <OracleSelectCard
+                                                key={id}
+                                                language={language}
+                                                persona={persona}
+                                                selected={isSelected}
+                                                recommended={isRecommended}
+                                                onSelect={() => {
+                                                    setCharacterId(id);
+                                                    setSelectionMode('manual');
+                                                }}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <p className="mt-4 rounded-[20px] border border-white/10 bg-black/20 px-4 py-4 text-sm leading-6 text-white/58">
+                                    {isEn
+                                        ? `${activePersona.name} is the current best match for this question. Open manual choice only when you want a different reading style.`
+                                        : `${activePersona.name} 가이드가 지금 질문에 가장 잘 맞는 기본 추천입니다. 다른 스타일로 보고 싶을 때만 직접 선택을 열면 됩니다.`}
+                                </p>
+                            )}
                         </div>
                     </>
                 )}
@@ -892,15 +1060,15 @@ export function ReadingInput({
             <div className="flex flex-col items-center justify-center gap-3 pt-1">
                 <button
                     type="submit"
-                    disabled={!name.trim() || !birthDate || !question.trim() || isLoading}
-                    className={`group relative overflow-hidden rounded-full border border-acc-gold/30 bg-gradient-to-r from-acc-gold via-[#f1cf74] to-[#c98d2d] px-10 py-3.5 text-deep-navy shadow-[0_18px_36px_rgba(212,175,55,0.18)] transition-all duration-300 hover:scale-[1.01] hover:shadow-[0_22px_46px_rgba(212,175,55,0.24)] ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
+                    disabled={!birthDate || !question.trim() || (!unknownTime && !birthTime) || isLoading}
+                    className={`group relative w-full overflow-hidden rounded-full border border-acc-gold/30 bg-gradient-to-r from-acc-gold via-[#f1cf74] to-[#c98d2d] px-8 py-3.5 text-deep-navy shadow-[0_18px_36px_rgba(212,175,55,0.18)] transition-all duration-300 hover:scale-[1.01] hover:shadow-[0_22px_46px_rgba(212,175,55,0.24)] md:w-auto md:px-10 ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
                 >
                     <span className="relative z-10 font-cinzel text-sm font-bold uppercase tracking-[0.3em]">
                         {isLoading
                             ? (isEn ? 'CALCULATING...' : 'CALCULATING...')
                             : (inviteCode
-                                ? (isEn ? 'SEE COMPATIBILITY (FREE)' : '무료로 궁합 확인하기')
-                                : (isEn ? 'INITIATE SEQUENCE' : '운명 분석 시작')
+                                ? (isEn ? 'SEE FREE COMPATIBILITY' : '무료 궁합 결과 보기')
+                                : (isEn ? 'SEE FREE RESULT' : '무료 결과 보기')
                             )
                         }
                     </span>
@@ -908,8 +1076,8 @@ export function ReadingInput({
                 </button>
                 <p className="text-center text-[11px] tracking-[0.16em] text-white/38 uppercase">
                     {isEn
-                        ? 'Your first oracle path opens as soon as the question and coordinates are set.'
-                        : '질문과 좌표가 정리되면 첫 오라클 리딩이 바로 열립니다.'}
+                        ? 'You answer once, then the first result opens right away.'
+                        : '한 번 입력하면 바로 첫 결과가 열립니다.'}
                 </p>
             </div>
 

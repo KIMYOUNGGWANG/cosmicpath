@@ -1,6 +1,6 @@
-import Link from 'next/link';
-
+import { GrowthTrackedLink } from '@/components/common/GrowthTracking';
 import { ENGLISH_GUIDES } from '@/lib/english-guides';
+import { getLandingVariant } from '@/lib/language-preference';
 
 const accentMap = {
     gold: 'from-[#D4AF37]/28 via-[#D4AF37]/10 to-transparent border-[#D4AF37]/24 shadow-[0_24px_80px_rgba(212,175,55,0.12)]',
@@ -9,6 +9,8 @@ const accentMap = {
 } as const;
 
 export function EnglishGuideSection() {
+    const landingVariant = getLandingVariant('en');
+
     return (
         <section className="relative px-6 py-20 md:py-28">
             <div className="container-cosmic relative">
@@ -57,26 +59,63 @@ export function EnglishGuideSection() {
                         </div>
 
                         <div className="mt-8 flex flex-wrap gap-3">
-                            <Link
+                            <GrowthTrackedLink
                                 href="/guides"
+                                trackingEvent={{
+                                    event: 'guide_cta_clicked',
+                                    source: 'landing_english_guide_section',
+                                    step: 'cta',
+                                    language: 'en',
+                                    context: 'guide',
+                                    metadata: {
+                                        landingVariant,
+                                        ctaLocation: 'section_primary',
+                                        ctaTarget: 'guides_hub',
+                                    },
+                                }}
                                 className="inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F4D88A] to-[#D4AF37] px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition-transform duration-300 hover:scale-[1.02]"
                             >
                                 Browse All English Guides
-                            </Link>
-                            <Link
+                            </GrowthTrackedLink>
+                            <GrowthTrackedLink
                                 href="/start?reset=true"
+                                trackingEvent={{
+                                    event: 'guide_cta_clicked',
+                                    source: 'landing_english_guide_section',
+                                    step: 'cta',
+                                    language: 'en',
+                                    context: 'guide',
+                                    metadata: {
+                                        landingVariant,
+                                        ctaLocation: 'section_secondary',
+                                        ctaTarget: 'start_reading',
+                                    },
+                                }}
                                 className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white/78 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
                             >
                                 Start the Reading First
-                            </Link>
+                            </GrowthTrackedLink>
                         </div>
                     </div>
 
                     <div className="space-y-4">
                         {ENGLISH_GUIDES.map((guide) => (
-                            <Link
+                            <GrowthTrackedLink
                                 key={guide.slug}
                                 href={`/guides/${guide.slug}`}
+                                trackingEvent={{
+                                    event: 'guide_card_clicked',
+                                    source: 'landing_english_guide_section',
+                                    step: 'discovery',
+                                    language: 'en',
+                                    context: 'guide',
+                                    metadata: {
+                                        landingVariant,
+                                        ctaLocation: 'landing_guide_grid',
+                                        guideSlug: guide.slug,
+                                        guideTitle: guide.title,
+                                    },
+                                }}
                                 className={`group relative block overflow-hidden rounded-[30px] border bg-gradient-to-br p-6 transition-transform duration-300 hover:-translate-y-1 ${accentMap[guide.accent]}`}
                             >
                                 <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.06),transparent_45%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -106,7 +145,7 @@ export function EnglishGuideSection() {
                                         ))}
                                     </div>
                                 </div>
-                            </Link>
+                            </GrowthTrackedLink>
                         ))}
                     </div>
                 </div>

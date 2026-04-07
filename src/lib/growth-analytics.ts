@@ -45,6 +45,8 @@ const EVENT_ALIASES: Record<string, CanonicalGrowthEvent> = {
     paywall_open: 'paywall_view',
     soft_paywall_shown: 'paywall_view',
     landing_view: 'landing_view',
+    guide_hub_view: 'landing_view',
+    guide_article_view: 'landing_view',
 };
 
 export function getCanonicalGrowthEvent(event: string): CanonicalGrowthEvent {

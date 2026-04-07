@@ -60,6 +60,12 @@ export interface GrowthSummary {
         viralCoefficientProxy: number;
     };
     activation: GrowthActivationSnapshot;
+    visits: {
+        today: number;
+        last7Days: number;
+        last30Days: number;
+        dauMauRate: number;
+    };
     series: GrowthSeriesPoint[];
     topSources: GrowthSourcePoint[];
 }
@@ -73,14 +79,19 @@ function startOfUtcDay(date: Date): Date {
 }
 
 export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
+    const DAY_IN_MS = 24 * 60 * 60 * 1000;
     const safeDays = Math.max(7, Math.min(90, days));
     const rangeEnd = new Date();
-    const rangeStart = startOfUtcDay(new Date(rangeEnd.getTime() - (safeDays - 1) * 24 * 60 * 60 * 1000));
+    const rangeStart = startOfUtcDay(new Date(rangeEnd.getTime() - (safeDays - 1) * DAY_IN_MS));
+    const trailing7Start = startOfUtcDay(new Date(rangeEnd.getTime() - 6 * DAY_IN_MS));
+    const trailing30Start = startOfUtcDay(new Date(rangeEnd.getTime() - 29 * DAY_IN_MS));
+    const queryStart = rangeStart < trailing30Start ? rangeStart : trailing30Start;
+    const todayKey = toDayKey(rangeEnd);
 
     const events = await prisma.growthEvent.findMany({
         where: {
             createdAt: {
-                gte: rangeStart,
+                gte: queryStart,
             },
         },
         // Growth summary only needs a narrow column set; avoid fetching unused identifiers.
@@ -97,9 +108,12 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
     const activeUsersByDay = new Map<string, Set<string>>();
     const activeUsersAcrossRange = new Set<string>();
     const dailyActiveDaysBySession = new Map<string, Set<string>>();
+    const visitSessionsToday = new Set<string>();
+    const visitSessionsLast7Days = new Set<string>();
+    const visitSessionsLast30Days = new Set<string>();
 
     for (let index = 0; index < safeDays; index += 1) {
-        const currentDate = new Date(rangeStart.getTime() + index * 24 * 60 * 60 * 1000);
+        const currentDate = new Date(rangeStart.getTime() + index * DAY_IN_MS);
         const dayKey = toDayKey(currentDate);
         seriesMap.set(dayKey, {
             date: dayKey,
@@ -137,6 +151,25 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
                 ? metadata.canonicalEvent
                 : getCanonicalGrowthEvent(event.event);
         const sessionId = typeof metadata.sessionId === 'string' ? metadata.sessionId : null;
+
+        if (sessionId) {
+            if (event.createdAt >= trailing30Start) {
+                visitSessionsLast30Days.add(sessionId);
+            }
+
+            if (event.createdAt >= trailing7Start) {
+                visitSessionsLast7Days.add(sessionId);
+            }
+
+            if (dayKey === todayKey) {
+                visitSessionsToday.add(sessionId);
+            }
+        }
+
+        if (event.createdAt < rangeStart) {
+            continue;
+        }
+
         const source = typeof event.channel === 'string' && event.channel.trim()
             ? event.channel.trim()
             : 'unknown';
@@ -252,6 +285,14 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
                 : 0,
             resultToPaidConversionRate: firstResultViews > 0
                 ? Number(((paidConversions / firstResultViews) * 100).toFixed(1))
+                : 0,
+        },
+        visits: {
+            today: visitSessionsToday.size,
+            last7Days: visitSessionsLast7Days.size,
+            last30Days: visitSessionsLast30Days.size,
+            dauMauRate: visitSessionsLast30Days.size > 0
+                ? Number(((visitSessionsToday.size / visitSessionsLast30Days.size) * 100).toFixed(1))
                 : 0,
         },
         series,

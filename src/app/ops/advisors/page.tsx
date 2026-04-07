@@ -10,9 +10,9 @@ export default async function AdvisorOpsPage() {
     if (!session?.user?.id) {
         return (
             <OpsAccessState
-                eyebrow="Advisor Command"
+                eyebrow="가이드 추천"
                 title="로그인이 필요합니다"
-                description="Advisor Ops 대시보드는 운영용 보호 페이지입니다. 먼저 로그인한 뒤 권한을 확인해주세요."
+                description="이 페이지는 운영자만 볼 수 있습니다. 먼저 로그인해 주세요."
             />
         );
     }
@@ -20,9 +20,9 @@ export default async function AdvisorOpsPage() {
     if (session.user.role !== 'ADMIN') {
         return (
             <OpsAccessState
-                eyebrow="Advisor Command"
+                eyebrow="가이드 추천"
                 title="관리자 전용 페이지입니다"
-                description="현재 계정은 Advisor Ops 대시보드 접근 권한이 없습니다. ADMIN 권한 계정으로 로그인해야 이 페이지를 볼 수 있습니다."
+                description="현재 계정으로는 이 페이지를 볼 수 없습니다. 관리자 계정으로 로그인해 주세요."
                 currentRole={session.user.role}
             />
         );
@@ -39,14 +39,14 @@ export default async function AdvisorOpsPage() {
                     <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                         <div className="max-w-3xl">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[hsl(42_79%_74%)]">
-                                Advisor Command
+                                가이드 추천
                             </p>
                             <h1 className="mt-4 font-[var(--font-outfit)] text-4xl font-semibold tracking-[-0.05em] text-white">
-                                Advisor & Intent Dashboard
+                                어떤 추천이 잘 맞는지 보기
                             </h1>
                             <p className="mt-4 text-sm leading-7 text-white/64">
-                                questionIntent와 advisor routing이 실제 follow-up과 paid outcome에 어떤 차이를 만드는지 보는 운영 패널입니다.
-                                specialist advisor 체계를 제품 운영 관점에서 읽을 수 있도록 구성했습니다.
+                                어떤 질문에 어떤 가이드를 붙였을 때 반응이 더 좋은지 보는 화면입니다.
+                                사람들이 추가 질문이나 결제까지 더 잘 이어지는 조합을 찾기 쉽게 정리했습니다.
                             </p>
                         </div>
                     </div>

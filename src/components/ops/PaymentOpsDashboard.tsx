@@ -37,13 +37,26 @@ interface PaymentOpsDashboardProps {
 function formatPaymentTypeLabel(type: string) {
     switch (type) {
         case 'premium_reading':
-            return 'Premium Reading';
+            return '유료 리딩';
         case 'chat_credit':
-            return 'Chat Credit';
+            return '채팅 크레딧';
         case 'match':
-            return 'Compatibility Unlock';
+            return '궁합 열람';
         default:
             return type;
+    }
+}
+
+function formatSeriesLabel(label: string | undefined) {
+    switch (label) {
+        case 'completedPayments':
+            return '결제 완료';
+        case 'revenueUsd':
+            return '매출';
+        case 'promoPayments':
+            return '할인 결제';
+        default:
+            return label ?? '숫자';
     }
 }
 
@@ -81,7 +94,7 @@ function TooltipCard({
                                     className="h-2.5 w-2.5 rounded-full"
                                     style={{ backgroundColor: entry.color }}
                                 />
-                                <span>{entry.dataKey}</span>
+                                <span>{formatSeriesLabel(entry.dataKey)}</span>
                             </div>
                             <strong className="text-white">
                                 {isRevenue ? formatUsdFromCents(rawValue * 100) : rawValue.toLocaleString()}
@@ -104,7 +117,7 @@ export function PaymentOpsDashboard({ summary }: PaymentOpsDashboardProps) {
 
     const metrics = [
         {
-            label: 'Gross Revenue',
+            label: '총매출',
             value: formatUsdFromCents(summary.totals.grossRevenueCents),
             caption: `평균 객단가는 ${formatUsdFromCents(summary.totals.averageOrderValueCents)} 입니다.`,
             icon: CircleDollarSign,
@@ -113,16 +126,16 @@ export function PaymentOpsDashboard({ summary }: PaymentOpsDashboardProps) {
                 'bg-[radial-gradient(circle_at_top_right,rgba(245,196,81,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]',
         },
         {
-            label: 'Completed Payments',
+            label: '결제 완료',
             value: summary.totals.completedPayments.toLocaleString(),
-            caption: `${summary.totals.premiumReadingPayments.toLocaleString()} premium / ${summary.totals.chatCreditPayments.toLocaleString()} credit`,
+            caption: `${summary.totals.premiumReadingPayments.toLocaleString()}건 리딩 / ${summary.totals.chatCreditPayments.toLocaleString()}건 크레딧`,
             icon: CreditCard,
             iconClassName: 'text-sky-200',
             surfaceClassName:
                 'bg-[radial-gradient(circle_at_top_right,rgba(125,211,252,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]',
         },
         {
-            label: 'Promo Orders',
+            label: '할인 결제',
             value: summary.totals.promoPayments.toLocaleString(),
             caption: '할인 코드나 프로모션이 실제 결제까지 이어진 건수입니다.',
             icon: WalletCards,
@@ -131,9 +144,9 @@ export function PaymentOpsDashboard({ summary }: PaymentOpsDashboardProps) {
                 'bg-[radial-gradient(circle_at_top_right,rgba(196,181,253,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]',
         },
         {
-            label: 'Unreconciled Reads',
+            label: '유료 처리 안 된 리딩',
             value: summary.totals.unresolvedPremiumReadings.toLocaleString(),
-            caption: '결제는 있는데 reading premium 상태가 아직 맞지 않는 건수입니다.',
+            caption: '결제는 끝났지만 리딩이 아직 유료로 안 바뀐 건수입니다.',
             icon: ShieldCheck,
             iconClassName: 'text-rose-200',
             surfaceClassName:
@@ -147,21 +160,21 @@ export function PaymentOpsDashboard({ summary }: PaymentOpsDashboardProps) {
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                     <div className="max-w-2xl">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                            Payment Command
+                            결제 상태
                         </p>
                         <h2 className="mt-3 font-[var(--font-outfit)] text-3xl font-semibold tracking-[-0.05em] text-white sm:text-4xl">
-                            결제가 어디서 떨어지고, 어디서 회복되는지 읽는 패널
+                            결제가 어디서 막히는지 보는 화면
                         </h2>
                         <p className="mt-4 text-sm leading-7 text-white/58 sm:text-base">
-                            매출 총액보다 중요한 건 checkout 시작, 실제 결제 완료, premium sync mismatch가 함께 보이는지입니다.
-                            one-time 결제와 구독 스냅샷을 분리해서 운영 판단이 쉬운 구조로 묶었습니다.
+                            매출만 보는 대신, 결제 시작, 결제 완료, 유료 처리 누락을 같이 보게 만들었습니다.
+                            한 번 결제와 구독도 따로 볼 수 있게 정리했습니다.
                         </p>
                     </div>
 
                     <div className="flex flex-wrap gap-3">
-                        <OpsSignalChip label="Window" value={windowLabel} />
-                        <OpsSignalChip label="Checkout Conv." value={formatPercent(summary.funnel.checkoutConversionRate)} />
-                        <OpsSignalChip label="Subscribers" value={`${summary.subscriptions.activePro + summary.subscriptions.activeCouple}`} />
+                        <OpsSignalChip label="기간" value={windowLabel} />
+                        <OpsSignalChip label="결제 전환율" value={formatPercent(summary.funnel.checkoutConversionRate)} />
+                        <OpsSignalChip label="구독 중" value={`${summary.subscriptions.activePro + summary.subscriptions.activeCouple}`} />
                     </div>
                 </div>
             </section>
@@ -184,21 +197,21 @@ export function PaymentOpsDashboard({ summary }: PaymentOpsDashboardProps) {
                 <div className="rounded-[34px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.12),transparent_22%),linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-6 shadow-[0_28px_80px_rgba(2,6,23,0.28)] sm:p-7">
                     <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                            Revenue Pulse
+                            매출 흐름
                         </p>
 
                         <div className="flex flex-wrap gap-2.5">
-                            <OpsSignalChip label="payments" value={summary.totals.completedPayments.toLocaleString()} />
-                            <OpsSignalChip label="promo" value={summary.totals.promoPayments.toLocaleString()} />
-                            <OpsSignalChip label="gross" value={formatUsdFromCents(summary.totals.grossRevenueCents)} />
+                            <OpsSignalChip label="결제 완료" value={summary.totals.completedPayments.toLocaleString()} />
+                            <OpsSignalChip label="할인 결제" value={summary.totals.promoPayments.toLocaleString()} />
+                            <OpsSignalChip label="총매출" value={formatUsdFromCents(summary.totals.grossRevenueCents)} />
                         </div>
                     </div>
 
                     <h2 className="font-[var(--font-outfit)] text-2xl font-semibold tracking-[-0.04em] text-white">
-                        revenue / completed payments / promo orders
+                        매출 / 결제 완료 / 할인 결제
                     </h2>
                     <p className="mt-3 max-w-2xl text-sm leading-7 text-white/55">
-                        운영자가 가장 먼저 봐야 하는 건 매출 절대값이 아니라 결제량과 수익이 함께 오르는지, 프로모션 비중이 어떤지입니다.
+                        매출만이 아니라 결제가 꾸준히 들어오는지, 할인 결제가 너무 많지는 않은지 같이 봅니다.
                     </p>
 
                     <div className="mt-6 rounded-[28px] border border-white/8 bg-black/15 p-4">
@@ -219,8 +232,8 @@ export function PaymentOpsDashboard({ summary }: PaymentOpsDashboardProps) {
                             </div>
                         ) : (
                             <OpsEmptyState
-                                title="아직 결제 펄스가 충분하지 않습니다"
-                                description="completed payment와 revenue가 쌓이기 시작하면 이 패널에서 급락 구간과 회복 구간을 바로 읽을 수 있습니다."
+                                title="아직 결제 기록이 많지 않습니다"
+                                description="결제가 더 쌓이면, 줄어드는 구간과 회복 구간을 여기서 바로 볼 수 있습니다."
                             />
                         )}
                     </div>
@@ -229,46 +242,46 @@ export function PaymentOpsDashboard({ summary }: PaymentOpsDashboardProps) {
                 <div className="space-y-6">
                     <div className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-6 shadow-[0_28px_80px_rgba(2,6,23,0.28)]">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                            Subscription Snapshot
+                            구독 현황
                         </p>
                         <div className="mt-5 space-y-3">
                             <OpsInsightRow
-                                label="Active Pro"
+                                label="개인 구독 중"
                                 value={summary.subscriptions.activePro.toLocaleString()}
-                                caption="현재 활성 `pro` 구독 상태를 가진 계정 수입니다."
+                                caption="지금 개인 구독을 쓰는 계정 수입니다."
                             />
                             <OpsInsightRow
-                                label="Active Couple"
+                                label="커플 구독 중"
                                 value={summary.subscriptions.activeCouple.toLocaleString()}
-                                caption="현재 `couple` 상태로 유지되는 계정 수입니다."
+                                caption="지금 커플 구독을 쓰는 계정 수입니다."
                             />
                             <OpsInsightRow
-                                label="Expiring Soon"
+                                label="곧 끝나는 구독"
                                 value={summary.subscriptions.expiringSoon.toLocaleString()}
-                                caption="7일 안에 만료 예정인 활성 구독 수입니다."
+                                caption="7일 안에 끝나는 구독 수입니다."
                             />
                         </div>
                     </div>
 
                     <div className="rounded-[34px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.12),transparent_22%),linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-6 shadow-[0_28px_80px_rgba(2,6,23,0.28)]">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                            Funnel Read
+                            결제 흐름
                         </p>
                         <div className="mt-5 space-y-3">
                             <OpsInsightRow
-                                label="Checkout Starts"
+                                label="결제 시작"
                                 value={summary.funnel.checkoutStarts.toLocaleString()}
-                                caption="paywall 이후 실제 checkout을 시작한 횟수입니다."
+                                caption="결제 창을 연 뒤 실제 결제를 시작한 수입니다."
                             />
                             <OpsInsightRow
-                                label="Paid Conversions"
+                                label="결제 완료"
                                 value={summary.funnel.paidConversions.toLocaleString()}
-                                caption="growth 이벤트 기준 결제 완료 수입니다."
+                                caption="실제로 결제가 끝난 수입니다."
                             />
                             <OpsInsightRow
-                                label="Checkout Conversion"
+                                label="결제 전환율"
                                 value={formatPercent(summary.funnel.checkoutConversionRate)}
-                                caption="checkout 시작 대비 paid conversion 비율입니다."
+                                caption="결제 시작한 사람 중 결제를 끝낸 비율입니다."
                             />
                         </div>
                     </div>
@@ -280,7 +293,7 @@ export function PaymentOpsDashboard({ summary }: PaymentOpsDashboardProps) {
                     <div className="mb-5 flex items-center justify-between gap-4">
                         <div>
                             <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                                Product Mix
+                                결제 종류
                             </p>
                             <h3 className="mt-3 font-[var(--font-outfit)] text-2xl font-semibold tracking-[-0.04em] text-white">
                                 어떤 결제가 실제로 찍히는지
@@ -305,7 +318,7 @@ export function PaymentOpsDashboard({ summary }: PaymentOpsDashboardProps) {
                     <div className="mb-5 flex items-center justify-between gap-4">
                         <div>
                             <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                                Status Mix
+                                결제 상태
                             </p>
                             <h3 className="mt-3 font-[var(--font-outfit)] text-2xl font-semibold tracking-[-0.04em] text-white">
                                 상태 분포
@@ -321,7 +334,7 @@ export function PaymentOpsDashboard({ summary }: PaymentOpsDashboardProps) {
                             >
                                 <div className="min-w-0">
                                     <p className="truncate font-medium text-white">{status.label}</p>
-                                    <p className="text-xs text-white/42">payment records</p>
+                                    <p className="text-xs text-white/42">기록 수</p>
                                 </div>
                                 <strong className="font-[var(--font-outfit)] text-lg tracking-[-0.04em] text-white">
                                     {status.count.toLocaleString()}
@@ -336,7 +349,7 @@ export function PaymentOpsDashboard({ summary }: PaymentOpsDashboardProps) {
                 <div className="mb-5 flex items-center justify-between gap-4">
                     <div>
                         <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                            Recent Payments
+                            최근 결제
                         </p>
                         <h3 className="mt-3 font-[var(--font-outfit)] text-2xl font-semibold tracking-[-0.04em] text-white">
                             최근 결제 흐름
@@ -351,17 +364,17 @@ export function PaymentOpsDashboard({ summary }: PaymentOpsDashboardProps) {
                             className="grid gap-3 rounded-[24px] border border-white/8 bg-black/15 px-4 py-4 text-sm text-white/74 md:grid-cols-[1.1fr_0.8fr_0.7fr_0.9fr]"
                         >
                             <div>
-                                <p className="font-medium text-white">{payment.customerEmail || 'customer pending'}</p>
+                                <p className="font-medium text-white">{payment.customerEmail || '고객 정보 없음'}</p>
                                 <p className="mt-1 text-xs text-white/42">{payment.orderId}</p>
                             </div>
                             <div>
                                 <p className="font-medium text-white">{formatPaymentTypeLabel(payment.type)}</p>
-                                <p className="mt-1 text-xs text-white/42">{payment.readingId ?? 'reading n/a'}</p>
+                                <p className="mt-1 text-xs text-white/42">{payment.readingId ?? '연결된 리딩 없음'}</p>
                             </div>
                             <div>
                                 <p className="font-medium text-white">{formatUsdFromCents(payment.amountCents)}</p>
                                 <p className="mt-1 text-xs text-white/42">
-                                    {payment.discountPercent ? `${payment.discountPercent}% off` : 'standard'}
+                                    {payment.discountPercent ? `${payment.discountPercent}% 할인` : '기본 결제'}
                                 </p>
                             </div>
                             <div className="md:text-right">

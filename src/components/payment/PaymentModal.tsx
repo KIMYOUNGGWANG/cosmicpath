@@ -466,35 +466,35 @@ export function PaymentModal({
     const unlockBenefits = isEnglish
         ? [
             {
-                title: 'Korean Saju Deep Reading',
-                description: 'Unlock the full interpretation across timing, pressure points, and your next action.',
+                title: 'Full reading',
+                description: 'See the full interpretation behind your free result, including timing, reasons, and next steps.',
                 Icon: ScrollText,
             },
             {
-                title: 'Saved Return Path',
-                description: 'Your reading stays connected when you come back after checkout.',
+                title: 'Saved for later',
+                description: 'Your reading stays saved, so you can come back and continue where you left off.',
                 Icon: Sparkles,
             },
             {
-                title: 'Stripe-secured',
-                description: 'Checkout and card data are handled safely through Stripe.',
+                title: 'Safe checkout',
+                description: 'Payment and card handling are safely processed through Stripe.',
                 Icon: ShieldCheck,
             },
         ]
         : [
             {
-                title: '심화 결정 리딩',
-                description: '타이밍, 핵심 압력, 다음 행동까지 이어지는 전체 해석을 엽니다.',
+                title: '전체 해석',
+                description: '무료 결과 뒤에 있는 타이밍, 이유, 다음 행동까지 한 번에 봅니다.',
                 Icon: ScrollText,
             },
             {
-                title: '리딩 경로 보관',
-                description: '결제 후 돌아와도 지금 질문의 리딩 경로가 그대로 이어집니다.',
+                title: '나중에 다시 보기',
+                description: '결제 후 다시 와도 지금 보던 결과가 그대로 이어집니다.',
                 Icon: Sparkles,
             },
             {
                 title: 'Stripe 안전 결제',
-                description: '결제와 카드 정보는 Stripe Checkout에서 안전하게 처리됩니다.',
+                description: '결제와 카드 정보는 Stripe에서 안전하게 처리됩니다.',
                 Icon: ShieldCheck,
             },
         ];
@@ -542,21 +542,21 @@ export function PaymentModal({
                                 >
                                     <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#A184FF]/20 bg-[#A184FF]/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.26em] text-[#cbb5ff]">
                                         <Lock className="h-4 w-4" />
-                                        {isEnglish ? 'Korean Saju Unlock' : '다음 행동 열기'}
+                                        {isEnglish ? 'Full Reading' : '전체 해석 보기'}
                                     </div>
                                     <h3 className="mb-3 text-xl font-bold text-white md:text-2xl">
-                                        {isEnglish ? 'Open Your Full Korean Saju Decision Reading' : '전체 결정 리딩 열기'}
+                                        {isEnglish ? 'See the full reading behind your free result' : '무료 결과 뒤에 있는 전체 해석 보기'}
                                     </h3>
                                     <p className="text-sm leading-relaxed text-white/60">
                                         {isEnglish ? (
                                             <>
-                                                The free summary ends here.<br />
-                                                Your guide opens the deeper Korean saju decision reading below.
+                                                The free result shows the direction first.<br />
+                                                Payment opens the deeper reasons, timing, and next action.
                                             </>
                                         ) : (
                                             <>
-                                                무료 요약은 여기까지입니다.<br />
-                                                이제부터 오라클 가이드가 읽은 깊은 결정 리딩이 열립니다.
+                                                무료 결과는 방향까지 먼저 보여줍니다.<br />
+                                                결제하면 왜 그렇게 읽혔는지와 다음 행동까지 더 자세히 볼 수 있습니다.
                                             </>
                                         )}
                                     </p>
@@ -591,7 +591,7 @@ export function PaymentModal({
                                         {discountedPriceLabel ? (
                                             <p className="text-xs font-medium text-emerald-300">
                                                 {isEnglish
-                                                    ? `${discount}% discount applied to this unlock.`
+                                                    ? `${discount}% discount applied.`
                                                     : `${discount}% 할인 코드가 적용되었습니다.`}
                                             </p>
                                         ) : null}
@@ -605,12 +605,12 @@ export function PaymentModal({
                                     className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-[transform,border-color,background-color] duration-300 hover:-translate-y-1 hover:border-white/15 hover:bg-white/[0.045]"
                                 >
                                     <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#A184FF]">
-                                        {isEnglish ? 'What Opens Next' : '결제 후 열리는 판단 흐름'}
+                                        {isEnglish ? 'What You Get Next' : '결제하면 바로 보이는 것'}
                                     </p>
                                     <ul className="space-y-2 text-sm text-white/75">
-                                        <li>{isEnglish ? 'The strongest action window behind your current question' : '현재 질문 뒤에서 가장 강하게 열리는 행동의 창'}</li>
-                                        <li>{isEnglish ? 'A cross-domain reading spanning relationship, career, money, and daily flow' : '관계, 커리어, 재물, 일상 흐름을 함께 읽는 교차 리딩'}</li>
-                                        <li>{isEnglish ? 'A next-move guide where Korean saju, astrology, and tarot converge' : '사주, 점성술, 타로가 겹치는 지점에서 도출한 다음 행동 가이드'}</li>
+                                        <li>{isEnglish ? 'A clearer reason for why this result showed up now' : '왜 지금 이 결과가 나왔는지 더 선명한 설명'}</li>
+                                        <li>{isEnglish ? 'A more detailed timing read for when to move and when to wait' : '움직일 때와 기다릴 때를 나눠 보는 더 자세한 타이밍 해석'}</li>
+                                        <li>{isEnglish ? 'A practical next-step guide you can act on right away' : '바로 써먹을 수 있는 다음 행동 가이드'}</li>
                                     </ul>
                                 </motion.div>
 
@@ -642,7 +642,7 @@ export function PaymentModal({
                                     className="mb-6"
                                 >
                                     <label className="mb-3 ml-1 block text-xs font-semibold uppercase tracking-widest text-[#A184FF]">
-                                        {isEnglish ? 'Email for your oracle link' : '오라클 링크를 받아볼 이메일'}
+                                        {isEnglish ? 'Email for your result link' : '결과 링크를 받아볼 이메일'}
                                         {isFreePromo ? <span className="ml-1 text-red-400">*</span> : <span className="ml-2 text-white/30 normal-case">(optional)</span>}
                                     </label>
                                     <input
@@ -655,8 +655,8 @@ export function PaymentModal({
                                         placeholder={isFreePromo
                                             ? 'name@example.com'
                                             : (isEnglish
-                                                ? 'Optional: receive your oracle link by email'
-                                                : '선택: 결제 후 오라클 링크를 이메일로 받기')}
+                                                ? 'Optional: get your result link by email'
+                                                : '선택: 결과 링크를 이메일로 받기')}
                                         className={`w-full rounded-2xl border bg-white/5 px-5 py-4 font-light text-white placeholder:text-gray-600 transition-[border-color,box-shadow,background-color] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A184FF]/40 ${emailError
                                             ? 'border-red-500 focus:border-red-500'
                                             : 'border-white/10 focus:border-[#A184FF]/50 hover:border-white/15 hover:bg-white/[0.06]'
@@ -705,14 +705,14 @@ export function PaymentModal({
                                     {isLoading
                                         ? (isEnglish ? 'Processing...' : '처리 중...')
                                         : (Number(discount) === 100
-                                            ? (isEnglish ? 'Open for Free' : '무료로 오라클 열기')
-                                            : (isEnglish ? 'Open Full Korean Saju Reading' : '전체 결정 리딩 열기'))}
+                                            ? (isEnglish ? 'See Full Reading for Free' : '무료로 전체 해석 보기')
+                                            : (isEnglish ? 'See Full Reading' : '전체 해석 보기'))}
                                 </motion.button>
 
                                 <p className="mt-4 text-center text-xs text-white/35">
                                     {isEnglish
-                                        ? 'Checkout is handled by Stripe. Your reading stays saved, so your decision path is still here when you return.'
-                                        : '결제는 Stripe에서 안전하게 처리되며, 나중에 다시 와도 현재 질문의 리딩 경로는 그대로 유지됩니다.'}
+                                        ? 'Stripe handles checkout safely. Your current result stays saved when you come back.'
+                                        : '결제는 Stripe에서 안전하게 처리되고, 지금 결과는 그대로 저장되어 다시 와도 이어서 볼 수 있습니다.'}
                                 </p>
                             </div>
                         </motion.div>

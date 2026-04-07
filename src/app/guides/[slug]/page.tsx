@@ -2,10 +2,15 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import {
+    GrowthEventTracker,
+    GrowthTrackedLink,
+} from '@/components/common/GrowthTracking';
 import { Navigation } from '@/components/landing/Navigation';
 import { Footer } from '@/components/landing/Footer';
 import { StructuredData } from '@/components/seo/StructuredData';
 import { ENGLISH_GUIDES, getEnglishGuideBySlug, getEnglishGuideSlugs } from '@/lib/english-guides';
+import { getLandingVariant } from '@/lib/language-preference';
 
 interface EnglishGuidePageProps {
     params: Promise<{ slug: string }>;
@@ -71,6 +76,7 @@ export default async function EnglishGuidePage({ params }: EnglishGuidePageProps
     }
 
     const relatedGuides = ENGLISH_GUIDES.filter((candidate) => candidate.slug !== guide.slug);
+    const landingVariant = getLandingVariant('en');
     const structuredData = {
         '@context': 'https://schema.org',
         '@type': 'Article',
@@ -96,6 +102,21 @@ export default async function EnglishGuidePage({ params }: EnglishGuidePageProps
     return (
         <main className="min-h-screen bg-void text-starlight">
             <StructuredData data={structuredData} />
+            <GrowthEventTracker
+                trackingEvent={{
+                    event: 'guide_article_view',
+                    source: 'english_guide_article',
+                    step: 'content',
+                    language: 'en',
+                    context: 'guide',
+                    metadata: {
+                        landingVariant,
+                        guideSurface: 'article',
+                        guideSlug: guide.slug,
+                        guideTitle: guide.title,
+                    },
+                }}
+            />
             <Navigation language="en" />
             <div className="cosmic-dust" />
 
@@ -249,12 +270,27 @@ export default async function EnglishGuidePage({ params }: EnglishGuidePageProps
                                 {guide.ctaBody}
                             </p>
                             <div className="mt-6 grid gap-3">
-                                <Link
+                                <GrowthTrackedLink
                                     href="/start?reset=true"
+                                    trackingEvent={{
+                                        event: 'guide_cta_clicked',
+                                        source: 'english_guide_article',
+                                        step: 'cta',
+                                        language: 'en',
+                                        context: 'guide',
+                                        metadata: {
+                                            landingVariant,
+                                            guideSurface: 'article',
+                                            guideSlug: guide.slug,
+                                            guideTitle: guide.title,
+                                            ctaLocation: 'sidebar_primary',
+                                            ctaTarget: 'start_reading',
+                                        },
+                                    }}
                                     className="inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F4D88A] to-[#D4AF37] px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition-transform duration-300 hover:scale-[1.02]"
                                 >
                                     Open Free Reading
-                                </Link>
+                                </GrowthTrackedLink>
                                 <Link
                                     href="/guides"
                                     className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white/78 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
@@ -270,9 +306,23 @@ export default async function EnglishGuidePage({ params }: EnglishGuidePageProps
                             </p>
                             <div className="mt-5 space-y-3">
                                 {relatedGuides.map((relatedGuide) => (
-                                    <Link
+                                    <GrowthTrackedLink
                                         key={relatedGuide.slug}
                                         href={`/guides/${relatedGuide.slug}`}
+                                        trackingEvent={{
+                                            event: 'guide_card_clicked',
+                                            source: 'english_guide_article',
+                                            step: 'discovery',
+                                            language: 'en',
+                                            context: 'guide',
+                                            metadata: {
+                                                landingVariant,
+                                                guideSurface: 'article_related',
+                                                guideSlug: relatedGuide.slug,
+                                                guideTitle: relatedGuide.title,
+                                                referrerGuideSlug: guide.slug,
+                                            },
+                                        }}
                                         className="block rounded-[22px] border border-white/10 bg-black/20 p-4 transition-colors hover:border-white/20 hover:bg-white/[0.04]"
                                     >
                                         <p className="text-[10px] uppercase tracking-[0.26em] text-white/42">
@@ -284,7 +334,7 @@ export default async function EnglishGuidePage({ params }: EnglishGuidePageProps
                                         <p className="mt-2 text-sm leading-6 text-white/60">
                                             {relatedGuide.description}
                                         </p>
-                                    </Link>
+                                    </GrowthTrackedLink>
                                 ))}
                             </div>
                         </div>
@@ -308,12 +358,27 @@ export default async function EnglishGuidePage({ params }: EnglishGuidePageProps
                             timing layer becomes useful instead of theoretical.
                         </p>
                         <div className="mt-8 flex flex-wrap justify-center gap-3">
-                            <Link
+                            <GrowthTrackedLink
                                 href="/start?reset=true"
+                                trackingEvent={{
+                                    event: 'guide_cta_clicked',
+                                    source: 'english_guide_article',
+                                    step: 'cta',
+                                    language: 'en',
+                                    context: 'guide',
+                                    metadata: {
+                                        landingVariant,
+                                        guideSurface: 'article',
+                                        guideSlug: guide.slug,
+                                        guideTitle: guide.title,
+                                        ctaLocation: 'closing_primary',
+                                        ctaTarget: 'start_reading',
+                                    },
+                                }}
                                 className="inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F4D88A] to-[#D4AF37] px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition-transform duration-300 hover:scale-[1.02]"
                             >
                                 Start the Oracle
-                            </Link>
+                            </GrowthTrackedLink>
                             <Link
                                 href="/"
                                 className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white/78 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"

@@ -11,9 +11,9 @@ export default async function OpsPage() {
     if (!session?.user?.id) {
         return (
             <OpsAccessState
-                eyebrow="Ops Command"
+                eyebrow="운영 홈"
                 title="로그인이 필요합니다"
-                description="Ops Command Center는 운영용 보호 페이지입니다. 먼저 로그인한 뒤 권한을 확인해주세요."
+                description="이 페이지는 운영자만 볼 수 있습니다. 먼저 로그인해 주세요."
             />
         );
     }
@@ -21,9 +21,9 @@ export default async function OpsPage() {
     if (session.user.role !== 'ADMIN') {
         return (
             <OpsAccessState
-                eyebrow="Ops Command"
+                eyebrow="운영 홈"
                 title="관리자 전용 페이지입니다"
-                description="현재 계정은 Ops Command Center 접근 권한이 없습니다. ADMIN 권한 계정으로 로그인해야 이 페이지를 볼 수 있습니다."
+                description="현재 계정으로는 이 페이지를 볼 수 없습니다. 관리자 계정으로 로그인해 주세요."
                 currentRole={session.user.role}
             />
         );

@@ -33,6 +33,21 @@ interface TrustOpsDashboardProps {
     summary: TrustOpsSummary;
 }
 
+function formatSeriesLabel(label: string | undefined) {
+    switch (label) {
+        case 'alerts':
+            return '경고';
+        case 'criticalAlerts':
+            return '급한 경고';
+        case 'failedJobs':
+            return '실패한 작업';
+        case 'pendingJobs':
+            return '밀린 작업';
+        default:
+            return label ?? '숫자';
+    }
+}
+
 function TooltipCard({
     active,
     label,
@@ -63,7 +78,7 @@ function TooltipCard({
                                 className="h-2.5 w-2.5 rounded-full"
                                 style={{ backgroundColor: entry.color }}
                             />
-                            <span>{entry.dataKey}</span>
+                            <span>{formatSeriesLabel(entry.dataKey)}</span>
                         </div>
                         <strong className="text-white">
                             {typeof entry.value === 'number'
@@ -105,36 +120,36 @@ export function TrustOpsDashboard({ summary }: TrustOpsDashboardProps) {
 
     const metrics = [
         {
-            label: 'Open Alerts',
+            label: '열린 경고',
             value: summary.totals.openAlerts.toLocaleString(),
-            caption: '운영자가 아직 닫지 않은 현재 open alert 수입니다.',
+            caption: '아직 해결하지 않은 경고 수입니다.',
             icon: ShieldAlert,
             iconClassName: 'text-sky-200',
             surfaceClassName:
                 'bg-[radial-gradient(circle_at_top_right,rgba(125,211,252,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]',
         },
         {
-            label: 'Critical Alerts',
+            label: '급한 경고',
             value: summary.totals.criticalOpenAlerts.toLocaleString(),
-            caption: '즉시 확인이 필요한 critical open alert 수입니다.',
+            caption: '지금 바로 봐야 하는 경고 수입니다.',
             icon: Siren,
             iconClassName: 'text-rose-200',
             surfaceClassName:
                 'bg-[radial-gradient(circle_at_top_right,rgba(251,113,133,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]',
         },
         {
-            label: 'Due Pending Jobs',
+            label: '늦어진 작업',
             value: summary.totals.duePendingJobs.toLocaleString(),
-            caption: '이미 실행 시점이 지난 follow-up pending job 수입니다.',
+            caption: '보내기로 했는데 아직 처리되지 않은 후속 작업 수입니다.',
             icon: Radar,
             iconClassName: 'text-violet-200',
             surfaceClassName:
                 'bg-[radial-gradient(circle_at_top_right,rgba(196,181,253,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]',
         },
         {
-            label: 'Failed Job Rate',
+            label: '실패 비율',
             value: formatPercent(summary.totals.failedJobRate),
-            caption: `${summary.totals.failedJobs.toLocaleString()} failed / ${summary.totals.sentJobs.toLocaleString()} sent`,
+            caption: `${summary.totals.failedJobs.toLocaleString()}건 실패 / ${summary.totals.sentJobs.toLocaleString()}건 발송`,
             icon: AlertTriangle,
             iconClassName: 'text-amber-200',
             surfaceClassName:
@@ -148,21 +163,21 @@ export function TrustOpsDashboard({ summary }: TrustOpsDashboardProps) {
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                     <div className="max-w-2xl">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                            Trust Command
+                            오류 / 경고
                         </p>
                         <h2 className="mt-3 font-[var(--font-outfit)] text-3xl font-semibold tracking-[-0.05em] text-white sm:text-4xl">
-                            인시던트와 follow-up 실패를 같이 읽는 패널
+                            어떤 문제가 생겼는지 보는 화면
                         </h2>
                         <p className="mt-4 text-sm leading-7 text-white/58 sm:text-base">
-                            Stripe webhook, reconcile, drip runner, follow-up runner가 남긴 신호를 한 곳에 모았습니다.
-                            알림과 job 실패를 분리해서 보되, 운영 우선순위는 같은 시야에서 판단할 수 있게 구성했습니다.
+                            결제 관련 경고와 후속 작업 실패를 한곳에 모았습니다.
+                            어떤 문제가 더 급한지 바로 고르기 쉽게 정리했습니다.
                         </p>
                     </div>
 
                     <div className="flex flex-wrap gap-3">
-                        <OpsSignalChip label="Window" value={windowLabel} />
-                        <OpsSignalChip label="Open" value={summary.totals.openAlerts.toLocaleString()} />
-                        <OpsSignalChip label="Critical" value={summary.totals.criticalOpenAlerts.toLocaleString()} />
+                        <OpsSignalChip label="기간" value={windowLabel} />
+                        <OpsSignalChip label="열린 경고" value={summary.totals.openAlerts.toLocaleString()} />
+                        <OpsSignalChip label="급한 경고" value={summary.totals.criticalOpenAlerts.toLocaleString()} />
                     </div>
                 </div>
             </section>
@@ -185,21 +200,21 @@ export function TrustOpsDashboard({ summary }: TrustOpsDashboardProps) {
                 <div className="rounded-[34px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(125,211,252,0.12),transparent_22%),linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-6 shadow-[0_28px_80px_rgba(2,6,23,0.28)] sm:p-7">
                     <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                            Incident Timeline
+                            경고 흐름
                         </p>
 
                         <div className="flex flex-wrap gap-2.5">
-                            <OpsSignalChip label="alerts" value={summary.totals.openAlerts.toLocaleString()} />
-                            <OpsSignalChip label="failed jobs" value={summary.totals.failedJobs.toLocaleString()} />
-                            <OpsSignalChip label="pending due" value={summary.totals.duePendingJobs.toLocaleString()} />
+                            <OpsSignalChip label="경고" value={summary.totals.openAlerts.toLocaleString()} />
+                            <OpsSignalChip label="실패한 작업" value={summary.totals.failedJobs.toLocaleString()} />
+                            <OpsSignalChip label="밀린 작업" value={summary.totals.duePendingJobs.toLocaleString()} />
                         </div>
                     </div>
 
                     <h2 className="font-[var(--font-outfit)] text-2xl font-semibold tracking-[-0.04em] text-white">
-                        alerts / critical alerts / failed jobs / pending jobs
+                        경고 / 급한 경고 / 실패 / 지연
                     </h2>
                     <p className="mt-3 max-w-2xl text-sm leading-7 text-white/55">
-                        이 차트는 알림이 늘어나는 날과 follow-up delivery가 흔들리는 날을 같은 축에서 보여줍니다.
+                        경고가 늘어난 날과 후속 작업이 흔들린 날을 한 번에 볼 수 있습니다.
                     </p>
 
                     <div className="mt-6 rounded-[28px] border border-white/8 bg-black/15 p-4">
@@ -220,8 +235,8 @@ export function TrustOpsDashboard({ summary }: TrustOpsDashboardProps) {
                             </div>
                         ) : (
                             <OpsEmptyState
-                                title="아직 incident 데이터가 적습니다"
-                                description="ops alert나 follow-up job 상태 변화가 쌓이면 이상 징후를 이 패널에서 바로 읽을 수 있습니다."
+                                title="아직 쌓인 문제가 많지 않습니다"
+                                description="경고와 후속 작업 기록이 더 쌓이면, 이상한 날을 여기서 바로 볼 수 있습니다."
                             />
                         )}
                     </div>
@@ -230,7 +245,7 @@ export function TrustOpsDashboard({ summary }: TrustOpsDashboardProps) {
                 <div className="space-y-6">
                     <div className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-6 shadow-[0_28px_80px_rgba(2,6,23,0.28)]">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                            Alert Sources
+                            어디서 문제가 났는지
                         </p>
                         <div className="mt-5 space-y-3">
                             {summary.alertsBySource.map((source) => (
@@ -238,7 +253,7 @@ export function TrustOpsDashboard({ summary }: TrustOpsDashboardProps) {
                                     key={source.label}
                                     label={source.label}
                                     value={source.count.toLocaleString()}
-                                    caption="최근 window 안에서 감지된 alert source volume 입니다."
+                                    caption="최근 기간에 이 종류의 경고가 몇 번 생겼는지입니다."
                                 />
                             ))}
                         </div>
@@ -246,7 +261,7 @@ export function TrustOpsDashboard({ summary }: TrustOpsDashboardProps) {
 
                     <div className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-6 shadow-[0_28px_80px_rgba(2,6,23,0.28)]">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                            Job Stage Mix
+                            어떤 작업이 막혔는지
                         </p>
                         <div className="mt-4 h-[260px] rounded-[24px] border border-white/8 bg-black/15 p-4">
                             <ResponsiveContainer width="100%" height="100%">
@@ -268,7 +283,7 @@ export function TrustOpsDashboard({ summary }: TrustOpsDashboardProps) {
                     <div className="mb-5 flex items-center justify-between gap-4">
                         <div>
                             <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                                Open Alerts
+                                아직 해결 안 된 문제
                             </p>
                             <h3 className="mt-3 font-[var(--font-outfit)] text-2xl font-semibold tracking-[-0.04em] text-white">
                                 아직 닫히지 않은 이슈
@@ -292,7 +307,7 @@ export function TrustOpsDashboard({ summary }: TrustOpsDashboardProps) {
                                     </SeverityBadge>
                                 </div>
                                 <p className="mt-3 leading-7 text-white/58">{alert.message}</p>
-                                <p className="mt-2 text-xs text-white/42">occurrence {alert.occurrenceCount} · status {alert.status}</p>
+                                <p className="mt-2 text-xs text-white/42">발생 {alert.occurrenceCount}번 · 상태 {alert.status}</p>
                             </div>
                         ))}
                     </div>
@@ -302,10 +317,10 @@ export function TrustOpsDashboard({ summary }: TrustOpsDashboardProps) {
                     <div className="mb-5 flex items-center justify-between gap-4">
                         <div>
                             <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
-                                Failed Follow-ups
+                                최근 실패한 후속 작업
                             </p>
                             <h3 className="mt-3 font-[var(--font-outfit)] text-2xl font-semibold tracking-[-0.04em] text-white">
-                                최근 실패 job
+                                최근 실패한 작업
                             </h3>
                         </div>
                     </div>
@@ -325,8 +340,8 @@ export function TrustOpsDashboard({ summary }: TrustOpsDashboardProps) {
                                         {job.status}
                                     </SeverityBadge>
                                 </div>
-                                <p className="mt-3 leading-7 text-white/58">{job.lastError || 'No error message saved.'}</p>
-                                <p className="mt-2 text-xs text-white/42">attempts {job.attempts}</p>
+                                <p className="mt-3 leading-7 text-white/58">{job.lastError || '저장된 오류 메시지가 없습니다.'}</p>
+                                <p className="mt-2 text-xs text-white/42">시도 {job.attempts}번</p>
                             </div>
                         ))}
                     </div>

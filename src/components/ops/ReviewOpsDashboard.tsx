@@ -212,15 +212,15 @@ export function ReviewOpsDashboard({ initialReviews }: ReviewOpsDashboardProps) 
                 <div className="rounded-[34px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(245,196,81,0.14),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(125,211,252,0.14),transparent_24%),linear-gradient(145deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-6 shadow-[0_28px_80px_rgba(2,6,23,0.28)] backdrop-blur-xl sm:p-7">
                     <div className="inline-flex items-center gap-2 rounded-full border border-[hsl(42_79%_74%/0.24)] bg-[hsl(42_79%_74%/0.08)] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-[hsl(42_79%_74%)]">
                         <Sparkles className="h-4 w-4" />
-                        Moderation Orbit
+                        후기 흐름
                     </div>
 
                     <h2 className="mt-5 font-[var(--font-outfit)] text-3xl font-semibold tracking-[-0.05em] text-white sm:text-4xl">
-                        후기 큐의 결을 먼저 읽고, 공개 가능한 목소리만 올립니다
+                        후기를 보고 공개할지 바로 정합니다
                     </h2>
                     <p className="mt-4 max-w-2xl text-sm leading-7 text-white/58 sm:text-base">
-                        단순 승인/삭제보다 중요한 건 어떤 후기 흐름이 쌓이고 있는지 읽는 것입니다.
-                        프로모션 유입, 높은 만족도, 대기 적체를 한 화면에서 보고 바로 정리할 수 있게 구성했습니다.
+                        어떤 후기가 쌓이는지 먼저 보고, 공개할 후기만 빠르게 고를 수 있게 만들었습니다.
+                        보상 받은 후기와 높은 평점 후기, 아직 기다리는 후기를 한 화면에서 같이 봅니다.
                     </p>
 
                     <div className="mt-6 flex flex-wrap gap-3">
@@ -239,10 +239,10 @@ export function ReviewOpsDashboard({ initialReviews }: ReviewOpsDashboardProps) 
                     </div>
                 </div>
 
-                <div className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-6 shadow-[0_28px_80px_rgba(2,6,23,0.24)] backdrop-blur-xl">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[hsl(42_79%_74%)]">
-                        큐 스냅샷
-                    </p>
+                    <div className="rounded-[34px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-6 shadow-[0_28px_80px_rgba(2,6,23,0.24)] backdrop-blur-xl">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[hsl(42_79%_74%)]">
+                        지금 상태
+                        </p>
                     <div className="mt-5 space-y-3">
                         <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
                             <div className="flex items-center justify-between gap-4">
@@ -268,7 +268,7 @@ export function ReviewOpsDashboard({ initialReviews }: ReviewOpsDashboardProps) 
                                     </div>
                                     <div>
                                         <p className="text-sm text-white/72">공개 가능</p>
-                                        <p className="text-xs text-white/46">랜딩 반영 후보</p>
+                                        <p className="text-xs text-white/46">화면에 보여줄 수 있는 후기</p>
                                     </div>
                                 </div>
                                 <strong className="font-[var(--font-outfit)] text-2xl tracking-[-0.05em] text-white">
@@ -315,13 +315,13 @@ export function ReviewOpsDashboard({ initialReviews }: ReviewOpsDashboardProps) 
                     caption="현재 누적 만족도 평균입니다."
                     glowClassName="bg-[radial-gradient(circle_at_top_right,rgba(245,196,81,0.18),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]"
                 />
-                <ReviewStatCard
-                    label="프로모션 연결"
-                    value={promoCount.toLocaleString()}
-                    caption="보상 루프와 연결된 후기 수입니다."
-                    glowClassName="bg-[radial-gradient(circle_at_top_right,rgba(125,211,252,0.18),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]"
-                />
-            </section>
+                    <ReviewStatCard
+                        label="프로모션 연결"
+                        value={promoCount.toLocaleString()}
+                    caption="보상을 받고 남긴 후기 수입니다."
+                        glowClassName="bg-[radial-gradient(circle_at_top_right,rgba(125,211,252,0.18),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]"
+                    />
+                </section>
 
             <section className="rounded-[34px] border border-white/10 bg-[linear-gradient(145deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-6 shadow-[0_28px_80px_rgba(2,6,23,0.28)] backdrop-blur-xl">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
@@ -330,10 +330,10 @@ export function ReviewOpsDashboard({ initialReviews }: ReviewOpsDashboardProps) 
                             리뷰 큐
                         </p>
                         <h2 className="mt-3 font-[var(--font-outfit)] text-3xl font-semibold tracking-[-0.05em] text-white">
-                            스캔이 쉬운 카드 보드로 검수 흐름을 정리했습니다
+                            카드 목록으로 빠르게 검토합니다
                         </h2>
                         <p className="mt-4 text-sm leading-7 text-white/56">
-                            상태, 평점, 프로모션 연동 여부, reading 연결 상태를 같은 카드 안에서 읽고 바로 액션할 수 있습니다.
+                            상태, 평점, 보상 여부, 리딩 연결 여부를 한 카드에서 보고 바로 처리할 수 있습니다.
                         </p>
                     </div>
 
@@ -401,7 +401,7 @@ export function ReviewOpsDashboard({ initialReviews }: ReviewOpsDashboardProps) 
                                                     <RatingStars rating={review.rating} />
                                                     <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-white/40">
                                                         <MessageSquareQuote className="h-3.5 w-3.5" />
-                                                        후기 시그널
+                                                        후기
                                                     </div>
                                                 </div>
                                             </div>
@@ -426,7 +426,7 @@ export function ReviewOpsDashboard({ initialReviews }: ReviewOpsDashboardProps) 
                                     <div className="flex flex-col gap-3 xl:w-[220px]">
                                         <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
                                             <p className="text-[11px] uppercase tracking-[0.28em] text-white/42">
-                                                운영 액션
+                                                지금 할 일
                                             </p>
                                             <p className="mt-2 text-sm leading-6 text-white/58">
                                                 {review.isApproved
@@ -477,7 +477,7 @@ export function ReviewOpsDashboard({ initialReviews }: ReviewOpsDashboardProps) 
                                         : '리뷰가 아직 없습니다'}
                             </h3>
                             <p className="mt-3 max-w-md text-sm leading-7 text-white/52">
-                                후기 데이터가 쌓이면 이 보드에서 목소리의 질감, 공개 가능 상태, 보상 연결 여부를 함께 읽을 수 있습니다.
+                                후기가 더 쌓이면, 공개할 만한 후기와 보상 받은 후기를 여기서 함께 볼 수 있습니다.
                             </p>
                         </div>
                     )}

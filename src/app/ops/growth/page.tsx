@@ -10,9 +10,9 @@ export default async function GrowthOpsPage() {
     if (!session?.user?.id) {
         return (
             <OpsAccessState
-                eyebrow="Growth Command"
+                eyebrow="사용자 흐름"
                 title="로그인이 필요합니다"
-                description="Growth Ops 대시보드는 운영용 보호 페이지입니다. 먼저 로그인한 뒤 권한을 확인해주세요."
+                description="이 페이지는 운영자만 볼 수 있습니다. 먼저 로그인해 주세요."
             />
         );
     }
@@ -20,9 +20,9 @@ export default async function GrowthOpsPage() {
     if (session.user.role !== 'ADMIN') {
         return (
             <OpsAccessState
-                eyebrow="Growth Command"
+                eyebrow="사용자 흐름"
                 title="관리자 전용 페이지입니다"
-                description="현재 계정은 Growth Ops 대시보드 접근 권한이 없습니다. ADMIN 권한 계정으로 로그인해야 이 페이지를 볼 수 있습니다."
+                description="현재 계정으로는 이 페이지를 볼 수 없습니다. 관리자 계정으로 로그인해 주세요."
                 currentRole={session.user.role}
             />
         );
@@ -39,25 +39,25 @@ export default async function GrowthOpsPage() {
                     <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                         <div className="max-w-3xl">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[hsl(42_79%_74%)]">
-                                Growth Command
+                                사용자 흐름
                             </p>
                             <h1 className="mt-4 font-[var(--font-outfit)] text-4xl font-semibold tracking-[-0.05em] text-white">
-                                Core Growth Dashboard
+                                결과부터 결제까지 보기
                             </h1>
                             <p className="mt-4 text-sm leading-7 text-white/64">
-                                최근 {summary.dateRange.days}일 기준 오라클 코어 루프의 핵심 4지표인 first result, follow-up, daily return, paid conversion을 먼저 봅니다.
-                                브라우저 단위 유입 신호는 보조 레이어로 내리고, 실제 제품 경험이 이어지는 신호를 위로 올렸습니다.
+                                최근 {summary.dateRange.days}일 동안 사람들이 무료 결과를 보고, 추가 질문을 하고, 다시 돌아오고, 결제까지 갔는지를 먼저 봅니다.
+                                오늘 방문, 최근 7일 방문, 최근 30일 방문도 같이 보여서 제품 크기와 전환 흐름을 함께 읽을 수 있습니다.
                             </p>
                         </div>
 
                         <div className="flex flex-wrap gap-3">
                             <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white/72">
-                                <span className="text-white/44">Range</span>
-                                <strong className="ml-2 text-white">{summary.dateRange.days} days</strong>
+                                <span className="text-white/44">기간</span>
+                                <strong className="ml-2 text-white">{summary.dateRange.days}일</strong>
                             </div>
                             <div className="rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white/72">
-                                <span className="text-white/44">Mode</span>
-                                <strong className="ml-2 text-white">Core Signals</strong>
+                                <span className="text-white/44">기준</span>
+                                <strong className="ml-2 text-white">중요한 행동 먼저</strong>
                             </div>
                         </div>
                     </div>

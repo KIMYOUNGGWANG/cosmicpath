@@ -10,9 +10,9 @@ export default async function ReviewOpsPage() {
     if (!session?.user?.id) {
         return (
             <OpsAccessState
-                eyebrow="Review Command"
+                eyebrow="후기 관리"
                 title="로그인이 필요합니다"
-                description="Review Ops 대시보드는 운영용 보호 페이지입니다. 먼저 로그인한 뒤 권한을 확인해주세요."
+                description="이 페이지는 운영자만 볼 수 있습니다. 먼저 로그인해 주세요."
             />
         );
     }
@@ -20,9 +20,9 @@ export default async function ReviewOpsPage() {
     if (session.user.role !== 'ADMIN') {
         return (
             <OpsAccessState
-                eyebrow="Review Command"
+                eyebrow="후기 관리"
                 title="관리자 전용 페이지입니다"
-                description="현재 계정은 Review Ops 대시보드 접근 권한이 없습니다. ADMIN 권한 계정으로 로그인해야 이 페이지를 볼 수 있습니다."
+                description="현재 계정으로는 이 페이지를 볼 수 없습니다. 관리자 계정으로 로그인해 주세요."
                 currentRole={session.user.role}
             />
         );
@@ -51,14 +51,14 @@ export default async function ReviewOpsPage() {
                     <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
                         <div className="max-w-3xl">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[hsl(42_79%_74%)]">
-                                Review Command
+                                후기 관리
                             </p>
                             <h1 className="mt-4 font-[var(--font-outfit)] text-4xl font-semibold tracking-[-0.05em] text-white">
-                                Review Ops Dashboard
+                                후기를 검토하는 화면
                             </h1>
                             <p className="mt-4 text-sm leading-7 text-white/64">
-                                후기 승인, 삭제, reading 연결 여부를 별도 운영 화면으로 분리했습니다.
-                                Growth 지표와 섞지 않고, 실제 사용자 목소리와 노출 가능 상태를 여기서 바로 관리할 수 있습니다.
+                                후기 승인, 삭제, 리딩 연결 여부를 따로 모아봤습니다.
+                                다른 숫자와 섞지 않고 후기만 바로 처리할 수 있게 만든 화면입니다.
                             </p>
                         </div>
 

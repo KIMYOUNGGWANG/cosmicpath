@@ -21,9 +21,9 @@ export default async function ReadingSupportPage({ searchParams }: ReadingSuppor
     if (!session?.user?.id) {
         return (
             <OpsAccessState
-                eyebrow="Support Command"
+                eyebrow="리딩 확인"
                 title="로그인이 필요합니다"
-                description="Reading Support 대시보드는 운영용 보호 페이지입니다. 먼저 로그인한 뒤 권한을 확인해주세요."
+                description="이 페이지는 운영자만 볼 수 있습니다. 먼저 로그인해 주세요."
             />
         );
     }
@@ -31,9 +31,9 @@ export default async function ReadingSupportPage({ searchParams }: ReadingSuppor
     if (session.user.role !== 'ADMIN') {
         return (
             <OpsAccessState
-                eyebrow="Support Command"
+                eyebrow="리딩 확인"
                 title="관리자 전용 페이지입니다"
-                description="현재 계정은 Reading Support 대시보드 접근 권한이 없습니다. ADMIN 권한 계정으로 로그인해야 이 페이지를 볼 수 있습니다."
+                description="현재 계정으로는 이 페이지를 볼 수 없습니다. 관리자 계정으로 로그인해 주세요."
                 currentRole={session.user.role}
             />
         );
@@ -50,14 +50,14 @@ export default async function ReadingSupportPage({ searchParams }: ReadingSuppor
                     <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                         <div className="max-w-3xl">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[hsl(42_79%_74%)]">
-                                Support Command
+                                리딩 확인
                             </p>
                             <h1 className="mt-4 font-[var(--font-outfit)] text-4xl font-semibold tracking-[-0.05em] text-white">
-                                Reading Support Dashboard
+                                리딩 문제를 찾는 화면
                             </h1>
                             <p className="mt-4 text-sm leading-7 text-white/64">
-                                reading owner proof, premium unlock, access key, follow-up credits를 함께 보는 운영 패널입니다.
-                                검색 모드에서는 reading id, user id, email 일부로 바로 조회할 수 있습니다.
+                                누가 이 리딩의 주인인지, 유료가 제대로 풀렸는지, 추가 질문이 가능한지를 같이 봅니다.
+                                리딩 ID, 유저 ID, 이메일 일부로 바로 찾을 수 있습니다.
                             </p>
                         </div>
                     </div>

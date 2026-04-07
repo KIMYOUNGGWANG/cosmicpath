@@ -506,7 +506,8 @@ export async function POST(req: NextRequest) {
                                 await sendResultEmail({
                                     email: customerEmail,
                                     resultId: readingId,
-                                    title: savedMeta.userContext || '통합 분석 리포트',
+                                    language: savedMeta.language === 'en' ? 'en' : 'ko',
+                                    title: savedMeta.userContext || (savedMeta.language === 'en' ? 'Your reading' : '통합 분석 리포트'),
                                     birthInfo: savedMeta.birthInfo,
                                     sajuSummary: savedMeta.sajuSummary,
                                     userContext: savedMeta.userContext

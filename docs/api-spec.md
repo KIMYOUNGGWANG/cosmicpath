@@ -79,6 +79,7 @@ interface ErrorResponse {
 > - 영문 약관/정책 요약, 로그인 제공자 우선순위, 공유 surface 재배치는 presentation-layer 변경으로 다루고 API response shape는 유지한다.
 > - 로그인 및 auth error display layer는 `Accept-Language` 기준으로 영문 카피를 우선 보여줄 수 있으며, 영어권에서는 Google을 기본 경로로 먼저 제안한다.
 > - 영어권 acquisition readiness는 `/guides`, `/guides/[slug]`, `/start` onboarding explainer 같은 presentation-layer surface로 제공되며, onward flow는 기존 `/api/reading` 및 `/api/growth/track` 계약을 그대로 사용한다.
+> - 운영 화면의 방문 규모 이해를 위해 `/api/growth/summary`는 기존 totals/series 외에 `visits.today`, `visits.last7Days`, `visits.last30Days`, `visits.dauMauRate`를 함께 제공할 수 있다. 이 값들은 모두 세션 기준 방문 신호이며 로그인 사용자 수와는 다르다.
 
 ### 1. 오늘의 운세 (Daily Fortune) ✅ 구현됨
 
@@ -416,6 +417,12 @@ interface GrowthSummaryResponse {
     resultToFollowupRate: number;
     resultToDailyReturnRate: number;
     resultToPaidConversionRate: number;
+  };
+  visits: {
+    today: number;
+    last7Days: number;
+    last30Days: number;
+    dauMauRate: number;
   };
   series: Array<{
     date: string;

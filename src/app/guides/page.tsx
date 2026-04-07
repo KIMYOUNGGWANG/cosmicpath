@@ -1,10 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import {
+    GrowthEventTracker,
+    GrowthTrackedLink,
+} from '@/components/common/GrowthTracking';
 import { Navigation } from '@/components/landing/Navigation';
 import { Footer } from '@/components/landing/Footer';
 import { StructuredData } from '@/components/seo/StructuredData';
 import { ENGLISH_GUIDES } from '@/lib/english-guides';
+import { getLandingVariant } from '@/lib/language-preference';
 
 export const metadata: Metadata = {
     title: 'English Starter Guides | CosmicPath',
@@ -71,6 +76,7 @@ const flowSteps = [
 ];
 
 export default function EnglishGuidesPage() {
+    const landingVariant = getLandingVariant('en');
     const structuredData = {
         '@context': 'https://schema.org',
         '@type': 'CollectionPage',
@@ -90,6 +96,20 @@ export default function EnglishGuidesPage() {
     return (
         <main className="min-h-screen bg-void text-starlight">
             <StructuredData data={structuredData} />
+            <GrowthEventTracker
+                trackingEvent={{
+                    event: 'guide_hub_view',
+                    source: 'english_guides_hub',
+                    step: 'landing',
+                    language: 'en',
+                    context: 'guide',
+                    metadata: {
+                        landingVariant,
+                        guideSurface: 'hub',
+                        guideCount: ENGLISH_GUIDES.length,
+                    },
+                }}
+            />
             <Navigation language="en" />
             <div className="cosmic-dust" />
 
@@ -112,12 +132,25 @@ export default function EnglishGuidesPage() {
                             </p>
 
                             <div className="mt-8 flex flex-wrap gap-3">
-                                <Link
+                                <GrowthTrackedLink
                                     href="/start?reset=true"
+                                    trackingEvent={{
+                                        event: 'guide_cta_clicked',
+                                        source: 'english_guides_hub',
+                                        step: 'cta',
+                                        language: 'en',
+                                        context: 'guide',
+                                        metadata: {
+                                            landingVariant,
+                                            guideSurface: 'hub',
+                                            ctaLocation: 'hero_primary',
+                                            ctaTarget: 'start_reading',
+                                        },
+                                    }}
                                     className="inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F4D88A] to-[#D4AF37] px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition-transform duration-300 hover:scale-[1.02]"
                                 >
                                     Start the Reading
-                                </Link>
+                                </GrowthTrackedLink>
                                 <Link
                                     href="/daily"
                                     className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white/78 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
@@ -195,8 +228,22 @@ export default function EnglishGuidesPage() {
                     </div>
 
                     <div className="grid gap-6 lg:grid-cols-[1.12fr_0.88fr]">
-                        <Link
+                        <GrowthTrackedLink
                             href={`/guides/${ENGLISH_GUIDES[0].slug}`}
+                            trackingEvent={{
+                                event: 'guide_card_clicked',
+                                source: 'english_guides_hub',
+                                step: 'discovery',
+                                language: 'en',
+                                context: 'guide',
+                                metadata: {
+                                    landingVariant,
+                                    guideSurface: 'hub',
+                                    ctaLocation: 'featured_guide_card',
+                                    guideSlug: ENGLISH_GUIDES[0].slug,
+                                    guideTitle: ENGLISH_GUIDES[0].title,
+                                },
+                            }}
                             className={`group relative overflow-hidden rounded-[34px] border p-7 transition-transform duration-300 hover:-translate-y-1 ${accentMap[ENGLISH_GUIDES[0].accent]}`}
                         >
                             <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.06),transparent_48%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -221,13 +268,27 @@ export default function EnglishGuidesPage() {
                                     ))}
                                 </div>
                             </div>
-                        </Link>
+                        </GrowthTrackedLink>
 
                         <div className="grid gap-6">
                             {ENGLISH_GUIDES.slice(1).map((guide) => (
-                                <Link
+                                <GrowthTrackedLink
                                     key={guide.slug}
                                     href={`/guides/${guide.slug}`}
+                                    trackingEvent={{
+                                        event: 'guide_card_clicked',
+                                        source: 'english_guides_hub',
+                                        step: 'discovery',
+                                        language: 'en',
+                                        context: 'guide',
+                                        metadata: {
+                                            landingVariant,
+                                            guideSurface: 'hub',
+                                            ctaLocation: 'guide_card_grid',
+                                            guideSlug: guide.slug,
+                                            guideTitle: guide.title,
+                                        },
+                                    }}
                                     className={`group relative overflow-hidden rounded-[30px] border p-6 transition-transform duration-300 hover:-translate-y-1 ${accentMap[guide.accent]}`}
                                 >
                                     <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.06),transparent_48%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -247,7 +308,7 @@ export default function EnglishGuidesPage() {
                                             {guide.description}
                                         </p>
                                     </div>
-                                </Link>
+                                </GrowthTrackedLink>
                             ))}
                         </div>
                     </div>
@@ -270,12 +331,25 @@ export default function EnglishGuidesPage() {
                             reading and whether the action conclusion feels sharper than your current mental loop.
                         </p>
                         <div className="mt-8 flex flex-wrap justify-center gap-3">
-                            <Link
+                            <GrowthTrackedLink
                                 href="/start?reset=true"
+                                trackingEvent={{
+                                    event: 'guide_cta_clicked',
+                                    source: 'english_guides_hub',
+                                    step: 'cta',
+                                    language: 'en',
+                                    context: 'guide',
+                                    metadata: {
+                                        landingVariant,
+                                        guideSurface: 'hub',
+                                        ctaLocation: 'closing_primary',
+                                        ctaTarget: 'start_reading',
+                                    },
+                                }}
                                 className="inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F4D88A] to-[#D4AF37] px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition-transform duration-300 hover:scale-[1.02]"
                             >
                                 Open My First Reading
-                            </Link>
+                            </GrowthTrackedLink>
                             <Link
                                 href="/"
                                 className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white/78 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"

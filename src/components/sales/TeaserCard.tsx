@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Lock, Sparkles, AlertTriangle, Heart, Coins, TrendingUp } from 'lucide-react';
+import { Lock, Sparkles, AlertTriangle, Heart, Coins } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TeaserCardProps {
@@ -93,7 +93,7 @@ export function TeaserCard({ title, hook, language, type = 'general', onUnlock, 
                     </p>
                     <p className="text-sm text-gray-300">
                         {isEn
-                            ? "Beneath this question sits a timing gap, a pressure point, and a next move the oracle is already narrowing down."
+                            ? "Behind this question is a clearer reason, a better timing read, and a next step that is already starting to take shape."
                             : "이 질문 뒤에는 타이밍의 어긋남, 지금 눌리는 핵심 포인트, 그리고 먼저 정리해야 할 다음 행동이 숨어 있습니다."}
                     </p>
                     <div className="h-20 w-full bg-white/20 rounded-lg mt-4" />
@@ -107,10 +107,10 @@ export function TeaserCard({ title, hook, language, type = 'general', onUnlock, 
                         className="group flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-acc-gold to-amber-600 text-black font-bold rounded-full shadow-lg shadow-acc-gold/20"
                     >
                         <Lock size={16} />
-                        <span>{isEn ? "Open Decision Insight" : "다음 결정 인사이트 열기"}</span>
+                        <span>{isEn ? "See More" : "더 보기"}</span>
                     </motion.button>
                     <p className="text-xs text-white/40 mt-3 font-light">
-                        {isEn ? "The next layer of this question is waiting inside" : "지금 질문의 다음 층위가 안에서 기다리고 있습니다"}
+                        {isEn ? "The fuller answer to this question is inside" : "이 질문의 더 자세한 답이 안에 있습니다"}
                     </p>
                 </div>
             </div>

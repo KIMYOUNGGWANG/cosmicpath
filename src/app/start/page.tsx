@@ -21,9 +21,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 // 🚀 Dynamic Imports - 초기 번들 크기 최적화
 // 이 컴포넌트들은 사용자가 해당 단계에 도달할 때만 로드됩니다
-const TarotPicker = dynamic(() => import('@/components/reading/tarot-picker').then(mod => mod.TarotPicker), {
-  loading: () => <div className="flex justify-center py-20"><Skeleton className="h-64 w-full max-w-2xl" /></div>
-});
 const PremiumReport = dynamic(() => import('@/components/reading/premium-report').then(mod => mod.PremiumReport), {
   loading: () => <div className="flex justify-center py-20"><Skeleton className="h-96 w-full" /></div>
 });
@@ -32,9 +29,6 @@ const PaymentModal = dynamic(() => import('@/components/payment/PaymentModal').t
 const ReviewModal = dynamic(() => import('@/components/review/ReviewModal').then(mod => mod.ReviewModal));
 const ChatInterface = dynamic(() => import('@/components/oracle-chat/ChatInterface').then(mod => mod.ChatInterface), {
   loading: () => <Skeleton className="h-48 w-full" />
-});
-const RevealContainer = dynamic(() => import('@/components/reading/RevealContainer').then(mod => mod.RevealContainer), {
-  loading: () => <div className="animate-pulse w-full h-96 bg-white/5 rounded-2xl" />
 });
 const ShareCardModal = dynamic(() => import('@/components/share/ShareCardModal').then(mod => mod.ShareCardModal));
 
@@ -90,7 +84,7 @@ function hasPremiumReportContent(report: PremiumReportState | null): report is P
 }
 
 function CosmicPathContent() {
-  const [step, setStep] = useState<'input' | 'mirror' | 'tarot' | 'reveal' | 'result'>('input');
+  const [step, setStep] = useState<'input' | 'result'>('input');
   const [readingData, setReadingData] = useState<ReadingData | null>(null);
   const [selectedCards, setSelectedCards] = useState<TarotSelection[]>([]);
 
@@ -600,19 +594,25 @@ function CosmicPathContent() {
 
     checkResume();
   }, []);
-
-
-  // Step 1: Birthdate Submission -> Go to Tarot
+  // Step 1: Input Submission -> Go Directly to Result
   const handleInputSubmit = (data: ReadingData) => {
     clearSessionAndBackup(); // Clear previous session data
-    saveToSessionAndBackup('is_session_active', 'false'); // Explicitly false until results are ready
+    saveToSessionAndBackup('is_session_active', 'true');
 
     hasTrackedFreeResult.current = false;
     hasTrackedReportComplete.current = false;
 
     setReadingData(data);
+    setSelectedCards([]);
+    setReportData(null);
+    setStreamContent('');
+    setMetadata(undefined);
+    setIsPremium(false);
+    setShareUrl(undefined);
+    setIsDecisionAccepted(false);
     setLanguage(data.language);
     localStorage.setItem(USER_LANGUAGE_STORAGE_KEY, data.language);
+    saveToSessionAndBackup('pending_reading_data', JSON.stringify({ ...data, tarotCards: [] }));
     void trackClientGrowthEvent({
       event: 'analysis_start',
       source: 'reading_input',
@@ -622,43 +622,10 @@ function CosmicPathContent() {
       invitationMode: isInvitationMode,
       price: dynamicPrice || undefined,
     });
-    setStep('tarot');
+    setIsLoading(true);
+    setStep('result');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Step 2: Tarot Completion -> Start Reveal Ritual
-  const handleTarotComplete = async (cards: { name: string; isReversed: boolean }[]) => {
-    setSelectedCards(cards);
-    saveToSessionAndBackup('is_session_active', 'true');
-    if (readingData) {
-      saveToSessionAndBackup('pending_reading_data', JSON.stringify({ ...readingData, tarotCards: cards }));
-    }
-
-    // Go to Reveal Step instead of direct Result
-    setStep('reveal');
-    void trackClientGrowthEvent({
-      event: 'tarot_complete',
-      source: 'tarot_picker',
-      step: 'tarot',
-      language,
-      context: readingData?.context,
-      invitationMode: isInvitationMode,
-      price: dynamicPrice || undefined,
-      metadata: {
-        tarotCount: cards.length,
-      },
-    });
-
-    // Start Data Fetching in Background (So it's ready when they unseal)
-    // We don't await here, we let it run. The Result step handles 'isLoading' check.
-    startReading(cards);
-  };
-
-  const handleRevealComplete = () => {
-    // Transition to full result dashboard after the visual payoff
-    setTimeout(() => {
-      setStep('result');
-    }, 1500); // Let them admire the revealed card for a moment
+    void startReading([], false, data);
   };
 
   const handleUpgrade = async () => {
@@ -703,7 +670,7 @@ function CosmicPathContent() {
       const labelsKo = [
         "",
         "오라클 가이드 정렬 중... (1/7)",
-        "점성·타로 신호를 교차 확인 중... (2/7)",
+        "보조 신호를 교차 확인 중... (2/7)",
         "사주 원국과 기질 축을 계산 중... (3/7)",
         "운의 흐름과 변곡점을 정렬 중... (4/7)",
         "삶의 영역별 신호를 엮는 중... (5/7)",
@@ -714,7 +681,7 @@ function CosmicPathContent() {
       const labelsEn = [
         "",
         "Aligning your oracle guide... (1/7)",
-        "Cross-checking star and tarot signals... (2/7)",
+        "Cross-checking the supporting signals... (2/7)",
         "Calculating your saju foundation... (3/7)",
         "Mapping the flow and turning points... (4/7)",
         "Weaving signals across life areas... (5/7)",
@@ -769,7 +736,23 @@ function CosmicPathContent() {
           accumulatedMetadata = { ...accumulatedMetadata, ...result.metadata };
           setMetadata({ ...accumulatedMetadata });
           saveToSessionAndBackup('pending_metadata', JSON.stringify(accumulatedMetadata));
+
+          if (!cards.length && Array.isArray(result.metadata.tarotCards)) {
+            const autoCards = (result.metadata.tarotCards as TarotSelection[]).map((card: TarotSelection) => ({
+              name: card.name,
+              isReversed: card.isReversed,
+            }));
+            setSelectedCards(autoCards);
+            saveToSessionAndBackup('pending_reading_data', JSON.stringify({ ...dataToUse, tarotCards: autoCards }));
+          }
         }
+
+        const phaseTarotCardsForSave =
+          cards.length > 0
+            ? cards
+            : Array.isArray(accumulatedMetadata.tarotCards)
+              ? accumulatedMetadata.tarotCards
+              : [];
 
         // [New] Intermediate Save for Premium Users after Phase 1
         // This ensures a ReadingResult record exists in DB for payment verification in Phase 2+
@@ -786,7 +769,7 @@ function CosmicPathContent() {
                   ...accumulatedMetadata,
                   isPremium: false, // Will be set to true by webhook/sync
                   readingData: dataToUse,
-                  tarotCards: cards,
+                  tarotCards: phaseTarotCardsForSave,
                   language,
                   paymentSource: isPremiumOverride ? 'override' : 'pending'
                 }
@@ -816,22 +799,47 @@ function CosmicPathContent() {
         setIsPremium(true);
         saveToSessionAndBackup('is_premium_user', 'true');
       }
+      const finalTarotCardsForSave =
+        cards.length > 0
+          ? cards
+          : Array.isArray(accumulatedMetadata.tarotCards)
+            ? accumulatedMetadata.tarotCards
+            : [];
       (async () => {
         try {
           const existingId = sessionStorage.getItem('pending_reading_id');
 
           // Prepare Email Metadata
           const userEmail = localStorage.getItem('user_email');
-          const birthInfoStr = `${dataToUse.birthDate} ${dataToUse.birthTime}생`;
+          const hasBirthTime = !dataToUse.unknownTime && Boolean(dataToUse.birthTime);
+          const birthInfoStr = language === 'en'
+            ? hasBirthTime
+              ? `Born on ${dataToUse.birthDate} at ${dataToUse.birthTime}`
+              : `Born on ${dataToUse.birthDate} (time unknown)`
+            : hasBirthTime
+              ? `${dataToUse.birthDate} ${dataToUse.birthTime}생`
+              : `${dataToUse.birthDate}생 (시간 모름)`;
           const sajuStr = accumulatedMetadata.saju?.fullSaju || '';
-          const contextMap: Record<string, string> = {
-            career: '커리어/직업',
-            love: '연애/결혼',
-            money: '금전/재물',
-            health: '건강/웰빙',
-            general: '종합 운세'
+          const contextMap: Record<'ko' | 'en', Record<string, string>> = {
+            ko: {
+              career: '커리어 / 직업',
+              love: '연애 / 관계',
+              money: '금전 / 재물',
+              health: '건강 / 웰빙',
+              general: '종합 리딩',
+            },
+            en: {
+              career: 'Career / Job',
+              love: 'Love / Relationship',
+              money: 'Money / Wealth',
+              health: 'Health / Wellness',
+              general: 'General reading',
+            },
           };
-          const contextStr = dataToUse.question || contextMap[dataToUse.context] || '운세 리딩';
+          const contextStr =
+            dataToUse.question ||
+            contextMap[language][dataToUse.context] ||
+            (language === 'en' ? 'Your reading' : '운세 리딩');
 
           const response = await fetch('/api/reading/save', {
             method: 'POST',
@@ -845,7 +853,7 @@ function CosmicPathContent() {
                 ...accumulatedMetadata,
                 isPremium: isComplete,
                 readingData: dataToUse,
-                tarotCards: cards,
+                tarotCards: finalTarotCardsForSave,
                 language,
                 // Email Trigger Data
                 email: userEmail,
@@ -1020,10 +1028,10 @@ function CosmicPathContent() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.8 }}
-              className="w-full max-w-4xl mx-auto py-20 px-6"
+              className="mx-auto w-full max-w-4xl px-4 py-12 md:px-6 md:py-20"
             >
-              <div className="mb-16 text-center">
-                <div className="mx-auto max-w-3xl rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.1),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] px-6 py-8 shadow-[0_24px_70px_rgba(2,6,23,0.24)] backdrop-blur-xl md:px-10">
+              <div className="mb-8 text-center md:mb-16">
+                <div className="mx-auto max-w-3xl rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.1),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] px-5 py-6 shadow-[0_24px_70px_rgba(2,6,23,0.24)] backdrop-blur-xl md:rounded-[32px] md:px-10 md:py-8">
                   <div className="flex flex-wrap items-center justify-center gap-2">
                     <span className="rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-acc-gold">
                       {language === 'en' ? 'Decision Timing Oracle' : '결정과 타이밍 오라클'}
@@ -1032,15 +1040,15 @@ function CosmicPathContent() {
                       {language === 'en' ? 'Free First Reading' : '첫 리딩 무료'}
                     </span>
                   </div>
-                  <h1 className="mb-4 mt-5 font-cinzel text-4xl text-starlight md:text-5xl">
+                  <h1 className="mb-3 mt-4 font-cinzel text-[2rem] text-starlight md:mb-4 md:mt-5 md:text-5xl">
                     {language === 'en' ? 'Map Your Decision Orbit' : '결정의 좌표 입력'}
                   </h1>
-                  <p className="mx-auto max-w-2xl text-sm leading-7 text-white/60">
+                  <p className="mx-auto max-w-2xl text-sm leading-6 text-white/60 md:leading-7">
                     {language === 'en'
-                      ? 'Choose the domain first, write one real question, and then open the reading with three core fields. Precision controls stay folded until you want a tighter route.'
-                      : '먼저 고민 영역을 고르고, 진짜 질문 하나를 적은 뒤, 이름·생일·성별 3개만으로 첫 리딩을 엽니다. 더 세밀한 설정은 필요할 때만 펼치면 됩니다.'}
+                      ? 'The free result now opens right after one question and your core saju inputs. Extra steps stay out of the way.'
+                      : '이제 무료 결과는 질문 하나와 핵심 사주 입력만 받으면 바로 열립니다. 품질과 상관없는 추가 단계는 앞에서 빼두었습니다.'}
                   </p>
-                  <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-[10px] uppercase tracking-[0.22em] text-white/45">
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[10px] uppercase tracking-[0.22em] text-white/45 md:mt-5">
                     <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
                       {language === 'en' ? 'Pick Domain' : '영역 선택'}
                     </span>
@@ -1048,10 +1056,10 @@ function CosmicPathContent() {
                       {language === 'en' ? 'Write Question' : '질문 입력'}
                     </span>
                     <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                      {language === 'en' ? '3 Core Fields' : '기본 3필드'}
+                      {language === 'en' ? 'Core Saju Inputs' : '핵심 사주 입력'}
                     </span>
                     <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                      {language === 'en' ? 'Precision Optional' : '정밀 설정 선택'}
+                      {language === 'en' ? 'See Free Result' : '무료 결과 보기'}
                     </span>
                   </div>
                 </div>
@@ -1074,78 +1082,6 @@ function CosmicPathContent() {
             </motion.div>
           )}
 
-
-          {/* Step 3: Tarot Selection */}
-          {step === 'tarot' && (
-            <motion.div
-              key="tarot"
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -40 }}
-              transition={{ duration: 0.7, ease: "easeOut" }}
-              className="w-full max-w-5xl mx-auto py-20"
-            >
-              <div className="mb-12 text-center">
-                <div className="mx-auto max-w-3xl rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(139,92,246,0.08),rgba(255,255,255,0.02))] px-6 py-8 backdrop-blur-xl">
-                <h2 className="mb-4 text-3xl font-bold tracking-wide text-glow-purple md:text-4xl font-cinzel">
-                  {language === 'en' ? 'Select Your Sacred Major Arcana' : '운명의 대아르카나를 선택하세요'}
-                </h2>
-                <div className="h-0.5 w-24 bg-gradient-to-r from-transparent via-tarot-purple/50 to-transparent mx-auto mb-6" />
-                <p className="text-lg font-light italic tracking-wide text-white/70">
-                  {language === 'en'
-                    ? "Close your eyes, breathe, and let your spirit guide your hand."
-                    : "숨을 가다듬고, 당신의 영혼이 손을 이끌게 하세요."
-                  }
-                </p>
-                </div>
-              </div>
-
-              <div className="relative px-4">
-                <TarotPicker
-                  onSelect={handleTarotComplete}
-                  maxCards={3}
-                  language={language}
-                />
-              </div>
-            </motion.div>
-          )}
-
-          {/* New Step: Visual Reveal (The Seal) */}
-          {step === 'reveal' && (
-            <motion.div
-              key="reveal"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, scale: 1.1 }}
-              className="w-full min-h-[60vh] flex flex-col items-center justify-center py-20"
-            >
-              <div className="text-center mb-12">
-                <h2 className="text-2xl md:text-3xl font-cinzel text-starlight mb-4">
-                  {language === 'en' ? 'The Oracle Gate Is Open' : '오라클의 문이 열렸습니다'}
-                </h2>
-                <p className="text-acc-gold/80 text-sm tracking-widest uppercase">
-                  {language === 'en' ? 'Your clearest next move is sealed within' : '지금 가장 선명한 다음 행동이 안에 봉인되어 있습니다'}
-                </p>
-              </div>
-
-              <RevealContainer onReveal={handleRevealComplete}>
-                {/* Back of the card (Visual Result Summary) */}
-                <div className="flex h-full w-full items-center justify-center bg-[#0A0A0C] p-4">
-                  <OracleCalibrationPanel
-                    compact
-                    language={language}
-                    loadingLabel={language === 'en' ? 'Unsealing your oracle path...' : '오라클 경로의 봉인을 푸는 중...'}
-                    loadingPhase={loadingPhase.phase}
-                    characterId={readingData?.characterId}
-                    precisionMetadata={metadata?.precisionMetadata ?? reportData?.precisionMetadata}
-                    oracleCouncil={metadata?.oracleCouncil ?? reportData?.oracleCouncil}
-                    hasPreciseBirthLocation={hasPreciseBirthLocation}
-                  />
-                </div>
-              </RevealContainer>
-            </motion.div>
-          )}
-
           {/* Step 4: Result (Deep Dive) */}
           {step === 'result' && (
           <motion.div
@@ -1155,7 +1091,7 @@ function CosmicPathContent() {
               transition={{ duration: 1.2 }}
             >
               {isLoading ? (
-                <div className="flex min-h-[500px] items-center justify-center px-4 py-16">
+                <div className="flex min-h-[420px] items-center justify-center px-4 py-12 md:min-h-[500px] md:py-16">
                   <OracleCalibrationPanel
                     language={language}
                     loadingLabel={loadingPhase.label || (language === 'en' ? 'Weaving your oracle path...' : '당신의 오라클 경로를 엮는 중...')}
@@ -1167,7 +1103,7 @@ function CosmicPathContent() {
                   />
                 </div>
               ) : reportData && reportData.summary ? (
-                <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 py-12 pt-32">
+                <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 py-10 pt-24 md:py-12 md:pt-32">
                   <DecisionGuard
                     isOpen={reportData.summary.trust_score <= 2 && !isDecisionAccepted}
                     onAccept={() => {
