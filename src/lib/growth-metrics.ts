@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { getCanonicalGrowthEvent, parseGrowthMetadata } from '@/lib/growth-analytics';
+import { getRuntimeEnvironmentFromRecord, matchesCurrentRuntimeEnvironment } from '@/lib/runtime-environment';
 
 interface GrowthSeriesPoint {
     date: string;
@@ -146,6 +147,12 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
         const dayKey = toDayKey(event.createdAt);
         const series = seriesMap.get(dayKey);
         const metadata = parseGrowthMetadata(event.metadata);
+        const runtimeEnvironment = getRuntimeEnvironmentFromRecord(metadata);
+
+        if (!matchesCurrentRuntimeEnvironment(runtimeEnvironment)) {
+            continue;
+        }
+
         const canonicalEvent =
             typeof metadata.canonicalEvent === 'string'
                 ? metadata.canonicalEvent

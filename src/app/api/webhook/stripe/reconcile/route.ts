@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/dev-logger';
 import { sendOpsAlert } from '@/lib/ops-alert';
+import { stampRuntimeMetadata } from '@/lib/runtime-environment';
 
 interface ReconcileResult {
     ok: boolean;
@@ -120,12 +121,12 @@ export async function POST(req: NextRequest) {
                         await prisma.readingResult.update({
                             where: { id: reading.id },
                             data: {
-                                metadata: JSON.stringify({
+                                metadata: JSON.stringify(stampRuntimeMetadata({
                                     ...readingMeta,
                                     isPremium: true,
                                     paymentReconciledAt: new Date().toISOString(),
                                     paymentSource: 'stripe_reconcile',
-                                }),
+                                })),
                             },
                         });
                         summary.updated += 1;

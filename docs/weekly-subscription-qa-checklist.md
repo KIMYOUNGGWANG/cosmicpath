@@ -33,7 +33,7 @@
 ## 3. Live Mode Release Checks
 
 - [ ] Confirm `.env` includes `NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY`
-- [ ] Confirm production server uses `STRIPE_SECRET_KEY=sk_live_...`
+- [ ] Confirm production server has a valid live Stripe secret key configured
 - [ ] Open the paywall in production and select `Weekly`
 - [ ] Confirm Stripe opens a `live` checkout page
 - [ ] Confirm the amount shows `$3.99 / week`

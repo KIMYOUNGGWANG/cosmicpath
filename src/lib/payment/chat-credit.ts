@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { prisma } from '@/lib/prisma';
+import { stampRuntimeMetadata } from '@/lib/runtime-environment';
 
 type ApplySource = 'webhook' | 'sync_verify';
 
@@ -78,7 +79,7 @@ export async function applyChatCreditFromSession(
       select: { credits: true },
     });
 
-    const mergedMeta = {
+    const mergedMeta = stampRuntimeMetadata({
       ...existingMeta,
       ...metadata,
       type: 'chat_credit',
@@ -86,7 +87,7 @@ export async function applyChatCreditFromSession(
       credits: String(creditsToAdd),
       chatCreditAppliedAt: new Date().toISOString(),
       chatCreditAppliedBy: source,
-    };
+    });
 
     await tx.payment.upsert({
       where: { orderId: session.id },

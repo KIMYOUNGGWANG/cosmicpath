@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createCheckoutSession, verifyCheckoutSession } from '@/lib/payment/stripe';
 import { READING_PRODUCT } from '@/lib/payment/payment-config';
 import { validatePromotionCodeForCheckout } from '@/lib/promo-codes';
+import { stampRuntimeMetadata } from '@/lib/runtime-environment';
 
 /**
  * POST /api/payment - 결제 세션 생성 (Stripe)
@@ -111,12 +112,12 @@ export async function GET(request: NextRequest) {
                         await prisma.readingResult.update({
                             where: { id: result.readingId },
                             data: {
-                                metadata: JSON.stringify({
+                                metadata: JSON.stringify(stampRuntimeMetadata({
                                     ...meta,
                                     isPremium: true,
                                     paymentVerifiedAt: new Date().toISOString(),
                                     paymentSource: 'sync_verification'
-                                })
+                                }))
                             }
                         });
                         console.log(`[Sync] Updated reading ${result.readingId} status to premium via sync.`);

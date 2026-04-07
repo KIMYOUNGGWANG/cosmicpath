@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/dev-logger';
 import { getCanonicalGrowthEvent, mirrorGrowthEvent } from '@/lib/growth-analytics';
+import { stampRuntimeMetadata } from '@/lib/runtime-environment';
 
 export interface GrowthEventInput {
   event: string;
@@ -13,11 +14,11 @@ export interface GrowthEventInput {
 export async function trackGrowthEvent(input: GrowthEventInput): Promise<void> {
   try {
     const canonicalEvent = getCanonicalGrowthEvent(input.event);
-    const metadata = {
+    const metadata = stampRuntimeMetadata({
       canonicalEvent,
       originalEvent: input.event,
       ...input.metadata,
-    };
+    });
 
     await prisma.growthEvent.create({
       data: {

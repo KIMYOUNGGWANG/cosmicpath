@@ -3,6 +3,7 @@ import { getGrowthSummary } from '@/lib/growth-metrics';
 import { getCanonicalGrowthEvent, parseGrowthMetadata } from '@/lib/growth-analytics';
 import { extractReadingAccessKey, normalizeReadingMetadata } from '@/lib/reading-access';
 import { getOracleIntentLabel } from '@/lib/ai/oracle-personas';
+import { getRuntimeEnvironmentFromRecord, matchesCurrentRuntimeEnvironment } from '@/lib/runtime-environment';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -223,6 +224,10 @@ function getNumber(record: JsonRecord | null, key: string): number | null {
     }
 
     return null;
+}
+
+function isRecordVisibleInCurrentRuntime(record: JsonRecord | null | undefined): boolean {
+    return matchesCurrentRuntimeEnvironment(getRuntimeEnvironmentFromRecord(record));
 }
 
 function toDayKey(date: Date): string {
@@ -463,8 +468,9 @@ export async function getPaymentOpsSummary(days: number): Promise<PaymentOpsSumm
     let chatCreditPayments = 0;
     let promoPayments = 0;
     let unresolvedPremiumReadings = 0;
+    const visiblePayments = payments.filter((payment) => isRecordVisibleInCurrentRuntime(parseJsonRecord(payment.metadata)));
 
-    for (const payment of payments) {
+    for (const payment of visiblePayments) {
         const metadata = parseJsonRecord(payment.metadata);
         const productType = resolvePaymentType(metadata, payment.readingId);
         const dayKey = toDayKey(payment.createdAt);
@@ -540,7 +546,7 @@ export async function getPaymentOpsSummary(days: number): Promise<PaymentOpsSumm
         series: Array.from(seriesMap.values()),
         statusMix: sortCounts(statusCounter),
         productMix: sortCounts(productCounter),
-        recentPayments: payments.slice(0, 12).map((payment) => {
+        recentPayments: visiblePayments.slice(0, 12).map((payment) => {
             const metadata = parseJsonRecord(payment.metadata);
             return {
                 orderId: payment.orderId,
@@ -615,15 +621,17 @@ export async function getReadingSupportSummary(days: number, query?: string | nu
         })
         : [];
 
-    const scopedReadingIds = Array.from(new Set([
-        ...readings.map((reading) => reading.id),
-        ...searchResultsRaw.map((reading) => reading.id),
+    const visibleReadings = readings.filter((reading) => isRecordVisibleInCurrentRuntime(normalizeReadingMetadata(reading.metadata)));
+    const visibleSearchResults = searchResultsRaw.filter((reading) => isRecordVisibleInCurrentRuntime(normalizeReadingMetadata(reading.metadata)));
+    const visibleScopedReadingIds = Array.from(new Set([
+        ...visibleReadings.map((reading) => reading.id),
+        ...visibleSearchResults.map((reading) => reading.id),
     ]));
 
-    const paymentRows = scopedReadingIds.length > 0
+    const paymentRows = visibleScopedReadingIds.length > 0
         ? await prisma.payment.findMany({
             where: {
-                readingId: { in: scopedReadingIds },
+                readingId: { in: visibleScopedReadingIds },
                 status: 'DONE',
             },
             select: {
@@ -649,10 +657,10 @@ export async function getReadingSupportSummary(days: number, query?: string | nu
     let missingAccessKeys = 0;
     let premiumWithoutPaymentRecord = 0;
 
-    const recentReadings = readings.slice(0, 12).map((reading) => buildReadingSnapshot(reading, paidReadingIds.has(reading.id)));
-    const searchResults = searchResultsRaw.map((reading) => buildReadingSnapshot(reading, paidReadingIds.has(reading.id)));
+    const recentReadings = visibleReadings.slice(0, 12).map((reading) => buildReadingSnapshot(reading, paidReadingIds.has(reading.id)));
+    const searchResults = visibleSearchResults.map((reading) => buildReadingSnapshot(reading, paidReadingIds.has(reading.id)));
 
-    for (const reading of readings) {
+    for (const reading of visibleReadings) {
         const snapshot = buildReadingSnapshot(reading, paidReadingIds.has(reading.id));
         const dayKey = toDayKey(reading.createdAt);
         const point = seriesMap.get(dayKey);
@@ -701,7 +709,7 @@ export async function getReadingSupportSummary(days: number, query?: string | nu
     return {
         dateRange,
         totals: {
-            readings: readings.length,
+            readings: visibleReadings.length,
             anonymousReadings,
             premiumReadings,
             chatReadyReadings,
@@ -735,6 +743,7 @@ export async function getTrustOpsSummary(days: number): Promise<TrustOpsSummary>
                 status: true,
                 title: true,
                 message: true,
+                details: true,
                 lastSeenAt: true,
                 occurrenceCount: true,
             },
@@ -755,10 +764,14 @@ export async function getTrustOpsSummary(days: number): Promise<TrustOpsSummary>
                 scheduledFor: true,
                 attempts: true,
                 lastError: true,
+                metadata: true,
             },
             orderBy: { scheduledFor: 'desc' },
         }),
     ]);
+
+    const visibleAlerts = alerts.filter((alert) => isRecordVisibleInCurrentRuntime(parseJsonRecord(alert.details)));
+    const visibleJobs = jobs.filter((job) => isRecordVisibleInCurrentRuntime(parseJsonRecord(job.metadata)));
 
     const seriesMap = createDaySeriesMap(rangeStart, safeDays, (date) => ({
         date,
@@ -771,10 +784,10 @@ export async function getTrustOpsSummary(days: number): Promise<TrustOpsSummary>
     const sourceCounter = new Map<string, number>();
     const stageCounter = new Map<string, number>();
 
-    const openAlerts = alerts.filter((alert) => alert.status === 'OPEN');
+    const openAlerts = visibleAlerts.filter((alert) => alert.status === 'OPEN');
     const criticalOpenAlerts = openAlerts.filter((alert) => alert.severity === 'critical').length;
 
-    for (const alert of alerts) {
+    for (const alert of visibleAlerts) {
         sourceCounter.set(alert.source, (sourceCounter.get(alert.source) ?? 0) + 1);
 
         if (alert.lastSeenAt < rangeStart) {
@@ -794,7 +807,7 @@ export async function getTrustOpsSummary(days: number): Promise<TrustOpsSummary>
     let sentJobs = 0;
     let duePendingJobs = 0;
 
-    for (const job of jobs) {
+    for (const job of visibleJobs) {
         stageCounter.set(job.stage, (stageCounter.get(job.stage) ?? 0) + 1);
 
         if (job.status === 'FAILED') {
@@ -852,7 +865,7 @@ export async function getTrustOpsSummary(days: number): Promise<TrustOpsSummary>
             lastSeenAt: alert.lastSeenAt.toISOString(),
             occurrenceCount: alert.occurrenceCount,
         })),
-        failedJobs: jobs
+        failedJobs: visibleJobs
             .filter((job) => job.status === 'FAILED')
             .slice(0, 10)
             .map((job) => ({
@@ -895,9 +908,12 @@ export async function getAdvisorOpsSummary(days: number): Promise<AdvisorOpsSumm
         }),
     ]);
 
+    const visibleReadings = readings.filter((reading) => isRecordVisibleInCurrentRuntime(normalizeReadingMetadata(reading.metadata)));
+    const visibleEvents = events.filter((event) => isRecordVisibleInCurrentRuntime(parseGrowthMetadata(event.metadata)));
+
     const eventMap = new Map<string, { followup: boolean; dailyReturn: boolean; paid: boolean }>();
 
-    for (const event of events) {
+    for (const event of visibleEvents) {
         if (!event.readingId) continue;
 
         const metadata = parseGrowthMetadata(event.metadata);
@@ -935,7 +951,7 @@ export async function getAdvisorOpsSummary(days: number): Promise<AdvisorOpsSumm
     let dailyReturnReadings = 0;
     let paidReadings = 0;
 
-    for (const reading of readings) {
+    for (const reading of visibleReadings) {
         const metadata = normalizeReadingMetadata(reading.metadata);
         const advisorProfile = asRecord(metadata.advisorProfile);
         const intent = getString(metadata, 'questionIntent') ?? 'general';
@@ -997,9 +1013,9 @@ export async function getAdvisorOpsSummary(days: number): Promise<AdvisorOpsSumm
     return {
         dateRange,
         totals: {
-            readings: readings.length,
+            readings: visibleReadings.length,
             manualSelections,
-            autoSelections: Math.max(readings.length - manualSelections, 0),
+            autoSelections: Math.max(visibleReadings.length - manualSelections, 0),
             followupReadings,
             dailyReturnReadings,
             paidReadings,

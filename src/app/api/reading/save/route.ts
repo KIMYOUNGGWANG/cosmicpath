@@ -11,6 +11,7 @@ import {
     normalizeReadingMetadata,
     stripPrivateReadingMetadata,
 } from '@/lib/reading-access';
+import { stampRuntimeMetadata } from '@/lib/runtime-environment';
 
 function normalizeEmail(email: string): string {
     return email.trim().toLowerCase();
@@ -117,9 +118,11 @@ export async function POST(request: Request) {
                 metadata === undefined
                     ? normalizeReadingMetadata(reading.metadata)
                     : normalizeReadingMetadata(metadata);
-            const nextMetadata = storedAccessKey
-                ? attachReadingAccessKey(nextMetadataSource, storedAccessKey)
-                : nextMetadataSource;
+            const nextMetadata = stampRuntimeMetadata(
+                storedAccessKey
+                    ? attachReadingAccessKey(nextMetadataSource, storedAccessKey)
+                    : nextMetadataSource
+            );
 
             result = await prisma.readingResult.update({
                 where: { id },
@@ -132,9 +135,11 @@ export async function POST(request: Request) {
         } else {
             const nextMetadataSource = normalizeReadingMetadata(metadata);
             responseAccessKey = userId ? null : createReadingAccessKey();
-            const nextMetadata = responseAccessKey
-                ? attachReadingAccessKey(nextMetadataSource, responseAccessKey)
-                : nextMetadataSource;
+            const nextMetadata = stampRuntimeMetadata(
+                responseAccessKey
+                    ? attachReadingAccessKey(nextMetadataSource, responseAccessKey)
+                    : nextMetadataSource
+            );
 
             result = await prisma.readingResult.create({
                 data: {
@@ -191,20 +196,22 @@ export async function POST(request: Request) {
 
                     const accessKeyForUpdate =
                         responseAccessKey ?? extractReadingAccessKey(result.metadata);
-                    const emailSentMetadata = accessKeyForUpdate
-                        ? attachReadingAccessKey(
-                            {
+                    const emailSentMetadata = stampRuntimeMetadata(
+                        accessKeyForUpdate
+                            ? attachReadingAccessKey(
+                                {
+                                    ...savedMeta,
+                                    emailSent: true,
+                                    emailSentVia: 'promo_redemption',
+                                },
+                                accessKeyForUpdate
+                            )
+                            : {
                                 ...savedMeta,
                                 emailSent: true,
                                 emailSentVia: 'promo_redemption',
-                            },
-                            accessKeyForUpdate
-                        )
-                        : {
-                            ...savedMeta,
-                            emailSent: true,
-                            emailSentVia: 'promo_redemption',
-                        };
+                            }
+                    );
 
                     await prisma.readingResult.update({
                         where: { id: result.id },

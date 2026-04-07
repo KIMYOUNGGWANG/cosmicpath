@@ -1,6 +1,7 @@
 import { devLog } from '@/lib/dev-logger';
 import { prisma } from '@/lib/prisma';
 import { sendOpsAlertEmail } from '@/lib/email/sender';
+import { stampRuntimeMetadata } from '@/lib/runtime-environment';
 
 export type OpsAlertSeverity = 'info' | 'warning' | 'critical';
 
@@ -18,7 +19,7 @@ const lastAlertByKey = new Map<string, number>();
 function stringifyDetails(details?: Record<string, unknown>): string {
   if (!details) return '';
   try {
-    const serialized = JSON.stringify(details);
+    const serialized = JSON.stringify(stampRuntimeMetadata(details));
     return serialized.length > 1200 ? `${serialized.slice(0, 1200)}...` : serialized;
   } catch {
     return '[unserializable details]';
@@ -40,6 +41,7 @@ export async function sendOpsAlert(input: OpsAlertInput): Promise<void> {
   const webhookUrl = process.env.OPS_ALERT_WEBHOOK_URL?.trim();
   const cooldownMs = Number(process.env.OPS_ALERT_COOLDOWN_MS ?? '300000');
   const dedupeKey = input.dedupeKey ?? `${input.source}:${input.title}:${severity}`;
+  const details = input.details ? stampRuntimeMetadata(input.details) : undefined;
 
   let isFirstSeen = false;
   try {
@@ -62,7 +64,7 @@ export async function sendOpsAlert(input: OpsAlertInput): Promise<void> {
           severity,
           title: input.title,
           message: input.message,
-          details: input.details ? JSON.stringify(input.details) : null,
+          details: details ? JSON.stringify(details) : null,
           status: 'OPEN',
         },
       });
@@ -75,7 +77,7 @@ export async function sendOpsAlert(input: OpsAlertInput): Promise<void> {
           severity,
           title: input.title,
           message: input.message,
-          details: input.details ? JSON.stringify(input.details) : null,
+          details: details ? JSON.stringify(details) : null,
           status: 'OPEN',
         },
       });
@@ -88,7 +90,7 @@ export async function sendOpsAlert(input: OpsAlertInput): Promise<void> {
     return;
   }
 
-  const detailsText = stringifyDetails(input.details);
+  const detailsText = stringifyDetails(details);
   const textLines = [
     `[${severity.toUpperCase()}] ${input.source}`,
     input.title,
@@ -111,7 +113,7 @@ export async function sendOpsAlert(input: OpsAlertInput): Promise<void> {
         severity,
         title: input.title,
         message: input.message,
-        details: input.details,
+        details,
       });
     } catch (error) {
       devLog.error('[OpsAlert] Failed to send ops alert email:', error);
@@ -133,7 +135,7 @@ export async function sendOpsAlert(input: OpsAlertInput): Promise<void> {
         severity,
         title: input.title,
         message: input.message,
-        details: input.details,
+        details,
         timestamp: new Date().toISOString(),
       }),
       signal: controller.signal,

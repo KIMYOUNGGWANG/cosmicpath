@@ -14,6 +14,7 @@ import {
   calculateOracleSajuProfile,
   type Gender,
 } from '@/lib/saju/saju-engine';
+import { stampRuntimeMetadata } from '@/lib/runtime-environment';
 
 type JsonRecord = Record<string, unknown>;
 type FollowUpLanguage = 'ko' | 'en';
@@ -157,7 +158,7 @@ export function mergeFollowUpMetadata(
   metadata: JsonRecord | null,
   context: OracleFollowUpContext
 ): JsonRecord {
-  return {
+  return stampRuntimeMetadata({
     ...(metadata ?? {}),
     characterId: context.characterId,
     questionIntent: context.questionIntent,
@@ -177,5 +178,5 @@ export function mergeFollowUpMetadata(
       selectionMode: context.selectionMode,
       updatedAt: new Date().toISOString(),
     },
-  };
+  });
 }

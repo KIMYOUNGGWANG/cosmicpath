@@ -6,6 +6,7 @@ import {
   extractReadingAccessKey,
   normalizeReadingMetadata,
 } from '@/lib/reading-access';
+import { stampRuntimeMetadata } from '@/lib/runtime-environment';
 
 const MAX_CREATE_ATTEMPTS = 6;
 
@@ -18,7 +19,7 @@ function normalizeEmail(email: string): string {
 }
 
 function stringifyMetadata(metadata: Record<string, unknown>): string {
-  return JSON.stringify(metadata);
+  return JSON.stringify(stampRuntimeMetadata(metadata));
 }
 
 function isUniqueConstraintError(error: unknown): boolean {

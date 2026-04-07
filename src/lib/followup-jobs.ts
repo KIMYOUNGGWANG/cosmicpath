@@ -3,6 +3,7 @@ import { devLog } from '@/lib/dev-logger';
 import { sendFollowUpNudgeEmail } from '@/lib/email/sender';
 import { trackGrowthEvent } from '@/lib/growth-events';
 import { createSingleUsePromotionCode } from '@/lib/promo-codes';
+import { stampRuntimeMetadata } from '@/lib/runtime-environment';
 
 export type FollowUpStage = 'D2_DISCOUNT' | 'D5_COSMIC_WINDOW' | 'H48' | 'D7';
 
@@ -25,6 +26,7 @@ interface FollowUpJobMetadata {
   cosmicWindowTitle?: string;
   cosmicWindowLabel?: string;
   phase4Url?: string;
+  runtimeEnvironment?: string;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -234,7 +236,7 @@ async function ensureDiscountOffer(job: {
   await prisma.followUpJob.update({
     where: { id: job.id },
     data: {
-      metadata: JSON.stringify(nextMetadata),
+      metadata: JSON.stringify(stampRuntimeMetadata(nextMetadata)),
     },
   });
 
@@ -286,6 +288,7 @@ export async function scheduleDefaultFollowUps({
           stage: item.stage,
           scheduledFor,
           status: 'PENDING',
+          metadata: JSON.stringify(stampRuntimeMetadata({})),
         },
       });
       continue;
@@ -295,7 +298,10 @@ export async function scheduleDefaultFollowUps({
       if (existingJob.email !== email) {
         await prisma.followUpJob.update({
           where: { id: existingJob.id },
-          data: { email },
+          data: {
+            email,
+            metadata: JSON.stringify(stampRuntimeMetadata(parseJobMetadata(existingJob.metadata))),
+          },
         });
       }
       continue;
@@ -308,6 +314,7 @@ export async function scheduleDefaultFollowUps({
         scheduledFor,
         status: existingJob.status === 'FAILED' ? 'PENDING' : existingJob.status,
         lastError: null,
+        metadata: JSON.stringify(stampRuntimeMetadata(parseJobMetadata(existingJob.metadata))),
       },
     });
   }
@@ -423,7 +430,7 @@ export async function runDueFollowUps({
           sentAt: new Date(),
           attempts: { increment: 1 },
           lastError: null,
-          metadata: JSON.stringify({
+          metadata: JSON.stringify(stampRuntimeMetadata({
             ...existingMetadata,
             ...(offer ?? {}),
             ...(cosmicWindow
@@ -435,7 +442,7 @@ export async function runDueFollowUps({
               : {}),
             subjectHint,
             sentAt: new Date().toISOString(),
-          }),
+          })),
         },
       });
 

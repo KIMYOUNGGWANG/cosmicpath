@@ -63,3 +63,8 @@ docs/marketing/*.md
 # utility scripts
 convert_threads_posts.py
 .tmp/prompt-verify/
+
+# local databases / backup artifacts
+dev.db
+prisma/dev.db
+.agent_backup_*/

@@ -13,6 +13,7 @@ import { sendOpsAlert } from '@/lib/ops-alert';
 import { scheduleDefaultFollowUps } from '@/lib/followup-jobs';
 import { applyChatCreditFromSession } from '@/lib/payment/chat-credit';
 import { redeemPromotionCode } from '@/lib/promo-codes';
+import { stampRuntimeMetadata } from '@/lib/runtime-environment';
 
 function getErrorMessage(error: unknown): string {
     if (error instanceof Error) return error.message;
@@ -222,10 +223,10 @@ async function mergePaymentMetadata(orderId: string, patch: Record<string, unkno
     await prisma.payment.update({
         where: { orderId },
         data: {
-            metadata: JSON.stringify({
+            metadata: JSON.stringify(stampRuntimeMetadata({
                 ...existing,
                 ...patch,
-            }),
+            })),
         },
     });
 }
@@ -332,10 +333,10 @@ export async function POST(req: NextRequest) {
                     select: { metadata: true },
                 });
 
-                const mergedMetadata = {
+                const mergedMetadata = stampRuntimeMetadata({
                     ...parseJsonObject(existingPayment?.metadata),
                     ...metadataPatch,
-                };
+                });
 
                 await prisma.payment.upsert({
                     where: { orderId: session.id },
@@ -459,13 +460,13 @@ export async function POST(req: NextRequest) {
                                 await prisma.readingResult.update({
                                     where: { id: readingId },
                                     data: {
-                                        metadata: JSON.stringify({
+                                        metadata: JSON.stringify(stampRuntimeMetadata({
                                             ...savedMeta,
                                             isPremium: true,
                                             paymentVerifiedAt: new Date().toISOString(),
                                             paymentSource: 'stripe_webhook',
                                             email: customerEmail || savedMeta.email || '',
-                                        }),
+                                        })),
                                     },
                                 });
                             }
@@ -517,13 +518,13 @@ export async function POST(req: NextRequest) {
                                 await prisma.readingResult.update({
                                     where: { id: readingId },
                                     data: {
-                                        metadata: JSON.stringify({
+                                        metadata: JSON.stringify(stampRuntimeMetadata({
                                             ...savedMeta,
                                             isPremium: true, // Explicitly set as premium
                                             email: customerEmail,
                                             emailSent: true,
                                             emailSentVia: 'webhook'
-                                        }),
+                                        })),
                                         // 유저가 존재하고, 아직 연동 안된 경우 연동
                                         ...(user && !reading.userId ? { userId: user.id } : {})
                                     }
