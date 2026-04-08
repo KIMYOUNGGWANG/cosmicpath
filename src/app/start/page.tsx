@@ -279,6 +279,121 @@ function CosmicPathContent() {
     localStorage.removeItem('backup_timestamp');
   };
 
+  const syncResultUrl = (readingId?: string | null) => {
+    if (typeof window === 'undefined') return;
+
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.delete('reset');
+    currentUrl.searchParams.delete('paid');
+    currentUrl.searchParams.delete('canceled');
+    currentUrl.searchParams.delete('accessKey');
+
+    if (readingId) {
+      currentUrl.searchParams.set('reading_id', readingId);
+    } else {
+      currentUrl.searchParams.delete('reading_id');
+    }
+
+    if (inviteCode) {
+      currentUrl.searchParams.set('invite', inviteCode);
+    }
+    if (autoReferralCode) {
+      currentUrl.searchParams.set('referralCode', autoReferralCode);
+    }
+
+    window.history.replaceState(
+      readingId ? { readingId } : window.history.state,
+      '',
+      currentUrl.toString()
+    );
+  };
+
+  const waitForPendingReadingId = async (timeoutMs = 1200) => {
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < timeoutMs) {
+      const pendingId =
+        sessionStorage.getItem('pending_reading_id') ||
+        localStorage.getItem('pending_reading_id');
+
+      if (pendingId) {
+        return pendingId;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 150));
+    }
+
+    return null;
+  };
+
+  const ensureReadingReadyForPayment = async () => {
+    const existingId =
+      sessionStorage.getItem('pending_reading_id') ||
+      localStorage.getItem('pending_reading_id');
+
+    if (existingId) {
+      syncResultUrl(existingId);
+      return existingId;
+    }
+
+    const waitedId = await waitForPendingReadingId();
+    if (waitedId) {
+      syncResultUrl(waitedId);
+      return waitedId;
+    }
+
+    if (!reportData || !readingData) {
+      syncResultUrl(null);
+      return null;
+    }
+
+    try {
+      const response = await fetch('/api/reading/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          accessKey: getStoredReadingAccessKey() || undefined,
+          data: reportData,
+          metadata: {
+            ...(metadata || {}),
+            isPremium: false,
+            readingData,
+            tarotCards: selectedCards,
+            language,
+            paymentSource: 'stripe_pending',
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        syncResultUrl(null);
+        return null;
+      }
+
+      const savedPayload = await response.json().catch(() => null);
+      syncReadingAccessKey(savedPayload?.accessKey);
+
+      const savedId = typeof savedPayload?.id === 'string' ? savedPayload.id : null;
+      if (!savedId) {
+        syncResultUrl(null);
+        return null;
+      }
+
+      saveToSessionAndBackup('pending_reading_id', savedId);
+
+      const origin = window.location.origin;
+      const appUrl = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+      setShareUrl(`${appUrl}/share/${savedId}`);
+      syncResultUrl(savedId);
+
+      return savedId;
+    } catch (error) {
+      console.error('Failed to prepare reading for payment modal:', error);
+      syncResultUrl(null);
+      return null;
+    }
+  };
+
   useEffect(() => {
     const fetchPrice = async () => {
       try {
@@ -626,6 +741,11 @@ function CosmicPathContent() {
           const restoredReadingData = hasStoredPayload(pendingData)
             ? JSON.parse(pendingData as string)
             : (parsedMetadata?.readingData as ReadingData | null) || null;
+          const hasRestoredReportPayload = Boolean(
+            restoredReport &&
+            typeof restoredReport === 'object' &&
+            Object.keys(restoredReport).length > 0
+          );
 
           if (restoredReadingData) {
             setReadingData(restoredReadingData);
@@ -657,17 +777,21 @@ function CosmicPathContent() {
             setIsPremium(true);
           }
 
-          setStep('result');
+          setStep(
+            hasRestoredReportPayload ||
+            paid === 'true' ||
+            canceled === 'true' ||
+            sessionStorage.getItem('payment_completed') === 'true'
+              ? 'result'
+              : 'input'
+          );
 
           const pendingId = sessionStorage.getItem('pending_reading_id');
           if (pendingId) {
             const origin = window.location.origin;
             const appUrl = origin.endsWith('/') ? origin.slice(0, -1) : origin;
             setShareUrl(`${appUrl}/share/${pendingId}`);
-
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('reading_id', pendingId);
-            window.history.replaceState({ readingId: pendingId }, '', currentUrl.toString());
+            syncResultUrl(pendingId);
           }
 
           const isPaymentCompleted = sessionStorage.getItem('payment_completed') === 'true';
@@ -720,6 +844,7 @@ function CosmicPathContent() {
   const handleInputSubmit = (data: ReadingData) => {
     clearSessionAndBackup(); // Clear previous session data
     saveToSessionAndBackup('is_session_active', 'true');
+    syncResultUrl(null);
 
     hasTrackedFreeResult.current = false;
     hasTrackedReportComplete.current = false;
@@ -753,6 +878,7 @@ function CosmicPathContent() {
   const handleUpgrade = async () => {
     // Open payment modal instead of direct unlock, unless already premium
     if (isPremium) return;
+    await ensureReadingReadyForPayment();
     setPaymentTrackingSource('start_result_unlock');
     setIsPaymentModalOpen(true);
   };
@@ -801,18 +927,23 @@ function CosmicPathContent() {
       for (let phase = startPhase; phase <= maxPhase; phase++) {
         setLoadingPhase({ phase, label: labels[phase] });
 
+        const requestTier = (isPremium || isPremiumOverride) ? 'premium' : 'free';
         const response = await fetch('/api/reading', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ...dataToUse,
             tarotCards: cards,
-            tier: 'premium',
-            phase, // Execute specific phase
-            previousReport: accumulatedReport, // Pass context
-            isPaid: isPremium || isPremiumOverride, // 🔒 결제 여부 전달
-            readingId: sessionStorage.getItem('pending_reading_id') || undefined, // 🔑 검증용 ID 전달
-            accessKey: getStoredReadingAccessKey() || undefined,
+            tier: requestTier,
+            ...(requestTier === 'premium'
+              ? {
+                  phase,
+                  previousReport: accumulatedReport,
+                  isPaid: isPremium || isPremiumOverride,
+                  readingId: sessionStorage.getItem('pending_reading_id') || undefined,
+                  accessKey: getStoredReadingAccessKey() || undefined,
+                }
+              : {}),
           }),
         });
 
@@ -1008,18 +1139,7 @@ function CosmicPathContent() {
             const appUrl = origin.endsWith('/') ? origin.slice(0, -1) : origin;
             const shareUrlPath = `/share/${savedId}`;
             setShareUrl(`${appUrl}${shareUrlPath}`);
-
-            // 브라우저 주소창 동기화 (새로고침 시 결과 유지 - /share로 이동하지 않음)
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('reading_id', savedId);
-            // inviteCode가 있다면 유지하여 리프레시 시에도 초대 모드 유지
-            if (inviteCode) {
-              currentUrl.searchParams.set('invite', inviteCode);
-            }
-            if (autoReferralCode) {
-              currentUrl.searchParams.set('referralCode', autoReferralCode);
-            }
-            window.history.replaceState({ readingId: savedId }, '', currentUrl.toString());
+            syncResultUrl(savedId);
 
             // Client-side email trigger REMOVED (Moved to Server-side in /api/reading/save)
           }
@@ -1133,9 +1253,19 @@ function CosmicPathContent() {
         isPremium: metadata.isPremium,
       }
     : undefined;
+  const shouldHideProductHeader = !hasCheckedResume || (step === 'result' && isLoading);
+  const returnToInputWithDraft = () => {
+    setIsLoading(false);
+    setStep('input');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
-    <ProductShell language={language} showBackButton={step === 'input' || step === 'result'}>
+    <ProductShell
+      language={language}
+      showBackButton={step === 'input' || step === 'result'}
+      showHeader={!shouldHideProductHeader}
+    >
       {/* Step 0: Initial Loading/Resume Check */}
       {!hasCheckedResume && (
         <div className="flex flex-col items-center justify-center min-h-screen relative z-20">
@@ -1194,6 +1324,7 @@ function CosmicPathContent() {
               </div>
 
               <ReadingInput
+                initialData={readingData ?? undefined}
                 initialLanguage={language}
                 onLanguageChange={setLanguage}
                 onSubmit={(data) => {
@@ -1347,7 +1478,8 @@ function CosmicPathContent() {
                                   : `방금 본 결과, 꽤 잘 맞았나요?\n이제 내 질문도 직접 읽어보세요.`}
                               </h3>
                               <button
-                            onClick={() => {
+                            onClick={async () => {
+                              await ensureReadingReadyForPayment();
                               setPaymentTrackingSource('invite_upsell');
                               setIsPaymentModalOpen(true);
                             }}
@@ -1451,10 +1583,10 @@ function CosmicPathContent() {
                       </button>
                     ) : (
                       <button
-                        onClick={() => window.location.href = '/start?reset=true'}
+                        onClick={returnToInputWithDraft}
                         className="btn-secondary px-8 py-3 text-sm font-medium tracking-widest uppercase hover:bg-white/5 transition-all"
                       >
-                        {language === 'en' ? 'Start Again' : '처음부터 다시 하기'}
+                        {language === 'en' ? 'Back To My Inputs' : '작성한 내용 다시 보기'}
                       </button>
                     )}
                   </div>

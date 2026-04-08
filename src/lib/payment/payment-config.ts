@@ -1,88 +1,87 @@
 /**
  * CosmicPath 결제 상품 설정 (Stripe 최적화)
  */
+function hasRealStripeLookupId(value: string | undefined, type: 'prod' | 'price'): boolean {
+    if (!value) return false;
+
+    const trimmed = value.trim();
+    const pattern = type === 'prod' ? /^prod_[A-Za-z0-9]+$/ : /^price_[A-Za-z0-9]+$/;
+
+    return pattern.test(trimmed) && !/(test|live|tbd)/i.test(trimmed);
+}
+
+const readingProductId = process.env.NODE_ENV === 'development'
+    ? (process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID_TEST || 'prod_TgwKnGfpJBusty')
+    : (process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID || 'prod_ThdoB65NmPU37y');
+
 export const READING_PRODUCT = {
     id: 'cosmicpath_reading_v1',
     // Live 모드 전환 시 .env 에 NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID 를 설정해주세요.
     // 개발 모드에서는 테스트용 ID를 우선 사용합니다.
-    productId: process.env.NODE_ENV === 'development'
-        ? (process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID_TEST || 'prod_TgwKnGfpJBusty')
-        : (process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID || 'prod_ThdoB65NmPU37y'),
+    productId: readingProductId,
     name: 'CosmicPath 통합 운명 리포트',
     description: '사주 + 점성술 + 타로 통합 분석 프리미엄 결과지',
     currency: 'USD',
     price: 999, // $9.99 fallback label when live lookup is delayed
     followUpQuestions: 0,
-    stripeConfigured: Boolean(
-        process.env.NODE_ENV === 'development'
-            ? (process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID_TEST || process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID)
-            : process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID
-    ),
+    stripeConfigured: hasRealStripeLookupId(readingProductId, 'prod'),
 } as const;
+
+const followUpProductId = process.env.NODE_ENV === 'development'
+    ? (process.env.NEXT_PUBLIC_STRIPE_FOLLOWUP_PRODUCT_ID_TEST || 'prod_TestFollowUpId')
+    : (process.env.NEXT_PUBLIC_STRIPE_FOLLOWUP_PRODUCT_ID || 'prod_LiveFollowUpId');
 
 export const FOLLOW_UP_PRODUCT = {
     id: 'cosmicpath_followup_v1',
-    productId: process.env.NODE_ENV === 'development'
-        ? (process.env.NEXT_PUBLIC_STRIPE_FOLLOWUP_PRODUCT_ID_TEST || 'prod_TestFollowUpId')
-        : (process.env.NEXT_PUBLIC_STRIPE_FOLLOWUP_PRODUCT_ID || 'prod_LiveFollowUpId'),
+    productId: followUpProductId,
     name: 'Oracle Chat Additional Credit',
     description: '1 Additional Question for Oracle Chat',
     currency: 'USD',
     followUpQuestions: 1,
-    stripeConfigured: Boolean(
-        process.env.NODE_ENV === 'development'
-            ? (process.env.NEXT_PUBLIC_STRIPE_FOLLOWUP_PRODUCT_ID_TEST || process.env.NEXT_PUBLIC_STRIPE_FOLLOWUP_PRODUCT_ID)
-            : process.env.NEXT_PUBLIC_STRIPE_FOLLOWUP_PRODUCT_ID
-    ),
+    stripeConfigured: hasRealStripeLookupId(followUpProductId, 'prod'),
 } as const;
 
 // Chat Credit Products (Upsell Options)
+const chatCreditSingleProductId = process.env.NODE_ENV === 'development'
+    ? (process.env.NEXT_PUBLIC_STRIPE_CREDIT_SINGLE_ID_TEST || 'prod_TestCreditSingle')
+    : (process.env.NEXT_PUBLIC_STRIPE_CREDIT_SINGLE_ID || 'prod_LiveCreditSingle');
+
 export const CHAT_CREDIT_SINGLE = {
     id: 'cosmicpath_credit_single',
-    productId: process.env.NODE_ENV === 'development'
-        ? (process.env.NEXT_PUBLIC_STRIPE_CREDIT_SINGLE_ID_TEST || 'prod_TestCreditSingle')
-        : (process.env.NEXT_PUBLIC_STRIPE_CREDIT_SINGLE_ID || 'prod_LiveCreditSingle'),
+    productId: chatCreditSingleProductId,
     name: '질문권 1회',
     description: 'Oracle Chat 1 Question',
     price: 199, // $1.99 in cents
     credits: 1,
-    stripeConfigured: Boolean(
-        process.env.NODE_ENV === 'development'
-            ? (process.env.NEXT_PUBLIC_STRIPE_CREDIT_SINGLE_ID_TEST || process.env.NEXT_PUBLIC_STRIPE_CREDIT_SINGLE_ID)
-            : process.env.NEXT_PUBLIC_STRIPE_CREDIT_SINGLE_ID
-    ),
+    stripeConfigured: hasRealStripeLookupId(chatCreditSingleProductId, 'prod'),
 } as const;
+
+const chatCreditPackProductId = process.env.NODE_ENV === 'development'
+    ? (process.env.NEXT_PUBLIC_STRIPE_CREDIT_PACK_ID_TEST || 'prod_TestCreditPack')
+    : (process.env.NEXT_PUBLIC_STRIPE_CREDIT_PACK_ID || 'prod_LiveCreditPack');
 
 export const CHAT_CREDIT_PACK = {
     id: 'cosmicpath_credit_pack',
-    productId: process.env.NODE_ENV === 'development'
-        ? (process.env.NEXT_PUBLIC_STRIPE_CREDIT_PACK_ID_TEST || 'prod_TestCreditPack')
-        : (process.env.NEXT_PUBLIC_STRIPE_CREDIT_PACK_ID || 'prod_LiveCreditPack'),
+    productId: chatCreditPackProductId,
     name: '질문권 3회 패키지',
     description: 'Oracle Chat 3 Questions (33% OFF)',
     price: 399, // $3.99 in cents
     credits: 3,
-    stripeConfigured: Boolean(
-        process.env.NODE_ENV === 'development'
-            ? (process.env.NEXT_PUBLIC_STRIPE_CREDIT_PACK_ID_TEST || process.env.NEXT_PUBLIC_STRIPE_CREDIT_PACK_ID)
-            : process.env.NEXT_PUBLIC_STRIPE_CREDIT_PACK_ID
-    ),
+    stripeConfigured: hasRealStripeLookupId(chatCreditPackProductId, 'prod'),
 } as const;
+
+const matchProductId = process.env.NODE_ENV === 'development'
+    ? (process.env.NEXT_PUBLIC_STRIPE_MATCH_PRODUCT_ID_TEST || 'prod_TestMatchId')
+    : (process.env.NEXT_PUBLIC_STRIPE_MATCH_PRODUCT_ID || 'prod_LiveMatchId');
 
 export const MATCH_PRODUCT = {
     id: 'cosmicpath_match_v1',
-    productId: process.env.NODE_ENV === 'development'
-        ? (process.env.NEXT_PUBLIC_STRIPE_MATCH_PRODUCT_ID_TEST || 'prod_TestMatchId')
-        : (process.env.NEXT_PUBLIC_STRIPE_MATCH_PRODUCT_ID || 'prod_LiveMatchId'),
+    productId: matchProductId,
     name: 'Cosmic Compatibility Full Report',
     description: '사주 + 점성술 기반 상세 궁합 분석 리포트',
     currency: 'USD',
     price: 799, // $7.99 in cents
-    stripeConfigured: Boolean(
-        process.env.NODE_ENV === 'development'
-            ? (process.env.NEXT_PUBLIC_STRIPE_MATCH_PRODUCT_ID_TEST || process.env.NEXT_PUBLIC_STRIPE_MATCH_PRODUCT_ID)
-            : process.env.NEXT_PUBLIC_STRIPE_MATCH_PRODUCT_ID
-    ),
+    stripeConfigured: hasRealStripeLookupId(matchProductId, 'prod'),
 } as const;
 
 export const SUBSCRIPTION_PLAN_IDS = ['pro_weekly', 'pro_monthly', 'pro_yearly', 'couple_monthly'] as const;
@@ -96,7 +95,7 @@ export const SUBSCRIPTION_FALLBACK_AMOUNTS = {
     ANNUAL: 49.99,
 } as const satisfies Record<ConsumerSubscriptionPlanType, number>;
 
-export const SUBSCRIPTION_PRICE_IDS = {
+const subscriptionPriceIds = {
     pro_weekly: process.env.NODE_ENV === 'development'
         ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY || 'price_pro_weekly_TBD')
         : (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY || 'price_pro_weekly_TBD'),
@@ -111,27 +110,13 @@ export const SUBSCRIPTION_PRICE_IDS = {
         : (process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY || 'price_1T7Keo0RiEHwZwUJVtCaF6Nn'),
 } as const satisfies Record<SubscriptionPlanId, string>;
 
+export const SUBSCRIPTION_PRICE_IDS = subscriptionPriceIds;
+
 export const SUBSCRIPTION_PRICE_CONFIGURED = {
-    pro_weekly: Boolean(
-        process.env.NODE_ENV === 'development'
-            ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY)
-            : process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY
-    ),
-    pro_monthly: Boolean(
-        process.env.NODE_ENV === 'development'
-            ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY)
-            : process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY
-    ),
-    pro_yearly: Boolean(
-        process.env.NODE_ENV === 'development'
-            ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY)
-            : process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY
-    ),
-    couple_monthly: Boolean(
-        process.env.NODE_ENV === 'development'
-            ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY)
-            : process.env.NEXT_PUBLIC_STRIPE_PRICE_COUPLE_MONTHLY
-    ),
+    pro_weekly: hasRealStripeLookupId(subscriptionPriceIds.pro_weekly, 'price'),
+    pro_monthly: hasRealStripeLookupId(subscriptionPriceIds.pro_monthly, 'price'),
+    pro_yearly: hasRealStripeLookupId(subscriptionPriceIds.pro_yearly, 'price'),
+    couple_monthly: hasRealStripeLookupId(subscriptionPriceIds.couple_monthly, 'price'),
 } as const satisfies Record<SubscriptionPlanId, boolean>;
 
 export const SUBSCRIPTION_CHECKOUT_PLAN_MAP = {
