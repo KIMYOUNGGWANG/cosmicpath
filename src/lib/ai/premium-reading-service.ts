@@ -20,6 +20,7 @@ import {
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 const MODEL_NAME = 'gemini-3-flash-preview';
+const PHASE_REQUEST_TIMEOUT_MS = 12000;
 
 
 
@@ -109,6 +110,14 @@ export async function generateSinglePhase(
     previousData: PremiumReportPartial | null,
     apiKey: string
 ): Promise<PhaseResult> {
+    if (!apiKey) {
+        return {
+            phase: phaseNumber,
+            success: false,
+            data: null,
+            error: 'GOOGLE_AI_API_KEY is not configured',
+        };
+    }
 
     // Get the appropriate prompt builder
     let promptBuilder: (userData: UserData, prev?: PremiumReportPartial | null) => { system: string; user: string };
@@ -147,12 +156,16 @@ export async function generateSinglePhase(
     let lastError: Error | null = null;
 
     while (retries <= maxRetries) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), PHASE_REQUEST_TIMEOUT_MS);
+
         try {
             const response = await fetch(
                 `${GEMINI_API_BASE}/${MODEL_NAME}:generateContent?key=${apiKey}`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    signal: controller.signal,
                     body: JSON.stringify({
                         systemInstruction: { parts: [{ text: system }] },
                         contents: [{
@@ -240,6 +253,12 @@ export async function generateSinglePhase(
             return { phase: phaseNumber, success: true, data };
 
         } catch (error) {
+            if (error instanceof Error && error.name === 'AbortError') {
+                lastError = new Error(`Phase ${phaseNumber} timed out after ${PHASE_REQUEST_TIMEOUT_MS}ms`);
+                console.error(`[Phase ${phaseNumber}] Timeout:`, lastError.message);
+                break;
+            }
+
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             console.error(`[Phase ${phaseNumber}] Attempt ${retries + 1} Error:`, errorMessage);
             lastError = error instanceof Error ? error : new Error(String(error));
@@ -251,6 +270,8 @@ export async function generateSinglePhase(
             const waitTime = 2000 * (retries + 1);
             await new Promise(resolve => setTimeout(resolve, waitTime));
             retries++;
+        } finally {
+            clearTimeout(timeoutId);
         }
     }
 

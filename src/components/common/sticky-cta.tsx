@@ -16,6 +16,11 @@ interface StickyCTAProps {
 export function StickyCTA({ price, originalPrice, onUnlock, language, isSuppressed = false }: StickyCTAProps) {
     const [isVisible, setIsVisible] = useState(false);
     const isEn = language === 'en';
+    const hasConcretePrice = /\d/.test(price);
+    const shouldShowOriginalPrice =
+        hasConcretePrice &&
+        Boolean(originalPrice?.trim()) &&
+        originalPrice.trim() !== price.trim();
     const headline = isEn ? 'See the full reading' : '전체 해석 보기';
     const supportingCopy = isEn
         ? 'See the reasons, timing, and next steps behind your free result.'
@@ -67,10 +72,18 @@ export function StickyCTA({ price, originalPrice, onUnlock, language, isSuppress
                                             </p>
                                         </div>
                                         <div className="shrink-0 text-right">
-                                            <div className="text-[11px] font-serif text-white/28 line-through md:text-xs">{originalPrice}</div>
-                                            <div className="font-cinzel text-2xl font-bold leading-none text-acc-gold md:text-[1.75rem]">
-                                                {price}
-                                            </div>
+                                            {shouldShowOriginalPrice ? (
+                                                <div className="text-[11px] font-serif text-white/28 line-through md:text-xs">{originalPrice}</div>
+                                            ) : null}
+                                            {hasConcretePrice ? (
+                                                <div className="font-cinzel text-2xl font-bold leading-none text-acc-gold md:text-[1.75rem]">
+                                                    {price}
+                                                </div>
+                                            ) : (
+                                                <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-white/58">
+                                                    {price}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 

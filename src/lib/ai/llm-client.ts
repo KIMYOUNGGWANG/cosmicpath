@@ -52,13 +52,20 @@ async function fetchWithRetry(
     url: string,
     options: RequestInit,
     maxRetries: number = 3,
-    initialDelay: number = 1500
+    initialDelay: number = 1500,
+    timeoutMs: number = 12000
 ): Promise<Response> {
     let lastError: Error | null = null;
 
     for (let i = 0; i <= maxRetries; i++) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
         try {
-            const response = await fetch(url, options);
+            const response = await fetch(url, {
+                ...options,
+                signal: controller.signal,
+            });
 
             // 503 (High Demand) 또는 429 (Rate Limit)인 경우에만 재시도
             if (response.status === 503 || response.status === 429) {
@@ -75,7 +82,11 @@ async function fetchWithRetry(
             return response;
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : String(error);
-            lastError = error instanceof Error ? error : new Error(message);
+            const isTimeoutError = error instanceof Error && error.name === 'AbortError';
+
+            lastError = isTimeoutError
+                ? new Error(`API timeout after ${timeoutMs}ms`)
+                : (error instanceof Error ? error : new Error(message));
 
             // 마지막 시도거나 503/429가 아닌 치명적 에러인 경우 즉시 중단
             if (i === maxRetries || (!message.includes('503') && !message.includes('429'))) {
@@ -85,6 +96,8 @@ async function fetchWithRetry(
             const delay = initialDelay * Math.pow(2, i);
             console.warn(`[AI Client Retry] Attempt ${i + 1} failed (Status: ${message}). Retrying in ${delay}ms...`);
             await new Promise(resolve => setTimeout(resolve, delay));
+        } finally {
+            clearTimeout(timeoutId);
         }
     }
 

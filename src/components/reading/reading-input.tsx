@@ -30,6 +30,7 @@ interface ReadingInputProps {
     onLanguageChange?: (lang: 'ko' | 'en') => void;
     initialContext?: ReadingContext;
     initialQuestion?: string;
+    initialData?: Partial<ReadingData>;
 }
 
 export interface ReadingData {
@@ -231,26 +232,39 @@ export function ReadingInput({
     onLanguageChange,
     initialContext,
     initialQuestion,
+    initialData,
 }: ReadingInputProps) {
-    const [name, setName] = useState('');
-    const [gender, setGender] = useState<'male' | 'female'>('male');
-    const [birthDate, setBirthDate] = useState('');
-    const [birthTime, setBirthTime] = useState('12:00');
-    const [calendarType, setCalendarType] = useState<'solar' | 'lunar'>('solar');
-    const [unknownTime, setUnknownTime] = useState(false);
-    const [characterId, setCharacterId] = useState<OracleCharacterId>('general_orion');
-    const [selectionMode, setSelectionMode] = useState<'auto' | 'manual'>('auto');
-    const [showPrecisionFields, setShowPrecisionFields] = useState(Boolean(inviteCode));
-    const [context, setContext] = useState<ReadingContext>(inviteCode ? 'love' : initialContext ?? 'general');
-    const [question, setQuestion] = useState(initialQuestion ?? '');
+    const [name, setName] = useState(initialData?.name ?? '');
+    const [gender, setGender] = useState<'male' | 'female'>(initialData?.gender ?? 'male');
+    const [birthDate, setBirthDate] = useState(initialData?.birthDate ?? '');
+    const [birthTime, setBirthTime] = useState(initialData?.birthTime ?? '12:00');
+    const [calendarType, setCalendarType] = useState<'solar' | 'lunar'>(initialData?.calendarType ?? 'solar');
+    const [unknownTime, setUnknownTime] = useState(initialData?.unknownTime ?? false);
+    const [characterId, setCharacterId] = useState<OracleCharacterId>(initialData?.characterId ?? 'general_orion');
+    const [selectionMode, setSelectionMode] = useState<'auto' | 'manual'>(initialData?.selectionMode ?? 'auto');
+    const [showPrecisionFields, setShowPrecisionFields] = useState(
+        Boolean(
+            inviteCode ||
+            initialData?.name ||
+            initialData?.cityName ||
+            typeof initialData?.longitude === 'number' ||
+            initialData?.partnerBirthDate
+        )
+    );
+    const [context, setContext] = useState<ReadingContext>(
+        initialData?.context ?? (inviteCode ? 'love' : initialContext ?? 'general')
+    );
+    const [question, setQuestion] = useState(initialData?.question ?? initialQuestion ?? '');
     const [languageOverride, setLanguageOverride] = useState<'ko' | 'en' | null>(null);
 
     // 상대방 정보 state (궁합/재회 분석용)
-    const [showPartnerInfo, setShowPartnerInfo] = useState(Boolean(inviteCode));
-    const [partnerName, setPartnerName] = useState('');
-    const [partnerBirthDate, setPartnerBirthDate] = useState('');
-    const [partnerBirthTime, setPartnerBirthTime] = useState('12:00');
-    const [partnerGender, setPartnerGender] = useState<'male' | 'female'>('male');
+    const [showPartnerInfo, setShowPartnerInfo] = useState(
+        Boolean(inviteCode || initialData?.partnerBirthDate || initialData?.partnerName)
+    );
+    const [partnerName, setPartnerName] = useState(initialData?.partnerName ?? '');
+    const [partnerBirthDate, setPartnerBirthDate] = useState(initialData?.partnerBirthDate ?? '');
+    const [partnerBirthTime, setPartnerBirthTime] = useState(initialData?.partnerBirthTime ?? '12:00');
+    const [partnerGender, setPartnerGender] = useState<'male' | 'female'>(initialData?.partnerGender ?? 'male');
     const [showAllGuides, setShowAllGuides] = useState(false);
     const questionFieldRef = useRef<HTMLTextAreaElement | null>(null);
 

@@ -84,6 +84,7 @@ export function PaymentModal({
     const displayedPriceLabel =
         effectivePriceLabel ||
         (isEnglish ? 'Shown at checkout' : '결제 단계에서 확인');
+    const hasConcreteDisplayedPrice = /\d/.test(displayedPriceLabel);
     const trackedPriceLabel = effectivePriceLabel || fallbackPriceLabel || 'checkout_visible';
 
     useEffect(() => {
@@ -526,17 +527,17 @@ export function PaymentModal({
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
                             transition={modalSpring}
-                            className="relative flex max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-2rem)] w-full max-w-xl flex-col overflow-hidden rounded-[28px] border border-white/10 bg-[#0f0f23] shadow-[0_0_50px_rgba(161,132,255,0.2)] md:max-h-[calc(100dvh-4rem)]"
+                            className="relative flex max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-2rem)] w-full max-w-xl flex-col overflow-hidden rounded-[28px] border border-[#f0d487]/12 bg-[#0b0d18] shadow-[0_28px_80px_rgba(0,0,0,0.58)] md:max-h-[calc(100dvh-4rem)]"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(161,132,255,0.16),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.05),transparent_28%)]" />
+                            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(244,216,138,0.14),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.05),transparent_28%)]" />
 
                             {/* Close button */}
                             <motion.button
                                 onClick={handleClose}
                                 whileHover={{ y: -1, backgroundColor: 'rgba(255,255,255,0.12)' }}
                                 whileTap={{ scale: 0.97 }}
-                                className="absolute right-4 top-4 z-10 rounded-full p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#A184FF]/70 md:right-6 md:top-6"
+                                className="absolute right-4 top-4 z-10 rounded-full p-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acc-gold/70 md:right-6 md:top-6"
                             >
                                 <X size={20} className="text-white/40" />
                             </motion.button>
@@ -548,7 +549,7 @@ export function PaymentModal({
                                     transition={{ duration: 0.35, delay: 0.05 }}
                                     className="mb-8 text-center md:mb-10"
                                 >
-                                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#A184FF]/20 bg-[#A184FF]/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.26em] text-[#cbb5ff]">
+                                    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-acc-gold/20 bg-acc-gold/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.26em] text-acc-gold">
                                         <Lock className="h-4 w-4" />
                                         {isEnglish ? 'Full Reading' : '전체 해석 보기'}
                                     </div>
@@ -568,14 +569,26 @@ export function PaymentModal({
                                             </>
                                         )}
                                     </p>
-                                    <div className="mt-6 inline-block rounded-full border border-[#A184FF]/20 bg-[#A184FF]/10 px-4 py-2 shadow-[0_0_24px_rgba(161,132,255,0.14)]">
+                                    <div className="mt-6 rounded-[24px] border border-white/10 bg-white/[0.03] px-5 py-4 shadow-[0_14px_36px_rgba(0,0,0,0.22)]">
+                                        <p className="text-[10px] uppercase tracking-[0.26em] text-white/42">
+                                            {isEnglish ? 'Current Unlock Price' : '현재 전체 해석 가격'}
+                                        </p>
                                         {discountedPriceLabel ? (
-                                            <div className="flex items-center gap-3">
+                                            <div className="mt-2 flex items-center justify-center gap-3">
                                                 <span className="text-sm text-white/35 line-through">{dynamicPrice}</span>
-                                                <span className="text-lg font-bold text-[#A184FF] md:text-xl">{discountedPriceLabel}</span>
+                                                <span className="text-xl font-bold text-acc-gold md:text-2xl">{discountedPriceLabel}</span>
                                             </div>
+                                        ) : hasConcreteDisplayedPrice ? (
+                                            <span className="mt-2 block text-xl font-bold text-acc-gold md:text-2xl">{displayedPriceLabel}</span>
                                         ) : (
-                                            <span className="text-lg font-bold text-[#A184FF] md:text-xl">{displayedPriceLabel}</span>
+                                            <div className="mt-2 space-y-1">
+                                                <p className="text-sm font-semibold text-white/78">{displayedPriceLabel}</p>
+                                                <p className="text-xs text-white/42">
+                                                    {isEnglish
+                                                        ? 'We will confirm the final amount again in Stripe checkout.'
+                                                        : '최종 금액은 Stripe 결제 단계에서 다시 정확히 보여드릴게요.'}
+                                                </p>
+                                            </div>
                                         )}
                                     </div>
                                     <div className="mt-3 min-h-10 space-y-2">
@@ -612,7 +625,7 @@ export function PaymentModal({
                                     transition={{ duration: 0.35, delay: 0.1 }}
                                     className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-[transform,border-color,background-color] duration-300 hover:-translate-y-1 hover:border-white/15 hover:bg-white/[0.045]"
                                 >
-                                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#A184FF]">
+                                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-acc-gold">
                                         {isEnglish ? 'What You Get Next' : '결제하면 바로 보이는 것'}
                                     </p>
                                     <ul className="space-y-2 text-sm text-white/75">
@@ -633,7 +646,7 @@ export function PaymentModal({
                                             key={title}
                                             className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left"
                                         >
-                                            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[#A184FF]/20 bg-[#A184FF]/10 text-[#cbb5ff]">
+                                            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-acc-gold/20 bg-acc-gold/10 text-acc-gold">
                                                 <Icon className="h-4 w-4" />
                                             </div>
                                             <p className="text-sm font-semibold text-white">{title}</p>
@@ -649,7 +662,7 @@ export function PaymentModal({
                                     transition={{ duration: 0.35, delay: 0.14 }}
                                     className="mb-6"
                                 >
-                                    <label className="mb-3 ml-1 block text-xs font-semibold uppercase tracking-widest text-[#A184FF]">
+                                    <label className="mb-3 ml-1 block text-xs font-semibold uppercase tracking-widest text-acc-gold">
                                         {isEnglish ? 'Email for your result link' : '결과 링크를 받아볼 이메일'}
                                         {isFreePromo ? <span className="ml-1 text-red-400">*</span> : <span className="ml-2 text-white/30 normal-case">(optional)</span>}
                                     </label>
@@ -665,9 +678,9 @@ export function PaymentModal({
                                             : (isEnglish
                                                 ? 'Optional: get your result link by email'
                                                 : '선택: 결과 링크를 이메일로 받기')}
-                                        className={`w-full rounded-2xl border bg-white/5 px-5 py-4 font-light text-white placeholder:text-gray-600 transition-[border-color,box-shadow,background-color] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A184FF]/40 ${emailError
+                                        className={`w-full rounded-2xl border bg-white/5 px-5 py-4 font-light text-white placeholder:text-gray-600 transition-[border-color,box-shadow,background-color] focus:outline-none focus-visible:ring-2 focus-visible:ring-acc-gold/40 ${emailError
                                             ? 'border-red-500 focus:border-red-500'
-                                            : 'border-white/10 focus:border-[#A184FF]/50 hover:border-white/15 hover:bg-white/[0.06]'
+                                            : 'border-white/10 focus:border-acc-gold/50 hover:border-white/15 hover:bg-white/[0.06]'
                                             }`}
                                     />
                                     {emailError && (
@@ -684,9 +697,9 @@ export function PaymentModal({
                                     transition={{ duration: 0.35, delay: 0.18 }}
                                     className="mb-8"
                                 >
-                                    <PromoCodeInput
-                                        email={email}
-                                        initialCode={resolvedAutoReferralCode || undefined}
+                                        <PromoCodeInput
+                                            email={email}
+                                            initialCode={resolvedAutoReferralCode || undefined}
                                         autoApply={isOpen}
                                         onApply={(id, discount, code) => {
                                             setPromoCodeId(id);
@@ -702,13 +715,13 @@ export function PaymentModal({
                                 <motion.button
                                     onClick={handlePayment}
                                     disabled={isLoading}
-                                    whileHover={isLoading ? undefined : { y: -2, boxShadow: Number(discount) === 100 ? '0 18px 44px rgba(16,185,129,0.28)' : '0 18px 44px rgba(139,92,246,0.28)' }}
+                                    whileHover={isLoading ? undefined : { y: -2, boxShadow: Number(discount) === 100 ? '0 18px 44px rgba(16,185,129,0.28)' : '0 18px 44px rgba(212,175,55,0.28)' }}
                                     whileTap={isLoading ? undefined : { scale: 0.985 }}
                                     className={`w-full rounded-2xl py-4 font-bold transition-all shadow-lg hover:opacity-90 disabled:opacity-50
                                         ${Number(discount) === 100
-                                            ? 'bg-gradient-to-r from-emerald-500 to-green-500 shadow-emerald-500/30'
-                                            : 'bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] shadow-[#8B5CF6]/30'
-                                        } text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-[#A184FF]/60`}
+                                            ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-emerald-500/30'
+                                            : 'bg-gradient-to-r from-acc-gold via-[#f0c35c] to-[#d88b16] text-black shadow-acc-gold/30'
+                                        } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-acc-gold/60`}
                                 >
                                     {isLoading
                                         ? (isEnglish ? 'Processing...' : '처리 중...')

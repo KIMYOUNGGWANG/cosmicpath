@@ -9,6 +9,7 @@ interface ProductShellProps {
     children: ReactNode;
     language?: 'ko' | 'en';
     showBackButton?: boolean;
+    showHeader?: boolean;
     className?: string;
 }
 
@@ -16,6 +17,7 @@ export function ProductShell({
     children,
     language = 'ko',
     showBackButton = true,
+    showHeader = true,
     className,
 }: ProductShellProps) {
     return (
@@ -23,9 +25,11 @@ export function ProductShell({
             <div className="aurora-bg fixed inset-0 z-0" />
             <div className="noise-overlay" />
 
-            <GlobalHeader language={language} showBackButton={showBackButton} />
+            {showHeader ? (
+                <GlobalHeader language={language} showBackButton={showBackButton} />
+            ) : null}
 
-            <div className={cn('relative z-10 safe-area-top', className)}>
+            <div className={cn('relative z-10', showHeader && 'safe-area-top', className)}>
                 {children}
             </div>
         </main>
