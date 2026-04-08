@@ -35,6 +35,23 @@ function formatMonthDay(value: string | undefined, language: EmailLanguage): str
     }).format(date);
 }
 
+function appendAccessKeyFragment(url: string, accessKey?: string | null): string {
+    if (!accessKey) {
+        return url;
+    }
+
+    try {
+        const parsedUrl = new URL(url);
+        const hashParams = new URLSearchParams(parsedUrl.hash.replace(/^#/, ''));
+        hashParams.set('accessKey', accessKey);
+        parsedUrl.hash = hashParams.toString();
+        return parsedUrl.toString();
+    } catch {
+        const hash = `accessKey=${encodeURIComponent(accessKey)}`;
+        return url.includes('#') ? `${url}&${hash}` : `${url}#${hash}`;
+    }
+}
+
 function buildResultEmailContent(params: {
     language: EmailLanguage;
     cleanTitle: string;
@@ -224,6 +241,7 @@ interface SendResultEmailParams {
     sajuSummary?: string;
     userContext?: string;
     language?: EmailLanguage;
+    accessKey?: string;
 }
 
 export async function sendResultEmail({
@@ -234,6 +252,7 @@ export async function sendResultEmail({
     sajuSummary,
     userContext,
     language,
+    accessKey,
 }: SendResultEmailParams) {
     // 이메일 형식 검증
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -246,7 +265,7 @@ export async function sendResultEmail({
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ||
         (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
 
-    const resultUrl = `${appUrl}/share/${resultId}?view=full`;
+    const resultUrl = appendAccessKeyFragment(`${appUrl}/share/${resultId}?view=full`, accessKey);
     const emailLanguage = resolveEmailLanguage(language);
     const cleanTitle = (title || (emailLanguage === 'en' ? 'Your CosmicPath reading' : 'CosmicPath 리딩'))
         .replace(/[\r\n]+/g, ' ')

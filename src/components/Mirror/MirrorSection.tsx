@@ -14,7 +14,7 @@ interface MirrorSectionProps {
 
 export function MirrorSection({ language, onUnlockFullReport, isLoading, teaserContent }: MirrorSectionProps) {
     const [showResult, setShowResult] = useState(false);
-    const [priceLabel, setPriceLabel] = useState('$9.99');
+    const [priceLabel, setPriceLabel] = useState<string | null>(null);
 
     useEffect(() => {
         if (!isLoading && teaserContent) {
@@ -33,7 +33,12 @@ export function MirrorSection({ language, onUnlockFullReport, isLoading, teaserC
                 });
                 const payload = await response.json();
 
-                if (isMounted && response.ok && typeof payload.formattedPrice === 'string') {
+                if (
+                    isMounted &&
+                    response.ok &&
+                    payload?.metadata?.fallback !== 'true' &&
+                    typeof payload.formattedPrice === 'string'
+                ) {
                     setPriceLabel(payload.formattedPrice);
                 }
             } catch (error) {
@@ -52,13 +57,13 @@ export function MirrorSection({ language, onUnlockFullReport, isLoading, teaserC
         ko: {
             loading: "천체들을 조립하는 중...",
             subloading: "1985년생, 화성이 7하우스에 위치했던 해...",
-            cta: `${priceLabel}로 50페이지 분석 보기`,
+            cta: priceLabel ? `${priceLabel}로 50페이지 분석 보기` : '최신 가격 확인 후 50페이지 분석 보기',
             emailCTA: "이메일로 월별 운세 받기"
         },
         en: {
             loading: "Assembling Constellations...",
             subloading: "Born in 1985, the year Mars was in the 7th House...",
-            cta: `Unlock 50-Page Report for ${priceLabel}`,
+            cta: priceLabel ? `Unlock 50-Page Report for ${priceLabel}` : 'Unlock 50-Page Report after confirming price',
             emailCTA: "Get Monthly Fortune via Email"
         }
     };

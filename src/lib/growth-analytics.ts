@@ -70,6 +70,55 @@ export function parseGrowthMetadata(rawValue: string | null | undefined): Growth
     return {};
 }
 
+function getMetadataString(metadata: GrowthMetadata, key: string): string | null {
+    const value = metadata[key];
+    return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+export function isCountablePaidConversionEvent(metadata: GrowthMetadata): boolean {
+    const plan = getMetadataString(metadata, 'plan');
+    const price = getMetadataString(metadata, 'price');
+
+    if (plan === 'promo_free_unlock') {
+        return false;
+    }
+
+    if (price?.toUpperCase() === 'FREE') {
+        return false;
+    }
+
+    return true;
+}
+
+export function getPaidConversionTrackingKey(input: {
+    metadata: GrowthMetadata;
+    readingId?: string | null;
+}): string | null {
+    const checkoutSessionId =
+        getMetadataString(input.metadata, 'checkoutSessionId') ||
+        getMetadataString(input.metadata, 'stripeSessionId');
+    const genericSessionId = getMetadataString(input.metadata, 'sessionId');
+    const orderId = getMetadataString(input.metadata, 'orderId');
+
+    if (orderId) {
+        return `order:${orderId}`;
+    }
+
+    if (checkoutSessionId) {
+        return `checkout:${checkoutSessionId}`;
+    }
+
+    if (genericSessionId?.startsWith('cs_')) {
+        return `checkout:${genericSessionId}`;
+    }
+
+    if (input.readingId) {
+        return `reading:${input.readingId}`;
+    }
+
+    return null;
+}
+
 export function getGrowthDistinctId(input: {
     readingId?: string;
     referralCode?: string;

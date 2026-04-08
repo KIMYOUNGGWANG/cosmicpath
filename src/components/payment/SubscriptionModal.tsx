@@ -18,9 +18,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     SUBSCRIPTION_CHECKOUT_PRICE_IDS,
-    SUBSCRIPTION_FALLBACK_AMOUNTS,
     formatUsdAmount,
-    getSubscriptionFallbackPriceLabel,
     normalizePriceLabel,
     type ConsumerSubscriptionPlanType,
     type SubscriptionPlanType,
@@ -65,10 +63,10 @@ const PLAN_OPTIONS: Record<ConsumerPlanType, PlanOption> = {
         eyebrow: 'Entry Orbit',
         name: '월간 멤버십',
         description: '가볍게 시작해서 한 달 동안 관계, 커리어, 재물, 타이밍 질문을 오라클 가이드와 충분히 이어갈 수 있습니다.',
-        priceLabel: '$9.99 / month',
-        billingLabel: 'Cancel anytime',
+        priceLabel: '최신 가격 확인',
+        billingLabel: '결제 단계에서 표시',
         valueLabel: '가장 가볍게 프리미엄 결정 리딩을 여는 기본 경로',
-        supportingLabel: '지금 바로 열고, 한 달 단위로 내 질문 흐름과 가이드 경험을 확인하기 좋습니다.',
+        supportingLabel: '실시간 가격을 불러오면 월간 금액을 바로 보여주고, 실패해도 결제 단계에서 최신 금액을 다시 확인할 수 있습니다.',
         benefits: ['무제한 Oracle Chat', '관계·커리어·재물 질문 확장', 'Daily Tarot premium guidance'],
         commitmentNote: '처음 전환하거나 짧게 루틴을 검증해보고 싶은 사용자에게 가장 자연스러운 시작점입니다.',
     },
@@ -77,11 +75,11 @@ const PLAN_OPTIONS: Record<ConsumerPlanType, PlanOption> = {
         eyebrow: 'Long Orbit',
         name: '연간 멤버십',
         description: '가장 낮은 월 환산 비용으로 multi-domain 오라클 리딩과 프리미엄 루틴을 길게 유지합니다.',
-        priceLabel: '$49.99 / year',
-        billingLabel: 'About $4.17 / month',
-        valueLabel: '월간 대비 $69.89 절약, 연간 기준 월 환산 약 $4.17',
-        supportingLabel: '재방문 빈도가 높거나 데일리 루틴이 이미 붙은 사용자에게 가장 효율적인 경로입니다.',
-        benefits: ['월간 대비 $69.89 절약', '무제한 Oracle Chat', '장기 결정 리딩과 프리미엄 유지'],
+        priceLabel: '최신 가격 확인',
+        billingLabel: '결제 단계에서 표시',
+        valueLabel: '가장 큰 절약폭으로 장기 루틴을 이어가기 좋은 경로',
+        supportingLabel: '실시간 가격을 불러오면 연간 금액과 월 환산을 함께 보여주고, 실패해도 결제 단계에서 최신 금액을 다시 확인할 수 있습니다.',
+        benefits: ['장기 구독 할인', '무제한 Oracle Chat', '장기 결정 리딩과 프리미엄 유지'],
         commitmentNote: '이미 자주 돌아오고 있다면 연간이 가장 단순하고 비용 효율적인 선택입니다.',
     },
 };
@@ -123,27 +121,42 @@ const TRUST_SIGNALS = [
 function buildPlanOptions(
     livePrices: Partial<Record<ConsumerPlanType, LiveSubscriptionPrice>>
 ): Record<ConsumerPlanType, PlanOption> {
-    const monthlyAmount = livePrices.MONTHLY?.amount ?? SUBSCRIPTION_FALLBACK_AMOUNTS.MONTHLY;
-    const annualAmount = livePrices.ANNUAL?.amount ?? SUBSCRIPTION_FALLBACK_AMOUNTS.ANNUAL;
-    const annualMonthlyEquivalent = annualAmount / 12;
-    const annualSavings = Math.max((monthlyAmount * 12) - annualAmount, 0);
-    const monthlyPriceLabel = livePrices.MONTHLY?.formattedPrice ?? getSubscriptionFallbackPriceLabel('MONTHLY');
-    const annualPriceLabel = livePrices.ANNUAL?.formattedPrice ?? getSubscriptionFallbackPriceLabel('ANNUAL');
+    const monthlyLivePrice = livePrices.MONTHLY;
+    const annualLivePrice = livePrices.ANNUAL;
+    const annualMonthlyEquivalent = annualLivePrice ? annualLivePrice.amount / 12 : null;
+    const annualSavings =
+        monthlyLivePrice && annualLivePrice
+            ? Math.max((monthlyLivePrice.amount * 12) - annualLivePrice.amount, 0)
+            : null;
 
     return {
         MONTHLY: {
             ...PLAN_OPTIONS.MONTHLY,
-            priceLabel: `${monthlyPriceLabel} / month`,
+            priceLabel: monthlyLivePrice
+                ? `${monthlyLivePrice.formattedPrice} / month`
+                : PLAN_OPTIONS.MONTHLY.priceLabel,
+            billingLabel: monthlyLivePrice ? 'Cancel anytime' : PLAN_OPTIONS.MONTHLY.billingLabel,
         },
         ANNUAL: {
             ...PLAN_OPTIONS.ANNUAL,
-            priceLabel: `${annualPriceLabel} / year`,
-            billingLabel: `About ${formatUsdAmount(annualMonthlyEquivalent)} / month`,
-            valueLabel: `월간 대비 ${formatUsdAmount(annualSavings)} 절약, 연간 기준 월 환산 약 ${formatUsdAmount(annualMonthlyEquivalent)}`,
-            benefits: [
-                `월간 대비 ${formatUsdAmount(annualSavings)} 절약`,
-                ...PLAN_OPTIONS.ANNUAL.benefits.slice(1),
-            ],
+            priceLabel: annualLivePrice
+                ? `${annualLivePrice.formattedPrice} / year`
+                : PLAN_OPTIONS.ANNUAL.priceLabel,
+            billingLabel:
+                annualMonthlyEquivalent !== null
+                    ? `About ${formatUsdAmount(annualMonthlyEquivalent)} / month`
+                    : PLAN_OPTIONS.ANNUAL.billingLabel,
+            valueLabel:
+                annualSavings !== null && annualMonthlyEquivalent !== null
+                    ? `월간 대비 ${formatUsdAmount(annualSavings)} 절약, 연간 기준 월 환산 약 ${formatUsdAmount(annualMonthlyEquivalent)}`
+                    : PLAN_OPTIONS.ANNUAL.valueLabel,
+            benefits:
+                annualSavings !== null
+                    ? [
+                        `월간 대비 ${formatUsdAmount(annualSavings)} 절약`,
+                        ...PLAN_OPTIONS.ANNUAL.benefits.slice(1),
+                    ]
+                    : PLAN_OPTIONS.ANNUAL.benefits,
         },
     };
 }
@@ -233,7 +246,12 @@ export function SubscriptionModal({
             });
             const payload = await response.json();
 
-            if (!response.ok || typeof payload.amount !== 'number' || !normalizePriceLabel(payload.formattedPrice)) {
+            if (
+                !response.ok ||
+                payload?.metadata?.fallback === 'true' ||
+                typeof payload.amount !== 'number' ||
+                !normalizePriceLabel(payload.formattedPrice)
+            ) {
                 throw new Error(`Failed to load ${planType} subscription price`);
             }
 
@@ -321,6 +339,10 @@ export function SubscriptionModal({
     );
     const showPriceLoadingState = isPriceLoading && DISPLAYED_PLAN_ORDER.some((planType) => !livePrices[planType]);
     const showPriceFallbackCopy = hasPriceFetchError;
+    const selectedPlanHasLivePrice = Boolean(livePrices[selectedPlanType]);
+    const checkoutButtonLabel = selectedPlanHasLivePrice
+        ? `${selectedPlan.priceLabel}으로 결정 리딩 열기`
+        : '최신 가격 확인 후 결정 리딩 열기';
 
     const trackOpenEvent = useCallback(async () => {
         const viewSignature = `${source}:membership:${pathname}:${resolvedDefaultPlanType}`;
@@ -585,7 +607,7 @@ export function SubscriptionModal({
                                         ) : null}
                                         {showPriceFallbackCopy ? (
                                             <p className="text-xs text-white/48">
-                                                실시간 가격 확인이 일부 지연되어 기본 구독 가격으로 먼저 표시합니다.
+                                                실시간 가격 확인이 지연되어 금액은 결제 단계에서 최신 값으로 다시 확인할 수 있습니다.
                                             </p>
                                         ) : null}
                                     </div>
@@ -657,7 +679,7 @@ export function SubscriptionModal({
                                             whileTap={shouldReduceMotion || isLoading ? undefined : { scale: 0.99 }}
                                             className="mt-6 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#f8e7aa] via-[#d4af37] to-[#b8902f] px-5 py-4 text-base font-bold text-[#111111] shadow-[0_18px_40px_rgba(212,175,55,0.2)] transition-[box-shadow,filter,opacity] duration-300 hover:shadow-[0_24px_46px_rgba(212,175,55,0.28)] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f4d88a]/80"
                                         >
-                                            <span>{isLoading ? 'Stripe Checkout 준비 중...' : `${selectedPlan.priceLabel}으로 결정 리딩 열기`}</span>
+                                            <span>{isLoading ? 'Stripe Checkout 준비 중...' : checkoutButtonLabel}</span>
                                             {!isLoading && <ArrowRight size={18} />}
                                         </motion.button>
 

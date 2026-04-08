@@ -126,7 +126,7 @@ function formatSeriesLabel(dataKey?: string) {
         case 'dailyReturnsAfterReading':
             return '다시 방문';
         case 'paidConversions':
-            return '결제 완료';
+            return '유료 전환';
         case 'installs':
             return '새 방문';
         case 'activeUsers':
@@ -284,9 +284,9 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
                 'bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]',
         },
         {
-            label: '결제 완료',
+            label: '유료 전환',
             value: summary.totals.paidConversions.toLocaleString(),
-            caption: `첫 결과 대비 ${formatPercent(summary.activation.resultToPaidConversionRate)}가 결제로 이어졌습니다.`,
+            caption: `첫 결과 대비 ${formatPercent(summary.activation.resultToPaidConversionRate)}가 실제 유료 결제로 이어졌습니다.`,
             icon: CircleDollarSign,
             iconClassName: 'text-amber-200',
             surfaceClassName:
@@ -307,7 +307,7 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
                         </h2>
                         <p className="mt-4 text-sm leading-7 text-white/58 sm:text-base">
                             브라우저 단위 보조 신호보다 실제 오라클 코어 루프가 얼마나 이어지는지를 먼저 보이도록 정렬했습니다.
-                            무료 결과, 추가 질문, 다시 방문, 결제 완료를 같은 화면에서 바로 볼 수 있습니다.
+                            무료 결과, 추가 질문, 다시 방문, 유료 전환을 같은 화면에서 바로 볼 수 있습니다.
                         </p>
                     </div>
 
@@ -359,7 +359,7 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
                             <SignalChip label="무료 결과" value={formatCompact(summary.activation.firstResultViews)} />
                             <SignalChip label="추가 질문" value={formatCompact(summary.activation.followupStarts)} />
                             <SignalChip label="다시 방문" value={formatCompact(summary.activation.dailyReturnsAfterReading)} />
-                            <SignalChip label="결제" value={formatCompact(summary.totals.paidConversions)} />
+                            <SignalChip label="유료 전환" value={formatCompact(summary.totals.paidConversions)} />
                         </div>
                     </div>
 
@@ -454,7 +454,7 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
                             <InsightRow
                                 label="결제 전환율"
                                 value={formatPercent(summary.rates.checkoutConversionRate)}
-                                caption="결제 시작 대비 실제 결제 완료 비율입니다."
+                                caption="결제 시작 대비 실제 유료 결제 완료 비율입니다."
                             />
                         </div>
                     </div>
@@ -492,9 +492,9 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
                                 caption="최근 리딩을 본 사용자가 다시 돌아온 수와 비율입니다."
                             />
                             <InsightRow
-                                label="결제 완료"
+                                label="유료 전환"
                                 value={`${summary.totals.paidConversions.toLocaleString()} · ${formatPercent(summary.activation.resultToPaidConversionRate)}`}
-                                caption="첫 결과를 본 뒤 실제 결제 완료까지 이어진 수와 전환율입니다."
+                                caption="첫 결과를 본 뒤 실제 유료 결제로 이어진 수와 전환율입니다."
                             />
                         </div>
 

@@ -3,6 +3,7 @@ import { devLog } from '@/lib/dev-logger';
 import { sendFollowUpNudgeEmail } from '@/lib/email/sender';
 import { trackGrowthEvent } from '@/lib/growth-events';
 import { createSingleUsePromotionCode } from '@/lib/promo-codes';
+import { extractReadingAccessKey } from '@/lib/reading-access';
 
 export type FollowUpStage = 'D2_DISCOUNT' | 'D5_COSMIC_WINDOW' | 'H48' | 'D7';
 
@@ -25,6 +26,23 @@ interface FollowUpJobMetadata {
   cosmicWindowTitle?: string;
   cosmicWindowLabel?: string;
   phase4Url?: string;
+}
+
+function appendAccessKeyFragment(url: string, accessKey?: string | null): string {
+  if (!accessKey) {
+    return url;
+  }
+
+  try {
+    const parsedUrl = new URL(url);
+    const hashParams = new URLSearchParams(parsedUrl.hash.replace(/^#/, ''));
+    hashParams.set('accessKey', accessKey);
+    parsedUrl.hash = hashParams.toString();
+    return parsedUrl.toString();
+  } catch {
+    const hash = `accessKey=${encodeURIComponent(accessKey)}`;
+    return url.includes('#') ? `${url}&${hash}` : `${url}#${hash}`;
+  }
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -368,7 +386,8 @@ export async function runDueFollowUps({
         continue;
       }
 
-      const readingUrl = `${appUrl}/share/${job.readingId}?view=full`;
+      const accessKey = extractReadingAccessKey(reading.metadata);
+      const readingUrl = appendAccessKeyFragment(`${appUrl}/share/${job.readingId}?view=full`, accessKey);
       const stage = resolveStage(job.stage);
       if (!stage) {
         await prisma.followUpJob.update({
@@ -389,7 +408,7 @@ export async function runDueFollowUps({
       const cosmicWindow = isCosmicWindowStage ? getCosmicWindowContent(job.scheduledFor) : null;
       const readingLanguage = getReadingLanguage(reading.metadata);
       const phase4Url = isCosmicWindowStage
-        ? `${appUrl}/start?reading_id=${encodeURIComponent(job.readingId)}`
+        ? appendAccessKeyFragment(`${appUrl}/start?reading_id=${encodeURIComponent(job.readingId)}`, accessKey)
         : undefined;
       const dailyUrl = readingLanguage === 'ko' ? `${appUrl}/daily` : undefined;
       const subjectHint = isDiscountStage

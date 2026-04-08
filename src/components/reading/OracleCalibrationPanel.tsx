@@ -211,7 +211,7 @@ export function OracleCalibrationPanel({
               </div>
               <div className="mt-1 text-[9px] uppercase tracking-[0.14em] text-white/40 md:text-[10px] md:tracking-[0.22em]">
                 {showPrecisionDetails
-                  ? persona.title
+                  ? (language === 'en' ? persona.titleEn : persona.titleKo)
                   : (language === 'en' ? persona.toneEn : persona.toneKo)}
               </div>
             </div>
@@ -270,7 +270,7 @@ export function OracleCalibrationPanel({
                 <div className="mt-1 font-cinzel text-lg text-starlight">{persona.name}</div>
                 <div className="text-sm text-white/55">
                   {showPrecisionDetails
-                    ? persona.title
+                    ? (language === 'en' ? persona.titleEn : persona.titleKo)
                     : (language === 'en' ? persona.toneEn : persona.toneKo)}
                 </div>
               </div>

@@ -41,7 +41,7 @@ export function CrossroadsSection() {
                 const response = await fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`, { cache: 'no-store' });
                 if (response.ok) {
                     const data = await response.json();
-                    if (data.formattedPrice) {
+                    if (data.metadata?.fallback !== 'true' && data.formattedPrice) {
                         setDynamicPrice(data.formattedPrice);
                     }
                     if (data.metadata?.compare_at_price) {
@@ -54,6 +54,8 @@ export function CrossroadsSection() {
         };
         fetchPrice();
     }, []);
+    const displayPrice = dynamicPrice || '결제 단계에서 확인';
+
     return (
         <section className="relative min-h-screen py-20 flex items-center justify-center bg-void overflow-hidden">
 
@@ -117,8 +119,10 @@ export function CrossroadsSection() {
                             </div>
 
                             <span className="text-sm font-medium mt-1 text-gray-500 group-hover:text-deep-navy/80 transition-colors">
-                                <span className="line-through opacity-50 mr-2">{originalPrice}</span>
-                                <span className="font-bold text-red-500 text-lg">{dynamicPrice}</span>
+                                {dynamicPrice ? (
+                                    <span className="line-through opacity-50 mr-2">{originalPrice}</span>
+                                ) : null}
+                                <span className="font-bold text-red-500 text-lg">{displayPrice}</span>
                             </span>
                         </Link>
                     </div>

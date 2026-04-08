@@ -1,6 +1,10 @@
 import { prisma } from '@/lib/prisma';
 import { getGrowthSummary } from '@/lib/growth-metrics';
-import { getCanonicalGrowthEvent, parseGrowthMetadata } from '@/lib/growth-analytics';
+import {
+    getCanonicalGrowthEvent,
+    isCountablePaidConversionEvent,
+    parseGrowthMetadata,
+} from '@/lib/growth-analytics';
 import { extractReadingAccessKey, normalizeReadingMetadata } from '@/lib/reading-access';
 import { getOracleIntentLabel } from '@/lib/ai/oracle-personas';
 
@@ -913,7 +917,7 @@ export async function getAdvisorOpsSummary(days: number): Promise<AdvisorOpsSumm
         if (canonicalEvent === 'daily_return_after_reading') {
             aggregate.dailyReturn = true;
         }
-        if (canonicalEvent === 'paid_conversion') {
+        if (canonicalEvent === 'paid_conversion' && isCountablePaidConversionEvent(metadata)) {
             aggregate.paid = true;
         }
 

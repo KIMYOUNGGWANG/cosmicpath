@@ -1,9 +1,10 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
+import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { getReadingShareSummary } from '@/lib/reading-share';
-import { SharedPageRedirect } from '@/components/reading/shared-page-redirect';
+import { stripPrivateReadingMetadata } from '@/lib/reading-access';
 
 import { SharedPageClient } from './SharedPageClient';
 
@@ -11,6 +12,7 @@ interface SharedPageProps {
   params: Promise<{
     id: string;
   }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export async function generateMetadata({ params }: SharedPageProps): Promise<Metadata> {
@@ -64,8 +66,11 @@ export async function generateMetadata({ params }: SharedPageProps): Promise<Met
   };
 }
 
-export default async function SharedPage({ params }: SharedPageProps) {
+export default async function SharedPage({ params, searchParams }: SharedPageProps) {
   const { id } = await params;
+  if (searchParams) {
+    await searchParams;
+  }
 
   const reading = await prisma.readingResult.findUnique({
     where: { id },
@@ -73,6 +78,7 @@ export default async function SharedPage({ params }: SharedPageProps) {
       id: true,
       data: true,
       metadata: true,
+      userId: true,
     },
   });
 
@@ -80,19 +86,26 @@ export default async function SharedPage({ params }: SharedPageProps) {
     notFound();
   }
 
-  const reportData = JSON.parse(reading.data);
-  const metadata = reading.metadata ? JSON.parse(reading.metadata) : {};
   const share = getReadingShareSummary(reading);
+  const session = await auth();
+  const sessionUserId = session?.user?.id ?? null;
+  const hasSessionOwnerAccess = Boolean(
+    reading.userId &&
+    sessionUserId &&
+    reading.userId === sessionUserId
+  );
+  const initialReportData = hasSessionOwnerAccess ? JSON.parse(reading.data) : null;
+  const initialMetadata = hasSessionOwnerAccess
+    ? stripPrivateReadingMetadata(reading.metadata)
+    : null;
 
   return (
-    <>
-      <SharedPageRedirect id={id} />
-      <SharedPageClient
-        id={id}
-        reportData={reportData}
-        metadata={metadata}
-        shareSummary={share}
-      />
-    </>
+    <SharedPageClient
+      id={id}
+      initialReportData={initialReportData}
+      initialMetadata={initialMetadata}
+      shareSummary={share}
+      readingOwnerUserId={reading.userId}
+    />
   );
 }

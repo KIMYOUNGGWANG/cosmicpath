@@ -124,6 +124,31 @@ function hasPremiumReportContent(report: PremiumReportState | null): report is P
   return Boolean(report?.summary && report?.traits);
 }
 
+function getReadingPhaseLabels(language: 'ko' | 'en') {
+  const labelsKo = [
+    "",
+    "질문에 맞는 가이드를 정리 중... (1/7)",
+    "보조 신호를 같이 확인 중... (2/7)",
+    "사주 원국을 계산 중... (3/7)",
+    "변곡점과 흐름을 읽는 중... (4/7)",
+    "분야별 포인트를 정리 중... (5/7)",
+    "언제 움직일지 정리 중... (6/7)",
+    "첫 결론을 마무리 중... (7/7)"
+  ];
+  const labelsEn = [
+    "",
+    "Aligning your oracle guide... (1/7)",
+    "Cross-checking the supporting signals... (2/7)",
+    "Calculating your saju foundation... (3/7)",
+    "Mapping the flow and turning points... (4/7)",
+    "Weaving signals across life areas... (5/7)",
+    "Opening your action window and timing map... (6/7)",
+    "Unsealing the final oracle verdict... (7/7)"
+  ];
+
+  return language === 'en' ? labelsEn : labelsKo;
+}
+
 function CosmicPathContent() {
   const [step, setStep] = useState<'input' | 'result'>('input');
   const [readingData, setReadingData] = useState<ReadingData | null>(null);
@@ -204,6 +229,38 @@ function CosmicPathContent() {
     );
   };
 
+  const getAccessKeyFromLocation = () => {
+    if (typeof window === 'undefined') return null;
+
+    const url = new URL(window.location.href);
+    const hashParams = new URLSearchParams(url.hash.replace(/^#/, ''));
+
+    return hashParams.get('accessKey') || url.searchParams.get('accessKey');
+  };
+
+  const stripAccessKeyFromLocation = () => {
+    if (typeof window === 'undefined') return;
+
+    const url = new URL(window.location.href);
+    const hashParams = new URLSearchParams(url.hash.replace(/^#/, ''));
+    const hadSearchAccessKey = url.searchParams.has('accessKey');
+    const hadHashAccessKey = hashParams.has('accessKey');
+
+    if (!hadSearchAccessKey && !hadHashAccessKey) {
+      return;
+    }
+
+    url.searchParams.delete('accessKey');
+    hashParams.delete('accessKey');
+    url.hash = hashParams.toString();
+
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${url.pathname}${url.search}${url.hash}`
+    );
+  };
+
   const syncReadingAccessKey = (accessKey?: string | null) => {
     if (!accessKey) return;
     saveToSessionAndBackup('pending_reading_access_key', accessKey);
@@ -227,7 +284,7 @@ function CosmicPathContent() {
       try {
         const response = await fetch('/api/payment/price');
         const data = await response.json();
-        if (data.formattedPrice) {
+        if (data.metadata?.fallback !== 'true' && data.formattedPrice) {
           setDynamicPrice(data.formattedPrice);
         }
       } catch (error) {
@@ -402,6 +459,7 @@ function CosmicPathContent() {
       const paid = params.get('paid');
       const canceled = params.get('canceled');
       const readingIdFromUrl = params.get('reading_id');
+      const accessKeyFromUrl = getAccessKeyFromLocation() || params.get('accessKey');
 
       // Small delay ONLY if we don't have explicit URL flags (relying on sessionStorage only)
       if (!paid && !canceled && !readingIdFromUrl) {
@@ -457,12 +515,16 @@ function CosmicPathContent() {
       if (readingId && !hasStoredPayload(sessionStorage.getItem('pending_reading_id'))) {
         sessionStorage.setItem('pending_reading_id', readingId);
       }
+      if (hasStoredPayload(accessKeyFromUrl)) {
+        syncReadingAccessKey(accessKeyFromUrl);
+        stripAccessKeyFromLocation();
+      }
 
       let pendingData = sessionPendingData;
       let pendingReportJson = sessionPendingReport;
       let pendingMetadataJson = sessionPendingMetadata;
       let pendingReadingId = sessionReadingId || backupReadingId;
-      let pendingReadingAccessKey = sessionReadingAccessKey || backupReadingAccessKey;
+      let pendingReadingAccessKey = accessKeyFromUrl || sessionReadingAccessKey || backupReadingAccessKey;
 
       if (hasBackupResume) {
         if (!hasStoredPayload(pendingReadingAccessKey) && hasStoredPayload(backupReadingAccessKey)) {
@@ -618,6 +680,16 @@ function CosmicPathContent() {
             if (!isLoadingRef.current) {
               const nextPhase = determineNextPremiumPhase(restoredReport);
               if (nextPhase <= TOTAL_PREMIUM_PHASES) {
+                const resumeLanguage =
+                  (restoredReadingData.language as 'ko' | 'en') ||
+                  (parsedMetadata?.language as 'ko' | 'en') ||
+                  'ko';
+                const labels = getReadingPhaseLabels(resumeLanguage);
+                setLoadingPhase({
+                  phase: nextPhase,
+                  label: labels[nextPhase] || (resumeLanguage === 'en' ? 'Preparing your reading...' : '리딩을 정리하는 중...'),
+                });
+                setHasCheckedResume(true);
                 await startReadingRef.current?.(
                   (restoredReadingData as ReadingData & { tarotCards?: { name: string; isReversed: boolean }[] }).tarotCards || [],
                   true,
@@ -641,6 +713,8 @@ function CosmicPathContent() {
     };
 
     checkResume();
+    // This restore flow must run only once on mount to avoid duplicate premium resumes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   // Step 1: Input Submission -> Go Directly to Result
   const handleInputSubmit = (data: ReadingData) => {
@@ -709,34 +783,13 @@ function CosmicPathContent() {
 
     try {
       setIsLoading(true);
+      setStreamContent('');
 
       // If resuming, use existing report, otherwise start empty
       let accumulatedReport: PremiumReportState = initialReport || {};
       let accumulatedMetadata: ReadingMetadata = metadata || {};
       const totalPhases = TOTAL_PREMIUM_PHASES;
-
-      const labelsKo = [
-        "",
-        "질문에 맞는 가이드를 정리 중... (1/7)",
-        "보조 신호를 같이 확인 중... (2/7)",
-        "사주 원국을 계산 중... (3/7)",
-        "변곡점과 흐름을 읽는 중... (4/7)",
-        "분야별 포인트를 정리 중... (5/7)",
-        "언제 움직일지 정리 중... (6/7)",
-        "첫 결론을 마무리 중... (7/7)"
-      ];
-      // ... (labelsEn omitted for brevity, assuming existing code structure)
-      const labelsEn = [
-        "",
-        "Aligning your oracle guide... (1/7)",
-        "Cross-checking the supporting signals... (2/7)",
-        "Calculating your saju foundation... (3/7)",
-        "Mapping the flow and turning points... (4/7)",
-        "Weaving signals across life areas... (5/7)",
-        "Opening your action window and timing map... (6/7)",
-        "Unsealing the final oracle verdict... (7/7)"
-      ];
-      const labels = language === 'en' ? labelsEn : labelsKo;
+      const labels = getReadingPhaseLabels(language);
 
       const startPhase = startPhaseOverride || 1;
       // If we are not premium, only show Phase 1 (Summary + Traits + Core) - 비용 절감
@@ -759,16 +812,41 @@ function CosmicPathContent() {
             previousReport: accumulatedReport, // Pass context
             isPaid: isPremium || isPremiumOverride, // 🔒 결제 여부 전달
             readingId: sessionStorage.getItem('pending_reading_id') || undefined, // 🔑 검증용 ID 전달
+            accessKey: getStoredReadingAccessKey() || undefined,
           }),
         });
 
+        const result = await response.json().catch(() => null);
+
         if (!response.ok) {
-          throw new Error(`Phase ${phase} failed: ${response.statusText}`);
+          const serverMessage =
+            result && typeof result.error === 'string'
+              ? result.error
+              : `Phase ${phase} failed: ${response.statusText}`;
+          throw new Error(serverMessage);
         }
 
-        const result = await response.json();
-
         if (!result.success) {
+          if (result.isFallback && typeof result.fallbackMessage === 'string') {
+            const fallbackReport: PremiumReportState = {
+              summary: {
+                title: language === 'en' ? 'Your reading summary' : '첫 리딩 요약',
+                content: result.fallbackMessage,
+                trust_score: 3,
+                trust_reason: language === 'en'
+                  ? 'A simplified fallback summary was prepared because the full AI response was unstable.'
+                  : '전체 AI 응답이 불안정해서 요약형 fallback 결과를 먼저 준비했습니다.',
+              },
+              traits: [],
+            };
+
+            accumulatedReport = { ...accumulatedReport, ...fallbackReport };
+            setReportData({ ...accumulatedReport });
+            setStreamContent(result.fallbackMessage);
+            saveToSessionAndBackup('pending_report_data', JSON.stringify(accumulatedReport));
+            break;
+          }
+
           throw new Error(result.error || `Phase ${phase} validation failed`);
         }
 
@@ -955,7 +1033,10 @@ function CosmicPathContent() {
 
     } catch (error) {
       console.error('Reading failed:', error);
-      setStreamContent(language === 'en' ? "Failed to connect to the server. Please try again." : "서버 연결에 실패했습니다. 다시 시도해주세요.");
+      const message = error instanceof Error && error.message
+        ? error.message
+        : (language === 'en' ? "Failed to connect to the server. Please try again." : "서버 연결에 실패했습니다. 다시 시도해주세요.");
+      setStreamContent(message);
     } finally {
       setIsLoading(false);
     }

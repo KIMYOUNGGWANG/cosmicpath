@@ -741,11 +741,15 @@ export function ReadingInput({
                                 {isEn ? 'Birth Date' : '생년월일'}
                             </label>
                             <input
-                                type="date"
+                                type="text"
+                                inputMode="numeric"
                                 value={birthDate}
-                                onChange={(e) => setBirthDate(e.target.value)}
+                                onChange={(e) => handleDateChange(e.target.value, setBirthDate)}
+                                placeholder="YYYY-MM-DD"
+                                maxLength={10}
+                                pattern="\d{4}-\d{2}-\d{2}"
                                 required
-                                className="mt-3 block min-h-[48px] w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-starlight transition-colors focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none"
+                                className="mt-3 block min-h-[48px] w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 font-mono text-base text-starlight transition-colors placeholder:text-white/20 focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none"
                             />
                             <p className="mt-2 text-[10px] text-dim font-mono tracking-widest">YYYY-MM-DD</p>
                         </div>
