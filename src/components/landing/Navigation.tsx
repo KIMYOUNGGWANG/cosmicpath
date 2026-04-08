@@ -7,6 +7,7 @@ import { Menu, Search, Sparkles, User } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 
 import { LoginModal, useLoginModal } from '@/components/auth/LoginModal';
+import { GrowthTrackedLink } from '@/components/common/GrowthTracking';
 import { MobileMenu } from '@/components/common/MobileMenu';
 import UserMenu from '@/components/layout/UserMenu';
 import { OrderLookupModal } from '@/components/orders/OrderLookupModal';
@@ -79,8 +80,23 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                             href="/daily"
                             className="shrink-0 whitespace-nowrap font-cinzel text-xs font-medium uppercase tracking-widest text-starlight transition-colors hover:text-acc-gold"
                         >
-                            {isEnglish ? 'Daily Signals' : '오늘의 운세'}
+                            {isEnglish ? 'Daily Signals' : '오늘 흐름'}
                         </Link>
+                        {!isEnglish ? (
+                            <GrowthTrackedLink
+                                href="/career/uncertainty"
+                                trackingEvent={{
+                                    event: 'career_uncertainty_nav_clicked',
+                                    source: 'landing_navigation',
+                                    step: 'desktop_nav',
+                                    language: 'ko',
+                                    context: 'career',
+                                }}
+                                className="shrink-0 whitespace-nowrap font-cinzel text-xs font-medium uppercase tracking-widest text-starlight transition-colors hover:text-acc-gold"
+                            >
+                                커리어 고민
+                            </GrowthTrackedLink>
+                        ) : null}
                         {isEnglish ? (
                             <Link
                                 href="/guides"
@@ -110,7 +126,7 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                             href="/start?reset=true"
                             className="inline-flex shrink-0 items-center justify-center rounded-full border border-white/20 px-5 py-2 font-cinzel text-xs font-bold uppercase tracking-widest text-white transition-all duration-300 hover:border-acc-gold hover:bg-acc-gold hover:text-deep-navy"
                         >
-                            {isEnglish ? 'Start Oracle' : '오라클 시작'}
+                            {isEnglish ? 'Start Free' : '무료로 시작'}
                         </Link>
                     </div>
 
@@ -126,7 +142,7 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                             href="/start?reset=true"
                             className="inline-flex items-center justify-center gap-1 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 font-cinzel text-[10px] font-bold uppercase tracking-widest text-white transition-all duration-300 hover:border-acc-gold hover:text-acc-gold"
                         >
-                            {isEnglish ? 'Oracle' : '오라클'}
+                            {isEnglish ? 'Start' : '시작'}
                         </Link>
 
                         <button
@@ -151,7 +167,7 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                                 icon: User,
                                 iconColorClass: 'group-hover:bg-white/10 group-hover:text-white',
                                 label: isEnglish ? 'LOGIN' : '로그인',
-                                subLabel: isEnglish ? 'Save your reading path' : '나의 운명을 저장하세요',
+                                subLabel: isEnglish ? 'Save your reading path' : '내 리딩 기록 저장하기',
                                 onClick: openLoginModal,
                             },
                         ]
@@ -169,9 +185,21 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                         icon: Sparkles,
                         iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
                         label: isEnglish ? 'DAILY SIGNALS' : '오늘의 운세',
-                        subLabel: isEnglish ? 'Birth-based daily guidance' : '생년월일 기반 데일리 운세',
+                        subLabel: isEnglish ? 'Birth-based daily guidance' : '오늘 흐름 바로 보기',
                         href: '/daily',
                     },
+                    ...(!isEnglish
+                        ? [
+                            {
+                                type: 'link' as const,
+                                icon: Sparkles,
+                                iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
+                                label: '커리어 고민',
+                                subLabel: '버틸지 옮길지 헷갈릴 때',
+                                href: '/career/uncertainty',
+                            },
+                        ]
+                        : []),
                     ...(isEnglish
                         ? [
                             {
@@ -188,8 +216,8 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                         type: 'link',
                         icon: Sparkles,
                         iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
-                        label: isEnglish ? 'START ANALYSIS' : '오라클 시작',
-                        subLabel: isEnglish ? 'Begin your cosmic journey' : '코스믹 여정을 시작하세요',
+                        label: isEnglish ? 'START FREE' : '무료로 시작',
+                        subLabel: isEnglish ? 'Begin your cosmic journey' : '질문 하나로 바로 보기',
                         href: '/start?reset=true',
                     },
                 ]}

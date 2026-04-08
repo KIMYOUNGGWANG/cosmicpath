@@ -29,10 +29,10 @@ interface OracleCalibrationPanelProps {
 const STAGE_LABELS = {
   precision: {
     ko: [
-      '출생 좌표 정렬',
+      '출생 시간 기준 확인',
       '진태양시 보정',
-      '사주 원국 재계산',
-      '자미 · 점성 합일',
+      '사주 다시 계산',
+      '교차 확인 정리',
     ],
     en: [
       'Birth Coordinate Sync',
@@ -43,10 +43,10 @@ const STAGE_LABELS = {
   },
   basic: {
     ko: [
-      '질문 흐름 정리',
-      '사주 해석 정렬',
-      '타로 · 점성 교차 확인',
-      '최종 리포트 구성',
+      '질문 정리',
+      '사주 계산',
+      '타로 · 별자리 확인',
+      '첫 결과 구성',
     ],
     en: [
       'Question Framing',
@@ -60,19 +60,19 @@ const STAGE_LABELS = {
 const PANEL_COPY = {
   precision: {
     ko: {
-      label: 'Oracle Calibration',
-      pendingTitle: '우주 좌표를 정밀 정렬하는 중',
-      readyTitle: '진태양시 보정 완료',
-      loadingText: '차트 시간, 페르소나 톤, 삼중 오라클 수렴도를 다시 조율하고 있습니다.',
-      snapshotLabel: 'Calibration Snapshot',
-      guideLabel: '선택한 오라클 가이드',
+      label: '정밀 리딩 준비',
+      pendingTitle: '출생 시간 기준을 다시 맞추는 중',
+      readyTitle: '정밀 보정이 끝났어요',
+      loadingText: '입력한 시간과 출생지 기준을 다시 확인하고, 교차 해석을 정리하고 있습니다.',
+      snapshotLabel: '리딩 기준 요약',
+      guideLabel: '선택한 가이드',
       timingLabel: '진태양시',
       timingPending: '경도 보정 대기 중',
       timingExplainLabel: '입력 시각 → 적용 시각',
       pillarLabel: '최종 시주',
-      scopeLabel: '오라클 수렴도',
-      scopePending: '자미두수와 점성 레이어를 동기화하는 중',
-      footerText: '출생 경도, 진태양시, 삼중 오라클 합성 기준으로 차트를 다시 계산하고 있습니다.',
+      scopeLabel: '교차 확인 범위',
+      scopePending: '자미두수와 점성 레이어를 함께 정리하는 중',
+      footerText: '출생지와 시간 기준을 다시 확인한 뒤, 사주와 다른 해석 레이어를 함께 정리하고 있습니다.',
     },
     en: {
       label: 'Oracle Calibration',
@@ -92,19 +92,19 @@ const PANEL_COPY = {
   },
   basic: {
     ko: {
-      label: 'Oracle Reading',
-      pendingTitle: '리딩 흐름을 정리하는 중',
-      readyTitle: '핵심 리딩 정리 완료',
-      loadingText: '사주, 점성술, 타로 흐름을 교차 확인하며 리포트를 정리하고 있습니다.',
-      snapshotLabel: 'Reading Snapshot',
-      guideLabel: '현재 오라클 가이드',
+      label: '리딩 준비 중',
+      pendingTitle: '질문에 맞는 결과를 정리하는 중',
+      readyTitle: '핵심 결과 정리 완료',
+      loadingText: '질문, 사주, 타로, 별자리 신호를 같이 확인하고 있습니다.',
+      snapshotLabel: '리딩 요약',
+      guideLabel: '현재 가이드',
       timingLabel: '해석 기준',
       timingPending: '출생지 입력이 없어 위치 기반 보정은 전면 노출하지 않습니다',
       timingExplainLabel: '입력 기준',
       pillarLabel: '시주',
       scopeLabel: '분석 범위',
       scopePending: '사주 · 점성술 · 타로',
-      footerText: '출생지 정보가 없어 위치 기반 진태양시 보정은 UI에 드러내지 않고, 입력한 생년월일시 기준으로 리딩을 정리하고 있습니다.',
+      footerText: '출생지 정보가 없으면 입력한 생년월일시를 기준으로 먼저 리딩을 정리합니다.',
     },
     en: {
       label: 'Oracle Reading',
@@ -185,7 +185,7 @@ export function OracleCalibrationPanel({
               </h3>
             </div>
             <div className="max-w-full self-start rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-white/55 sm:text-[11px] sm:tracking-[0.24em]">
-              {showPrecisionDetails ? persona.name : (language === 'en' ? 'Oracle Read' : '오라클 리딩')}
+              {showPrecisionDetails ? persona.name : (language === 'en' ? 'Reading View' : '리딩 보기')}
             </div>
           </div>
 
@@ -211,7 +211,7 @@ export function OracleCalibrationPanel({
               </div>
               <div className="mt-1 text-[9px] uppercase tracking-[0.14em] text-white/40 md:text-[10px] md:tracking-[0.22em]">
                 {showPrecisionDetails
-                  ? persona.title
+                  ? (language === 'en' ? persona.titleEn : persona.titleKo)
                   : (language === 'en' ? persona.toneEn : persona.toneKo)}
               </div>
             </div>
@@ -270,7 +270,7 @@ export function OracleCalibrationPanel({
                 <div className="mt-1 font-cinzel text-lg text-starlight">{persona.name}</div>
                 <div className="text-sm text-white/55">
                   {showPrecisionDetails
-                    ? persona.title
+                    ? (language === 'en' ? persona.titleEn : persona.titleKo)
                     : (language === 'en' ? persona.toneEn : persona.toneKo)}
                 </div>
               </div>

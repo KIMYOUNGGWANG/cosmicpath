@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { type ComponentProps, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
 import { ArrowRight, ChevronLeft, Lock, Orbit, Sparkles, Stars } from 'lucide-react';
 
@@ -9,10 +11,17 @@ import { PremiumReport } from '@/components/reading/premium-report';
 import { ChatInterface } from '@/components/oracle-chat/ChatInterface';
 import { ShareCard } from '@/components/reading/share-card';
 
+const subscribeToClient = () => () => {};
+
+type SharedReportData = ComponentProps<typeof PremiumReport>['report'];
+type SharedReportMetadata = (ComponentProps<typeof PremiumReport>['metadata'] & {
+  isPremium?: boolean;
+}) | null;
+
 interface SharedPageClientProps {
   id: string;
-  reportData: any;
-  metadata: any;
+  initialReportData: SharedReportData | null;
+  initialMetadata: SharedReportMetadata;
   shareSummary: {
     title: string;
     description: string;
@@ -20,6 +29,7 @@ interface SharedPageClientProps {
     mainCardName: string;
     language: 'ko' | 'en';
   };
+  readingOwnerUserId: string | null;
 }
 
 const sectionReveal = {
@@ -32,21 +42,75 @@ const sectionTransition = {
   ease: [0.22, 1, 0.36, 1] as const,
 };
 
+function readAccessKeyFromUrl(): string | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const url = new URL(window.location.href);
+  const hashParams = new URLSearchParams(url.hash.replace(/^#/, ''));
+
+  return hashParams.get('accessKey') || url.searchParams.get('accessKey');
+}
+
+function stripAccessKeyFromUrl(): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  const url = new URL(window.location.href);
+  const hashParams = new URLSearchParams(url.hash.replace(/^#/, ''));
+  const hadSearchAccessKey = url.searchParams.has('accessKey');
+  const hadHashAccessKey = hashParams.has('accessKey');
+
+  if (!hadSearchAccessKey && !hadHashAccessKey) {
+    return;
+  }
+
+  url.searchParams.delete('accessKey');
+  hashParams.delete('accessKey');
+  url.hash = hashParams.toString();
+
+  window.history.replaceState(
+    window.history.state,
+    '',
+    `${url.pathname}${url.search}${url.hash}`
+  );
+}
+
 export function SharedPageClient({
   id,
-  reportData,
-  metadata,
+  initialReportData,
+  initialMetadata,
   shareSummary,
+  readingOwnerUserId,
 }: SharedPageClientProps) {
-  const [isOwner, setIsOwner] = useState(false);
-  const [isReady, setIsReady] = useState(false);
+  const searchParams = useSearchParams();
+  const { data: session } = useSession();
+  const isClient = useSyncExternalStore(subscribeToClient, () => true, () => false);
+  const requestedView = searchParams.get('view');
+  const [reportData, setReportData] = useState<SharedReportData | null>(initialReportData);
+  const [metadata, setMetadata] = useState<SharedReportMetadata>(initialMetadata);
+  const [runtimeAccessKey, setRuntimeAccessKey] = useState<string | null>(null);
+  const [isResolvingFullReport, setIsResolvingFullReport] = useState(false);
+  const [ownerResolutionState, setOwnerResolutionState] = useState<'idle' | 'denied' | 'error'>('idle');
+  const hasStoredOwnerSession = useMemo(() => {
+    if (!isClient) {
+      return false;
+    }
 
-  useEffect(() => {
     const storedId = sessionStorage.getItem('pending_reading_id');
+    const storedAccessKey =
+      sessionStorage.getItem('pending_reading_access_key') ||
+      localStorage.getItem('pending_reading_access_key');
     const paymentCompleted = sessionStorage.getItem('payment_completed') === 'true';
-    setIsOwner(Boolean(storedId && storedId === id && paymentCompleted));
-    setIsReady(true);
-  }, [id]);
+
+    return Boolean(
+      storedId &&
+      storedId === id &&
+      (paymentCompleted || Boolean(storedAccessKey))
+    );
+  }, [id, isClient]);
 
   const shareUrl = useMemo(() => {
     if (typeof window === 'undefined') {
@@ -54,15 +118,168 @@ export function SharedPageClient({
     }
     return `${window.location.origin}/share/${id}`;
   }, [id]);
+  const startHref = useMemo(() => {
+    const params = new URLSearchParams({ reading_id: id });
+    const hash = runtimeAccessKey
+      ? `#accessKey=${encodeURIComponent(runtimeAccessKey)}`
+      : '';
+    return `/start?${params.toString()}${hash}`;
+  }, [id, runtimeAccessKey]);
 
   const isEn = shareSummary.language === 'en';
   const trustPercent = Math.round((shareSummary.trustScore / 5) * 100);
+  const hasAccountOwnerAccess = Boolean(
+    readingOwnerUserId &&
+    session?.user?.id &&
+    session.user.id === readingOwnerUserId
+  );
 
-  if (!isReady) {
+  useEffect(() => {
+    if (!isClient) {
+      return;
+    }
+
+    const storedAccessKey =
+      sessionStorage.getItem('pending_reading_access_key') ||
+      localStorage.getItem('pending_reading_access_key');
+    const locationAccessKey = readAccessKeyFromUrl();
+    const resolvedAccessKey = locationAccessKey || storedAccessKey;
+
+    if (locationAccessKey) {
+      sessionStorage.setItem('pending_reading_access_key', locationAccessKey);
+      localStorage.setItem('pending_reading_access_key', locationAccessKey);
+      localStorage.setItem('backup_timestamp', Date.now().toString());
+      stripAccessKeyFromUrl();
+    }
+
+    if (initialReportData || locationAccessKey || resolvedAccessKey) {
+      sessionStorage.setItem('pending_reading_id', id);
+      localStorage.setItem('pending_reading_id', id);
+      localStorage.setItem('backup_timestamp', Date.now().toString());
+    }
+
+    setRuntimeAccessKey(resolvedAccessKey);
+  }, [id, initialReportData, isClient]);
+
+  useEffect(() => {
+    if (!isClient || reportData || isResolvingFullReport) {
+      return;
+    }
+
+    const shouldResolveFullReport =
+      requestedView === 'full' ||
+      hasAccountOwnerAccess ||
+      Boolean(runtimeAccessKey);
+
+    if (!shouldResolveFullReport) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const resolveFullReport = async () => {
+      setIsResolvingFullReport(true);
+      setOwnerResolutionState('idle');
+
+      try {
+        const params = new URLSearchParams({ id });
+        if (runtimeAccessKey) {
+          params.set('accessKey', runtimeAccessKey);
+        }
+
+        const response = await fetch(`/api/reading/save?${params.toString()}`);
+        const payload = await response.json().catch(() => null);
+
+        if (!response.ok || !payload?.success) {
+          if (!cancelled) {
+            setOwnerResolutionState(response.status === 403 ? 'denied' : 'error');
+
+            if (response.status === 403 && runtimeAccessKey && !hasAccountOwnerAccess) {
+              sessionStorage.removeItem('pending_reading_access_key');
+              localStorage.removeItem('pending_reading_access_key');
+            }
+          }
+          return;
+        }
+
+        if (cancelled) {
+          return;
+        }
+
+        setReportData(payload.data);
+        setMetadata(payload.metadata ?? null);
+        sessionStorage.setItem('pending_reading_id', id);
+        localStorage.setItem('pending_reading_id', id);
+        localStorage.setItem('backup_timestamp', Date.now().toString());
+      } catch {
+        if (!cancelled) {
+          setOwnerResolutionState('error');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsResolvingFullReport(false);
+        }
+      }
+    };
+
+    void resolveFullReport();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    hasAccountOwnerAccess,
+    id,
+    isClient,
+    isResolvingFullReport,
+    reportData,
+    requestedView,
+    runtimeAccessKey,
+  ]);
+
+  const canViewFullReport = Boolean(reportData);
+  const canOpenChat = canViewFullReport && (hasStoredOwnerSession || hasAccountOwnerAccess);
+  const ownerLockMessage =
+    ownerResolutionState === 'denied'
+      ? isEn
+        ? 'This reading is now linked to the owner account. Sign in with that account to open the full report again.'
+        : '이 리딩은 이제 소유자 계정에 연결되어 있어요. 같은 계정으로 로그인해야 전체 리포트를 다시 열 수 있습니다.'
+      : ownerResolutionState === 'error'
+        ? isEn
+          ? 'We could not restore the private report right now. Try again from the original device or reopen the email link once more.'
+          : '지금은 비공개 리포트를 복구하지 못했어요. 원래 보던 기기에서 다시 열거나 메일 링크를 한 번 더 눌러주세요.'
+        : isEn
+          ? 'The full report remains private to the owner. Open it from the original device or sign in with the owner account.'
+          : '전체 리포트는 소유자에게만 공개됩니다. 원래 보던 기기에서 열거나 소유자 계정으로 로그인해 주세요.';
+
+  if (!isClient) {
     return <div className="min-h-screen bg-[#040612]" />;
   }
 
-  if (isOwner) {
+  if (isResolvingFullReport && !reportData) {
+    return (
+      <main className="min-h-screen relative overflow-hidden bg-[#040612] text-white font-outfit">
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.18),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_28%),linear-gradient(180deg,#040612_0%,#070b19_44%,#0b0f1f_100%)]" />
+        <div className="mx-auto flex min-h-screen max-w-3xl items-center px-4 py-20">
+          <div className="w-full rounded-[2rem] border border-white/10 bg-white/[0.04] p-8 text-center backdrop-blur-xl">
+            <div className="text-[11px] uppercase tracking-[0.24em] text-violet-200/80">
+              {isEn ? 'Restoring private reading' : '비공개 리딩 복구 중'}
+            </div>
+            <h1 className="mt-4 text-3xl font-black tracking-[-0.04em] text-white">
+              {isEn ? 'Opening your full report...' : '전체 리포트를 불러오는 중이에요'}
+            </h1>
+            <p className="mt-4 text-sm leading-7 text-white/68">
+              {isEn
+                ? 'We are checking the original owner session before showing the report.'
+                : '원래 보던 기기 또는 소유자 계정인지 확인한 뒤 리포트를 보여드릴게요.'}
+            </p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (canViewFullReport && reportData) {
     return (
       <main className="min-h-screen relative overflow-hidden text-foreground selection:bg-star-yellow selection:text-deep-navy font-outfit">
         <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.24),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.16),transparent_26%),linear-gradient(180deg,#040612_0%,#070b19_44%,#0b0f1f_100%)]" />
@@ -78,14 +295,29 @@ export function SharedPageClient({
         <div className="pt-24 pb-20">
           <PremiumReport
             report={reportData}
-            metadata={metadata}
+            metadata={metadata ?? undefined}
             language={shareSummary.language}
             isPremium={metadata?.isPremium || true}
             shareUrl={shareUrl}
           />
-          <div className="container mx-auto px-4 mt-12 mb-20">
-            <ChatInterface readingId={id} />
-          </div>
+          {canOpenChat ? (
+            <div className="container mx-auto px-4 mt-12 mb-20">
+              <ChatInterface readingId={id} />
+            </div>
+          ) : (
+            <div className="container mx-auto px-4 mt-12 mb-20">
+              <div className="mx-auto max-w-3xl rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 text-sm leading-7 text-white/72 backdrop-blur-xl md:p-8">
+                <div className="text-[11px] uppercase tracking-[0.24em] text-white/45">
+                  {isEn ? 'Private follow-up' : '후속 질문 안내'}
+                </div>
+                <p className="mt-3">
+                  {isEn
+                    ? 'This link opens the full report, but follow-up chat remains available only in the original session or the owner account.'
+                    : '이 링크에서는 전체 리포트까지 볼 수 있지만, 후속 질문은 원래 보던 기기나 소유자 계정에서만 이어집니다.'}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     );
@@ -175,7 +407,7 @@ export function SharedPageClient({
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
-                  href="/start"
+                  href={startHref}
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 px-6 py-4 text-base font-bold text-black shadow-[0_18px_40px_rgba(245,158,11,0.18)] transition-[transform,box-shadow,filter] duration-300 hover:-translate-y-1 hover:shadow-[0_28px_48px_rgba(245,158,11,0.28)] hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200/80"
                 >
                   <Sparkles className="h-5 w-5" />
@@ -185,7 +417,7 @@ export function SharedPageClient({
 
                 <div className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-sm text-white/72 transition-colors duration-300 hover:border-white/15 hover:bg-white/[0.07]">
                   <Lock className="h-4 w-4" />
-                  {isEn ? 'Full report remains private to the owner' : '전체 리포트는 소유자에게만 공개됩니다'}
+                  {ownerLockMessage}
                 </div>
               </div>
             </motion.div>

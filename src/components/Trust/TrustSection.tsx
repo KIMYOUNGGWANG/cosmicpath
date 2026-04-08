@@ -9,22 +9,22 @@ interface TrustSectionProps {
 export function TrustSection({ language }: TrustSectionProps) {
     const content = {
         ko: {
-            title: "과학과 신비의 교차점",
-            subtitle: "32만 건의 실제 데이터를 바탕으로 분석된 당신의 운명",
+            title: "근거 있는 이유, 믿을 수 있는 결과",
+            subtitle: "32만 건 데이터 기반 — 그냥 느낌이 아니에요",
             cards: [
                 {
-                    title: "데이터 기반",
-                    desc: "고대 서적과 현대 통계가 결합된 정밀 알고리즘",
+                    title: "근거 있는 분석",
+                    desc: "오래된 지식 + 현대 데이터. 정밀하게 읽어요",
                     icon: "📊"
                 },
                 {
-                    title: "신뢰도 보장",
-                    desc: "이미 5만 명 이상의 사용자가 자신의 삶을 점검했습니다",
+                    title: "5만 명이 써봤어요",
+                    desc: "이미 많은 사람들이 자신의 흐름을 확인했어요",
                     icon: "⭐"
                 },
                 {
-                    title: "완전한 익명성",
-                    desc: "당신의 데이터는 리포트 생성 즉시 삭제됩니다",
+                    title: "내 정보는 안전해요",
+                    desc: "리포트 생성 후 데이터 즉시 삭제해요",
                     icon: "🔒"
                 }
             ]

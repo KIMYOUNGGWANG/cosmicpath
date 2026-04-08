@@ -11,9 +11,6 @@ interface HeroSectionProps {
 export function HeroSection({ language }: HeroSectionProps) {
     const isKo = language === 'ko';
     const landingVariant = getLandingVariant(language);
-    const trustBadges = isKo
-        ? ['결정과 타이밍 리딩', '전문 오라클 가이드', '첫 리딩 무료']
-        : ['Korean Saju Reading', 'Decision Timing Oracle', 'Free First Reading'];
     const decisionSignals = isKo
         ? ['관계', '커리어', '재물', '타이밍']
         : ['Relationship', 'Career', 'Wealth', 'Timing'];
@@ -28,8 +25,8 @@ export function HeroSection({ language }: HeroSectionProps) {
                     <span className="hidden h-3 w-px bg-white/10 sm:block" />
                     <span className="text-[11px] text-white/62">
                         {isKo
-                            ? '관계 · 커리어 · 재물 · 타이밍 오라클'
-                            : 'Relationship · Career · Wealth · Timing Oracle'}
+                            ? '관계 · 커리어 · 재물 · 타이밍 리딩'
+                            : 'Relationship · Career · Wealth · Timing Reading'}
                     </span>
                 </div>
 
@@ -50,9 +47,9 @@ export function HeroSection({ language }: HeroSectionProps) {
                 <p className="mb-8 max-w-3xl break-keep text-lg font-light leading-relaxed text-moonlight md:text-2xl">
                     {isKo ? (
                         <>
-                            관계, 커리어, 재물, 일상의 흐름까지. <br className="hidden md:block" />
-                            사주와 타로, 점성 데이터를 교차해 읽는 1:1 오라클이 <br className="md:hidden" />
-                            지금 가장 중요한 선택의 <span className="font-medium text-white">타이밍과 다음 행동의 창</span>을 제안합니다.
+                            애매할수록 더 보고 싶은 건 위로보다 타이밍이죠. <br className="hidden md:block" />
+                            지금 움직일지, 조금 더 기다릴지, 무엇부터 볼지. <br className="md:hidden" />
+                            <span className="font-medium text-white">관계 · 커리어 · 재물 · 타이밍</span>을 같이 읽어드립니다.
                         </>
                     ) : (
                         <>
@@ -62,26 +59,15 @@ export function HeroSection({ language }: HeroSectionProps) {
                     )}
                 </p>
 
-                <div className="flex flex-wrap justify-center gap-3">
-                    {trustBadges.map((badge) => (
-                        <div
-                            key={badge}
-                            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-md"
-                        >
-                            <span className="text-[11px] font-medium uppercase tracking-[0.24em] text-acc-gold md:text-xs">
-                                {badge}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="mt-5 flex flex-wrap justify-center gap-2">
+                <div className="flex flex-wrap justify-center gap-2">
                     {decisionSignals.map((signal) => (
                         <div
                             key={signal}
-                            className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-white/62 backdrop-blur-md"
+                            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-md"
                         >
-                            {signal}
+                            <span className="text-[11px] font-medium uppercase tracking-[0.24em] text-acc-gold md:text-xs">
+                                {signal}
+                            </span>
                         </div>
                     ))}
                 </div>
@@ -93,7 +79,7 @@ export function HeroSection({ language }: HeroSectionProps) {
                             className="group relative inline-flex min-h-[52px] items-center justify-center rounded-full bg-gradient-to-r from-acc-gold via-amber-300 to-acc-gold bg-[length:200%_auto] px-8 py-4 text-lg font-bold tracking-tight text-deep-navy shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_40px_rgba(212,175,55,0.6)]"
                         >
                             <span className="relative z-10 flex items-center gap-2">
-                                {isKo ? '오라클 리딩 시작하기' : 'Start Your Oracle Reading'}
+                                {isKo ? '내 타이밍 알아보기' : 'Start Your Oracle Reading'}
                                 <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                                 </svg>
@@ -104,20 +90,28 @@ export function HeroSection({ language }: HeroSectionProps) {
                             href="/daily"
                             className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-white/15 bg-white/5 px-7 py-4 text-sm font-medium uppercase tracking-[0.22em] text-white/82 transition-all duration-300 hover:border-white/30 hover:bg-white/10 hover:text-white"
                         >
-                            {isKo ? '오늘의 행동 창 보기' : 'Explore Daily Signals'}
+                            {isKo ? '오늘 흐름 보기' : 'Explore Daily Signals'}
                         </Link>
                     </div>
 
-                    <div className="rounded-[24px] border border-white/10 bg-black/20 px-5 py-4 backdrop-blur-xl">
-                        <p className="text-[11px] uppercase tracking-[0.26em] text-white/42">
-                            {isKo ? 'First Session' : 'First Session'}
-                        </p>
-                        <p className="mt-2 text-sm leading-6 text-white/72">
-                            {isKo
-                                ? '무료 리딩은 바로 열리고, 고민 영역을 고른 뒤 더 깊은 결정 리딩으로 자연스럽게 이어집니다.'
-                                : 'Your first reading opens right away, then extends into a deeper decision path if you want more clarity.'}
-                        </p>
-                    </div>
+                    {isKo ? (
+                        <GrowthTrackedLink
+                            href="/career/uncertainty"
+                            trackingEvent={{
+                                event: 'career_uncertainty_entry_clicked',
+                                source: 'landing_hero',
+                                step: 'secondary_entry',
+                                language,
+                                context: 'career',
+                                metadata: {
+                                    landingVariant,
+                                },
+                            }}
+                            className="inline-flex min-h-11 items-center justify-center rounded-full border border-acc-gold/20 bg-acc-gold/10 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-acc-gold transition-colors hover:border-acc-gold/40 hover:bg-acc-gold/16 hover:text-[#ffe39d]"
+                        >
+                            이직 고민이라면 커리어 리딩부터 보기
+                        </GrowthTrackedLink>
+                    ) : null}
 
                     {!isKo ? (
                         <GrowthTrackedLink

@@ -52,7 +52,7 @@ export function OracleSelectCard({
                         )}
                     </div>
                     <p className="mt-1 text-[11px] uppercase tracking-[0.24em] text-white/40">
-                        {persona.title}
+                        {isEn ? persona.titleEn : persona.titleKo}
                     </p>
                 </div>
                 <div
@@ -72,7 +72,7 @@ export function OracleSelectCard({
             </div>
 
             <p className="mt-3 text-sm leading-relaxed text-white/70">
-                {persona.description}
+                {isEn ? persona.descriptionEn : persona.descriptionKo}
             </p>
 
             <div className="mt-4 space-y-2">

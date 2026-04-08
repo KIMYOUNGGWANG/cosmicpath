@@ -70,10 +70,10 @@ export function PaymentModal({
     const [fetchedPrice, setFetchedPrice] = useState<string | null>(null);
     const [isPriceLoading, setIsPriceLoading] = useState(false);
     const [hasPriceFetchError, setHasPriceFetchError] = useState(false);
-    const dynamicPrice = resolvedPriceProp || normalizePriceLabel(fetchedPrice) || fallbackPriceLabel;
-    const numericDynamicPrice = Number.parseFloat(dynamicPrice.replace(/[^0-9.]/g, ''));
+    const dynamicPrice = resolvedPriceProp || normalizePriceLabel(fetchedPrice);
+    const numericDynamicPrice = Number.parseFloat((dynamicPrice || '').replace(/[^0-9.]/g, ''));
     const discountedPriceLabel =
-        discount > 0 && discount < 100 && Number.isFinite(numericDynamicPrice)
+        dynamicPrice && discount > 0 && discount < 100 && Number.isFinite(numericDynamicPrice)
             ? new Intl.NumberFormat('en-US', {
                 style: 'currency',
                 currency: 'USD',
@@ -81,6 +81,10 @@ export function PaymentModal({
             : null;
     const effectivePriceLabel =
         discount === 100 ? 'FREE' : discountedPriceLabel || dynamicPrice;
+    const displayedPriceLabel =
+        effectivePriceLabel ||
+        (isEnglish ? 'Shown at checkout' : '결제 단계에서 확인');
+    const trackedPriceLabel = effectivePriceLabel || fallbackPriceLabel || 'checkout_visible';
 
     useEffect(() => {
         setIsMounted(true);
@@ -104,7 +108,11 @@ export function PaymentModal({
             .then(async (response) => {
                 const data = await response.json();
 
-                if (!response.ok || !normalizePriceLabel(data.formattedPrice)) {
+                if (
+                    !response.ok ||
+                    data?.metadata?.fallback === 'true' ||
+                    !normalizePriceLabel(data.formattedPrice)
+                ) {
                     throw new Error('Failed to load reading price');
                 }
 
@@ -152,14 +160,14 @@ export function PaymentModal({
                 context: readingData?.context as string | undefined,
                 invitationMode: Boolean(metadata?.inviteCode),
                 referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
-                price: effectivePriceLabel,
+                price: trackedPriceLabel,
                 readingId: sessionStorage.getItem('pending_reading_id') || undefined,
                 plan: READING_PRODUCT.id,
                 metadata: {
                     landingVariant,
                 },
             }),
-        [appliedReferralCode, effectivePriceLabel, landingVariant, metadata, readingData, resolvedAutoReferralCode, trackingSource]
+        [appliedReferralCode, landingVariant, metadata, readingData, resolvedAutoReferralCode, trackedPriceLabel, trackingSource]
     );
 
     useEffect(() => {
@@ -173,7 +181,7 @@ export function PaymentModal({
             context: readingData?.context as string | undefined,
             invitationMode: Boolean(metadata?.inviteCode),
             referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
-            price: effectivePriceLabel,
+            price: trackedPriceLabel,
             readingId:
                 sessionStorage.getItem('pending_reading_id') ||
                 (typeof metadata?.readingId === 'string' ? metadata.readingId : undefined),
@@ -182,7 +190,7 @@ export function PaymentModal({
                 landingVariant,
             },
         });
-    }, [appliedReferralCode, effectivePriceLabel, isOpen, landingVariant, metadata, readingData, resolvedAutoReferralCode, trackingSource]);
+    }, [appliedReferralCode, isOpen, landingVariant, metadata, readingData, resolvedAutoReferralCode, trackedPriceLabel, trackingSource]);
 
     // Handle browser back button - close modal instead of navigating away
     useEffect(() => {
@@ -321,7 +329,7 @@ export function PaymentModal({
                 context: readingData?.context as string | undefined,
                 invitationMode: Boolean(metadata?.inviteCode),
                 referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
-                price: effectivePriceLabel,
+                price: trackedPriceLabel,
                 readingId: readingId || undefined,
                 plan: isFreePromo ? 'promo_free_unlock' : READING_PRODUCT.id,
                 metadata: {
@@ -446,7 +454,7 @@ export function PaymentModal({
                 context: readingData?.context as string | undefined,
                 invitationMode: Boolean(metadata?.inviteCode),
                 referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
-                price: effectivePriceLabel,
+                price: trackedPriceLabel,
                 readingId: sessionStorage.getItem('pending_reading_id') || undefined,
                 plan: isFreePromo ? 'promo_free_unlock' : READING_PRODUCT.id,
                 metadata: {
@@ -567,7 +575,7 @@ export function PaymentModal({
                                                 <span className="text-lg font-bold text-[#A184FF] md:text-xl">{discountedPriceLabel}</span>
                                             </div>
                                         ) : (
-                                            <span className="text-lg font-bold text-[#A184FF] md:text-xl">{effectivePriceLabel}</span>
+                                            <span className="text-lg font-bold text-[#A184FF] md:text-xl">{displayedPriceLabel}</span>
                                         )}
                                     </div>
                                     <div className="mt-3 min-h-10 space-y-2">
@@ -584,8 +592,8 @@ export function PaymentModal({
                                         {showPriceFallbackCopy ? (
                                             <p className="text-xs text-white/45">
                                                 {isEnglish
-                                                    ? 'Live pricing is delayed, so the base launch price is shown for now.'
-                                                    : '실시간 가격 확인이 지연되어 기본 런치 가격으로 먼저 표시합니다.'}
+                                                    ? 'Live pricing is delayed, so the latest amount will be shown again in checkout.'
+                                                    : '실시간 가격 확인이 지연되어 최신 금액은 결제 단계에서 다시 보여드립니다.'}
                                             </p>
                                         ) : null}
                                         {discountedPriceLabel ? (

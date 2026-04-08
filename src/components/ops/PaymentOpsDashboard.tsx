@@ -274,14 +274,14 @@ export function PaymentOpsDashboard({ summary }: PaymentOpsDashboardProps) {
                                 caption="결제 창을 연 뒤 실제 결제를 시작한 수입니다."
                             />
                             <OpsInsightRow
-                                label="결제 완료"
+                                label="유료 전환 이벤트"
                                 value={summary.funnel.paidConversions.toLocaleString()}
-                                caption="실제로 결제가 끝난 수입니다."
+                                caption="성공 페이지 기준 유료 결제 완료 수입니다. 무료 프로모션 unlock은 제외됩니다."
                             />
                             <OpsInsightRow
                                 label="결제 전환율"
                                 value={formatPercent(summary.funnel.checkoutConversionRate)}
-                                caption="결제 시작한 사람 중 결제를 끝낸 비율입니다."
+                                caption="결제 시작한 사람 중 유료 결제로 끝난 비율입니다."
                             />
                         </div>
                     </div>

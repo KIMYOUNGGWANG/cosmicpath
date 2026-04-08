@@ -125,12 +125,12 @@ export function EngineSection() {
                         Cosmic Intelligence
                     </span>
                     <h2 className="font-cinzel text-2xl md:text-4xl text-starlight mb-6 leading-tight">
-                        모호한 운세는 그만.<br className="md:hidden" />
-                        <span className="text-acc-gold">데이터</span>로 증명합니다.
+                        대충 맞는 말 말고, <br className="md:hidden" />
+                        <span className="text-acc-gold">근거부터 같이 봅니다.</span>
                     </h2>
                     <p className="text-moonlight max-w-xl mx-auto text-base md:text-lg leading-relaxed">
-                        수천 년의 역사가 담긴 사주와 점성학의 알고리즘,<br />
-                        그리고 현대적 데이터 분석 기술이 당신의 운명을 정밀하게 판독합니다.
+                        사주, 별자리, 타로를 따로 보지 않고 같이 읽습니다.<br />
+                        그래서 왜 이런 결론이 나왔는지 설명할 수 있어요.
                     </p>
                 </motion.div>
 
@@ -226,28 +226,28 @@ export function EngineSection() {
                             0
                         </div>
                         <div className="text-sm font-bold text-white mb-1">판독 포인트</div>
-                        <div className="text-xs text-dim text-center">당신의 사주와 별자리를<br />214가지 관점에서 정밀 분석</div>
+                        <div className="text-xs text-dim text-center">사주와 별자리를<br />214가지 포인트로 읽어요</div>
                     </div>
 
                     {/* Stat 2 */}
                     <div className="flex flex-col items-center p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-acc-logic/30 transition-colors">
                         <div className="text-4xl md:text-5xl font-bold text-acc-logic mb-2 font-cinzel">3</div>
-                        <div className="text-sm font-bold text-white mb-1">차원 입체 검증</div>
-                        <div className="text-xs text-dim text-center">사주(논리) + 점성술(흐름)<br />+ 타로(직관) 통합 엔진</div>
+                        <div className="text-sm font-bold text-white mb-1">교차 확인</div>
+                        <div className="text-xs text-dim text-center">사주 + 별자리 + 타로<br />세 방향을 같이 봐요</div>
                     </div>
 
                     {/* Stat 3 */}
                     <div className="flex flex-col items-center p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-tarot-purple/30 transition-colors">
                         <div className="text-4xl md:text-5xl font-bold text-tarot-purple mb-2 font-cinzel">78</div>
-                        <div className="text-sm font-bold text-white mb-1">운명의 원형</div>
-                        <div className="text-xs text-dim text-center">78장의 타로 아키타입으로<br />무의식의 영역까지 해석</div>
+                        <div className="text-sm font-bold text-white mb-1">타로 카드 반영</div>
+                        <div className="text-xs text-dim text-center">78장 기준으로 지금 내 상태를<br />직관적으로 읽어요</div>
                     </div>
 
                     {/* Stat 4 */}
                     <div className="flex flex-col items-center p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-star-yellow/30 transition-colors">
                         <div className="text-4xl md:text-5xl font-bold text-star-yellow mb-2 font-cinzel">1</div>
-                        <div className="text-sm font-bold text-white mb-1">단 하나의 설계도</div>
-                        <div className="text-xs text-dim text-center">복사 붙여넣기가 아닌<br />오직 당신만을 위한 리포트</div>
+                        <div className="text-sm font-bold text-white mb-1">먼저 볼 결론</div>
+                        <div className="text-xs text-dim text-center">첫 결과에서 지금 필요한 포인트를<br />먼저 보여드려요</div>
                     </div>
                 </motion.div>
             </div>

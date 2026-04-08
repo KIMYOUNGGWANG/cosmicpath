@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw } from 'lucide-react';
 import { ReadingInput, ReadingData } from '@/components/reading/reading-input';
 import type { PremiumReportData } from '@/components/reading/premium-report';
+import type { ReadingContext } from '@/lib/ai/prompt-builder';
 import { createSession } from '@/lib/session/reading-session';
 import { trackClientGrowthEvent } from '@/lib/client-growth-events';
 import { OracleCalibrationPanel } from '@/components/reading/OracleCalibrationPanel';
@@ -70,6 +71,46 @@ type ReadingMetadata = {
   [key: string]: unknown;
 };
 
+const SUPPORTED_READING_CONTEXTS: ReadonlySet<ReadingContext> = new Set([
+  'career',
+  'love',
+  'money',
+  'health',
+  'general',
+]);
+
+function getPrefilledReadingContext(value: string | null): ReadingContext | undefined {
+  if (!value) return undefined;
+
+  const normalized = value.trim().toLowerCase();
+  if (SUPPORTED_READING_CONTEXTS.has(normalized as ReadingContext)) {
+    return normalized as ReadingContext;
+  }
+
+  return undefined;
+}
+
+function getPrefilledQuestion(value: string | null): string | undefined {
+  if (!value) return undefined;
+
+  const normalized = value.trim();
+  if (!normalized) return undefined;
+
+  return normalized.slice(0, 240);
+}
+
+function getStartPageSource(hasInvite: boolean, entry: string | null): string {
+  if (hasInvite) {
+    return 'start_page_invite';
+  }
+
+  if (!entry) {
+    return 'start_page';
+  }
+
+  return `start_page_${entry.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '_')}`.slice(0, 64);
+}
+
 function getSourceSummary(value: unknown, fallback: string) {
   if (!value || typeof value !== 'object') {
     return fallback;
@@ -81,6 +122,31 @@ function getSourceSummary(value: unknown, fallback: string) {
 
 function hasPremiumReportContent(report: PremiumReportState | null): report is PremiumReportData {
   return Boolean(report?.summary && report?.traits);
+}
+
+function getReadingPhaseLabels(language: 'ko' | 'en') {
+  const labelsKo = [
+    "",
+    "질문에 맞는 가이드를 정리 중... (1/7)",
+    "보조 신호를 같이 확인 중... (2/7)",
+    "사주 원국을 계산 중... (3/7)",
+    "변곡점과 흐름을 읽는 중... (4/7)",
+    "분야별 포인트를 정리 중... (5/7)",
+    "언제 움직일지 정리 중... (6/7)",
+    "첫 결론을 마무리 중... (7/7)"
+  ];
+  const labelsEn = [
+    "",
+    "Aligning your oracle guide... (1/7)",
+    "Cross-checking the supporting signals... (2/7)",
+    "Calculating your saju foundation... (3/7)",
+    "Mapping the flow and turning points... (4/7)",
+    "Weaving signals across life areas... (5/7)",
+    "Opening your action window and timing map... (6/7)",
+    "Unsealing the final oracle verdict... (7/7)"
+  ];
+
+  return language === 'en' ? labelsEn : labelsKo;
 }
 
 function CosmicPathContent() {
@@ -116,6 +182,10 @@ function CosmicPathContent() {
     searchParams.get('ref') ||
     searchParams.get('promo') ||
     undefined;
+  const entry = searchParams.get('entry');
+  const initialContext = getPrefilledReadingContext(searchParams.get('context'));
+  const initialQuestion = getPrefilledQuestion(searchParams.get('question'));
+  const landingSource = getStartPageSource(Boolean(searchParams.get('invite')), entry);
   const [hasCheckedResume, setHasCheckedResume] = useState(false);
 
   // Dynamic Price State (fetched from Stripe)
@@ -159,6 +229,38 @@ function CosmicPathContent() {
     );
   };
 
+  const getAccessKeyFromLocation = () => {
+    if (typeof window === 'undefined') return null;
+
+    const url = new URL(window.location.href);
+    const hashParams = new URLSearchParams(url.hash.replace(/^#/, ''));
+
+    return hashParams.get('accessKey') || url.searchParams.get('accessKey');
+  };
+
+  const stripAccessKeyFromLocation = () => {
+    if (typeof window === 'undefined') return;
+
+    const url = new URL(window.location.href);
+    const hashParams = new URLSearchParams(url.hash.replace(/^#/, ''));
+    const hadSearchAccessKey = url.searchParams.has('accessKey');
+    const hadHashAccessKey = hashParams.has('accessKey');
+
+    if (!hadSearchAccessKey && !hadHashAccessKey) {
+      return;
+    }
+
+    url.searchParams.delete('accessKey');
+    hashParams.delete('accessKey');
+    url.hash = hashParams.toString();
+
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${url.pathname}${url.search}${url.hash}`
+    );
+  };
+
   const syncReadingAccessKey = (accessKey?: string | null) => {
     if (!accessKey) return;
     saveToSessionAndBackup('pending_reading_access_key', accessKey);
@@ -182,7 +284,7 @@ function CosmicPathContent() {
       try {
         const response = await fetch('/api/payment/price');
         const data = await response.json();
-        if (data.formattedPrice) {
+        if (data.metadata?.fallback !== 'true' && data.formattedPrice) {
           setDynamicPrice(data.formattedPrice);
         }
       } catch (error) {
@@ -199,7 +301,7 @@ function CosmicPathContent() {
     hasTrackedLandingView.current = true;
     void trackClientGrowthEvent({
       event: 'landing_view',
-      source: searchParams.get('invite') ? 'start_page_invite' : 'start_page',
+      source: landingSource,
       step: step,
       language,
       invitationMode: Boolean(searchParams.get('invite')),
@@ -207,9 +309,12 @@ function CosmicPathContent() {
       price: dynamicPrice || undefined,
       metadata: {
         landingVariant: getLandingVariant(language),
+        entry: entry || undefined,
+        initialContext: initialContext || undefined,
+        hasPrefilledQuestion: Boolean(initialQuestion),
       },
     });
-  }, [autoReferralCode, dynamicPrice, language, searchParams, step]);
+  }, [autoReferralCode, dynamicPrice, entry, initialContext, initialQuestion, landingSource, language, searchParams, step]);
 
   // 🎫 Viral Invitation Verification
   useEffect(() => {
@@ -354,6 +459,7 @@ function CosmicPathContent() {
       const paid = params.get('paid');
       const canceled = params.get('canceled');
       const readingIdFromUrl = params.get('reading_id');
+      const accessKeyFromUrl = getAccessKeyFromLocation() || params.get('accessKey');
 
       // Small delay ONLY if we don't have explicit URL flags (relying on sessionStorage only)
       if (!paid && !canceled && !readingIdFromUrl) {
@@ -409,12 +515,16 @@ function CosmicPathContent() {
       if (readingId && !hasStoredPayload(sessionStorage.getItem('pending_reading_id'))) {
         sessionStorage.setItem('pending_reading_id', readingId);
       }
+      if (hasStoredPayload(accessKeyFromUrl)) {
+        syncReadingAccessKey(accessKeyFromUrl);
+        stripAccessKeyFromLocation();
+      }
 
       let pendingData = sessionPendingData;
       let pendingReportJson = sessionPendingReport;
       let pendingMetadataJson = sessionPendingMetadata;
       let pendingReadingId = sessionReadingId || backupReadingId;
-      let pendingReadingAccessKey = sessionReadingAccessKey || backupReadingAccessKey;
+      let pendingReadingAccessKey = accessKeyFromUrl || sessionReadingAccessKey || backupReadingAccessKey;
 
       if (hasBackupResume) {
         if (!hasStoredPayload(pendingReadingAccessKey) && hasStoredPayload(backupReadingAccessKey)) {
@@ -570,6 +680,16 @@ function CosmicPathContent() {
             if (!isLoadingRef.current) {
               const nextPhase = determineNextPremiumPhase(restoredReport);
               if (nextPhase <= TOTAL_PREMIUM_PHASES) {
+                const resumeLanguage =
+                  (restoredReadingData.language as 'ko' | 'en') ||
+                  (parsedMetadata?.language as 'ko' | 'en') ||
+                  'ko';
+                const labels = getReadingPhaseLabels(resumeLanguage);
+                setLoadingPhase({
+                  phase: nextPhase,
+                  label: labels[nextPhase] || (resumeLanguage === 'en' ? 'Preparing your reading...' : '리딩을 정리하는 중...'),
+                });
+                setHasCheckedResume(true);
                 await startReadingRef.current?.(
                   (restoredReadingData as ReadingData & { tarotCards?: { name: string; isReversed: boolean }[] }).tarotCards || [],
                   true,
@@ -593,6 +713,8 @@ function CosmicPathContent() {
     };
 
     checkResume();
+    // This restore flow must run only once on mount to avoid duplicate premium resumes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   // Step 1: Input Submission -> Go Directly to Result
   const handleInputSubmit = (data: ReadingData) => {
@@ -661,34 +783,13 @@ function CosmicPathContent() {
 
     try {
       setIsLoading(true);
+      setStreamContent('');
 
       // If resuming, use existing report, otherwise start empty
       let accumulatedReport: PremiumReportState = initialReport || {};
       let accumulatedMetadata: ReadingMetadata = metadata || {};
       const totalPhases = TOTAL_PREMIUM_PHASES;
-
-      const labelsKo = [
-        "",
-        "오라클 가이드 정렬 중... (1/7)",
-        "보조 신호를 교차 확인 중... (2/7)",
-        "사주 원국과 기질 축을 계산 중... (3/7)",
-        "운의 흐름과 변곡점을 정렬 중... (4/7)",
-        "삶의 영역별 신호를 엮는 중... (5/7)",
-        "행동의 창과 타이밍 지도를 여는 중... (6/7)",
-        "최종 오라클 결론을 봉인 해제 중... (7/7)"
-      ];
-      // ... (labelsEn omitted for brevity, assuming existing code structure)
-      const labelsEn = [
-        "",
-        "Aligning your oracle guide... (1/7)",
-        "Cross-checking the supporting signals... (2/7)",
-        "Calculating your saju foundation... (3/7)",
-        "Mapping the flow and turning points... (4/7)",
-        "Weaving signals across life areas... (5/7)",
-        "Opening your action window and timing map... (6/7)",
-        "Unsealing the final oracle verdict... (7/7)"
-      ];
-      const labels = language === 'en' ? labelsEn : labelsKo;
+      const labels = getReadingPhaseLabels(language);
 
       const startPhase = startPhaseOverride || 1;
       // If we are not premium, only show Phase 1 (Summary + Traits + Core) - 비용 절감
@@ -711,16 +812,41 @@ function CosmicPathContent() {
             previousReport: accumulatedReport, // Pass context
             isPaid: isPremium || isPremiumOverride, // 🔒 결제 여부 전달
             readingId: sessionStorage.getItem('pending_reading_id') || undefined, // 🔑 검증용 ID 전달
+            accessKey: getStoredReadingAccessKey() || undefined,
           }),
         });
 
+        const result = await response.json().catch(() => null);
+
         if (!response.ok) {
-          throw new Error(`Phase ${phase} failed: ${response.statusText}`);
+          const serverMessage =
+            result && typeof result.error === 'string'
+              ? result.error
+              : `Phase ${phase} failed: ${response.statusText}`;
+          throw new Error(serverMessage);
         }
 
-        const result = await response.json();
-
         if (!result.success) {
+          if (result.isFallback && typeof result.fallbackMessage === 'string') {
+            const fallbackReport: PremiumReportState = {
+              summary: {
+                title: language === 'en' ? 'Your reading summary' : '첫 리딩 요약',
+                content: result.fallbackMessage,
+                trust_score: 3,
+                trust_reason: language === 'en'
+                  ? 'A simplified fallback summary was prepared because the full AI response was unstable.'
+                  : '전체 AI 응답이 불안정해서 요약형 fallback 결과를 먼저 준비했습니다.',
+              },
+              traits: [],
+            };
+
+            accumulatedReport = { ...accumulatedReport, ...fallbackReport };
+            setReportData({ ...accumulatedReport });
+            setStreamContent(result.fallbackMessage);
+            saveToSessionAndBackup('pending_report_data', JSON.stringify(accumulatedReport));
+            break;
+          }
+
           throw new Error(result.error || `Phase ${phase} validation failed`);
         }
 
@@ -907,7 +1033,10 @@ function CosmicPathContent() {
 
     } catch (error) {
       console.error('Reading failed:', error);
-      setStreamContent(language === 'en' ? "Failed to connect to the server. Please try again." : "서버 연결에 실패했습니다. 다시 시도해주세요.");
+      const message = error instanceof Error && error.message
+        ? error.message
+        : (language === 'en' ? "Failed to connect to the server. Please try again." : "서버 연결에 실패했습니다. 다시 시도해주세요.");
+      setStreamContent(message);
     } finally {
       setIsLoading(false);
     }
@@ -978,8 +1107,8 @@ function CosmicPathContent() {
     }
 
     return {
-      summary: reportData.summary?.title || "운명의 통합 분석",
-      detailedContent: reportData.summary?.content || "사주와 점성술, 타로가 공통적으로 가리키는 당신의 운명입니다.",
+      summary: reportData.summary?.title || "핵심 리딩 요약",
+      detailedContent: reportData.summary?.content || "사주, 별자리, 타로를 함께 읽어 정리한 현재 결론입니다.",
       primaryTags: uniqueTags.slice(0, 5), // Top 5
       totalConfidenceScore: reportData.summary?.trust_score ? reportData.summary.trust_score * 20 : 85, // Scale 1-5 to 100
       matchLevel: (reportData.summary?.trust_score || 0) >= 4.5 ? 'PERFECT' : (reportData.summary?.trust_score || 0) >= 3 ? 'PARTIAL' : 'CONFLICT',
@@ -1014,7 +1143,7 @@ function CosmicPathContent() {
           <p className="text-white/60 text-sm animate-pulse tracking-widest font-cinzel">
             {searchParams.get('paid') === 'true'
               ? (language === 'en' ? 'PAYMENT VERIFIED! PREPARING PREMIUM REPORT...' : '결제 확인 완료! 프리미엄 리포트를 준비 중입니다...')
-              : (language === 'en' ? 'ALIGNING YOUR ORACLE PATH...' : '오라클 경로를 정렬하는 중...')}
+              : (language === 'en' ? 'PREPARING YOUR READING...' : '리딩을 준비하는 중...')}
           </p>
         </div>
       )}
@@ -1027,36 +1156,35 @@ function CosmicPathContent() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.8 }}
-              className="mx-auto w-full max-w-4xl px-4 py-12 md:px-6 md:py-20"
+              className="mx-auto w-full max-w-4xl px-4 pt-24 pb-12 md:px-6 md:pt-32 md:pb-20"
             >
               <div className="mb-8 text-center md:mb-16">
                 <div className="mx-auto max-w-3xl rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.1),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] px-5 py-6 shadow-[0_24px_70px_rgba(2,6,23,0.24)] backdrop-blur-xl md:rounded-[32px] md:px-10 md:py-8">
                   <div className="flex flex-wrap items-center justify-center gap-2">
                     <span className="rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-acc-gold">
-                      {language === 'en' ? 'Decision Timing Oracle' : '결정과 타이밍 오라클'}
+                      {language === 'en' ? 'Decision Timing Reading' : '결정 타이밍 리딩'}
                     </span>
                     <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
                       {language === 'en' ? 'Free First Reading' : '첫 리딩 무료'}
                     </span>
                   </div>
                   <h1 className="mb-3 mt-4 font-cinzel text-[2rem] text-starlight md:mb-4 md:mt-5 md:text-5xl">
-                    {language === 'en' ? 'Map Your Decision Orbit' : '결정의 좌표 입력'}
+                    {language === 'en' ? 'Start With The Question' : '지금 고민되는 질문부터 적어보세요'}
                   </h1>
                   <p className="mx-auto max-w-2xl text-sm leading-6 text-white/60 md:leading-7">
                     {language === 'en'
                       ? 'The free result now opens right after one question and your core saju inputs. Extra steps stay out of the way.'
-                      : '이제 무료 결과는 질문 하나와 핵심 사주 입력만 받으면 바로 열립니다. 품질과 상관없는 추가 단계는 앞에서 빼두었습니다.'}
+                      : '질문 하나와 핵심 정보만 넣으면 첫 결과가 바로 열립니다. 정확도와 상관없는 단계는 앞에서 최대한 뺐습니다.'}
                   </p>
                   <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[10px] uppercase tracking-[0.22em] text-white/45 md:mt-5">
                     <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                      {language === 'en' ? 'Pick Domain' : '영역 선택'}
+                      {language === 'en' ? 'Pick Domain' : '영역 고르기'}
                     </span>
                     <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                      {language === 'en' ? 'Write Question' : '질문 입력'}
+                      {language === 'en' ? 'Write Question' : '질문 적기'}
                     </span>
                     <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-                      {language === 'en' ? 'Core Saju Inputs' : '핵심 사주 입력'}
+                      {language === 'en' ? 'Core Saju Inputs' : '생년월일 입력'}
                     </span>
                     <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
                       {language === 'en' ? 'See Free Result' : '무료 결과 보기'}
@@ -1067,6 +1195,7 @@ function CosmicPathContent() {
 
               <ReadingInput
                 initialLanguage={language}
+                onLanguageChange={setLanguage}
                 onSubmit={(data) => {
                   handleInputSubmit({
                     ...data,
@@ -1078,6 +1207,8 @@ function CosmicPathContent() {
                 isLoading={isLoading}
                 inviterName={inviterName}
                 inviteCode={inviteCode}
+                initialContext={initialContext}
+                initialQuestion={initialQuestion}
               />
             </motion.div>
           )}
@@ -1094,7 +1225,7 @@ function CosmicPathContent() {
                 <div className="flex min-h-[420px] items-center justify-center px-4 py-12 md:min-h-[500px] md:py-16">
                   <OracleCalibrationPanel
                     language={language}
-                    loadingLabel={loadingPhase.label || (language === 'en' ? 'Weaving your oracle path...' : '당신의 오라클 경로를 엮는 중...')}
+                    loadingLabel={loadingPhase.label || (language === 'en' ? 'Preparing your reading...' : '리딩을 정리하는 중...')}
                     loadingPhase={loadingPhase.phase}
                     characterId={metadata?.characterId ?? readingData?.characterId}
                     precisionMetadata={metadata?.precisionMetadata ?? reportData?.precisionMetadata}
@@ -1186,7 +1317,7 @@ function CosmicPathContent() {
                                       }),
                                     }).catch(() => null);
 
-                                    alert(language === 'en' ? 'Invitation link copied!' : '골든 티켓(초대 링크)이 복사되었습니다!\n친구에게 공유하여 무료 궁합을 확인해보세요.');
+                                    alert(language === 'en' ? 'Invitation link copied!' : '초대 링크를 복사했어요.\n친구에게 보내면 궁합 결과를 무료로 볼 수 있어요.');
                                   }
                                 } catch (e) {
                                   console.error(e);
@@ -1198,7 +1329,7 @@ function CosmicPathContent() {
                               <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500" />
                               <div className="relative flex items-center gap-2">
                                 <span className="font-cinzel tracking-wider">
-                                  {language === 'en' ? 'Send Oracle Invitation' : '친구 초대하고 궁합 무료로 보기'}
+                                  {language === 'en' ? 'Send Reading Invite' : '친구 초대 링크 복사하기'}
                                 </span>
                               </div>
                             </button>
@@ -1208,12 +1339,12 @@ function CosmicPathContent() {
                           {isInvitationMode && (
                             <div className="animate-in fade-in slide-in-from-bottom-4 w-full max-w-md rounded-[26px] border border-acc-gold/30 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.12),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-6 text-center backdrop-blur-xl">
                               <div className="mb-2 text-xs font-bold uppercase tracking-widest text-acc-gold">
-                                {language === 'en' ? 'Oracle Invitation' : '오라클 초대'}
+                                {language === 'en' ? 'Reading Invitation' : '리딩 초대'}
                               </div>
                               <h3 className="text-white text-lg font-cinzel mb-4 leading-relaxed">
                                 {language === 'en'
                                   ? 'Ready to open your own oracle path?'
-                                  : `방금 본 오라클 흐름은 어떠셨나요?\n이제 내 질문도 직접 열어보세요.`}
+                                  : `방금 본 결과, 꽤 잘 맞았나요?\n이제 내 질문도 직접 읽어보세요.`}
                               </h3>
                               <button
                             onClick={() => {
@@ -1222,7 +1353,7 @@ function CosmicPathContent() {
                             }}
                             className="w-full rounded-xl border border-white/20 bg-white/10 py-3 font-bold text-starlight transition-[transform,background-color,border-color,color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-transparent hover:bg-acc-gold hover:text-bg-void hover:shadow-[0_16px_32px_rgba(212,175,55,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acc-gold/70"
                           >
-                                {language === 'en' ? 'Open My Decision Reading (30% OFF)' : '내 결정 리딩 열기 (30% 할인)'}
+                                {language === 'en' ? 'Open My Decision Reading (30% OFF)' : '내 질문도 직접 보기 (30% 할인)'}
                               </button>
                             </div>
                           )}
@@ -1290,11 +1421,13 @@ function CosmicPathContent() {
                   <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                     <span className="text-red-400 text-3xl italic font-cinzel">!</span>
                   </div>
-                  <h3 className="text-xl font-cinzel mb-4 text-red-200">Analysis Interrupted</h3>
+                  <h3 className="text-xl font-cinzel mb-4 text-red-200">
+                    {language === 'en' ? 'Analysis Interrupted' : '결과를 불러오지 못했어요'}
+                  </h3>
                   <p className="text-sm text-gray-400 mb-6 font-light leading-relaxed">
                     {streamContent || (language === 'en'
                       ? "The cosmic alignment was too complex to process at this moment."
-                      : "우주의 기운이 너무 복잡하여 현재 처리할 수 없습니다.")}
+                      : "지금은 결과를 끝까지 불러오지 못했습니다. 잠시 후 다시 시도해주세요.")}
                   </p>
                   <div className="flex flex-col gap-3 justify-center items-center">
                     {(isPremium || searchParams.get('paid') === 'true') ? (
@@ -1321,7 +1454,7 @@ function CosmicPathContent() {
                         onClick={() => window.location.href = '/start?reset=true'}
                         className="btn-secondary px-8 py-3 text-sm font-medium tracking-widest uppercase hover:bg-white/5 transition-all"
                       >
-                        {language === 'en' ? 'Re-enter Your Orbit' : '좌표 다시 입력하기'}
+                        {language === 'en' ? 'Start Again' : '처음부터 다시 하기'}
                       </button>
                     )}
                   </div>
@@ -1360,13 +1493,13 @@ function CosmicPathContent() {
         <ShareCardModal
           isOpen={isShareModalOpen}
           onClose={() => setIsShareModalOpen(false)}
-          title={reportData.summary?.title || "나의 우주적 운명"}
+          title={reportData.summary?.title || "내 리딩 결과"}
           trustScore={reportData.summary?.trust_score ? Math.round(reportData.summary.trust_score * 20) : 85}
           matchLevel={
             (reportData.summary?.trust_score || 0) >= 4.5 ? 'PERFECT' :
               (reportData.summary?.trust_score || 0) >= 3 ? 'PARTIAL' : 'CONFLICT'
           }
-          keywords={reportData.summary?.keywords?.slice(0, 4) || ['운명', '변화', '성장']}
+          keywords={reportData.summary?.keywords?.slice(0, 4) || ['타이밍', '변화', '선택']}
           userName={readingData?.name}
         />
       )}

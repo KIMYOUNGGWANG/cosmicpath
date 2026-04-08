@@ -1,5 +1,10 @@
 import { prisma } from '@/lib/prisma';
-import { getCanonicalGrowthEvent, parseGrowthMetadata } from '@/lib/growth-analytics';
+import {
+    getCanonicalGrowthEvent,
+    getPaidConversionTrackingKey,
+    isCountablePaidConversionEvent,
+    parseGrowthMetadata,
+} from '@/lib/growth-analytics';
 import { getRuntimeEnvironmentFromRecord, matchesCurrentRuntimeEnvironment } from '@/lib/runtime-environment';
 
 interface GrowthSeriesPoint {
@@ -25,6 +30,7 @@ interface GrowthEventSummaryRow {
     event: string;
     channel: string | null;
     metadata: string | null;
+    readingId: string | null;
 }
 
 interface GrowthActivationSnapshot {
@@ -101,6 +107,7 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
             event: true,
             channel: true,
             metadata: true,
+            readingId: true,
         },
     }) as GrowthEventSummaryRow[];
 
@@ -142,6 +149,7 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
     let firstResultViews = 0;
     let followupStarts = 0;
     let dailyReturnsAfterReading = 0;
+    const countedPaidConversionKeys = new Set<string>();
 
     for (const event of events) {
         const dayKey = toDayKey(event.createdAt);
@@ -223,6 +231,25 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
                 if (series) series.inviteConversions += 1;
                 break;
             case 'paid_conversion':
+                if (!isCountablePaidConversionEvent(metadata)) {
+                    break;
+                }
+
+                {
+                    const trackingKey = getPaidConversionTrackingKey({
+                        metadata,
+                        readingId: event.readingId,
+                    });
+
+                    if (trackingKey) {
+                        if (countedPaidConversionKeys.has(trackingKey)) {
+                            break;
+                        }
+
+                        countedPaidConversionKeys.add(trackingKey);
+                    }
+                }
+
                 paidConversions += 1;
                 if (series) series.paidConversions += 1;
                 break;

@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { auth } from '@/lib/auth';
 import { getClientIp } from '@/lib/audit-logger';
 import { rateLimit } from '@/lib/rate-limiter';
 import { prisma } from '@/lib/prisma';
@@ -37,6 +38,7 @@ import { generateStructuredReport, ModelTier } from '@/lib/ai/llm-client';
 import { generatePremiumReport, generateSinglePhase } from '@/lib/ai/premium-reading-service';
 import { consumeDailyQuota } from '@/lib/plan-limits';
 import { trackGrowthEvent } from '@/lib/growth-events';
+import { extractReadingAccessKey, hasReadingAccess } from '@/lib/reading-access';
 
 export const maxDuration = 60; // Vercel Function Timeout (Increased for multi-turn)
 export const dynamic = 'force-dynamic';
@@ -77,6 +79,7 @@ const ReadingRequestSchema = z.object({
     isPaid: z.boolean().default(false),
     inviteCode: z.string().optional(),
     readingId: z.string().optional(),
+    accessKey: z.string().optional(),
 });
 
 type ReadingLanguage = 'ko' | 'en';
@@ -89,6 +92,21 @@ interface FreeFocusPayload {
 
 function sanitizeText(value: unknown): string {
     return typeof value === 'string' ? value.trim() : '';
+}
+
+function parseJsonRecord(value: string | null | undefined): Record<string, unknown> {
+    if (!value) return {};
+
+    try {
+        const parsed = JSON.parse(value);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            return parsed as Record<string, unknown>;
+        }
+    } catch {
+        return {};
+    }
+
+    return {};
 }
 
 function takeLeadSentences(text: string, maxLength = 160): string {
@@ -370,6 +388,7 @@ export async function POST(request: NextRequest) {
             unknownTime,
             inviteCode,
             readingId,
+            accessKey,
             cityName,
             longitude,
             latitude,
@@ -387,6 +406,8 @@ export async function POST(request: NextRequest) {
             isPaid,
         } = validationResult.data;
         const clientIp = getClientIp(request.headers);
+        const session = await auth();
+        const sessionUserId = session?.user?.id ?? null;
 
         // === Viral Loop: Handle Invitation ===
         if (inviteCode) {
@@ -544,21 +565,85 @@ export async function POST(request: NextRequest) {
 
             if (requiresPremiumVerification) {
                 let isVerified = false;
+                let readingMetadata: Record<string, unknown> = {};
 
                 if (readingId) {
                     const reading = await prisma.readingResult.findUnique({
                         where: { id: readingId },
-                        select: { metadata: true },
+                        select: { metadata: true, userId: true },
                     });
 
-                    if (reading?.metadata) {
+                    if (!reading) {
+                        return NextResponse.json(
+                            { error: '리딩을 찾을 수 없습니다.', code: 'READING_NOT_FOUND' },
+                            { status: 404 }
+                        );
+                    }
+
+                    const canAccessReading = hasReadingAccess({
+                        readingUserId: reading.userId,
+                        sessionUserId,
+                        storedAccessKey: extractReadingAccessKey(reading.metadata),
+                        providedAccessKey: accessKey,
+                    });
+
+                    if (!canAccessReading) {
+                        return NextResponse.json(
+                            { error: '이 리딩에 접근할 권한이 없습니다.', code: 'READING_ACCESS_DENIED' },
+                            { status: 403 }
+                        );
+                    }
+
+                    if (reading.metadata) {
                         try {
-                            const meta = JSON.parse(reading.metadata) as Record<string, unknown>;
-                            if (meta.isPremium === true) {
+                            readingMetadata = JSON.parse(reading.metadata) as Record<string, unknown>;
+                            if (readingMetadata.isPremium === true) {
                                 isVerified = true;
                             }
                         } catch (e) {
                             console.error('Metadata parse failed during verification', e);
+                        }
+                    }
+
+                    if (!isVerified) {
+                        const paymentRecord = await prisma.payment.findFirst({
+                            where: {
+                                readingId,
+                                status: 'DONE',
+                            },
+                            select: {
+                                orderId: true,
+                                metadata: true,
+                            },
+                            orderBy: { createdAt: 'desc' },
+                        });
+
+                        if (paymentRecord) {
+                            const paymentMetadata = parseJsonRecord(paymentRecord.metadata);
+                            const paymentType = typeof paymentMetadata.type === 'string'
+                                ? paymentMetadata.type
+                                : 'premium_reading';
+
+                            if (paymentType === 'premium_reading') {
+                                isVerified = true;
+
+                                if (readingMetadata.isPremium !== true) {
+                                    await prisma.readingResult.update({
+                                        where: { id: readingId },
+                                        data: {
+                                            metadata: JSON.stringify({
+                                                ...readingMetadata,
+                                                isPremium: true,
+                                                paymentVerifiedAt: new Date().toISOString(),
+                                                paymentSource: 'payment_record',
+                                                paymentOrderId: paymentRecord.orderId,
+                                            }),
+                                        },
+                                    }).catch((updateError) => {
+                                        console.error('Failed to sync premium status from payment record', updateError);
+                                    });
+                                }
+                            }
                         }
                     }
                 }
@@ -683,7 +768,13 @@ export async function POST(request: NextRequest) {
                 });
             } catch (premiumError) {
                 console.error('Premium generation failed:', premiumError);
-                // Fall through to standard mode
+                return NextResponse.json(
+                    {
+                        error: '프리미엄 리포트를 불러오는 중 오류가 발생했습니다.',
+                        code: 'PREMIUM_GENERATION_FAILED',
+                    },
+                    { status: 500 }
+                );
             }
         }
 

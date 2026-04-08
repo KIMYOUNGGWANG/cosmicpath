@@ -28,10 +28,12 @@ export type OracleSelectionMode = 'auto' | 'manual';
 export interface OraclePersonaProfile {
   id: OracleCharacterId;
   name: string;
-  title: string;
+  titleKo: string;
+  titleEn: string;
   archetype: string;
   specialty: OracleQuestionIntent;
-  description: string;
+  descriptionKo: string;
+  descriptionEn: string;
   recommendedContexts: OracleRecommendationContext[];
   evidencePriority: OracleEvidenceSource[];
   toneKo: string;
@@ -81,10 +83,12 @@ const ORACLE_PERSONAS: Record<OracleCharacterId, OraclePersonaProfile> = {
   general_orion: {
     id: 'general_orion',
     name: 'Orion',
-    title: '궤도의 해석자',
+    titleKo: '궤도의 해석자',
+    titleEn: 'Interpreter of Paths',
     archetype: 'navigation, pattern, decisive next move',
     specialty: 'general',
-    description: '질문 전체의 흐름을 읽고, 지금 당신의 궤도를 가장 크게 바꿀 한 수를 짚어주는 메인 오라클 가이드',
+    descriptionKo: '질문 전체의 흐름을 읽고, 지금 당신의 궤도를 가장 크게 바꿀 한 수를 짚어주는 메인 오라클 가이드',
+    descriptionEn: 'A main oracle guide who reads the overall flow of your question and identifies the single move that will most shift your current trajectory.',
     recommendedContexts: ['general', 'health'],
     evidencePriority: ['saju', 'ziwei', 'natal'],
     toneKo: '차분하게 흐름을 정리하고 다음 행동을 또렷하게 남기는 항해사형',
@@ -101,10 +105,12 @@ const ORACLE_PERSONAS: Record<OracleCharacterId, OraclePersonaProfile> = {
   compatibility_cassio: {
     id: 'compatibility_cassio',
     name: 'Cassio',
-    title: '관계 공명의 해석자',
+    titleKo: '관계 공명의 해석자',
+    titleEn: 'Interpreter of Resonance',
     archetype: 'resonance, chemistry, emotional rhythm',
     specialty: 'compatibility',
-    description: '두 사람의 감정 온도, 소통 리듬, 오래 가는 관계 구조를 읽는 관계 오라클 가이드',
+    descriptionKo: '두 사람의 감정 온도, 소통 리듬, 오래 가는 관계 구조를 읽는 관계 오라클 가이드',
+    descriptionEn: 'A relationship oracle guide who reads the emotional temperature, communication rhythms, and durable structures between two people.',
     recommendedContexts: ['love', 'general'],
     evidencePriority: ['saju', 'natal', 'ziwei'],
     toneKo: '다정하지만 감정의 비대칭과 관계 구조를 날카롭게 읽는 공명형',
@@ -121,10 +127,12 @@ const ORACLE_PERSONAS: Record<OracleCharacterId, OraclePersonaProfile> = {
   reunion_nova: {
     id: 'reunion_nova',
     name: 'Nova',
-    title: '재회의 신호 해석자',
+    titleKo: '재회의 신호 해석자',
+    titleEn: 'Interpreter of Reconnection',
     archetype: 'return signal, closure, emotional residue',
     specialty: 'reunion',
-    description: '끊어진 관계에 남은 신호와 다시 이어질 조건, 재회 후 달라져야 할 패턴을 읽는 오라클 가이드',
+    descriptionKo: '끊어진 관계에 남은 신호와 다시 이어질 조건, 재회 후 달라져야 할 패턴을 읽는 오라클 가이드',
+    descriptionEn: 'An oracle guide who reads the remaining signals in a broken relationship, the conditions for reconnection, and patterns that must change.',
     recommendedContexts: ['love', 'general'],
     evidencePriority: ['ziwei', 'saju', 'natal'],
     toneKo: '희망을 과장하지 않고, 다시 이어질 조건과 한계를 함께 보는 신호 해석형',
@@ -141,10 +149,12 @@ const ORACLE_PERSONAS: Record<OracleCharacterId, OraclePersonaProfile> = {
   wealth_midas: {
     id: 'wealth_midas',
     name: 'Midas',
-    title: '재물 흐름의 감식자',
+    titleKo: '재물 흐름의 감식자',
+    titleEn: 'Discerner of Wealth Flows',
     archetype: 'wealth flow, stability, tradeoff',
     specialty: 'wealth',
-    description: '돈의 흐름, 지출 습관, 손실 리스크를 냉정하게 감별하는 재무 오라클 가이드',
+    descriptionKo: '돈의 흐름, 지출 습관, 손실 리스크를 냉정하게 감별하는 재무 오라클 가이드',
+    descriptionEn: 'A financial oracle guide who coldly discerns cash flows, spending habits, and loss risks.',
     recommendedContexts: ['money', 'general'],
     evidencePriority: ['saju', 'natal', 'ziwei'],
     toneKo: '흥분보다 지속 가능성을 먼저 보는 냉정한 재물 감식형',
@@ -161,10 +171,12 @@ const ORACLE_PERSONAS: Record<OracleCharacterId, OraclePersonaProfile> = {
   timing_selene: {
     id: 'timing_selene',
     name: 'Selene',
-    title: '시기의 관측자',
+    titleKo: '시기의 관측자',
+    titleEn: 'Observer of Timing',
     archetype: 'timing, window, pacing',
     specialty: 'timing',
-    description: '지금이 준비기인지 행동기인지 정리기인지, 움직여야 할 시기 창을 좁혀주는 타이밍 가이드',
+    descriptionKo: '지금이 준비기인지 행동기인지 정리기인지, 움직여야 할 시기 창을 좁혀주는 타이밍 가이드',
+    descriptionEn: 'A timing guide who narrows down when to move, clarifying whether it’s a time for preparation, action, or consolidation.',
     recommendedContexts: ['general', 'love', 'money', 'career'],
     evidencePriority: ['ziwei', 'natal', 'saju'],
     toneKo: '서두름을 줄이고 움직일 창을 맑게 보여주는 관측자형',
@@ -181,10 +193,12 @@ const ORACLE_PERSONAS: Record<OracleCharacterId, OraclePersonaProfile> = {
   career_lyra: {
     id: 'career_lyra',
     name: 'Lyra',
-    title: '소명의 항로 설계자',
+    titleKo: '소명의 항로 설계자',
+    titleEn: 'Architect of Vocations',
     archetype: 'career direction, role fit, growth',
     specialty: 'career',
-    description: '직업 방향, 역할 적합도, 전환 타이밍을 현실적으로 설계하는 커리어 오라클 가이드',
+    descriptionKo: '직업 방향, 역할 적합도, 전환 타이밍을 현실적으로 설계하는 커리어 오라클 가이드',
+    descriptionEn: 'A career oracle guide who realistically designs professional direction, role fit, and transition timing.',
     recommendedContexts: ['career', 'general'],
     evidencePriority: ['saju', 'ziwei', 'natal'],
     toneKo: '현실 감각이 있고 역할 적합도와 성장 궤적을 함께 보는 설계자형',
@@ -201,10 +215,12 @@ const ORACLE_PERSONAS: Record<OracleCharacterId, OraclePersonaProfile> = {
   business_draco: {
     id: 'business_draco',
     name: 'Draco',
-    title: '확장의 전략가',
+    titleKo: '확장의 전략가',
+    titleEn: 'Strategist of Expansion',
     archetype: 'business model, leverage, risk',
     specialty: 'business',
-    description: '창업, 부업, 사업 확장, 파트너십 리스크를 구조적으로 읽는 비즈니스 오라클 가이드',
+    descriptionKo: '창업, 부업, 사업 확장, 파트너십 리스크를 구조적으로 읽는 비즈니스 오라클 가이드',
+    descriptionEn: 'A business oracle guide who structurally reads startup, side hustle, expansion, and partnership risks.',
     recommendedContexts: ['career', 'money', 'general'],
     evidencePriority: ['ziwei', 'saju', 'natal'],
     toneKo: '확장 욕심보다 구조와 검증 순서를 중시하는 전략가형',
@@ -376,16 +392,17 @@ export function getOraclePersona(characterId?: string | null): OraclePersonaProf
 
 export function buildOracleAdvisorProfile(
   characterId?: string | null,
-  selectionMode: OracleSelectionMode = 'auto'
+  selectionMode: OracleSelectionMode = 'auto',
+  language: OraclePersonaLanguage = 'ko'
 ): OracleAdvisorProfile {
   const persona = getOraclePersona(characterId);
 
   return {
     id: persona.id,
     name: persona.name,
-    title: persona.title,
+    title: language === 'en' ? persona.titleEn : persona.titleKo,
     specialty: persona.specialty,
-    description: persona.description,
+    description: language === 'en' ? persona.descriptionEn : persona.descriptionKo,
     recommendedContexts: persona.recommendedContexts,
     evidencePriority: persona.evidencePriority,
     selectionMode,
@@ -424,11 +441,11 @@ export function buildOraclePersonaBlock(
     return [
       '<ORACLE_GUIDE_PROFILE>',
       `Guide ID: ${persona.id}`,
-      `Guide: ${persona.name} - ${persona.title}`,
+      `Guide: ${persona.name} - ${language === 'en' ? persona.titleEn : persona.titleKo}`,
       `Question Intent: ${intentLabel} (${questionIntent})`,
       `Selection Mode: ${selectionMode}`,
       `Specialty: ${persona.specialty}`,
-      `Description: ${persona.description}`,
+      `Description: ${language === 'en' ? persona.descriptionEn : persona.descriptionKo}`,
       `Archetype: ${persona.archetype}`,
       `Tone: ${persona.toneEn}`,
       `Strengths: ${persona.strengthsEn.join('; ')}`,
@@ -445,11 +462,11 @@ export function buildOraclePersonaBlock(
   return [
     '<오라클_가이드_프로필>',
     `가이드 ID: ${persona.id}`,
-    `가이드: ${persona.name} - ${persona.title}`,
+    `가이드: ${persona.name} - ${persona.titleKo}`,
     `질문 의도: ${intentLabel} (${questionIntent})`,
     `선택 방식: ${selectionMode}`,
     `전문 분야: ${persona.specialty}`,
-    `설명: ${persona.description}`,
+    `설명: ${persona.descriptionKo}`,
     `아키타입: ${persona.archetype}`,
     `톤: ${persona.toneKo}`,
     `강점: ${persona.strengthsKo.join('; ')}`,

@@ -170,6 +170,9 @@ export async function POST(request: Request) {
 
             if (redemption) {
                 try {
+                    const accessKeyForEmail =
+                        responseAccessKey ?? extractReadingAccessKey(result.metadata);
+
                     await sendResultEmail({
                         email: savedEmail,
                         resultId: result.id,
@@ -192,10 +195,10 @@ export async function POST(request: Request) {
                             typeof savedMeta.userContext === 'string'
                                 ? savedMeta.userContext
                                 : undefined,
+                        accessKey: accessKeyForEmail ?? undefined,
                     });
 
-                    const accessKeyForUpdate =
-                        responseAccessKey ?? extractReadingAccessKey(result.metadata);
+                    const accessKeyForUpdate = accessKeyForEmail;
                     const emailSentMetadata = stampRuntimeMetadata(
                         accessKeyForUpdate
                             ? attachReadingAccessKey(

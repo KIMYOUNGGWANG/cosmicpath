@@ -14,6 +14,7 @@ import { scheduleDefaultFollowUps } from '@/lib/followup-jobs';
 import { applyChatCreditFromSession } from '@/lib/payment/chat-credit';
 import { redeemPromotionCode } from '@/lib/promo-codes';
 import { stampRuntimeMetadata } from '@/lib/runtime-environment';
+import { extractReadingAccessKey } from '@/lib/reading-access';
 
 function getErrorMessage(error: unknown): string {
     if (error instanceof Error) return error.message;
@@ -498,6 +499,7 @@ export async function POST(req: NextRequest) {
 
                         if (reading) {
                             const savedMeta = reading.metadata ? JSON.parse(reading.metadata) : {};
+                            const accessKey = extractReadingAccessKey(reading.metadata);
 
                             // 이미 발송된 경우 스킵
                             if (savedMeta.emailSent) {
@@ -511,7 +513,8 @@ export async function POST(req: NextRequest) {
                                     title: savedMeta.userContext || (savedMeta.language === 'en' ? 'Your reading' : '통합 분석 리포트'),
                                     birthInfo: savedMeta.birthInfo,
                                     sajuSummary: savedMeta.sajuSummary,
-                                    userContext: savedMeta.userContext
+                                    userContext: savedMeta.userContext,
+                                    accessKey: accessKey ?? undefined,
                                 });
 
                                 // 이메일 발송 완료 플래그 & 유저 ID 업데이트

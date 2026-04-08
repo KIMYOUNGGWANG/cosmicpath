@@ -87,9 +87,15 @@ export function hasReadingAccess(params: {
     storedAccessKey?: string | null;
     providedAccessKey?: string | null;
 }): boolean {
-    if (params.readingUserId) {
-        return Boolean(params.sessionUserId && params.sessionUserId === params.readingUserId);
-    }
+    const hasSessionAccess = Boolean(
+        params.readingUserId &&
+        params.sessionUserId &&
+        params.sessionUserId === params.readingUserId
+    );
+    const canUseAccessKey = !params.readingUserId;
+    const hasAccessKeyMatch =
+        canUseAccessKey &&
+        safeCompare(params.providedAccessKey, params.storedAccessKey);
 
-    return safeCompare(params.providedAccessKey, params.storedAccessKey);
+    return hasSessionAccess || hasAccessKeyMatch;
 }

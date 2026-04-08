@@ -11,7 +11,7 @@ interface PricingSectionProps {
 }
 
 export function PricingSection({ language, onSelect }: PricingSectionProps) {
-    const [priceLabel, setPriceLabel] = useState('$9.99');
+    const [priceLabel, setPriceLabel] = useState<string | null>(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -23,7 +23,12 @@ export function PricingSection({ language, onSelect }: PricingSectionProps) {
                 });
                 const payload = await response.json();
 
-                if (isMounted && response.ok && typeof payload.formattedPrice === 'string') {
+                if (
+                    isMounted &&
+                    response.ok &&
+                    payload?.metadata?.fallback !== 'true' &&
+                    typeof payload.formattedPrice === 'string'
+                ) {
                     setPriceLabel(payload.formattedPrice);
                 }
             } catch (error) {
@@ -41,7 +46,7 @@ export function PricingSection({ language, onSelect }: PricingSectionProps) {
     const content = {
         ko: {
             title: "하나의 리포트, 모든 해답",
-            price: priceLabel,
+            price: priceLabel || "결제 단계에서 확인",
             period: "일회성 결제",
             cta: "지금 운명 확인하기",
             features: [
@@ -55,7 +60,7 @@ export function PricingSection({ language, onSelect }: PricingSectionProps) {
         },
         en: {
             title: "One Report, All Answers",
-            price: priceLabel,
+            price: priceLabel || "Shown at checkout",
             period: "One-Time Payment",
             cta: "Unlock Your Destiny Now",
             features: [

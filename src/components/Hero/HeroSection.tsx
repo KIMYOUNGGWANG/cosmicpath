@@ -15,8 +15,8 @@ export function HeroSection({ onStart, language }: HeroSectionProps) {
 
     const content = {
         ko: {
-            headline: "당신의 2025년은 이미 쓰여져 있다",
-            subheadline: "별의 움직임이 말해주는 당신의 운명",
+            headline: "내 2025년, 어떤 흐름일까?",
+            subheadline: "사주와 별자리가 짚어주는 가장 정확한 타이밍",
             label: "생년월일 입력",
             cta: "무료로 확인하기"
         },

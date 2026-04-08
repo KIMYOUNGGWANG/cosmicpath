@@ -24,7 +24,7 @@ import { SoulmateSection, SoulmateData } from './SoulmateSection';
 import { LuckyAssetsGrid, LuckyAssetsData } from './LuckyAssetsGrid';
 import { GlossarySection } from './GlossarySection';
 import { PaymentModal } from '../payment/PaymentModal';
-import { getReadingFallbackPriceLabel, normalizePriceLabel, READING_PRODUCT } from '@/lib/payment/payment-config';
+import { normalizePriceLabel, READING_PRODUCT } from '@/lib/payment/payment-config';
 import { ElementHarmony } from './ElementHarmony';
 import { ActionChecklist } from './ActionChecklist';
 import { FinalVerdictCard } from './FinalVerdictCard';
@@ -274,6 +274,13 @@ interface MetadataWithReadingData extends NonNullable<PremiumReportProps['metada
     tarotCards?: any[];
 }
 
+type PremiumSectionKey =
+    | 'fortune_flow'
+    | 'life_areas'
+    | 'special_analysis'
+    | 'action_plan'
+    | 'final_verdict';
+
 // ... (existing helper)
 
 function CosmicRadarMemo({ report, metadata, language }: { report: PremiumReportData; metadata?: PremiumReportProps['metadata']; language: 'ko' | 'en' }) {
@@ -386,11 +393,11 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
     });
 
     // Dynamic price from prop or fetched from API
-    const fallbackPriceLabel = getReadingFallbackPriceLabel();
     const resolvedPriceProp = normalizePriceLabel(price);
     const [fetchedPrice, setFetchedPrice] = useState<string | null>(null);
-    const dynamicPrice = resolvedPriceProp || normalizePriceLabel(fetchedPrice) || fallbackPriceLabel;
+    const dynamicPrice = resolvedPriceProp || normalizePriceLabel(fetchedPrice);
     const originalPrice = '$19.90';
+    const displayPrice = dynamicPrice || (isEn ? 'Shown at checkout' : '결제 단계에서 확인');
 
     // Fetch price from Stripe when component mounts (if not provided via prop)
     useEffect(() => {
@@ -402,7 +409,12 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
             .then(async (response) => {
                 const data = await response.json();
 
-                if (isMounted && response.ok && normalizePriceLabel(data.formattedPrice)) {
+                if (
+                    isMounted &&
+                    response.ok &&
+                    data?.metadata?.fallback !== 'true' &&
+                    normalizePriceLabel(data.formattedPrice)
+                ) {
                     setFetchedPrice(data.formattedPrice);
                 }
             })
@@ -420,6 +432,16 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
             setIsCheckoutOpen(true);
         }
     };
+
+    const firstMissingPremiumSection: PremiumSectionKey | null = (() => {
+        if (!isPremium || isLoading || !onRetry) return null;
+        if (!report.fortune_flow) return 'fortune_flow';
+        if (!report.life_areas) return 'life_areas';
+        if (!report.special_analysis) return 'special_analysis';
+        if (!report.action_plan) return 'action_plan';
+        if (!report.past_life || !report.glossary || !report.final_verdict) return 'final_verdict';
+        return null;
+    })();
 
     // Dynamic Teaser Text Generator
     const getTeaserText = (section: string) => {
@@ -635,16 +657,10 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                     {isEn ? "Syncing Cosmic Flow..." : "심층 운세 동기화 중..."}
                                 </p>
                             </div>
+                        ) : firstMissingPremiumSection === 'fortune_flow' ? (
+                            <PremiumSectionInterruptionCard language={language} onRetry={onRetry} />
                         ) : (
-                            <div className="p-12 text-center bg-red-500/5 rounded-3xl border border-red-500/20 mx-4 md:px-6">
-                                <p className="text-red-400 mb-4">{isEn ? 'Analysis Interrupted' : '분석이 일시 중단되었습니다'}</p>
-                                <button
-                                    onClick={onRetry}
-                                    className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-full text-sm transition-colors border border-red-500/30"
-                                >
-                                    {isEn ? 'Resume Analysis' : '분석 이어하기'}
-                                </button>
-                            </div>
+                            null
                         )
                     ) : (
                         <div className="px-4 md:px-6">
@@ -683,15 +699,10 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                     {isEn ? "Unveiling Life Secrets..." : "영역별 상세 분석 조율 중..."}
                                 </p>
                             </div>
+                        ) : firstMissingPremiumSection === 'life_areas' ? (
+                            <PremiumSectionInterruptionCard language={language} onRetry={onRetry} />
                         ) : (
-                            <div className="p-12 text-center bg-red-500/5 rounded-3xl border border-red-500/20 mx-4 md:px-6">
-                                <button
-                                    onClick={onRetry}
-                                    className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-full text-sm transition-colors border border-red-500/30"
-                                >
-                                    {isEn ? 'Resume Analysis' : '분석 이어하기'}
-                                </button>
-                            </div>
+                            null
                         )
                     ) : (
                         <div className="px-4 md:px-6">
@@ -740,15 +751,10 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                     {isEn ? "Finalizing Action Plan..." : "특수 비책 및 솔루션 도출 중..."}
                                 </p>
                             </div>
+                        ) : firstMissingPremiumSection === 'special_analysis' ? (
+                            <PremiumSectionInterruptionCard language={language} onRetry={onRetry} />
                         ) : (
-                            <div className="p-12 text-center bg-red-500/5 rounded-3xl border border-red-500/20 mx-4 md:px-6">
-                                <button
-                                    onClick={onRetry}
-                                    className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-full text-sm transition-colors border border-red-500/30"
-                                >
-                                    {isEn ? 'Resume Analysis' : '분석 이어하기'}
-                                </button>
-                            </div>
+                            null
                         )
                     ) : (
                         <div className="px-4 md:px-6">
@@ -786,6 +792,17 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                 <DateSelectionSection data={report.date_selection} language={language} />
                             )}
                         </>
+                    ) : isPremium ? (
+                        isLoading ? (
+                            <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 mx-4 md:px-6">
+                                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-acc-gold/50" />
+                                <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
+                                    {isEn ? "Preparing Next Actions..." : "다음 행동을 정리하는 중..."}
+                                </p>
+                            </div>
+                        ) : firstMissingPremiumSection === 'action_plan' ? (
+                            <PremiumSectionInterruptionCard language={language} onRetry={onRetry} />
+                        ) : null
                     ) : (
                         <div className="px-4 md:px-6">
                             <BlindSpotTeaser
@@ -810,11 +827,22 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     viewport={{ once: true, margin: "-100px" }}
                     variants={fadeInUp}
                 >
-                    {report.final_verdict && (
+                    {report.final_verdict ? (
                         <div className="px-4 md:px-0">
                             <FinalVerdictCard data={report.final_verdict} />
                         </div>
-                    )}
+                    ) : isPremium ? (
+                        isLoading ? (
+                            <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 mx-4 md:px-6">
+                                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-gold/50" />
+                                <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
+                                    {isEn ? "Wrapping the final verdict..." : "최종 결론을 정리하는 중..."}
+                                </p>
+                            </div>
+                        ) : firstMissingPremiumSection === 'final_verdict' ? (
+                            <PremiumSectionInterruptionCard language={language} onRetry={onRetry} />
+                        ) : null
+                    ) : null}
                 </motion.section>
 
                 {/* 6. Glossary - PAYWALL (Bonus) */}
@@ -824,7 +852,20 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     viewport={{ once: true, margin: "-100px" }}
                     variants={fadeInUp}
                 >
-                    {report.glossary && <GlossarySection data={report.glossary} language={language} />}
+                    {report.glossary ? (
+                        <GlossarySection data={report.glossary} language={language} />
+                    ) : isPremium && report.final_verdict ? (
+                        isLoading ? (
+                            <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 mx-4 md:px-6">
+                                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-purple-400/50" />
+                                <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
+                                    {isEn ? "Compiling your glossary..." : "용어집을 정리하는 중..."}
+                                </p>
+                            </div>
+                        ) : firstMissingPremiumSection === 'final_verdict' ? (
+                            <PremiumSectionInterruptionCard language={language} onRetry={onRetry} />
+                        ) : null
+                    ) : null}
                 </motion.section>
 
             </div>
@@ -922,14 +963,14 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 currentReport={report}
                 metadata={metadata}
                 readingData={(metadata as MetadataWithReadingData)?.readingData}
-                price={dynamicPrice}
+                price={dynamicPrice || undefined}
                 trackingSource="shared_report_unlock"
             />
 
             {/* Sticky CTA for Partial Result (Show if we can unlock) */}
             {!report.fortune_flow && !isPremium && (
                 <StickyCTA
-                    price={dynamicPrice}
+                    price={displayPrice}
                     originalPrice={originalPrice}
                     onUnlock={handleUnlock}
                     language={language}
@@ -937,6 +978,35 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 />
             )}
 
+        </div>
+    );
+}
+
+function PremiumSectionInterruptionCard({
+    language,
+    onRetry,
+}: {
+    language: 'ko' | 'en';
+    onRetry?: () => void;
+}) {
+    const isEn = language === 'en';
+
+    return (
+        <div className="mx-4 rounded-3xl border border-red-500/20 bg-red-500/5 p-12 text-center md:px-6">
+            <p className="mb-3 text-red-300 font-medium">
+                {isEn ? 'We could not finish loading the deeper result.' : '심층 결과를 끝까지 불러오지 못했어요.'}
+            </p>
+            <p className="mb-5 text-sm leading-6 text-white/48">
+                {isEn
+                    ? 'Pick up from the last completed step and continue loading the remaining sections.'
+                    : '중간까지 불러온 지점부터 이어서 남은 섹션을 다시 불러올게요.'}
+            </p>
+            <button
+                onClick={onRetry}
+                className="rounded-full border border-red-500/30 bg-red-500/20 px-6 py-2 text-sm text-red-100 transition-colors hover:bg-red-500/30"
+            >
+                {isEn ? 'Continue Loading' : '결과 이어서 불러오기'}
+            </button>
         </div>
     );
 }

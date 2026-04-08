@@ -27,32 +27,32 @@ export function BlueprintSection() {
                         The Product
                     </span>
                     <h2 className="font-cinzel text-3xl md:text-5xl text-starlight mb-6 md:mb-8 leading-tight">
-                        단순 운세가 아닌, <br />
-                        <span className="text-acc-gold">인생 설계도</span>입니다.
+                        운세를 보는 게 아니라, <br />
+                        <span className="text-acc-gold">내 선택을 읽는 거예요.</span>
                     </h2>
                     <p className="text-moonlight text-lg mb-8 leading-relaxed">
-                        당신의 무의식, 잠재된 욕망, 그리고 앞으로 10년간 펼쳐질 운명의 파동을 시각화된 그래프로 제공합니다.
-                        Cosmic Path는 다가올 위기를 기회로 바꿀 구체적인 &apos;액션 플랜&apos;을 제안합니다.
+                        막막한 기분으로 끝내지 않게. 지금 상태, 다음 흐름,
+                        먼저 볼 포인트를 한 화면에 정리해드려요.
                     </p>
 
                     <ul className="space-y-6 text-dim mt-10">
                         <li className="relative pl-6 border-l border-acc-logic/30">
                             <h4 className="text-acc-logic font-bold text-sm mb-1 uppercase tracking-wider">Logic (사주)</h4>
-                            <p className="text-sm text-moonlight">선천적으로 타고난 기질과 논리적 운명 구조</p>
+                            <p className="text-sm text-moonlight">타고난 기질과 강점이 어디서 잘 쓰이는지</p>
                         </li>
                         <li className="relative pl-6 border-l border-tarot-purple/30">
                             <h4 className="text-tarot-purple font-bold text-sm mb-1 uppercase tracking-wider">Intuition (타로)</h4>
-                            <p className="text-sm text-moonlight">현재 당신의 무의식이 가리키는 직관적 방향</p>
+                            <p className="text-sm text-moonlight">지금 마음이 어디서 흔들리는지</p>
                         </li>
                         <li className="relative pl-6 border-l border-star-yellow/30">
                             <h4 className="text-star-yellow font-bold text-sm mb-1 uppercase tracking-wider">Flow (별자리)</h4>
-                            <p className="text-sm text-moonlight">외부 우주의 흐름이 당신에게 미치는 시기적 영향</p>
+                            <p className="text-sm text-moonlight">움직일 때와 기다릴 때를 가늠하는 힌트</p>
                         </li>
                     </ul>
 
                     <div className="mt-8 p-4 bg-white/5 border border-white/10 rounded-lg">
                         <p className="text-xs text-dim leading-relaxed">
-                            💡 <span className="text-starlight font-bold">Cosmic Radar</span>는 이 3가지를 통합 분석하여, 당신의 운명이 어느 한쪽으로 치우치지 않았는지 <span className="text-acc-gold underline decoration-acc-gold/50 underline-offset-4">균형(Balance)</span>을 진단합니다.
+                            💡 <span className="text-starlight font-bold">Cosmic Radar</span>는 이 3가지를 같이 봐요. 한쪽 해석만 믿지 않게, <span className="text-acc-gold underline decoration-acc-gold/50 underline-offset-4">균형 있게</span> 읽어드리려는 구조예요.
                         </p>
                     </div>
                 </div>

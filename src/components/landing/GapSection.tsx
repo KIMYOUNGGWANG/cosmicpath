@@ -27,13 +27,13 @@ export function GapSection() {
                     {/* Panel 1: The Problem (Old) */}
                     <div className="w-screen h-full flex items-center justify-center relative px-6 border-r border-white/5 bg-void">
                         <motion.div style={{ opacity: opacityOld }} className="max-w-xl text-center">
-                            <h3 className="text-gray-500 font-cinzel text-xl mb-4 tracking-widest uppercase">The Problem</h3>
+                            <h3 className="text-gray-500 font-cinzel text-xl mb-4 tracking-widest uppercase">What Does Not Help</h3>
                             <h2 className="text-3xl md:text-5xl text-gray-400 font-medium mb-8 leading-tight blur-[2px] hover:blur-none transition-all duration-700">
-                                &quot;애매모호한 위로는 <br /> 거절합니다.&quot;
+                                &quot;좋은 말만 하는 리딩은 <br /> 필요 없어요.&quot;
                             </h2>
                             <p className="text-gray-600 font-serif italic text-lg">
-                                &apos;언젠가 잘 될 것이다&apos;, &apos;복을 많이 받을 것이다&apos;... <br />
-                                듣기 좋은 말뿐인 운세는 당신의 인생을 1mm도 바꾸지 못합니다.
+                                &apos;다 잘 될 거예요&apos;, &apos;곧 기회가 와요&apos; 같은 말은 <br />
+                                잠깐 위로는 돼도 지금의 선택을 도와주진 못해요.
                             </p>
                         </motion.div>
                     </div>
@@ -43,14 +43,14 @@ export function GapSection() {
                         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] opacity-20" />
 
                         <motion.div style={{ opacity: opacityNew }} className="max-w-xl text-center relative z-10">
-                            <h3 className="text-acc-logic font-cinzel text-xl mb-4 tracking-widest uppercase shadow-[0_0_15px_rgba(99,102,241,0.4)]">The Solution</h3>
+                            <h3 className="text-acc-logic font-cinzel text-xl mb-4 tracking-widest uppercase shadow-[0_0_15px_rgba(99,102,241,0.4)]">What You Need</h3>
                             <h2 className="text-3xl md:text-5xl text-starlight font-bold mb-8 leading-tight drop-shadow-2xl">
-                                &quot;우리는 <span className="text-acc-gold">타이밍</span>과 <br /> <span className="text-acc-logic">전략</span>을 드립니다.&quot;
+                                &quot;좋은 말 대신, <span className="text-acc-gold">지금 뭘 해야 할지</span> <br /> <span className="text-acc-logic">먼저 보여드려요.</span>&quot;
                             </h2>
                             <p className="text-moonlight text-lg">
-                                재물운이 터지는 정확한 시기(Time), <br />
-                                피해야 할 사람의 유형(Target), <br />
-                                그리고 당장 실행해야 할 행동(Action).
+                                언제 움직일지, <br />
+                                뭘 먼저 준비할지, <br />
+                                지금 피해야 할 선택이 뭔지.
                             </p>
 
                             {/* Visual Graph Element */}
