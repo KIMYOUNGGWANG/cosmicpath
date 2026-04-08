@@ -1,7 +1,6 @@
 'use client';
 
-import { motion, useInView } from 'framer-motion';
-import { useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 
 
 
@@ -18,10 +17,10 @@ export function VerdictSection() {
                     className="mb-12 md:mb-20"
                 >
                     <span className="text-acc-logic/80 text-[10px] md:text-xs font-bold tracking-[0.3em] uppercase block mb-4">
-                        Social Proof
+                        Why It Feels Clear
                     </span>
                     <h2 className="font-cinzel text-2xl md:text-5xl text-starlight mb-6 leading-tight">
-                        &quot;우연이 아닙니다. <span className="italic text-acc-logic">시스템</span>입니다.&quot;
+                        &quot;좋은 말보다, <span className="italic text-acc-logic">지금 필요한 답.</span>&quot;
                     </h2>
                 </motion.div>
 
@@ -33,35 +32,30 @@ export function VerdictSection() {
                             3<span className="text-xl md:text-2xl ml-1 text-dim">X</span>
                         </div>
                         <p className="text-moonlight text-xs tracking-widest uppercase leading-relaxed">
-                            Cross-Validation<br />Accuracy
+                            Cross-Check<br />Layers
                         </p>
                     </div>
 
                     {/* Stat 2 */}
                     <div className="p-8 border-l border-white/5 bg-gradient-to-r from-white/5 to-transparent backdrop-blur-sm">
-                        <div className="font-mono text-4xl md:text-6xl text-starlight mb-4">
-                            <span ref={(node) => { if (node) node.textContent = '360'; }}>360</span>
-                            <span className="text-2xl ml-1 text-dim">°</span>
-                        </div>
+                        <div className="font-mono text-4xl md:text-6xl text-starlight mb-4">1</div>
                         <p className="text-moonlight text-xs tracking-widest uppercase leading-relaxed">
-                            Holistic Life View
+                            First Action<br />To Check
                         </p>
                     </div>
 
                     {/* Stat 3 */}
                     <div className="p-8 border-l border-white/5 bg-gradient-to-r from-white/5 to-transparent backdrop-blur-sm">
-                        <div className="font-mono text-4xl md:text-6xl text-starlight mb-4">
-                            0<span className="text-2xl ml-1 text-dim">%</span>
-                        </div>
+                        <div className="font-mono text-4xl md:text-6xl text-starlight mb-4">4</div>
                         <p className="text-moonlight text-xs tracking-widest uppercase leading-relaxed">
-                            Bias & Hallucination
+                            Decision<br />Domains
                         </p>
                     </div>
 
                 </div>
 
                 <p className="mt-16 text-dim text-xs font-mono">
-                    Based on Kepler&apos;s Laws & Modern Data Science.
+                    사주, 별자리, 타로를 함께 읽는 교차 해석 구조예요.
                 </p>
 
             </div>

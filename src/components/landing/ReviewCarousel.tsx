@@ -83,10 +83,10 @@ export function ReviewCarousel({ language = 'ko' }: { language?: string }) {
                     transition={{ duration: 0.8 }}
                 >
                     <span className="text-purple-400 text-xs tracking-[0.2em] font-medium uppercase mb-2 block">
-                        Seeker&apos;s Voices
+                        Real Reviews
                     </span>
                     <h2 className="text-2xl md:text-4xl font-cinzel font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-indigo-200">
-                        {language === 'en' ? 'Stories Written in the Stars' : '운명을 확인한 사람들의 이야기'}
+                        {language === 'en' ? 'What People Said After Reading' : '읽어본 사람들이 남긴 후기'}
                     </h2>
                     <div className="h-1 w-20 bg-gradient-to-r from-transparent via-purple-500 to-transparent mx-auto opacity-50" />
                 </motion.div>

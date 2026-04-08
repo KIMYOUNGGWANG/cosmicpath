@@ -45,7 +45,7 @@ export function RitualSection() {
                     className="mb-8 inline-flex items-center gap-3 px-4 py-1 border border-white/10 rounded-full"
                 >
                     <span className={`w-1 h-1 rounded-full transition-colors duration-500 ${isHovered ? 'bg-acc-gold' : 'bg-starlight/30'}`} />
-                    <span className="text-[10px] tracking-[0.5em] text-starlight/40 font-mono uppercase">System Integrity: Nominal</span>
+                    <span className="text-[10px] tracking-[0.5em] text-starlight/40 font-mono uppercase">Reading Ready</span>
                 </motion.div>
 
                 <motion.h2
@@ -54,7 +54,7 @@ export function RitualSection() {
                     transition={{ duration: 1.5 }}
                     className="font-cinzel text-2xl sm:text-3xl md:text-7xl text-starlight mb-10 tracking-[0.1em] sm:tracking-[0.2em] md:tracking-[0.3em]"
                 >
-                    THE RITUAL
+                    첫 리딩은 이렇게 열려요
                 </motion.h2>
 
                 <motion.p
@@ -64,8 +64,8 @@ export function RitualSection() {
                     className="text-moonlight text-xs md:text-sm mb-12 md:mb-20 font-light tracking-[0.2em] max-w-lg mx-auto leading-relaxed border-l border-r border-white/10 px-8"
                 >
                     {language === 'ko'
-                        ? "당신의 좌표가 우주의 시간과 정렬되었습니다. 황금빛 궤적을 따라 내면의 봉인을 해제하십시오."
-                        : "Your coordinates are aligned. Unseal your inner universe through the golden trajectory."}
+                        ? "질문 하나만 정하면, 지금 뭘 먼저 봐야 하는지 바로 확인할 수 있어요 ✦"
+                        : "Analysis complete. Discover the most essential solution for you right now ✦"}
                 </motion.p>
 
                 {/* Chronos Dial: Color Hierarchy Refined */}
@@ -148,7 +148,7 @@ export function RitualSection() {
                                 ENTER
                             </span>
                             <span className="relative z-10 font-cinzel text-lg md:text-2xl font-bold tracking-[0.2em] text-starlight group-hover:text-white group-hover:scale-110 transition-all duration-500">
-                                {language === 'ko' ? "봉인 해제" : "UNSEAL"}
+                                {language === 'ko' ? "바로 시작" : "UNSEAL"}
                             </span>
 
                             <div className="mt-4 w-8 h-[1px] bg-acc-gold/30 group-hover:w-16 group-hover:bg-acc-gold transition-all duration-700" />
@@ -180,7 +180,7 @@ export function RitualSection() {
                         className="font-cinzel text-[10px] md:text-xs tracking-[0.6em] text-acc-gold uppercase flex items-center gap-4"
                     >
                         <span className="w-12 h-px bg-gradient-to-r from-transparent to-acc-gold" />
-                        {isHovered ? "Alignment Locked" : "Scanning Pattern"}
+                        {isHovered ? "입력 준비 완료" : "질문 대기 중"}
                         <span className="w-12 h-px bg-gradient-to-l from-transparent to-acc-gold" />
                     </motion.div>
                 </div>

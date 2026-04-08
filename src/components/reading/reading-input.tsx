@@ -27,6 +27,9 @@ interface ReadingInputProps {
     inviterName?: string;
     inviteCode?: string;
     initialLanguage?: 'ko' | 'en';
+    onLanguageChange?: (lang: 'ko' | 'en') => void;
+    initialContext?: ReadingContext;
+    initialQuestion?: string;
 }
 
 export interface ReadingData {
@@ -225,6 +228,9 @@ export function ReadingInput({
     inviterName,
     inviteCode,
     initialLanguage = 'ko',
+    onLanguageChange,
+    initialContext,
+    initialQuestion,
 }: ReadingInputProps) {
     const [name, setName] = useState('');
     const [gender, setGender] = useState<'male' | 'female'>('male');
@@ -235,8 +241,8 @@ export function ReadingInput({
     const [characterId, setCharacterId] = useState<OracleCharacterId>('general_orion');
     const [selectionMode, setSelectionMode] = useState<'auto' | 'manual'>('auto');
     const [showPrecisionFields, setShowPrecisionFields] = useState(Boolean(inviteCode));
-    const [context, setContext] = useState<ReadingContext>(inviteCode ? 'love' : 'general');
-    const [question, setQuestion] = useState('');
+    const [context, setContext] = useState<ReadingContext>(inviteCode ? 'love' : initialContext ?? 'general');
+    const [question, setQuestion] = useState(initialQuestion ?? '');
     const [languageOverride, setLanguageOverride] = useState<'ko' | 'en' | null>(null);
 
     // 상대방 정보 state (궁합/재회 분석용)
@@ -245,8 +251,8 @@ export function ReadingInput({
     const [partnerBirthDate, setPartnerBirthDate] = useState('');
     const [partnerBirthTime, setPartnerBirthTime] = useState('12:00');
     const [partnerGender, setPartnerGender] = useState<'male' | 'female'>('male');
+    const [showAllGuides, setShowAllGuides] = useState(false);
     const questionFieldRef = useRef<HTMLTextAreaElement | null>(null);
-    const guideSectionRef = useRef<HTMLDivElement | null>(null);
 
     const language = languageOverride ?? initialLanguage;
     const isEn = language === 'en';
@@ -370,15 +376,7 @@ export function ReadingInput({
     };
 
     const openGuideSelection = () => {
-        setShowPrecisionFields(true);
-        setSelectionMode('manual');
-
-        window.setTimeout(() => {
-            guideSectionRef.current?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start',
-            });
-        }, 80);
+        setShowAllGuides(true);
     };
 
     return (
@@ -393,12 +391,15 @@ export function ReadingInput({
             <div className="border-b border-white/5 pb-4">
                 <div className="flex items-center justify-between gap-4">
                     <span className="text-xs font-mono text-dim tracking-widest uppercase">
-                        {isEn ? 'Oracle Intake Protocol' : 'Oracle Intake Protocol'}
+                        {isEn ? 'Reading Intake' : '질문 입력 순서'}
                     </span>
                     <div className="flex gap-4 text-xs font-mono">
-                        <button
+                         <button
                             type="button"
-                            onClick={() => setLanguageOverride('ko')}
+                            onClick={() => {
+                                setLanguageOverride('ko');
+                                onLanguageChange?.('ko');
+                            }}
                             className={`transition-colors ${language === 'ko' ? 'text-acc-gold' : 'text-dim hover:text-white'}`}
                         >
                             KR
@@ -406,7 +407,10 @@ export function ReadingInput({
                         <span className="text-dim">/</span>
                         <button
                             type="button"
-                            onClick={() => setLanguageOverride('en')}
+                            onClick={() => {
+                                setLanguageOverride('en');
+                                onLanguageChange?.('en');
+                            }}
                             className={`transition-colors ${language === 'en' ? 'text-acc-gold' : 'text-dim hover:text-white'}`}
                         >
                             EN
@@ -420,13 +424,13 @@ export function ReadingInput({
                                 {isEn ? 'First Reading Free' : '첫 리딩 무료'}
                             </span>
                             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
-                                {isEn ? 'Question + Birth Data + Result' : '질문 + 사주 정보 + 무료 결과'}
+                                {isEn ? 'Question + Birth Data + Result' : '질문 + 생년월일 + 바로 결과'}
                             </span>
                         </div>
                         <p className="mt-2 text-sm leading-6 text-white/62">
                             {isEn
                                 ? 'Keep the depth in the saju itself, not in extra steps. Ask one real question, add your birth details, and go straight to the first result.'
-                                : '깊이는 단계 수가 아니라 사주 해석에 남겨둡니다. 질문 하나와 생년월일시를 입력하면 바로 첫 결과로 넘어갑니다.'}
+                                : '단계가 많다고 더 정확한 건 아니에요. 지금 고민 하나와 생년월일만 넣으면 첫 결과를 바로 볼 수 있어요.'}
                         </p>
                     </div>
                     {isEn ? (
@@ -453,7 +457,7 @@ export function ReadingInput({
                             <p className="mt-2 text-sm leading-6 text-white/58">
                                 {isEn
                                     ? 'Start with the question before the coordinates. Once the oracle knows what you are trying to decide, your birth timing can sharpen the route.'
-                                    : '좌표보다 질문부터 정합니다. 무엇을 결정하려는지 먼저 알려주면, 생년월일시는 그 질문을 더 정밀하게 읽는 기준이 됩니다.'}
+                                    : '질문부터 시작합니다. 뭘 결정해야 하는지 먼저 알아야, 생년월일도 그 질문을 더 정확하게 읽어줄 수 있어요.'}
                             </p>
                         </div>
                         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
@@ -499,7 +503,7 @@ export function ReadingInput({
                         </div>
 
                         <label className="mt-4 block text-xs uppercase tracking-[0.24em] text-white/38">
-                            {isEn ? 'Your Real Question' : '지금 가장 궁금한 질문'}
+                            {isEn ? 'Your Real Question' : '지금 제일 걸리는 질문'}
                         </label>
                         <textarea
                             ref={questionFieldRef}
@@ -524,7 +528,7 @@ export function ReadingInput({
                         <p className="mt-2 text-[11px] leading-5 text-white/38">
                             {isEn
                                 ? 'A concrete question makes the action window, follow-up guidance, and premium upgrade feel much sharper from the first reading.'
-                                : '질문이 구체적일수록 첫 리딩부터 행동 결론, follow-up 질문, 프리미엄 심화 가이드가 더 선명해집니다.'}
+                                : '질문이 구체적일수록 첫 결과가 더 바로 이해되고, 다음에 뭘 물어볼지도 선명해집니다.'}
                         </p>
                     </div>
                 </div>
@@ -535,10 +539,10 @@ export function ReadingInput({
                             <label className="block text-xs text-acc-gold tracking-widest uppercase">
                                 {isEn ? 'Recommended Guide' : '이번 질문의 추천 가이드'}
                             </label>
-                            <p className="mt-2 text-sm leading-6 text-white/58">
-                                {isEn
-                                    ? 'This is one of the core parts of the product. We first attach the guide that fits the question best, then let you switch right away if you want another lens.'
-                                    : '이 가이드는 우리 서비스의 핵심입니다. 질문에 맞는 상담가를 먼저 붙여주고, 원하면 바로 다른 가이드로 바꿔서 볼 수 있게 합니다.'}
+                            <p className="mt-1 text-[11px] leading-relaxed text-white/40">
+                                {isEn 
+                                    ? "Reads the overall flow and points to the single most important path right now."
+                                    : "질문 전체의 흐름을 읽고, 지금 당신의 궤도를 가장 크게 바꿀 한 수를 짚어주는 메인 오라클 가이드"}
                             </p>
                         </div>
                         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
@@ -549,8 +553,8 @@ export function ReadingInput({
                     </div>
 
                     <div className="mt-4 rounded-[22px] border border-white/10 bg-black/20 p-4 md:p-5">
-                        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                            <div className="min-w-0">
+                        <div className="flex flex-col gap-5">
+                            <div>
                                 <div className="flex flex-wrap items-center gap-2">
                                     <span className="rounded-full border border-acc-gold/25 bg-acc-gold/10 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-acc-gold">
                                         {routePersona.name}
@@ -561,13 +565,13 @@ export function ReadingInput({
                                 </div>
 
                                 <p className="mt-3 text-sm uppercase tracking-[0.22em] text-white/40">
-                                    {routePersona.title}
+                                    {isEn ? routePersona.titleEn : routePersona.titleKo}
                                 </p>
 
-                                <div className="mt-4 rounded-[18px] border border-white/10 bg-white/[0.04] p-4">
+                                <div className="mt-4 rounded-[18px] border border-white/10 bg-white/[0.04] p-4 md:p-5">
                                     <p className="text-[11px] uppercase tracking-[0.22em] text-white/42">
                                         {isUsingRecommendedGuide
-                                            ? (isEn ? 'Why this guide came first' : '왜 이 가이드가 먼저 나왔나요')
+                                            ? (isEn ? 'Why this guide came first' : '왜 이 가이드가 먼저 나왔을까요')
                                             : (isEn ? 'What changes with this guide' : '이 가이드로 바꾸면')}
                                     </p>
                                     <p className="mt-2 text-sm leading-6 text-white/72">
@@ -576,7 +580,7 @@ export function ReadingInput({
                                 </div>
 
                                 <p className="mt-4 text-sm leading-6 text-white/68">
-                                    {routePersona.description}
+                                    {isEn ? routePersona.descriptionEn : routePersona.descriptionKo}
                                 </p>
 
                                 <div className="mt-4 flex flex-wrap gap-2">
@@ -590,24 +594,70 @@ export function ReadingInput({
                                     ))}
                                 </div>
                             </div>
-                            <div className="flex flex-col gap-2 md:min-w-[210px]">
-                                <button
-                                    type="button"
-                                    onClick={openGuideSelection}
-                                    className="min-h-[44px] rounded-full border border-white/15 px-4 py-2 text-xs uppercase tracking-[0.22em] text-white/78 transition-all hover:border-white/30 hover:text-white"
-                                >
-                                    {isEn ? 'See All Guides' : '전체 가이드 보기'}
-                                </button>
-                                <p className="text-[11px] leading-5 text-white/38">
+
+                            <div className="mt-2 flex flex-col gap-4 rounded-[18px] border border-white/10 bg-white/[0.02] p-4 md:flex-row md:items-center md:justify-between">
+                                <p className="text-[11px] leading-5 text-white/45 md:max-w-[65%]">
                                     {isEn
                                         ? 'Keep the best match, or open the full list below when you want another reading style.'
                                         : '추천 가이드를 그대로 써도 되고, 원하면 아래 전체 목록에서 다른 가이드로 바꿀 수 있습니다.'}
                                 </p>
+                                <button
+                                    type="button"
+                                    onClick={openGuideSelection}
+                                    className="min-h-[44px] whitespace-nowrap rounded-full border border-white/15 bg-white/5 px-5 py-2 text-xs uppercase tracking-[0.22em] text-white/78 transition-all hover:border-white/30 hover:bg-white/10 hover:text-white"
+                                >
+                                    {isEn ? 'See All Guides' : '전체 가이드 보기'}
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    {alternativeGuides.length > 0 ? (
+                    {showAllGuides ? (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="mt-4 rounded-[22px] border border-white/10 bg-white/[0.03] p-4 md:p-5"
+                        >
+                            <div className="mb-4">
+                                <p className="text-xs uppercase tracking-[0.22em] text-white/40">
+                                    {isEn ? 'All Guides' : '전체 가이드 목록'}
+                                </p>
+                                <p className="mt-2 text-sm leading-6 text-white/58">
+                                    {isEn
+                                        ? 'The guide changes how the question is read. Pick any guide you want.'
+                                        : '가이드는 결과 말투가 아니라 질문을 읽는 관점을 바꿉니다. 원하는 시선으로 직접 골라보세요.'}
+                                </p>
+                            </div>
+                            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                {ORACLE_CHARACTER_IDS.map((id) => {
+                                    const persona = getOraclePersona(id);
+                                    const isSelected = selectedCharacterId === id;
+                                    const isRecommended = recommendedCharacterId === id;
+                                    return (
+                                        <OracleSelectCard
+                                            key={id}
+                                            language={language}
+                                            persona={persona}
+                                            selected={isSelected}
+                                            recommended={isRecommended}
+                                            onSelect={() => {
+                                                setCharacterId(id);
+                                                setSelectionMode('manual');
+                                            }}
+                                        />
+                                    );
+                                })}
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowAllGuides(false)}
+                                className="mt-4 w-full rounded-full border border-white/15 bg-white/[0.03] px-4 py-3 text-xs uppercase tracking-[0.22em] text-white/62 hover:bg-white/[0.06] hover:text-white"
+                            >
+                                {isEn ? 'Show Less' : '목록 접기'}
+                            </button>
+                        </motion.div>
+                    ) : alternativeGuides.length > 0 ? (
                         <div className="mt-4 rounded-[22px] border border-white/10 bg-white/[0.03] p-4 md:p-5">
                             <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                                 <div>
@@ -650,7 +700,7 @@ export function ReadingInput({
                                         </div>
 
                                         <p className="mt-3 text-sm uppercase tracking-[0.22em] text-white/40">
-                                            {persona.title}
+                                            {isEn ? persona.titleEn : persona.titleKo}
                                         </p>
                                         <p className="mt-3 text-sm leading-6 text-white/64">
                                             {strength}
@@ -677,7 +727,7 @@ export function ReadingInput({
                             <p className="mt-2 text-sm leading-6 text-white/58">
                                 {isEn
                                     ? 'These are the fields that actually affect the first saju read: birth date, birth time or time unknown, gender, and solar/lunar calendar.'
-                                    : '여기는 첫 사주 결과의 질에 직접 쓰이는 값만 받습니다. 생년월일, 태어난 시간 또는 시간 모름, 성별, 양력/음력까지가 핵심입니다.'}
+                                    : '첫 결과에 직접 필요한 값만 먼저 받습니다. 생년월일, 태어난 시간, 성별, 양력/음력까지가 핵심이에요.'}
                             </p>
                         </div>
                         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
@@ -836,7 +886,7 @@ export function ReadingInput({
                             <p className="max-w-2xl text-sm leading-6 text-white/58">
                                 {isEn
                                     ? 'The first result now uses the quality-critical saju fields first. Extra inputs are only for compatibility, manual guide choice, or a more custom path.'
-                                    : '이제 무료 결과는 품질에 직접 쓰이는 사주 입력부터 받고 바로 엽니다. 추가 입력은 궁합, 가이드 직접 선택, 더 세밀한 경로가 필요할 때만 씁니다.'}
+                                    : '무료 결과는 필요한 정보만 먼저 받고 바로 엽니다. 추가 입력은 더 자세히 보고 싶을 때만 넣으면 됩니다.'}
                             </p>
                         </div>
                     </div>
@@ -966,91 +1016,6 @@ export function ReadingInput({
                             </div>
                         )}
 
-                        {/* 4. Oracle Guide */}
-                        <div ref={guideSectionRef} className={`${sectionShellClass} order-5`}>
-                            <label className="block text-xs text-acc-gold tracking-widest uppercase mb-4">
-                                {isEn ? 'All Guides' : '전체 가이드 보기'}
-                            </label>
-
-                            <div className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4 md:p-5">
-                                <div className="flex flex-wrap items-center gap-2">
-                                    <span className="rounded-full border border-acc-gold/25 bg-acc-gold/10 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-acc-gold">
-                                        {selectionMode === 'auto'
-                                            ? (isEn ? 'Auto Matched' : '자동 매칭')
-                                            : (isEn ? 'Manual Pick' : '직접 선택')}
-                                    </span>
-                                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-white/55">
-                                        {activePersona.name}
-                                    </span>
-                                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-white/55">
-                                        {isEn
-                                            ? getOracleIntentLabel(inferredQuestionIntent, 'en')
-                                            : getOracleIntentLabel(inferredQuestionIntent, 'ko')}
-                                    </span>
-                                </div>
-
-                                <p className="mt-3 text-sm leading-6 text-white/58">
-                                    {isEn
-                                        ? 'The guide changes how the question is read. Keep the best match if it feels right, or switch here when you want another point of view.'
-                                        : '가이드는 결과 말투가 아니라 질문을 읽는 관점을 바꿉니다. 기본 추천이 맞으면 그대로 쓰고, 다른 시선이 필요하면 여기서 바꾸면 됩니다.'}
-                                </p>
-
-                                <div className="mt-4 flex flex-wrap gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectionMode('auto')}
-                                        className={`min-h-[38px] rounded-full border px-4 py-2 text-xs uppercase tracking-[0.22em] transition-all ${
-                                            selectionMode === 'auto'
-                                                ? 'border-acc-gold bg-acc-gold text-bg-void'
-                                                : 'border-white/15 text-white/70 hover:border-white/30 hover:text-white'
-                                        }`}
-                                    >
-                                        {isEn ? 'Use Best Match' : '추천 가이드 쓰기'}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectionMode('manual')}
-                                        className={`min-h-[38px] rounded-full border px-4 py-2 text-xs uppercase tracking-[0.22em] transition-all ${
-                                            selectionMode === 'manual'
-                                                ? 'border-acc-gold bg-acc-gold text-bg-void'
-                                                : 'border-white/15 text-white/70 hover:border-white/30 hover:text-white'
-                                        }`}
-                                    >
-                                        {isEn ? 'Pick Manually' : '직접 고르기'}
-                                    </button>
-                                </div>
-                            </div>
-
-                            {selectionMode === 'manual' ? (
-                                <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
-                                    {ORACLE_CHARACTER_IDS.map((id) => {
-                                        const persona = getOraclePersona(id);
-                                        const isSelected = characterId === id;
-                                        const isRecommended = recommendedCharacterId === id;
-
-                                        return (
-                                            <OracleSelectCard
-                                                key={id}
-                                                language={language}
-                                                persona={persona}
-                                                selected={isSelected}
-                                                recommended={isRecommended}
-                                                onSelect={() => {
-                                                    setCharacterId(id);
-                                                    setSelectionMode('manual');
-                                                }}
-                                            />
-                                        );
-                                    })}
-                                </div>
-                            ) : (
-                                <p className="mt-4 rounded-[20px] border border-white/10 bg-black/20 px-4 py-4 text-sm leading-6 text-white/58">
-                                    {isEn
-                                        ? `${activePersona.name} is the current best match for this question. Open manual choice only when you want a different reading style.`
-                                        : `${activePersona.name} 가이드가 지금 질문에 가장 잘 맞는 기본 추천입니다. 다른 스타일로 보고 싶을 때만 직접 선택을 열면 됩니다.`}
-                                </p>
-                            )}
-                        </div>
                     </>
                 )}
 
@@ -1068,7 +1033,7 @@ export function ReadingInput({
                             ? (isEn ? 'CALCULATING...' : 'CALCULATING...')
                             : (inviteCode
                                 ? (isEn ? 'SEE FREE COMPATIBILITY' : '무료 궁합 결과 보기')
-                                : (isEn ? 'SEE FREE RESULT' : '무료 결과 보기')
+                                : (isEn ? 'SEE FREE RESULT' : '내 결과 먼저 보기')
                             )
                         }
                     </span>
@@ -1077,7 +1042,7 @@ export function ReadingInput({
                 <p className="text-center text-[11px] tracking-[0.16em] text-white/38 uppercase">
                     {isEn
                         ? 'You answer once, then the first result opens right away.'
-                        : '한 번 입력하면 바로 첫 결과가 열립니다.'}
+                        : '입력 한 번이면 첫 결과가 바로 열립니다.'}
                 </p>
             </div>
 

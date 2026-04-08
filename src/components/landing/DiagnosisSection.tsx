@@ -21,20 +21,20 @@ export function DiagnosisSection() {
                     className="flex-1 md:pr-12 relative z-20 w-full"
                 >
                     <span className="text-acc-nebula text-xs font-bold tracking-widest uppercase mb-4 block">
-                        The Diagnosis
+                        Why It Feels Hard
                     </span>
                     <h2 className="font-cinzel text-2xl md:text-4xl text-starlight mb-6 md:mb-8 leading-tight">
-                        겉으로는 <span className="text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">차분한 호수</span> 같지만,<br />
-                        수면 아래에는 <span className="text-acc-nebula drop-shadow-[0_0_15px_rgba(255,59,48,0.4)]">화산</span>이 끓고 있습니다.
+                        겉으론 괜찮아 보여도, <br />
+                        <span className="text-acc-nebula drop-shadow-[0_0_15px_rgba(255,59,48,0.4)]">속으론 계속 걸리죠.</span>
                     </h2>
                     <div className="space-y-4 md:space-y-6 text-moonlight font-light leading-relaxed text-sm md:text-base">
                         <p>
-                            남들은 당신을 &#39;안정적인 사람&#39;이라 생각합니다.
-                            하지만 당신은 알고 있습니다. 지금 자신이 인생의 거대한 변곡점에 서 있다는 것을.
+                            버텨야 하는지, 그만둬야 하는지. <br />
+                            잘하고 있는 건지, 그냥 익숙해서 붙잡고 있는 건지.
                         </p>
                         <p>
-                            불안은 당신이 약해서가 아닙니다. <br />
-                            자신의 &#39;설계도&#39;를 아직 본 적이 없기 때문입니다.
+                            답답한 건 약해서가 아니에요. <br />
+                            아직 질문이 제대로 정리되지 않았기 때문일 수 있어요.
                         </p>
                     </div>
                 </motion.div>

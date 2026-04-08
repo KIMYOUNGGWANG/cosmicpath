@@ -33,11 +33,11 @@ export async function generateMetadata(): Promise<Metadata> {
 
     if (isKorean) {
         return {
-            title: 'CosmicPath | 1:1 한국형 오라클 & 데이터 기반 사주·타로',
-            description: '애매한 선택을 앞둔 순간, 가장 정확한 타이밍과 행동을 제안합니다. 사주·별자리·타로 교차 검증 오라클.',
+            title: 'CosmicPath | 지금 움직여도 될지 읽어주는 사주 리딩',
+            description: '연애, 커리어, 재물, 일상. 애매한 선택 앞에서 지금 움직일지 더 기다릴지, 사주·타로·별자리로 읽어드립니다.',
             openGraph: {
-                title: 'CosmicPath | 1:1 한국형 오라클 & 데이터 기반 사주·타로',
-                description: '애매한 선택을 앞둔 순간, 가장 정확한 타이밍과 행동을 제안합니다. 사주·별자리·타로 교차 검증 오라클.',
+                title: 'CosmicPath | 지금 움직여도 될지 읽어주는 사주 리딩',
+                description: '연애, 커리어, 재물, 일상. 애매한 선택 앞에서 지금 움직일지 더 기다릴지, 사주·타로·별자리로 읽어드립니다.',
                 images: ['/og-image.png'],
             },
         };
