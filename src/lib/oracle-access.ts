@@ -15,7 +15,7 @@ export class OracleAccessError extends Error {
 }
 
 export interface AuthorizedOracleContext {
-    userId: string;
+    userId: string | null;
     reading: {
         id: string;
         data: string;
@@ -30,11 +30,7 @@ export async function authorizeOracleAccess(
     accessKey?: string | null
 ): Promise<AuthorizedOracleContext> {
     const session = await auth();
-    const userId = session?.user?.id;
-
-    if (!userId) {
-        throw new OracleAccessError(401, 'UNAUTHORIZED', 'Unauthorized');
-    }
+    const userId = session?.user?.id ?? null;
 
     let reading = await prisma.readingResult.findUnique({
         where: { id: readingId },
@@ -51,15 +47,23 @@ export async function authorizeOracleAccess(
     }
 
     if (!reading.userId) {
-        const canClaimAnonymousReading = hasReadingAccess({
+        const canAccessAnonymousReading = hasReadingAccess({
             readingUserId: reading.userId,
             sessionUserId: userId,
             storedAccessKey: extractReadingAccessKey(reading.metadata),
             providedAccessKey: accessKey,
         });
 
-        if (!canClaimAnonymousReading) {
+        if (!canAccessAnonymousReading) {
             throw new OracleAccessError(403, 'FORBIDDEN', 'You do not have access to this reading');
+        }
+
+        if (!userId) {
+            return {
+                userId: null,
+                reading,
+                isUnlimited: false,
+            };
         }
 
         const claimResult = await prisma.readingResult.updateMany({
@@ -88,6 +92,10 @@ export async function authorizeOracleAccess(
         } else {
             reading = { ...reading, userId };
         }
+    }
+
+    if (!userId) {
+        throw new OracleAccessError(401, 'UNAUTHORIZED', 'Unauthorized');
     }
 
     if (reading.userId !== userId) {

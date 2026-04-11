@@ -431,6 +431,7 @@ export function PaymentModal({
                     productId: READING_PRODUCT.productId,
                     email,
                     readingId: readingId || undefined,
+                    accessKey: getStoredReadingAccessKey() || undefined,
                     referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
                     promoCodeId: promoCodeId || undefined,
                     discount: discount || undefined,

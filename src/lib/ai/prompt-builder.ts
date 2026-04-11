@@ -222,24 +222,9 @@ export function buildUserPrompt(
 ): string {
   const config = CONTEXT_CONFIG[context];
   const isEn = language === 'en';
-  const today = currentDate || new Date().toISOString().split('T')[0];
-  const personaBlock = buildOraclePersonaBlock(characterId, language, {
-    questionIntent: promptContext?.questionIntent,
-    selectionMode: promptContext?.selectionMode,
-  });
   const advisorEvidenceBlock = promptContext?.advisorEvidenceSummary?.trim()
     ? `\n${promptContext.advisorEvidenceSummary.trim()}`
     : '';
-  const depthRule = isEn
-    ? (promptContext?.isPremium
-      ? 'Premium depth rule: you may go section by section, but every section must stay anchored in evidence and remain useful.'
-      : 'Free depth rule: stay concise and decisive. Prioritize 2-3 strong insights over exhaustive coverage. `free_focus` must clearly contain one next move, one evidence summary, and one follow-up question.')
-    : (promptContext?.isPremium
-      ? '프리미엄 깊이 규칙: 섹션별로 더 깊게 들어가도 되지만, 모든 단락은 근거에 고정하고 실제 도움이 되게 유지하세요.'
-      : '무료 깊이 규칙: 길게 늘어놓기보다 2-3개의 강한 통찰을 우선하세요. `free_focus`에 다음 행동 1개, 근거 요약 1개, 다음 질문 1개를 분명하게 넣으세요.');
-  const hanjaRule = isEn
-    ? 'If you use traditional East Asian terms, explain them once as 漢字(reading, plain meaning).'
-    : '한자나 전통 명리 용어를 쓰면 반드시 한자(독음, 쉬운 뜻) 형식으로 한 번 풀어 설명하세요.';
 
   // 데이터 요약
   const sajuData = formatSaju(saju);
@@ -263,11 +248,7 @@ export function buildUserPrompt(
 **Astrology (${Math.round(WEIGHTS.astrology * 100)}%)**: ${astroData}
 **Tarot (${Math.round(WEIGHTS.tarot * 100)}%)**: ${tarotData}
 
-${personaBlock}
 ${advisorEvidenceBlock}
-
-${depthRule}
-${hanjaRule}
 
 # Cross-Validation
 - Confidence: ${guide.confidence.score}/5 (${guide.confidence.percentage}%)
@@ -275,31 +256,15 @@ ${hanjaRule}
 - Key Themes: ${guide.keyThemes.slice(0, 3).join(', ')}
 - Priority: ${guide.prioritySource}
 
-# Context
-- Today: ${today}
+# Reading Goal
 - Area: ${context}
 - Question: "${question || 'General flow'}"
 - Tone: ${config.tone}
-
-# Requirements
-Include:
-□ 1+ data point from Saju (50% weight)
-□ 1+ from Astrology (30% weight)
-□ 1+ from Tarot (20% weight)
-□ Specific date/period (YYYY-MM format)
-□ Actionable advice
-□ free_focus.action_conclusion = one concrete next move
-□ free_focus.evidence_summary = 1-2 lines grounded in evidence
-□ free_focus.next_question = one precise follow-up question
-
 Focus: ${config.focus.join(', ')}
 Avoid: ${config.avoid.join(', ')}
-
-# Good Example
-${config.examples.good}
-
-# Bad Example (DON'T)
-${config.examples.bad}
+- Prefer the strongest shared pattern before edge cases.
+- If timing is weak, say so instead of forcing a date.
+- Keep the answer decision-useful, concrete, and emotionally clear.
 
 ${guide.warnings.length > 0 ? `⚠️ Warnings: ${guide.warnings.join('; ')}` : ''}`;
   }
@@ -309,11 +274,7 @@ ${guide.warnings.length > 0 ? `⚠️ Warnings: ${guide.warnings.join('; ')}` : 
 **점성술 (${Math.round(WEIGHTS.astrology * 100)}%)**: ${astroData}
 **타로 (${Math.round(WEIGHTS.tarot * 100)}%)**: ${tarotData}
 
-${personaBlock}
 ${advisorEvidenceBlock}
-
-${depthRule}
-${hanjaRule}
 
 # 교차 검증
 - 신뢰도: ${guide.confidence.score}/5 (${guide.confidence.percentage}%)
@@ -321,30 +282,15 @@ ${hanjaRule}
 - 핵심 테마: ${guide.keyThemes.slice(0, 3).join(', ')}
 - 우선순위: ${guide.prioritySource}
 
-# 컨텍스트
-- 오늘: ${today}
+# 리딩 목표
 - 영역: ${context}
 - 질문: "${question || '전반적 흐름'}"
 - 톤: ${config.tone}
-
-# 필수 포함 요소
-□ 사주 데이터 1개 이상 (50% 가중치)
-□ 점성술 데이터 1개 이상 (30% 가중치)
-□ 타로 데이터 1개 이상 (20% 가중치)
-□ 구체적 날짜/기간 (YYYY-MM 형식)
-□ 실행 가능 조언
-□ free_focus.action_conclusion = 바로 붙잡을 다음 행동 1개
-□ free_focus.evidence_summary = 근거 기반 1-2줄 요약
-□ free_focus.next_question = 바로 이어서 물어볼 질문 1개
-
 집중: ${config.focus.join(', ')}
 회피: ${config.avoid.join(', ')}
-
-# 좋은 예시
-${config.examples.good}
-
-# 나쁜 예시 (하지 말 것)
-${config.examples.bad}
+- 가장 강하게 겹치는 신호를 먼저 설명하고, 엣지 케이스는 뒤로 미루세요.
+- 시기 근거가 약하면 날짜를 억지로 만들지 말고 불확실성을 그대로 말하세요.
+- 답변은 실제 의사결정에 도움이 되게, 구체적이고 정서적으로도 읽히게 만드세요.
 
 ${guide.warnings.length > 0 ? `⚠️ 주의: ${guide.warnings.join('; ')}` : ''}`;
 }
@@ -361,6 +307,7 @@ export function buildStructuredSystemPrompt(
     questionIntent?: OracleQuestionIntent;
     selectionMode?: OracleSelectionMode;
     isPremium?: boolean;
+    freeOutputMode?: 'core' | 'full';
   }
 ): string {
   const isEn = language === 'en';
@@ -371,20 +318,26 @@ export function buildStructuredSystemPrompt(
   const personaBlock = buildOraclePersonaBlock(options?.characterId, language, {
     questionIntent: options?.questionIntent,
     selectionMode: options?.selectionMode,
+    detailLevel: options?.isPremium ? 'full' : 'compact',
   });
   const depthRule = isEn
     ? (options?.isPremium
       ? '# Premium Depth Rule\n- Premium outputs may go deeper section by section, but every section must still cite evidence and stay decision-useful.'
-      : '# Free Depth Rule\n- This is a free reading. Deliver the clearest high-signal summary first and avoid exhaustive sub-analysis.\n- `free_focus` must always contain one decisive next move, one compact evidence summary, and one precise follow-up question.')
+      : options?.freeOutputMode === 'core'
+        ? '# Free Depth Rule\n- This is phase 1 of a free reading. Deliver the clearest high-signal summary first and avoid exhaustive sub-analysis.\n- Return only `free_focus` and `summary` in this phase.\n- `free_focus` must always contain one decisive next move, one compact evidence summary, and one precise follow-up question.'
+        : '# Free Depth Rule\n- This is a free reading. Deliver the clearest high-signal summary first and avoid exhaustive sub-analysis.\n- Return only `free_focus`, `summary`, and `traits`.\n- `free_focus` must always contain one decisive next move, one compact evidence summary, and one precise follow-up question.')
     : (options?.isPremium
       ? '# 프리미엄 깊이 규칙\n- 프리미엄 출력은 더 깊게 들어갈 수 있지만, 모든 섹션은 근거 인용과 실제 의사결정 도움을 유지해야 합니다.'
-      : '# 무료 깊이 규칙\n- 이것은 무료 리딩입니다. 가장 해상도 높은 요약을 먼저 주고, 과도한 세부 분해는 피하세요.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 다음 질문 1개를 반드시 넣으세요.');
+      : options?.freeOutputMode === 'core'
+        ? '# 무료 깊이 규칙\n- 이것은 무료 리딩 1단계입니다. 가장 해상도 높은 요약을 먼저 주고, 과도한 세부 분해는 피하세요.\n- 이 단계에서는 `free_focus`, `summary`만 반환하세요.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 다음 질문 1개를 반드시 넣으세요.'
+        : '# 무료 깊이 규칙\n- 이것은 무료 리딩입니다. 가장 해상도 높은 요약을 먼저 주고, 과도한 세부 분해는 피하세요.\n- 출력은 `free_focus`, `summary`, `traits`만 반환하세요.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 다음 질문 1개를 반드시 넣으세요.');
   const hanjaRule = isEn
     ? '# Traditional Term Rule\n- If you use traditional East Asian terms, explain them once as 漢字(reading, plain meaning).'
     : '# 한자 용어 규칙\n- 한자나 전통 명리 용어를 쓰면 반드시 한자(독음, 쉬운 뜻) 형식으로 한 번 풀어 설명하세요.';
 
   // 간소화된 JSON 스키마
-  const schema = isEn ? `
+  const schema = options?.isPremium
+    ? (isEn ? `
 # JSON Structure (Required Fields Only)
 
 \`\`\`json
@@ -470,9 +423,101 @@ export function buildStructuredSystemPrompt(
   }
 }
 \`\`\`
-`;
+`)
+    : options?.freeOutputMode === 'core'
+      ? (isEn ? `
+# JSON Structure (Free Reading Phase 1)
 
-  const validationRules = isEn ? `
+\`\`\`json
+{
+  "free_focus": {
+    "action_conclusion": "One concrete next move",
+    "evidence_summary": "1-2 lines grounded in Saju/Astro/Tarot evidence",
+    "next_question": "One precise follow-up question"
+  },
+  "summary": {
+    "title": "Memorable headline (10-20 words)",
+    "content": "Core insight integrating the three systems (4-6 sentences)",
+    "trust_score": 1-5,
+    "trust_reason": "Why this summary is trustworthy with evidence"
+  }
+}
+\`\`\`
+` : `
+# JSON 구조 (무료 리딩 1단계)
+
+\`\`\`json
+{
+  "free_focus": {
+    "action_conclusion": "지금 붙잡을 행동 결론 1개",
+    "evidence_summary": "사주/점성/타로 근거 기반 1-2줄 요약",
+    "next_question": "바로 이어서 물어볼 다음 질문 1개"
+  },
+  "summary": {
+    "title": "기억에 남는 헤드라인 (15-30자)",
+    "content": "3원 통합 핵심 통찰 (4-6문장)",
+    "trust_score": 1-5,
+    "trust_reason": "이 요약을 믿을 수 있는 근거"
+  }
+}
+\`\`\`
+`)
+      : (isEn ? `
+# JSON Structure (Free Reading Only)
+
+\`\`\`json
+{
+  "free_focus": {
+    "action_conclusion": "One concrete next move",
+    "evidence_summary": "1-2 lines grounded in Saju/Astro/Tarot evidence",
+    "next_question": "One precise follow-up question"
+  },
+  "summary": {
+    "title": "Memorable headline (10-20 words)",
+    "content": "Core insight integrating the three systems (4-6 sentences)",
+    "trust_score": 1-5,
+    "trust_reason": "Why this summary is trustworthy with evidence"
+  },
+  "traits": [
+    {
+      "type": "saju|astro|tarot",
+      "name": "Short trait name",
+      "description": "One clear sentence",
+      "grade": "S|A|B"
+    }
+  ]
+}
+\`\`\`
+` : `
+# JSON 구조 (무료 리딩 전용)
+
+\`\`\`json
+{
+  "free_focus": {
+    "action_conclusion": "지금 붙잡을 행동 결론 1개",
+    "evidence_summary": "사주/점성/타로 근거 기반 1-2줄 요약",
+    "next_question": "바로 이어서 물어볼 다음 질문 1개"
+  },
+  "summary": {
+    "title": "기억에 남는 헤드라인 (15-30자)",
+    "content": "3원 통합 핵심 통찰 (4-6문장)",
+    "trust_score": 1-5,
+    "trust_reason": "이 요약을 믿을 수 있는 근거"
+  },
+  "traits": [
+    {
+      "type": "saju|astro|tarot",
+      "name": "짧은 트레이트 이름",
+      "description": "한눈에 읽히는 설명 한 문장",
+      "grade": "S|A|B"
+    }
+  ]
+}
+\`\`\`
+`);
+
+  const validationRules = options?.isPremium
+    ? (isEn ? `
 # Validation Rules
 1. All dates must be >= ${today}
 2. Technical terms must have plain language in parentheses
@@ -488,7 +533,36 @@ export function buildStructuredSystemPrompt(
 4. 애매한 표현 금지: "곧", "아마", "~할 수도"
 5. final_verdict.core_message는 반드시 사주 + 점성술 기반
 6. free_focus는 반드시 포함하고, 각 필드는 한눈에 읽히는 한 문장이어야 함
-`;
+`)
+    : options?.freeOutputMode === 'core'
+      ? (isEn ? `
+# Validation Rules
+1. Return ONLY the two top-level keys: free_focus and summary
+2. trust_score must be an integer from 1 to 5
+3. No vague filler like "maybe", "probably", "soon"
+4. free_focus MUST be present and each field must be a single clear sentence
+` : `
+# 검증 규칙
+1. 최상위 키는 free_focus, summary 두 가지만 반환
+2. trust_score는 1~5의 정수
+3. "곧", "아마", "~할 수도" 같은 애매한 표현 금지
+4. free_focus는 반드시 포함하고, 각 필드는 한눈에 읽히는 한 문장이어야 함
+`)
+      : (isEn ? `
+# Validation Rules
+1. Return ONLY the three top-level keys: free_focus, summary, traits
+2. traits must contain 2-4 items and use only saju|astro|tarot for type
+3. trust_score must be an integer from 1 to 5
+4. No vague filler like "maybe", "probably", "soon"
+5. free_focus MUST be present and each field must be a single clear sentence
+` : `
+# 검증 규칙
+1. 최상위 키는 free_focus, summary, traits 세 가지만 반환
+2. traits는 2-4개, type은 saju|astro|tarot만 사용
+3. trust_score는 1~5의 정수
+4. "곧", "아마", "~할 수도" 같은 애매한 표현 금지
+5. free_focus는 반드시 포함하고, 각 필드는 한눈에 읽히는 한 문장이어야 함
+`);
 
   return [
     basePrompt,

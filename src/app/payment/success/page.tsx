@@ -44,18 +44,28 @@ function PaymentSuccessContent() {
             }
 
             try {
+                sessionStorage.setItem('payment_session_id', sessionId);
+                if (readingId) {
+                    sessionStorage.setItem('payment_reading_id', readingId);
+                }
+
                 // Use the existing Stripe GET handler
                 const response = await fetch(`/api/payment?session_id=${sessionId}`);
                 const result = await response.json();
 
                 if (result.status === 'paid') {
+                    const resolvedReadingId =
+                        typeof result.reading_id === 'string' && result.reading_id
+                            ? result.reading_id
+                            : readingId;
+
                     setStatus('success');
                     void trackClientGrowthEvent({
                         event: 'checkout_success',
                         source: 'payment_success_page',
                         step: 'payment_verification',
                         language,
-                        readingId: readingId || undefined,
+                        readingId: resolvedReadingId || undefined,
                         plan: result.payment_type || 'premium_reading',
                         metadata: {
                             sessionId,
@@ -64,9 +74,14 @@ function PaymentSuccessContent() {
                     });
                     // Mark payment completed in storage for start/page.tsx to pick up
                     sessionStorage.setItem('payment_completed', 'true');
+                    sessionStorage.setItem('is_premium_user', 'true');
+                    if (resolvedReadingId) {
+                        sessionStorage.setItem('pending_reading_id', resolvedReadingId);
+                        sessionStorage.setItem('payment_reading_id', resolvedReadingId);
+                    }
 
                     setTimeout(() => {
-                        router.replace(`/start?paid=true${readingId ? `&reading_id=${readingId}` : ''}`);
+                        router.replace(`/start?paid=true${resolvedReadingId ? `&reading_id=${resolvedReadingId}` : ''}`);
                     }, 1000);
                 } else {
                     setStatus('error');
@@ -142,7 +157,10 @@ function PaymentSuccessContent() {
                         </p>
                     </div>
                     <button
-                        onClick={() => router.replace(`/start?paid=true${readingId ? `&reading_id=${readingId}` : ''}`)}
+                        onClick={() => {
+                            const resolvedReadingId = sessionStorage.getItem('payment_reading_id') || readingId;
+                            router.replace(`/start?paid=true${resolvedReadingId ? `&reading_id=${resolvedReadingId}` : ''}`);
+                        }}
                         className="w-full py-4 bg-[#A184FF] text-white font-bold rounded-2xl flex items-center justify-center gap-2"
                     >
                         {isEnglish ? 'See My Reading' : '결과 확인하기'} <ArrowRight size={18} />

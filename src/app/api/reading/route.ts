@@ -31,10 +31,9 @@ import {
 import {
     buildStructuredSystemPrompt,
     buildUserPrompt,
-    buildFallbackMessage,
     ReadingContext
 } from '@/lib/ai/prompt-builder';
-import { generateStructuredReport, ModelTier } from '@/lib/ai/llm-client';
+import { generateStructuredReport, ModelTier, StructuredParseError } from '@/lib/ai/llm-client';
 import { generatePremiumReport, generateSinglePhase } from '@/lib/ai/premium-reading-service';
 import { consumeDailyQuota } from '@/lib/plan-limits';
 import { trackGrowthEvent } from '@/lib/growth-events';
@@ -66,7 +65,7 @@ const ReadingRequestSchema = z.object({
     })).optional(),
     tier: z.enum(['free', 'basic', 'premium']).default('free'),
     language: z.enum(['ko', 'en']).optional().default('ko'),
-    phase: z.number().min(1).max(7).optional(), // for multi-step execution
+    phase: z.number().min(1).max(8).optional(), // for multi-step execution
     previousReport: z.object({}).passthrough().optional(), // previous phase data
     calendarType: z.enum(['solar', 'lunar']).default('solar'),
     unknownTime: z.boolean().default(false),
@@ -83,6 +82,23 @@ const ReadingRequestSchema = z.object({
 });
 
 type ReadingLanguage = 'ko' | 'en';
+type ReadingGuideSnapshot = ReturnType<typeof generateInterpretationGuide>;
+type StoredLegacySajuResult = ReturnType<typeof mapToLegacySaju>;
+
+interface StoredReadingRuntime {
+    guide: ReadingGuideSnapshot;
+    saju: StoredLegacySajuResult;
+    astrology: ReturnType<typeof calculateAstrology>;
+    cards: TarotCard[];
+    characterId: ReturnType<typeof resolveOracleCharacterId>;
+    questionIntent: OracleQuestionIntent;
+    selectionMode: OracleSelectionMode;
+    advisorProfile: ReturnType<typeof buildOracleAdvisorProfile>;
+    advisorEvidenceSummary: string;
+    precisionMetadata?: OracleSajuProfile['precisionMetadata'] | null;
+    oracleCouncil?: OracleSajuProfile['oracleCouncil'] | null;
+    partnerSaju?: StoredLegacySajuResult | null;
+}
 
 interface FreeFocusPayload {
     action_conclusion: string;
@@ -90,8 +106,120 @@ interface FreeFocusPayload {
     next_question: string;
 }
 
+const FreeReadingTraitSchema = z.object({
+    type: z.enum(['saju', 'astro', 'tarot']),
+    name: z.string().min(1),
+    description: z.string().min(1),
+    grade: z.enum(['S', 'A', 'B']),
+});
+
+const FreeReadingReportSchema = z.object({
+    free_focus: z.object({
+        action_conclusion: z.string().min(1),
+        evidence_summary: z.string().min(1),
+        next_question: z.string().min(1),
+    }),
+    summary: z.object({
+        title: z.string().min(1),
+        content: z.string().min(1),
+        trust_score: z.coerce.number().int().min(1).max(5),
+        trust_reason: z.string().min(1),
+    }),
+    traits: z.array(FreeReadingTraitSchema).min(1).max(4),
+});
+
+const FreeReadingCoreSchema = z.object({
+    free_focus: z.object({
+        action_conclusion: z.string().min(1),
+        evidence_summary: z.string().min(1),
+        next_question: z.string().min(1),
+    }),
+    summary: z.object({
+        title: z.string().min(1),
+        content: z.string().min(1),
+        trust_score: z.coerce.number().int().min(1).max(5),
+        trust_reason: z.string().min(1),
+    }),
+});
+
+type FreeReadingReport = z.infer<typeof FreeReadingReportSchema>;
+
+const ZODIAC_SIGNS_EN = [
+    'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+    'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces',
+] as const;
+
+const FREE_READING_TITLES: Record<OracleQuestionIntent, Record<ReadingLanguage, string>> = {
+    general: {
+        ko: '지금 흐름에서 먼저 볼 한 수',
+        en: 'The next move to read first',
+    },
+    compatibility: {
+        ko: '관계에서 먼저 조정할 신호',
+        en: 'The first relationship signal to adjust',
+    },
+    reunion: {
+        ko: '재회 전에 먼저 안정시킬 흐름',
+        en: 'What to stabilize before reunion',
+    },
+    wealth: {
+        ko: '지금 돈 흐름에서 먼저 잡을 기준',
+        en: 'The money signal to anchor first',
+    },
+    timing: {
+        ko: '지금은 움직일지 더 기다릴지',
+        en: 'Whether to move now or wait longer',
+    },
+    career: {
+        ko: '커리어에서 먼저 선명해질 포인트',
+        en: 'The career move to clarify first',
+    },
+    business: {
+        ko: '사업에서 먼저 검증할 병목',
+        en: 'The business bottleneck to validate first',
+    },
+};
+
+const CONFIDENCE_TEXT_EN = {
+    very_high: {
+        message: 'Saju, natal timing, and tarot are converging in the same direction.',
+        recommendation: 'Act with conviction, but keep execution disciplined.',
+    },
+    high: {
+        message: 'Most signals are aligned in one workable direction.',
+        recommendation: 'Follow the main current and stay flexible on details.',
+    },
+    medium: {
+        message: 'The reading has a clear center, but there are still competing angles.',
+        recommendation: 'Use the main signal, but leave room for alternatives.',
+    },
+    low: {
+        message: 'Different systems are showing different angles right now.',
+        recommendation: 'Avoid forcing one answer too early and compare options.',
+    },
+    very_low: {
+        message: 'The signals conflict too much to force a definitive answer now.',
+        recommendation: 'Wait, observe, and gather one more concrete signal first.',
+    },
+} as const;
+
 function sanitizeText(value: unknown): string {
     return typeof value === 'string' ? value.trim() : '';
+}
+
+function extractEvidenceLine(summary: string, labels: string[]): string {
+    const lines = summary.split('\n').map((line) => line.trim()).filter(Boolean);
+
+    for (const line of lines) {
+        for (const label of labels) {
+            const prefix = `- [${label}]`;
+            if (line.startsWith(prefix)) {
+                return line.slice(prefix.length).trim();
+            }
+        }
+    }
+
+    return '';
 }
 
 function parseJsonRecord(value: string | null | undefined): Record<string, unknown> {
@@ -107,6 +235,99 @@ function parseJsonRecord(value: string | null | undefined): Record<string, unkno
     }
 
     return {};
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isTarotCard(value: unknown): value is TarotCard {
+    if (!isRecord(value)) return false;
+
+    return typeof value.id === 'number' &&
+        typeof value.name === 'string' &&
+        typeof value.nameEn === 'string' &&
+        Array.isArray(value.keywords) &&
+        value.keywords.every((keyword) => typeof keyword === 'string') &&
+        typeof value.interpretation === 'string' &&
+        typeof value.isReversed === 'boolean';
+}
+
+function isQuestionIntent(value: unknown): value is OracleQuestionIntent {
+    return typeof value === 'string' &&
+        ORACLE_QUESTION_INTENTS.includes(value as OracleQuestionIntent);
+}
+
+function isSelectionMode(value: unknown): value is OracleSelectionMode {
+    return value === 'auto' || value === 'manual';
+}
+
+function isAstrologyResult(value: unknown): value is ReturnType<typeof calculateAstrology> {
+    return isRecord(value) &&
+        typeof value.sunSign === 'number' &&
+        typeof value.moonSign === 'number' &&
+        typeof value.ascendant === 'number';
+}
+
+function extractStoredReadingRuntime(metadata: Record<string, unknown>): StoredReadingRuntime | null {
+    const confidence = isRecord(metadata.confidence) ? metadata.confidence : null;
+    const matching = isRecord(metadata.matching) ? metadata.matching : null;
+    const radarScores = isRecord(metadata.radarScores) ? metadata.radarScores : null;
+    const keyThemes = Array.isArray(metadata.keyThemes) && metadata.keyThemes.every((item) => typeof item === 'string')
+        ? metadata.keyThemes as string[]
+        : null;
+    const saju = isRecord(metadata.sajuResult) ? metadata.sajuResult as StoredLegacySajuResult : null;
+    const astrology = isAstrologyResult(metadata.astrologyResult) ? metadata.astrologyResult : null;
+    const questionIntent = isQuestionIntent(metadata.questionIntent) ? metadata.questionIntent : null;
+    const selectionMode = isSelectionMode(metadata.selectionMode) ? metadata.selectionMode : null;
+    const characterId = typeof metadata.characterId === 'string'
+        ? resolveOracleCharacterId(metadata.characterId)
+        : null;
+
+    if (!confidence || !matching || !radarScores || !keyThemes || !saju || !astrology || !questionIntent || !selectionMode || !characterId) {
+        return null;
+    }
+
+    const cards = Array.isArray(metadata.tarotCards) && metadata.tarotCards.every(isTarotCard)
+        ? metadata.tarotCards as TarotCard[]
+        : [];
+    const advisorProfile = isRecord(metadata.advisorProfile)
+        ? metadata.advisorProfile as unknown as ReturnType<typeof buildOracleAdvisorProfile>
+        : buildOracleAdvisorProfile(characterId, selectionMode);
+    const precisionMetadata = isRecord(metadata.precisionMetadata)
+        ? metadata.precisionMetadata as unknown as OracleSajuProfile['precisionMetadata']
+        : isRecord(metadata.precision)
+            ? metadata.precision as unknown as OracleSajuProfile['precisionMetadata']
+            : null;
+    const oracleCouncil = isRecord(metadata.oracleCouncil)
+        ? metadata.oracleCouncil as unknown as OracleSajuProfile['oracleCouncil']
+        : null;
+    const partnerSaju = isRecord(metadata.partnerSajuResult)
+        ? metadata.partnerSajuResult as unknown as StoredLegacySajuResult
+        : null;
+
+    return {
+        guide: {
+            confidence: confidence as unknown as ReadingGuideSnapshot['confidence'],
+            matching: matching as unknown as ReadingGuideSnapshot['matching'],
+            radarScores: radarScores as unknown as ReadingGuideSnapshot['radarScores'],
+            prioritySource: 'saju',
+            tone: 'balanced',
+            keyThemes,
+            warnings: [],
+        },
+        saju,
+        astrology,
+        cards,
+        characterId,
+        questionIntent,
+        selectionMode,
+        advisorProfile,
+        advisorEvidenceSummary: sanitizeText(metadata.advisorEvidenceSummary),
+        precisionMetadata,
+        oracleCouncil,
+        partnerSaju,
+    };
 }
 
 function takeLeadSentences(text: string, maxLength = 160): string {
@@ -280,7 +501,8 @@ function buildOracleReportEnrichment(
         language: ReadingLanguage;
         advisorProfile: ReturnType<typeof buildOracleAdvisorProfile>;
         advisorEvidenceSummary: string;
-        sajuProfile: OracleSajuProfile;
+        precisionMetadata?: OracleSajuProfile['precisionMetadata'] | null;
+        oracleCouncil?: OracleSajuProfile['oracleCouncil'] | null;
     }
 ) {
     const baseReport =
@@ -298,8 +520,8 @@ function buildOracleReportEnrichment(
         characterId: params.characterId,
         questionIntent: params.questionIntent,
         selectionMode: params.selectionMode,
-        precisionMetadata: params.sajuProfile.precisionMetadata,
-        oracleCouncil: params.sajuProfile.oracleCouncil,
+        precisionMetadata: params.precisionMetadata ?? null,
+        oracleCouncil: params.oracleCouncil ?? null,
         advisorProfile: params.advisorProfile,
         advisorEvidenceSummary: params.advisorEvidenceSummary,
         oraclePersona: {
@@ -311,8 +533,8 @@ function buildOracleReportEnrichment(
 }
 
 function buildReadingMetadata(params: {
-    guide: ReturnType<typeof generateInterpretationGuide>;
-    saju: ReturnType<typeof mapToLegacySaju>;
+    guide: ReadingGuideSnapshot;
+    saju: StoredLegacySajuResult;
     astrology: ReturnType<typeof calculateAstrology>;
     cards: TarotCard[];
     characterId: string;
@@ -320,7 +542,9 @@ function buildReadingMetadata(params: {
     selectionMode: OracleSelectionMode;
     advisorProfile: ReturnType<typeof buildOracleAdvisorProfile>;
     advisorEvidenceSummary: string;
-    sajuProfile: OracleSajuProfile;
+    precisionMetadata?: OracleSajuProfile['precisionMetadata'] | null;
+    oracleCouncil?: OracleSajuProfile['oracleCouncil'] | null;
+    partnerSaju?: StoredLegacySajuResult | null;
 }) {
     return {
         confidence: params.guide.confidence,
@@ -351,10 +575,214 @@ function buildReadingMetadata(params: {
             name: params.advisorProfile.name,
             title: params.advisorProfile.title,
         },
-        precisionMetadata: params.sajuProfile.precisionMetadata,
-        precision: params.sajuProfile.precisionMetadata,
-        oracleCouncil: params.sajuProfile.oracleCouncil,
+        precisionMetadata: params.precisionMetadata ?? null,
+        precision: params.precisionMetadata ?? null,
+        oracleCouncil: params.oracleCouncil ?? null,
+        partnerSajuResult: params.partnerSaju ?? null,
     };
+}
+
+function toTraitGrade(score: number): 'S' | 'A' | 'B' {
+    if (score >= 88) return 'S';
+    if (score >= 72) return 'A';
+    return 'B';
+}
+
+function getLocalizedConfidenceCopy(
+    guide: ReadingGuideSnapshot,
+    language: ReadingLanguage
+) {
+    if (language === 'ko') {
+        return {
+            message: guide.confidence.message,
+            recommendation: guide.confidence.recommendation,
+        };
+    }
+
+    return CONFIDENCE_TEXT_EN[guide.confidence.level];
+}
+
+function getAstrologySignalName(index: number, language: ReadingLanguage): string {
+    if (language === 'en') {
+        return ZODIAC_SIGNS_EN[index] ?? 'Unknown';
+    }
+
+    return ZODIAC_SIGNS[index]?.name ?? '미상';
+}
+
+function buildDeterministicFreeReport(params: {
+    guide: ReadingGuideSnapshot;
+    saju: StoredLegacySajuResult;
+    astrology: ReturnType<typeof calculateAstrology>;
+    cards: TarotCard[];
+    questionIntent: OracleQuestionIntent;
+    advisorEvidenceSummary: string;
+    language: ReadingLanguage;
+}): FreeReadingReport {
+    const confidenceCopy = getLocalizedConfidenceCopy(params.guide, params.language);
+    const freeFocus = buildFreeFocusFallback({}, {
+        questionIntent: params.questionIntent,
+        language: params.language,
+        advisorEvidenceSummary: params.advisorEvidenceSummary,
+    });
+    const sajuLine = extractEvidenceLine(
+        params.advisorEvidenceSummary,
+        params.language === 'en' ? ['Saju'] : ['사주']
+    );
+    const astroLine = extractEvidenceLine(
+        params.advisorEvidenceSummary,
+        params.language === 'en' ? ['Natal', 'Ziwei'] : ['점성', '자미']
+    );
+    const tarotLine = extractEvidenceLine(
+        params.advisorEvidenceSummary,
+        params.language === 'en' ? ['Tarot'] : ['타로']
+    );
+    const tarotCard = params.cards[0];
+    const evidenceSummary = takeLeadSentences(
+        [sajuLine, astroLine].filter(Boolean).join(' '),
+        180
+    ) || freeFocus.evidence_summary;
+    const tarotDescription = tarotLine || (
+        params.language === 'en'
+            ? `${tarotCard?.nameEn || 'Tarot'}${tarotCard?.isReversed ? ' reversed' : ''} reflects the immediate emotional weather around this question.`
+            : `${tarotCard?.name || '타로'}${tarotCard?.isReversed ? ' 역방향' : ''} 카드가 지금 질문의 즉각적인 심리 신호를 비춥니다. ${takeLeadSentences(tarotCard?.interpretation || '', 90)}`
+    );
+
+    return {
+        free_focus: {
+            ...freeFocus,
+            evidence_summary: evidenceSummary,
+        },
+        summary: {
+            title: FREE_READING_TITLES[params.questionIntent][params.language],
+            content: takeLeadSentences(
+                [
+                    freeFocus.action_conclusion,
+                    evidenceSummary,
+                    confidenceCopy.recommendation,
+                ].filter(Boolean).join(' '),
+                360
+            ),
+            trust_score: params.guide.confidence.score,
+            trust_reason: params.language === 'en'
+                ? `${params.guide.matching.matchingTags.length} cross-checked themes overlap, and ${confidenceCopy.message.toLowerCase()}`
+                : `공통 테마 ${params.guide.matching.matchingTags.length}개가 겹치고, ${confidenceCopy.message}`,
+        },
+        traits: buildDeterministicFreeTraits(params, {
+            sajuLine,
+            astroLine,
+            tarotDescription,
+        }),
+    };
+}
+
+function extractPartialJsonStringValue(source: string, key: string): string | null {
+    const keyIndex = source.indexOf(`"${key}"`);
+    if (keyIndex === -1) return null;
+
+    const colonIndex = source.indexOf(':', keyIndex);
+    if (colonIndex === -1) return null;
+
+    const quoteStart = source.indexOf('"', colonIndex + 1);
+    if (quoteStart === -1) return null;
+
+    let value = '';
+    let escaped = false;
+
+    for (let index = quoteStart + 1; index < source.length; index += 1) {
+        const char = source[index];
+
+        if (escaped) {
+            value += char === 'n' ? '\n' : char;
+            escaped = false;
+            continue;
+        }
+
+        if (char === '\\') {
+            escaped = true;
+            continue;
+        }
+
+        if (char === '"') {
+            return value.trim() || null;
+        }
+
+        value += char;
+    }
+
+    return value.trim() || null;
+}
+
+function buildDeterministicFreeTraits(
+    params: {
+        guide: ReadingGuideSnapshot;
+        saju: StoredLegacySajuResult;
+        astrology: ReturnType<typeof calculateAstrology>;
+        cards: TarotCard[];
+        questionIntent: OracleQuestionIntent;
+        advisorEvidenceSummary: string;
+        language: ReadingLanguage;
+    },
+    overrides?: {
+        sajuLine?: string;
+        astroLine?: string;
+        tarotDescription?: string;
+    }
+): FreeReadingReport['traits'] {
+    const tarotCard = params.cards[0];
+    const sajuLine = overrides?.sajuLine || extractEvidenceLine(
+        params.advisorEvidenceSummary,
+        params.language === 'en' ? ['Saju'] : ['사주']
+    );
+    const astroLine = overrides?.astroLine || extractEvidenceLine(
+        params.advisorEvidenceSummary,
+        params.language === 'en' ? ['Natal', 'Ziwei'] : ['점성', '자미']
+    );
+    const tarotDescription = overrides?.tarotDescription || extractEvidenceLine(
+        params.advisorEvidenceSummary,
+        params.language === 'en' ? ['Tarot'] : ['타로']
+    ) || (
+        params.language === 'en'
+            ? `${tarotCard?.nameEn || 'Tarot'}${tarotCard?.isReversed ? ' reversed' : ''} reflects the immediate emotional weather around this question.`
+            : `${tarotCard?.name || '타로'}${tarotCard?.isReversed ? ' 역방향' : ''} 카드가 지금 질문의 즉각적인 심리 신호를 비춥니다. ${takeLeadSentences(tarotCard?.interpretation || '', 90)}`
+    );
+
+    return [
+        {
+            type: 'saju',
+            name: params.language === 'en' ? `Day Master ${params.saju.dayMaster}` : `일간 ${params.saju.dayMaster} 중심축`,
+            description: takeLeadSentences(
+                sajuLine || (
+                    params.language === 'en'
+                        ? `Your Day Master ${params.saju.dayMaster} and month pillar ${params.saju.monthPillar.stem}${params.saju.monthPillar.branch} set the base pace of this decision.`
+                        : `${params.saju.dayMaster} 일간과 ${params.saju.monthPillar.stem}${params.saju.monthPillar.branch} 월주가 이번 선택의 기본 축을 잡습니다.`
+                ),
+                160
+            ),
+            grade: toTraitGrade(params.guide.radarScores.saju),
+        },
+        {
+            type: 'astro',
+            name: params.language === 'en' ? 'Natal timing signal' : '점성 타이밍 신호',
+            description: takeLeadSentences(
+                astroLine || (
+                    params.language === 'en'
+                        ? `Sun ${getAstrologySignalName(params.astrology.sunSign, 'en')}, Moon ${getAstrologySignalName(params.astrology.moonSign, 'en')}, and Ascendant ${getAstrologySignalName(params.astrology.ascendant, 'en')} show how your outer timing and inner mood are lining up.`
+                        : `태양 ${getAstrologySignalName(params.astrology.sunSign, 'ko')}, 달 ${getAstrologySignalName(params.astrology.moonSign, 'ko')}, 상승궁 ${getAstrologySignalName(params.astrology.ascendant, 'ko')} 조합이 겉의 흐름과 속마음의 결을 함께 보여줍니다.`
+                ),
+                160
+            ),
+            grade: toTraitGrade(params.guide.radarScores.astrology),
+        },
+        {
+            type: 'tarot',
+            name: params.language === 'en'
+                ? `${tarotCard?.nameEn || 'Tarot'} signal`
+                : `${tarotCard?.name || '타로'} 카드 신호`,
+            description: takeLeadSentences(tarotDescription, 160),
+            grade: toTraitGrade(params.guide.radarScores.tarot),
+        },
+    ];
 }
 
 export async function POST(request: NextRequest) {
@@ -403,11 +831,11 @@ export async function POST(request: NextRequest) {
             partnerBirthTime,
             partnerGender,
             partnerName,
-            isPaid,
         } = validationResult.data;
         const clientIp = getClientIp(request.headers);
         const session = await auth();
         const sessionUserId = session?.user?.id ?? null;
+        let isInvitePremiumAccess = false;
 
         // === Viral Loop: Handle Invitation ===
         if (inviteCode) {
@@ -427,7 +855,7 @@ export async function POST(request: NextRequest) {
 
                     // Upgrade to Premium for Free
                     tier = 'premium';
-                    isPaid = true;
+                    isInvitePremiumAccess = true;
                     context = 'love'; // Force compatibility context
 
                     console.log(`[Viral] Link activated. Inviter: ${partnerName}, Invitee: ${name}`);
@@ -460,7 +888,10 @@ export async function POST(request: NextRequest) {
 
         // === Plan Limits: Free tier daily quota (phase 1 only) ===
         const isFirstPhase = !phase || phase === 1;
-        if (isFirstPhase && !isPaid && tier === 'free') {
+        const isPremiumRequest = tier === 'premium';
+        const effectiveModelTier: ModelTier = isPremiumRequest ? 'premium' : 'free';
+
+        if (isFirstPhase && effectiveModelTier === 'free') {
             const quota = await consumeDailyQuota({
                 identifier: clientIp,
                 action: 'daily_free_reading',
@@ -488,178 +919,228 @@ export async function POST(request: NextRequest) {
             }
         }
 
+        const currentPhase = phase || 1;
+        let storedReadingMetadata: Record<string, unknown> = {};
+        let storedReading:
+            | {
+                id: string;
+                metadata: string | null;
+                userId: string | null;
+            }
+            | null = null;
+        let hasVerifiedPremiumAccess = isInvitePremiumAccess;
+
+        if (isPremiumRequest) {
+            if (!readingId && !isInvitePremiumAccess) {
+                return NextResponse.json(
+                    { error: '결제 정보가 확인되지 않습니다.', code: 'PAYMENT_REQUIRED' },
+                    { status: 402 }
+                );
+            }
+
+            if (readingId) {
+                storedReading = await prisma.readingResult.findUnique({
+                    where: { id: readingId },
+                    select: { id: true, metadata: true, userId: true },
+                });
+
+                if (!storedReading) {
+                    return NextResponse.json(
+                        { error: '리딩을 찾을 수 없습니다.', code: 'READING_NOT_FOUND' },
+                        { status: 404 }
+                    );
+                }
+
+                const canAccessReading = hasReadingAccess({
+                    readingUserId: storedReading.userId,
+                    sessionUserId,
+                    storedAccessKey: extractReadingAccessKey(storedReading.metadata),
+                    providedAccessKey: accessKey,
+                });
+
+                if (!canAccessReading) {
+                    return NextResponse.json(
+                        { error: '이 리딩에 접근할 권한이 없습니다.', code: 'READING_ACCESS_DENIED' },
+                        { status: 403 }
+                    );
+                }
+
+                storedReadingMetadata = parseJsonRecord(storedReading.metadata);
+                hasVerifiedPremiumAccess = storedReadingMetadata.isPremium === true;
+
+                if (!hasVerifiedPremiumAccess) {
+                    const paymentRecord = await prisma.payment.findFirst({
+                        where: {
+                            readingId,
+                            status: 'DONE',
+                        },
+                        select: {
+                            orderId: true,
+                            metadata: true,
+                        },
+                        orderBy: { createdAt: 'desc' },
+                    });
+
+                    if (paymentRecord) {
+                        const paymentMetadata = parseJsonRecord(paymentRecord.metadata);
+                        const paymentType = typeof paymentMetadata.type === 'string'
+                            ? paymentMetadata.type
+                            : 'premium_reading';
+
+                        if (paymentType === 'premium_reading') {
+                            hasVerifiedPremiumAccess = true;
+
+                            if (storedReadingMetadata.isPremium !== true) {
+                                const syncedMetadata = {
+                                    ...storedReadingMetadata,
+                                    isPremium: true,
+                                    paymentVerifiedAt: new Date().toISOString(),
+                                    paymentSource: 'payment_record',
+                                    paymentOrderId: paymentRecord.orderId,
+                                };
+
+                                storedReadingMetadata = syncedMetadata;
+
+                                await prisma.readingResult.update({
+                                    where: { id: storedReading.id },
+                                    data: {
+                                        metadata: JSON.stringify(syncedMetadata),
+                                    },
+                                }).catch((updateError) => {
+                                    console.error('Failed to sync premium status from payment record', updateError);
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (!hasVerifiedPremiumAccess) {
+                return NextResponse.json(
+                    { error: '결제 정보가 확인되지 않습니다.', code: 'PAYMENT_REQUIRED' },
+                    { status: 402 }
+                );
+            }
+        }
+
         // 1. 사주/점성술용 날짜 파싱 (타임존 이슈 방지: YYYY, MM, DD 직접 추출)
         const [yearPart, monthPart, dayPart] = birthDate.split('-').map(Number);
 
         const [hours, minutes] = birthTime.split(':').map(Number);
         // 실제 생시 반영된 Date 객체
         const exactBirthDateTime = new Date(yearPart, monthPart - 1, dayPart, hours, minutes || 0, 0);
+        const storedRuntime = isPremiumRequest
+            ? extractStoredReadingRuntime(storedReadingMetadata)
+            : null;
 
-        // 2. Parallel Calculations (Saju Engine Core + Astrology)
-        // Using the new Dr.Saju engine for improved accuracy and true solar time correction
-        const sajuProfile = await calculateOracleSajuProfile({
-            birthDate,
-            birthTime,
-            gender,
-            cityName,
-            longitude,
-            latitude,
-            isLunar: calendarType === 'lunar',
-            unknownTime: unknownTime || false
-        });
+        let guide: ReadingGuideSnapshot;
+        let saju: StoredLegacySajuResult;
+        let partnerSaju: StoredLegacySajuResult | null;
+        let astrology: ReturnType<typeof calculateAstrology>;
+        let resolvedQuestionIntent: OracleQuestionIntent;
+        let resolvedCharacterId: ReturnType<typeof resolveOracleCharacterId>;
+        let effectiveSelectionMode: OracleSelectionMode;
+        let advisorProfile: ReturnType<typeof buildOracleAdvisorProfile>;
+        let advisorEvidenceSummary: string;
+        let cards: TarotCard[];
+        let precisionMetadata: OracleSajuProfile['precisionMetadata'] | null | undefined;
+        let oracleCouncil: OracleSajuProfile['oracleCouncil'] | null | undefined;
 
-        // Map new engine result to legacy format for tag engine compatibility
-        const saju = mapToLegacySaju(sajuProfile);
+        if (storedRuntime) {
+            saju = storedRuntime.saju;
+            astrology = storedRuntime.astrology;
+            resolvedQuestionIntent = storedRuntime.questionIntent;
+            resolvedCharacterId = storedRuntime.characterId;
+            effectiveSelectionMode = storedRuntime.selectionMode;
+            advisorProfile = storedRuntime.advisorProfile;
+            advisorEvidenceSummary = storedRuntime.advisorEvidenceSummary;
+            cards = storedRuntime.cards.length > 0
+                ? storedRuntime.cards
+                : (tarotCards || drawCards(1)) as TarotCard[];
+            guide = storedRuntime.guide;
+            precisionMetadata = storedRuntime.precisionMetadata;
+            oracleCouncil = storedRuntime.oracleCouncil;
 
-        const [partnerSaju, astrology] = await Promise.all([
-            partnerBirthDate
-                ? (async () => {
-                    const profile = await calculateOracleSajuProfile({
+            if (storedRuntime.partnerSaju) {
+                partnerSaju = storedRuntime.partnerSaju;
+            } else if (partnerBirthDate) {
+                const partnerProfile = await calculateOracleSajuProfile({
+                    birthDate: partnerBirthDate,
+                    birthTime: partnerBirthTime || '12:00',
+                    gender: partnerGender || 'male',
+                    unknownTime: !partnerBirthTime
+                });
+                partnerSaju = mapToLegacySaju(partnerProfile);
+            } else {
+                partnerSaju = null;
+            }
+
+            console.log('[Reading API] Reused stored oracle runtime context', {
+                readingId,
+                phase: currentPhase,
+            });
+        } else {
+            // Using the new Dr.Saju engine for improved accuracy and true solar time correction
+            const sajuProfile = await calculateOracleSajuProfile({
+                birthDate,
+                birthTime,
+                gender,
+                cityName,
+                longitude,
+                latitude,
+                isLunar: calendarType === 'lunar',
+                unknownTime: unknownTime || false
+            });
+
+            saju = mapToLegacySaju(sajuProfile);
+            precisionMetadata = sajuProfile.precisionMetadata;
+            oracleCouncil = sajuProfile.oracleCouncil;
+
+            const [partnerSajuProfile, calculatedAstrology] = await Promise.all([
+                partnerBirthDate
+                    ? calculateOracleSajuProfile({
                         birthDate: partnerBirthDate,
                         birthTime: partnerBirthTime || '12:00',
                         gender: partnerGender || 'male',
                         unknownTime: !partnerBirthTime
-                    });
-                    return mapToLegacySaju(profile);
-                })()
-                : Promise.resolve(null),
-            Promise.resolve(calculateAstrology(exactBirthDateTime, birthTime))
-        ]);
-        const resolvedQuestionIntent = requestedQuestionIntent ?? inferQuestionIntent({
-            context,
-            question,
-            partnerBirthDate,
-            partnerName,
-        });
-        const resolvedCharacterId = selectionMode === 'manual'
-            ? resolveOracleCharacterId(characterId)
-            : getRecommendedOracleCharacterId({
+                    })
+                    : Promise.resolve(null),
+                Promise.resolve(calculateAstrology(exactBirthDateTime, birthTime))
+            ]);
+
+            partnerSaju = partnerSajuProfile ? mapToLegacySaju(partnerSajuProfile) : null;
+            astrology = calculatedAstrology;
+            resolvedQuestionIntent = requestedQuestionIntent ?? inferQuestionIntent({
                 context,
                 question,
                 partnerBirthDate,
                 partnerName,
-                questionIntent: resolvedQuestionIntent,
             });
-        const advisorProfile = buildOracleAdvisorProfile(resolvedCharacterId, selectionMode);
-        const advisorEvidenceSummary = buildOracleAdvisorEvidenceSummary({
-            profile: sajuProfile,
-            questionIntent: resolvedQuestionIntent,
-            evidencePriority: advisorProfile.evidencePriority,
-            language: language as 'ko' | 'en',
-        });
+            effectiveSelectionMode = selectionMode;
+            resolvedCharacterId = effectiveSelectionMode === 'manual'
+                ? resolveOracleCharacterId(characterId)
+                : getRecommendedOracleCharacterId({
+                    context,
+                    question,
+                    partnerBirthDate,
+                    partnerName,
+                    questionIntent: resolvedQuestionIntent,
+                });
+            advisorProfile = buildOracleAdvisorProfile(resolvedCharacterId, effectiveSelectionMode);
+            advisorEvidenceSummary = buildOracleAdvisorEvidenceSummary({
+                profile: sajuProfile,
+                questionIntent: resolvedQuestionIntent,
+                evidencePriority: advisorProfile.evidencePriority,
+                language: language as 'ko' | 'en',
+            });
+            cards = (tarotCards || drawCards(1)) as TarotCard[];
 
-        // 3. 타로 카드 (전달받거나 자동 선택)
-        const cards = (tarotCards || drawCards(1)) as TarotCard[];
-
-        // 4. 태그 추출
-        const tagResult = extractAllTags(saju, astrology, cards);
-
-        // 5. 충돌 해결 및 신뢰도 계산
-        const guide = generateInterpretationGuide(tagResult, question);
+            const tagResult = extractAllTags(saju, astrology, cards);
+            guide = generateInterpretationGuide(tagResult, question);
+        }
 
         // ===== Premium Mode: Multi-Turn API =====
         if (tier === 'premium') {
-            // Free users can access phase 1 only. Any deeper premium path must be verified server-side.
-            const currentPhase = phase || 1;
-            const requiresPremiumVerification = !phase || currentPhase > 1;
-
-            if (requiresPremiumVerification) {
-                let isVerified = false;
-                let readingMetadata: Record<string, unknown> = {};
-
-                if (readingId) {
-                    const reading = await prisma.readingResult.findUnique({
-                        where: { id: readingId },
-                        select: { metadata: true, userId: true },
-                    });
-
-                    if (!reading) {
-                        return NextResponse.json(
-                            { error: '리딩을 찾을 수 없습니다.', code: 'READING_NOT_FOUND' },
-                            { status: 404 }
-                        );
-                    }
-
-                    const canAccessReading = hasReadingAccess({
-                        readingUserId: reading.userId,
-                        sessionUserId,
-                        storedAccessKey: extractReadingAccessKey(reading.metadata),
-                        providedAccessKey: accessKey,
-                    });
-
-                    if (!canAccessReading) {
-                        return NextResponse.json(
-                            { error: '이 리딩에 접근할 권한이 없습니다.', code: 'READING_ACCESS_DENIED' },
-                            { status: 403 }
-                        );
-                    }
-
-                    if (reading.metadata) {
-                        try {
-                            readingMetadata = JSON.parse(reading.metadata) as Record<string, unknown>;
-                            if (readingMetadata.isPremium === true) {
-                                isVerified = true;
-                            }
-                        } catch (e) {
-                            console.error('Metadata parse failed during verification', e);
-                        }
-                    }
-
-                    if (!isVerified) {
-                        const paymentRecord = await prisma.payment.findFirst({
-                            where: {
-                                readingId,
-                                status: 'DONE',
-                            },
-                            select: {
-                                orderId: true,
-                                metadata: true,
-                            },
-                            orderBy: { createdAt: 'desc' },
-                        });
-
-                        if (paymentRecord) {
-                            const paymentMetadata = parseJsonRecord(paymentRecord.metadata);
-                            const paymentType = typeof paymentMetadata.type === 'string'
-                                ? paymentMetadata.type
-                                : 'premium_reading';
-
-                            if (paymentType === 'premium_reading') {
-                                isVerified = true;
-
-                                if (readingMetadata.isPremium !== true) {
-                                    await prisma.readingResult.update({
-                                        where: { id: readingId },
-                                        data: {
-                                            metadata: JSON.stringify({
-                                                ...readingMetadata,
-                                                isPremium: true,
-                                                paymentVerifiedAt: new Date().toISOString(),
-                                                paymentSource: 'payment_record',
-                                                paymentOrderId: paymentRecord.orderId,
-                                            }),
-                                        },
-                                    }).catch((updateError) => {
-                                        console.error('Failed to sync premium status from payment record', updateError);
-                                    });
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (inviteCode) {
-                    isVerified = true;
-                }
-
-                if (!isVerified) {
-                    return NextResponse.json(
-                        { error: '결제 정보가 확인되지 않습니다.', code: 'PAYMENT_REQUIRED' },
-                        { status: 402 }
-                    );
-                }
-            }
-
             const apiKey = process.env.GOOGLE_AI_API_KEY;
             const currentDate = new Date().toLocaleDateString('ko-KR', {
                 timeZone: 'Asia/Seoul',
@@ -674,7 +1155,7 @@ export async function POST(request: NextRequest) {
                 birthDate,
                 birthTime,
                 characterId: resolvedCharacterId,
-                selectionMode,
+                selectionMode: effectiveSelectionMode,
                 questionIntent: resolvedQuestionIntent,
                 advisorProfile,
                 advisorEvidenceSummary,
@@ -715,11 +1196,12 @@ export async function POST(request: NextRequest) {
                         report: buildOracleReportEnrichment(phaseResult.data, {
                             characterId: resolvedCharacterId,
                             questionIntent: resolvedQuestionIntent,
-                            selectionMode,
+                            selectionMode: effectiveSelectionMode,
                             language: language as ReadingLanguage,
                             advisorProfile,
                             advisorEvidenceSummary,
-                            sajuProfile,
+                            precisionMetadata,
+                            oracleCouncil,
                         }),
                         isPremium: true,
                         metadata: buildReadingMetadata({
@@ -729,10 +1211,12 @@ export async function POST(request: NextRequest) {
                             cards,
                             characterId: resolvedCharacterId,
                             questionIntent: resolvedQuestionIntent,
-                            selectionMode,
+                            selectionMode: effectiveSelectionMode,
                             advisorProfile,
                             advisorEvidenceSummary,
-                            sajuProfile,
+                            precisionMetadata,
+                            oracleCouncil,
+                            partnerSaju,
                         }),
                     });
                 }
@@ -745,11 +1229,12 @@ export async function POST(request: NextRequest) {
                     report: buildOracleReportEnrichment(premiumResult.report, {
                         characterId: resolvedCharacterId,
                         questionIntent: resolvedQuestionIntent,
-                        selectionMode,
+                        selectionMode: effectiveSelectionMode,
                         language: language as ReadingLanguage,
                         advisorProfile,
                         advisorEvidenceSummary,
-                        sajuProfile,
+                        precisionMetadata,
+                        oracleCouncil,
                     }),
                     error: premiumResult.error, // 에러 메시지 포함
                     isPremium: true,
@@ -760,10 +1245,12 @@ export async function POST(request: NextRequest) {
                         cards,
                         characterId: resolvedCharacterId,
                         questionIntent: resolvedQuestionIntent,
-                        selectionMode,
+                        selectionMode: effectiveSelectionMode,
                         advisorProfile,
                         advisorEvidenceSummary,
-                        sajuProfile,
+                        precisionMetadata,
+                        oracleCouncil,
+                        partnerSaju,
                     }),
                 });
             } catch (premiumError) {
@@ -776,6 +1263,76 @@ export async function POST(request: NextRequest) {
                     { status: 500 }
                 );
             }
+        }
+
+        if (!isPremiumRequest && currentPhase > 1) {
+            const deterministicFallback = buildDeterministicFreeReport({
+                guide,
+                saju,
+                astrology,
+                cards,
+                questionIntent: resolvedQuestionIntent,
+                advisorEvidenceSummary,
+                language: language as ReadingLanguage,
+            });
+            const previousFreeReport = isRecord(previousReport) ? previousReport : {};
+            const previousFreeFocus = isRecord(previousFreeReport.free_focus) ? previousFreeReport.free_focus : {};
+            const previousSummary = isRecord(previousFreeReport.summary) ? previousFreeReport.summary : {};
+
+            const finalizedReport = FreeReadingReportSchema.parse({
+                free_focus: {
+                    action_conclusion: sanitizeText(previousFreeFocus.action_conclusion) || deterministicFallback.free_focus.action_conclusion,
+                    evidence_summary: sanitizeText(previousFreeFocus.evidence_summary) || deterministicFallback.free_focus.evidence_summary,
+                    next_question: sanitizeText(previousFreeFocus.next_question) || deterministicFallback.free_focus.next_question,
+                },
+                summary: {
+                    title: sanitizeText(previousSummary.title) || deterministicFallback.summary.title,
+                    content: sanitizeText(previousSummary.content) || deterministicFallback.summary.content,
+                    trust_score: typeof previousSummary.trust_score === 'number'
+                        ? previousSummary.trust_score
+                        : deterministicFallback.summary.trust_score,
+                    trust_reason: sanitizeText(previousSummary.trust_reason) || deterministicFallback.summary.trust_reason,
+                },
+                traits: buildDeterministicFreeTraits({
+                    guide,
+                    saju,
+                    astrology,
+                    cards,
+                    questionIntent: resolvedQuestionIntent,
+                    advisorEvidenceSummary,
+                    language: language as ReadingLanguage,
+                }),
+            });
+
+            return NextResponse.json({
+                success: true,
+                phase: currentPhase,
+                report: buildOracleReportEnrichment(finalizedReport, {
+                    characterId: resolvedCharacterId,
+                    questionIntent: resolvedQuestionIntent,
+                    selectionMode: effectiveSelectionMode,
+                    language: language as ReadingLanguage,
+                    advisorProfile,
+                    advisorEvidenceSummary,
+                    precisionMetadata,
+                    oracleCouncil,
+                }),
+                isPremium: false,
+                metadata: buildReadingMetadata({
+                    guide,
+                    saju,
+                    astrology,
+                    cards,
+                    characterId: resolvedCharacterId,
+                    questionIntent: resolvedQuestionIntent,
+                    selectionMode: effectiveSelectionMode,
+                    advisorProfile,
+                    advisorEvidenceSummary,
+                    precisionMetadata,
+                    oracleCouncil,
+                    partnerSaju,
+                }),
+            });
         }
 
         const currentDate = new Date().toLocaleDateString('ko-KR', {
@@ -791,8 +1348,9 @@ export async function POST(request: NextRequest) {
             {
                 characterId: resolvedCharacterId,
                 questionIntent: resolvedQuestionIntent,
-                selectionMode,
+                selectionMode: effectiveSelectionMode,
                 isPremium: false,
+                freeOutputMode: 'core',
             }
         );
         const userPrompt = buildUserPrompt(
@@ -809,7 +1367,7 @@ export async function POST(request: NextRequest) {
             resolvedCharacterId,
             {
                 questionIntent: resolvedQuestionIntent,
-                selectionMode,
+                selectionMode: effectiveSelectionMode,
                 advisorEvidenceSummary,
                 isPremium: false,
             }
@@ -819,7 +1377,8 @@ export async function POST(request: NextRequest) {
             const report = await generateStructuredReport(
                 systemPrompt,
                 userPrompt,
-                tier as ModelTier
+                effectiveModelTier,
+                FreeReadingCoreSchema
             );
 
             return NextResponse.json({
@@ -827,11 +1386,12 @@ export async function POST(request: NextRequest) {
                 report: buildOracleReportEnrichment(report, {
                     characterId: resolvedCharacterId,
                     questionIntent: resolvedQuestionIntent,
-                    selectionMode,
+                    selectionMode: effectiveSelectionMode,
                     language: language as ReadingLanguage,
                     advisorProfile,
                     advisorEvidenceSummary,
-                    sajuProfile,
+                    precisionMetadata,
+                    oracleCouncil,
                 }),
                 isPremium: false,
                 metadata: buildReadingMetadata({
@@ -841,24 +1401,116 @@ export async function POST(request: NextRequest) {
                     cards,
                     characterId: resolvedCharacterId,
                     questionIntent: resolvedQuestionIntent,
-                    selectionMode,
+                    selectionMode: effectiveSelectionMode,
                     advisorProfile,
                     advisorEvidenceSummary,
-                    sajuProfile,
+                    precisionMetadata,
+                    oracleCouncil,
+                    partnerSaju,
                 }),
             });
 
         } catch (aiError) {
-            console.error('AI generation failed:', aiError);
+            const aiErrorMessage = aiError instanceof Error ? aiError.message : String(aiError);
+            const isProviderPressure =
+                aiErrorMessage.includes('503:') ||
+                aiErrorMessage.includes('429:') ||
+                aiErrorMessage.includes('API timeout after');
+            const isStructuredParseFailure = aiError instanceof StructuredParseError;
 
-            const fallbackMessage = buildFallbackMessage(context as ReadingContext, language as 'ko' | 'en');
+            if (isProviderPressure) {
+                console.warn('[Reading API] Free structured generation unavailable on primary model:', aiErrorMessage);
+            } else if (isStructuredParseFailure) {
+                console.warn('[Reading API] Free structured generation returned malformed JSON. Recovering with partial parse fallback.');
+            } else {
+                console.error('AI generation failed:', aiError);
+            }
 
-            return NextResponse.json({
-                success: false,
-                isFallback: true,
-                error: 'AI 리포트 생성 실패',
-                fallbackMessage: fallbackMessage,
-            });
+            if (isStructuredParseFailure) {
+                const deterministicFallback = buildDeterministicFreeReport({
+                    guide,
+                    saju,
+                    astrology,
+                    cards,
+                    questionIntent: resolvedQuestionIntent,
+                    advisorEvidenceSummary,
+                    language: language as ReadingLanguage,
+                });
+
+                const recoveredReport = {
+                    ...deterministicFallback,
+                    free_focus: {
+                        action_conclusion:
+                            sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'action_conclusion')) ||
+                            deterministicFallback.free_focus.action_conclusion,
+                        evidence_summary:
+                            sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'evidence_summary')) ||
+                            deterministicFallback.free_focus.evidence_summary,
+                        next_question:
+                            sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'next_question')) ||
+                            deterministicFallback.free_focus.next_question,
+                    },
+                    summary: {
+                        title:
+                            sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'title')) ||
+                            deterministicFallback.summary.title,
+                        content:
+                            sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'content')) ||
+                            deterministicFallback.summary.content,
+                        trust_score: deterministicFallback.summary.trust_score,
+                        trust_reason:
+                            sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'trust_reason')) ||
+                            deterministicFallback.summary.trust_reason,
+                    },
+                } satisfies FreeReadingReport;
+
+                return NextResponse.json({
+                    success: true,
+                    report: buildOracleReportEnrichment(recoveredReport, {
+                        characterId: resolvedCharacterId,
+                        questionIntent: resolvedQuestionIntent,
+                        selectionMode: effectiveSelectionMode,
+                        language: language as ReadingLanguage,
+                        advisorProfile,
+                        advisorEvidenceSummary,
+                        precisionMetadata,
+                        oracleCouncil,
+                    }),
+                    isPremium: false,
+                    metadata: {
+                        ...buildReadingMetadata({
+                            guide,
+                            saju,
+                            astrology,
+                            cards,
+                            characterId: resolvedCharacterId,
+                            questionIntent: resolvedQuestionIntent,
+                            selectionMode: effectiveSelectionMode,
+                            advisorProfile,
+                            advisorEvidenceSummary,
+                            precisionMetadata,
+                            oracleCouncil,
+                            partnerSaju,
+                        }),
+                        fallbackMode: 'partial_json_recovery',
+                    },
+                });
+            }
+
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: language === 'en'
+                        ? (isProviderPressure
+                            ? 'The oracle is crowded right now. Please wait a bit and try again.'
+                            : 'We could not complete your reading right now. Please try again.')
+                        : (isProviderPressure
+                            ? '지금 오라클 리딩이 혼잡합니다. 잠시 후 다시 시도해주세요.'
+                            : '지금은 리딩을 끝까지 생성하지 못했습니다. 다시 시도해주세요.'),
+                    code: isProviderPressure ? 'AI_TEMPORARILY_UNAVAILABLE' : 'AI_GENERATION_FAILED',
+                },
+                { status: isProviderPressure ? 503 : 500 }
+            );
         }
 
     } catch (error) {

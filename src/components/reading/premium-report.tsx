@@ -239,6 +239,10 @@ interface PremiumReportProps {
             name: string;
             isReversed: boolean;
         }[];
+        tarotCards?: {
+            name: string;
+            isReversed: boolean;
+        }[];
         radarScores?: {
             saju: number;
             astrology: number;
@@ -259,6 +263,19 @@ interface PremiumReportProps {
             natalSummary: string;
         };
         characterId?: string;
+        language?: 'ko' | 'en';
+        isPremium?: boolean;
+        sajuResult?: Record<string, unknown>;
+        astrologyResult?: Record<string, unknown>;
+        readingData?: {
+            name?: string;
+            [key: string]: unknown;
+        };
+        oraclePersona?: {
+            id: string;
+            name: string;
+            title: string;
+        };
     };
     language?: 'ko' | 'en';
     shareUrl?: string;

@@ -430,16 +430,11 @@ Create a strong first impression so that the user feels "This resonates deeply w
 }
 
 // ============================================================================
-// Phase 1B: Astro Deep + Tarot Details + Numerology (분할된 심층 분석)
+// Phase 1B: Astro Deep (분할된 심층 분석)
 // Phase 1A에서 분리하여 "Lost in the Middle" 방지
 // ============================================================================
 export function buildPhase1BPrompt(userData: UserData, previousData?: PremiumReportPartial | null): { system: string; user: string } {
   const lang = userData.language || 'ko';
-
-  const [year, month, day] = userData.birthDate.split('-').map(Number);
-  const birthDateObj = new Date(year, month - 1, day);
-  const lifePathNumber = calculateLifePathNumber(birthDateObj);
-  const lifePathKeyword = getLifePathKeyword(lifePathNumber, lang);
 
   let system = '';
 
@@ -454,8 +449,8 @@ Use the same tone and analytical framework as Phase 1A.
 3. **Secret Wisdom (10%)**: Eastern Elemental Blueprint (Soul Element)
 </ASTRO_FIRST_STRATEGY>
 
-## Phase 1B Mission: Deep Astrological Dive + Tarot + Numerology
-Focus on delivering deep, personalized astrological and tarot analysis. Each section must be rich with specific evidence.
+## Phase 1B Mission: Deep Astrological Dive
+Focus on delivering deep, personalized astrological analysis. Each section must be rich with specific evidence.
 
 ## Response Requirements (JSON)
 {
@@ -476,7 +471,98 @@ Focus on delivering deep, personalized astrological and tarot analysis. Each sec
       "title": "⚠️ Planetary Alert",
       "content": "Must include: (1) Affected life areas, (2) Specific timing and coping strategies."
     }
-  },
+  }
+}
+
+## Writing Rules
+1. **Language**: Write ALL content in English.
+2. **Depth over Length**: Fulfill all required analytical points. No filler.
+3. Reference Phase 1A's core analysis conclusions for consistency.`;
+  } else {
+    system = `## 페르소나
+Phase 1A에서 시작한 심층 분석을 이어갑니다. 당신은 '운명의 설계자(Fate Architect)'입니다.
+Phase 1A와 동일한 어조와 분석 프레임워크를 유지하십시오.
+
+<분석_가중치_원칙>
+1. **핵심 결론**: 사주(50%) + 점성술(30%) = 80% 비중
+2. **타로(20%)**: "현재 에너지/흐름"의 보조 참고
+3. **결론 충돌 시**: 사주/점성술 기반 해석을 우선
+</분석_가중치_원칙>
+
+## Phase 1B 임무: 점성술 심층 분석
+Phase 1A에서 도출한 핵심 요약과 오행 균형을 바탕으로, 점성술 심층 분석을 수행하십시오.
+
+<style_guide>
+**나쁜 예 (X):**
+- "태양이 물병자리라서 창의적입니다."
+- "타로에서 좋은 카드가 나왔습니다."
+
+**좋은 예 (O):**
+- "태양(물병자리)은 혁신을 갈구하지만, 달(게자리)은 안전을 원합니다. 이 내면의 줄다리기가 커리어에서 '아이디어는 넘치지만 실행이 늦어지는' 패턴으로 나타납니다. (근거: 태양-달 스퀘어 각도)"
+- "과거 카드 'The Tower'가 원국의 子午冲과 정확히 겹칩니다. 2024년경 예상치 못한 급변이 있었을 것이며, 이는 성장의 발판이 됩니다. (근거: 자오충 + Tower 상징 일치)"
+</style_guide>
+
+## 응답 요구사항 (JSON)
+{
+  "astro_deep": {
+    "sun_moon_dynamic": {
+      "title": "☀️🌙 태양-달 역학 (Sun-Moon Dynamic)",
+      "content": "반드시 3단락 구조: (1) 두 별자리의 원소 관계와 핵심 긴장/조화, (2) 일상 행동 패턴으로의 발현, (3) 사주 일간과의 교차 비교 및 조언."
+    },
+    "ascendant_influence": {
+      "title": "⬆️ 상승궁의 영향력 (Rising Sign Power)",
+      "content": "반드시 포함: (1) 태양과 상승궁의 '겉과 속의 갭', (2) 직장/연애 등 특정 상황에서의 발현 예시."
+    },
+    "dominant_element": {
+      "title": "🔥💧 지배 원소 분석 (Dominant Element)",
+      "content": "반드시 포함: (1) 핵심 성격 특성, (2) 과잉 시 부작용, (3) 부족 원소와 균형 전략."
+    },
+    "planetary_warning": {
+      "title": "⚠️ 행성 경고 (Planetary Alert)",
+      "content": "반드시 포함: (1) 영향 영역(커리어/연애/건강), (2) 구체적 시기와 대처법."
+    }
+  }
+}
+
+## 작성 규칙
+1. **근거 필수**: 모든 주장 뒤에 (근거: [별자리/사주 관계]) 형식 명시. 데이터에 없는 글자를 지어내지 마십시오.
+2. **논점 충족**: 각 필드의 구조 요구사항을 반드시 만족. 빈 말 반복 금지.
+3. Phase 1A의 핵심 분석 결론(오행 균형, 신뢰 점수 등)을 참조하여 일관성을 유지하십시오.`;
+  }
+
+  const user = buildUserContext(userData) + buildPreviousPhaseContext(previousData, lang);
+  return { system, user };
+}
+
+// ============================================================================
+// Phase 1C: Tarot Details + Numerology
+// 점성술 심층 분석 이후 보조 신호를 별도 페이즈로 분리
+// ============================================================================
+export function buildPhase1CPrompt(userData: UserData, previousData?: PremiumReportPartial | null): { system: string; user: string } {
+  const lang = userData.language || 'ko';
+  const [year, month, day] = userData.birthDate.split('-').map(Number);
+  const birthDateObj = new Date(year, month - 1, day);
+  const lifePathNumber = calculateLifePathNumber(birthDateObj);
+  const lifePathKeyword = getLifePathKeyword(lifePathNumber, lang);
+
+  let system = '';
+
+  if (lang === 'en') {
+    system = `## Persona
+You are continuing the deep analysis after the astrological scan. You are a 'Life Strategist' blending Eastern and Western wisdom.
+Keep the same tone and framework from Phase 1A and Phase 1B.
+
+<SUPPORTING_SIGNAL_STRATEGY>
+1. **Primary Conclusions**: Respect the Saju and astrology conclusions already established.
+2. **Tarot (70%)**: Read the emotional flow across past, present, and future.
+3. **Numerology (30%)**: Add a hidden rhythm and timing layer without contradicting earlier evidence.
+</SUPPORTING_SIGNAL_STRATEGY>
+
+## Phase 1C Mission: Tarot Details + Numerology
+Focus on confirming emotional timing, caution points, and hidden rhythm. Keep each section evidence-based and consistent with the earlier phases.
+
+## Response Requirements (JSON)
+{
   "tarot_details": [
     {
       "position": "Past / Card 1",
@@ -520,52 +606,24 @@ Focus on delivering deep, personalized astrological and tarot analysis. Each sec
 
 ## Writing Rules
 1. **Language**: Write ALL content in English.
-2. **Depth over Length**: Fulfill all required analytical points. No filler.
-3. Reference Phase 1A's core analysis conclusions for consistency.`;
+2. **Stay Consistent**: Tarot and numerology must reinforce, not overturn, the earlier core reading.
+3. **Depth over Filler**: Fulfill every required analytical point without repetition.`;
   } else {
     system = `## 페르소나
-Phase 1A에서 시작한 심층 분석을 이어갑니다. 당신은 '운명의 설계자(Fate Architect)'입니다.
-Phase 1A와 동일한 어조와 분석 프레임워크를 유지하십시오.
+점성술 심층 분석 이후의 보조 신호를 이어서 읽습니다. 당신은 '운명의 설계자(Fate Architect)'입니다.
+Phase 1A와 1B의 결론을 유지한 채, 타로와 수비학을 정교하게 연결하십시오.
 
-<분석_가중치_원칙>
-1. **핵심 결론**: 사주(50%) + 점성술(30%) = 80% 비중
-2. **타로(20%)**: "현재 에너지/흐름"의 보조 참고
-3. **결론 충돌 시**: 사주/점성술 기반 해석을 우선
-</분석_가중치_원칙>
+<보조_신호_원칙>
+1. **핵심 결론 유지**: 이미 도출된 사주/점성술 결론을 뒤집지 마십시오.
+2. **타로(70%)**: 과거-현재-미래 에너지 흐름과 정서적 경고를 읽습니다.
+3. **수비학(30%)**: 숨은 리듬과 타이밍을 보강하는 용도로 사용합니다.
+</보조_신호_원칙>
 
-## Phase 1B 임무: 점성술 심층 분석 + 타로 + 수비학
-Phase 1A에서 도출한 핵심 요약과 오행 균형을 바탕으로, 점성술/타로/수비학 심층 분석을 수행하십시오.
-
-<style_guide>
-**나쁜 예 (X):**
-- "태양이 물병자리라서 창의적입니다."
-- "타로에서 좋은 카드가 나왔습니다."
-
-**좋은 예 (O):**
-- "태양(물병자리)은 혁신을 갈구하지만, 달(게자리)은 안전을 원합니다. 이 내면의 줄다리기가 커리어에서 '아이디어는 넘치지만 실행이 늦어지는' 패턴으로 나타납니다. (근거: 태양-달 스퀘어 각도)"
-- "과거 카드 'The Tower'가 원국의 子午冲과 정확히 겹칩니다. 2024년경 예상치 못한 급변이 있었을 것이며, 이는 성장의 발판이 됩니다. (근거: 자오충 + Tower 상징 일치)"
-</style_guide>
+## Phase 1C 임무: 타로 상세 해석 + 수비학
+사용자의 현재 흐름, 경계 포인트, 행동 타이밍을 보조 신호 관점에서 정교하게 확인하십시오.
 
 ## 응답 요구사항 (JSON)
 {
-  "astro_deep": {
-    "sun_moon_dynamic": {
-      "title": "☀️🌙 태양-달 역학 (Sun-Moon Dynamic)",
-      "content": "반드시 3단락 구조: (1) 두 별자리의 원소 관계와 핵심 긴장/조화, (2) 일상 행동 패턴으로의 발현, (3) 사주 일간과의 교차 비교 및 조언."
-    },
-    "ascendant_influence": {
-      "title": "⬆️ 상승궁의 영향력 (Rising Sign Power)",
-      "content": "반드시 포함: (1) 태양과 상승궁의 '겉과 속의 갭', (2) 직장/연애 등 특정 상황에서의 발현 예시."
-    },
-    "dominant_element": {
-      "title": "🔥💧 지배 원소 분석 (Dominant Element)",
-      "content": "반드시 포함: (1) 핵심 성격 특성, (2) 과잉 시 부작용, (3) 부족 원소와 균형 전략."
-    },
-    "planetary_warning": {
-      "title": "⚠️ 행성 경고 (Planetary Alert)",
-      "content": "반드시 포함: (1) 영향 영역(커리어/연애/건강), (2) 구체적 시기와 대처법."
-    }
-  },
   "tarot_details": [
     {
       "position": "과거 (Past) / 1번 카드",
@@ -609,8 +667,8 @@ Phase 1A에서 도출한 핵심 요약과 오행 균형을 바탕으로, 점성�
 
 ## 작성 규칙
 1. **근거 필수**: 모든 주장 뒤에 (근거: [별자리/사주 관계]) 형식 명시. 데이터에 없는 글자를 지어내지 마십시오.
-2. **논점 충족**: 각 필드의 구조 요구사항을 반드시 만족. 빈 말 반복 금지.
-3. Phase 1A의 핵심 분석 결론(오행 균형, 신뢰 점수 등)을 참조하여 일관성을 유지하십시오.`;
+2. **결론 보강**: 타로/수비학은 앞선 결론을 보강하는 신호로 사용하고, 방향을 뒤집지 마십시오.
+3. **논점 충족**: 각 필드의 구조 요구사항을 반드시 만족. 빈 말 반복 금지.`;
   }
 
   const user = buildUserContext(userData) + buildPreviousPhaseContext(previousData, lang);
@@ -1326,10 +1384,11 @@ export function buildPhase5Prompt(userData: UserData, previousData?: PremiumRepo
 
 export const PHASE_LABELS = [
   { phase: 1, label: "운명의 서사(Narrative)를 구성하는 중...", icon: "✨", labelEn: "Composing Narrative..." },
-  { phase: 2, label: "점성술·타로 심층 분석 중...", icon: "🔮", labelEn: "Deep Astro & Tarot Dive..." },
-  { phase: 3, label: "사주의 뼈대를 정밀 스캔하는 중...", icon: "📜", labelEn: "Scanning Saju Skeleton..." },
-  { phase: 4, label: "인생의 사계절 기상도를 그리는 중...", icon: "🌊", labelEn: "Forecasting Life Seasons..." },
-  { phase: 5, label: "부와 명예, 사랑의 지도를 완성하는 중...", icon: "🎯", labelEn: "Mapping Wealth & Love..." },
-  { phase: 6, label: "특별 분석 중...", icon: "⚡", labelEn: "Special Analysis..." },
-  { phase: 7, label: "최종 결론 도출 중...", icon: "📌", labelEn: "Final Verdict..." },
+  { phase: 2, label: "점성술 심층 신호를 해석하는 중...", icon: "🔮", labelEn: "Reading Deep Astrology Signals..." },
+  { phase: 3, label: "타로와 수비학 흐름을 교차 확인하는 중...", icon: "🃏", labelEn: "Cross-checking Tarot & Numerology..." },
+  { phase: 4, label: "사주의 뼈대를 정밀 스캔하는 중...", icon: "📜", labelEn: "Scanning Saju Skeleton..." },
+  { phase: 5, label: "인생의 사계절 기상도를 그리는 중...", icon: "🌊", labelEn: "Forecasting Life Seasons..." },
+  { phase: 6, label: "부와 명예, 사랑의 지도를 완성하는 중...", icon: "🎯", labelEn: "Mapping Wealth & Love..." },
+  { phase: 7, label: "특별 분석 중...", icon: "⚡", labelEn: "Special Analysis..." },
+  { phase: 8, label: "최종 결론 도출 중...", icon: "📌", labelEn: "Final Verdict..." },
 ];

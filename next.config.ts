@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Security: Disable x-powered-by header
   poweredByHeader: false,
+  allowedDevOrigins: ['127.0.0.1', 'localhost'],
 
   images: {
     remotePatterns: [

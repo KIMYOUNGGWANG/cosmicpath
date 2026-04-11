@@ -9,7 +9,7 @@
 
 ## Authentication
 
-- **공개 엔드포인트**: Auth 불필요 (`/api/daily/fortune`, `/api/reading/*`, `/api/growth/track`)
+- **공개 엔드포인트**: Auth 불필요 (`/api/daily/fortune`, `/api/reading/*`, `/api/payment*`, `/api/growth/track`)
 - **보호 엔드포인트**: `next-auth` 세션 필수. `auth()` 서버 액션으로 검증.
 - **관리자 엔드포인트**: 세션 + `session.user.role === 'ADMIN'` 필요 (`/api/growth/summary`)
 
@@ -68,13 +68,13 @@ interface ErrorResponse {
 >
 > **Planned Stability Delta (2026-04-04 Night)**:
 > - 다음 사이클은 신규 consumer surface 확장보다 `paywall price reliability`, `review integrity`, `growth summary performance`를 우선한다.
-> - `GET /api/payment/price`, `GET|POST /api/review`, `GET|PATCH|DELETE /api/review/admin`를 명시적 계약으로 승격한다.
+> - `POST|GET /api/payment`, `GET /api/payment/price`, `GET|POST /api/review`, `GET|PATCH|DELETE /api/review/admin`를 명시적 계약으로 승격한다.
 > - 리뷰 보상 루프는 API-level check뿐 아니라 DB-level uniqueness로 강화해 `readingId`당 1회 제출/1회 보상을 보장한다.
 > - `/api/growth/summary`는 response shape를 유지하되, 저장소 인덱스와 query shape만 조정하는 non-breaking hardening으로 다룬다.
 >
 > **Implementation Note (2026-04-05) — Global Validation Foundation**:
 > - 이번 사이클의 목표는 `광범위한 글로벌 확장`이 아니라 `Korea-first PMF + English-speaking niche validation`이다.
-> - 첫 글로벌 검증 단계에서는 **새 public API를 추가하지 않는다**. 기존 `/api/reading`, `/api/reading/followup*`, `/api/growth/track`, `/api/growth/summary`, `/api/payment/price` 계약을 재사용한다.
+> - 첫 글로벌 검증 단계에서는 **새 public API를 추가하지 않는다**. 기존 `/api/reading`, `/api/reading/followup*`, `/api/payment`, `/api/payment/price`, `/api/growth/track`, `/api/growth/summary` 계약을 재사용한다.
 > - 영문 실험에서 핵심 분기 값은 `language`이며, 퍼널 비교를 위해 `source`, `path`, `metadata.landingVariant` 같은 attribution 필드를 기존 growth contract 안에서 함께 보낸다.
 > - 영문 약관/정책 요약, 로그인 제공자 우선순위, 공유 surface 재배치는 presentation-layer 변경으로 다루고 API response shape는 유지한다.
 > - 로그인 및 auth error display layer는 `Accept-Language` 기준으로 영문 카피를 우선 보여줄 수 있으며, 영어권에서는 Google을 기본 경로로 먼저 제안한다.
@@ -450,7 +450,65 @@ interface GrowthSummaryResponse {
 
 ---
 
-### 11. 결제 가격 조회 (Payment Price Lookup) ✅ 구현됨
+### 11. 원타임 리딩 결제 생성 & 검증 (Payment Checkout & Verify) ✅ 구현됨
+
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `POST` | `/api/payment` | ❌ |
+| `GET` | `/api/payment` | ❌ |
+
+**POST Request**
+```typescript
+interface PaymentCheckoutRequest {
+  productId?: string;       // optional, 기본값은 oracle reading product
+  email?: string;           // optional, Stripe metadata 저장용
+  readingId?: string;       // optional, 연결된 리딩 ID
+  accessKey?: string;       // anonymous reading owner proof
+  referralCode?: string;    // optional
+  promoCodeId?: string;     // optional
+  discount?: number;        // optional, promo 검증용 기대 할인율
+}
+```
+
+**POST Response**
+```typescript
+interface PaymentCheckoutResponse {
+  url: string;              // Stripe Checkout URL
+}
+```
+
+**GET Query**
+```
+session_id: string   // required
+```
+
+**GET Response**
+```typescript
+interface PaymentVerifyResponse {
+  status: 'paid' | 'unpaid';
+  customer_email: string | null;
+  payment_type: string;     // e.g. 'premium_reading' | 'chat_credit'
+  reading_id: string | null;
+  credits_applied: boolean;
+  credits_total: number | null;
+}
+```
+
+**Implementation Notes**
+- `POST /api/payment`는 one-time oracle reading checkout을 생성한다.
+- `readingId`가 포함되면 현재 로그인 사용자 또는 해당 reading의 `accessKey` 보유자만 checkout을 시작할 수 있다.
+- `GET /api/payment?session_id=...`는 Stripe checkout 결과를 검증하고, 결제 레코드 upsert 및 리딩 premium/chat credit 동기화를 함께 수행한다.
+- 이 endpoint는 `/payment/success`와 결과 복구 흐름에서 webhook race condition 완화를 위해 사용된다.
+
+**Error**
+- `400` 잘못된 promo code 요청 또는 `session_id` 누락
+- `403` reading ownership 또는 accessKey 불일치
+- `404` reading 없음
+- `500` Stripe checkout 생성/검증 실패
+
+---
+
+### 12. 결제 가격 조회 (Payment Price Lookup) ✅ 구현됨
 
 | Method | Path | Auth |
 |:-------|:-----|:-----|
@@ -485,7 +543,7 @@ interface PaymentPriceResponse {
 
 ---
 
-### 12. 공개 리뷰 목록 & 리뷰 등록 (Review Public) ✅ 구현됨
+### 13. 공개 리뷰 목록 & 리뷰 등록 (Review Public) ✅ 구현됨
 
 | Method | Path | Auth |
 |:-------|:-----|:-----|
@@ -551,7 +609,7 @@ interface ReviewCreateResponse {
 
 ---
 
-### 13. 리뷰 운영 (Review Admin) ✅ 구현됨
+### 14. 리뷰 운영 (Review Admin) ✅ 구현됨
 
 | Method | Path | Auth |
 |:-------|:-----|:-----|
@@ -622,6 +680,7 @@ interface ReviewAdminMutationResponse {
 
 | Task (task_board.md) | Endpoint |
 |:---------------------|:---------|
+| Oracle reading checkout & payment sync | `POST|GET /api/payment` |
 | 구독 해지 버튼 | `POST /api/subscription/cancel` |
 | 데일리 타로 UI | `GET /api/daily/tarot` |
 | 친구 초대 보상 | `POST /api/referral/reward` |

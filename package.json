@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && next build",
-    "start": "next start",
+    "dev": "bash scripts/run-next-with-native-fallbacks.sh dev",
+    "build": "prisma generate && bash scripts/run-next-with-native-fallbacks.sh build",
+    "start": "bash scripts/run-next-with-native-fallbacks.sh start",
     "verify:stability": "node scripts/verify-stability-guards.cjs",
     "grant:admin": "node scripts/grant-admin.js",
     "lint": "npm run lint:target",

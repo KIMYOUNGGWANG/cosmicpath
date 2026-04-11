@@ -429,13 +429,43 @@ export function buildOraclePersonaBlock(
   options?: {
     questionIntent?: OracleQuestionIntent | null;
     selectionMode?: OracleSelectionMode | null;
+    detailLevel?: 'full' | 'compact';
   }
 ): string {
   const persona = getOraclePersona(characterId);
   const questionIntent = options?.questionIntent ?? persona.specialty;
   const selectionMode = options?.selectionMode ?? 'auto';
+  const detailLevel = options?.detailLevel ?? 'full';
   const intentLabel = getOracleIntentLabel(questionIntent, language);
   const evidencePriority = formatEvidencePriority(persona.evidencePriority, language);
+
+  if (detailLevel === 'compact') {
+    if (language === 'en') {
+      return [
+        '<ORACLE_GUIDE_PROFILE>',
+        `Guide: ${persona.name} - ${persona.titleEn}`,
+        `Question Intent: ${intentLabel} (${questionIntent})`,
+        `Selection Mode: ${selectionMode}`,
+        `Tone: ${persona.toneEn}`,
+        `Evidence Priority: ${evidencePriority}`,
+        `Framework: ${persona.frameworkEn.join('; ')}`,
+        `Caution: ${persona.cautionEn}`,
+        '</ORACLE_GUIDE_PROFILE>',
+      ].join('\n');
+    }
+
+    return [
+      '<오라클_가이드_프로필>',
+      `가이드: ${persona.name} - ${persona.titleKo}`,
+      `질문 의도: ${intentLabel} (${questionIntent})`,
+      `선택 방식: ${selectionMode}`,
+      `톤: ${persona.toneKo}`,
+      `근거 우선순위: ${evidencePriority}`,
+      `분석 프레임워크: ${persona.frameworkKo.join('; ')}`,
+      `주의: ${persona.cautionKo}`,
+      '</오라클_가이드_프로필>',
+    ].join('\n');
+  }
 
   if (language === 'en') {
     return [

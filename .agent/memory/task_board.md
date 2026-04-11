@@ -50,6 +50,8 @@
 - [x] **Step M: Review Contract & Moderation States** — `/api/review`, `/api/review/admin`의 accessKey/owner 규칙, 409 conflict, 승인 상태를 `docs/api-spec.md`에 승격하고 운영 화면과 같은 언어로 맞춤
 - [x] **Step N: Growth Summary Performance Guard** — `GrowthEvent.createdAt` 중심 인덱스와 요약 query shape를 정리해 `/api/growth/summary`와 `/ops/growth` 응답 시간을 이벤트 증가 후에도 안정화
 - [x] **Step O: Regression Verification** — paywall price fallback, duplicate review, review accessKey ownership, growth summary 응답 shape에 대한 테스트/검증 경로를 추가
+- [x] **Step O.1: Start Flow Session Persistence Hardening** — `/start`가 URL sync/remount 중에도 `tarot/reveal/result` 단계를 잃지 않도록 현재 단계 저장 순서를 실제 화면 기준으로 고정
+- [x] **Step O.2: Payment Contract Sync** — live `POST|GET /api/payment` checkout/verification 흐름을 `docs/api-spec.md`에 승격하고 stale payment verification labels를 정리
 
 ## 🌍 Global Validation Block (2026-04-05)
 *원칙: 한국 PMF를 흔들지 않고, 영어권 니치 수요를 작은 범위에서 검증한다.*
@@ -151,6 +153,7 @@
     - [x] `/start` 무료 리딩 결과 새로고침 시 restore 조건 완화 및 결과 화면 복구
     - [x] 출생지 미입력 상태에서는 '진태양시 보정' 패널을 축소/조건부 노출하고 카피를 정직하게 다운그레이드
     - [x] 현재 8종 캐릭터 선택 UI를 '자동 추천 + 상세 선택' 구조로 축소해 진입 장벽 완화
+    - [x] `/start` reset query 재처리로 활성 리딩이 intake form으로 되돌아가지 않도록 live URL 기준 복원 로직으로 하드닝
 - [x] **Sprint 8.5: Specialist Oracle Advisors (v3.1)**
     - [x] 톤 중심 `oracle-personas.ts`를 분야 특화 상담가 카탈로그로 재설계 (`general`, `compatibility`, `reunion`, `wealth`, `timing`, `career`, `business`)
     - [x] 질문/컨텍스트 기반 `questionIntent` 추론 및 상담가 자동 매칭 규칙 설계

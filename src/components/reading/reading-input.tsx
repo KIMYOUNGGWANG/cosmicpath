@@ -9,6 +9,7 @@ import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ReadingContext } from '@/lib/ai/prompt-builder';
 import { ENGLISH_GUIDES } from '@/lib/english-guides';
+import { BIRTH_CITY_OPTIONS } from '@/lib/saju/cities';
 import {
     getOracleIntentLabel,
     ORACLE_CHARACTER_IDS,
@@ -47,6 +48,7 @@ export interface ReadingData {
     calendarType: 'solar' | 'lunar';
     unknownTime: boolean;
     cityName?: string;
+    latitude?: number;
     longitude?: number;
     // 상대방 정보 (궁합/재회 분석용 - optional)
     partnerName?: string;
@@ -240,14 +242,13 @@ export function ReadingInput({
     const [birthTime, setBirthTime] = useState(initialData?.birthTime ?? '12:00');
     const [calendarType, setCalendarType] = useState<'solar' | 'lunar'>(initialData?.calendarType ?? 'solar');
     const [unknownTime, setUnknownTime] = useState(initialData?.unknownTime ?? false);
+    const [cityName, setCityName] = useState(initialData?.cityName ?? '');
     const [characterId, setCharacterId] = useState<OracleCharacterId>(initialData?.characterId ?? 'general_orion');
     const [selectionMode, setSelectionMode] = useState<'auto' | 'manual'>(initialData?.selectionMode ?? 'auto');
     const [showPrecisionFields, setShowPrecisionFields] = useState(
         Boolean(
             inviteCode ||
-            initialData?.name ||
-            initialData?.cityName ||
-            typeof initialData?.longitude === 'number' ||
+            initialData?.partnerName ||
             initialData?.partnerBirthDate
         )
     );
@@ -312,11 +313,17 @@ export function ReadingInput({
             return left.order - right.order;
         })
         .slice(0, 2);
-    const coreFieldsComplete = Boolean(birthDate && (unknownTime || birthTime) && question.trim());
+    const coreFieldsComplete = Boolean(name.trim() && birthDate && (unknownTime || birthTime) && question.trim());
     const coreSignals = [
+        name.trim()
+            ? (isEn ? `Name ${name.trim()}` : `이름 ${name.trim()}`)
+            : (isEn ? 'Name Needed' : '이름 필요'),
         calendarType === 'solar'
             ? (isEn ? 'Solar Calendar' : '양력')
             : (isEn ? 'Lunar Calendar' : '음력'),
+        cityName.trim()
+            ? (isEn ? `Birth City ${cityName.trim()}` : `출생지 ${cityName.trim()}`)
+            : (isEn ? 'Birth City Recommended' : '출생지 권장'),
         unknownTime
             ? (isEn ? 'Time Unknown' : '시간 모름')
             : `${isEn ? 'Birth Time' : '생시'} ${birthTime}`,
@@ -377,7 +384,19 @@ export function ReadingInput({
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSubmit({
-            name: name.trim(), gender, birthDate, birthTime, characterId: selectedCharacterId, questionIntent: inferredQuestionIntent, selectionMode, context, question: question.trim(), language, calendarType, unknownTime,
+            name: name.trim(),
+            gender,
+            birthDate,
+            birthTime,
+            characterId: selectedCharacterId,
+            questionIntent: inferredQuestionIntent,
+            selectionMode,
+            context,
+            question: question.trim(),
+            language,
+            calendarType,
+            unknownTime,
+            cityName: cityName.trim() || undefined,
             // 상대방 정보 (입력된 경우에만 포함)
             ...(showPartnerInfo && partnerBirthDate ? {
                 partnerName: partnerName || undefined,
@@ -438,13 +457,13 @@ export function ReadingInput({
                                 {isEn ? 'First Reading Free' : '첫 리딩 무료'}
                             </span>
                             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
-                                {isEn ? 'Question + Birth Data + Result' : '질문 + 생년월일 + 바로 결과'}
+                                {isEn ? 'Question + Tarot + Result' : '질문 + 타로 선택 + 결과'}
                             </span>
                         </div>
                         <p className="mt-2 text-sm leading-6 text-white/62">
                             {isEn
-                                ? 'Keep the depth in the saju itself, not in extra steps. Ask one real question, add your birth details, and go straight to the first result.'
-                                : '단계가 많다고 더 정확한 건 아니에요. 지금 고민 하나와 생년월일만 넣으면 첫 결과를 바로 볼 수 있어요.'}
+                                ? 'Ask one real question, add your birth details, and choose the tarot cards your intuition reaches for before the first result opens.'
+                                : '지금 고민 하나와 생년월일을 적고, 직관이 끌리는 타로 카드를 고른 뒤 첫 결과를 여는 흐름으로 다시 정리했어요.'}
                         </p>
                     </div>
                     {isEn ? (
@@ -740,8 +759,8 @@ export function ReadingInput({
                             </label>
                             <p className="mt-2 text-sm leading-6 text-white/58">
                                 {isEn
-                                    ? 'These are the fields that actually affect the first saju read: birth date, birth time or time unknown, gender, and solar/lunar calendar.'
-                                    : '첫 결과에 직접 필요한 값만 먼저 받습니다. 생년월일, 태어난 시간, 성별, 양력/음력까지가 핵심이에요.'}
+                                    ? 'For numerology and true-solar-time calibration, the first read now uses your name, birth date, birth city, birth time, gender, and solar/lunar calendar.'
+                                    : '수비학과 진태양시 보정을 함께 쓰기 때문에, 이제 첫 결과에도 이름, 생년월일, 출생 도시, 태어난 시간, 성별, 양력/음력을 함께 받습니다.'}
                             </p>
                         </div>
                         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
@@ -750,6 +769,25 @@ export function ReadingInput({
                     </div>
 
                         <div className="mt-4 grid grid-cols-1 gap-4 md:mt-5 md:grid-cols-2">
+                        <div>
+                            <label className="block text-[11px] uppercase tracking-[0.22em] text-white/40">
+                                {isEn ? 'Name' : '이름'}
+                            </label>
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                placeholder={isEn ? 'Name used for numerology' : '수비학에 반영할 이름'}
+                                required
+                                className="mt-3 block min-h-[48px] w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-starlight transition-colors placeholder:text-white/25 focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none"
+                            />
+                            <p className="mt-2 text-[11px] leading-5 text-white/42">
+                                {isEn
+                                    ? 'We use your name for the numerology layer and a more grounded reading voice.'
+                                    : '이름은 수비학 레이어와 결과 호칭에 함께 반영됩니다.'}
+                            </p>
+                        </div>
+
                         <div>
                             <label className="block text-[11px] uppercase tracking-[0.22em] text-white/40">
                                 {isEn ? 'Birth Date' : '생년월일'}
@@ -808,6 +846,33 @@ export function ReadingInput({
                                         : '태어난 시간을 모르겠어요. 이 경우 낮 12:00을 기준점으로 씁니다.'}
                                 </span>
                             </button>
+                        </div>
+
+                        <div>
+                            <label className="block text-[11px] uppercase tracking-[0.22em] text-white/40">
+                                {isEn ? 'Birth City' : '출생 도시'}
+                            </label>
+                            <input
+                                type="text"
+                                list="birth-city-options"
+                                value={cityName}
+                                onChange={(e) => setCityName(e.target.value)}
+                                placeholder={isEn ? 'Seoul, Busan, Jeju...' : '서울, 부산, 제주...'}
+                                className="mt-3 block min-h-[48px] w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-starlight transition-colors placeholder:text-white/20 focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none"
+                            />
+                            <datalist id="birth-city-options">
+                                {BIRTH_CITY_OPTIONS.map((city) => (
+                                    <option
+                                        key={city.value}
+                                        value={isEn ? city.labelEn : city.labelKo}
+                                    />
+                                ))}
+                            </datalist>
+                            <p className="mt-2 text-[11px] leading-5 text-white/42">
+                                {isEn
+                                    ? 'Recommended for true-solar-time correction. If omitted, the reading falls back to Seoul.'
+                                    : '진태양시 보정용 권장 입력입니다. 비워두면 서울 기준으로 계산됩니다.'}
+                            </p>
                         </div>
 
                         <div>
@@ -871,18 +936,6 @@ export function ReadingInput({
                         </div>
                     </div>
 
-                    <div className="mt-5">
-                        <button
-                            type="button"
-                            onClick={() => setShowPrecisionFields((value) => !value)}
-                            className="min-h-[48px] w-full rounded-full border border-white/15 px-5 py-2 text-xs uppercase tracking-[0.22em] text-white/72 transition-all hover:border-white/30 hover:text-white md:w-auto"
-                        >
-                            {showPrecisionFields
-                                ? (isEn ? 'Hide Extra Options' : '추가 입력 닫기')
-                                : (isEn ? 'Open Extra Options' : '추가 입력 열기')}
-                        </button>
-                    </div>
-
                     <div className="mt-5 rounded-[22px] border border-white/10 bg-black/20 p-4 md:p-5">
                         <div className="flex flex-wrap items-center gap-2">
                             <span className="rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-acc-gold">
@@ -903,41 +956,29 @@ export function ReadingInput({
                         <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                             <p className="max-w-2xl text-sm leading-6 text-white/58">
                                 {isEn
-                                    ? 'The first result now uses the quality-critical saju fields first. Extra inputs are only for compatibility, manual guide choice, or a more custom path.'
-                                    : '무료 결과는 필요한 정보만 먼저 받고 바로 엽니다. 추가 입력은 더 자세히 보고 싶을 때만 넣으면 됩니다.'}
+                                    ? 'The first result now uses the quality-critical inputs up front: name for numerology, birth city for calibration, and the core saju fields for the initial read.'
+                                    : '무료 결과도 이제 이름, 출생 도시, 핵심 사주 입력을 먼저 반영합니다. 수비학과 보정 정확도를 초반부터 같이 잡는 구조입니다.'}
                             </p>
                         </div>
                     </div>
                 </div>
 
-                {showPrecisionFields && (
+                {context === 'love' && (
                     <>
-                        <div className={`${sectionShellClass} order-3`}>
-                            <label className="block text-xs text-acc-gold tracking-widest uppercase mb-4">
-                                {isEn ? '03. Extra Inputs' : '03. 추가 입력'}
-                            </label>
-                            <div>
-                                <label className="block text-[11px] uppercase tracking-[0.22em] text-white/40">
-                                    {isEn ? 'Name (Optional)' : '이름 또는 닉네임 (선택)'}
-                                </label>
-                                <input
-                                    type="text"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    placeholder={isEn ? 'Only if you want it reflected in the reading' : '리딩에 이름을 반영하고 싶을 때만 적어주세요'}
-                                    className="mt-3 block min-h-[48px] w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-starlight transition-colors placeholder:text-white/25 focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none"
-                                />
-                                <p className="mt-2 text-[11px] leading-5 text-white/42">
-                                    {isEn
-                                        ? 'You can skip this. It is only used for a more personal tone in the result.'
-                                        : '건너뛰어도 됩니다. 결과 문장을 조금 더 개인적으로 보여줄 때만 씁니다.'}
-                                </p>
-                            </div>
+                        <div className="mt-5">
+                            <button
+                                type="button"
+                                onClick={() => setShowPrecisionFields((value) => !value)}
+                                className="min-h-[48px] w-full rounded-full border border-white/15 px-5 py-2 text-xs uppercase tracking-[0.22em] text-white/72 transition-all hover:border-white/30 hover:text-white md:w-auto"
+                            >
+                                {showPrecisionFields
+                                    ? (isEn ? 'Hide Relationship Inputs' : '상대 정보 닫기')
+                                    : (isEn ? 'Open Relationship Inputs' : '상대 정보 열기')}
+                            </button>
                         </div>
 
-                        {/* 3. Partner Info (Love/Relationship Only) */}
-                        {context === 'love' && (
-                            <div className={`${sectionShellClass} order-4`}>
+                        {showPrecisionFields && (
+                            <div className={`${sectionShellClass} order-3`}>
                                 <div className="flex items-center justify-between mb-4">
                                     <label className="block text-xs text-acc-gold tracking-widest uppercase">
                                         {isEn ? 'Partner Information (Optional)' : '상대 정보 (선택)'}
@@ -1033,7 +1074,6 @@ export function ReadingInput({
                                 )}
                             </div>
                         )}
-
                     </>
                 )}
 
@@ -1043,7 +1083,7 @@ export function ReadingInput({
             <div className="flex flex-col items-center justify-center gap-3 pt-1">
                 <button
                     type="submit"
-                    disabled={!birthDate || !question.trim() || (!unknownTime && !birthTime) || isLoading}
+                    disabled={!name.trim() || !birthDate || !question.trim() || (!unknownTime && !birthTime) || isLoading}
                     className={`group relative w-full overflow-hidden rounded-full border border-acc-gold/30 bg-gradient-to-r from-acc-gold via-[#f1cf74] to-[#c98d2d] px-8 py-3.5 text-deep-navy shadow-[0_18px_36px_rgba(212,175,55,0.18)] transition-all duration-300 hover:scale-[1.01] hover:shadow-[0_22px_46px_rgba(212,175,55,0.24)] md:w-auto md:px-10 ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
                 >
                     <span className="relative z-10 font-cinzel text-sm font-bold uppercase tracking-[0.3em]">

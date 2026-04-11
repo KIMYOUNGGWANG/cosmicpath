@@ -19,16 +19,17 @@ export const MODEL_CONFIG: Record<ModelTier, {
     free: {
         provider: 'google',
         model: 'gemini-3-flash-preview',
+        fallback: { provider: 'google', model: 'gemini-2.5-flash' },
     },
     basic: {
         provider: 'google',
         model: 'gemini-3-flash-preview',
-        fallback: { provider: 'google', model: 'gemini-2.0-flash' },
+        fallback: { provider: 'google', model: 'gemini-2.5-flash' },
     },
     premium: {
         provider: 'google',
         model: 'gemini-3-flash-preview',
-        fallback: { provider: 'google', model: 'gemini-1.5-pro' },
+        fallback: { provider: 'google', model: 'gemini-2.5-flash' },
     },
 };
 
@@ -42,6 +43,18 @@ export interface LLMResponse {
         completionTokens: number;
         totalTokens: number;
     };
+}
+
+export class StructuredParseError extends Error {
+    cleanedText: string;
+    rawText: string;
+
+    constructor(message: string, cleanedText: string, rawText: string) {
+        super(message);
+        this.name = 'StructuredParseError';
+        this.cleanedText = cleanedText;
+        this.rawText = rawText;
+    }
 }
 
 /**
@@ -67,8 +80,8 @@ async function fetchWithRetry(
                 signal: controller.signal,
             });
 
-            // 503 (High Demand) 또는 429 (Rate Limit)인 경우에만 재시도
-            if (response.status === 503 || response.status === 429) {
+            // 일시적 서버 오류/혼잡에는 재시도
+            if ([429, 500, 502, 503, 504].includes(response.status)) {
                 const errorData = await response.json().catch(() => ({}));
                 throw new Error(`${response.status}: ${errorData.error?.message || response.statusText}`);
             }
@@ -88,13 +101,17 @@ async function fetchWithRetry(
                 ? new Error(`API timeout after ${timeoutMs}ms`)
                 : (error instanceof Error ? error : new Error(message));
 
-            // 마지막 시도거나 503/429가 아닌 치명적 에러인 경우 즉시 중단
-            if (i === maxRetries || (!message.includes('503') && !message.includes('429'))) {
+            const isRetryable =
+                isTimeoutError ||
+                ['429', '500', '502', '503', '504'].some((status) => message.includes(status));
+
+            // 마지막 시도거나 재시도 대상이 아니면 즉시 중단
+            if (i === maxRetries || !isRetryable) {
                 break;
             }
 
             const delay = initialDelay * Math.pow(2, i);
-            console.warn(`[AI Client Retry] Attempt ${i + 1} failed (Status: ${message}). Retrying in ${delay}ms...`);
+            console.warn(`[AI Client Retry] Attempt ${i + 1} failed (Status: ${lastError.message}). Retrying in ${delay}ms...`);
             await new Promise(resolve => setTimeout(resolve, delay));
         } finally {
             clearTimeout(timeoutId);
@@ -378,48 +395,9 @@ export async function generateStructuredReport<T>(
 ): Promise<T> {
     const config = MODEL_CONFIG[tier];
     const apiKey = process.env.GOOGLE_AI_API_KEY;
-    const model = config.provider === 'google' ? config.model : 'gemini-3-flash-preview';
 
     if (!apiKey) throw new Error('GOOGLE_AI_API_KEY is not configured');
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-    const options = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            systemInstruction: { parts: [{ text: systemPrompt }] },
-            contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-            generationConfig: {
-                temperature: 0.7, // 0.85 -> 0.7 for higher stability
-                maxOutputTokens: 8192,
-                responseMimeType: "application/json",
-            },
-        }),
-    };
-
-    const response = await fetchWithRetry(url, options);
-    const data = await response.json();
-    await safeIncrementUsageCounter({
-        provider: 'google',
-        metric: 'api_requests',
-        count: 1,
-        metadata: { model, mode: 'structured_report' },
-    });
-
-    const tokenTotal = data.usageMetadata?.totalTokenCount;
-    if (typeof tokenTotal === 'number' && tokenTotal > 0) {
-        await safeIncrementUsageCounter({
-            provider: 'google',
-            metric: 'tokens_total',
-            count: 1,
-            amount: tokenTotal,
-            metadata: { model, mode: 'structured_report' },
-        });
-    }
-
-    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-
-    // Helper: Clean problematic JSON content
     const cleanJsonString = (str: string) => {
         let cleaned = str.trim();
         // 1. Remove markdown code blocks if present
@@ -460,34 +438,126 @@ export async function generateStructuredReport<T>(
         return cleaned;
     };
 
-    const text = cleanJsonString(rawText);
+    const parseStructuredText = (rawText: string) => {
+        const text = cleanJsonString(rawText);
+
+        try {
+            const parsed = JSON.parse(text);
+            if (schema) {
+                const validation = schema.safeParse(parsed);
+                if (!validation.success) {
+                    console.error("[AI Schema Validation Failed]", validation.error);
+                    console.error("[Bad Response Body]", text);
+                    throw new Error(`Schema Validation Failed: ${validation.error.message}`);
+                }
+                return validation.data;
+            }
+            return parsed as T;
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : String(error);
+            const errorPosMatch = message.match(/position (\d+)/);
+
+            if (errorPosMatch) {
+                const pos = parseInt(errorPosMatch[1], 10);
+                const start = Math.max(0, pos - 50);
+                const end = Math.min(text.length, pos + 50);
+                console.error(`[JSON Parse Detail] Error around position ${pos}:`);
+                console.error(`...${text.substring(start, pos)} >>> ${text.charAt(pos)} <<< ${text.substring(pos + 1, end)}...`);
+            }
+
+            console.error("JSON Parse Error Message:", message);
+            console.error("Failed JSON Content (Full):", text);
+            throw new StructuredParseError(`Failed to parse AI response: ${message}`, text, rawText);
+        }
+    };
+
+    const getStructuredRequestConfig = (model: string) => {
+        const isFallbackModel = config.fallback?.provider === 'google' && config.fallback.model === model;
+
+        if (tier === 'basic') {
+            return {
+                timeoutMs: isFallbackModel ? 12000 : 16000,
+                maxRetries: isFallbackModel ? 0 : 1,
+                maxOutputTokens: 1024,
+                initialDelayMs: 1500,
+            };
+        }
+
+        if (tier === 'free') {
+            return {
+                timeoutMs: isFallbackModel ? 18000 : 30000,
+                maxRetries: isFallbackModel ? 0 : 2,
+                maxOutputTokens: 1536,
+                initialDelayMs: 3000,
+            };
+        }
+
+        return {
+            timeoutMs: isFallbackModel ? 18000 : 24000,
+            maxRetries: isFallbackModel ? 0 : 1,
+            maxOutputTokens: 4096,
+            initialDelayMs: 1500,
+        };
+    };
+
+    const requestStructuredReport = async (model: string): Promise<T> => {
+        const requestConfig = getStructuredRequestConfig(model);
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const options = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+                generationConfig: {
+                    temperature: 0.7,
+                    maxOutputTokens: requestConfig.maxOutputTokens,
+                    responseMimeType: "application/json",
+                },
+            }),
+        };
+
+        const response = await fetchWithRetry(
+            url,
+            options,
+            requestConfig.maxRetries,
+            requestConfig.initialDelayMs,
+            requestConfig.timeoutMs
+        );
+        const data = await response.json();
+
+        await safeIncrementUsageCounter({
+            provider: 'google',
+            metric: 'api_requests',
+            count: 1,
+            metadata: { model, mode: 'structured_report' },
+        });
+
+        const tokenTotal = data.usageMetadata?.totalTokenCount;
+        if (typeof tokenTotal === 'number' && tokenTotal > 0) {
+            await safeIncrementUsageCounter({
+                provider: 'google',
+                metric: 'tokens_total',
+                count: 1,
+                amount: tokenTotal,
+                metadata: { model, mode: 'structured_report' },
+            });
+        }
+
+        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+        return parseStructuredText(rawText);
+    };
+
+    const primaryModel = config.provider === 'google' ? config.model : 'gemini-3-flash-preview';
+    const allowStructuredFallback = tier !== 'free';
 
     try {
-        const parsed = JSON.parse(text);
-        if (schema) {
-            const validation = schema.safeParse(parsed);
-            if (!validation.success) {
-                console.error("[AI Schema Validation Failed]", validation.error);
-                console.error("[Bad Response Body]", text);
-                throw new Error(`Schema Validation Failed: ${validation.error.message}`);
-            }
-            return validation.data;
+        return await requestStructuredReport(primaryModel);
+    } catch (error) {
+        if (allowStructuredFallback && config.fallback?.provider === 'google') {
+            console.warn(`[AI Client] Structured report primary model failed, trying fallback: ${config.fallback.model}`);
+            return await requestStructuredReport(config.fallback.model);
         }
-        return parsed as T;
-    } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : String(error);
-        // Advanced diagnostics: Find error position
-        const errorPosMatch = message.match(/position (\d+)/);
-        if (errorPosMatch) {
-            const pos = parseInt(errorPosMatch[1], 10);
-            const start = Math.max(0, pos - 50);
-            const end = Math.min(text.length, pos + 50);
-            console.error(`[JSON Parse Detail] Error around position ${pos}:`);
-            console.error(`...${text.substring(start, pos)} >>> ${text.charAt(pos)} <<< ${text.substring(pos + 1, end)}...`);
-        }
-
-        console.error("JSON Parse Error Message:", message);
-        console.error("Failed JSON Content (Full):", text);
-        throw new Error(`Failed to parse AI response: ${message}`);
+        throw error;
     }
 }
