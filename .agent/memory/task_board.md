@@ -1,7 +1,69 @@
 # 🎯 CosmicPath v2.0 — Task Board (리서치 기반 전략 로드맵)
 
-> 기준일: 2026-03-19 | 리서치: `RESEARCH/CosmicPath_Analysis_20260318`
+> 기준일: 2026-04-13 | 최신 전략: `docs/office-hours.md` + `.agent/memory/brainstorm.md`
 > 목표: **3개월 내 MAU 3,000 / 월 수익 500만원 / k-factor 1.5**
+
+---
+
+## 🚀 [NEW] Grand Oracle Chat — 구독형 고민 상담 채팅 (2026-04-13)
+
+> **근거**: `office-hours.md` (커리어 Wedge) + `brainstorm.md` (1+2+4 하이브리드 모델 확정)
+> **API 계약**: `docs/oracle-chat-api-spec.md`
+> **수직 분류**: Wedge = `이직/취업/퇴사 타이밍`, 확장 = 관계/재물/일상
+
+### 🎯 Mission
+> "사주+점성술+타로 3중 엔진이 기억력을 가지고, 결정적 순간에는 단호한 팩트폭행을 날리며
+>  평소에는 내 하루를 먼저 체크해 주는 개인 오라클 채팅 서비스"
+
+### Scope
+- **Now (MVP)**: 커리어 도메인 특화 채팅. 구독자 무제한 / 비구독자 1일 3회
+- **Later**: 관계/재물 도메인 확장, Push Notification (재방문 훅)
+- **Out**: 음성, 이미지, 다중 사용자, 실시간 인간 상담사
+
+### Implementation Steps
+
+- [x] **Step 1: DB 마이그레이션**
+  - `OracleChatRoom` / `OracleChatMessage` / `OracleChatQuota` 테이블 생성 (Prisma Migration)
+  - 검증: `npx prisma migrate dev && npx prisma studio`
+
+- [x] **Step 2: 백엔드 — 메시지 전송 API**
+  - `POST /api/oracle-chat/message` (스트리밍 SSE 방식)
+  - LLM intent 분류 (casual vs council_briefing)
+  - `council_briefing` 시: `saju-engine.ts` + 타로 시드 + 점성술 통합 파이프라인
+  - 검증: `curl -X POST /api/oracle-chat/message -d '{"content":"퇴사할까요?"}' | cat`
+
+- [x] **Step 3: 백엔드 — 히스토리 & 데일리 훅 API**
+  - `GET /api/oracle-chat/history`
+  - `GET /api/oracle-chat/daily-hook`
+  - 검증: API 응답 shape가 `oracle-chat-api-spec.md` 계약과 일치하는지 TypeScript 타입 체크
+
+- [x] **Step 4: 프론트엔드 — 채팅 UI (`/oracle-chat`)**
+  - 채팅창 레이아웃 (모바일 퍼스트)
+  - `casual` 모드: 일반 말풍선
+  - `council_briefing` 모드: 접힌 "위원회 분석 보기" + 최종 결론 강조 카드
+  - 스트리밍 타이핑 애니메이션
+  - 검증: 브라우저 직접 확인
+
+- [ ] **Step 5: 프론트엔드 — 데일리 훅 진입점 연결**
+  - `/daily` 또는 홈 화면에서 AI가 먼저 말을 거는 배너/카드 표시
+  - 검증: 재방문 시 dailyHook 메시지가 노출되는지 확인
+
+- [ ] **Step 6: 비구독자 Paywall 연결**
+  - 일일 3회 초과 시 `402` → 구독 유도 모달 (기존 `PaymentModal` 재활용)
+  - 검증: 비로그인/비구독 유저 3회 이후 Paywall이 노출되는지 확인
+
+### Risks & Open Questions
+- [ ] **토큰 비용**: `council_briefing` 1회당 LLM 호출이 3~4번 발생. 월 MAU 3,000 기준 비용 추정 필요.
+- [ ] **맥락 기억 범위**: DB에서 최근 N개 메시지를 context로 주입할지, Vector DB (pgvector)를 써야 할지 결정 필요.
+- [ ] **CS 리스크**: 극단적 우울감 등 민감한 입력에 대한 안전망 프롬프트 가이드라인 필요.
+
+### Status Note (2026-04-12 PM)
+- Oracle Chat migration SQL, API routes, and `/oracle-chat` UI are implemented and connected.
+- Validation passed: `prisma validate`, targeted `eslint`, full `tsc --noEmit`, `npm run build`, and remote Supabase table creation 확인.
+- Remaining product scope is Step 5-6 only: `/daily` or 홈 진입점 연결, 그리고 기존 `PaymentModal` 재활용 paywall 마감.
+
+---
+
 
 ## 🧭 Focus Reset (2026-04-04)
 *원칙: 오라클 코어 루프를 강화하고, 운영 복잡도는 줄인다.*
