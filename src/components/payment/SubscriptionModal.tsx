@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
@@ -16,6 +17,7 @@ import {
     X,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useDocumentScrollLock } from '@/hooks/useDocumentScrollLock';
 import {
     SUBSCRIPTION_CHECKOUT_PRICE_IDS,
     formatUsdAmount,
@@ -49,6 +51,24 @@ interface PlanOption {
     commitmentNote: string;
 }
 
+interface PaywallCopy {
+    badge: string;
+    headline: string;
+    body: string;
+    insightLabel: string;
+    insightBody: string;
+    accessLabel: string;
+    checkoutActionLabel: string;
+    decisionUnlockBody: string;
+    pathBody: string;
+}
+
+interface TrustSignal {
+    title: string;
+    description: string;
+    Icon: typeof ShieldCheck;
+}
+
 interface LiveSubscriptionPrice {
     amount: number;
     formattedPrice: string;
@@ -62,35 +82,66 @@ const PLAN_OPTIONS: Record<ConsumerPlanType, PlanOption> = {
         id: 'MONTHLY',
         eyebrow: 'Entry Orbit',
         name: '월간 멤버십',
-        description: '가볍게 시작해서 한 달 동안 관계, 커리어, 재물, 타이밍 질문을 오라클 가이드와 충분히 이어갈 수 있습니다.',
+        description: '가볍게 시작해서 한 달 동안 Grand Oracle Chat, daily premium guidance, 프리미엄 리딩 흐름을 함께 열 수 있습니다.',
         priceLabel: '최신 가격 확인',
         billingLabel: '결제 단계에서 표시',
-        valueLabel: '가장 가볍게 프리미엄 결정 리딩을 여는 기본 경로',
+        valueLabel: '가장 가볍게 premium membership을 여는 기본 경로',
         supportingLabel: '실시간 가격을 불러오면 월간 금액을 바로 보여주고, 실패해도 결제 단계에서 최신 금액을 다시 확인할 수 있습니다.',
-        benefits: ['무제한 Oracle Chat', '관계·커리어·재물 질문 확장', 'Daily Tarot premium guidance'],
-        commitmentNote: '처음 전환하거나 짧게 루틴을 검증해보고 싶은 사용자에게 가장 자연스러운 시작점입니다.',
+        benefits: ['Grand Oracle Chat과 follow-up access', 'Daily tarot premium guidance', '프리미엄 리딩과 타이밍 가이드'],
+        commitmentNote: '처음 전환하거나 이 루틴에 얼마나 자주 돌아오는지 가볍게 검증해보고 싶은 사용자에게 가장 자연스러운 시작점입니다.',
     },
     ANNUAL: {
         id: 'ANNUAL',
         eyebrow: 'Long Orbit',
         name: '연간 멤버십',
-        description: '가장 낮은 월 환산 비용으로 multi-domain 오라클 리딩과 프리미엄 루틴을 길게 유지합니다.',
+        description: '가장 낮은 월 환산 비용으로 Grand Oracle Chat, daily premium, 프리미엄 리딩 루틴을 길게 유지합니다.',
         priceLabel: '최신 가격 확인',
         billingLabel: '결제 단계에서 표시',
-        valueLabel: '가장 큰 절약폭으로 장기 루틴을 이어가기 좋은 경로',
+        valueLabel: '가장 큰 절약폭으로 premium membership을 오래 유지하는 경로',
         supportingLabel: '실시간 가격을 불러오면 연간 금액과 월 환산을 함께 보여주고, 실패해도 결제 단계에서 최신 금액을 다시 확인할 수 있습니다.',
-        benefits: ['장기 구독 할인', '무제한 Oracle Chat', '장기 결정 리딩과 프리미엄 유지'],
+        benefits: ['장기 구독 할인', 'Grand Oracle Chat과 daily premium 유지', '프리미엄 리딩과 follow-up 루틴'],
         commitmentNote: '이미 자주 돌아오고 있다면 연간이 가장 단순하고 비용 효율적인 선택입니다.',
     },
 };
 
-const PAYWALL_COPY = {
-    badge: 'Decision Timing Oracle',
-    headline: '결정의 순간마다 오라클 리딩을 계속 이어가세요',
-    body: '무료 사용량 이후에도 관계, 커리어, 재물, 타이밍 질문을 Oracle Chat, Daily Tarot premium guidance, 프리미엄 리딩 경험으로 끊기지 않게 이어갈 수 있습니다. 월간은 가장 가볍게 흐름을 열기 좋고, 연간은 가장 큰 절약폭으로 장기 루틴을 이어가기 좋습니다.',
-    insightLabel: 'Decision Path',
+const ORACLE_CHAT_PLAN_OVERRIDES: Record<ConsumerPlanType, Partial<PlanOption>> = {
+    MONTHLY: {
+        description: '가볍게 시작해서 한 달 동안 Grand Oracle Chat과 결정 타이밍 질문을 충분히 이어갈 수 있습니다.',
+        valueLabel: '가장 가볍게 Grand Oracle Chat 무제한을 여는 기본 경로',
+        benefits: ['Grand Oracle Chat 무제한', '관계·커리어·재물 질문 확장', 'Daily Hook + Tarot premium guidance'],
+        commitmentNote: '처음 전환하거나 오라클 상담 루틴이 나와 맞는지 짧게 검증해보고 싶은 사용자에게 가장 자연스러운 시작점입니다.',
+    },
+    ANNUAL: {
+        description: '가장 낮은 월 환산 비용으로 Grand Oracle Chat과 daily oracle 루틴을 길게 유지합니다.',
+        valueLabel: '가장 큰 절약폭으로 Grand Oracle 루틴을 이어가기 좋은 경로',
+        benefits: ['장기 구독 할인', 'Grand Oracle Chat 무제한', '장기 결정 리딩과 daily oracle 유지'],
+    },
+};
+
+const DEFAULT_PAYWALL_COPY: PaywallCopy = {
+    badge: 'CosmicPath Membership',
+    headline: '프리미엄 흐름을 계속 이어가세요',
+    body: 'Grand Oracle Chat, daily premium guidance, 프리미엄 리딩과 follow-up 경험을 하나의 membership으로 이어갈 수 있습니다. 월간은 가장 가볍게 루틴을 열기 좋고, 연간은 가장 큰 절약폭으로 장기 사용에 유리합니다.',
+    insightLabel: 'Membership Path',
     insightBody:
-        '기본 결제 표면은 월간과 연간 두 가지 경로만 남겼습니다. 처음에는 월간으로 가볍게 열고, 결정 리딩 루틴이 붙었다면 연간으로 이어가는 구조가 가장 명확하고 안정적입니다.',
+        '기본 결제 표면은 월간과 연간 두 가지 경로만 남겼습니다. 처음에는 월간으로 루틴을 열고, 반복적으로 돌아오게 되면 연간으로 이어가는 구조가 가장 명확하고 안정적입니다.',
+    accessLabel: '지금 열리는 Premium Access',
+    checkoutActionLabel: '프리미엄 멤버십 열기',
+    decisionUnlockBody: '결제 직후 구독 상태가 반영되면 `/start` 결과, `/daily`, `/oracle-chat`, `/my`에서 프리미엄 흐름을 바로 이어갈 수 있습니다.',
+    pathBody: '현재 기본 결제 표면은 월간/연간 두 가지 경로만 노출합니다. 어디서 들어오든 같은 membership 레일로 이어지고, source만 analytics에 남깁니다.',
+};
+
+const ORACLE_CHAT_PAYWALL_COPY: PaywallCopy = {
+    badge: 'Grand Oracle Membership',
+    headline: 'Grand Oracle Chat을 무제한으로 계속 이어가세요',
+    body: '무료 사용량 이후에도 관계, 커리어, 재물, 타이밍 질문을 Grand Oracle Chat, Daily Hook, premium tarot guidance, 프리미엄 리딩 경험으로 끊기지 않게 이어갈 수 있습니다. 월간은 가장 가볍게 흐름을 열기 좋고, 연간은 가장 큰 절약폭으로 장기 루틴을 이어가기 좋습니다.',
+    insightLabel: 'Oracle Path',
+    insightBody:
+        '기본 결제 표면은 월간과 연간 두 가지 경로만 남겼습니다. 처음에는 월간으로 Grand Oracle Chat 루틴을 열고, 반복적으로 돌아오게 되면 연간으로 이어가는 구조가 가장 명확하고 안정적입니다.',
+    accessLabel: '지금 열리는 Grand Oracle Access',
+    checkoutActionLabel: 'Grand Oracle Chat 열기',
+    decisionUnlockBody: '결제 직후 구독 상태가 반영되면 `/oracle-chat`, `/daily`, `/my`에서 바로 이어서 사용할 수 있습니다.',
+    pathBody: '현재 기본 결제 표면은 월간/연간 두 가지 경로만 노출합니다. 어디서 들어오든 같은 Grand Oracle membership 흐름으로 이어지고, source만 analytics에 남깁니다.',
 };
 
 const BENEFIT_ICONS = [MessageCircle, Palette, CalendarDays] as const;
@@ -100,7 +151,7 @@ const PLAN_ICONS = {
     ANNUAL: Crown,
 } as const satisfies Record<ConsumerPlanType, typeof Sparkles>;
 
-const TRUST_SIGNALS = [
+const DEFAULT_TRUST_SIGNALS: TrustSignal[] = [
     {
         title: 'Stripe-secured',
         description: '결제 정보는 Stripe Checkout에서 안전하게 처리됩니다.',
@@ -108,19 +159,44 @@ const TRUST_SIGNALS = [
     },
     {
         title: 'Decision unlock',
-        description: '결제 직후 Oracle Chat과 관계·커리어·재물 리딩 흐름이 바로 열립니다.',
+        description: '결제 직후 Grand Oracle Chat, daily premium, 프리미엄 리딩 흐름이 바로 열립니다.',
         Icon: Sparkles,
     },
     {
         title: 'Daily ritual',
-        description: '월간으로 가볍게 시작하거나, 연간으로 가장 큰 절약폭의 리딩 루틴을 선택할 수 있습니다.',
+        description: '월간으로 가볍게 시작하거나, 연간으로 가장 큰 절약폭의 premium 루틴을 선택할 수 있습니다.',
         Icon: Crown,
     },
 ] as const;
 
+const ORACLE_CHAT_TRUST_SIGNALS: TrustSignal[] = [
+    DEFAULT_TRUST_SIGNALS[0],
+    {
+        title: 'Decision unlock',
+        description: '결제 직후 Grand Oracle Chat, daily oracle loop, 관계·커리어·재물 리딩 흐름이 바로 열립니다.',
+        Icon: Sparkles,
+    },
+    {
+        title: 'Daily ritual',
+        description: '월간으로 가볍게 시작하거나, 연간으로 가장 큰 절약폭의 Grand Oracle 루틴을 선택할 수 있습니다.',
+        Icon: Crown,
+    },
+];
+
 function buildPlanOptions(
-    livePrices: Partial<Record<ConsumerPlanType, LiveSubscriptionPrice>>
+    livePrices: Partial<Record<ConsumerPlanType, LiveSubscriptionPrice>>,
+    source: PaywallSource
 ): Record<ConsumerPlanType, PlanOption> {
+    const basePlanOptions: Record<ConsumerPlanType, PlanOption> = {
+        MONTHLY: {
+            ...PLAN_OPTIONS.MONTHLY,
+            ...(source === 'oracle_chat' ? ORACLE_CHAT_PLAN_OVERRIDES.MONTHLY : {}),
+        },
+        ANNUAL: {
+            ...PLAN_OPTIONS.ANNUAL,
+            ...(source === 'oracle_chat' ? ORACLE_CHAT_PLAN_OVERRIDES.ANNUAL : {}),
+        },
+    };
     const monthlyLivePrice = livePrices.MONTHLY;
     const annualLivePrice = livePrices.ANNUAL;
     const annualMonthlyEquivalent = annualLivePrice ? annualLivePrice.amount / 12 : null;
@@ -131,34 +207,42 @@ function buildPlanOptions(
 
     return {
         MONTHLY: {
-            ...PLAN_OPTIONS.MONTHLY,
+            ...basePlanOptions.MONTHLY,
             priceLabel: monthlyLivePrice
                 ? `${monthlyLivePrice.formattedPrice} / month`
-                : PLAN_OPTIONS.MONTHLY.priceLabel,
-            billingLabel: monthlyLivePrice ? 'Cancel anytime' : PLAN_OPTIONS.MONTHLY.billingLabel,
+                : basePlanOptions.MONTHLY.priceLabel,
+            billingLabel: monthlyLivePrice ? 'Cancel anytime' : basePlanOptions.MONTHLY.billingLabel,
         },
         ANNUAL: {
-            ...PLAN_OPTIONS.ANNUAL,
+            ...basePlanOptions.ANNUAL,
             priceLabel: annualLivePrice
                 ? `${annualLivePrice.formattedPrice} / year`
-                : PLAN_OPTIONS.ANNUAL.priceLabel,
+                : basePlanOptions.ANNUAL.priceLabel,
             billingLabel:
                 annualMonthlyEquivalent !== null
                     ? `About ${formatUsdAmount(annualMonthlyEquivalent)} / month`
-                    : PLAN_OPTIONS.ANNUAL.billingLabel,
+                    : basePlanOptions.ANNUAL.billingLabel,
             valueLabel:
                 annualSavings !== null && annualMonthlyEquivalent !== null
                     ? `월간 대비 ${formatUsdAmount(annualSavings)} 절약, 연간 기준 월 환산 약 ${formatUsdAmount(annualMonthlyEquivalent)}`
-                    : PLAN_OPTIONS.ANNUAL.valueLabel,
+                    : basePlanOptions.ANNUAL.valueLabel,
             benefits:
                 annualSavings !== null
                     ? [
                         `월간 대비 ${formatUsdAmount(annualSavings)} 절약`,
-                        ...PLAN_OPTIONS.ANNUAL.benefits.slice(1),
+                        ...basePlanOptions.ANNUAL.benefits.slice(1),
                     ]
-                    : PLAN_OPTIONS.ANNUAL.benefits,
+                    : basePlanOptions.ANNUAL.benefits,
         },
     };
+}
+
+function getPaywallCopy(source: PaywallSource): PaywallCopy {
+    return source === 'oracle_chat' ? ORACLE_CHAT_PAYWALL_COPY : DEFAULT_PAYWALL_COPY;
+}
+
+function getTrustSignals(source: PaywallSource): TrustSignal[] {
+    return source === 'oracle_chat' ? ORACLE_CHAT_TRUST_SIGNALS : DEFAULT_TRUST_SIGNALS;
 }
 
 function resolveInitialPlanType(defaultPlanType?: SubscriptionPlanType): ConsumerPlanType {
@@ -214,6 +298,7 @@ export function SubscriptionModal({
     const { data: session } = useSession();
     const pathname = usePathname();
     const viewSignatureRef = useRef<string | null>(null);
+    const [isMounted, setIsMounted] = useState(false);
     const [selectedPlanType, setSelectedPlanType] = useState<ConsumerPlanType>('MONTHLY');
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -223,6 +308,12 @@ export function SubscriptionModal({
     const shouldReduceMotion = useReducedMotion();
     const displayName = getDisplayName(session?.user?.name);
     const resolvedDefaultPlanType = resolveInitialPlanType(defaultPlanType);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    useDocumentScrollLock(isOpen);
 
     useEffect(() => {
         if (!isOpen) return;
@@ -310,23 +401,22 @@ export function SubscriptionModal({
     useEffect(() => {
         if (!isOpen) return undefined;
 
-        const previousOverflow = document.body.style.overflow;
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape' && !isLoading) {
                 handleDismiss();
             }
         };
 
-        document.body.style.overflow = 'hidden';
         window.addEventListener('keydown', handleKeyDown);
 
         return () => {
-            document.body.style.overflow = previousOverflow;
             window.removeEventListener('keydown', handleKeyDown);
         };
     }, [handleDismiss, isLoading, isOpen]);
 
-    const planOptions = useMemo(() => buildPlanOptions(livePrices), [livePrices]);
+    const paywallCopy = useMemo(() => getPaywallCopy(source), [source]);
+    const trustSignals = useMemo(() => getTrustSignals(source), [source]);
+    const planOptions = useMemo(() => buildPlanOptions(livePrices, source), [livePrices, source]);
 
     const orderedPlans = useMemo(
         () => DISPLAYED_PLAN_ORDER.map((planType) => planOptions[planType]),
@@ -341,8 +431,8 @@ export function SubscriptionModal({
     const showPriceFallbackCopy = hasPriceFetchError;
     const selectedPlanHasLivePrice = Boolean(livePrices[selectedPlanType]);
     const checkoutButtonLabel = selectedPlanHasLivePrice
-        ? `${selectedPlan.priceLabel}으로 결정 리딩 열기`
-        : '최신 가격 확인 후 결정 리딩 열기';
+        ? `${selectedPlan.priceLabel}으로 ${paywallCopy.checkoutActionLabel}`
+        : `최신 가격 확인 후 ${paywallCopy.checkoutActionLabel}`;
 
     const trackOpenEvent = useCallback(async () => {
         const viewSignature = `${source}:membership:${pathname}:${resolvedDefaultPlanType}`;
@@ -417,62 +507,64 @@ export function SubscriptionModal({
         }
     }
 
-    return (
+    if (!isMounted) {
+        return null;
+    }
+
+    return createPortal(
         <AnimatePresence>
             {isOpen && (
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(2,6,23,0.82)] p-3 backdrop-blur-md sm:p-4"
-                    style={{ touchAction: 'none' }}
+                    data-lenis-prevent
+                    className="fixed inset-0 z-[10010] overflow-y-auto overscroll-contain touch-pan-y bg-[rgba(2,6,23,0.82)] backdrop-blur-md"
                     onClick={handleDismiss}
                 >
-                    <motion.div
-                        initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 18, scale: 0.98 }}
-                        animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
-                        exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 10, scale: 0.985 }}
-                        transition={{ duration: shouldReduceMotion ? 0 : 0.24, ease: [0.16, 1, 0.3, 1] }}
-                        role="dialog"
-                        aria-modal="true"
-                        aria-labelledby="subscription-modal-title"
-                        className="relative max-h-[92vh] w-full max-w-6xl overflow-hidden rounded-[32px] border border-[#f0d487]/20 bg-[radial-gradient(circle_at_top_left,rgba(244,216,138,0.16),transparent_30%),radial-gradient(circle_at_85%_15%,rgba(99,102,241,0.22),transparent_26%),linear-gradient(155deg,#060914,#0d1322_48%,#0a0f1d)] shadow-[0_32px_120px_rgba(0,0,0,0.52)]"
-                        onClick={(event) => event.stopPropagation()}
-                    >
-                        <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-[#f4d88a]/70 to-transparent" />
+                    <div className="flex min-h-[100dvh] items-start justify-center px-3 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-[calc(env(safe-area-inset-top)+1rem)] sm:items-center sm:px-4 sm:pb-6 sm:pt-6">
                         <motion.div
-                            aria-hidden="true"
-                            className="pointer-events-none absolute -left-24 top-12 h-56 w-56 rounded-full bg-[#f4d88a]/10 blur-3xl"
-                            animate={shouldReduceMotion ? undefined : { opacity: [0.4, 0.75, 0.45], scale: [0.98, 1.05, 1] }}
-                            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
-                        />
-                        <motion.div
-                            aria-hidden="true"
-                            className="pointer-events-none absolute -right-20 bottom-10 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl"
-                            animate={shouldReduceMotion ? undefined : { opacity: [0.3, 0.6, 0.35], scale: [1, 1.08, 1] }}
-                            transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-                        />
-
-                        <button
-                            type="button"
-                            onClick={handleDismiss}
-                            className="absolute right-5 top-5 z-20 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/65 transition-[background-color,border-color,color,transform] duration-200 hover:border-white/20 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f4d88a]/70"
-                            aria-label="구독 모달 닫기"
-                        >
-                            <X size={18} />
-                        </button>
-
-                        <div
-                            className="max-h-[92vh] overflow-y-auto p-5 sm:p-7 md:p-8 lg:p-10"
-                            style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch' }}
+                            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 18, scale: 0.98 }}
+                            animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+                            exit={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 10, scale: 0.985 }}
+                            transition={{ duration: shouldReduceMotion ? 0 : 0.24, ease: [0.16, 1, 0.3, 1] }}
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="subscription-modal-title"
+                            data-lenis-prevent
+                            className="relative flex max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-2rem)] w-full max-w-6xl min-h-0 flex-col overflow-hidden rounded-[32px] border border-[#f0d487]/20 bg-[radial-gradient(circle_at_top_left,rgba(244,216,138,0.16),transparent_30%),radial-gradient(circle_at_85%_15%,rgba(99,102,241,0.22),transparent_26%),linear-gradient(155deg,#060914,#0d1322_48%,#0a0f1d)] shadow-[0_32px_120px_rgba(0,0,0,0.52)] sm:max-h-[calc(100dvh-3rem)]"
                             onClick={(event) => event.stopPropagation()}
                         >
-                            <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.85fr)] xl:gap-8">
-                                <div>
+                            <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-[#f4d88a]/70 to-transparent" />
+                            <motion.div
+                                aria-hidden="true"
+                                className="pointer-events-none absolute -left-24 top-12 h-56 w-56 rounded-full bg-[#f4d88a]/10 blur-3xl"
+                                animate={shouldReduceMotion ? undefined : { opacity: [0.4, 0.75, 0.45], scale: [0.98, 1.05, 1] }}
+                                transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+                            />
+                            <motion.div
+                                aria-hidden="true"
+                                className="pointer-events-none absolute -right-20 bottom-10 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl"
+                                animate={shouldReduceMotion ? undefined : { opacity: [0.3, 0.6, 0.35], scale: [1, 1.08, 1] }}
+                                transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+                            />
+
+                            <button
+                                type="button"
+                                onClick={handleDismiss}
+                                className="absolute right-5 top-5 z-20 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/65 transition-[background-color,border-color,color,transform] duration-200 hover:border-white/20 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f4d88a]/70"
+                                aria-label="구독 모달 닫기"
+                            >
+                                <X size={18} />
+                            </button>
+
+                            <div data-lenis-prevent className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain touch-pan-y p-5 sm:p-7 md:p-8 lg:p-10" onClick={(event) => event.stopPropagation()}>
+                                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.85fr)] xl:gap-8">
+                                    <div>
                                     <div className="mb-6 max-w-4xl">
                                         <div className="mb-4 inline-flex min-h-9 items-center gap-2 rounded-full border border-[#f0d487]/25 bg-[#f0d487]/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#f4d88a]">
                                             <Sparkles size={14} />
-                                            {PAYWALL_COPY.badge}
+                                            {paywallCopy.badge}
                                         </div>
 
                                         <h2
@@ -481,16 +573,16 @@ export function SubscriptionModal({
                                         >
                                             {displayName ? `${displayName}님,` : '지금'}
                                             <span className="block bg-gradient-to-r from-[#fff4cf] via-[#f4d88a] to-[#c7a243] bg-clip-text text-transparent">
-                                                {PAYWALL_COPY.headline}
+                                                {paywallCopy.headline}
                                             </span>
                                         </h2>
                                         <p className="mt-4 max-w-3xl text-sm leading-7 text-white/72 sm:text-base">
-                                            {PAYWALL_COPY.body}
+                                            {paywallCopy.body}
                                         </p>
                                     </div>
 
                                     <div className="mb-6 grid gap-3 sm:grid-cols-3">
-                                        {TRUST_SIGNALS.map(({ title, description, Icon }) => (
+                                        {trustSignals.map(({ title, description, Icon }) => (
                                             <div
                                                 key={title}
                                                 className="rounded-[24px] border border-white/10 bg-white/[0.035] px-4 py-4 backdrop-blur-sm"
@@ -611,107 +703,110 @@ export function SubscriptionModal({
                                             </p>
                                         ) : null}
                                     </div>
-                                </div>
+                                    </div>
 
-                                <div className="xl:pt-10">
-                                    <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-6">
-                                        <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-                                            <div>
-                                                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#f4d88a]">
-                                                    Selected Path
+                                    <div className="xl:pt-10">
+                                        <div className="rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-5 shadow-[0_22px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-6">
+                                            <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+                                                <div>
+                                                    <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[#f4d88a]">
+                                                        Selected Path
+                                                    </p>
+                                                    <h3 className="mt-2 font-cinzel text-2xl text-white">
+                                                        {selectedPlan.name}
+                                                    </h3>
+                                                </div>
+                                                <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/65">
+                                                    {selectedPlan.billingLabel}
+                                                </div>
+                                            </div>
+
+                                            <div className="rounded-[24px] border border-[#f4d88a]/18 bg-[#f4d88a]/8 px-4 py-4">
+                                                <p className="text-sm font-semibold text-white">{selectedPlan.valueLabel}</p>
+                                                <p className="mt-2 text-xs leading-6 text-white/62">
+                                                    {selectedPlan.commitmentNote}
                                                 </p>
-                                                <h3 className="mt-2 font-cinzel text-2xl text-white">
-                                                    {selectedPlan.name}
-                                                </h3>
                                             </div>
-                                            <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/65">
-                                                {selectedPlan.billingLabel}
-                                            </div>
-                                        </div>
 
-                                        <div className="rounded-[24px] border border-[#f4d88a]/18 bg-[#f4d88a]/8 px-4 py-4">
-                                            <p className="text-sm font-semibold text-white">{selectedPlan.valueLabel}</p>
-                                            <p className="mt-2 text-xs leading-6 text-white/62">
-                                                {selectedPlan.commitmentNote}
-                                            </p>
-                                        </div>
-
-                                        <div className="mt-4 rounded-[24px] border border-white/10 bg-black/20 px-4 py-4">
-                                            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#f4d88a]/80">
-                                                {PAYWALL_COPY.insightLabel}
-                                            </p>
-                                            <p className="mt-2 text-sm leading-7 text-white/72">
-                                                {PAYWALL_COPY.insightBody}
-                                            </p>
-                                        </div>
-
-                                        <div className="mt-6">
-                                            <p className="text-sm font-semibold text-white">지금 열리는 결정 리딩</p>
-                                            <ul className="mt-4 space-y-3">
-                                                {selectedPlan.benefits.map((benefit, index) => {
-                                                    const Icon = BENEFIT_ICONS[index] ?? Check;
-                                                    return (
-                                                        <li
-                                                            key={benefit}
-                                                            className="flex items-start gap-3 rounded-[20px] border border-white/8 bg-white/[0.03] px-4 py-3 text-sm text-white/82"
-                                                        >
-                                                            <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-[#f4d88a]/20 bg-[#f4d88a]/10 text-[#f4d88a]">
-                                                                <Icon size={16} />
-                                                            </span>
-                                                            <span className="leading-6">{benefit}</span>
-                                                        </li>
-                                                    );
-                                                })}
-                                            </ul>
-                                        </div>
-
-                                        {errorMessage && (
-                                            <p className="mt-5 rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm leading-6 text-red-200">
-                                                {errorMessage}
-                                            </p>
-                                        )}
-
-                                        <motion.button
-                                            type="button"
-                                            onClick={handleStartCheckout}
-                                            disabled={isLoading}
-                                            whileHover={shouldReduceMotion || isLoading ? undefined : { y: -2, scale: 1.01 }}
-                                            whileTap={shouldReduceMotion || isLoading ? undefined : { scale: 0.99 }}
-                                            className="mt-6 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#f8e7aa] via-[#d4af37] to-[#b8902f] px-5 py-4 text-base font-bold text-[#111111] shadow-[0_18px_40px_rgba(212,175,55,0.2)] transition-[box-shadow,filter,opacity] duration-300 hover:shadow-[0_24px_46px_rgba(212,175,55,0.28)] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f4d88a]/80"
-                                        >
-                                            <span>{isLoading ? 'Stripe Checkout 준비 중...' : checkoutButtonLabel}</span>
-                                            {!isLoading && <ArrowRight size={18} />}
-                                        </motion.button>
-
-                                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                                            <div className="rounded-[20px] border border-white/8 bg-black/15 px-4 py-3">
+                                            <div className="mt-4 rounded-[24px] border border-white/10 bg-black/20 px-4 py-4">
                                                 <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#f4d88a]/80">
-                                                    Decision Unlock
+                                                    {paywallCopy.insightLabel}
                                                 </p>
-                                                <p className="mt-2 text-sm leading-6 text-white/68">
-                                                    결제 직후 구독 상태가 반영되면 `/my`, `/daily`, Oracle Chat에서 바로 이어서 사용할 수 있습니다.
-                                                </p>
-                                            </div>
-                                            <div className="rounded-[20px] border border-white/8 bg-black/15 px-4 py-3">
-                                                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#f4d88a]/80">
-                                                    Decision Path
-                                                </p>
-                                                <p className="mt-2 text-sm leading-6 text-white/68">
-                                                    현재 기본 결제 표면은 월간/연간 두 가지 경로만 노출합니다. 어디서 들어오든 같은 결정 리딩 흐름으로 이어지고, source만 analytics에 남깁니다.
+                                                <p className="mt-2 text-sm leading-7 text-white/72">
+                                                    {paywallCopy.insightBody}
                                                 </p>
                                             </div>
-                                        </div>
 
-                                        <p className="mt-4 text-center text-xs leading-6 text-white/45">
-                                            결제는 Stripe Checkout으로 이동해 진행됩니다. 기본 노출은 월간/연간 두 가지이며, 선택한 경로만 서버에 전송됩니다.
-                                        </p>
+                                            <div className="mt-6">
+                                                <p className="text-sm font-semibold text-white">{paywallCopy.accessLabel}</p>
+                                                <ul className="mt-4 space-y-3">
+                                                    {selectedPlan.benefits.map((benefit, index) => {
+                                                        const Icon = BENEFIT_ICONS[index] ?? Check;
+                                                        return (
+                                                            <li
+                                                                key={benefit}
+                                                                className="flex items-start gap-3 rounded-[20px] border border-white/8 bg-white/[0.03] px-4 py-3 text-sm text-white/82"
+                                                            >
+                                                                <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-[#f4d88a]/20 bg-[#f4d88a]/10 text-[#f4d88a]">
+                                                                    <Icon size={16} />
+                                                                </span>
+                                                                <span className="leading-6">{benefit}</span>
+                                                            </li>
+                                                        );
+                                                    })}
+                                                </ul>
+                                            </div>
+
+                                            {errorMessage && (
+                                                <p className="mt-5 rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm leading-6 text-red-200">
+                                                    {errorMessage}
+                                                </p>
+                                            )}
+
+                                            <motion.button
+                                                type="button"
+                                                onClick={handleStartCheckout}
+                                                disabled={isLoading}
+                                                whileHover={shouldReduceMotion || isLoading ? undefined : { y: -2, scale: 1.01 }}
+                                                whileTap={shouldReduceMotion || isLoading ? undefined : { scale: 0.99 }}
+                                                className="mt-6 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#f8e7aa] via-[#d4af37] to-[#b8902f] px-5 py-4 text-base font-bold text-[#111111] shadow-[0_18px_40px_rgba(212,175,55,0.2)] transition-[box-shadow,filter,opacity] duration-300 hover:shadow-[0_24px_46px_rgba(212,175,55,0.28)] hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f4d88a]/80"
+                                            >
+                                                <span>{isLoading ? 'Stripe Checkout 준비 중...' : checkoutButtonLabel}</span>
+                                                {!isLoading && <ArrowRight size={18} />}
+                                            </motion.button>
+
+                                            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                                <div className="rounded-[20px] border border-white/8 bg-black/15 px-4 py-3">
+                                                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#f4d88a]/80">
+                                                        Decision Unlock
+                                                    </p>
+                                                    <p className="mt-2 text-sm leading-6 text-white/68">
+                                                        {paywallCopy.decisionUnlockBody}
+                                                    </p>
+                                                </div>
+                                                <div className="rounded-[20px] border border-white/8 bg-black/15 px-4 py-3">
+                                                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#f4d88a]/80">
+                                                        {paywallCopy.insightLabel}
+                                                    </p>
+                                                    <p className="mt-2 text-sm leading-6 text-white/68">
+                                                        {paywallCopy.pathBody}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <p className="mt-4 text-center text-xs leading-6 text-white/45">
+                                                결제는 Stripe Checkout으로 이동해 진행됩니다. 기본 노출은 월간/연간 두 가지이며, 선택한 경로만 서버에 전송됩니다.
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </motion.div>
+                        </motion.div>
+                    </div>
                 </motion.div>
             )}
         </AnimatePresence>
+        ,
+        document.body
     );
 }

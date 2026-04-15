@@ -1,10 +1,13 @@
 "use client";
 
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { create } from "zustand";
 
 import { AuthEntryCard } from "@/components/auth/AuthEntryCard";
+import { useDocumentScrollLock } from "@/hooks/useDocumentScrollLock";
 
 interface LoginModalStore {
     isOpen: boolean;
@@ -20,8 +23,17 @@ export const useLoginModal = create<LoginModalStore>((set) => ({
 
 export function LoginModal() {
     const { isOpen, closeLoginModal } = useLoginModal();
+    const [isMounted, setIsMounted] = useState(false);
 
-    return (
+    useDocumentScrollLock(isOpen);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    if (!isMounted) return null;
+
+    return createPortal(
         <AnimatePresence>
             {isOpen && (
                 <>
@@ -55,5 +67,7 @@ export function LoginModal() {
                 </>
             )}
         </AnimatePresence>
+        ,
+        document.body
     );
 }

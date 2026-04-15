@@ -80,6 +80,12 @@ interface ErrorResponse {
 > - 로그인 및 auth error display layer는 `Accept-Language` 기준으로 영문 카피를 우선 보여줄 수 있으며, 영어권에서는 Google을 기본 경로로 먼저 제안한다.
 > - 영어권 acquisition readiness는 `/guides`, `/guides/[slug]`, `/start` onboarding explainer 같은 presentation-layer surface로 제공되며, onward flow는 기존 `/api/reading` 및 `/api/growth/track` 계약을 그대로 사용한다.
 > - 운영 화면의 방문 규모 이해를 위해 `/api/growth/summary`는 기존 totals/series 외에 `visits.today`, `visits.last7Days`, `visits.last30Days`, `visits.dauMauRate`를 함께 제공할 수 있다. 이 값들은 모두 세션 기준 방문 신호이며 로그인 사용자 수와는 다르다.
+>
+> **Planned Grand Oracle Chat Billing Delta (2026-04-12 PM)**:
+> - `Grand Oracle Chat` MVP는 **새 Stripe membership SKU, 새 `planType`, 새 `subscriptionStatus` enum을 추가하지 않는다.**
+> - 기존 `GET /api/subscription/status`, `POST /api/subscription/create`, `POST /api/subscription/cancel`, `/billing`, `SubscriptionModal`을 그대로 재사용한다.
+> - 새로 바뀌는 것은 `billing packaging`과 `entitlement naming`이다. 즉, 서버는 기존 활성 유료 membership을 `Oracle Chat access` 의미 계층으로 해석하고, UI는 같은 결제 레일을 `Grand Oracle Chat 무제한` 가치 제안 중심으로 다시 설명한다.
+> - Oracle Chat quota 초과(`402`)는 one-time reading paywall이 아니라 기존 membership paywall surface로 연결되어야 한다.
 
 ### 1. 오늘의 운세 (Daily Fortune) ✅ 구현됨
 
@@ -169,6 +175,7 @@ interface SubscriptionStatusResponse {
 **Implementation Note (2026-04-04)**:
 - `pro_weekly`, `couple_monthly`는 레거시/실험 값으로 남아 있을 수 있다.
 - 현재 소비자 paywall UI는 `pro_monthly`, `pro_yearly`를 기본 merchandising 경로로 사용한다.
+- `Grand Oracle Chat` MVP는 새로운 plan 값을 추가하지 않는다. 서버는 기존 활성 유료 membership 상태를 `Oracle Chat access` entitlement로 해석한다.
 
 ---
 
@@ -190,6 +197,8 @@ interface SubscriptionCreateRequest {
 **Implementation Note (2026-04-04)**:
 - `MONTHLY`, `ANNUAL`은 현재 기본 CTA 경로다.
 - `WEEKLY`는 레거시 실험 플랜으로 유지 가능하지만, 기본 paywall surface에서는 숨김 처리한다.
+- `Grand Oracle Chat` paywall은 이 endpoint를 그대로 재사용하며, 신규 전용 `planType`을 추가하지 않는다.
+- 결제 진입 surface(`SubscriptionModal`, `/billing`)는 오라클 챗 무제한 상담과 daily retention 가치를 더 앞세우는 카피로 리패키징할 수 있다.
 
 ---
 
@@ -663,6 +672,142 @@ interface ReviewAdminMutationResponse {
 
 ---
 
+### 15. Grand Oracle Chat 히스토리 조회 ✅ 구현됨
+
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `GET` | `/api/oracle-chat/history` | ✅ |
+
+**Query**
+```
+roomId?: string  // optional. 없으면 최근 활성 room
+limit?: number   // default 30, max 50
+cursor?: string  // optional. 페이지네이션용 message id
+```
+
+**Response**
+```typescript
+interface OracleChatHistoryResponse {
+  roomId: string | null;
+  domain: 'career' | 'love' | 'wealth' | 'general';
+  messages: Array<{
+    id: string;
+    role: 'user' | 'oracle';
+    content: string;
+    mode: 'casual' | 'council_briefing';
+    councilData?: {
+      sajuSummary?: string;
+      tarotCard?: string;
+      tarotIsReversed?: boolean;
+      natalSummary?: string;
+      finalVerdict?: string;
+    };
+    createdAt: string;
+  }>;
+  hasMore: boolean;
+  nextCursor: string | null;
+}
+```
+
+**Logic**
+- 로그인 사용자 본인의 room만 조회할 수 있다.
+- `roomId`가 없으면 가장 최근 활성 room 기준으로 반환한다.
+- 빈 히스토리일 때도 `domain`, `messages`, `hasMore`, `nextCursor` shape는 유지한다.
+
+**Error**
+- `401` 로그인 필요
+- `404` 존재하지 않거나 본인 소유가 아닌 room
+
+---
+
+### 16. Grand Oracle Chat 메시지 전송 ✅ 구현됨
+
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `POST` | `/api/oracle-chat/message` | ✅ |
+
+**Request**
+```typescript
+interface OracleChatMessageRequest {
+  roomId?: string;
+  domain?: 'career' | 'love' | 'wealth' | 'general';
+  content: string; // 1-1000 chars
+  userContext?: {
+    birthDate: string;      // YYYY-MM-DD
+    birthTime?: string;     // HH:mm
+    birthPlace?: string;    // optional
+  };
+}
+```
+
+**Response**
+```typescript
+// text/event-stream
+// chunk: data: { delta: string, done: false }
+// final: data: { delta: '', done: true, messageId: string, mode: 'casual' | 'council_briefing' }
+```
+
+**Logic**
+- 서버는 질문 의도를 `casual` 또는 `council_briefing`으로 분류한다.
+- `council_briefing`에서는 사주, 타로, 점성술 근거를 결합한 최종 브리핑을 생성한다.
+- **활성 유료 membership 사용자**는 무제한 메시지다.
+- **비구독자**는 `OracleChatQuota` 기준 1일 3회까지만 보낼 수 있다.
+- quota 초과 시에는 one-time reading 결제가 아니라 기존 membership paywall (`SubscriptionModal` / `/billing`)로 유도한다.
+- Oracle Chat access는 클라이언트 flag가 아니라 서버의 활성 membership 상태에서만 도출해야 한다.
+
+**Error**
+- `400` 잘못된 payload
+- `401` 로그인 필요
+- `402` 일일 무료 quota 초과
+- `404` 존재하지 않거나 본인 소유가 아닌 room
+
+**402 Error Shape**
+```typescript
+interface OracleChatQuotaErrorResponse {
+  error: {
+    code: 402;
+    message: string;
+    details?: 'ORACLE_CHAT_DAILY_LIMIT';
+  };
+}
+```
+
+---
+
+### 17. Grand Oracle Chat 데일리 훅 ✅ 구현됨
+
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `GET` | `/api/oracle-chat/daily-hook` | ✅ |
+
+**Query**
+```
+roomId?: string  // optional. 없으면 최근 room 기준
+```
+
+**Response**
+```typescript
+interface OracleChatDailyHookResponse {
+  hookMessage: string;
+  generatedAt: string;
+  basedOn: {
+    lastMessageSummary: string;
+    todayFortuneSummary: string;
+  };
+}
+```
+
+**Logic**
+- 최근 오라클 질문 요약과 오늘의 흐름을 연결해 재방문 훅을 만든다.
+- room 지정 시에도 본인 소유 room만 사용할 수 있다.
+- `/daily` 또는 홈 surface에서 `Grand Oracle Chat` 진입 카드로 재사용할 수 있다.
+
+**Error**
+- `401` 로그인 필요
+- `404` 존재하지 않거나 본인 소유가 아닌 room
+
+---
+
 ## Database Tables (관련 테이블)
 
 | Table | 핵심 컬럼 | 비고 |
@@ -670,6 +815,9 @@ interface ReviewAdminMutationResponse {
 | `User` | `referralCode`, `stripeSubscriptionId`, `subscriptionStatus` | 초대 코드 관리 |
 | `Referral` | `referralCode`, `inviterUserId`, `inviteeUserId` | 중복 방지 `@@unique` |
 | `ChatSession` | `credits`, `shareRewardClaimed`, `characterId` | 전문 상담가/선택 상태 유지 (`characterId` wire key 유지) |
+| `OracleChatRoom` | `userId`, `domain`, `title`, `updatedAt` | Grand Oracle Chat thread 보관 |
+| `OracleChatMessage` | `roomId`, `role`, `mode`, `councilData`, `createdAt` | council briefing 근거와 최종 결론 포함 |
+| `OracleChatQuota` | `userId`, `date`, `messageCount` | 비구독자 1일 3회 quota 관리 |
 | `Review` | `readingId`, `rating`, `isApproved`, `isPromoUser` | `readingId` 단위 1회 제출/1회 보상을 partial unique index로 고정 |
 | `FollowUpJob` | `stage`, `status`, `scheduledFor` | 드립 이메일 관리 |
 | `GrowthEvent` | `event`, `channel`, `metadata`, `createdAt` | 퍼널/리텐션/바이럴 계측, `createdAt` 중심 조회 성능 하드닝 적용 |
@@ -686,6 +834,9 @@ interface ReviewAdminMutationResponse {
 | 친구 초대 보상 | `POST /api/referral/reward` |
 | KPI 대시보드 | `GET /api/growth/summary` |
 | Paywall price reliability | `GET /api/payment/price` |
+| Grand Oracle Chat history | `GET /api/oracle-chat/history` |
+| Grand Oracle Chat message + quota gate | `POST /api/oracle-chat/message`, `GET /api/subscription/status`, `POST /api/subscription/create` |
+| Grand Oracle Chat daily entry | `GET /api/oracle-chat/daily-hook` |
 | Review integrity & moderation | `GET|POST /api/review`, `GET|PATCH|DELETE /api/review/admin` |
 | English-ready reading path | `POST /api/reading`, `POST|GET /api/reading/followup`, `POST /api/reading/followup/stream` |
 | Language-split funnel instrumentation | `POST /api/growth/track`, `GET /api/growth/summary` |

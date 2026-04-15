@@ -3,6 +3,7 @@
 import { useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Shield, Zap, X } from 'lucide-react';
+import { useDocumentScrollLock } from '@/hooks/useDocumentScrollLock';
 
 interface TarotDetailModalProps {
     isOpen: boolean;
@@ -29,12 +30,11 @@ export function TarotDetailModal({
 }: TarotDetailModalProps) {
     const isEn = language === 'en';
 
+    useDocumentScrollLock(isOpen);
+
     // Handle browser back button - close modal instead of navigating away
     useEffect(() => {
         if (!isOpen) return;
-
-        // Prevent body scrolling
-        document.body.style.overflow = 'hidden';
 
         // Push a history state when modal opens
         const modalState = { modalType: 'tarot-detail', modalOpen: true };
@@ -50,7 +50,6 @@ export function TarotDetailModal({
         window.addEventListener('popstate', handlePopState);
 
         return () => {
-            document.body.style.overflow = ''; // Restore scrolling
             window.removeEventListener('popstate', handlePopState);
         };
     }, [isOpen, onClose]);
@@ -81,6 +80,7 @@ export function TarotDetailModal({
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        data-lenis-prevent
                         className="relative w-full max-w-lg bg-[#1a1c23] border border-white/10 rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto scrollbar-hide"
                     >
                         {/* Header */}

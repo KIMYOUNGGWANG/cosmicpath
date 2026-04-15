@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, Check } from 'lucide-react';
 import { CosmicShareCard } from './CosmicShareCard';
 import { useShareCard } from '@/hooks/useShareCard';
 import { trackClientGrowthEvent } from '@/lib/client-growth-events';
+import { useDocumentScrollLock } from '@/hooks/useDocumentScrollLock';
 
 interface ShareCardModalProps {
     isOpen: boolean;
@@ -35,6 +37,8 @@ export function ShareCardModal({
     });
     const [isDownloaded, setIsDownloaded] = useState(false);
 
+    useDocumentScrollLock(isOpen);
+
     const handleDownload = async () => {
         await captureAndDownload();
         await trackClientGrowthEvent({
@@ -46,7 +50,9 @@ export function ShareCardModal({
         setTimeout(() => setIsDownloaded(false), 3000);
     };
 
-    return (
+    if (typeof document === 'undefined') return null;
+
+    return createPortal(
         <AnimatePresence>
             {isOpen && (
                 <motion.div
@@ -125,5 +131,7 @@ export function ShareCardModal({
                 </motion.div>
             )}
         </AnimatePresence>
+        ,
+        document.body
     );
 }

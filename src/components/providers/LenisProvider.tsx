@@ -2,6 +2,10 @@
 
 import { useEffect } from 'react';
 import Lenis from 'lenis';
+import {
+    DOCUMENT_SCROLL_LOCK_ATTRIBUTE,
+    DOCUMENT_SCROLL_LOCK_EVENT,
+} from '@/lib/scroll-lock';
 
 export default function LenisProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
@@ -11,7 +15,31 @@ export default function LenisProvider({ children }: { children: React.ReactNode 
             orientation: 'vertical',
             gestureOrientation: 'vertical',
             smoothWheel: true,
+            allowNestedScroll: true,
         });
+
+        const syncLenisLockState = (isLocked: boolean) => {
+            if (isLocked) {
+                lenis.stop();
+                return;
+            }
+
+            lenis.start();
+        };
+
+        const handleScrollLockChange = (event: Event) => {
+            const customEvent = event as CustomEvent<{ isLocked?: boolean }>;
+            syncLenisLockState(Boolean(customEvent.detail?.isLocked));
+        };
+
+        syncLenisLockState(
+            document.documentElement.hasAttribute(DOCUMENT_SCROLL_LOCK_ATTRIBUTE)
+        );
+
+        window.addEventListener(
+            DOCUMENT_SCROLL_LOCK_EVENT,
+            handleScrollLockChange as EventListener
+        );
 
         let rafId = 0;
         const raf = (time: number) => {
@@ -22,6 +50,10 @@ export default function LenisProvider({ children }: { children: React.ReactNode 
         rafId = requestAnimationFrame(raf);
 
         return () => {
+            window.removeEventListener(
+                DOCUMENT_SCROLL_LOCK_EVENT,
+                handleScrollLockChange as EventListener
+            );
             cancelAnimationFrame(rafId);
             lenis.destroy();
         };

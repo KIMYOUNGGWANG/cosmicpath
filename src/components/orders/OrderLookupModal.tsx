@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, PanInfo, useMotionValue, useTransform } from 'framer-motion';
 import { Loader2, Mail, Lock, X, ExternalLink } from 'lucide-react';
+import { useDocumentScrollLock } from '@/hooks/useDocumentScrollLock';
 
 interface OrderLookupModalProps {
     isOpen: boolean;
@@ -24,24 +25,14 @@ export function OrderLookupModal({ isOpen, onClose }: OrderLookupModalProps) {
     const dragY = useMotionValue(0);
     const sheetOpacity = useTransform(dragY, [0, 300], [1, 0.5]);
 
+    useDocumentScrollLock(isOpen);
+
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768);
         checkMobile();
         window.addEventListener('resize', checkMobile);
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
-
-    // Lock body scroll when open
-    useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
-        }
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
-    }, [isOpen]);
 
     const handleSendOtp = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -141,7 +132,7 @@ export function OrderLookupModal({ isOpen, onClose }: OrderLookupModalProps) {
 
     // Modal content (shared between desktop and mobile)
     const modalContent = (
-        <div className="bg-[#0f0f2a] border border-white/10 rounded-t-2xl md:rounded-2xl shadow-2xl overflow-hidden relative max-h-[85vh] flex flex-col">
+        <div data-lenis-prevent className="bg-[#0f0f2a] border border-white/10 rounded-t-2xl md:rounded-2xl shadow-2xl overflow-hidden relative max-h-[85vh] flex flex-col">
             {/* Drag Handle (Mobile Only) */}
             {isMobile && (
                 <div className="flex justify-center pt-3 pb-1">
@@ -188,7 +179,7 @@ export function OrderLookupModal({ isOpen, onClose }: OrderLookupModalProps) {
             </div>
 
             {/* Content */}
-            <div className="p-6 overflow-y-auto flex-1">
+            <div data-lenis-prevent className="p-6 overflow-y-auto flex-1">
                 <AnimatePresence mode="wait">
                     {step === 'EMAIL' && (
                         <motion.form
@@ -361,7 +352,7 @@ export function OrderLookupModal({ isOpen, onClose }: OrderLookupModalProps) {
                             dragElastic={{ top: 0, bottom: 0.5 }}
                             onDragEnd={handleDragEnd}
                             style={{ y: dragY, opacity: sheetOpacity }}
-                            className="fixed bottom-0 left-0 right-0 z-[9999] touch-none"
+                            className="fixed bottom-0 left-0 right-0 z-[9999] touch-pan-y"
                         >
                             {modalContent}
                         </motion.div>
@@ -371,4 +362,3 @@ export function OrderLookupModal({ isOpen, onClose }: OrderLookupModalProps) {
         </AnimatePresence>
     );
 }
-

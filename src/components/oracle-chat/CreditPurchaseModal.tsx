@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, Zap, Check, Lock } from 'lucide-react';
 import {
@@ -8,6 +9,7 @@ import {
     CHAT_CREDIT_SINGLE,
     formatUsdFromCents,
 } from '@/lib/payment/payment-config';
+import { useDocumentScrollLock } from '@/hooks/useDocumentScrollLock';
 
 interface CreditPurchaseModalProps {
     isOpen: boolean;
@@ -106,11 +108,15 @@ export function CreditPurchaseModal({
         return Math.max(0, Math.round((1 - packPrice.amount / regularTotal) * 100));
     }, [packPrice.amount, singlePrice.amount]);
 
+    useDocumentScrollLock(isOpen);
+
     const handlePurchase = () => {
         onSelectOption(selectedOption);
     };
 
-    return (
+    if (typeof document === 'undefined') return null;
+
+    return createPortal(
         <AnimatePresence>
             {isOpen && (
                 <motion.div
@@ -286,5 +292,7 @@ export function CreditPurchaseModal({
                 </motion.div>
             )}
         </AnimatePresence>
+        ,
+        document.body
     );
 }

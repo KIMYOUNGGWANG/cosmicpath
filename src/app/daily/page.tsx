@@ -7,6 +7,11 @@ import { StructuredData } from '@/components/seo/StructuredData';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import {
+    getOracleChatDailyHook,
+    getOracleChatHistoryForUser,
+    type OracleChatDomain,
+} from '@/lib/oracle-chat';
+import {
     getDailyLinkedLabel,
     parseDailyLinkedOracleContext,
 } from '@/lib/daily/daily-linked-context';
@@ -35,6 +40,7 @@ export const metadata: Metadata = {
 
 export default async function DailyPage() {
     const session = await auth();
+    const userId = session?.user?.id;
     const latestReading = session?.user?.id
         ? await prisma.readingResult.findFirst({
             where: { userId: session.user.id },
@@ -57,6 +63,28 @@ export default async function DailyPage() {
         })
         : null;
     const linkedLabel = linkedOracleContext ? getDailyLinkedLabel(linkedOracleContext, 'ko') : null;
+    const oracleChatHistory = userId
+        ? await getOracleChatHistoryForUser({
+            userId,
+            limit: 1,
+        })
+        : null;
+    const oracleChatHook =
+        userId && oracleChatHistory?.roomId
+            ? await getOracleChatDailyHook({
+                userId,
+                roomId: oracleChatHistory.roomId,
+            })
+            : null;
+    const oracleChatDomainLabel: Record<OracleChatDomain, string> = {
+        career: '커리어',
+        love: '관계',
+        wealth: '재물',
+        general: '일상',
+    };
+    const oracleChatLabel = oracleChatHistory?.domain
+        ? oracleChatDomainLabel[oracleChatHistory.domain]
+        : '결정';
 
     const structuredData = [
         {
@@ -142,6 +170,41 @@ export default async function DailyPage() {
                     </header>
 
                     <DailySealedWidget linkedOracleContext={linkedOracleContext} />
+
+                    {oracleChatHistory?.roomId && oracleChatHook ? (
+                        <section className="mt-8 rounded-[30px] border border-cyan-300/15 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.12),transparent_35%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] px-5 py-6 shadow-[0_22px_70px_rgba(8,47,73,0.24)] backdrop-blur-xl sm:px-7">
+                            <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+                                <div className="max-w-2xl">
+                                    <div className="inline-flex rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-100">
+                                        Grand Oracle Chat
+                                    </div>
+                                    <h2 className="mt-3 font-cinzel text-2xl text-white sm:text-3xl">
+                                        오늘은 {oracleChatLabel} 질문을 다시 이어볼 타이밍입니다
+                                    </h2>
+                                    <p className="mt-3 text-sm leading-7 text-starlight/72 sm:text-base">
+                                        {oracleChatHook.hookMessage}
+                                    </p>
+                                    {oracleChatHook.basedOn.lastMessageSummary ? (
+                                        <p className="mt-3 text-xs leading-6 text-cyan-100/70">
+                                            최근 질문 요약: {oracleChatHook.basedOn.lastMessageSummary}
+                                        </p>
+                                    ) : null}
+                                </div>
+
+                                <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+                                    <Link
+                                        href="/oracle-chat"
+                                        className="inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-cyan-300 to-sky-300 px-5 py-2 text-sm font-semibold text-slate-950 transition-transform hover:scale-[1.01]"
+                                    >
+                                        오라클 챗 다시 열기
+                                    </Link>
+                                    <p className="text-xs text-starlight/55">
+                                        최신 대화 thread와 daily hook 문맥으로 이어집니다.
+                                    </p>
+                                </div>
+                            </div>
+                        </section>
+                    ) : null}
                 </div>
             </div>
         </ProductShell>

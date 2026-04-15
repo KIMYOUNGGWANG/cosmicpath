@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { AlertCircle, Send, Sparkles } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { SubscriptionModal } from '@/components/payment/SubscriptionModal';
 import type {
   OracleChatDomain,
   OracleChatHistoryMessage,
@@ -125,6 +126,7 @@ export default function OracleChatClient({
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [paywallRequired, setPaywallRequired] = useState(false);
+  const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -199,6 +201,7 @@ export default function OracleChatClient({
       if (!response.ok) {
         if (response.status === 402) {
           setPaywallRequired(true);
+          setIsSubscriptionModalOpen(true);
           setMessages((current) =>
             current.map((message) =>
               message.id === optimisticOracleId
@@ -374,13 +377,22 @@ export default function OracleChatClient({
       {paywallRequired ? (
         <div className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-400/10 px-4 py-4 text-sm text-amber-50">
           <p className="font-medium">오늘의 무료 상담이 모두 끝났습니다.</p>
-          <p className="mt-1 text-amber-100/90">구독하면 오라클 위원회 브리핑을 계속 이어갈 수 있습니다.</p>
-          <Link
-            href="/billing"
-            className="mt-3 inline-flex rounded-full bg-amber-300 px-4 py-2 text-sm font-medium text-slate-950"
-          >
-            구독 보러 가기
-          </Link>
+          <p className="mt-1 text-amber-100/90">구독하면 Grand Oracle Chat과 오라클 위원회 브리핑을 무제한으로 이어갈 수 있습니다.</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setIsSubscriptionModalOpen(true)}
+              className="inline-flex rounded-full bg-amber-300 px-4 py-2 text-sm font-medium text-slate-950"
+            >
+              멤버십 열기
+            </button>
+            <Link
+              href="/billing"
+              className="inline-flex rounded-full border border-amber-200/30 px-4 py-2 text-sm font-medium text-amber-50"
+            >
+              /billing 보기
+            </Link>
+          </div>
         </div>
       ) : null}
 
@@ -410,6 +422,12 @@ export default function OracleChatClient({
           <span>오라클의 답변은 조언이며, 중요한 결정은 결국 당신의 판단으로 마무리해야 합니다.</span>
         </div>
       </div>
+
+      <SubscriptionModal
+        isOpen={isSubscriptionModalOpen}
+        onClose={() => setIsSubscriptionModalOpen(false)}
+        source="oracle_chat"
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { isSubscriptionActive } from '@/lib/subscription';
 import { generateCompletion } from '@/lib/ai/llm-client';
@@ -12,6 +12,7 @@ const SEOUL_LATITUDE = 37.5665;
 const SEOUL_LONGITUDE = 126.978;
 const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 50;
+const ORACLE_CHAT_DAILY_LIMIT_DETAIL = 'ORACLE_CHAT_DAILY_LIMIT';
 
 export const ORACLE_CHAT_FREE_DAILY_LIMIT = 3;
 
@@ -160,11 +161,28 @@ function truncateText(value: string, maxLength: number): string {
   return `${compact.slice(0, maxLength - 1).trim()}…`;
 }
 
-function asRecord(value: Prisma.JsonValue | null | undefined): Record<string, unknown> | null {
+function asRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
     return null;
   }
   return value as Record<string, unknown>;
+}
+
+function parseJsonRecord(value?: string | null): Record<string, unknown> | null {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    return asRecord(JSON.parse(value));
+  } catch {
+    return null;
+  }
+}
+
+function getString(record: Record<string, unknown> | null, key: string): string | null {
+  const value = record?.[key];
+  return typeof value === 'string' && value.trim() ? value.trim() : null;
 }
 
 function extractCouncilData(value: Prisma.JsonValue | null): OracleCouncilData | undefined {
@@ -281,6 +299,37 @@ function getLatestSajuSummary(messages: OracleChatHistoryMessage[]): string | nu
   return null;
 }
 
+async function getLatestOracleChatUserContext(userId: string): Promise<OracleChatUserContextInput | null> {
+  const latestReading = await prisma.readingResult.findFirst({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      metadata: true,
+    },
+  });
+
+  const metadata = parseJsonRecord(latestReading?.metadata);
+  const readingData = asRecord(metadata?.readingData);
+  const birthDate = getString(readingData, 'birthDate');
+
+  if (!birthDate) {
+    return null;
+  }
+
+  const birthTime = getString(readingData, 'birthTime');
+  const birthPlace = getString(readingData, 'cityName') ?? getString(readingData, 'birthPlace');
+
+  return {
+    birthDate,
+    ...(birthTime ? { birthTime } : {}),
+    ...(birthPlace ? { birthPlace } : {}),
+  };
+}
+
+function isUniqueConstraintError(error: unknown): boolean {
+  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
+}
+
 function getClassificationFallback(content: string): OracleChatMode {
   const normalized = content.trim().toLowerCase();
   const councilPattern = /(퇴사|이직|합격|창업|사업|투자|돈|연봉|재회|재결합|고백|헤어|언제|지금|결정|선택|해야 할까|할까요|괜찮을까|should i|should we|when|decision|leave|quit|move job|career|relationship|money)/i;
@@ -361,50 +410,53 @@ export async function getOracleChatUsage(userId: string) {
 export async function consumeOracleChatQuota(userId: string): Promise<void> {
   const date = getSeoulDayDate();
 
-  const allowed = await prisma.$transaction(async (transaction) => {
-    const current = await transaction.oracleChatQuota.findUnique({
+  const tryIncrement = async () => {
+    const result = await prisma.oracleChatQuota.updateMany({
       where: {
-        userId_date: {
-          userId,
-          date,
+        userId,
+        date,
+        messageCount: {
+          lt: ORACLE_CHAT_FREE_DAILY_LIMIT,
+        },
+      },
+      data: {
+        messageCount: {
+          increment: 1,
         },
       },
     });
 
-    if (current && current.messageCount >= ORACLE_CHAT_FREE_DAILY_LIMIT) {
-      return false;
-    }
+    return result.count === 1;
+  };
 
-    if (current) {
-      await transaction.oracleChatQuota.update({
-        where: {
-          userId_date: {
-            userId,
-            date,
-          },
-        },
-        data: {
-          messageCount: {
-            increment: 1,
-          },
-        },
-      });
-      return true;
-    }
+  if (await tryIncrement()) {
+    return;
+  }
 
-    await transaction.oracleChatQuota.create({
+  try {
+    await prisma.oracleChatQuota.create({
       data: {
         userId,
         date,
         messageCount: 1,
       },
     });
-    return true;
-  });
-
-  if (!allowed) {
-    throw new OracleChatRouteError(402, 'QUOTA_EXCEEDED', '오늘의 무료 상담 한도를 모두 사용했습니다.');
+    return;
+  } catch (error) {
+    if (!isUniqueConstraintError(error)) {
+      throw error;
+    }
   }
+
+  if (await tryIncrement()) {
+    return;
+  }
+
+  throw new OracleChatRouteError(
+    402,
+    ORACLE_CHAT_DAILY_LIMIT_DETAIL,
+    '오늘의 무료 상담 한도를 모두 사용했습니다.'
+  );
 }
 
 export async function getOracleChatRoomForUser(
@@ -524,9 +576,12 @@ export async function buildOracleChatPromptContext(input: {
   }
 
   const tarot = getTarotDraw(`${input.userId}:${input.roomId ?? 'new'}:${input.content}`);
+  const latestSajuSummary = getLatestSajuSummary(history.messages);
+  const resolvedUserContext =
+    input.userContext ?? (!latestSajuSummary ? await getLatestOracleChatUserContext(input.userId) : null);
   const sajuSummary =
-    getOptionalSajuSummary(input.userContext) ??
-    getLatestSajuSummary(history.messages) ??
+    getOptionalSajuSummary(resolvedUserContext) ??
+    latestSajuSummary ??
     '출생 정보가 없어 정밀 사주 교차 검증은 생략하고 질문의 상황 맥락 중심으로 읽었습니다.';
   const astrologySummary = getCurrentAstrologySummary();
   const councilData: OracleCouncilData = {

@@ -1,7 +1,61 @@
 # 🎯 CosmicPath v2.0 — Task Board (리서치 기반 전략 로드맵)
 
-> 기준일: 2026-04-13 | 최신 전략: `docs/office-hours.md` + `.agent/memory/brainstorm.md`
+> 기준일: 2026-04-13 | 최신 전략: `docs/office-hours.md` + `docs/sms-oracle-api-spec.md`
 > 목표: **3개월 내 MAU 3,000 / 월 수익 500만원 / k-factor 1.5**
+
+---
+
+## 📱 [PIVOT] SMS Oracle — VIP 문자 구독형 오라클 (2026-04-13)
+
+> **근거**: `docs/office-hours.md` (SMS Wedge 확정 — 번아웃된 2030의 수동형 채널)
+> **API 계약**: `docs/sms-oracle-api-spec.md`
+> **구독 가격**: $19.99~$29.99/월 (고단가 전략, 통신비 마진 확보)
+
+### 🎯 Mission
+> "앱도 켜기 귀찮은 번아웃 2030에게, 아침마다 먼저 위로 문자를 보내고
+>  내가 답장하면 사주+타로+점성 3중 엔진이 단호하게 코칭하는 영적 비서 서비스"
+
+### Scope
+- **Now (MVP):** 국내 Solapi 연동. 하루 1회 Daily Hook + 하루 최대 3회 장문(LMS) 답변. 순수 텍스트.
+- **Later:** 카카오 알림톡(더 저렴), 글로벌 Twilio, 이미지(MMS) 타로 카드
+- **Out:** 웹/앱 채팅 UI, 무제한 대화, 이미지 멀티미디어
+
+### Implementation Steps
+
+- [ ] **Step 1: DB 스키마 마이그레이션**
+  - `SmsOracleSubscriber` / `SmsOracleMessage` / `SmsOracleQuota` 테이블 생성
+  - `User` 모델에 역관계 추가
+  - 검증: `npx prisma db push && npx prisma studio`
+
+- [ ] **Step 2: Solapi 계정 세팅 & 환경변수**
+  - Solapi 가입 → 발신번호 등록 (사전 심사 최대 3일 소요 주의)
+  - `.env.local` 에 `SOLAPI_API_KEY`, `SOLAPI_API_SECRET`, `SOLAPI_FROM_NUMBER` 추가
+  - 검증: Solapi SDK로 내 번호에 테스트 문자 발송 성공 여부 확인
+
+- [ ] **Step 3: 백엔드 — 인바운드 Webhook (`POST /api/sms-oracle/inbound`)**
+  - Solapi Webhook 서명 검증 (보안 필수)
+  - 유저 조회 → 쿼터 확인 → LLM 1-Call → LMS 발송 파이프라인
+  - 검증: Solapi 대시보드에서 웹훅 테스트 발송 후 로그 확인
+
+- [ ] **Step 4: 백엔드 — 데일리 훅 Cron (`POST /api/sms-oracle/daily-hook`)**
+  - Vercel Cron (`vercel.json`에 매일 오전 8시 설정)
+  - 활성 구독자 전체 배치 발송 + 중복 방지(`dailyHookSentAt`)
+  - 검증: 수동 `curl -X POST /api/sms-oracle/daily-hook -H "Authorization: cron-secret"` 테스트
+
+- [ ] **Step 5: 백엔드 — 전화번호 등록 + OTP 인증**
+  - `POST /api/sms-oracle/register` (번호 등록 + OTP 문자 발송)
+  - `POST /api/sms-oracle/verify` (OTP 6자리 검증)
+  - 검증: 실제 번호로 OTP 수신 및 인증 완료 플로우 확인
+
+- [ ] **Step 6: 프론트엔드 — 마이페이지 전화번호 등록 UI**
+  - `/my` 또는 `/settings` 내 SMS 오라클 전용 섹션 추가
+  - 번호 입력 → OTP 인증 → "내일 아침 첫 오라클 메시지가 도착합니다" 완료 화면
+  - 검증: 브라우저에서 전체 등록 플로우 수동 확인
+
+### Risks & Open Questions
+- [ ] **Solapi 발신번호 심사:** 등록 후 승인까지 영업일 1~3일 걸림. 개발 시작 전에 **즉시** 가입해야 함.
+- [ ] **스팸 차단 리스크:** 대량 발송 시 통신사 스팸 필터 우회를 위해 `(광고)` 문구 및 수신거부 번호를 명시해야 함 (정보통신망법 의무).
+- [ ] **마진 시뮬레이션:** 구독료 $19.99 기준, Solapi LMS 발송 40원 × 1일 4건(훅+3답변) × 30일 = 유저 1인당 월 통신비 약 4,800원. $19.99($28,000원) 대비 감내 가능 수준.
 
 ---
 
@@ -16,9 +70,9 @@
 >  평소에는 내 하루를 먼저 체크해 주는 개인 오라클 채팅 서비스"
 
 ### Scope
-- **Now (MVP)**: 커리어 도메인 특화 채팅. 구독자 무제한 / 비구독자 1일 3회
-- **Later**: 관계/재물 도메인 확장, Push Notification (재방문 훅)
-- **Out**: 음성, 이미지, 다중 사용자, 실시간 인간 상담사
+- **Now (MVP)**: 커리어 도메인 특화 채팅. **기존 Pro/paid membership 레일 재사용**, 구독자 무제한 / 비구독자 1일 3회
+- **Later**: 관계/재물 도메인 확장, Push Notification (재방문 훅), Oracle Chat 전용 별도 구독 SKU 검토
+- **Out**: 음성, 이미지, 다중 사용자, 실시간 인간 상담사, 지금 당장의 신규 Stripe 플랜 분기
 
 ### Implementation Steps
 
@@ -44,23 +98,30 @@
   - 스트리밍 타이핑 애니메이션
   - 검증: 브라우저 직접 확인
 
-- [ ] **Step 5: 프론트엔드 — 데일리 훅 진입점 연결**
+- [x] **Step 5: 프론트엔드 — 데일리 훅 진입점 연결**
   - `/daily` 또는 홈 화면에서 AI가 먼저 말을 거는 배너/카드 표시
-  - 검증: 재방문 시 dailyHook 메시지가 노출되는지 확인
+  - 최근 질문 영역과 연결된 CTA로 `/oracle-chat` 진입을 만든다
+  - 검증: 재방문 시 dailyHook 메시지가 노출되고, 클릭 시 같은 thread 또는 최신 room으로 이어지는지 확인
 
-- [ ] **Step 6: 비구독자 Paywall 연결**
-  - 일일 3회 초과 시 `402` → 구독 유도 모달 (기존 `PaymentModal` 재활용)
-  - 검증: 비로그인/비구독 유저 3회 이후 Paywall이 노출되는지 확인
+- [x] **Step 6: 빌링 & Paywall 리패키징**
+  - 일일 3회 초과 시 `402` → **기존 `SubscriptionModal` / `/billing` 레일**로 연결
+  - 기존 Stripe 상품/웹훅/`/api/subscription/*`는 유지하고, 오라클 챗 무제한 가치 제안 중심으로 카피를 재작성
+  - 서버 권한 판정은 `기존 활성 유료 membership => Oracle Chat access` 의미 계층으로 감싼다
+  - 검증: 비로그인/비구독 유저 3회 이후 `oracle_chat` source paywall이 열리고, 유료 유저는 무제한 사용이 유지되는지 확인
 
 ### Risks & Open Questions
 - [ ] **토큰 비용**: `council_briefing` 1회당 LLM 호출이 3~4번 발생. 월 MAU 3,000 기준 비용 추정 필요.
 - [ ] **맥락 기억 범위**: DB에서 최근 N개 메시지를 context로 주입할지, Vector DB (pgvector)를 써야 할지 결정 필요.
 - [ ] **CS 리스크**: 극단적 우울감 등 민감한 입력에 대한 안전망 프롬프트 가이드라인 필요.
+- [ ] **빌링 패키징 리스크**: 기존 리딩 중심 membership copy와 Grand Oracle Chat 무제한 가치 제안이 같은 `/billing` surface에서 충돌하지 않도록 정리 필요.
+- [ ] **SKU 분리 시점**: Oracle Chat 전용 플랜이 실제로 필요한 시점(전환율/ARPU 기준)을 언제로 볼지 기준 정의 필요.
 
 ### Status Note (2026-04-12 PM)
 - Oracle Chat migration SQL, API routes, and `/oracle-chat` UI are implemented and connected.
 - Validation passed: `prisma validate`, targeted `eslint`, full `tsc --noEmit`, `npm run build`, and remote Supabase table creation 확인.
-- Remaining product scope is Step 5-6 only: `/daily` or 홈 진입점 연결, 그리고 기존 `PaymentModal` 재활용 paywall 마감.
+- Billing direction lock: **새 Stripe SKU를 추가하지 않고 기존 membership 레일을 재사용**한다. 대신 `/billing`, `SubscriptionModal`, 402 paywall copy를 Grand Oracle Chat 무제한 가치 제안 기준으로 다시 잠근다.
+- `/daily`에 Grand Oracle Chat daily hook CTA를 연결했고, `/oracle-chat` 402는 `SubscriptionModal` source=`oracle_chat`로 연결되며 `/billing`도 같은 가치 제안으로 리패키징되었다.
+- Grand Oracle Chat MVP Step 1-6 is complete. 남은 것은 토큰 비용, 기억 범위, 민감 입력 safety, 그리고 future SKU 분리 시점 판단이다.
 
 ---
 

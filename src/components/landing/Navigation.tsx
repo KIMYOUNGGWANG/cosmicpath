@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { motion, useMotionValueEvent, useScroll } from 'framer-motion';
 import Link from 'next/link';
 import { Menu, Search, Sparkles, User } from 'lucide-react';
@@ -12,6 +12,7 @@ import { MobileMenu } from '@/components/common/MobileMenu';
 import UserMenu from '@/components/layout/UserMenu';
 import { OrderLookupModal } from '@/components/orders/OrderLookupModal';
 import { SubscriptionModal } from '@/components/payment/SubscriptionModal';
+import { useDocumentScrollLock } from '@/hooks/useDocumentScrollLock';
 
 interface NavigationProps {
     language?: 'ko' | 'en';
@@ -28,6 +29,8 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
     const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
     const isEnglish = language === 'en';
 
+    useDocumentScrollLock(isMobileMenuOpen);
+
     useMotionValueEvent(scrollY, 'change', (latest) => {
         const previous = prevScroll;
 
@@ -39,14 +42,6 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
 
         setPrevScroll(latest);
     });
-
-    useEffect(() => {
-        document.body.style.overflow = isMobileMenuOpen ? 'hidden' : 'unset';
-
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
-    }, [isMobileMenuOpen]);
 
     const toggleOrderModal = () => {
         setIsOrderModalOpen(true);
