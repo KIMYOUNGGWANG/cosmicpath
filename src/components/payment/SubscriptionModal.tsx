@@ -118,6 +118,21 @@ const ORACLE_CHAT_PLAN_OVERRIDES: Record<ConsumerPlanType, Partial<PlanOption>> 
     },
 };
 
+const MY_PLAN_OVERRIDES: Record<ConsumerPlanType, Partial<PlanOption>> = {
+    MONTHLY: {
+        description: 'Grand Oracle Chat, daily premium guidance, 프리미엄 리딩 흐름을 열고, 인증된 번호에는 아침 SMS Daily Signal perk까지 함께 연결할 수 있습니다.',
+        valueLabel: '핵심 오라클 access를 열고 Daily Signal perk까지 연결하는 가장 가벼운 경로',
+        benefits: ['Grand Oracle Chat과 follow-up access', 'Daily tarot premium guidance', '인증된 번호에 한해 아침 SMS Daily Signal perk'],
+        commitmentNote: '문자 자체가 주상품은 아니고, 핵심 오라클 루틴에 더해 아침에 먼저 도착하는 보조 신호를 받고 싶을 때 가장 자연스러운 시작점입니다.',
+    },
+    ANNUAL: {
+        description: 'Grand Oracle Chat과 daily oracle 루틴을 길게 유지하면서, 인증된 번호에는 아침 SMS Daily Signal perk도 안정적으로 이어갈 수 있습니다.',
+        valueLabel: '장기 오라클 루틴과 Daily Signal perk를 함께 유지하는 경로',
+        benefits: ['장기 구독 할인', 'Grand Oracle Chat과 daily premium 유지', '인증된 번호에 한해 아침 SMS Daily Signal perk'],
+        commitmentNote: '이미 자주 돌아오고 있고 아침 Daily Signal도 함께 쓰고 싶다면 가장 단순하고 비용 효율적인 선택입니다.',
+    },
+};
+
 const DEFAULT_PAYWALL_COPY: PaywallCopy = {
     badge: 'CosmicPath Membership',
     headline: '프리미엄 흐름을 계속 이어가세요',
@@ -142,6 +157,19 @@ const ORACLE_CHAT_PAYWALL_COPY: PaywallCopy = {
     checkoutActionLabel: 'Grand Oracle Chat 열기',
     decisionUnlockBody: '결제 직후 구독 상태가 반영되면 `/oracle-chat`, `/daily`, `/my`에서 바로 이어서 사용할 수 있습니다.',
     pathBody: '현재 기본 결제 표면은 월간/연간 두 가지 경로만 노출합니다. 어디서 들어오든 같은 Grand Oracle membership 흐름으로 이어지고, source만 analytics에 남깁니다.',
+};
+
+const MY_PAYWALL_COPY: PaywallCopy = {
+    badge: 'CosmicPath Membership',
+    headline: '핵심 오라클 access를 열고 Daily Signal도 함께 연결하세요',
+    body: '메인 가치는 Grand Oracle Chat, daily premium guidance, 프리미엄 리딩 흐름입니다. SMS Daily Signal은 여기에 덧붙는 보조 perk로, 구독 후 인증된 번호에만 하루 한 번 먼저 도착합니다.',
+    insightLabel: 'Membership Path',
+    insightBody:
+        'Daily Signal을 위해 별도 상품을 만든 것이 아니라, 기존 membership 위에 아침 리텐션 perk를 얹었습니다. 핵심 가치는 오라클 경험이고, SMS는 그 흐름을 먼저 떠오르게 하는 보조 채널입니다.',
+    accessLabel: '지금 열리는 Premium Access',
+    checkoutActionLabel: '프리미엄 멤버십 열기',
+    decisionUnlockBody: '결제 직후 구독 상태가 반영되면 `/oracle-chat`, `/daily`, `/start` 프리미엄 흐름이 열리고, `/my`에서 인증된 번호에는 Daily Signal perk도 연결할 수 있습니다.',
+    pathBody: '현재 기본 결제 표면은 월간/연간 두 가지 경로만 노출합니다. Daily Signal도 같은 membership 레일 위에서 켜지며, 별도 SMS 전용 결제 SKU는 두지 않습니다.',
 };
 
 const BENEFIT_ICONS = [MessageCircle, Palette, CalendarDays] as const;
@@ -183,6 +211,20 @@ const ORACLE_CHAT_TRUST_SIGNALS: TrustSignal[] = [
     },
 ];
 
+const MY_TRUST_SIGNALS: TrustSignal[] = [
+    DEFAULT_TRUST_SIGNALS[0],
+    {
+        title: 'Core value first',
+        description: '핵심 가치는 Grand Oracle Chat, daily premium, 프리미엄 리딩 흐름이고 SMS Daily Signal은 번호 인증 후 붙는 보조 perk입니다.',
+        Icon: Sparkles,
+    },
+    {
+        title: 'One membership rail',
+        description: '별도 SMS 상품 없이 기존 membership 하나로 오라클 access와 Daily Signal perk를 함께 관리합니다.',
+        Icon: Crown,
+    },
+];
+
 function buildPlanOptions(
     livePrices: Partial<Record<ConsumerPlanType, LiveSubscriptionPrice>>,
     source: PaywallSource
@@ -190,11 +232,19 @@ function buildPlanOptions(
     const basePlanOptions: Record<ConsumerPlanType, PlanOption> = {
         MONTHLY: {
             ...PLAN_OPTIONS.MONTHLY,
-            ...(source === 'oracle_chat' ? ORACLE_CHAT_PLAN_OVERRIDES.MONTHLY : {}),
+            ...(source === 'oracle_chat'
+                ? ORACLE_CHAT_PLAN_OVERRIDES.MONTHLY
+                : source === 'my'
+                  ? MY_PLAN_OVERRIDES.MONTHLY
+                  : {}),
         },
         ANNUAL: {
             ...PLAN_OPTIONS.ANNUAL,
-            ...(source === 'oracle_chat' ? ORACLE_CHAT_PLAN_OVERRIDES.ANNUAL : {}),
+            ...(source === 'oracle_chat'
+                ? ORACLE_CHAT_PLAN_OVERRIDES.ANNUAL
+                : source === 'my'
+                  ? MY_PLAN_OVERRIDES.ANNUAL
+                  : {}),
         },
     };
     const monthlyLivePrice = livePrices.MONTHLY;
@@ -238,11 +288,27 @@ function buildPlanOptions(
 }
 
 function getPaywallCopy(source: PaywallSource): PaywallCopy {
-    return source === 'oracle_chat' ? ORACLE_CHAT_PAYWALL_COPY : DEFAULT_PAYWALL_COPY;
+    if (source === 'oracle_chat') {
+        return ORACLE_CHAT_PAYWALL_COPY;
+    }
+
+    if (source === 'my') {
+        return MY_PAYWALL_COPY;
+    }
+
+    return DEFAULT_PAYWALL_COPY;
 }
 
 function getTrustSignals(source: PaywallSource): TrustSignal[] {
-    return source === 'oracle_chat' ? ORACLE_CHAT_TRUST_SIGNALS : DEFAULT_TRUST_SIGNALS;
+    if (source === 'oracle_chat') {
+        return ORACLE_CHAT_TRUST_SIGNALS;
+    }
+
+    if (source === 'my') {
+        return MY_TRUST_SIGNALS;
+    }
+
+    return DEFAULT_TRUST_SIGNALS;
 }
 
 function resolveInitialPlanType(defaultPlanType?: SubscriptionPlanType): ConsumerPlanType {

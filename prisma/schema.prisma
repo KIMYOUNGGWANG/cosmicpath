@@ -79,6 +79,9 @@ model User {
   // Oracle Chat
   oracleChatRooms  OracleChatRoom[]
   oracleChatQuotas OracleChatQuota[]
+
+  // SMS Oracle
+  smsOracleSubscriber SmsOracleSubscriber?
 }
 
 model Referral {
@@ -331,4 +334,42 @@ model OracleChatQuota {
 
   @@unique([userId, date])
   @@index([userId, date])
+}
+
+model SmsOracleSubscriber {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  phoneNumber String   @unique // E.164 format
+  isVerified  Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages    SmsOracleMessage[]
+  quotas      SmsOracleQuota[]
+}
+
+model SmsOracleMessage {
+  id           String   @id @default(uuid())
+  subscriberId String
+  direction    String   // 'inbound' | 'outbound'
+  content      String   @db.Text
+  createdAt    DateTime @default(now())
+
+  subscriber   SmsOracleSubscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+
+  @@index([subscriberId, createdAt])
+}
+
+model SmsOracleQuota {
+  id              String    @id @default(uuid())
+  subscriberId    String
+  date            DateTime  @db.Date
+  replyCount      Int       @default(0) // Daily max 3
+  dailyHookSentAt DateTime?
+
+  subscriber      SmsOracleSubscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriberId, date])
+  @@index([subscriberId, date])
 }

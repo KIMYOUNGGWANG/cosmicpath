@@ -91,11 +91,11 @@ function getTierLabel(status: SubscriptionTier): string {
 function getTierDescription(status: SubscriptionTier): string {
     switch (status) {
         case 'pro':
-            return 'Grand Oracle Chat, daily premium, 프리미엄 리딩 흐름이 포함된 membership이 활성화된 상태입니다.';
+            return 'Grand Oracle Chat 무제한, daily premium, 프리미엄 리딩 흐름이 활성화된 상태입니다. 인증된 번호에는 SMS Daily Signal perk도 함께 연결할 수 있습니다.';
         case 'couple':
             return '기존 관계형 멤버십이 유지 중이며, 현재는 shared premium membership 혜택 범주로 함께 관리됩니다.';
         default:
-            return '현재는 무료 티어입니다. 구독 후 Grand Oracle Chat, daily premium, 프리미엄 리딩 흐름이 즉시 열립니다.';
+            return '현재는 무료 티어입니다. 구독 후 Grand Oracle Chat, daily premium, 프리미엄 리딩 흐름이 열리고, 인증된 번호에는 SMS Daily Signal perk도 연결할 수 있습니다.';
     }
 }
 
@@ -309,7 +309,8 @@ export default function BillingPage() {
                             </h1>
                             <p className="mt-6 max-w-2xl text-[15px] leading-8 text-white/66 md:text-base">
                                 단순한 상태 조회가 아니라, 지금 이 멤버십이 Grand Oracle Chat, daily premium,
-                                프리미엄 리딩 흐름에 어떤 접근권을 주는지 한 화면에서 읽을 수 있도록 재구성했습니다.
+                                프리미엄 리딩 흐름에 어떤 접근권을 주는지, 그리고 SMS Daily Signal perk가 어디에
+                                붙는지 한 화면에서 읽을 수 있도록 재구성했습니다.
                             </p>
                         </div>
 
@@ -350,7 +351,7 @@ export default function BillingPage() {
                     <MetricCard
                         label="Plan Profile"
                         value={planValue}
-                        caption="월간/연간 membership 구조는 유지하되, 어떤 루틴을 여는 플랜인지 더 선명하게 해석할 수 있도록 단순화했습니다."
+                        caption="월간/연간 membership 구조는 유지하되, 메인 가치는 Grand Oracle Chat에 두고 SMS Daily Signal은 보조 perk로 읽히도록 정리했습니다."
                     />
                     <MetricCard
                         label={renewalLabel}
@@ -376,7 +377,7 @@ export default function BillingPage() {
                         <div className="mt-8">
                             <JourneyMilestone
                                 title="현재 멤버십 상태 유지"
-                                description="프리미엄 또는 커플 구독이 활성화된 동안 Grand Oracle Chat, daily premium, 분석 리포트 접근은 그대로 유지됩니다."
+                                description="프리미엄 또는 커플 구독이 활성화된 동안 Grand Oracle Chat, daily premium, 분석 리포트 접근은 그대로 유지되고, 인증된 번호에는 Daily Signal perk도 함께 이어집니다."
                                 state="done"
                             />
                             <JourneyMilestone
@@ -395,7 +396,7 @@ export default function BillingPage() {
                                 <p className="text-sm font-semibold text-white">Subscription Actions</p>
                                 <div className="mt-3 space-y-3 text-sm leading-7 text-white/58">
                                     <p>Stripe 연결 상태: {connectionLabel}</p>
-                                    <p>해지 후에도 현재 기간이 끝나기 전까지 Grand Oracle Chat을 포함한 Premium 기능은 유지됩니다.</p>
+                                    <p>해지 후에도 현재 기간이 끝나기 전까지 Grand Oracle Chat을 포함한 Premium 기능과 Daily Signal perk는 유지됩니다.</p>
                                     <p>구독 변경은 중복 결제를 막는 전용 변경 플로우가 준비된 후 열 계획입니다.</p>
                                 </div>
 
@@ -465,6 +466,7 @@ export default function BillingPage() {
 
                             <div className="mt-5 space-y-3 text-sm leading-7 text-white/60">
                                 <p>현재 MVP는 새 Stripe SKU를 늘리기보다, 기존 membership 레일 위에서 Grand Oracle Chat 가치를 다시 포장하는 쪽이 더 안전합니다.</p>
+                                <p>SMS Daily Signal도 별도 상품이 아니라, 핵심 오라클 경험 위에 얹는 보조 retention perk로만 다룹니다.</p>
                                 <p>지금 구조에서 새 Checkout을 여러 갈래로 열면 Stripe에 중복 subscription 이 생성될 가능성이 있습니다.</p>
                                 <p>안전한 다음 단계는 Stripe Billing Portal 또는 전용 `subscription update` API 입니다.</p>
                             </div>
@@ -480,8 +482,8 @@ export default function BillingPage() {
                                     className="group flex items-center justify-between rounded-[22px] border border-cyan-300/20 bg-[linear-gradient(135deg,rgba(34,211,238,0.16),rgba(34,211,238,0.04))] px-5 py-4 transition-all duration-300 hover:border-cyan-200/35 hover:shadow-[0_18px_60px_rgba(34,211,238,0.12)]"
                                 >
                                     <div>
-                                        <p className="text-sm font-semibold text-cyan-50">Grand Oracle Chat로 돌아가기</p>
-                                        <p className="mt-1 text-sm text-cyan-100/70">무제한 상담 thread와 daily hook 흐름으로 바로 복귀합니다.</p>
+                                        <p className="text-sm font-semibold text-cyan-50">핵심 오라클 흐름으로 돌아가기</p>
+                                        <p className="mt-1 text-sm text-cyan-100/70">Grand Oracle Chat 무제한 흐름과 daily hook 리텐션으로 바로 복귀합니다.</p>
                                     </div>
                                     <ArrowRight className="h-4 w-4 text-cyan-100/70 transition-transform duration-300 group-hover:translate-x-0.5" />
                                 </Link>
@@ -491,8 +493,8 @@ export default function BillingPage() {
                                     className="group flex items-center justify-between rounded-[22px] border border-white/10 bg-black/20 px-5 py-4 transition-all duration-300 hover:border-white/18 hover:bg-white/[0.05]"
                                 >
                                     <div>
-                                        <p className="text-sm font-semibold text-white">My Journey로 돌아가기</p>
-                                        <p className="mt-1 text-sm text-white/54">프로필과 개인 리포트 흐름으로 복귀합니다.</p>
+                                        <p className="text-sm font-semibold text-white">My Journey와 Daily Signal 관리</p>
+                                        <p className="mt-1 text-sm text-white/54">프로필, 번호 인증, Daily Signal perk 설정 흐름으로 복귀합니다.</p>
                                     </div>
                                     <ArrowRight className="h-4 w-4 text-white/48 transition-transform duration-300 group-hover:translate-x-0.5" />
                                 </Link>
@@ -502,8 +504,8 @@ export default function BillingPage() {
                                     className="group flex items-center justify-between rounded-[22px] border border-[hsl(42_79%_74%_/0.18)] bg-[linear-gradient(135deg,rgba(245,211,138,0.18),rgba(245,211,138,0.06))] px-5 py-4 transition-all duration-300 hover:border-[hsl(42_79%_74%_/0.3)] hover:shadow-[0_18px_60px_rgba(245,211,138,0.12)]"
                                 >
                                     <div>
-                                        <p className="text-sm font-semibold text-[hsl(42_79%_87%)]">오늘의 운세 열기</p>
-                                        <p className="mt-1 text-sm text-[hsl(42_52%_82%_/0.7)]">매일 재방문 흐름으로 바로 연결합니다.</p>
+                                        <p className="text-sm font-semibold text-[hsl(42_79%_87%)]">오늘의 오라클 흐름 열기</p>
+                                        <p className="mt-1 text-sm text-[hsl(42_52%_82%_/0.7)]">Daily Signal 뒤에 이어지는 daily premium 흐름으로 바로 연결합니다.</p>
                                     </div>
                                     <ArrowRight className="h-4 w-4 text-[hsl(42_79%_78%)] transition-transform duration-300 group-hover:translate-x-0.5" />
                                 </Link>

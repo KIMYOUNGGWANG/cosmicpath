@@ -86,6 +86,11 @@ interface ErrorResponse {
 > - 기존 `GET /api/subscription/status`, `POST /api/subscription/create`, `POST /api/subscription/cancel`, `/billing`, `SubscriptionModal`을 그대로 재사용한다.
 > - 새로 바뀌는 것은 `billing packaging`과 `entitlement naming`이다. 즉, 서버는 기존 활성 유료 membership을 `Oracle Chat access` 의미 계층으로 해석하고, UI는 같은 결제 레일을 `Grand Oracle Chat 무제한` 가치 제안 중심으로 다시 설명한다.
 > - Oracle Chat quota 초과(`402`)는 one-time reading paywall이 아니라 기존 membership paywall surface로 연결되어야 한다.
+>
+> **Planned SMS Daily Signal Delta (2026-04-15)**:
+> - SMS는 별도 주력 상품이 아니라 **기존 유료 membership의 보조 retention perk**로 다룬다.
+> - launch scope는 `구독자 + 인증된 전화번호` 대상 **하루 1회 one-way daily signal** 이다.
+> - reply형 문자 상담, 일일 3회 quota, SMS 전용 SKU는 현재 계약 범위 밖으로 둔다.
 
 ### 1. 오늘의 운세 (Daily Fortune) ✅ 구현됨
 
@@ -808,6 +813,91 @@ interface OracleChatDailyHookResponse {
 
 ---
 
+### 18. SMS Daily Signal 번호 등록 ✅ 계획 잠금
+
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `POST` | `/api/sms-oracle/register` | ✅ |
+
+**Request**
+```typescript
+interface SmsOracleRegisterRequest {
+  phoneNumber: string;
+}
+```
+
+**Response**
+```typescript
+interface SmsOracleRegisterResponse {
+  success: boolean;
+  verificationSent: boolean;
+}
+```
+
+**Logic**
+- 로그인 사용자가 Daily Signal 수신용 번호를 등록한다.
+- OTP 검증 전까지 실제 발송 대상이 되지 않는다.
+- 현재 이 flow는 paid perk 온보딩의 일부이며, free 체험용 문자 funnel로 쓰지 않는다.
+
+---
+
+### 19. SMS Daily Signal 번호 인증 ✅ 계획 잠금
+
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `POST` | `/api/sms-oracle/verify` | ✅ |
+
+**Request**
+```typescript
+interface SmsOracleVerifyRequest {
+  phoneNumber: string;
+  code: string;
+}
+```
+
+**Response**
+```typescript
+interface SmsOracleVerifyResponse {
+  verified: boolean;
+}
+```
+
+**Logic**
+- OTP가 일치하면 해당 번호를 `verified` 상태로 전환한다.
+- 이후 활성 paid membership이 존재하면 daily signal 발송 대상이 된다.
+
+---
+
+### 20. SMS Daily Signal 발송 Cron ✅ 계획 잠금
+
+| Method | Path | Auth |
+|:-------|:-----|:-----|
+| `POST` | `/api/sms-oracle/daily-hook` | `CRON_SECRET` |
+| `GET` | `/api/sms-oracle/daily-hook` | `CRON_SECRET` |
+
+**Request**
+```typescript
+interface SmsOracleDailyHookRequest {
+  targetDate?: string;
+}
+```
+
+**Response**
+```typescript
+interface SmsOracleDailyHookResponse {
+  dispatched: number;
+  failed: number;
+  skipped: number;
+}
+```
+
+**Logic**
+- `isVerified`인 subscriber 중 **활성 paid membership 사용자만** 대상으로 한다.
+- 최근 `/daily`, 최근 리딩, 최근 `Grand Oracle Chat` 문맥에서 한 줄짜리 signal을 만든다.
+- 이 endpoint는 one-way retention signal만 다루며, inbound 상담 계약은 현재 범위 밖이다.
+
+---
+
 ## Database Tables (관련 테이블)
 
 | Table | 핵심 컬럼 | 비고 |
@@ -818,6 +908,9 @@ interface OracleChatDailyHookResponse {
 | `OracleChatRoom` | `userId`, `domain`, `title`, `updatedAt` | Grand Oracle Chat thread 보관 |
 | `OracleChatMessage` | `roomId`, `role`, `mode`, `councilData`, `createdAt` | council briefing 근거와 최종 결론 포함 |
 | `OracleChatQuota` | `userId`, `date`, `messageCount` | 비구독자 1일 3회 quota 관리 |
+| `SmsOracleSubscriber` | `userId`, `phoneNumber`, `isVerified`, `isActive` | Daily Signal 수신 대상 관리 |
+| `SmsOracleMessage` | `subscriberId`, `direction`, `content`, `createdAt` | launch scope에서는 outbound 로그 중심 |
+| `SmsOracleQuota` | `subscriberId`, `date`, `dailyHookSentAt` | 하루 1회 signal 중복 방지 |
 | `Review` | `readingId`, `rating`, `isApproved`, `isPromoUser` | `readingId` 단위 1회 제출/1회 보상을 partial unique index로 고정 |
 | `FollowUpJob` | `stage`, `status`, `scheduledFor` | 드립 이메일 관리 |
 | `GrowthEvent` | `event`, `channel`, `metadata`, `createdAt` | 퍼널/리텐션/바이럴 계측, `createdAt` 중심 조회 성능 하드닝 적용 |
@@ -837,6 +930,8 @@ interface OracleChatDailyHookResponse {
 | Grand Oracle Chat history | `GET /api/oracle-chat/history` |
 | Grand Oracle Chat message + quota gate | `POST /api/oracle-chat/message`, `GET /api/subscription/status`, `POST /api/subscription/create` |
 | Grand Oracle Chat daily entry | `GET /api/oracle-chat/daily-hook` |
+| SMS Daily Signal enrollment | `POST /api/sms-oracle/register`, `POST /api/sms-oracle/verify` |
+| SMS Daily Signal dispatch | `POST|GET /api/sms-oracle/daily-hook` |
 | Review integrity & moderation | `GET|POST /api/review`, `GET|PATCH|DELETE /api/review/admin` |
 | English-ready reading path | `POST /api/reading`, `POST|GET /api/reading/followup`, `POST /api/reading/followup/stream` |
 | Language-split funnel instrumentation | `POST /api/growth/track`, `GET /api/growth/summary` |

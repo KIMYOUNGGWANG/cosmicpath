@@ -18,18 +18,18 @@ export const MODEL_CONFIG: Record<ModelTier, {
 }> = {
     free: {
         provider: 'google',
-        model: 'gemini-3-flash-preview',
-        fallback: { provider: 'google', model: 'gemini-2.5-flash' },
+        model: 'gemini-1.5-flash',
+        fallback: { provider: 'google', model: 'gemini-1.5-flash-8b' },
     },
     basic: {
         provider: 'google',
-        model: 'gemini-3-flash-preview',
-        fallback: { provider: 'google', model: 'gemini-2.5-flash' },
+        model: 'gemini-1.5-flash',
+        fallback: { provider: 'google', model: 'gemini-1.5-flash-8b' },
     },
     premium: {
         provider: 'google',
-        model: 'gemini-3-flash-preview',
-        fallback: { provider: 'google', model: 'gemini-2.5-flash' },
+        model: 'gemini-1.5-pro',
+        fallback: { provider: 'google', model: 'gemini-1.5-flash' },
     },
 };
 
@@ -478,7 +478,7 @@ export async function generateStructuredReport<T>(
             return {
                 timeoutMs: isFallbackModel ? 12000 : 16000,
                 maxRetries: isFallbackModel ? 0 : 1,
-                maxOutputTokens: 1024,
+                maxOutputTokens: 2048,
                 initialDelayMs: 1500,
             };
         }
@@ -487,7 +487,7 @@ export async function generateStructuredReport<T>(
             return {
                 timeoutMs: isFallbackModel ? 18000 : 30000,
                 maxRetries: isFallbackModel ? 0 : 2,
-                maxOutputTokens: 1536,
+                maxOutputTokens: 2048,
                 initialDelayMs: 3000,
             };
         }
@@ -548,7 +548,7 @@ export async function generateStructuredReport<T>(
         return parseStructuredText(rawText);
     };
 
-    const primaryModel = config.provider === 'google' ? config.model : 'gemini-3-flash-preview';
+    const primaryModel = config.provider === 'google' ? config.model : 'gemini-1.5-flash';
     const allowStructuredFallback = tier !== 'free';
 
     try {

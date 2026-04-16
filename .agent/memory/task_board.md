@@ -5,57 +5,73 @@
 
 ---
 
-## 📱 [PIVOT] SMS Oracle — VIP 문자 구독형 오라클 (2026-04-13)
+## 📱 [PIVOT] SMS Oracle — 구독자 전용 Daily Signal (2026-04-15)
 
 > **근거**: `docs/office-hours.md` (SMS Wedge 확정 — 번아웃된 2030의 수동형 채널)
 > **API 계약**: `docs/sms-oracle-api-spec.md`
-> **구독 가격**: $19.99~$29.99/월 (고단가 전략, 통신비 마진 확보)
+> **과금 방향**: 신규 SMS 전용 SKU 없이, **기존 paid membership perk**로 우선 검증
 
 ### 🎯 Mission
-> "앱도 켜기 귀찮은 번아웃 2030에게, 아침마다 먼저 위로 문자를 보내고
->  내가 답장하면 사주+타로+점성 3중 엔진이 단호하게 코칭하는 영적 비서 서비스"
+> "구독한 사용자가 앱을 열지 않아도, 아침에 하루 한 번 먼저 도착하는 짧은 오라클 시그널로
+> `/daily`와 `Grand Oracle Chat`으로 다시 돌아오게 만드는 paid retention layer"
 
 ### Scope
-- **Now (MVP):** 국내 Solapi 연동. 하루 1회 Daily Hook + 하루 최대 3회 장문(LMS) 답변. 순수 텍스트.
-- **Later:** 카카오 알림톡(더 저렴), 글로벌 Twilio, 이미지(MMS) 타로 카드
-- **Out:** 웹/앱 채팅 UI, 무제한 대화, 이미지 멀티미디어
+- **Now (MVP):** 국내 Solapi 연동. **구독자 + 인증된 번호 보유자**에게 하루 1회 짧은 SMS/LMS Daily Hook 발송. 순수 텍스트, one-way 리텐션 신호.
+- **Later:** 답장형 상담(inbound webhook), 카카오 알림톡(더 저렴), 글로벌 Twilio, 이미지(MMS) 타로 카드
+- **Out:** 하루 3회 문자 상담, 무제한 대화, SMS 전용 신규 결제 SKU, free user 문자 체험
 
 ### Implementation Steps
 
-- [ ] **Step 1: DB 스키마 마이그레이션**
+- [x] **Step 1: DB 스키마 마이그레이션**
   - `SmsOracleSubscriber` / `SmsOracleMessage` / `SmsOracleQuota` 테이블 생성
   - `User` 모델에 역관계 추가
-  - 검증: `npx prisma db push && npx prisma studio`
+  - 검증: `npx prisma validate`, `npx prisma db execute --file prisma/migrations/20260414_add_sms_oracle_tables.sql --schema prisma/schema.prisma`, remote table existence 확인
 
 - [ ] **Step 2: Solapi 계정 세팅 & 환경변수**
   - Solapi 가입 → 발신번호 등록 (사전 심사 최대 3일 소요 주의)
-  - `.env.local` 에 `SOLAPI_API_KEY`, `SOLAPI_API_SECRET`, `SOLAPI_FROM_NUMBER` 추가
+  - `.env.local` 에 `SOLAPI_API_KEY`, `SOLAPI_API_SECRET`, `SOLAPI_FROM_NUMBER`, `CRON_SECRET` 추가
   - 검증: Solapi SDK로 내 번호에 테스트 문자 발송 성공 여부 확인
 
-- [ ] **Step 3: 백엔드 — 인바운드 Webhook (`POST /api/sms-oracle/inbound`)**
-  - Solapi Webhook 서명 검증 (보안 필수)
-  - 유저 조회 → 쿼터 확인 → LLM 1-Call → LMS 발송 파이프라인
-  - 검증: Solapi 대시보드에서 웹훅 테스트 발송 후 로그 확인
+- [ ] **Step 3: 백엔드 — Daily Hook Cron (`POST /api/sms-oracle/daily-hook`)**
+  - Vercel Cron (`vercel.json`)으로 매일 오전 8시 발송
+  - **활성 paid membership + 인증된 전화번호** 보유자만 대상으로 필터링
+  - 최근 리딩/`/daily`/`oracle-chat` 문맥을 짧은 1문장 signal로 압축
+  - 검증: 수동 `curl -X POST /api/sms-oracle/daily-hook -H "Authorization: Bearer <CRON_SECRET>"` 테스트
 
-- [ ] **Step 4: 백엔드 — 데일리 훅 Cron (`POST /api/sms-oracle/daily-hook`)**
-  - Vercel Cron (`vercel.json`에 매일 오전 8시 설정)
-  - 활성 구독자 전체 배치 발송 + 중복 방지(`dailyHookSentAt`)
-  - 검증: 수동 `curl -X POST /api/sms-oracle/daily-hook -H "Authorization: cron-secret"` 테스트
-
-- [ ] **Step 5: 백엔드 — 전화번호 등록 + OTP 인증**
+- [ ] **Step 4: 백엔드 — 전화번호 등록 + OTP 인증**
   - `POST /api/sms-oracle/register` (번호 등록 + OTP 문자 발송)
   - `POST /api/sms-oracle/verify` (OTP 6자리 검증)
+  - 인증 완료 후 구독자만 다음날부터 Daily Signal 수신
   - 검증: 실제 번호로 OTP 수신 및 인증 완료 플로우 확인
 
-- [ ] **Step 6: 프론트엔드 — 마이페이지 전화번호 등록 UI**
-  - `/my` 또는 `/settings` 내 SMS 오라클 전용 섹션 추가
-  - 번호 입력 → OTP 인증 → "내일 아침 첫 오라클 메시지가 도착합니다" 완료 화면
-  - 검증: 브라우저에서 전체 등록 플로우 수동 확인
+- [ ] **Step 5: 프론트엔드 — 마이페이지 등록/동의 UI**
+  - `/my`에 SMS Daily Signal 전용 섹션 유지
+  - 번호 입력 → OTP 인증 → "매일 아침 한 번 먼저 알려드립니다" 상태 문구
+  - 비구독자에게는 잠금/업셀 문구만 노출
+  - 검증: 브라우저에서 등록, 인증, 구독 상태별 화면 수동 확인
+
+- [ ] **Step 6: 멤버십 가치 제안 연결**
+  - `/billing`, `SubscriptionModal`, `/my`에서 SMS를 **보조 paid perk**로 설명
+  - "문자 상담"이 아니라 "아침에 먼저 오는 personal daily signal" 톤으로 고정
+  - 검증: 구독자/비구독자 surface copy가 `oracle_chat` 주가치를 해치지 않는지 확인
 
 ### Risks & Open Questions
-- [ ] **Solapi 발신번호 심사:** 등록 후 승인까지 영업일 1~3일 걸림. 개발 시작 전에 **즉시** 가입해야 함.
-- [ ] **스팸 차단 리스크:** 대량 발송 시 통신사 스팸 필터 우회를 위해 `(광고)` 문구 및 수신거부 번호를 명시해야 함 (정보통신망법 의무).
-- [ ] **마진 시뮬레이션:** 구독료 $19.99 기준, Solapi LMS 발송 40원 × 1일 4건(훅+3답변) × 30일 = 유저 1인당 월 통신비 약 4,800원. $19.99($28,000원) 대비 감내 가능 수준.
+- [ ] **Solapi 발신번호 심사:** 등록 후 승인까지 영업일 1~3일 걸림. 실제 검증 전에 선행되어야 함.
+- [ ] **스팸/법률 리스크:** daily signal도 대량 발송이 되면 광고성/수신거부 문구 정책을 검토해야 함.
+- [ ] **가치 밀도 리스크:** 하루 1회 알림이 retention에는 좋아도, paid membership 전환 가치를 설명할 만큼 강한 perk인지 검증 필요.
+- [ ] **카피 충돌 리스크:** `Grand Oracle Chat 무제한`이 메인 가치인데 SMS가 주 상품처럼 오해되면 결제 표면이 흐려질 수 있음.
+- [ ] **원가 시뮬레이션:** one-way 기준으로는 훨씬 가벼워지지만, SMS 길이가 LMS로 넘어가는 비율을 확인해야 함.
+
+### Status Note (2026-04-15)
+- Step 1 DB schema는 remote DB까지 반영되었다.
+- 코드 워크트리에는 `POST /api/sms-oracle/register`, `POST /api/sms-oracle/verify`, `POST /api/sms-oracle/inbound`, `POST /api/sms-oracle/daily-hook` skeleton이 존재한다.
+- 다만 **현재 rollout scope는 inbound 상담이 아니라 one-way daily signal** 쪽으로 축소한다.
+- `/my`에 SMS Oracle 전화번호 등록 → OTP 인증 → 완료 상태 UI가 이미 연결되어 있다.
+- `solapi` 패키지를 설치했고, `.env.example`, `vercel.json`, `docs/sms-oracle-setup.md`로 운영 세팅 가이드를 추가했다.
+- `GET /api/sms-oracle/daily-hook`는 Vercel Cron 호환 alias로 추가되었고, 기존 수동/백필 호출은 `POST` 계약을 유지한다.
+- `prisma generate`, targeted `eslint`, `tsc --noEmit` 검증은 통과했다.
+- production `npm run build`도 통과했다.
+- 다만 live SMS delivery 검증은 `SOLAPI_*` 환경변수와 실제 계정 세팅 이후에만 마무리할 수 있다.
 
 ---
 
