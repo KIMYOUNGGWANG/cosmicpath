@@ -19,12 +19,18 @@ import { SajuResult, formatSaju } from '../engines/saju';
 import { AstrologyResult, formatAstrology } from '../engines/astrology';
 import { TarotCard } from '../engines/tarot';
 import {
-  buildOraclePersonaBlock,
   type OracleAdvisorProfile,
   type OracleCharacterId,
   type OracleQuestionIntent,
   type OracleSelectionMode,
 } from './oracle-personas';
+import {
+  buildChatModeProtocol,
+  buildPlainTextValidationRules,
+  buildPromptSharedPrelude,
+  buildStructuredJsonSchema,
+  buildStructuredValidationRules,
+} from './prompt-shared-rules';
 import {
   buildUnifiedSystemPrompt,
   buildDataContext,
@@ -315,263 +321,67 @@ export function buildStructuredSystemPrompt(
   const [year] = today.split('-');
 
   const basePrompt = buildUnifiedSystemPrompt(language);
-  const personaBlock = buildOraclePersonaBlock(options?.characterId, language, {
+  const sharedPrelude = buildPromptSharedPrelude({
+    language,
+    characterId: options?.characterId,
     questionIntent: options?.questionIntent,
     selectionMode: options?.selectionMode,
     detailLevel: options?.isPremium ? 'full' : 'compact',
+    depthMode: options?.isPremium
+      ? 'premium'
+      : options?.freeOutputMode === 'core'
+        ? 'free-core'
+        : 'free-full',
+    format: 'markdown',
   });
-  const depthRule = isEn
-    ? (options?.isPremium
-      ? '# Premium Depth Rule\n- Premium outputs may go deeper section by section, but every section must still cite evidence and stay decision-useful.'
-      : options?.freeOutputMode === 'core'
-        ? '# Free Depth Rule\n- This is phase 1 of a free reading. Deliver the clearest high-signal summary first and avoid exhaustive sub-analysis.\n- Return only `free_focus` and `summary` in this phase.\n- `free_focus` must always contain one decisive next move, one compact evidence summary, and one precise follow-up question.'
-        : '# Free Depth Rule\n- This is a free reading. Deliver the clearest high-signal summary first and avoid exhaustive sub-analysis.\n- Return only `free_focus`, `summary`, and `traits`.\n- `free_focus` must always contain one decisive next move, one compact evidence summary, and one precise follow-up question.')
-    : (options?.isPremium
-      ? '# 프리미엄 깊이 규칙\n- 프리미엄 출력은 더 깊게 들어갈 수 있지만, 모든 섹션은 근거 인용과 실제 의사결정 도움을 유지해야 합니다.'
-      : options?.freeOutputMode === 'core'
-        ? '# 무료 깊이 규칙\n- 이것은 무료 리딩 1단계입니다. 가장 해상도 높은 요약을 먼저 주고, 과도한 세부 분해는 피하세요.\n- 이 단계에서는 `free_focus`, `summary`만 반환하세요.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 다음 질문 1개를 반드시 넣으세요.'
-        : '# 무료 깊이 규칙\n- 이것은 무료 리딩입니다. 가장 해상도 높은 요약을 먼저 주고, 과도한 세부 분해는 피하세요.\n- 출력은 `free_focus`, `summary`, `traits`만 반환하세요.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 다음 질문 1개를 반드시 넣으세요.');
-  const hanjaRule = isEn
-    ? '# Traditional Term Rule\n- If you use traditional East Asian terms, explain them once as 漢字(reading, plain meaning).'
-    : '# 한자 용어 규칙\n- 한자나 전통 명리 용어를 쓰면 반드시 한자(독음, 쉬운 뜻) 형식으로 한 번 풀어 설명하세요.';
 
-  // 간소화된 JSON 스키마
-  const schema = options?.isPremium
-    ? (isEn ? `
-# JSON Structure (Required Fields Only)
-
-\`\`\`json
-{
-  "free_focus": {
-    "action_conclusion": "One concrete next move",
-    "evidence_summary": "1-2 lines grounded in Saju/Astro/Tarot evidence",
-    "next_question": "One precise follow-up question"
-  },
-  "summary": {
-    "title": "Memorable headline (10-20 words)",
-    "content": "Core insight integrating 3 systems (5+ sentences)",
-    "trust_score": 1-5,
-    "trust_reason": "Explanation citing Saju/Astro/Tarot data"
-  },
-  "core_elements": {
-    "lacking": { "elements": "...", "impact": "...", "remedy": "..." },
-    "abundant": { "elements": "...", "strength": "...", "usage": "..." }
-  },
-  "fortune_timeline": {
-    "major_luck": { "period": "...", "theme": "...", "advice": "..." },
-    "yearly": { "year": ${year}, "opportunities": [...], "cautions": [...] }
-  },
-  "life_areas": {
-    "career": { "outlook": "...", "timing": "YYYY-MM", "strategy": "..." },
-    "wealth": { "flow": "...", "opportunity": "...", "risk": "..." },
-    "love": { "energy": "...", "meeting": "...", "advice": "..." }
-  },
-  "action_plan": [
-    { "date": "YYYY-MM", "action": "...", "reasoning": "...", "type": "opportunity|caution" }
-  ],
-  "final_verdict": {
-    "title": "Final Verdict",
-    "core_message": "3-4 sentences (Saju 50% + Astro 30% basis)",
-    "saju_foundation": "...",
-    "astro_support": "...",
-    "tarot_insight": "...",
-    "action_priorities": ["...", "...", "..."],
-    "closing_words": "..."
-  }
-}
-\`\`\`
-` : `
-# JSON 구조 (필수 필드만)
-
-\`\`\`json
-{
-  "free_focus": {
-    "action_conclusion": "지금 붙잡을 행동 결론 1개",
-    "evidence_summary": "사주/점성/타로 근거 기반 1-2줄 요약",
-    "next_question": "바로 이어서 물어볼 다음 질문 1개"
-  },
-  "summary": {
-    "title": "기억에 남는 헤드라인 (15-30자)",
-    "content": "3원 통합 핵심 통찰 (5문장 이상)",
-    "trust_score": 1-5,
-    "trust_reason": "사주/점성/타로 데이터 인용 근거"
-  },
-  "core_elements": {
-    "lacking": { "elements": "...", "impact": "...", "remedy": "..." },
-    "abundant": { "elements": "...", "strength": "...", "usage": "..." }
-  },
-  "fortune_timeline": {
-    "major_luck": { "period": "...", "theme": "...", "advice": "..." },
-    "yearly": { "year": ${year}, "opportunities": [...], "cautions": [...] }
-  },
-  "life_areas": {
-    "career": { "outlook": "...", "timing": "YYYY-MM", "strategy": "..." },
-    "wealth": { "flow": "...", "opportunity": "...", "risk": "..." },
-    "love": { "energy": "...", "meeting": "...", "advice": "..." }
-  },
-  "action_plan": [
-    { "date": "YYYY-MM", "action": "...", "reasoning": "...", "type": "opportunity|caution" }
-  ],
-  "final_verdict": {
-    "title": "운명의 최종 판결",
-    "core_message": "3-4문장 (사주 50% + 점성 30% 근거)",
-    "saju_foundation": "...",
-    "astro_support": "...",
-    "tarot_insight": "...",
-    "action_priorities": ["...", "...", "..."],
-    "closing_words": "..."
-  }
-}
-\`\`\`
-`)
+  const structuredMode = options?.isPremium
+    ? 'premium'
     : options?.freeOutputMode === 'core'
-      ? (isEn ? `
-# JSON Structure (Free Reading Phase 1)
-
-\`\`\`json
-{
-  "free_focus": {
-    "action_conclusion": "One concrete next move",
-    "evidence_summary": "1-2 lines grounded in Saju/Astro/Tarot evidence",
-    "next_question": "One precise follow-up question"
-  },
-  "summary": {
-    "title": "Memorable headline (10-20 words)",
-    "content": "Core insight integrating the three systems (4-6 sentences)",
-    "trust_score": 1-5,
-    "trust_reason": "Why this summary is trustworthy with evidence"
-  }
-}
-\`\`\`
-` : `
-# JSON 구조 (무료 리딩 1단계)
-
-\`\`\`json
-{
-  "free_focus": {
-    "action_conclusion": "지금 붙잡을 행동 결론 1개",
-    "evidence_summary": "사주/점성/타로 근거 기반 1-2줄 요약",
-    "next_question": "바로 이어서 물어볼 다음 질문 1개"
-  },
-  "summary": {
-    "title": "기억에 남는 헤드라인 (15-30자)",
-    "content": "3원 통합 핵심 통찰 (4-6문장)",
-    "trust_score": 1-5,
-    "trust_reason": "이 요약을 믿을 수 있는 근거"
-  }
-}
-\`\`\`
-`)
-      : (isEn ? `
-# JSON Structure (Free Reading Only)
-
-\`\`\`json
-{
-  "free_focus": {
-    "action_conclusion": "One concrete next move",
-    "evidence_summary": "1-2 lines grounded in Saju/Astro/Tarot evidence",
-    "next_question": "One precise follow-up question"
-  },
-  "summary": {
-    "title": "Memorable headline (10-20 words)",
-    "content": "Core insight integrating the three systems (4-6 sentences)",
-    "trust_score": 1-5,
-    "trust_reason": "Why this summary is trustworthy with evidence"
-  },
-  "traits": [
-    {
-      "type": "saju|astro|tarot",
-      "name": "Short trait name",
-      "description": "One clear sentence",
-      "grade": "S|A|B"
-    }
-  ]
-}
-\`\`\`
-` : `
-# JSON 구조 (무료 리딩 전용)
-
-\`\`\`json
-{
-  "free_focus": {
-    "action_conclusion": "지금 붙잡을 행동 결론 1개",
-    "evidence_summary": "사주/점성/타로 근거 기반 1-2줄 요약",
-    "next_question": "바로 이어서 물어볼 다음 질문 1개"
-  },
-  "summary": {
-    "title": "기억에 남는 헤드라인 (15-30자)",
-    "content": "3원 통합 핵심 통찰 (4-6문장)",
-    "trust_score": 1-5,
-    "trust_reason": "이 요약을 믿을 수 있는 근거"
-  },
-  "traits": [
-    {
-      "type": "saju|astro|tarot",
-      "name": "짧은 트레이트 이름",
-      "description": "한눈에 읽히는 설명 한 문장",
-      "grade": "S|A|B"
-    }
-  ]
-}
-\`\`\`
-`);
-
-  const validationRules = options?.isPremium
-    ? (isEn ? `
-# Validation Rules
-1. All dates must be >= ${today}
-2. Technical terms must have plain language in parentheses
-3. Each section must cite at least 1 source (Saju/Astro/Tarot)
-4. No vague phrases: "soon", "maybe", "probably"
-5. final_verdict.core_message MUST cite Saju + Astrology primarily
-6. free_focus MUST be present and each field must be a single clear sentence
-` : `
-# 검증 규칙
-1. 모든 날짜는 ${today} 이후여야 함
-2. 전문 용어는 괄호 안 쉬운 말 병기
-3. 각 섹션은 최소 1개 출처(사주/점성/타로) 인용
-4. 애매한 표현 금지: "곧", "아마", "~할 수도"
-5. final_verdict.core_message는 반드시 사주 + 점성술 기반
-6. free_focus는 반드시 포함하고, 각 필드는 한눈에 읽히는 한 문장이어야 함
-`)
-    : options?.freeOutputMode === 'core'
-      ? (isEn ? `
-# Validation Rules
-1. Return ONLY the two top-level keys: free_focus and summary
-2. trust_score must be an integer from 1 to 5
-3. No vague filler like "maybe", "probably", "soon"
-4. free_focus MUST be present and each field must be a single clear sentence
-` : `
-# 검증 규칙
-1. 최상위 키는 free_focus, summary 두 가지만 반환
-2. trust_score는 1~5의 정수
-3. "곧", "아마", "~할 수도" 같은 애매한 표현 금지
-4. free_focus는 반드시 포함하고, 각 필드는 한눈에 읽히는 한 문장이어야 함
-`)
-      : (isEn ? `
-# Validation Rules
-1. Return ONLY the three top-level keys: free_focus, summary, traits
-2. traits must contain 2-4 items and use only saju|astro|tarot for type
-3. trust_score must be an integer from 1 to 5
-4. No vague filler like "maybe", "probably", "soon"
-5. free_focus MUST be present and each field must be a single clear sentence
-` : `
-# 검증 규칙
-1. 최상위 키는 free_focus, summary, traits 세 가지만 반환
-2. traits는 2-4개, type은 saju|astro|tarot만 사용
-3. trust_score는 1~5의 정수
-4. "곧", "아마", "~할 수도" 같은 애매한 표현 금지
-5. free_focus는 반드시 포함하고, 각 필드는 한눈에 읽히는 한 문장이어야 함
-`);
+      ? 'free-core'
+      : 'free-full';
+  const schema = buildStructuredJsonSchema(language, {
+    mode: structuredMode,
+    year,
+  });
+  const validationRules = buildStructuredValidationRules(language, {
+    mode: structuredMode,
+    today,
+  });
 
   return [
     basePrompt,
-    personaBlock,
-    depthRule,
-    hanjaRule,
+    sharedPrelude,
     schema,
     validationRules,
     isEn ? FEW_SHOT_EXAMPLES.en : FEW_SHOT_EXAMPLES.ko,
+  ].join('\n\n');
+}
+
+export function buildFreeSummaryExpansionSystemPrompt(
+  language: Language = 'ko',
+  options?: {
+    characterId?: OracleCharacterId;
+    questionIntent?: OracleQuestionIntent;
+    selectionMode?: OracleSelectionMode;
+  }
+): string {
+  const basePrompt = buildUnifiedSystemPrompt(language);
+  const sharedPrelude = buildPromptSharedPrelude({
+    language,
+    characterId: options?.characterId,
+    questionIntent: options?.questionIntent,
+    selectionMode: options?.selectionMode,
+    detailLevel: 'compact',
+    depthMode: 'free-phase2',
+    format: 'markdown',
+  });
+  const validationRules = buildPlainTextValidationRules(language, 480);
+
+  return [
+    basePrompt,
+    sharedPrelude,
+    validationRules,
   ].join('\n\n');
 }
 
@@ -588,13 +398,15 @@ export function buildChatSystemPrompt(
   const isEn = language === 'en';
   const hasFacts = Boolean(factsOfDestinyBlock?.trim());
   const extraBlock = supplementalContextBlock?.trim();
-  const personaBlock = buildOraclePersonaBlock(readingData.characterId, language, {
+  const sharedPrelude = buildPromptSharedPrelude({
+    language,
+    characterId: readingData.characterId,
     questionIntent: readingData.questionIntent,
     selectionMode: readingData.selectionMode,
+    advisorEvidenceSummary: readingData.advisorEvidenceSummary,
+    detailLevel: 'full',
+    format: 'markdown',
   });
-  const advisorEvidenceBlock = readingData.advisorEvidenceSummary?.trim()
-    ? `\n\n${readingData.advisorEvidenceSummary.trim()}`
-    : '';
 
   const sajuSummary = typeof readingData.saju === 'string'
     ? readingData.saju
@@ -615,10 +427,10 @@ export function buildChatSystemPrompt(
   const basePrompt = buildUnifiedSystemPrompt(language);
 
   const dataSection = hasFacts
-    ? `\n${factsOfDestinyBlock}${extraBlock ? `\n\n${extraBlock}` : ''}\n\n${personaBlock}${advisorEvidenceBlock}\n\n**타로 (20%)**: ${tarotSummary}`
+    ? `\n${factsOfDestinyBlock}${extraBlock ? `\n\n${extraBlock}` : ''}\n\n**타로 (20%)**: ${tarotSummary}`
     : isEn
-      ? `\n# Your Knowledge Base\n**Saju (50%)**: ${sajuSummary}${typeof readingData.saju === 'object' && readingData.saju?.oraclePromptBlock ? `\n\n<SAJU_PRECISION_DATA>\n${readingData.saju.oraclePromptBlock}\n</SAJU_PRECISION_DATA>` : ''}\n**Astrology (30%)**: ${astroSummary}\n**Tarot (20%)**: ${tarotSummary}${extraBlock ? `\n\n${extraBlock}` : ''}\n\n${personaBlock}${advisorEvidenceBlock}`
-      : `\n# 당신이 아는 정보\n**사주 (50%)**: ${sajuSummary}${typeof readingData.saju === 'object' && readingData.saju?.oraclePromptBlock ? `\n\n<사주_정밀_데이터>\n${readingData.saju.oraclePromptBlock}\n</사주_정밀_데이터>` : ''}\n**점성술 (30%)**: ${astroSummary}\n**타로 (20%)**: ${tarotSummary}${extraBlock ? `\n\n${extraBlock}` : ''}\n\n${personaBlock}${advisorEvidenceBlock}`;
+      ? `\n# Your Knowledge Base\n**Saju (50%)**: ${sajuSummary}${typeof readingData.saju === 'object' && readingData.saju?.oraclePromptBlock ? `\n\n<SAJU_PRECISION_DATA>\n${readingData.saju.oraclePromptBlock}\n</SAJU_PRECISION_DATA>` : ''}\n**Astrology (30%)**: ${astroSummary}\n**Tarot (20%)**: ${tarotSummary}${extraBlock ? `\n\n${extraBlock}` : ''}`
+      : `\n# 당신이 아는 정보\n**사주 (50%)**: ${sajuSummary}${typeof readingData.saju === 'object' && readingData.saju?.oraclePromptBlock ? `\n\n<사주_정밀_데이터>\n${readingData.saju.oraclePromptBlock}\n</사주_정밀_데이터>` : ''}\n**점성술 (30%)**: ${astroSummary}\n**타로 (20%)**: ${tarotSummary}${extraBlock ? `\n\n${extraBlock}` : ''}`;
 
   const evidenceRule = hasFacts
     ? isEn
@@ -694,16 +506,6 @@ export function buildChatSystemPrompt(
   3. 필요하면 짧은 공감 한 문장만 덧붙이세요.
 - 고위험 응답에는 예측 리딩, 타이밍 조언, 전략 제안, 포트폴리오 언급, 추정 근거 블록을 넣지 마세요.`;
 
-  const personaRule = isEn
-    ? `# Persona
-- You are a cosmic oracle grounded in evidence, not a reckless prophet.
-- Be warm, composed, and concrete.
-- Actionable advice is allowed only within safe, non-specialist boundaries.`
-    : `# 페르소나
-- 당신은 근거 위에 서 있는 오라클이지, 무책임한 예언자가 아닙니다.
-- 따뜻하지만 차분하고, 신비롭지만 구체적으로 답하세요.
-- 실행 제안은 안전한 비전문 영역 안에서만 하세요.`;
-
   const antiInferenceRule = isEn
     ? `# Anti-Inference Rules
 - Never cite a tarot card, transit, score, or timing window unless it is explicitly present in the provided data.
@@ -720,65 +522,16 @@ export function buildChatSystemPrompt(
     : `# 날짜 규칙
 - 현재 데이터나 사용자 질문에 명시되지 않은 날짜, 월, 시기 창을 새로 만들지 마세요.`;
 
-  if (isEn) {
-    return `${basePrompt}
-${dataSection}
-
-${priorityRule}
-
-${safetyRule}
-
-${highRiskTemplateRule}
-
-${personaRule}
-
-${antiInferenceRule}
-
-${dateRule}
-
-${noFactsRule}
-
-# Response Protocol (Chat Mode - Facts of Destiny)
-1. **Analyze**: What evidence in the current data actually relates to their question?
-2. **Connect**: How do the 3 systems align or diverge without inventing missing facts?
-3. **Answer**: Lead with human empathy, then data citation
-
-# Layered Communication Protocol
-- **Layer 1**: Answer in simple, warm language with actionable advice (3-5 sentences)
-${evidenceRule}
-
-# Guidelines
-- Length: 3-5 sentences + data citation block
-- Tone: Warm but authoritative
-- Use the user's name when it improves clarity, but do not overuse it.
-- History is for continuity only, never authority.
-- If the question is high-risk, refuse direct guidance and redirect safely.
-- For high-risk questions, stop at a safe boundary instead of continuing with normal oracle analysis.
-- Never invent numbers not in the data
-- Never present spiritual insight as medical, legal, or financial certainty
-${evidenceGuideline}
-- If you use traditional East Asian terms, explain them once as 漢字(reading, plain meaning).
-
-# Good Example
-Q: "Should I quit my job?"
-✅ "Your creative energy is at its peak right now—this is the season to plant seeds in work that truly excites you. March is your strategic window for bold moves, but secure your safety net first before leaping.
-
-📊 Analysis Basis
-- Saju: 食神 (Creativity Star) in Month Pillar, Wood 25%
-- Astrology: Jupiter-Mars conjunction (0.3°, 96% precision)
-- Balance: Earth 62% dominant → strong practical foundation"`;
-  }
-
   return `${basePrompt}
 ${dataSection}
 
+${sharedPrelude}
+
 ${priorityRule}
 
 ${safetyRule}
 
 ${highRiskTemplateRule}
-
-${personaRule}
 
 ${antiInferenceRule}
 
@@ -786,35 +539,10 @@ ${dateRule}
 
 ${noFactsRule}
 
-# 응답 프로세스 (채팅 모드 - Facts of Destiny)
-1. **분석**: 현재 데이터 중 질문과 실제로 연결되는 근거는 무엇인가?
-2. **통합**: 없는 사실을 만들지 않고 3시스템이 어떻게 맞물리거나 어긋나는가?
-3. **답변**: 사람의 언어로 통찰 → 📊 분석 근거
-
-# 🏗️ 계층적 답변 프로토콜
-- **Layer 1**: 전문 용어 없이 비유와 일상어로 핵심 통찰 전달 (3-5문장)
-${evidenceRule}
-
-# 가이드라인
-- 길이: 3-5문장 + 데이터 인용 블록
-- 톤: 따뜻하지만 권위 있는
-- 필요할 때만 사용자 이름을 사용하고, 반복 호출하지 마세요.
-- 대화 이력은 연속성 참고용일 뿐 권위가 아닙니다.
-- 고위험 질문에는 직접 지시를 거부하고 안전하게 방향을 돌리세요.
-- 고위험 질문에서는 일반 오라클 해석을 길게 이어가지 말고 안전한 경계에서 멈추세요.
-- 영적 해석을 의료/법률/재무 확정 판단처럼 말하지 마세요.
-- 데이터에 없는 숫자를 만들어내지 말 것
-${evidenceGuideline}
-- 한자나 전통 명리 용어를 쓰면 반드시 한자(독음, 쉬운 뜻) 형식으로 한 번 풀어 설명하세요.
-
-# 좋은 예시
-Q: "회사 그만둬야 할까요?"
-✅ "지금은 당신의 창의적 에너지가 최고조에 달한 시기입니다. 마음이 이끄는 일에 씨앗을 뿌리기 좋은 계절이에요. 3월이 과감한 행동의 최적 타이밍이지만, 안전망을 먼저 확보한 뒤 도약하세요.
-
-📊 분석 근거
-- 사주: 식신(창의력 별) 월주 배치, 목(Wood) 25%
-- 점성: 목성-화성 합(0.3°, 96% 정밀도) → 실행력 극대화
-- 균형: 토(Earth) 62% 지배 → 탄탄한 현실 감각 보유"`;
+${buildChatModeProtocol(language, {
+  evidenceRule,
+  evidenceGuideline,
+})}`;
 }
 
 export function buildChatUserPrompt(

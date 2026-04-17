@@ -59,6 +59,15 @@ export interface OracleAdvisorProfile {
   selectionMode: OracleSelectionMode;
 }
 
+type OracleDecisionContract = {
+  analysisOrderKo: string[];
+  analysisOrderEn: string[];
+  forbiddenPatternsKo: string[];
+  forbiddenPatternsEn: string[];
+  outputSkeletonKo: string[];
+  outputSkeletonEn: string[];
+};
+
 const DEFAULT_ORACLE_CHARACTER_ID: OracleCharacterId = 'general_orion';
 
 const LEGACY_CHARACTER_ID_MAP = {
@@ -423,6 +432,117 @@ function formatEvidencePriority(
   return sources.map((source) => labels[source][language]).join(language === 'en' ? ' > ' : ' > ');
 }
 
+function formatCompactSequence(items: string[]): string {
+  return items.join(' -> ');
+}
+
+function buildEvidencePrioritySequence(
+  sources: OracleEvidenceSource[],
+  language: OraclePersonaLanguage
+): string {
+  const labels: Record<OracleEvidenceSource, { ko: string; en: string }> = {
+    saju: { ko: '사주', en: 'Saju' },
+    ziwei: { ko: '자미', en: 'Ziwei' },
+    natal: { ko: '점성', en: 'Natal' },
+    tarot: { ko: '타로', en: 'Tarot' },
+  };
+
+  const [primary, secondary, tertiary, fourth] = sources.map((source) => labels[source][language]);
+
+  if (language === 'en') {
+    return [
+      `open with ${primary}`,
+      secondary ? `support with ${secondary}` : '',
+      tertiary ? `confirm with ${tertiary}` : '',
+      fourth ? `use ${fourth} only as nuance when present` : '',
+    ].filter(Boolean).join(' -> ');
+  }
+
+  return [
+    `${primary}부터 먼저 열기`,
+    secondary ? `${secondary} 근거로 보강` : '',
+    tertiary ? `${tertiary} 근거로 확인` : '',
+    fourth ? `${fourth}는 있을 때만 뉘앙스 보강용으로 사용` : '',
+  ].filter(Boolean).join(' -> ');
+}
+
+function getOracleDecisionContract(persona: OraclePersonaProfile): OracleDecisionContract {
+  switch (persona.id) {
+    case 'general_orion':
+      return {
+        analysisOrderKo: ['질문의 중심축 진단', '흐름을 흔드는 요인과 받쳐주는 요인 구분', '지금 바꿔야 할 다음 한 수 제시'],
+        analysisOrderEn: ['diagnose the central axis of the question', 'separate destabilizers from stabilizers', 'name the single next move that changes the path'],
+        forbiddenPatternsKo: ['좋은 말만 늘어놓기', '선택지를 과하게 늘리기', '막연한 운명론으로 결론 회피'],
+        forbiddenPatternsEn: ['padding with comfort only', 'offering too many equal options', 'hiding the conclusion inside vague fate talk'],
+        outputSkeletonKo: ['핵심 결론', '근거 축 요약', '바로 실행할 한 걸음'],
+        outputSkeletonEn: ['core conclusion', 'evidence axis summary', 'one immediate move'],
+      };
+    case 'compatibility_cassio':
+      return {
+        analysisOrderKo: ['감정 온도와 공명 리듬 진단', '소통 습관과 반복 충돌 포인트 식별', '관계를 안정화할 행동 제안'],
+        analysisOrderEn: ['diagnose emotional temperature and resonance rhythm', 'identify communication habits and repeated friction', 'propose actions that stabilize the relationship'],
+        forbiddenPatternsKo: ['로맨틱한 기대만 키우기', '충돌 지점 숨기기', '상대의 감정을 단정적으로 단언하기'],
+        forbiddenPatternsEn: ['inflating romance only', 'hiding the friction points', 'claiming certainty about the other person’s feelings'],
+        outputSkeletonKo: ['관계 현재 진단', '엇갈리는 지점', '안정화 행동 2-3가지'],
+        outputSkeletonEn: ['current relationship diagnosis', 'where the rhythm misaligns', '2-3 stabilizing actions'],
+      };
+    case 'reunion_nova':
+      return {
+        analysisOrderKo: ['감정 잔향과 재접점 신호 분리', '재회를 여는 조건과 막는 요인 정리', '반복을 줄일 변화 행동 제안'],
+        analysisOrderEn: ['separate emotional residue from real reconnection signals', 'map conditions that open or block reunion', 'propose the change that reduces repetition'],
+        forbiddenPatternsKo: ['재회를 확정적으로 약속하기', '미련을 가능성처럼 포장하기', '바뀌어야 할 패턴을 생략하기'],
+        forbiddenPatternsEn: ['promising reunion as certain', 'packaging longing as evidence', 'omitting the pattern that must change'],
+        outputSkeletonKo: ['재회 가능성 진단', '조건과 리스크', '다시 만나기 전 바꿔야 할 점'],
+        outputSkeletonEn: ['reunion likelihood diagnosis', 'conditions and risks', 'what must change before reconnecting'],
+      };
+    case 'wealth_midas':
+      return {
+        analysisOrderKo: ['현금 흐름과 지출 습관 점검', '돈이 새는 지점과 리스크 판별', '지속 가능한 재무 행동 제안'],
+        analysisOrderEn: ['check cash flow and spending habits', 'identify where money leaks and risk concentrates', 'propose sustainable money behavior'],
+        forbiddenPatternsKo: ['대박 서사 부추기기', '공격적 투자 타이밍 확언', '손실 리스크보다 기대 수익만 강조하기'],
+        forbiddenPatternsEn: ['pushing jackpot narratives', 'claiming aggressive investment timing', 'emphasizing upside while hiding downside'],
+        outputSkeletonKo: ['재무 현재 상태', '새는 지점과 방어선', '작게 반복할 행동'],
+        outputSkeletonEn: ['current financial state', 'leaks and defensive buffer', 'small repeatable behavior'],
+      };
+    case 'timing_selene':
+      return {
+        analysisOrderKo: ['지금 국면이 준비/행동/정리 중 어디인지 판정', '유리한 시기 창과 피해야 할 타이밍 구분', '즉시 가능한 준비 행동 제시'],
+        analysisOrderEn: ['decide whether the moment is preparation, action, or consolidation', 'separate favorable windows from timing to avoid', 'name the preparation move available right now'],
+        forbiddenPatternsKo: ['근거 없는 정확한 날짜 꾸며내기', '시기 불확실성을 숨기기', '준비 없이 행동만 밀어붙이기'],
+        forbiddenPatternsEn: ['inventing exact dates without evidence', 'hiding timing uncertainty', 'pushing action without preparation'],
+        outputSkeletonKo: ['현재 국면 판정', '시기 창 요약', '지금 당장 할 준비 행동'],
+        outputSkeletonEn: ['current phase diagnosis', 'timing window summary', 'preparation action to take now'],
+      };
+    case 'career_lyra':
+      return {
+        analysisOrderKo: ['강점이 살아나는 역할과 환경 정의', '지금 전환할지 더 다질지 판단', '실행 우선순위 3단계 제시'],
+        analysisOrderEn: ['define roles and environments where strengths come alive', 'judge whether to transition now or build deeper first', 'set a 3-step execution priority'],
+        forbiddenPatternsKo: ['직함만 화려하게 포장하기', '현실 적합도 없이 이직만 밀기', '실행 순서 없이 동기부여만 남기기'],
+        forbiddenPatternsEn: ['glorifying title without fit', 'pushing a move without practical fit', 'ending with motivation instead of execution order'],
+        outputSkeletonKo: ['역할 적합도 진단', '이동 vs 유지 판단', '다음 실행 3단계'],
+        outputSkeletonEn: ['role-fit diagnosis', 'move vs stay judgment', 'next 3 execution steps'],
+      };
+    case 'business_draco':
+      return {
+        analysisOrderKo: ['사업 구조와 현재 병목 진단', '파트너/고객/운영 리스크 정리', '작게 검증할 실험 제안'],
+        analysisOrderEn: ['diagnose the business structure and current bottleneck', 'map partner, customer, and operating risk', 'propose small experiments to validate next'],
+        forbiddenPatternsKo: ['확장 서사만 과장하기', '검증 없이 크게 벌리기', '운영 리스크를 감정적 낙관으로 덮기'],
+        forbiddenPatternsEn: ['glorifying scale without validation', 'pushing expansion before proof', 'covering operating risk with optimism'],
+        outputSkeletonKo: ['핵심 병목 진단', '리스크 지도', '바로 돌릴 실험 2-3개'],
+        outputSkeletonEn: ['core bottleneck diagnosis', 'risk map', '2-3 experiments to run next'],
+      };
+  }
+
+  return {
+    analysisOrderKo: ['질문의 중심축 진단', '흐름을 흔드는 요인과 받쳐주는 요인 구분', '지금 바꿔야 할 다음 한 수 제시'],
+    analysisOrderEn: ['diagnose the central axis of the question', 'separate destabilizers from stabilizers', 'name the single next move that changes the path'],
+    forbiddenPatternsKo: ['좋은 말만 늘어놓기', '선택지를 과하게 늘리기', '막연한 운명론으로 결론 회피'],
+    forbiddenPatternsEn: ['padding with comfort only', 'offering too many equal options', 'hiding the conclusion inside vague fate talk'],
+    outputSkeletonKo: ['핵심 결론', '근거 축 요약', '바로 실행할 한 걸음'],
+    outputSkeletonEn: ['core conclusion', 'evidence axis summary', 'one immediate move'],
+  };
+}
+
 export function buildOraclePersonaBlock(
   characterId?: string | null,
   language: OraclePersonaLanguage = 'ko',
@@ -438,6 +558,17 @@ export function buildOraclePersonaBlock(
   const detailLevel = options?.detailLevel ?? 'full';
   const intentLabel = getOracleIntentLabel(questionIntent, language);
   const evidencePriority = formatEvidencePriority(persona.evidencePriority, language);
+  const decisionContract = getOracleDecisionContract(persona);
+  const decisionSequence = language === 'en'
+    ? formatCompactSequence(decisionContract.analysisOrderEn)
+    : formatCompactSequence(decisionContract.analysisOrderKo);
+  const forbiddenPatterns = language === 'en'
+    ? decisionContract.forbiddenPatternsEn.join('; ')
+    : decisionContract.forbiddenPatternsKo.join('; ');
+  const outputSkeleton = language === 'en'
+    ? formatCompactSequence(decisionContract.outputSkeletonEn)
+    : formatCompactSequence(decisionContract.outputSkeletonKo);
+  const evidenceSequence = buildEvidencePrioritySequence(persona.evidencePriority, language);
 
   if (detailLevel === 'compact') {
     if (language === 'en') {
@@ -448,7 +579,11 @@ export function buildOraclePersonaBlock(
         `Selection Mode: ${selectionMode}`,
         `Tone: ${persona.toneEn}`,
         `Evidence Priority: ${evidencePriority}`,
+        `Evidence Sequence: ${evidenceSequence}`,
         `Framework: ${persona.frameworkEn.join('; ')}`,
+        `Decision Sequence: ${decisionSequence}`,
+        `Answer Skeleton: ${outputSkeleton}`,
+        `Forbidden Patterns: ${forbiddenPatterns}`,
         `Caution: ${persona.cautionEn}`,
         '</ORACLE_GUIDE_PROFILE>',
       ].join('\n');
@@ -461,7 +596,11 @@ export function buildOraclePersonaBlock(
       `선택 방식: ${selectionMode}`,
       `톤: ${persona.toneKo}`,
       `근거 우선순위: ${evidencePriority}`,
+      `근거 순서: ${evidenceSequence}`,
       `분석 프레임워크: ${persona.frameworkKo.join('; ')}`,
+      `분석 순서: ${decisionSequence}`,
+      `답변 골격: ${outputSkeleton}`,
+      `금지 패턴: ${forbiddenPatterns}`,
       `주의: ${persona.cautionKo}`,
       '</오라클_가이드_프로필>',
     ].join('\n');
@@ -480,7 +619,11 @@ export function buildOraclePersonaBlock(
       `Tone: ${persona.toneEn}`,
       `Strengths: ${persona.strengthsEn.join('; ')}`,
       `Evidence Priority: ${evidencePriority}`,
+      `Evidence Sequence: ${evidenceSequence}`,
       `Framework: ${persona.frameworkEn.join('; ')}`,
+      `Decision Sequence: ${decisionSequence}`,
+      `Answer Skeleton: ${outputSkeleton}`,
+      `Forbidden Patterns: ${forbiddenPatterns}`,
       `Style Rules: ${persona.styleRulesEn.join('; ')}`,
       `Caution: ${persona.cautionEn}`,
       'Traditional terms must be explained once in the format 漢字(reading, plain meaning).',
@@ -501,7 +644,11 @@ export function buildOraclePersonaBlock(
     `톤: ${persona.toneKo}`,
     `강점: ${persona.strengthsKo.join('; ')}`,
     `근거 우선순위: ${evidencePriority}`,
+    `근거 순서: ${evidenceSequence}`,
     `분석 프레임워크: ${persona.frameworkKo.join('; ')}`,
+    `분석 순서: ${decisionSequence}`,
+    `답변 골격: ${outputSkeleton}`,
+    `금지 패턴: ${forbiddenPatterns}`,
     `스타일 규칙: ${persona.styleRulesKo.join('; ')}`,
     `주의: ${persona.cautionKo}`,
     '한자나 전통 용어는 반드시 한자(독음, 쉬운 뜻) 형식으로 한 번 풀어서 설명한다.',

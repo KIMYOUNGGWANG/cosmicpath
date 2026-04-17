@@ -40,4 +40,13 @@ if [[ -z "${NODE_BIN}" ]]; then
   fi
 fi
 
+VERBOSE_DEV_LOGS="${COSMICPATH_VERBOSE_DEV_LOGS:-}"
+VERBOSE_DEV_LOGS_NORMALIZED="$(printf '%s' "${VERBOSE_DEV_LOGS}" | tr '[:upper:]' '[:lower:]')"
+if [[ "${1:-}" == "dev" ]] && [[ ! "${VERBOSE_DEV_LOGS_NORMALIZED}" =~ ^(1|true|yes|on)$ ]]; then
+  exec "${NODE_BIN}" "${REPO_ROOT}/scripts/filter-next-dev-logs.mjs" \
+    "${NODE_BIN}" \
+    "${REPO_ROOT}/node_modules/next/dist/bin/next" \
+    "$@"
+fi
+
 exec "${NODE_BIN}" "${REPO_ROOT}/node_modules/next/dist/bin/next" "$@"

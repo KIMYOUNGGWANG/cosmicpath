@@ -7,12 +7,12 @@ import type { SajuResult } from '../engines/saju';
 import type { TarotCard } from '../engines/tarot';
 import { calculateLifePathNumber, getLifePathKeyword } from '../engines/numerology';
 import {
-  buildOraclePersonaBlock,
   type OracleAdvisorProfile,
   type OracleCharacterId,
   type OracleQuestionIntent,
   type OracleSelectionMode,
 } from './oracle-personas';
+import { buildPromptSharedPrelude } from './prompt-shared-rules';
 
 // Astro data 타입 정의
 export interface AstroData {
@@ -62,19 +62,16 @@ export interface PremiumReportPartial {
 function buildUserContext(userData: UserData): string {
   const lang = userData.language || 'ko';
   const isEn = lang === 'en';
-  const personaBlock = buildOraclePersonaBlock(userData.characterId, lang, {
+  const sharedPrelude = buildPromptSharedPrelude({
+    language: lang,
+    characterId: userData.characterId,
     questionIntent: userData.questionIntent,
     selectionMode: userData.selectionMode,
+    advisorEvidenceSummary: userData.advisorEvidenceSummary,
+    detailLevel: 'full',
+    depthMode: 'premium',
+    format: 'inline',
   });
-  const advisorEvidenceBlock = userData.advisorEvidenceSummary?.trim()
-    ? `\n${userData.advisorEvidenceSummary.trim()}\n`
-    : '';
-  const premiumDepthRule = isEn
-    ? 'Premium depth rule: each section may go deep, but every paragraph must remain evidence-led and decision-useful.'
-    : '프리미엄 깊이 규칙: 각 섹션은 깊게 들어가되, 모든 단락은 근거 중심이고 실제 의사결정에 도움이 되어야 합니다.';
-  const hanjaRule = isEn
-    ? 'If you use traditional East Asian terms, explain them once as 漢字(reading, plain meaning).'
-    : '한자나 전통 용어를 쓰면 반드시 한자(독음, 쉬운 뜻) 형식으로 한 번 풀어 설명하세요.';
 
   const nameStr = userData.name ? (isEn ? `${userData.name}` : `${userData.name}님`) : (isEn ? 'User' : '사용자님');
   const genderStr = userData.gender === 'male' ? (isEn ? 'Male' : '남성(乾命)') : (isEn ? 'Female' : '여성(坤命)');
@@ -119,10 +116,7 @@ Question: ${userData.question || 'General Reading'}
 Today's Date: ${userData.currentDate || new Date().toISOString().split('T')[0]}
 </USER_INFO>
 
-${personaBlock}
-${advisorEvidenceBlock}
-${premiumDepthRule}
-${hanjaRule}
+${sharedPrelude}
 
 ${userData.sajuData ? `<SAJU_DATA>\n${JSON.stringify(userData.sajuData, null, 2)}\n</SAJU_DATA>${userData.sajuData.oraclePromptBlock ? `\n\n<SAJU_PRECISION_DATA>\n${userData.sajuData.oraclePromptBlock}\n</SAJU_PRECISION_DATA>` : ''}` : ''}
 ${userData.astroData ? `<ASTRO_DATA>\n${JSON.stringify(userData.astroData, null, 2)}\n</ASTRO_DATA>` : ''}
@@ -141,10 +135,7 @@ ${tarotContext ? tarotContext : (userData.tarotCards ? `<TAROT_CARDS>\n${JSON.st
 오늘의 날짜: ${userData.currentDate || new Date().toISOString().split('T')[0]} (현재 시점 기준의 운세를 정확히 판단할 것)
 </사용자_정보>
 
-${personaBlock}
-${advisorEvidenceBlock}
-${premiumDepthRule}
-${hanjaRule}
+${sharedPrelude}
 
 ${userData.sajuData ? `<사주_원국>\n${JSON.stringify(userData.sajuData, null, 2)}\n</사주_원국>${userData.sajuData.oraclePromptBlock ? `\n\n<사주_정밀_데이터>\n${userData.sajuData.oraclePromptBlock}\n</사주_정밀_데이터>` : ''}` : ''}
 ${userData.astroData ? `<점성술_데이터>\n${JSON.stringify(userData.astroData, null, 2)}\n</점성술_데이터>` : ''}
@@ -253,10 +244,9 @@ export function buildPhase1Prompt(userData: UserData): { system: string; user: s
 
 
   if (lang === 'en') {
-    system = `## Persona
-You are a 'Life Strategist' who blends Eastern wisdom with Western Astrology to help people navigate their lives.
-You are NOT a "fortune teller" who predicts fate. You are a **strategic advisor** who identifies energy patterns and empowers users to make informed decisions.
-Your tone is warm, empowering, and insightful—like a wise mentor, not a mystical oracle.
+    system = `## Core Role
+Use the shared oracle guide profile and evidence rules provided in the prompt context as the primary advisor contract.
+You are not a generic life coach or a reckless fortune teller. Lead with the user's next meaningful move and the pattern that explains it.
 
 <ANALYSIS_WEIGHTING_PRINCIPLE>
 **ASTRO-FIRST STRATEGY (For Global Users)**
@@ -336,9 +326,9 @@ Create a strong first impression so that the user feels "This resonates deeply w
     // ===============================================================
     // [NEW] 개선된 Phase 1 프롬프트 (v2.0) - 심층 분석 버전
     // ===============================================================
-    system = `## 페르소나 (Persona)
-당신은 40년간 수만 명의 운명을 감정한 '운명의 설계자(Fate Architect)'입니다.
-단순한 데이터 분석가가 아닙니다. 사용자의 내면에 숨겨진 욕망과 두려움을 꿰뚫어 보고, 그들이 나아가야 할 길을 명확히 제시하는 영적 멘토입니다.
+    system = `## 핵심 역할
+프롬프트 컨텍스트에 제공된 오라클 가이드 프로필과 근거 규칙을 1차 계약으로 사용하십시오.
+당신은 generic한 라이프 코치나 막연한 예언자가 아니라, 사용자의 다음 움직임과 그 이유를 가장 선명하게 짚는 판단형 오라클입니다.
 
 <분석_가중치_원칙>
 1. **핵심 결론**: 사주(50%) + 점성술(30%) = 80% 비중으로 도출
@@ -439,9 +429,9 @@ export function buildPhase1BPrompt(userData: UserData, previousData?: PremiumRep
   let system = '';
 
   if (lang === 'en') {
-    system = `## Persona
-You are continuing the deep analysis started in Phase 1A. You are a 'Life Strategist' blending Eastern and Western wisdom.
-Use the same tone and analytical framework as Phase 1A.
+    system = `## Core Role
+Continue the deep analysis started in Phase 1A using the shared oracle guide profile and evidence rules from the prompt context.
+Keep the same guide voice and analytical frame from Phase 1A instead of resetting into a generic mentor tone.
 
 <ASTRO_FIRST_STRATEGY>
 1. **Primary Framework (60%)**: Western Astrology
@@ -479,9 +469,9 @@ Focus on delivering deep, personalized astrological analysis. Each section must 
 2. **Depth over Length**: Fulfill all required analytical points. No filler.
 3. Reference Phase 1A's core analysis conclusions for consistency.`;
   } else {
-    system = `## 페르소나
-Phase 1A에서 시작한 심층 분석을 이어갑니다. 당신은 '운명의 설계자(Fate Architect)'입니다.
-Phase 1A와 동일한 어조와 분석 프레임워크를 유지하십시오.
+    system = `## 핵심 역할
+Phase 1A에서 시작한 심층 분석을, 프롬프트 컨텍스트의 오라클 가이드 프로필과 근거 규칙을 바탕으로 이어가십시오.
+새로운 generic 멘토 톤으로 리셋하지 말고, Phase 1A와 동일한 가이드의 어조와 분석 프레임워크를 유지하십시오.
 
 <분석_가중치_원칙>
 1. **핵심 결론**: 사주(50%) + 점성술(30%) = 80% 비중

@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { CosmicRadar } from '@/components/reading/cosmic-radar';
 import { DraftProposal } from '@/components/reading/draft-proposal';
 import { EvidenceTooltip } from '@/components/ui/confidence-badge';
@@ -23,7 +23,6 @@ interface ResultStreamProps {
         tarot: number;
     };
     content: string;
-    currentStep?: number;
 }
 
 export function ResultStream({
@@ -32,29 +31,19 @@ export function ResultStream({
     matching,
     radarScores,
     content,
-    currentStep = 0,
 }: ResultStreamProps) {
     const contentRef = useRef<HTMLDivElement>(null);
     const [displayedContent, setDisplayedContent] = useState('');
-    const [isDecisionAccepted, setIsDecisionAccepted] = useState(false);
-
-    // Decision Guard를 props에서 직접 파생 (useEffect + setState 대신)
-    const showDecisionGuard = useMemo(() => {
-        if (isDecisionAccepted) return false;
-        return confidence && (confidence.score <= 2 || matching?.level === 'low');
-    }, [confidence, matching, isDecisionAccepted]);
 
     // 스트리밍 효과
     useEffect(() => {
         if (content.length > displayedContent.length) {
-            if (!isDecisionAccepted && showDecisionGuard) return; // 가드에 막힘
-
             const timer = setTimeout(() => {
                 setDisplayedContent(content.slice(0, displayedContent.length + 3)); // 조금 더 빠르게
             }, 5);
             return () => clearTimeout(timer);
         }
-    }, [content, displayedContent, isDecisionAccepted, showDecisionGuard]);
+    }, [content, displayedContent]);
 
     // 스크롤 자동 이동
     useEffect(() => {
@@ -101,84 +90,52 @@ export function ResultStream({
             {/* Left Column: Result & Stream */}
             <div className="lg:col-span-2 space-y-6">
 
-                {/* Decision Guard Modal */}
-                <AnimatePresence>
-                    {showDecisionGuard && !isDecisionAccepted && (
+                {/* Content Card */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="glass-card p-6 min-h-[400px] flex flex-col relative"
+                >
+                    {/* Header */}
+                    <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
+                        <div className="w-2 h-2 rounded-full bg-gold animate-pulse" />
+                        <span className="text-sm text-gold font-medium tracking-wider">COSMIC INSIGHT</span>
+                    </div>
+
+                    {/* Text Stream */}
+                    <div
+                        ref={contentRef}
+                        className="prose prose-invert max-w-none text-gray-200 leading-relaxed overflow-y-auto custom-scrollbar flex-grow"
+                    >
+                        <div className="whitespace-pre-wrap text-lg">
+                            {displayedContent ? renderContent(displayedContent) : (
+                                <span className="text-gray-500 animate-pulse">운명의 데이터를 수신 중...</span>
+                            )}
+                            {isLoading && displayedContent.length === content.length && (
+                                <span className="typewriter-cursor ml-1" />
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Action Area (Draft Proposal) */}
+                    {!isLoading && displayedContent.length > 100 && (
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="glass-card border-red-500/30 p-6 relative overflow-hidden"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mt-8 pt-6 border-t border-white/5"
                         >
-                            <div className="absolute inset-0 bg-red-500/5 z-0" />
-                            <div className="relative z-10 text-center">
-                                <div className="text-4xl mb-3">⚠️</div>
-                                <h3 className="text-xl font-bold text-white mb-2">잠시만요!</h3>
-                                <p className="text-gray-300 mb-6">
-                                    현재 분석 결과에서 <strong>상충되는 신호</strong>가 감지되었습니다.<br />
-                                    AI의 조언은 환경적 조언일 뿐, <strong>최종 선택은 당신의 몫</strong>입니다.
-                                    <br /><br />
-                                    결과를 확인하시겠습니까?
-                                </p>
-                                <button
-                                    onClick={() => setIsDecisionAccepted(true)}
-                                    className="btn-primary w-full max-w-xs"
-                                >
-                                    네, 주체적으로 판단하겠습니다
-                                </button>
-                            </div>
+                            <DraftProposal
+                                title={draftData.title}
+                                date={draftData.date}
+                                time={draftData.time}
+                                description={draftData.description}
+                                confidence={draftData.confidence}
+                                onConfirm={() => { }}
+                                onCancel={() => { }}
+                            />
                         </motion.div>
                     )}
-                </AnimatePresence>
-
-                {/* Content Card */}
-                {(!showDecisionGuard || isDecisionAccepted) && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="glass-card p-6 min-h-[400px] flex flex-col relative"
-                    >
-                        {/* Header */}
-                        <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/5">
-                            <div className="w-2 h-2 rounded-full bg-gold animate-pulse" />
-                            <span className="text-sm text-gold font-medium tracking-wider">COSMIC INSIGHT</span>
-                        </div>
-
-                        {/* Text Stream */}
-                        <div
-                            ref={contentRef}
-                            className="prose prose-invert max-w-none text-gray-200 leading-relaxed overflow-y-auto custom-scrollbar flex-grow"
-                        >
-                            <div className="whitespace-pre-wrap text-lg">
-                                {displayedContent ? renderContent(displayedContent) : (
-                                    <span className="text-gray-500 animate-pulse">운명의 데이터를 수신 중...</span>
-                                )}
-                                {isLoading && displayedContent.length === content.length && (
-                                    <span className="typewriter-cursor ml-1" />
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Action Area (Draft Proposal) */}
-                        {!isLoading && displayedContent.length > 100 && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="mt-8 pt-6 border-t border-white/5"
-                            >
-                                <DraftProposal
-                                    title={draftData.title}
-                                    date={draftData.date}
-                                    time={draftData.time}
-                                    description={draftData.description}
-                                    confidence={draftData.confidence}
-                                    onConfirm={() => { }}
-                                    onCancel={() => { }}
-                                />
-                            </motion.div>
-                        )}
-                    </motion.div>
-                )}
+                </motion.div>
             </div>
 
             {/* Right Column: Radar & Meta */}
