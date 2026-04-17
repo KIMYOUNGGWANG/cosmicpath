@@ -94,12 +94,15 @@ export function calculateMatchingScore(tagResult: TagExtractionResult): Matching
     const matchingTags: string[] = [];
     const conflictingTags: string[] = [];
 
+    const sourceDepthByTag = new Map<string, number>();
+
     uniqueTags.forEach(tag => {
         const inSaju = sajuTagSet.has(tag);
         const inAstrology = astrologyTagSet.has(tag);
         const inTarot = tarotTagSet.has(tag);
 
         const sourceCount = [inSaju, inAstrology, inTarot].filter(Boolean).length;
+        sourceDepthByTag.set(tag, sourceCount);
 
         if (sourceCount >= 2) {
             matchingTags.push(tag);
@@ -126,14 +129,26 @@ export function calculateMatchingScore(tagResult: TagExtractionResult): Matching
     });
 
     // 매칭 스코어 계산
-    // 기본: 일치 태그 비율 × 가중치
-    const totalPossibleMatches = uniqueTags.length;
-    const matchRatio = totalPossibleMatches > 0
-        ? matchingTags.length / totalPossibleMatches
+    // 기존 union(uniqueTags) 분모는 교차검증이 조금만 있어도 점수를 과하게 낮췄다.
+    // 실제 체감 신뢰도에 맞추기 위해, 각 소스의 평균 태그 밀도 기준으로
+    // 2원/3원 일치 태그를 가중 합산한다.
+    const averageSourceTagCount = (
+        sajuTagSet.size +
+        astrologyTagSet.size +
+        tarotTagSet.size
+    ) / 3;
+
+    const weightedMatches = matchingTags.reduce((sum, tag) => {
+        const sourceDepth = sourceDepthByTag.get(tag) || 2;
+        return sum + (sourceDepth >= 3 ? 1.5 : 1);
+    }, 0);
+
+    const matchRatio = averageSourceTagCount > 0
+        ? weightedMatches / averageSourceTagCount
         : 0;
 
-    // 충돌 패널티
-    const conflictPenalty = conflictingTags.length * 0.05;
+    // 충돌 패널티는 유지하되, 일치보다 과도하게 전체 점수를 붕괴시키지 않게 완화
+    const conflictPenalty = conflictingTags.length * 0.03;
 
     // 최종 스코어 (0-100)
     const rawScore = matchRatio * 100 - conflictPenalty * 100;

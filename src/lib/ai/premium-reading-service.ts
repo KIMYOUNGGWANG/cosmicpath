@@ -27,13 +27,46 @@ const PHASE_ONE_PRIMARY_TIMEOUT_MS = 36000;
 const PHASE_ONE_FALLBACK_TIMEOUT_MS = 30000;
 const DEEP_PHASE_PRIMARY_TIMEOUT_MS = 30000;
 const DEEP_PHASE_FALLBACK_TIMEOUT_MS = 24000;
+const FORTUNE_FLOW_PRIMARY_TIMEOUT_MS = 45000;
+const FORTUNE_FLOW_FALLBACK_TIMEOUT_MS = 42000;
 const MAX_ATTEMPTS_PER_MODEL = 2;
+const PHASE_OUTPUT_TOKEN_BUDGETS: Record<number, { initial: number; retry: number }> = {
+    1: { initial: 4096, retry: 5120 },   // Summary + traits + core analysis
+    2: { initial: 3072, retry: 3584 },   // Astro deep
+    3: { initial: 3072, retry: 3584 },   // Tarot details + numerology
+    4: { initial: 5120, retry: 6144 },   // Saju sections
+    5: { initial: 8192, retry: 10240 },  // Fortune flow
+    6: { initial: 6656, retry: 8192 },   // Life areas + soulmate + compatibility
+    7: { initial: 5120, retry: 6144 },   // Special analysis + action plan + date selection
+    8: { initial: 5632, retry: 7168 },   // Past life + glossary + final verdict
+};
+
+function extractGoogleTextParts(parts: unknown): string {
+    if (!Array.isArray(parts)) return '';
+
+    return parts
+        .map((part) => (
+            part &&
+            typeof part === 'object' &&
+            typeof (part as { text?: unknown }).text === 'string'
+        )
+            ? (part as { text: string }).text
+            : ''
+        )
+        .join('');
+}
 
 function getPhaseRequestTimeoutMs(phaseNumber: number, modelName: string) {
     if (phaseNumber === 1) {
         return modelName === PRIMARY_MODEL_NAME
             ? PHASE_ONE_PRIMARY_TIMEOUT_MS
             : PHASE_ONE_FALLBACK_TIMEOUT_MS;
+    }
+
+    if (phaseNumber === 5) {
+        return modelName === PRIMARY_MODEL_NAME
+            ? FORTUNE_FLOW_PRIMARY_TIMEOUT_MS
+            : FORTUNE_FLOW_FALLBACK_TIMEOUT_MS;
     }
 
     if (phaseNumber >= 2) {
@@ -45,12 +78,41 @@ function getPhaseRequestTimeoutMs(phaseNumber: number, modelName: string) {
     return FAST_PHASE_REQUEST_TIMEOUT_MS;
 }
 
-function getPhaseMaxOutputTokens(phaseNumber: number) {
-    if (phaseNumber <= 3) {
-        return 4096;
+function getPhaseMaxOutputTokens(phaseNumber: number, attempt: number) {
+    const budget = PHASE_OUTPUT_TOKEN_BUDGETS[phaseNumber];
+    if (!budget) {
+        return 6144;
     }
 
-    return 6144;
+    return attempt > 0 ? budget.retry : budget.initial;
+}
+
+function getPhaseTemperature(phaseNumber: number) {
+    if (phaseNumber === 5) {
+        return 0.5;
+    }
+
+    if (phaseNumber >= 6) {
+        return 0.6;
+    }
+
+    return 0.72;
+}
+
+function getPhaseThinkingConfig(modelName: string, phaseNumber: number) {
+    if (modelName.startsWith('gemini-3')) {
+        return {
+            thinkingLevel: 'medium',
+        };
+    }
+
+    if (modelName.startsWith('gemini-2.5')) {
+        return {
+            thinkingBudget: phaseNumber >= 5 ? 0 : 256,
+        };
+    }
+
+    return undefined;
 }
 
 
@@ -196,6 +258,8 @@ export async function generateSinglePhase(
     for (const modelName of modelSequence) {
         for (let attempt = 0; attempt < MAX_ATTEMPTS_PER_MODEL; attempt++) {
             const requestTimeoutMs = getPhaseRequestTimeoutMs(phaseNumber, modelName);
+            const maxOutputTokens = getPhaseMaxOutputTokens(phaseNumber, attempt);
+            const thinkingConfig = getPhaseThinkingConfig(modelName, phaseNumber);
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), requestTimeoutMs);
 
@@ -213,9 +277,10 @@ export async function generateSinglePhase(
                                 parts: [{ text: user }],
                             }],
                             generationConfig: {
-                                temperature: 0.72,
-                                maxOutputTokens: getPhaseMaxOutputTokens(phaseNumber),
+                                temperature: getPhaseTemperature(phaseNumber),
+                                maxOutputTokens,
                                 responseMimeType: "application/json",
+                                ...(thinkingConfig ? { thinkingConfig } : {}),
                             },
                             // 안전 설정 추가: 민감한 주제 차단 방지
                             safetySettings: [
@@ -254,16 +319,25 @@ export async function generateSinglePhase(
                 const result = await response.json();
 
                 // Extract text from response
-                let text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                const candidate = result.candidates?.[0];
+                const finishReason = typeof candidate?.finishReason === 'string'
+                    ? candidate.finishReason
+                    : null;
+                let text = extractGoogleTextParts(candidate?.content?.parts);
 
                 // Log raw result for debugging (Gemini 3 compatibility check)
                 if (!text) {
-                    const finishReason = result.candidates?.[0]?.finishReason;
-                    const safetyRatings = result.candidates?.[0]?.safetyRatings;
+                    const safetyRatings = candidate?.safetyRatings;
                     console.warn(`[Phase ${phaseNumber}] Empty content from ${modelName}. FinishReason: ${finishReason}`, { safetyRatings, rawResult: JSON.stringify(result) });
 
                     lastError = new Error(`Empty content. FinishReason: ${finishReason}`);
                     continue;
+                }
+
+                if (finishReason && finishReason !== 'STOP') {
+                    console.warn(
+                        `[Phase ${phaseNumber}] Non-STOP finish from ${modelName}: ${finishReason} (maxOutputTokens=${maxOutputTokens}, attempt=${attempt + 1}/${MAX_ATTEMPTS_PER_MODEL})`
+                    );
                 }
 
                 // Clean up markdown code blocks if present
@@ -275,7 +349,9 @@ export async function generateSinglePhase(
                     data = JSON.parse(text);
                 } catch (e) {
                     console.error(`[Phase ${phaseNumber}] JSON Parse Error from ${modelName}. Raw text:`, text.substring(0, 200) + '...');
-                    lastError = new Error(`Failed to parse JSON: ${e}`);
+                    lastError = new Error(
+                        `Failed to parse JSON${finishReason ? ` (finishReason: ${finishReason})` : ''}: ${e}`
+                    );
                     continue;
                 }
 

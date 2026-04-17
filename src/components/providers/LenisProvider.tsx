@@ -1,31 +1,38 @@
 'use client';
 
 import { useEffect } from 'react';
-import Lenis from 'lenis';
 
-export default function LenisProvider({ children }: { children: React.ReactNode }) {
+export default function LenisProvider() {
     useEffect(() => {
-        const lenis = new Lenis({
-            duration: 1.2,
-            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-            orientation: 'vertical',
-            gestureOrientation: 'vertical',
-            smoothWheel: true,
+        let rafId = 0;
+        let isDisposed = false;
+        let lenisInstance: { raf: (time: number) => void; destroy: () => void } | null = null;
+
+        void import('lenis').then(({ default: Lenis }) => {
+            if (isDisposed) return;
+
+            lenisInstance = new Lenis({
+                duration: 1.2,
+                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                orientation: 'vertical',
+                gestureOrientation: 'vertical',
+                smoothWheel: true,
+            });
+
+            const raf = (time: number) => {
+                lenisInstance?.raf(time);
+                rafId = requestAnimationFrame(raf);
+            };
+
+            rafId = requestAnimationFrame(raf);
         });
 
-        let rafId = 0;
-        const raf = (time: number) => {
-            lenis.raf(time);
-            rafId = requestAnimationFrame(raf);
-        };
-
-        rafId = requestAnimationFrame(raf);
-
         return () => {
+            isDisposed = true;
             cancelAnimationFrame(rafId);
-            lenis.destroy();
+            lenisInstance?.destroy();
         };
     }, []);
 
-    return <>{children}</>;
+    return null;
 }

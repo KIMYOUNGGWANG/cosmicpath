@@ -3,6 +3,116 @@
 > 기준일: 2026-03-19 | 리서치: `RESEARCH/CosmicPath_Analysis_20260318`
 > 목표: **3개월 내 MAU 3,000 / 월 수익 500만원 / k-factor 1.5**
 
+## 🛠 Refactor Block (2026-04-16)
+*원칙: 제품 계약과 리딩 품질은 유지하고, 내부 구조와 프롬프트 경계를 다시 세운다.*
+
+- **Mission** — `/start` 무료 리딩 → 결과 → follow-up → 결제 루프의 신뢰도와 속도를 유지한 채, 리딩 생성 파이프라인을 분리 가능한 구조로 재구성한다.
+
+### Scope Now
+- `/start`를 `입력 / 복구 / 결과 / 결제 / 공유 / follow-up 진입` 책임으로 분리한다.
+- `/api/reading`을 `요청 검증 / 리딩 런타임 구성 / free generation / premium phase orchestration / 저장 및 resume` 경계로 분리한다.
+- `premium-report`를 section 컴포넌트와 render schema 기반 구조로 나눈다.
+- 리포트 생성 프롬프트를 `공통 시스템 규칙층 + free/premium 모드층 + phase 전용 지시층`으로 재정렬한다.
+- 계산 엔진 결과와 metadata를 한 번 만든 뒤 재사용하는 `reading runtime` source-of-truth를 고정한다.
+
+### Scope Later
+- `src/lib/engines/saju.ts`를 계산기, formatter, glossary, derived insight 레이어로 추가 분리한다.
+- follow-up chat과 `/daily`가 공유하는 oracle context builder를 별도 모듈로 승격한다.
+- LLM provider/model budget 정책을 통합된 orchestration 레이어로 정리한다.
+
+### Explicitly Out
+- 새 consumer-facing 기능 추가
+- `/api/reading*`, `/api/payment*`, `/api/growth*`의 응답 shape 변경
+- paywall merchandising 실험 재확장
+- `/match`, `/viral`, 블로그 surface 재투자
+
+### Implementation Steps
+- [x] **Step 1: Start Flow Boundary Split** — `src/app/start/page.tsx`에서 상태 저장, resume/reset, payment/share/review modal, follow-up 진입 로직을 훅/섹션 단위로 분리한다.
+- [x] **Step 2: Reading Route Service Split** — `src/app/api/reading/route.ts`를 orchestration 중심으로 남기고, runtime assembly / free reading / premium phase / persistence helpers를 서비스로 분리한다.
+- [x] **Step 3: Prompt Stack Refactor** — `prompt-builder.ts`와 `phase-prompts.ts`의 중복 규칙을 줄이고, 공통 시스템 프롬프트와 phase overlay 조립 구조를 만든다.
+- [x] **Step 4: Premium Report Decomposition** — `premium-report.tsx`를 section registry, section components, shared cards/utilities로 분리해 결과 렌더링을 데이터 중심으로 바꾼다.
+- [x] **Step 5: Engine & Runtime Stabilization** — `saju-engine.ts`/`engines/saju.ts`의 derived formatter와 evidence summary builder를 정리하고, premium resume 시 재계산을 최소화한다.
+- [x] **Step 6: Regression Harness** — free outline, premium phase resume, payment verification, restore/accessKey, follow-up continuity를 중심으로 빌드/테스트/수동 smoke 경로를 고정한다.
+
+### Progress Note
+- 2026-04-16 PM: Step 1 started. `/start`의 storage/url helper, resume hook, payment/share/review modal state를 별도 모듈로 추출했고 `npm run build` 통과. 입력/result section 분해와 follow-up entry 경계 정리는 계속 진행한다.
+- 2026-04-16 PM (2): `/start` 결과 렌더를 `start-result-stage.tsx`로 추출해 CTA, premium report, chat entry, error state를 page 바깥으로 이동했고 `npm run build` 재통과. 다음은 input/tarot/reveal section 분리 또는 follow-up/payment CTA handler 추가 정리다.
+- 2026-04-16 PM (3): `/start`의 input/tarot/reveal stage를 각각 `start-input-stage.tsx`, `start-tarot-stage.tsx`, `start-reveal-stage.tsx`로 분리했고 `page.tsx`를 orchestration 중심으로 축소했다. `npm run build` 재통과 기준으로 Step 1을 완료 처리하고, 다음 사이클은 `/api/reading` service split으로 넘어간다.
+- 2026-04-16 PM (4): Step 2 started. `/api/reading`의 runtime assembly를 `reading-runtime-service.ts`, free/premium generation orchestration을 `reading-generation-service.ts`로 분리해 `route.ts`를 access/validation/orchestration 중심으로 축소했다. `npm run build` 통과 기준으로 generation 경계는 정리됐고, 다음은 premium access/persistence helper까지 route 바깥으로 빼는 작업이다.
+- 2026-04-16 PM (5): `/api/reading`의 invite 처리와 premium access/payment sync를 `reading-request-service.ts`로 분리했고, `route.ts`는 quota/auth/response orchestration 위주로 정리했다. `route.ts`는 `222`줄까지 줄었고 `npm run build` 재통과 기준으로 Step 2를 완료 처리한다.
+- 2026-04-16 PM (6): Step 3 started. `prompt-shared-rules.ts`를 추가해 free/premium 공통 규칙층(깊이 규칙, 한자 규칙, persona/evidence prelude)을 모듈화했고, `prompt-builder.ts`와 `phase-prompts.ts`가 이 shared prelude를 사용하도록 연결했다. `npm run build` 통과 기준으로 중복 규칙 정리는 시작됐고, 다음은 schema/validation prompt와 chat prompt 쪽의 중복 문구를 더 줄이는 작업이다.
+- 2026-04-16 PM (7): `prompt-shared-rules.ts`에 structured JSON schema, validation rules, free summary plain-text validation, chat response protocol helper를 추가해 `prompt-builder.ts`의 큰 문자열 블록을 공통 조립 구조로 이동했다. `phase-prompts.ts`는 shared prelude를 유지하고, `npm run build` 재통과 기준으로 Step 3를 완료 처리한다.
+- 2026-04-16 PM (8): Step 4 started. `premium-report.tsx`에서 순수 프레젠테이션 섹션(`HeaderSection`, `FreeFocusSection`, `PremiumSectionInterruptionCard`, `ContentCard`)만 `premium-report-sections.tsx`로 분리했고, 상태/계산 로직은 그대로 유지했다. `npm run build` 재통과 기준으로 이번 변화는 동작 변경 없는 저위험 분리이며, 다음은 나머지 섹션을 같은 방식으로 점진 분해한다.
+- 2026-04-16 PM (9): `premium-report-sections.tsx`에 상태 없는 순수 섹션(`ActionPlanSection`, `NumerologySection`, `PastLifeSection`)을 추가로 이동했고, `premium-report.tsx`는 import 조립만 하도록 정리했다. `npm run build` 재통과 기준으로 Step 4는 안전한 presentation 분해를 계속 진행 중이며, 다음은 stateful 섹션 전까지 더 옮길 수 있는 조각을 선별한다.
+- 2026-04-16 PM (10): `CoreAnalysisSection`과 `AccordionSection`도 `premium-report-sections.tsx`로 이동해, `premium-report.tsx`에서 무상태 렌더 조각을 더 걷어냈다. `npm run build` 재통과 기준으로 이번 배치도 동작 변경 없는 저위험 분리이며, 남은 Step 4 범위는 주로 `FortuneFlow`, `SpecialAnalysis`, `Compatibility`, `DateSelection`, `AstroDeep` 같은 stateful 섹션 정리다.
+- 2026-04-16 PM (11): stateful 섹션 첫 배치로 `SpecialAnalysisSection`을 `premium-report-sections.tsx`로 이동했다. 중간에 `Zap` import 누락으로 타입 에러가 한 번 있었지만 즉시 복구했고, 최종적으로 `npm run build` 재통과 기준으로 동작/계약 변화 없이 안정 상태를 확인했다.
+- 2026-04-16 PM (12): 다음 stateful 배치로 `DateSelectionSection`을 `premium-report-sections.tsx`로 이동했고, 탭 상태/애니메이션/날짜 포맷 로직은 그대로 유지했다. `npm run build` 재통과 기준으로 Step 4는 여전히 안전한 단위 분해를 유지 중이며, 남은 큰 stateful 후보는 `CompatibilitySection`, `AstroDeepSection`, `FortuneFlowSection`이다.
+- 2026-04-16 PM (13): `CompatibilitySection`도 `premium-report-sections.tsx`로 이동해, 사회적 궁합 탭 상태와 transition을 섹션 단위로 분리했다. `npm run build` 재통과 기준으로 현재 Step 4의 주요 남은 stateful 후보는 `AstroDeepSection`과 `FortuneFlowSection`이며, 특히 `FortuneFlowSection`은 내부 상태와 UI 밀도가 높아 가장 마지막에 다루는 것이 안전하다.
+- 2026-04-16 PM (14): `AstroDeepSection`도 `premium-report-sections.tsx`로 이동했고, accordion 상태와 열림 애니메이션은 그대로 유지했다. `npm run build` 재통과 기준으로 이제 Step 4의 큰 남은 덩어리는 `FortuneFlowSection`과 legacy `CompatibleDeepDiveSection` 정도이며, 전자는 마지막에 다루는 것이 가장 안전하다.
+- 2026-04-16 PM (15): legacy `CompatibleDeepDiveSection`도 `premium-report-sections.tsx`로 이동해, fallback 탭 렌더까지 섹션 파일로 모았다. `npm run build` 재통과 기준으로 Step 4의 주된 남은 대형 섹션은 사실상 `FortuneFlowSection` 하나이며, 이 부분은 내부 상태와 월간 맵 UI가 결합돼 있어 마지막에 단독으로 다루는 것이 맞다.
+- 2026-04-16 PM (16): `FortuneFlowSection`, `LifeAreasSection`, `TarotSpreadSection`, `TraitsSection`까지 `premium-report-sections.tsx`로 이동해 `premium-report.tsx`를 조립 중심으로 정리했다. `npm run build` 재통과 기준으로 Step 4를 완료 처리한다.
+- 2026-04-16 PM (17): `oracle-followup-context.ts`가 저장된 `sajuResult.raw`, `oraclePromptBlock`, `followUpMetadata`를 우선 재사용하도록 정리해 follow-up 질문 시 사주 런타임 재계산을 줄였다. 새 질문으로 intent가 바뀌어도 저장된 raw profile이 있으면 evidence summary만 다시 조립하고, `npm run build` 재통과 기준으로 Step 5를 완료 처리한다.
+- 2026-04-16 PM (18): `scripts/test-refactor-regression.sh`와 `docs/refactor-regression-checklist.md`를 추가하고 `package.json`에 `npm test`를 연결해 리팩터링 경계 회귀 검사를 고정했다. `npm test`, `npm run build`, `bash .agent/scripts/audit-status.sh` 기준으로 Step 6를 완료 처리한다.
+
+### Validation
+- `npm run build`
+- `npm test`
+- `/start` 무료 1단계 → 2단계 요약 확장 → 결과 복구 수동 검증
+- 유료 resume 경로에서 phase 재개 및 결제 검증 수동 점검
+- `POST /api/reading`, `POST|GET /api/reading/followup`, `POST|GET /api/payment` 응답 shape 회귀 확인
+
+### Risks / Open Questions
+- 프롬프트 리팩터링 중 free/premium tone drift가 생기지 않도록 golden sample 비교가 필요하다.
+- `characterId`, `questionIntent`, `selectionMode`, `free_focus`는 wire contract로 유지해야 한다.
+- premium phase 저장 포맷을 바꾸면 기존 resume 데이터와 충돌할 수 있으므로 migration 없는 호환 레이어가 먼저 필요하다.
+- `/start`는 URL sync와 sessionStorage, 서버 restore가 모두 얽혀 있어 상태 ownership을 먼저 고정하지 않으면 재회귀 가능성이 높다.
+
+## 🧠 Prompt & Advisor Quality Block (2026-04-16 Night)
+*원칙: 외부 계약은 유지하고, 시스템 프롬프트와 상담가 레이어를 더 짧고 더 선명하며 더 전문적으로 만든다.*
+
+- **Mission** — 무료 결과, premium report, follow-up chat이 모두 “결정과 타이밍 오라클”답게 읽히도록 만들되, generic한 라이프 코치 톤과 phase별 프롬프트 중복을 줄이고 상담가의 도메인 전문성을 실제 판단 구조로 승격한다.
+
+### Scope Now
+- `phase-prompts.ts`의 중복된 `Life Strategist` 시스템 프롬프트를 걷어내고, free 첫 결과와 follow-up에 가장 직접 연결되는 공통 규칙층을 우선 정리한다.
+- `oracle-personas.ts`의 `framework`, `styleRules`, `caution`, `evidencePriority`를 “설명문”이 아니라 “판단 계약”으로 강화해 상담가 차이를 실제 출력 구조에서 체감되게 만든다.
+- `evidencePriority`가 실제 답변 구조에서 첫 근거/보조 근거 순서로 반영되게 하되, 우선 가장 사용 빈도가 높은 질문 흐름에 집중한다.
+- generic한 라이프 코치 톤을 줄이고, 사용자가 첫 결과와 follow-up에서 바로 느낄 수 있는 “결정과 타이밍 오라클” 차별성을 우선 확보한다.
+
+### Scope Later
+- 한국어 기본 프레임과 영어권 onboarding 프레임의 전면 재정렬
+- `primaryIntent + secondaryIntent` 라우팅을 본격 도입해 복합 질문 분류를 고도화한다.
+- follow-up continuity를 위한 `advisor thesis` / summary state의 저장 전략 확장
+- provider별 토큰 budget 및 locale별 few-shot 압축 정책을 별도 orchestration 레이어로 승격한다.
+
+### Explicitly Out
+- 새 consumer-facing surface 추가
+- `characterId`, `questionIntent`, `selectionMode`, `free_focus`, `summary`, `metadata`의 wire contract 변경
+- 상담가 ID 추가/삭제 또는 브랜딩 명칭 변경
+- DB migration이 필요한 저장 구조 개편
+- premium multi-phase 전체를 한 번에 완성도 높게 재작성하는 작업
+
+### Implementation Steps
+- [x] **Step 1: Core Prompt Contract Unification** — `phase-prompts.ts`와 `prompt-builder.ts`에서 free 첫 결과 / follow-up에 직접 영향을 주는 중복 시스템 프롬프트를 걷어내고, `prompt-shared-rules.ts` 기반 공통 규칙층과 phase overlay만 남긴다.
+- [x] **Step 2: Advisor Decision Contract** — 각 상담가의 `framework/styleRules/caution`를 실제 분석 순서, 금지 패턴, 출력 골격으로 승격하되, 가장 사용 빈도가 높은 질문 흐름부터 적용한다.
+- [x] **Step 3: Evidence Ordering** — `evidencePriority`를 실제 답변 구조에 반영해 generic 문장보다 근거 순서가 먼저 드러나게 한다.
+- [x] **Step 4: Prompt Regression & Golden Samples** — free 첫 결과, premium 핵심 phase, follow-up용 golden sample과 regression check를 추가해 generic drift와 advisor drift를 감시한다.
+
+### Progress Note
+- 2026-04-16 Night (2): Step 1 completed. `prompt-shared-rules.ts`에 결정/타이밍 오라클 base rule과 evidence-first 서술 규칙을 추가했고, `prompt-builder.ts`의 free/follow-up system prompt가 이 공통 규칙층을 직접 재사용하도록 정리했다. `phase-prompts.ts`는 Phase 1/1B의 중복 `Life Strategist` 머리말을 shared guide contract 기준의 얇은 phase overlay로 축소했다. `npm test`, `npm run build` 통과. `node scripts/verify-oracle-prompt-refactor.ts`는 현재 plain Node ESM import resolution 때문에 실행 실패하므로 Step 4에서 runnable verifier 경로를 함께 정리한다.
+- 2026-04-16 Night (3): Step 2-4 completed. `oracle-personas.ts`에 상담가별 분석 순서, 금지 패턴, 답변 골격, 근거 순서를 internal decision contract helper로 추가했고, 이 정보가 free structured prompt와 follow-up prompt의 shared guide block에 직접 노출되도록 연결했다. `prompt-shared-rules.ts`의 chat protocol도 guide contract를 실제 답변 구조에 반영하도록 강화했다. `scripts/oracle-prompt-golden-samples.json`과 runnable `node scripts/verify-oracle-prompt-refactor.ts`를 추가해 structured/free/follow-up/phase1 drift를 검증 가능하게 만들었고, `node scripts/verify-oracle-prompt-refactor.ts`, `npm test`, `npm run build` 모두 통과했다. 현재 남은 경고는 verifier 실행 시 Node의 `MODULE_TYPELESS_PACKAGE_JSON` warning뿐이며, 기능상 blocker는 아니다.
+
+### Validation
+- `npm run build`
+- `npm test`
+- `node scripts/verify-oracle-prompt-refactor.ts`
+- 상담가별 샘플 질문 수동 비교
+- `free result`, `premium phase`, `follow-up` 출력에서 tone/evidence/order 수동 spot check
+
+### Risks / Open Questions
+- 상담가 전문성을 너무 강하게 밀면 free/premium tone 차이가 과장되거나 과도한 페르소나 연기가 생길 수 있다.
+- 영어권 `astro-first` onboarding을 지금 크게 건드리면 진입 이해도가 흔들릴 수 있다.
+- provider별 출력 예측성이 달라 golden sample을 어떻게 관리할지 기준을 먼저 정해야 한다.
+
 ## 🧭 Focus Reset (2026-04-04)
 *원칙: 오라클 코어 루프를 강화하고, 운영 복잡도는 줄인다.*
 
