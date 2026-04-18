@@ -133,6 +133,20 @@ const MY_PLAN_OVERRIDES: Record<ConsumerPlanType, Partial<PlanOption>> = {
     },
 };
 
+const DAILY_PLAN_OVERRIDES: Record<ConsumerPlanType, Partial<PlanOption>> = {
+    MONTHLY: {
+        description: '하루의 흐름을 미리 읽는 Daily Premium Guidance와 Grand Oracle Chat을 매일 이어갈 수 있습니다.',
+        valueLabel: '가장 가볍게 매일의 운세 루틴을 여는 기본 경로',
+        benefits: ['Daily tarot & saju premium guidance', 'Grand Oracle Chat 무제한', '프리미엄 리딩과 타이밍 가이드'],
+        commitmentNote: '처음 전환하거나 아침마다 운세를 읽는 루틴이 나와 맞는지 짧게 검증해보고 싶은 사용자에게 가장 자연스러운 시작점입니다.',
+    },
+    ANNUAL: {
+        description: '가장 낮은 월 환산 비용으로 Daily Premium Guidance 루틴을 길게 유지합니다.',
+        valueLabel: '가장 큰 절약폭으로 매일의 가이던스를 오래 유지하는 경로',
+        benefits: ['장기 구독 할인', 'Daily premium guidance 1년 유지', 'Grand Oracle Chat 무제한'],
+    },
+};
+
 const DEFAULT_PAYWALL_COPY: PaywallCopy = {
     badge: 'CosmicPath Membership',
     headline: '프리미엄 흐름을 계속 이어가세요',
@@ -170,6 +184,19 @@ const MY_PAYWALL_COPY: PaywallCopy = {
     checkoutActionLabel: '프리미엄 멤버십 열기',
     decisionUnlockBody: '결제 직후 구독 상태가 반영되면 `/oracle-chat`, `/daily`, `/start` 프리미엄 흐름이 열리고, `/my`에서 인증된 번호에는 Daily Signal perk도 연결할 수 있습니다.',
     pathBody: '현재 기본 결제 표면은 월간/연간 두 가지 경로만 노출합니다. Daily Signal도 같은 membership 레일 위에서 켜지며, 별도 SMS 전용 결제 SKU는 두지 않습니다.',
+};
+
+const DAILY_PAYWALL_COPY: PaywallCopy = {
+    badge: 'Daily Premium Membership',
+    headline: '매일의 결정적인 흐름을 놓치지 마세요',
+    body: '당신의 사주와 타로를 결합한 Daily Premium 정밀 분석을 매일 아침 받아볼 수 있습니다. 월간은 가장 가볍게 루틴을 열기 좋고, 연간은 장기적인 운의 흐름을 가장 경제적으로 따라가는 방법입니다.',
+    insightLabel: 'Daily Routine Path',
+    insightBody:
+        '기본 결제 표면은 월간과 연간 두 가지 경로만 남겼습니다. 처음에는 월간으로 데일리 루틴을 열어보고, 만족스럽다면 연간으로 이어가는 구조가 가장 명확하고 안정적입니다.',
+    accessLabel: '지금 열리는 Daily Premium Access',
+    checkoutActionLabel: '프리미엄 데일리 열기',
+    decisionUnlockBody: '결제 직후 즉시 오늘과 다가올 내일의 Premium Daily 리딩이 열립니다.',
+    pathBody: '어디서 들어오든 같은 membership 레일 위에서 관리되며, 데일리 프리미엄 혜택과 Grand Oracle 무제한 접근이 동시에 열립니다.',
 };
 
 const BENEFIT_ICONS = [MessageCircle, Palette, CalendarDays] as const;
@@ -225,6 +252,20 @@ const MY_TRUST_SIGNALS: TrustSignal[] = [
     },
 ];
 
+const DAILY_TRUST_SIGNALS: TrustSignal[] = [
+    DEFAULT_TRUST_SIGNALS[0],
+    {
+        title: 'Decision unlock',
+        description: '결제 직후 단편적인 운세가 아닌, 사주 바탕의 정밀한 Daily 흐름이 즉시 열립니다.',
+        Icon: Sparkles,
+    },
+    {
+        title: 'Daily ritual',
+        description: '가볍게 한 달을 시작하거나 가장 저렴한 비용으로 1년간 매일의 흐름을 확인하세요.',
+        Icon: Crown,
+    },
+];
+
 function buildPlanOptions(
     livePrices: Partial<Record<ConsumerPlanType, LiveSubscriptionPrice>>,
     source: PaywallSource
@@ -234,17 +275,21 @@ function buildPlanOptions(
             ...PLAN_OPTIONS.MONTHLY,
             ...(source === 'oracle_chat'
                 ? ORACLE_CHAT_PLAN_OVERRIDES.MONTHLY
-                : source === 'my'
-                  ? MY_PLAN_OVERRIDES.MONTHLY
-                  : {}),
+                : source === 'daily'
+                  ? DAILY_PLAN_OVERRIDES.MONTHLY
+                  : source === 'my'
+                    ? MY_PLAN_OVERRIDES.MONTHLY
+                    : {}),
         },
         ANNUAL: {
             ...PLAN_OPTIONS.ANNUAL,
             ...(source === 'oracle_chat'
                 ? ORACLE_CHAT_PLAN_OVERRIDES.ANNUAL
-                : source === 'my'
-                  ? MY_PLAN_OVERRIDES.ANNUAL
-                  : {}),
+                : source === 'daily'
+                  ? DAILY_PLAN_OVERRIDES.ANNUAL
+                  : source === 'my'
+                    ? MY_PLAN_OVERRIDES.ANNUAL
+                    : {}),
         },
     };
     const monthlyLivePrice = livePrices.MONTHLY;
@@ -292,6 +337,10 @@ function getPaywallCopy(source: PaywallSource): PaywallCopy {
         return ORACLE_CHAT_PAYWALL_COPY;
     }
 
+    if (source === 'daily') {
+        return DAILY_PAYWALL_COPY;
+    }
+
     if (source === 'my') {
         return MY_PAYWALL_COPY;
     }
@@ -302,6 +351,10 @@ function getPaywallCopy(source: PaywallSource): PaywallCopy {
 function getTrustSignals(source: PaywallSource): TrustSignal[] {
     if (source === 'oracle_chat') {
         return ORACLE_CHAT_TRUST_SIGNALS;
+    }
+
+    if (source === 'daily') {
+        return DAILY_TRUST_SIGNALS;
     }
 
     if (source === 'my') {

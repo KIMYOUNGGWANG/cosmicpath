@@ -145,7 +145,12 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        const finalText = responseText.trim() || '지금은 답을 또렷하게 만들 재료가 부족합니다. 질문을 한 문장 더 구체적으로 알려주세요.';
+        let finalText = responseText.trim();
+        if (!finalText && promptContext.mode === 'council_briefing') {
+          finalText = `### 📜 사주 분석결과\n위 데이터를 바탕으로 검토하고 있습니다.\n\n### ⚖️ 타로 리딩\n위 카드의 흐름을 참조하세요.\n\n### 🌠 현재 행성 흐름\n현재 별자리의 흐름을 짚어보고 있습니다.\n\n### 🔮 수석 오라클의 최종 결론\n오라클 위원회의 답변을 생성하는 중에 연결이 고르지 못했습니다. 번거로우시더라도 같은 흐름으로 질문을 한 번 더 던져주세요.`;
+        } else if (!finalText) {
+          finalText = '지금은 답을 또렷하게 만들 재료가 부족합니다. 질문을 한 문장 더 구체적으로 알려주세요.';
+        }
         const councilData = applyFinalVerdict(promptContext.councilData, finalText);
         const saved = await saveOracleChatExchange({
           userId,

@@ -17,6 +17,13 @@
 > - 이번 사이클의 immediate wedge는 `free 첫 결과 + follow-up chat`의 generic drift를 줄이고 상담가 차이를 체감시키는 것이다. premium multi-phase 전체 재정렬과 locale 전면 재설계는 후순위로 둔다.
 > - `questionIntent`는 당분간 single wire key를 유지한다. `primary/secondary intent` 같은 복합 intent 실험이 생겨도 우선 internal metadata 또는 derived state로만 다룬다.
 > - follow-up continuity를 위한 advisor thesis / summary state는 기존 `metadata` 호환 범위 안에서만 추가할 수 있으며, DB migration이나 public response shape 변경은 이번 범위 밖이다.
+>
+> **Grand Oracle Chat Trust Hardening Lock (2026-04-17)**:
+> - 이번 사이클의 immediate wedge는 `Grand Oracle Chat`의 context continuity, quota/entitlement trust boundary, `council_briefing` reliability를 고정하는 것이다.
+> - `GET /api/oracle-chat/history`, `POST /api/oracle-chat/message`, `GET /api/oracle-chat/daily-hook`의 public request/response shape는 유지한다.
+> - 최근 reading metadata, birth context, latest room summary 복원은 모두 서버 truth 기준으로만 강화할 수 있다. 클라이언트가 보낸 membership flag, quota state, room ownership 힌트는 신뢰하지 않는다.
+> - free quota 초과는 계속 `402` + `details: 'ORACLE_CHAT_DAILY_LIMIT'` 계약을 유지하고, one-time reading paywall이 아니라 기존 membership paywall surface로 연결해야 한다.
+> - Oracle Chat trust hardening은 internal-only change로 다루며, 새 Stripe SKU, 새 `planType`, 새 `subscriptionStatus`, 새 public endpoint 추가는 이번 범위 밖이다.
 
 ---
 
@@ -111,6 +118,12 @@ interface ErrorResponse {
 > - SMS는 별도 주력 상품이 아니라 **기존 유료 membership의 보조 retention perk**로 다룬다.
 > - launch scope는 `구독자 + 인증된 전화번호` 대상 **하루 1회 one-way daily signal** 이다.
 > - reply형 문자 상담, 일일 3회 quota, SMS 전용 SKU는 현재 계약 범위 밖으로 둔다.
+>
+> **Implementation Note (2026-04-17) — Grand Oracle Chat Trust Hardening**:
+> - `Grand Oracle Chat`은 `최근 reading metadata -> latest room summary -> request payload userContext` 순서로 context source-of-truth를 우선 탐색할 수 있다.
+> - room ownership, membership entitlement, free quota는 모두 서버가 판정해야 하며, quota 차감은 동시 요청 경쟁 조건을 고려한 atomic path로 다룬다.
+> - `council_briefing` 생성 실패 시에도 public response shape는 유지하고, empty response 대신 예측 가능한 fallback answer를 반환해야 한다.
+> - `/oracle-chat`, `/daily`, `/billing`, `SubscriptionModal`의 `oracle_chat` merchandising은 source-aware copy를 유지하되, 한 entry surface의 문구가 다른 entry surface를 덮어쓰지 않게 해야 한다.
 
 ### 1. 오늘의 운세 (Daily Fortune) ✅ 구현됨
 
@@ -787,6 +800,11 @@ interface OracleChatMessageRequest {
 - quota 초과 시에는 one-time reading 결제가 아니라 기존 membership paywall (`SubscriptionModal` / `/billing`)로 유도한다.
 - Oracle Chat access는 클라이언트 flag가 아니라 서버의 활성 membership 상태에서만 도출해야 한다.
 
+**Implementation Note (2026-04-17)**
+- 메시지 생성 시 context 우선순위는 `최근 reading metadata -> latest room summary -> request payload userContext` 순서를 따른다.
+- room ownership, membership entitlement, quota state는 모두 서버에서 판정한다.
+- `council_briefing` 생성이 부분 실패해도 public stream shape는 유지해야 하며, empty completion으로 끝나서는 안 된다.
+
 **Error**
 - `400` 잘못된 payload
 - `401` 로그인 필요
@@ -833,6 +851,10 @@ interface OracleChatDailyHookResponse {
 - 최근 오라클 질문 요약과 오늘의 흐름을 연결해 재방문 훅을 만든다.
 - room 지정 시에도 본인 소유 room만 사용할 수 있다.
 - `/daily` 또는 홈 surface에서 `Grand Oracle Chat` 진입 카드로 재사용할 수 있다.
+
+**Implementation Note (2026-04-17)**
+- daily hook은 최근 room이 있으면 이를 우선 사용하되, recent reading-linked context가 있으면 함께 참고할 수 있다.
+- hook 생성 실패는 fatal error보다 ordinary chat welcome fallback으로 다루는 편이 우선이다.
 
 **Error**
 - `401` 로그인 필요

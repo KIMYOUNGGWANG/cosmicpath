@@ -7,7 +7,7 @@ cd "$ROOT_DIR"
 require_match() {
   local file="$1"
   local needle="$2"
-  if ! rg -F -q "$needle" "$file"; then
+  if ! grep -F -q "$needle" "$file"; then
     echo "Missing expected pattern in $file: $needle" >&2
     exit 1
   fi
@@ -16,7 +16,7 @@ require_match() {
 require_absence() {
   local file="$1"
   local needle="$2"
-  if rg -F -q "$needle" "$file"; then
+  if grep -F -q "$needle" "$file"; then
     echo "Unexpected pattern still present in $file: $needle" >&2
     exit 1
   fi
@@ -55,5 +55,10 @@ require_match "src/app/api/reading/followup/stream/route.ts" "mergeFollowUpMetad
 require_match "src/app/api/payment/route.ts" "session_id"
 require_match "src/app/api/payment/route.ts" "accessKey"
 require_match "src/app/start/use-start-resume.ts" "getStoredReadingAccessKey"
+
+# Grand Oracle Chat Trust Hardening (2026-04-17)
+require_match "src/lib/oracle-chat.ts" "getOptionalSajuSummary(latestReadingContext)"
+require_match "src/app/api/oracle-chat/message/route.ts" "### 🔮 수석 오라클의 최종 결론"
+require_match "src/components/payment/SubscriptionModal.tsx" "DAILY_PAYWALL_COPY"
 
 echo "Refactor regression checks passed"

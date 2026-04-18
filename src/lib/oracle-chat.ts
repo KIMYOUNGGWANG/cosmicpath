@@ -576,12 +576,12 @@ export async function buildOracleChatPromptContext(input: {
   }
 
   const tarot = getTarotDraw(`${input.userId}:${input.roomId ?? 'new'}:${input.content}`);
+  const latestReadingContext = await getLatestOracleChatUserContext(input.userId);
   const latestSajuSummary = getLatestSajuSummary(history.messages);
-  const resolvedUserContext =
-    input.userContext ?? (!latestSajuSummary ? await getLatestOracleChatUserContext(input.userId) : null);
   const sajuSummary =
-    getOptionalSajuSummary(resolvedUserContext) ??
+    getOptionalSajuSummary(latestReadingContext) ??
     latestSajuSummary ??
+    getOptionalSajuSummary(input.userContext) ??
     '출생 정보가 없어 정밀 사주 교차 검증은 생략하고 질문의 상황 맥락 중심으로 읽었습니다.';
   const astrologySummary = getCurrentAstrologySummary();
   const councilData: OracleCouncilData = {

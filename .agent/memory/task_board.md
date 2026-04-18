@@ -113,6 +113,51 @@
 - 영어권 `astro-first` onboarding을 지금 크게 건드리면 진입 이해도가 흔들릴 수 있다.
 - provider별 출력 예측성이 달라 golden sample을 어떻게 관리할지 기준을 먼저 정해야 한다.
 
+## 💬 Grand Oracle Chat Trust Hardening Block (2026-04-17)
+*원칙: 새 소비자 surface를 늘리지 않고, `Grand Oracle Chat`을 계속 써도 되는 코어 경험으로 고정한다.*
+
+- **Mission** — `Grand Oracle Chat`이 최근 리딩 맥락, birth context, membership/quota 경계를 더 일관되게 복원하고, `council_briefing` 응답은 깊이를 유지하면서도 지연/실패 시 예측 가능한 fallback을 제공하도록 만든다.
+
+### Scope Now
+- `/api/oracle-chat/message`가 room ownership, membership entitlement, free quota 차감, context restore를 모두 서버 truth 기준으로 처리하도록 잠근다.
+- `buildOracleChatPromptContext`가 최근 리딩 metadata와 최신 채팅 요약을 우선 재사용하도록 정리한다.
+- `council_briefing` 생성 경로에서 latency budget과 fallback shape를 명시해, 실패해도 `casual` 이하의 빈약한 응답으로 무너지지 않게 한다.
+- `/oracle-chat`, `/daily`, `SubscriptionModal`, `/billing`의 `oracle_chat` source branching을 유지하되, 한 surface용 카피가 다른 surface를 덮어쓰지 않게 정리한다.
+- `GET /api/oracle-chat/history`, `POST /api/oracle-chat/message`, `GET /api/oracle-chat/daily-hook`의 regression 확인 경로를 고정한다.
+
+### Scope Later
+- `Grand Oracle Chat` 전용 summary memory 또는 vector recall 전략
+- `career/love/wealth/general`별 전문 브리핑 템플릿 세분화
+- Oracle Chat 전용 유료 플랜 또는 add-on packaging 검토
+- SMS Daily Signal과 Oracle Chat thread를 더 촘촘히 연결하는 cross-channel orchestration
+
+### Explicitly Out
+- 새 Stripe SKU, 새 `planType`, 새 `subscriptionStatus` 추가
+- `POST /api/oracle-chat/message`의 public request/response shape 변경
+- Oracle Chat 신규 surface 추가 또는 대규모 UI 리디자인
+- voice/image/multi-user chat
+
+### Implementation Steps
+- [x] **Step 1: Server Context Recovery Lock** — 최근 reading metadata, birth context, latest room summary를 서버 우선순위로 복원하도록 `oracle-chat` context builder 경계를 잠근다.
+- [x] **Step 2: Quota & Entitlement Hardening** — free quota 차감과 membership entitlement 판정을 atomic/server-owned 흐름으로 정리하고 `402 ORACLE_CHAT_DAILY_LIMIT` 계약을 회귀 검사한다.
+- [x] **Step 3: Council Briefing Reliability** — `council_briefing`의 latency budget, fallback shape, partial failure 처리 규칙을 정리해 답변 깊이와 안정성을 같이 고정한다.
+- [x] **Step 4: Surface Copy Isolation** — `/oracle-chat`, `/daily`, paywall source별 messaging를 분리해 한 entry surface의 merchandising이 다른 surface를 덮어쓰지 않게 한다.
+- [x] **Step 5: Regression Harness** — `history/message/daily-hook`, membership paywall 진입, reading-linked context continuity를 최소 smoke 경로로 고정한다.
+
+### Validation
+- `npm run build`
+- `npm test`
+- `GET /api/oracle-chat/history`
+- `POST /api/oracle-chat/message`
+- `GET /api/oracle-chat/daily-hook`
+- 비구독자 1일 3회 초과 시 `402 ORACLE_CHAT_DAILY_LIMIT` 수동 확인
+- 최근 reading이 있는 사용자 기준으로 `/oracle-chat` 첫 응답 continuity 수동 점검
+
+### Risks / Open Questions
+- recent reading metadata를 너무 강하게 우선하면 현재 질문보다 과거 맥락을 과적합할 수 있다.
+- `council_briefing` depth를 유지하면 latency budget이 다시 흔들릴 수 있으므로, fallback이 실제로 “얕지만 일관된 답변”인지 검증이 필요하다.
+- paywall source isolation을 잘못 적용하면 `/daily`와 `/oracle-chat`의 카피가 또 충돌할 수 있다.
+
 ## 🧭 Focus Reset (2026-04-04)
 *원칙: 오라클 코어 루프를 강화하고, 운영 복잡도는 줄인다.*
 
