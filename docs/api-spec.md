@@ -5,6 +5,19 @@
 > **Status**: **LOCKED** — 변경 시 사유 기재 필수
 > **근거**: `docs/prd-v2.md` (친구 가입 완료 시 Credit +1 정책 확정)
 
+> **Refactor Contract Lock (2026-04-16)**:
+> - 이번 리팩터링 사이클의 목적은 외부 API 계약 변경이 아니라 내부 리딩 파이프라인 재구성이다.
+> - `/api/reading`, `/api/reading/followup*`, `/api/payment*`, `/api/growth*`의 request/response shape는 유지한다.
+> - `characterId`, `questionIntent`, `selectionMode`, `free_focus`, `summary`, `metadata`는 active wire contract로 간주한다.
+> - 프롬프트 시스템 재구성은 internal-only change로 다루며, free/premium 결과의 계약 키와 access ownership 규칙은 바꾸지 않는다.
+>
+> **Prompt & Advisor Quality Lock (2026-04-16)**:
+> - 다음 prompt 품질 사이클의 목적은 시스템 프롬프트와 상담가 레이어의 중복/충돌을 줄이고, 상담가의 전문성을 실제 판단 구조로 승격하는 것이다.
+> - `phase-prompts.ts` 재구성, `oracle-personas.ts` 강화, `evidencePriority` 반영, locale별 base framing 정리는 모두 internal-only change로 다룬다.
+> - 이번 사이클의 immediate wedge는 `free 첫 결과 + follow-up chat`의 generic drift를 줄이고 상담가 차이를 체감시키는 것이다. premium multi-phase 전체 재정렬과 locale 전면 재설계는 후순위로 둔다.
+> - `questionIntent`는 당분간 single wire key를 유지한다. `primary/secondary intent` 같은 복합 intent 실험이 생겨도 우선 internal metadata 또는 derived state로만 다룬다.
+> - follow-up continuity를 위한 advisor thesis / summary state는 기존 `metadata` 호환 범위 안에서만 추가할 수 있으며, DB migration이나 public response shape 변경은 이번 범위 밖이다.
+
 ---
 
 ## Authentication
@@ -80,6 +93,13 @@ interface ErrorResponse {
 > - 로그인 및 auth error display layer는 `Accept-Language` 기준으로 영문 카피를 우선 보여줄 수 있으며, 영어권에서는 Google을 기본 경로로 먼저 제안한다.
 > - 영어권 acquisition readiness는 `/guides`, `/guides/[slug]`, `/start` onboarding explainer 같은 presentation-layer surface로 제공되며, onward flow는 기존 `/api/reading` 및 `/api/growth/track` 계약을 그대로 사용한다.
 > - 운영 화면의 방문 규모 이해를 위해 `/api/growth/summary`는 기존 totals/series 외에 `visits.today`, `visits.last7Days`, `visits.last30Days`, `visits.dauMauRate`를 함께 제공할 수 있다. 이 값들은 모두 세션 기준 방문 신호이며 로그인 사용자 수와는 다르다.
+>
+> **Implementation Note (2026-04-16) — Reading Refactor Boundary**:
+> - `/api/reading` 내부 구현은 `request validation -> runtime assembly -> free generation -> premium phase orchestration -> persistence/resume` 순서의 서비스 경계로 재구성할 수 있다.
+> - free generation은 `free_focus`와 compact summary contract를 유지한 채 prompt/runtime 경계만 정리한다.
+> - premium generation은 multi-phase contract를 유지한 채 공통 시스템 규칙층과 phase overlay 조합 구조로 이동할 수 있다.
+> - reading runtime metadata는 later premium resume와 follow-up에서 재사용 가능한 source-of-truth로 취급한다.
+> - anonymous owner proof (`accessKey`)와 server-verified premium entitlement 규칙은 리팩터링 중에도 동일하게 유지해야 한다.
 >
 > **Planned Grand Oracle Chat Billing Delta (2026-04-12 PM)**:
 > - `Grand Oracle Chat` MVP는 **새 Stripe membership SKU, 새 `planType`, 새 `subscriptionStatus` enum을 추가하지 않는다.**
@@ -343,6 +363,13 @@ interface OracleAdvisorProfile {
 - 상담가는 말투보다 `분석 도메인`이 우선이며, 질문 의도가 바뀌면 follow-up에서도 상담가 재추천이 가능해야 한다.
 - 한자/전통 용어를 쓸 때는 반드시 `한자(독음, 쉬운 뜻)`으로 풀어서 설명한다.
 - 전문 상담가 체계는 active investment 범위이며, 세그먼트형 paywall 실험보다 높은 우선순위를 가진다.
+
+**Prompt Quality Direction (2026-04-16 Planned)**:
+- premium phase system prompt는 반복적인 `Life Strategist` 페르소나 문구보다 `shared rules + advisor contract + phase overlay` 조합을 우선한다.
+- 상담가별 `framework`, `styleRules`, `caution`, `evidencePriority`는 단순 설명이 아니라 실제 분석 순서와 출력 골격으로 반영되어야 한다.
+- locale(`ko/en`)별 기본 framing은 유지하되, 한국어 메인 제품의 `decision timing oracle` 포지션과 영어권 onboarding frame이 충돌하지 않도록 정리한다.
+- immediate execution scope는 free 첫 결과와 follow-up의 차별화 강화에 두고, locale 전면 재설계나 복합 intent 도입은 후속 사이클로 미룬다.
+- 이 변화는 internal-only prompt/runtime change이며, `characterId`, `questionIntent`, `selectionMode`, `advisorProfile`, `advisorEvidenceSummary` wire contract는 그대로 유지한다.
 
 ### 9. 성장 이벤트 수집 (Growth Track) ✅ 구현됨
 

@@ -30,7 +30,10 @@ function buildRequestBody(systemPrompt: string, userPrompt: string) {
     ],
     generationConfig: {
       temperature: 0.85,
-      maxOutputTokens: 1200,
+      maxOutputTokens: 2048,
+      thinkingConfig: {
+        thinkingLevel: 'minimal',
+      },
     },
   };
 }

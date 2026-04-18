@@ -13,6 +13,7 @@ import {
   buildOracleSajuPromptBlock,
   calculateOracleSajuProfile,
   type Gender,
+  type OracleSajuProfile,
 } from '@/lib/saju/saju-engine';
 import { stampRuntimeMetadata } from '@/lib/runtime-environment';
 
@@ -76,6 +77,79 @@ function getReadingData(metadata: JsonRecord | null): JsonRecord | null {
   return asRecord(metadata?.readingData);
 }
 
+function getFollowUpMetadata(metadata: JsonRecord | null): JsonRecord | null {
+  return asRecord(metadata?.followUpMetadata);
+}
+
+function getStoredSajuResult(metadata: JsonRecord | null): JsonRecord | null {
+  return asRecord(metadata?.sajuResult);
+}
+
+function getStoredOracleProfile(metadata: JsonRecord | null): OracleSajuProfile | null {
+  const storedSajuResult = getStoredSajuResult(metadata);
+  const rawProfile = asRecord(storedSajuResult?.raw);
+  return rawProfile ? rawProfile as unknown as OracleSajuProfile : null;
+}
+
+function getStoredPromptBlock(metadata: JsonRecord | null): string | undefined {
+  const followUpMetadata = getFollowUpMetadata(metadata);
+  const storedSajuResult = getStoredSajuResult(metadata);
+
+  return getString(followUpMetadata, 'localSajuPromptBlock')
+    ?? getString(metadata, 'localSajuPromptBlock')
+    ?? getString(storedSajuResult, 'oraclePromptBlock');
+}
+
+function getReusableAdvisorEvidenceSummary(
+  metadata: JsonRecord | null,
+  params: {
+    advisorProfile: OracleAdvisorProfile;
+    characterId: OracleCharacterId;
+    questionIntent: OracleQuestionIntent;
+    language: FollowUpLanguage;
+  }
+): { advisorEvidenceSummary?: string; localSajuPromptBlock?: string } {
+  const storedProfile = getStoredOracleProfile(metadata);
+  const storedPromptBlock = getStoredPromptBlock(metadata);
+
+  if (storedProfile) {
+    return {
+      advisorEvidenceSummary: buildOracleAdvisorEvidenceSummary({
+        profile: storedProfile,
+        questionIntent: params.questionIntent,
+        evidencePriority: params.advisorProfile.evidencePriority,
+        language: params.language,
+      }),
+      localSajuPromptBlock: storedPromptBlock || buildOracleSajuPromptBlock(storedProfile),
+    };
+  }
+
+  const followUpMetadata = getFollowUpMetadata(metadata);
+  const savedAdvisorEvidenceSummary = getString(followUpMetadata, 'advisorEvidenceSummary')
+    ?? getString(metadata, 'advisorEvidenceSummary');
+  const savedQuestionIntent = getString(followUpMetadata, 'questionIntent')
+    ?? getString(metadata, 'questionIntent');
+  const savedCharacterId = resolveOracleCharacterId(
+    getString(followUpMetadata, 'characterId')
+      ?? getString(metadata, 'characterId')
+  );
+
+  if (
+    savedAdvisorEvidenceSummary &&
+    savedQuestionIntent === params.questionIntent &&
+    savedCharacterId === params.characterId
+  ) {
+    return {
+      advisorEvidenceSummary: savedAdvisorEvidenceSummary,
+      localSajuPromptBlock: storedPromptBlock,
+    };
+  }
+
+  return {
+    localSajuPromptBlock: storedPromptBlock,
+  };
+}
+
 export function resolveFollowUpAdvisorContext(input: {
   metadata: JsonRecord | null;
   question: string;
@@ -117,12 +191,31 @@ export function resolveFollowUpAdvisorContext(input: {
       });
   const advisorProfile = buildOracleAdvisorProfile(characterId, selectionMode);
   const birthDate = getString(readingData, 'birthDate');
+  const reusableAdvisorContext = getReusableAdvisorEvidenceSummary(input.metadata, {
+    advisorProfile,
+    characterId,
+    questionIntent,
+    language,
+  });
 
   if (!birthDate) {
     return {
-      advisorEvidenceSummary: getString(input.metadata, 'advisorEvidenceSummary'),
+      advisorEvidenceSummary: reusableAdvisorContext.advisorEvidenceSummary
+        ?? getString(input.metadata, 'advisorEvidenceSummary'),
       advisorProfile,
       characterId,
+      localSajuPromptBlock: reusableAdvisorContext.localSajuPromptBlock,
+      questionIntent,
+      selectionMode,
+    };
+  }
+
+  if (reusableAdvisorContext.advisorEvidenceSummary && reusableAdvisorContext.localSajuPromptBlock) {
+    return {
+      advisorEvidenceSummary: reusableAdvisorContext.advisorEvidenceSummary,
+      advisorProfile,
+      characterId,
+      localSajuPromptBlock: reusableAdvisorContext.localSajuPromptBlock,
       questionIntent,
       selectionMode,
     };
@@ -170,10 +263,12 @@ export function mergeFollowUpMetadata(
       name: context.advisorProfile.name,
       title: context.advisorProfile.title,
     },
+    localSajuPromptBlock: context.localSajuPromptBlock,
     followUpMetadata: {
       advisorProfile: context.advisorProfile,
       advisorEvidenceSummary: context.advisorEvidenceSummary,
       characterId: context.characterId,
+      localSajuPromptBlock: context.localSajuPromptBlock,
       questionIntent: context.questionIntent,
       selectionMode: context.selectionMode,
       updatedAt: new Date().toISOString(),

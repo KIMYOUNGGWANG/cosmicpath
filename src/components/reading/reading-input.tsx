@@ -8,8 +8,7 @@ import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ReadingContext } from '@/lib/ai/prompt-builder';
-import { ENGLISH_GUIDES } from '@/lib/english-guides';
-import { BIRTH_CITY_OPTIONS } from '@/lib/saju/cities';
+import { BIRTH_CITY_OPTIONS } from '@/lib/saju/city-options';
 import {
     getOracleIntentLabel,
     ORACLE_CHARACTER_IDS,
@@ -170,6 +169,8 @@ const contexts: ContextOption[] = [
 
 const sectionShellClass =
     'relative overflow-hidden rounded-[24px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.08),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-4 shadow-[0_18px_50px_rgba(2,6,23,0.22)] backdrop-blur-xl md:rounded-[26px] md:p-6';
+
+const PRIMARY_ENGLISH_GUIDE_HREF = '/guides/what-is-korean-saju';
 
 const getGuideFitCopy = (
     specialty: OracleQuestionIntent,
@@ -468,7 +469,7 @@ export function ReadingInput({
                     </div>
                     {isEn ? (
                         <Link
-                            href={ENGLISH_GUIDES[0] ? `/guides/${ENGLISH_GUIDES[0].slug}` : '/guides'}
+                            href={PRIMARY_ENGLISH_GUIDE_HREF}
                             className="text-[11px] uppercase tracking-[0.24em] text-white/58 transition-colors hover:text-white"
                         >
                             {isEn ? 'New here? Read the quick guide' : '빠른 가이드 보기'}

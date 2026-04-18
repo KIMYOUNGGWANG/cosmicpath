@@ -1,0 +1,104 @@
+{
+  "samples": [
+    {
+      "id": "structured_timing_ko",
+      "type": "structured",
+      "language": "ko",
+      "currentDate": "2026-04-16",
+      "options": {
+        "characterId": "timing_selene",
+        "questionIntent": "timing",
+        "selectionMode": "auto",
+        "freeOutputMode": "core"
+      },
+      "expectedContains": [
+        "결정과 타이밍 오라클 규칙",
+        "분석 순서: 지금 국면이 준비/행동/정리 중 어디인지 판정 -> 유리한 시기 창과 피해야 할 타이밍 구분 -> 즉시 가능한 준비 행동 제시",
+        "근거 순서: 자미부터 먼저 열기 -> 점성 근거로 보강 -> 사주 근거로 확인",
+        "답변 골격: 현재 국면 판정 -> 시기 창 요약 -> 지금 당장 할 준비 행동",
+        "금지 패턴: 근거 없는 정확한 날짜 꾸며내기; 시기 불확실성을 숨기기; 준비 없이 행동만 밀어붙이기"
+      ]
+    },
+    {
+      "id": "chat_compatibility_ko",
+      "type": "chat",
+      "language": "ko",
+      "readingData": {
+        "saju": "사주 요약",
+        "astrology": "점성 요약",
+        "characterId": "compatibility_cassio",
+        "questionIntent": "compatibility",
+        "selectionMode": "auto",
+        "advisorEvidenceSummary": "<ADVISOR_EVIDENCE>\n- 감정 공명 축 확인\n</ADVISOR_EVIDENCE>",
+        "tarot": [
+          {
+            "id": 17,
+            "name": "별",
+            "nameEn": "The Star",
+            "keywords": ["희망"],
+            "interpretation": "희망이 살아납니다",
+            "isReversed": false,
+            "image": "https://example.com/star.jpg"
+          }
+        ]
+      },
+      "factsOfDestinyBlock": "## 📊 Facts of Destiny 데이터\n- 감정 온도: 68",
+      "expectedContains": [
+        "근거 순서: 사주부터 먼저 열기 -> 점성 근거로 보강 -> 자미 근거로 확인",
+        "답변 골격: 관계 현재 진단 -> 엇갈리는 지점 -> 안정화 행동 2-3가지",
+        "금지 패턴: 로맨틱한 기대만 키우기; 충돌 지점 숨기기; 상대의 감정을 단정적으로 단언하기",
+        "<오라클_가이드_프로필>에 적힌 분석 순서, 근거 순서, 답변 골격, 금지 패턴을 실제 답변 구조에 그대로 반영하세요."
+      ]
+    },
+    {
+      "id": "chat_wealth_en",
+      "type": "chat",
+      "language": "en",
+      "readingData": {
+        "saju": "Saju summary",
+        "astrology": "Astrology summary",
+        "characterId": "wealth_midas",
+        "questionIntent": "wealth",
+        "selectionMode": "manual",
+        "tarot": [
+          {
+            "id": 10,
+            "name": "Wheel of Fortune",
+            "nameEn": "Wheel of Fortune",
+            "keywords": ["cycle"],
+            "interpretation": "cycles are shifting",
+            "isReversed": false,
+            "image": "https://example.com/wheel.jpg"
+          }
+        ]
+      },
+      "expectedContains": [
+        "Evidence Sequence: open with Saju -> support with Natal -> confirm with Ziwei",
+        "Answer Skeleton: current financial state -> leaks and defensive buffer -> small repeatable behavior",
+        "Forbidden Patterns: pushing jackpot narratives; claiming aggressive investment timing; emphasizing upside while hiding downside",
+        "Follow the guide's Decision Sequence, Evidence Sequence, Answer Skeleton, and Forbidden Patterns from <ORACLE_GUIDE_PROFILE>."
+      ]
+    },
+    {
+      "id": "phase1_overlay_en",
+      "type": "phase1",
+      "userData": {
+        "birthDate": "1994-08-17",
+        "birthTime": "09:30",
+        "context": "career",
+        "question": "Should I change jobs this year?",
+        "language": "en",
+        "characterId": "career_lyra",
+        "questionIntent": "career",
+        "selectionMode": "auto"
+      },
+      "expectedContains": [
+        "## Core Role",
+        "Use the shared oracle guide profile and evidence rules provided in the prompt context as the primary advisor contract."
+      ],
+      "expectedNotContains": [
+        "You are a 'Life Strategist' who blends Eastern wisdom with Western Astrology to help people navigate their lives."
+      ]
+    }
+  ]
+}

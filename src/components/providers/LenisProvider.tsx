@@ -1,30 +1,29 @@
 'use client';
 
 import { useEffect } from 'react';
-import Lenis from 'lenis';
 import {
     DOCUMENT_SCROLL_LOCK_ATTRIBUTE,
     DOCUMENT_SCROLL_LOCK_EVENT,
 } from '@/lib/scroll-lock';
 
-export default function LenisProvider({ children }: { children: React.ReactNode }) {
+export default function LenisProvider() {
     useEffect(() => {
-        const lenis = new Lenis({
-            duration: 1.2,
-            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-            orientation: 'vertical',
-            gestureOrientation: 'vertical',
-            smoothWheel: true,
-            allowNestedScroll: true,
-        });
+        let rafId = 0;
+        let isDisposed = false;
+        let lenisInstance: {
+            raf: (time: number) => void;
+            destroy: () => void;
+            stop: () => void;
+            start: () => void;
+        } | null = null;
 
         const syncLenisLockState = (isLocked: boolean) => {
             if (isLocked) {
-                lenis.stop();
+                lenisInstance?.stop();
                 return;
             }
 
-            lenis.start();
+            lenisInstance?.start();
         };
 
         const handleScrollLockChange = (event: Event) => {
@@ -32,32 +31,45 @@ export default function LenisProvider({ children }: { children: React.ReactNode 
             syncLenisLockState(Boolean(customEvent.detail?.isLocked));
         };
 
-        syncLenisLockState(
-            document.documentElement.hasAttribute(DOCUMENT_SCROLL_LOCK_ATTRIBUTE)
-        );
+        void import('lenis').then(({ default: Lenis }) => {
+            if (isDisposed) return;
 
-        window.addEventListener(
-            DOCUMENT_SCROLL_LOCK_EVENT,
-            handleScrollLockChange as EventListener
-        );
+            lenisInstance = new Lenis({
+                duration: 1.2,
+                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                orientation: 'vertical',
+                gestureOrientation: 'vertical',
+                smoothWheel: true,
+                allowNestedScroll: true,
+            });
 
-        let rafId = 0;
-        const raf = (time: number) => {
-            lenis.raf(time);
+            syncLenisLockState(
+                document.documentElement.hasAttribute(DOCUMENT_SCROLL_LOCK_ATTRIBUTE)
+            );
+
+            window.addEventListener(
+                DOCUMENT_SCROLL_LOCK_EVENT,
+                handleScrollLockChange as EventListener
+            );
+
+            const raf = (time: number) => {
+                lenisInstance?.raf(time);
+                rafId = requestAnimationFrame(raf);
+            };
+
             rafId = requestAnimationFrame(raf);
-        };
-
-        rafId = requestAnimationFrame(raf);
+        });
 
         return () => {
+            isDisposed = true;
             window.removeEventListener(
                 DOCUMENT_SCROLL_LOCK_EVENT,
                 handleScrollLockChange as EventListener
             );
             cancelAnimationFrame(rafId);
-            lenis.destroy();
+            lenisInstance?.destroy();
         };
     }, []);
 
-    return <>{children}</>;
+    return null;
 }

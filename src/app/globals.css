@@ -52,6 +52,11 @@
   --duration-slow: 0.8s;
 }
 
+html,
+body {
+  position: relative;
+}
+
 /* Noise Grain Texture (Performance optimized) */
 .noise-overlay {
   position: fixed;

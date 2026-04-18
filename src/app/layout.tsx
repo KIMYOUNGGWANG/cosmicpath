@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import Script from "next/script";
 import "./globals.css";
 import JsonLd from "@/components/seo/json-ld";
 import { Analytics } from '@vercel/analytics/react';
@@ -93,24 +94,27 @@ export default async function RootLayout({
 }>) {
   const headersList = await headers();
   const isKorean = (headersList.get('accept-language') || '').includes('ko');
+  const DevConsoleFilter = process.env.NODE_ENV === 'development'
+    ? (await import("@/components/providers/DevConsoleFilter")).default
+    : null;
+
   return (
     <html lang={isKorean ? "ko" : "en"} suppressHydrationWarning>
       <body
         className="antialiased"
       >
-
         <SessionProvider>
-          <LenisProvider>
-            <JsonLd />
-            {children}
-            {process.env.NODE_ENV === 'production' ? <Analytics /> : null}
-          </LenisProvider>
+          <LenisProvider />
+          {DevConsoleFilter ? <DevConsoleFilter /> : null}
+          <JsonLd />
+          {children}
+          {process.env.NODE_ENV === 'production' ? <Analytics /> : null}
         </SessionProvider>
-        <script
+        <Script
           src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"
+          strategy="lazyOnload"
           crossOrigin="anonymous"
-          defer
-        ></script>
+        />
       </body>
     </html>
   );

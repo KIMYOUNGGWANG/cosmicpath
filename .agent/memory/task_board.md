@@ -1,146 +1,117 @@
 # 🎯 CosmicPath v2.0 — Task Board (리서치 기반 전략 로드맵)
 
-> 기준일: 2026-04-13 | 최신 전략: `docs/office-hours.md` + `docs/sms-oracle-api-spec.md`
+> 기준일: 2026-03-19 | 리서치: `RESEARCH/CosmicPath_Analysis_20260318`
 > 목표: **3개월 내 MAU 3,000 / 월 수익 500만원 / k-factor 1.5**
 
----
+## 🛠 Refactor Block (2026-04-16)
+*원칙: 제품 계약과 리딩 품질은 유지하고, 내부 구조와 프롬프트 경계를 다시 세운다.*
 
-## 📱 [PIVOT] SMS Oracle — 구독자 전용 Daily Signal (2026-04-15)
+- **Mission** — `/start` 무료 리딩 → 결과 → follow-up → 결제 루프의 신뢰도와 속도를 유지한 채, 리딩 생성 파이프라인을 분리 가능한 구조로 재구성한다.
 
-> **근거**: `docs/office-hours.md` (SMS Wedge 확정 — 번아웃된 2030의 수동형 채널)
-> **API 계약**: `docs/sms-oracle-api-spec.md`
-> **과금 방향**: 신규 SMS 전용 SKU 없이, **기존 paid membership perk**로 우선 검증
+### Scope Now
+- `/start`를 `입력 / 복구 / 결과 / 결제 / 공유 / follow-up 진입` 책임으로 분리한다.
+- `/api/reading`을 `요청 검증 / 리딩 런타임 구성 / free generation / premium phase orchestration / 저장 및 resume` 경계로 분리한다.
+- `premium-report`를 section 컴포넌트와 render schema 기반 구조로 나눈다.
+- 리포트 생성 프롬프트를 `공통 시스템 규칙층 + free/premium 모드층 + phase 전용 지시층`으로 재정렬한다.
+- 계산 엔진 결과와 metadata를 한 번 만든 뒤 재사용하는 `reading runtime` source-of-truth를 고정한다.
 
-### 🎯 Mission
-> "구독한 사용자가 앱을 열지 않아도, 아침에 하루 한 번 먼저 도착하는 짧은 오라클 시그널로
-> `/daily`와 `Grand Oracle Chat`으로 다시 돌아오게 만드는 paid retention layer"
+### Scope Later
+- `src/lib/engines/saju.ts`를 계산기, formatter, glossary, derived insight 레이어로 추가 분리한다.
+- follow-up chat과 `/daily`가 공유하는 oracle context builder를 별도 모듈로 승격한다.
+- LLM provider/model budget 정책을 통합된 orchestration 레이어로 정리한다.
 
-### Scope
-- **Now (MVP):** 국내 Solapi 연동. **구독자 + 인증된 번호 보유자**에게 하루 1회 짧은 SMS/LMS Daily Hook 발송. 순수 텍스트, one-way 리텐션 신호.
-- **Later:** 답장형 상담(inbound webhook), 카카오 알림톡(더 저렴), 글로벌 Twilio, 이미지(MMS) 타로 카드
-- **Out:** 하루 3회 문자 상담, 무제한 대화, SMS 전용 신규 결제 SKU, free user 문자 체험
-
-### Implementation Steps
-
-- [x] **Step 1: DB 스키마 마이그레이션**
-  - `SmsOracleSubscriber` / `SmsOracleMessage` / `SmsOracleQuota` 테이블 생성
-  - `User` 모델에 역관계 추가
-  - 검증: `npx prisma validate`, `npx prisma db execute --file prisma/migrations/20260414_add_sms_oracle_tables.sql --schema prisma/schema.prisma`, remote table existence 확인
-
-- [ ] **Step 2: Solapi 계정 세팅 & 환경변수**
-  - Solapi 가입 → 발신번호 등록 (사전 심사 최대 3일 소요 주의)
-  - `.env.local` 에 `SOLAPI_API_KEY`, `SOLAPI_API_SECRET`, `SOLAPI_FROM_NUMBER`, `CRON_SECRET` 추가
-  - 검증: Solapi SDK로 내 번호에 테스트 문자 발송 성공 여부 확인
-
-- [ ] **Step 3: 백엔드 — Daily Hook Cron (`POST /api/sms-oracle/daily-hook`)**
-  - Vercel Cron (`vercel.json`)으로 매일 오전 8시 발송
-  - **활성 paid membership + 인증된 전화번호** 보유자만 대상으로 필터링
-  - 최근 리딩/`/daily`/`oracle-chat` 문맥을 짧은 1문장 signal로 압축
-  - 검증: 수동 `curl -X POST /api/sms-oracle/daily-hook -H "Authorization: Bearer <CRON_SECRET>"` 테스트
-
-- [ ] **Step 4: 백엔드 — 전화번호 등록 + OTP 인증**
-  - `POST /api/sms-oracle/register` (번호 등록 + OTP 문자 발송)
-  - `POST /api/sms-oracle/verify` (OTP 6자리 검증)
-  - 인증 완료 후 구독자만 다음날부터 Daily Signal 수신
-  - 검증: 실제 번호로 OTP 수신 및 인증 완료 플로우 확인
-
-- [ ] **Step 5: 프론트엔드 — 마이페이지 등록/동의 UI**
-  - `/my`에 SMS Daily Signal 전용 섹션 유지
-  - 번호 입력 → OTP 인증 → "매일 아침 한 번 먼저 알려드립니다" 상태 문구
-  - 비구독자에게는 잠금/업셀 문구만 노출
-  - 검증: 브라우저에서 등록, 인증, 구독 상태별 화면 수동 확인
-
-- [ ] **Step 6: 멤버십 가치 제안 연결**
-  - `/billing`, `SubscriptionModal`, `/my`에서 SMS를 **보조 paid perk**로 설명
-  - "문자 상담"이 아니라 "아침에 먼저 오는 personal daily signal" 톤으로 고정
-  - 검증: 구독자/비구독자 surface copy가 `oracle_chat` 주가치를 해치지 않는지 확인
-
-### Risks & Open Questions
-- [ ] **Solapi 발신번호 심사:** 등록 후 승인까지 영업일 1~3일 걸림. 실제 검증 전에 선행되어야 함.
-- [ ] **스팸/법률 리스크:** daily signal도 대량 발송이 되면 광고성/수신거부 문구 정책을 검토해야 함.
-- [ ] **가치 밀도 리스크:** 하루 1회 알림이 retention에는 좋아도, paid membership 전환 가치를 설명할 만큼 강한 perk인지 검증 필요.
-- [ ] **카피 충돌 리스크:** `Grand Oracle Chat 무제한`이 메인 가치인데 SMS가 주 상품처럼 오해되면 결제 표면이 흐려질 수 있음.
-- [ ] **원가 시뮬레이션:** one-way 기준으로는 훨씬 가벼워지지만, SMS 길이가 LMS로 넘어가는 비율을 확인해야 함.
-
-### Status Note (2026-04-15)
-- Step 1 DB schema는 remote DB까지 반영되었다.
-- 코드 워크트리에는 `POST /api/sms-oracle/register`, `POST /api/sms-oracle/verify`, `POST /api/sms-oracle/inbound`, `POST /api/sms-oracle/daily-hook` skeleton이 존재한다.
-- 다만 **현재 rollout scope는 inbound 상담이 아니라 one-way daily signal** 쪽으로 축소한다.
-- `/my`에 SMS Oracle 전화번호 등록 → OTP 인증 → 완료 상태 UI가 이미 연결되어 있다.
-- `solapi` 패키지를 설치했고, `.env.example`, `vercel.json`, `docs/sms-oracle-setup.md`로 운영 세팅 가이드를 추가했다.
-- `GET /api/sms-oracle/daily-hook`는 Vercel Cron 호환 alias로 추가되었고, 기존 수동/백필 호출은 `POST` 계약을 유지한다.
-- `prisma generate`, targeted `eslint`, `tsc --noEmit` 검증은 통과했다.
-- production `npm run build`도 통과했다.
-- 다만 live SMS delivery 검증은 `SOLAPI_*` 환경변수와 실제 계정 세팅 이후에만 마무리할 수 있다.
-
----
-
-## 🚀 [NEW] Grand Oracle Chat — 구독형 고민 상담 채팅 (2026-04-13)
-
-> **근거**: `office-hours.md` (커리어 Wedge) + `brainstorm.md` (1+2+4 하이브리드 모델 확정)
-> **API 계약**: `docs/oracle-chat-api-spec.md`
-> **수직 분류**: Wedge = `이직/취업/퇴사 타이밍`, 확장 = 관계/재물/일상
-
-### 🎯 Mission
-> "사주+점성술+타로 3중 엔진이 기억력을 가지고, 결정적 순간에는 단호한 팩트폭행을 날리며
->  평소에는 내 하루를 먼저 체크해 주는 개인 오라클 채팅 서비스"
-
-### Scope
-- **Now (MVP)**: 커리어 도메인 특화 채팅. **기존 Pro/paid membership 레일 재사용**, 구독자 무제한 / 비구독자 1일 3회
-- **Later**: 관계/재물 도메인 확장, Push Notification (재방문 훅), Oracle Chat 전용 별도 구독 SKU 검토
-- **Out**: 음성, 이미지, 다중 사용자, 실시간 인간 상담사, 지금 당장의 신규 Stripe 플랜 분기
+### Explicitly Out
+- 새 consumer-facing 기능 추가
+- `/api/reading*`, `/api/payment*`, `/api/growth*`의 응답 shape 변경
+- paywall merchandising 실험 재확장
+- `/match`, `/viral`, 블로그 surface 재투자
 
 ### Implementation Steps
+- [x] **Step 1: Start Flow Boundary Split** — `src/app/start/page.tsx`에서 상태 저장, resume/reset, payment/share/review modal, follow-up 진입 로직을 훅/섹션 단위로 분리한다.
+- [x] **Step 2: Reading Route Service Split** — `src/app/api/reading/route.ts`를 orchestration 중심으로 남기고, runtime assembly / free reading / premium phase / persistence helpers를 서비스로 분리한다.
+- [x] **Step 3: Prompt Stack Refactor** — `prompt-builder.ts`와 `phase-prompts.ts`의 중복 규칙을 줄이고, 공통 시스템 프롬프트와 phase overlay 조립 구조를 만든다.
+- [x] **Step 4: Premium Report Decomposition** — `premium-report.tsx`를 section registry, section components, shared cards/utilities로 분리해 결과 렌더링을 데이터 중심으로 바꾼다.
+- [x] **Step 5: Engine & Runtime Stabilization** — `saju-engine.ts`/`engines/saju.ts`의 derived formatter와 evidence summary builder를 정리하고, premium resume 시 재계산을 최소화한다.
+- [x] **Step 6: Regression Harness** — free outline, premium phase resume, payment verification, restore/accessKey, follow-up continuity를 중심으로 빌드/테스트/수동 smoke 경로를 고정한다.
 
-- [x] **Step 1: DB 마이그레이션**
-  - `OracleChatRoom` / `OracleChatMessage` / `OracleChatQuota` 테이블 생성 (Prisma Migration)
-  - 검증: `npx prisma migrate dev && npx prisma studio`
+### Progress Note
+- 2026-04-16 PM: Step 1 started. `/start`의 storage/url helper, resume hook, payment/share/review modal state를 별도 모듈로 추출했고 `npm run build` 통과. 입력/result section 분해와 follow-up entry 경계 정리는 계속 진행한다.
+- 2026-04-16 PM (2): `/start` 결과 렌더를 `start-result-stage.tsx`로 추출해 CTA, premium report, chat entry, error state를 page 바깥으로 이동했고 `npm run build` 재통과. 다음은 input/tarot/reveal section 분리 또는 follow-up/payment CTA handler 추가 정리다.
+- 2026-04-16 PM (3): `/start`의 input/tarot/reveal stage를 각각 `start-input-stage.tsx`, `start-tarot-stage.tsx`, `start-reveal-stage.tsx`로 분리했고 `page.tsx`를 orchestration 중심으로 축소했다. `npm run build` 재통과 기준으로 Step 1을 완료 처리하고, 다음 사이클은 `/api/reading` service split으로 넘어간다.
+- 2026-04-16 PM (4): Step 2 started. `/api/reading`의 runtime assembly를 `reading-runtime-service.ts`, free/premium generation orchestration을 `reading-generation-service.ts`로 분리해 `route.ts`를 access/validation/orchestration 중심으로 축소했다. `npm run build` 통과 기준으로 generation 경계는 정리됐고, 다음은 premium access/persistence helper까지 route 바깥으로 빼는 작업이다.
+- 2026-04-16 PM (5): `/api/reading`의 invite 처리와 premium access/payment sync를 `reading-request-service.ts`로 분리했고, `route.ts`는 quota/auth/response orchestration 위주로 정리했다. `route.ts`는 `222`줄까지 줄었고 `npm run build` 재통과 기준으로 Step 2를 완료 처리한다.
+- 2026-04-16 PM (6): Step 3 started. `prompt-shared-rules.ts`를 추가해 free/premium 공통 규칙층(깊이 규칙, 한자 규칙, persona/evidence prelude)을 모듈화했고, `prompt-builder.ts`와 `phase-prompts.ts`가 이 shared prelude를 사용하도록 연결했다. `npm run build` 통과 기준으로 중복 규칙 정리는 시작됐고, 다음은 schema/validation prompt와 chat prompt 쪽의 중복 문구를 더 줄이는 작업이다.
+- 2026-04-16 PM (7): `prompt-shared-rules.ts`에 structured JSON schema, validation rules, free summary plain-text validation, chat response protocol helper를 추가해 `prompt-builder.ts`의 큰 문자열 블록을 공통 조립 구조로 이동했다. `phase-prompts.ts`는 shared prelude를 유지하고, `npm run build` 재통과 기준으로 Step 3를 완료 처리한다.
+- 2026-04-16 PM (8): Step 4 started. `premium-report.tsx`에서 순수 프레젠테이션 섹션(`HeaderSection`, `FreeFocusSection`, `PremiumSectionInterruptionCard`, `ContentCard`)만 `premium-report-sections.tsx`로 분리했고, 상태/계산 로직은 그대로 유지했다. `npm run build` 재통과 기준으로 이번 변화는 동작 변경 없는 저위험 분리이며, 다음은 나머지 섹션을 같은 방식으로 점진 분해한다.
+- 2026-04-16 PM (9): `premium-report-sections.tsx`에 상태 없는 순수 섹션(`ActionPlanSection`, `NumerologySection`, `PastLifeSection`)을 추가로 이동했고, `premium-report.tsx`는 import 조립만 하도록 정리했다. `npm run build` 재통과 기준으로 Step 4는 안전한 presentation 분해를 계속 진행 중이며, 다음은 stateful 섹션 전까지 더 옮길 수 있는 조각을 선별한다.
+- 2026-04-16 PM (10): `CoreAnalysisSection`과 `AccordionSection`도 `premium-report-sections.tsx`로 이동해, `premium-report.tsx`에서 무상태 렌더 조각을 더 걷어냈다. `npm run build` 재통과 기준으로 이번 배치도 동작 변경 없는 저위험 분리이며, 남은 Step 4 범위는 주로 `FortuneFlow`, `SpecialAnalysis`, `Compatibility`, `DateSelection`, `AstroDeep` 같은 stateful 섹션 정리다.
+- 2026-04-16 PM (11): stateful 섹션 첫 배치로 `SpecialAnalysisSection`을 `premium-report-sections.tsx`로 이동했다. 중간에 `Zap` import 누락으로 타입 에러가 한 번 있었지만 즉시 복구했고, 최종적으로 `npm run build` 재통과 기준으로 동작/계약 변화 없이 안정 상태를 확인했다.
+- 2026-04-16 PM (12): 다음 stateful 배치로 `DateSelectionSection`을 `premium-report-sections.tsx`로 이동했고, 탭 상태/애니메이션/날짜 포맷 로직은 그대로 유지했다. `npm run build` 재통과 기준으로 Step 4는 여전히 안전한 단위 분해를 유지 중이며, 남은 큰 stateful 후보는 `CompatibilitySection`, `AstroDeepSection`, `FortuneFlowSection`이다.
+- 2026-04-16 PM (13): `CompatibilitySection`도 `premium-report-sections.tsx`로 이동해, 사회적 궁합 탭 상태와 transition을 섹션 단위로 분리했다. `npm run build` 재통과 기준으로 현재 Step 4의 주요 남은 stateful 후보는 `AstroDeepSection`과 `FortuneFlowSection`이며, 특히 `FortuneFlowSection`은 내부 상태와 UI 밀도가 높아 가장 마지막에 다루는 것이 안전하다.
+- 2026-04-16 PM (14): `AstroDeepSection`도 `premium-report-sections.tsx`로 이동했고, accordion 상태와 열림 애니메이션은 그대로 유지했다. `npm run build` 재통과 기준으로 이제 Step 4의 큰 남은 덩어리는 `FortuneFlowSection`과 legacy `CompatibleDeepDiveSection` 정도이며, 전자는 마지막에 다루는 것이 가장 안전하다.
+- 2026-04-16 PM (15): legacy `CompatibleDeepDiveSection`도 `premium-report-sections.tsx`로 이동해, fallback 탭 렌더까지 섹션 파일로 모았다. `npm run build` 재통과 기준으로 Step 4의 주된 남은 대형 섹션은 사실상 `FortuneFlowSection` 하나이며, 이 부분은 내부 상태와 월간 맵 UI가 결합돼 있어 마지막에 단독으로 다루는 것이 맞다.
+- 2026-04-16 PM (16): `FortuneFlowSection`, `LifeAreasSection`, `TarotSpreadSection`, `TraitsSection`까지 `premium-report-sections.tsx`로 이동해 `premium-report.tsx`를 조립 중심으로 정리했다. `npm run build` 재통과 기준으로 Step 4를 완료 처리한다.
+- 2026-04-16 PM (17): `oracle-followup-context.ts`가 저장된 `sajuResult.raw`, `oraclePromptBlock`, `followUpMetadata`를 우선 재사용하도록 정리해 follow-up 질문 시 사주 런타임 재계산을 줄였다. 새 질문으로 intent가 바뀌어도 저장된 raw profile이 있으면 evidence summary만 다시 조립하고, `npm run build` 재통과 기준으로 Step 5를 완료 처리한다.
+- 2026-04-16 PM (18): `scripts/test-refactor-regression.sh`와 `docs/refactor-regression-checklist.md`를 추가하고 `package.json`에 `npm test`를 연결해 리팩터링 경계 회귀 검사를 고정했다. `npm test`, `npm run build`, `bash .agent/scripts/audit-status.sh` 기준으로 Step 6를 완료 처리한다.
 
-- [x] **Step 2: 백엔드 — 메시지 전송 API**
-  - `POST /api/oracle-chat/message` (스트리밍 SSE 방식)
-  - LLM intent 분류 (casual vs council_briefing)
-  - `council_briefing` 시: `saju-engine.ts` + 타로 시드 + 점성술 통합 파이프라인
-  - 검증: `curl -X POST /api/oracle-chat/message -d '{"content":"퇴사할까요?"}' | cat`
+### Validation
+- `npm run build`
+- `npm test`
+- `/start` 무료 1단계 → 2단계 요약 확장 → 결과 복구 수동 검증
+- 유료 resume 경로에서 phase 재개 및 결제 검증 수동 점검
+- `POST /api/reading`, `POST|GET /api/reading/followup`, `POST|GET /api/payment` 응답 shape 회귀 확인
 
-- [x] **Step 3: 백엔드 — 히스토리 & 데일리 훅 API**
-  - `GET /api/oracle-chat/history`
-  - `GET /api/oracle-chat/daily-hook`
-  - 검증: API 응답 shape가 `oracle-chat-api-spec.md` 계약과 일치하는지 TypeScript 타입 체크
+### Risks / Open Questions
+- 프롬프트 리팩터링 중 free/premium tone drift가 생기지 않도록 golden sample 비교가 필요하다.
+- `characterId`, `questionIntent`, `selectionMode`, `free_focus`는 wire contract로 유지해야 한다.
+- premium phase 저장 포맷을 바꾸면 기존 resume 데이터와 충돌할 수 있으므로 migration 없는 호환 레이어가 먼저 필요하다.
+- `/start`는 URL sync와 sessionStorage, 서버 restore가 모두 얽혀 있어 상태 ownership을 먼저 고정하지 않으면 재회귀 가능성이 높다.
 
-- [x] **Step 4: 프론트엔드 — 채팅 UI (`/oracle-chat`)**
-  - 채팅창 레이아웃 (모바일 퍼스트)
-  - `casual` 모드: 일반 말풍선
-  - `council_briefing` 모드: 접힌 "위원회 분석 보기" + 최종 결론 강조 카드
-  - 스트리밍 타이핑 애니메이션
-  - 검증: 브라우저 직접 확인
+## 🧠 Prompt & Advisor Quality Block (2026-04-16 Night)
+*원칙: 외부 계약은 유지하고, 시스템 프롬프트와 상담가 레이어를 더 짧고 더 선명하며 더 전문적으로 만든다.*
 
-- [x] **Step 5: 프론트엔드 — 데일리 훅 진입점 연결**
-  - `/daily` 또는 홈 화면에서 AI가 먼저 말을 거는 배너/카드 표시
-  - 최근 질문 영역과 연결된 CTA로 `/oracle-chat` 진입을 만든다
-  - 검증: 재방문 시 dailyHook 메시지가 노출되고, 클릭 시 같은 thread 또는 최신 room으로 이어지는지 확인
+- **Mission** — 무료 결과, premium report, follow-up chat이 모두 “결정과 타이밍 오라클”답게 읽히도록 만들되, generic한 라이프 코치 톤과 phase별 프롬프트 중복을 줄이고 상담가의 도메인 전문성을 실제 판단 구조로 승격한다.
 
-- [x] **Step 6: 빌링 & Paywall 리패키징**
-  - 일일 3회 초과 시 `402` → **기존 `SubscriptionModal` / `/billing` 레일**로 연결
-  - 기존 Stripe 상품/웹훅/`/api/subscription/*`는 유지하고, 오라클 챗 무제한 가치 제안 중심으로 카피를 재작성
-  - 서버 권한 판정은 `기존 활성 유료 membership => Oracle Chat access` 의미 계층으로 감싼다
-  - 검증: 비로그인/비구독 유저 3회 이후 `oracle_chat` source paywall이 열리고, 유료 유저는 무제한 사용이 유지되는지 확인
+### Scope Now
+- `phase-prompts.ts`의 중복된 `Life Strategist` 시스템 프롬프트를 걷어내고, free 첫 결과와 follow-up에 가장 직접 연결되는 공통 규칙층을 우선 정리한다.
+- `oracle-personas.ts`의 `framework`, `styleRules`, `caution`, `evidencePriority`를 “설명문”이 아니라 “판단 계약”으로 강화해 상담가 차이를 실제 출력 구조에서 체감되게 만든다.
+- `evidencePriority`가 실제 답변 구조에서 첫 근거/보조 근거 순서로 반영되게 하되, 우선 가장 사용 빈도가 높은 질문 흐름에 집중한다.
+- generic한 라이프 코치 톤을 줄이고, 사용자가 첫 결과와 follow-up에서 바로 느낄 수 있는 “결정과 타이밍 오라클” 차별성을 우선 확보한다.
 
-### Risks & Open Questions
-- [ ] **토큰 비용**: `council_briefing` 1회당 LLM 호출이 3~4번 발생. 월 MAU 3,000 기준 비용 추정 필요.
-- [ ] **맥락 기억 범위**: DB에서 최근 N개 메시지를 context로 주입할지, Vector DB (pgvector)를 써야 할지 결정 필요.
-- [ ] **CS 리스크**: 극단적 우울감 등 민감한 입력에 대한 안전망 프롬프트 가이드라인 필요.
-- [ ] **빌링 패키징 리스크**: 기존 리딩 중심 membership copy와 Grand Oracle Chat 무제한 가치 제안이 같은 `/billing` surface에서 충돌하지 않도록 정리 필요.
-- [ ] **SKU 분리 시점**: Oracle Chat 전용 플랜이 실제로 필요한 시점(전환율/ARPU 기준)을 언제로 볼지 기준 정의 필요.
+### Scope Later
+- 한국어 기본 프레임과 영어권 onboarding 프레임의 전면 재정렬
+- `primaryIntent + secondaryIntent` 라우팅을 본격 도입해 복합 질문 분류를 고도화한다.
+- follow-up continuity를 위한 `advisor thesis` / summary state의 저장 전략 확장
+- provider별 토큰 budget 및 locale별 few-shot 압축 정책을 별도 orchestration 레이어로 승격한다.
 
-### Status Note (2026-04-12 PM)
-- Oracle Chat migration SQL, API routes, and `/oracle-chat` UI are implemented and connected.
-- Validation passed: `prisma validate`, targeted `eslint`, full `tsc --noEmit`, `npm run build`, and remote Supabase table creation 확인.
-- Billing direction lock: **새 Stripe SKU를 추가하지 않고 기존 membership 레일을 재사용**한다. 대신 `/billing`, `SubscriptionModal`, 402 paywall copy를 Grand Oracle Chat 무제한 가치 제안 기준으로 다시 잠근다.
-- `/daily`에 Grand Oracle Chat daily hook CTA를 연결했고, `/oracle-chat` 402는 `SubscriptionModal` source=`oracle_chat`로 연결되며 `/billing`도 같은 가치 제안으로 리패키징되었다.
-- Grand Oracle Chat MVP Step 1-6 is complete. 남은 것은 토큰 비용, 기억 범위, 민감 입력 safety, 그리고 future SKU 분리 시점 판단이다.
+### Explicitly Out
+- 새 consumer-facing surface 추가
+- `characterId`, `questionIntent`, `selectionMode`, `free_focus`, `summary`, `metadata`의 wire contract 변경
+- 상담가 ID 추가/삭제 또는 브랜딩 명칭 변경
+- DB migration이 필요한 저장 구조 개편
+- premium multi-phase 전체를 한 번에 완성도 높게 재작성하는 작업
 
----
+### Implementation Steps
+- [x] **Step 1: Core Prompt Contract Unification** — `phase-prompts.ts`와 `prompt-builder.ts`에서 free 첫 결과 / follow-up에 직접 영향을 주는 중복 시스템 프롬프트를 걷어내고, `prompt-shared-rules.ts` 기반 공통 규칙층과 phase overlay만 남긴다.
+- [x] **Step 2: Advisor Decision Contract** — 각 상담가의 `framework/styleRules/caution`를 실제 분석 순서, 금지 패턴, 출력 골격으로 승격하되, 가장 사용 빈도가 높은 질문 흐름부터 적용한다.
+- [x] **Step 3: Evidence Ordering** — `evidencePriority`를 실제 답변 구조에 반영해 generic 문장보다 근거 순서가 먼저 드러나게 한다.
+- [x] **Step 4: Prompt Regression & Golden Samples** — free 첫 결과, premium 핵심 phase, follow-up용 golden sample과 regression check를 추가해 generic drift와 advisor drift를 감시한다.
 
+### Progress Note
+- 2026-04-16 Night (2): Step 1 completed. `prompt-shared-rules.ts`에 결정/타이밍 오라클 base rule과 evidence-first 서술 규칙을 추가했고, `prompt-builder.ts`의 free/follow-up system prompt가 이 공통 규칙층을 직접 재사용하도록 정리했다. `phase-prompts.ts`는 Phase 1/1B의 중복 `Life Strategist` 머리말을 shared guide contract 기준의 얇은 phase overlay로 축소했다. `npm test`, `npm run build` 통과. `node scripts/verify-oracle-prompt-refactor.ts`는 현재 plain Node ESM import resolution 때문에 실행 실패하므로 Step 4에서 runnable verifier 경로를 함께 정리한다.
+- 2026-04-16 Night (3): Step 2-4 completed. `oracle-personas.ts`에 상담가별 분석 순서, 금지 패턴, 답변 골격, 근거 순서를 internal decision contract helper로 추가했고, 이 정보가 free structured prompt와 follow-up prompt의 shared guide block에 직접 노출되도록 연결했다. `prompt-shared-rules.ts`의 chat protocol도 guide contract를 실제 답변 구조에 반영하도록 강화했다. `scripts/oracle-prompt-golden-samples.json`과 runnable `node scripts/verify-oracle-prompt-refactor.ts`를 추가해 structured/free/follow-up/phase1 drift를 검증 가능하게 만들었고, `node scripts/verify-oracle-prompt-refactor.ts`, `npm test`, `npm run build` 모두 통과했다. 현재 남은 경고는 verifier 실행 시 Node의 `MODULE_TYPELESS_PACKAGE_JSON` warning뿐이며, 기능상 blocker는 아니다.
+
+### Validation
+- `npm run build`
+- `npm test`
+- `node scripts/verify-oracle-prompt-refactor.ts`
+- 상담가별 샘플 질문 수동 비교
+- `free result`, `premium phase`, `follow-up` 출력에서 tone/evidence/order 수동 spot check
+
+### Risks / Open Questions
+- 상담가 전문성을 너무 강하게 밀면 free/premium tone 차이가 과장되거나 과도한 페르소나 연기가 생길 수 있다.
+- 영어권 `astro-first` onboarding을 지금 크게 건드리면 진입 이해도가 흔들릴 수 있다.
+- provider별 출력 예측성이 달라 golden sample을 어떻게 관리할지 기준을 먼저 정해야 한다.
 
 ## 🧭 Focus Reset (2026-04-04)
 *원칙: 오라클 코어 루프를 강화하고, 운영 복잡도는 줄인다.*
