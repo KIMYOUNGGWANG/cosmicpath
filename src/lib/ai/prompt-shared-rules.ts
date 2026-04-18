@@ -89,8 +89,8 @@ export function buildPromptDepthRule(
 
   if (mode === 'free-core') {
     return language === 'en'
-      ? '# Free Depth Rule\n- This is phase 1 of a free reading. Deliver the clearest high-signal outline first and avoid exhaustive sub-analysis.\n- Return only `free_focus` and compact `summary` metadata in this phase.\n- Do not write the long summary body yet. Phase 2 will expand it later.\n- `free_focus` must always contain one decisive next move, one compact evidence summary, and one precise follow-up question.'
-      : '# 무료 깊이 규칙\n- 이것은 무료 리딩 1단계입니다. 가장 해상도 높은 아웃라인을 먼저 주고, 과도한 세부 분해는 피하세요.\n- 이 단계에서는 `free_focus`와 압축된 `summary` 메타데이터만 반환하세요.\n- 긴 summary 본문은 아직 쓰지 마세요. 본문은 2단계에서 확장합니다.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 다음 질문 1개를 반드시 넣으세요.';
+      ? '# Free Depth Rule\n- This is phase 1 of a free reading. Deliver the clearest high-signal outline first and avoid exhaustive sub-analysis.\n- Return only `free_focus` and compact `summary` metadata in this phase.\n- Do not write the long summary body yet. Phase 2 will expand it later.\n- `free_focus.action_conclusion` MUST begin by directly answering the user\'s question. Example: "You asked about changing jobs — this is a good time to move." Starting with generic fortune flow language like "Your current energy..." is forbidden.\n- `free_focus.evidence_summary` must cite at least one concrete Saju/Astro/Tarot signal (e.g. a pillar name, planet, or card).\n- `free_focus` must always contain one decisive next move, one compact evidence summary, and one precise follow-up question.'
+      : '# 무료 깊이 규칙\n- 이것은 무료 리딩 1단계입니다. 가장 해상도 높은 아웃라인을 먼저 주고, 과도한 세부 분해는 피하세요.\n- 이 단계에서는 `free_focus`와 압축된 `summary` 메타데이터만 반환하세요.\n- 긴 summary 본문은 아직 쓰지 마세요. 본문은 2단계에서 확장합니다.\n- `free_focus.action_conclusion`은 반드시 사용자의 질문에 대한 직접 답변으로 시작해야 합니다. 예: "이직을 물어보셨는데, 지금 움직여도 됩니다." "당신의 현재 운세 흐름은..." 같은 포괄적 서술로 시작하는 것은 금지합니다.\n- `free_focus.evidence_summary`는 반드시 사주 기둥명, 행성, 타로 카드 등 최소 1개의 구체적 근거를 인용해야 합니다.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 다음 질문 1개를 반드시 넣으세요.';
   }
 
   if (mode === 'free-phase2') {
@@ -100,8 +100,8 @@ export function buildPromptDepthRule(
   }
 
   return language === 'en'
-    ? '# Free Depth Rule\n- This is a free reading. Deliver the clearest high-signal summary first and avoid exhaustive sub-analysis.\n- Return only `free_focus`, `summary`, and `traits`.\n- `free_focus` must always contain one decisive next move, one compact evidence summary, and one precise follow-up question.'
-    : '# 무료 깊이 규칙\n- 이것은 무료 리딩입니다. 가장 해상도 높은 요약을 먼저 주고, 과도한 세부 분해는 피하세요.\n- 출력은 `free_focus`, `summary`, `traits`만 반환하세요.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 다음 질문 1개를 반드시 넣으세요.';
+    ? '# Free Depth Rule\n- This is a free reading. Deliver the clearest high-signal summary first and avoid exhaustive sub-analysis.\n- Return only `free_focus`, `summary`, and `traits`.\n- `free_focus.action_conclusion` MUST begin by directly answering the user\'s question. Example: "You asked about changing jobs — this is a good time to move." Starting with generic fortune flow language like "Your current energy..." is forbidden.\n- `free_focus.evidence_summary` must cite at least one concrete Saju/Astro/Tarot signal (e.g. a pillar name, planet, or card).\n- `free_focus` must always contain one decisive next move, one compact evidence summary, and one precise follow-up question.'
+    : '# 무료 깊이 규칙\n- 이것은 무료 리딩입니다. 가장 해상도 높은 요약을 먼저 주고, 과도한 세부 분해는 피하세요.\n- 출력은 `free_focus`, `summary`, `traits`만 반환하세요.\n- `free_focus.action_conclusion`은 반드시 사용자의 질문에 대한 직접 답변으로 시작해야 합니다. 예: "이직을 물어보셨는데, 지금 움직여도 됩니다." "당신의 현재 운세 흐름은..." 같은 포괄적 서술로 시작하는 것은 금지합니다.\n- `free_focus.evidence_summary`는 반드시 사주 기둥명, 행성, 타로 카드 등 최소 1개의 구체적 근거를 인용해야 합니다.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 다음 질문 1개를 반드시 넣으세요.';
 }
 
 export function buildPromptSharedPrelude(options: PromptSharedPreludeOptions) {

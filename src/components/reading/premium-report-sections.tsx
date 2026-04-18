@@ -115,10 +115,12 @@ export function FreeFocusSection({
   freeFocus,
   language,
   isPremium,
+  userQuestion,
 }: {
   freeFocus?: PremiumReportData['free_focus'];
   language: 'ko' | 'en';
   isPremium: boolean;
+  userQuestion?: string;
 }) {
   const isEn = language === 'en';
 
@@ -133,6 +135,16 @@ export function FreeFocusSection({
       transition={{ delay: 0.08, duration: 0.45, ease: 'easeOut' }}
       className="mt-6 px-4 md:px-6"
     >
+      {!isPremium && userQuestion && (
+        <div className="mb-4 rounded-[20px] border border-white/10 bg-white/[0.04] px-5 py-4 backdrop-blur-sm">
+          <div className="mb-2 text-[10px] uppercase tracking-[0.22em] text-white/38">
+            {isEn ? 'Your Question' : '당신의 질문'}
+          </div>
+          <p className="text-sm font-medium leading-relaxed text-white/80">
+            &ldquo;{userQuestion}&rdquo;
+          </p>
+        </div>
+      )}
       <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(10,12,24,0.55))] p-5 shadow-[0_24px_80px_rgba(8,12,28,0.35)] backdrop-blur-xl md:p-6">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>

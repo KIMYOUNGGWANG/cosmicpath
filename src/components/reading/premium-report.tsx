@@ -301,6 +301,7 @@ interface PremiumReportProps {
     price?: string;
     isLoading?: boolean;
     onRetry?: () => void;
+    userQuestion?: string;
 }
 
 interface MetadataWithReadingData extends NonNullable<PremiumReportProps['metadata']> {
@@ -414,7 +415,7 @@ const fadeInUp: Variants = {
     }
 };
 
-export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock, isPremium, price, isLoading, onRetry }: PremiumReportProps) {
+export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock, isPremium, price, isLoading, onRetry, userQuestion }: PremiumReportProps) {
     const isEn = language === 'en';
     const [selectedCardIdx, setSelectedCardIdx] = useState<number | null>(null);
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -501,12 +502,22 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
 
     return (
         <div className="w-full max-w-2xl mx-auto pb-24 md:pb-32">
+            {/* FreeFocusSection: 비구독자는 최상단에, 프리미엄은 HeaderSection 다음에 */}
+            {!isPremium && (
+                <FreeFocusSection
+                    freeFocus={freeFocus}
+                    language={language}
+                    isPremium={false}
+                    userQuestion={userQuestion}
+                />
+            )}
+
             {/* Header */}
             {(metadata as any)?.readingData?.partnerName ? (
                 <CompatibilityHeader
                     userName={(metadata as any)?.readingData?.name || 'User'}
                     partnerName={(metadata as any)?.readingData?.partnerName}
-                    score={report.summary.trust_score * 20} // Convert 1-5 to percentage
+                    score={report.summary.trust_score * 20}
                     title={report.summary.title}
                     content={report.summary.content}
                     language={language}
@@ -518,11 +529,13 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 />
             )}
 
-            <FreeFocusSection
-                freeFocus={freeFocus}
-                language={language}
-                isPremium={Boolean(isPremium)}
-            />
+            {isPremium && (
+                <FreeFocusSection
+                    freeFocus={freeFocus}
+                    language={language}
+                    isPremium={true}
+                />
+            )}
 
             {/* Hidden Print Layout */}
             <div className="hidden">
