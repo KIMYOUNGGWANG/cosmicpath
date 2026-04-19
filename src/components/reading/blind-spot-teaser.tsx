@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Sparkles, Lock } from 'lucide-react';
+import { AlertTriangle, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BlindSpotTeaserProps {
@@ -15,14 +15,27 @@ export function BlindSpotTeaser({ title, previewText, hiddenText, language, isLo
     const isEn = language === 'en';
 
     return (
-        <div className="relative overflow-hidden rounded-xl border border-gold/30 bg-gold/5 mt-6 group transition-colors">
+        <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={cn(
+                "relative overflow-hidden rounded-xl border mt-6 group transition-colors",
+                isLocked ? "border-red-500/30 bg-red-500/5 shadow-[0_0_20px_rgba(239,68,68,0.05)]" : "border-gold/30 bg-gold/5"
+            )}
+        >
             {/* Header / Hook */}
-            <div className="flex items-center justify-between p-4 border-b border-gold/10 bg-gold/5">
+            <div className={cn(
+                "flex items-center justify-between p-4 border-b",
+                isLocked ? "border-red-500/20 bg-red-500/10" : "border-gold/10 bg-gold/5"
+            )}>
                 <div className="flex items-center gap-3">
-                    <div className="p-1.5 rounded-full bg-gold/10">
-                        <Sparkles size={16} className="text-gold" />
+                    <div className={cn("p-1.5 rounded-full animate-pulse", isLocked ? "bg-red-500/20" : "bg-gold/10")}>
+                        <AlertTriangle size={16} className={isLocked ? "text-red-400" : "text-gold"} />
                     </div>
-                    <h3 className="font-bold text-starlight text-sm md:text-base tracking-wide flex items-center gap-2">
+                    <h3 className={cn(
+                        "font-bold text-sm md:text-base tracking-wide flex items-center gap-2",
+                        isLocked ? "text-red-200" : "text-starlight"
+                    )}>
                         {title}
                     </h3>
                 </div>
@@ -41,7 +54,10 @@ export function BlindSpotTeaser({ title, previewText, hiddenText, language, isLo
             {/* Content Area */}
             <div className="p-5 relative">
                 {/* Visible Teaser */}
-                <p className="text-gray-300 text-sm md:text-base leading-relaxed mb-4 font-medium italic border-l-2 border-gold/30 pl-4">
+                <p className={cn(
+                    "text-sm md:text-base leading-relaxed mb-4 font-medium italic border-l-2 pl-4",
+                    isLocked ? "text-red-100/90 border-red-500/40" : "text-gray-300 border-gold/30"
+                )}>
                     {previewText}
                 </p>
 
@@ -56,15 +72,15 @@ export function BlindSpotTeaser({ title, previewText, hiddenText, language, isLo
 
                     {/* Lock Overlay */}
                     {isLocked && (
-                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/5 backdrop-blur-[2px]">
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[4px]">
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={onUnlock}
-                                className="flex items-center gap-2 bg-gradient-to-r from-gold to-yellow-600 text-black font-bold text-xs px-4 py-2 rounded-full shadow-lg hover:shadow-gold/20 transition-all"
+                                className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-800 border border-red-500/50 text-white font-bold text-xs px-4 py-2 rounded-full shadow-lg shadow-red-900/20 hover:shadow-red-500/40 transition-all"
                             >
                                 <Lock size={12} fill="currentColor" />
-                                {isEn ? 'Read the Hidden Oracle Signal' : '숨겨진 오라클 신호 읽기'}
+                                {isEn ? 'Unlock to Reveal Risk' : '체크카드 잠금해제 및 확인'}
                             </motion.button>
                         </div>
                     )}
@@ -77,6 +93,6 @@ export function BlindSpotTeaser({ title, previewText, hiddenText, language, isLo
                     backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
                 }}
             />
-        </div>
+        </motion.div>
     );
 }

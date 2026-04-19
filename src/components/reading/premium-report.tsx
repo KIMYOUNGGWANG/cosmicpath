@@ -490,6 +490,15 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
         ? `⚠️ Element conflict with '${primaryTrait}'`
         : "⚠️ Critical Element Imbalance Detected";
 
+    // Dynamic Blind Spot Hook
+    const dynamicBlindSpotPreviewKo = userName
+        ? `이 결정을 실행할 때 ${userName}님이 절대 놓치면 안 될 치명적 리스크가 하나 발견되었습니다. 교차 검증 중 포착된 이 충돌 신호를 무시하면...`
+        : `이 결정을 실행할 때 절대 놓치면 안 될 치명적 리스크가 하나 발견되었습니다. 교차 검증 중 포착된 이 충돌 신호를 무시하면...`;
+    
+    const dynamicBlindSpotPreviewEn = userName
+        ? `A critical blind spot has been detected for ${userName}. Ignoring this conflict signal discovered during cross-validation could lead to...`
+        : `A critical blind spot has been detected. Ignoring this conflict signal discovered during cross-validation could lead to...`;
+
     const firstMissingPremiumSection: PremiumSectionKey | null = (() => {
         if (!isPremium || isLoading || !onRetry) return null;
         if (!report.fortune_flow) return 'fortune_flow';
@@ -596,6 +605,25 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
 
             {/* Categorized Analysis - LINEAR LAYOUT */}
             <div className="space-y-12 md:space-y-16 mt-8 md:mt-12">
+
+                {/* 0. Blind Spot Warning (PAYWALL WEDGE) */}
+                {!isPremium && (
+                    <motion.div
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, margin: "-100px" }}
+                        variants={fadeInUp}
+                    >
+                        <BlindSpotTeaser
+                            title={isEn ? "⚠️ Critical Blind Spot Warning" : "⚠️ 치명적 사각지대 (Blind Spot) 경고"}
+                            previewText={isEn ? dynamicBlindSpotPreviewEn : dynamicBlindSpotPreviewKo}
+                            hiddenText={isEn ? "Conflicting planetary alignments suggest a high probability of severe misjudgment if you proceed without addressing the underlying root cause." : "별자리와 타로카드 배열에서 심각한 오판의 징후가 발견되었습니다. 이 문제를 해결하지 못하면 결정적인 순간에 발목을 잡힐 수 있습니다."}
+                            language={language || 'ko'}
+                            isLocked={true}
+                            onUnlock={handleUnlock}
+                        />
+                    </motion.div>
+                )}
 
                 {/* 1. Basic Analysis - FREE: summary + traits only, PREMIUM: all */}
                 <motion.section
