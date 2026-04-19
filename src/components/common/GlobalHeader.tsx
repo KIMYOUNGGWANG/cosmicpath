@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import { ChevronLeft, Menu, Search, Sparkles, User } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { OrderLookupModal } from '@/components/orders/OrderLookupModal';
 import { MobileMenu } from '@/components/common/MobileMenu';
 import UserMenu from '@/components/layout/UserMenu';
 import { LoginModal, useLoginModal } from '@/components/auth/LoginModal';
 import { useSession } from 'next-auth/react';
+import { useDocumentScrollLock } from '@/hooks/useDocumentScrollLock';
 
 interface GlobalHeaderProps {
     language?: 'ko' | 'en';
@@ -22,17 +23,7 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    // Lock body scroll when menu is open
-    useEffect(() => {
-        if (isMobileMenuOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
-        }
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
-    }, [isMobileMenuOpen]);
+    useDocumentScrollLock(isMobileMenuOpen);
 
     const toggleOrderModal = () => {
         setIsOrderModalOpen(true);

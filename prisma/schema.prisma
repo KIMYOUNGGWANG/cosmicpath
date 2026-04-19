@@ -75,6 +75,13 @@ model User {
   // Match Sessions
   hostedMatches MatchSession[] @relation("Host")
   guestMatches  MatchSession[] @relation("Guest")
+
+  // Oracle Chat
+  oracleChatRooms  OracleChatRoom[]
+  oracleChatQuotas OracleChatQuota[]
+
+  // SMS Oracle
+  smsOracleSubscriber SmsOracleSubscriber?
 }
 
 model Referral {
@@ -287,4 +294,82 @@ model OpsAlert {
   @@unique([source, alertKey])
   @@index([severity, lastSeenAt])
   @@index([status, lastSeenAt])
+}
+
+model OracleChatRoom {
+  id        String   @id @default(uuid())
+  userId    String
+  domain    String
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  OracleChatMessage[]
+
+  @@index([userId, updatedAt])
+}
+
+model OracleChatMessage {
+  id          String   @id @default(uuid())
+  roomId      String
+  role        String   // 'user' | 'oracle'
+  content     String   @db.Text
+  mode        String   // 'casual' | 'council_briefing'
+  councilData Json?
+  createdAt   DateTime @default(now())
+
+  room        OracleChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt])
+}
+
+model OracleChatQuota {
+  id           String   @id @default(uuid())
+  userId       String
+  date         DateTime @db.Date // YYYY-MM-DD
+  messageCount Int      @default(0)
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+model SmsOracleSubscriber {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  phoneNumber String   @unique // E.164 format
+  isVerified  Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages    SmsOracleMessage[]
+  quotas      SmsOracleQuota[]
+}
+
+model SmsOracleMessage {
+  id           String   @id @default(uuid())
+  subscriberId String
+  direction    String   // 'inbound' | 'outbound'
+  content      String   @db.Text
+  createdAt    DateTime @default(now())
+
+  subscriber   SmsOracleSubscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+
+  @@index([subscriberId, createdAt])
+}
+
+model SmsOracleQuota {
+  id              String    @id @default(uuid())
+  subscriberId    String
+  date            DateTime  @db.Date
+  replyCount      Int       @default(0) // Daily max 3
+  dailyHookSentAt DateTime?
+
+  subscriber      SmsOracleSubscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriberId, date])
+  @@index([subscriberId, date])
 }

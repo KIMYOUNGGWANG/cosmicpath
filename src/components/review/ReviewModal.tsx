@@ -2,8 +2,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { Star, X } from 'lucide-react';
+import { useDocumentScrollLock } from '@/hooks/useDocumentScrollLock';
 
 interface ReviewModalProps {
     isOpen: boolean;
@@ -19,6 +21,8 @@ export function ReviewModal({ isOpen, onClose, readingId, accessKey }: ReviewMod
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
+
+    useDocumentScrollLock(isOpen);
 
     // Handle browser back button - close modal
     useEffect(() => {
@@ -108,9 +112,9 @@ export function ReviewModal({ isOpen, onClose, readingId, accessKey }: ReviewMod
         }
     };
 
-    if (!isOpen) return null;
+    if (typeof document === 'undefined' || !isOpen) return null;
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -203,5 +207,7 @@ export function ReviewModal({ isOpen, onClose, readingId, accessKey }: ReviewMod
                 </div>
             </motion.div>
         </div>
+        ,
+        document.body
     );
 }

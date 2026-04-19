@@ -12,6 +12,7 @@ interface BlurredPreviewSectionProps {
     language: 'ko' | 'en';
     icon?: React.ReactNode;
     className?: string;
+    userQuestion?: string;
 }
 
 /**
@@ -27,6 +28,7 @@ export function BlurredPreviewSection({
     language,
     icon,
     className,
+    userQuestion,
 }: BlurredPreviewSectionProps) {
     const isEn = language === 'en';
 
@@ -45,6 +47,18 @@ export function BlurredPreviewSection({
 
             {subtitle && (
                 <p className="text-sm text-white/60 mb-4">{subtitle}</p>
+            )}
+
+            {/* Question Echo Panel */}
+            {userQuestion && userQuestion.trim().length >= 5 && (
+                <div className="mb-4 px-4 py-3 bg-white/5 border border-white/10 rounded-xl backdrop-blur-sm relative z-10">
+                    <span className="text-[10px] text-acc-gold opacity-80 uppercase tracking-widest block mb-1">
+                        {isEn ? "Your Question" : "내 질문"}
+                    </span>
+                    <p className="text-sm font-medium text-white/90 line-clamp-2">
+                        &ldquo;{userQuestion}&rdquo;
+                    </p>
+                </div>
             )}
 
             {/* Blurred Content Container */}
@@ -99,6 +113,7 @@ interface BlurredPreviewWrapperProps extends Omit<BlurredPreviewSectionProps, 'c
     isPremium: boolean;
     children: React.ReactNode;
     fallback?: React.ReactNode;
+    userQuestion?: string;
 }
 
 export function BlurredPreviewWrapper({

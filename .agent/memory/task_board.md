@@ -70,7 +70,7 @@
 ## 🧠 Prompt & Advisor Quality Block (2026-04-16 Night)
 *원칙: 외부 계약은 유지하고, 시스템 프롬프트와 상담가 레이어를 더 짧고 더 선명하며 더 전문적으로 만든다.*
 
-- **Mission** — 무료 결과, premium report, follow-up chat이 모두 “결정과 타이밍 오라클”답게 읽히도록 만들되, generic한 라이프 코치 톤과 phase별 프롬프트 중복을 줄이고 상담가의 도메인 전문성을 실제 판단 구조로 승격한다.
+- **Mission** — 무료 결과, premium report, follow-up chat이 모두 “결정과 타이밍 오라클”답게 읽히도록 만들되, generic한 라이프 코치 톤과 phase별 프롬프트 중복을 줄이고 상담가의 도메인 전문성을 실제 판단 구조로 승격한다. 추가로 페이월 전환율 최적화를 위해 "Blind Spot (손실 회피)" 컴포넌트를 설계한다.
 
 ### Scope Now
 - `phase-prompts.ts`의 중복된 `Life Strategist` 시스템 프롬프트를 걷어내고, free 첫 결과와 follow-up에 가장 직접 연결되는 공통 규칙층을 우선 정리한다.
@@ -96,6 +96,17 @@
 - [x] **Step 2: Advisor Decision Contract** — 각 상담가의 `framework/styleRules/caution`를 실제 분석 순서, 금지 패턴, 출력 골격으로 승격하되, 가장 사용 빈도가 높은 질문 흐름부터 적용한다.
 - [x] **Step 3: Evidence Ordering** — `evidencePriority`를 실제 답변 구조에 반영해 generic 문장보다 근거 순서가 먼저 드러나게 한다.
 - [x] **Step 4: Prompt Regression & Golden Samples** — free 첫 결과, premium 핵심 phase, follow-up용 golden sample과 regression check를 추가해 generic drift와 advisor drift를 감시한다.
+- [x] **Step 5: Paywall Blind Spot Hook** — 결제 전환율(Conversion) 극대화를 위해 손실 회피(Fear/Risk)를 자극하는 `BlindSpotTeaser`를 `PremiumReport` 컴포넌트의 유료 섹션 최상단에 전진 배치한다.
+
+## 📱 Oracle Story Swiper UX Renewal Block (2026-04-18)
+*원칙: 기존 고품질 분석 데이터 구조를 유지하되 프론트엔드의 세로 스크롤을 가로 스와이프 카드로 개편.*
+
+- **Mission** — 긴 텍스트로 인한 가독성 하락을 막고 모바일 앱처럼 쾌감 있는 UX를 주기 위해 페이월 이후의 리포트를 'Oracle Story Swiper' 방식으로 갈아엎는다. 상세 텍스트는 서랍 인터페이스 속에 분리 배치한다.
+
+### Implementation Steps
+- [x] **Step 1: Story Swiper Framework** — `story-swiper.tsx`와 `deep-dive-drawer.tsx`의 뼈대를 Framer Motion 드래그 이벤트를 기반으로 구축한다. 모바일 터치 대응과 데스크탑 Fallback 내비게이션을 포함한다.
+- [x] **Step 2: Premium Data Parsing** — `premium-report.tsx`에 인입된 기존 텍스트 위주의 `report` 객체에서 리딩 슬라이드별(코어, 타로, 점성) 핵심 '한 줄 훅'을 추출하는 유틸 기능 작성.
+- [x] **Step 3: Component Integration** — 기존 렌더링되던 Linear Layout을 걷어내고, Story Swiper에 슬라이드를 마운트하여 스크린 테스트 진행.
 
 ### Progress Note
 - 2026-04-16 Night (2): Step 1 completed. `prompt-shared-rules.ts`에 결정/타이밍 오라클 base rule과 evidence-first 서술 규칙을 추가했고, `prompt-builder.ts`의 free/follow-up system prompt가 이 공통 규칙층을 직접 재사용하도록 정리했다. `phase-prompts.ts`는 Phase 1/1B의 중복 `Life Strategist` 머리말을 shared guide contract 기준의 얇은 phase overlay로 축소했다. `npm test`, `npm run build` 통과. `node scripts/verify-oracle-prompt-refactor.ts`는 현재 plain Node ESM import resolution 때문에 실행 실패하므로 Step 4에서 runnable verifier 경로를 함께 정리한다.
@@ -112,6 +123,51 @@
 - 상담가 전문성을 너무 강하게 밀면 free/premium tone 차이가 과장되거나 과도한 페르소나 연기가 생길 수 있다.
 - 영어권 `astro-first` onboarding을 지금 크게 건드리면 진입 이해도가 흔들릴 수 있다.
 - provider별 출력 예측성이 달라 golden sample을 어떻게 관리할지 기준을 먼저 정해야 한다.
+
+## 💬 Grand Oracle Chat Trust Hardening Block (2026-04-17)
+*원칙: 새 소비자 surface를 늘리지 않고, `Grand Oracle Chat`을 계속 써도 되는 코어 경험으로 고정한다.*
+
+- **Mission** — `Grand Oracle Chat`이 최근 리딩 맥락, birth context, membership/quota 경계를 더 일관되게 복원하고, `council_briefing` 응답은 깊이를 유지하면서도 지연/실패 시 예측 가능한 fallback을 제공하도록 만든다.
+
+### Scope Now
+- `/api/oracle-chat/message`가 room ownership, membership entitlement, free quota 차감, context restore를 모두 서버 truth 기준으로 처리하도록 잠근다.
+- `buildOracleChatPromptContext`가 최근 리딩 metadata와 최신 채팅 요약을 우선 재사용하도록 정리한다.
+- `council_briefing` 생성 경로에서 latency budget과 fallback shape를 명시해, 실패해도 `casual` 이하의 빈약한 응답으로 무너지지 않게 한다.
+- `/oracle-chat`, `/daily`, `SubscriptionModal`, `/billing`의 `oracle_chat` source branching을 유지하되, 한 surface용 카피가 다른 surface를 덮어쓰지 않게 정리한다.
+- `GET /api/oracle-chat/history`, `POST /api/oracle-chat/message`, `GET /api/oracle-chat/daily-hook`의 regression 확인 경로를 고정한다.
+
+### Scope Later
+- `Grand Oracle Chat` 전용 summary memory 또는 vector recall 전략
+- `career/love/wealth/general`별 전문 브리핑 템플릿 세분화
+- Oracle Chat 전용 유료 플랜 또는 add-on packaging 검토
+- SMS Daily Signal과 Oracle Chat thread를 더 촘촘히 연결하는 cross-channel orchestration
+
+### Explicitly Out
+- 새 Stripe SKU, 새 `planType`, 새 `subscriptionStatus` 추가
+- `POST /api/oracle-chat/message`의 public request/response shape 변경
+- Oracle Chat 신규 surface 추가 또는 대규모 UI 리디자인
+- voice/image/multi-user chat
+
+### Implementation Steps
+- [x] **Step 1: Server Context Recovery Lock** — 최근 reading metadata, birth context, latest room summary를 서버 우선순위로 복원하도록 `oracle-chat` context builder 경계를 잠근다.
+- [x] **Step 2: Quota & Entitlement Hardening** — free quota 차감과 membership entitlement 판정을 atomic/server-owned 흐름으로 정리하고 `402 ORACLE_CHAT_DAILY_LIMIT` 계약을 회귀 검사한다.
+- [x] **Step 3: Council Briefing Reliability** — `council_briefing`의 latency budget, fallback shape, partial failure 처리 규칙을 정리해 답변 깊이와 안정성을 같이 고정한다.
+- [x] **Step 4: Surface Copy Isolation** — `/oracle-chat`, `/daily`, paywall source별 messaging를 분리해 한 entry surface의 merchandising이 다른 surface를 덮어쓰지 않게 한다.
+- [x] **Step 5: Regression Harness** — `history/message/daily-hook`, membership paywall 진입, reading-linked context continuity를 최소 smoke 경로로 고정한다.
+
+### Validation
+- `npm run build`
+- `npm test`
+- `GET /api/oracle-chat/history`
+- `POST /api/oracle-chat/message`
+- `GET /api/oracle-chat/daily-hook`
+- 비구독자 1일 3회 초과 시 `402 ORACLE_CHAT_DAILY_LIMIT` 수동 확인
+- 최근 reading이 있는 사용자 기준으로 `/oracle-chat` 첫 응답 continuity 수동 점검
+
+### Risks / Open Questions
+- recent reading metadata를 너무 강하게 우선하면 현재 질문보다 과거 맥락을 과적합할 수 있다.
+- `council_briefing` depth를 유지하면 latency budget이 다시 흔들릴 수 있으므로, fallback이 실제로 “얕지만 일관된 답변”인지 검증이 필요하다.
+- paywall source isolation을 잘못 적용하면 `/daily`와 `/oracle-chat`의 카피가 또 충돌할 수 있다.
 
 ## 🧭 Focus Reset (2026-04-04)
 *원칙: 오라클 코어 루프를 강화하고, 운영 복잡도는 줄인다.*

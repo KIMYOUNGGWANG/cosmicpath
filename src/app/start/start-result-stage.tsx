@@ -155,6 +155,7 @@ export function StartResultStage(props: StartResultStageProps) {
                 price={props.dynamicPrice}
                 isLoading={props.isLoading}
                 onRetry={props.onRetryPremium}
+                userQuestion={props.readingData?.question}
               />
             ) : null}
 

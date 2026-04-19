@@ -14,6 +14,7 @@ import { EvidenceTooltip } from '../ui/confidence-badge';
 import { TarotDetailModal } from './tarot-detail-modal';
 import { ShareCard } from './share-card';
 import { BlindSpotTeaser } from './blind-spot-teaser';
+import { VerdictReport } from './verdict-report';
 import { TeaserCard } from '../sales/TeaserCard';
 import { BlurredPreviewSection } from '../sales/BlurredPreviewSection';
 import { StickyCTA } from '../common/sticky-cta';
@@ -301,6 +302,7 @@ interface PremiumReportProps {
     price?: string;
     isLoading?: boolean;
     onRetry?: () => void;
+    userQuestion?: string;
 }
 
 interface MetadataWithReadingData extends NonNullable<PremiumReportProps['metadata']> {
@@ -414,7 +416,7 @@ const fadeInUp: Variants = {
     }
 };
 
-export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock, isPremium, price, isLoading, onRetry }: PremiumReportProps) {
+export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock, isPremium, price, isLoading, onRetry, userQuestion }: PremiumReportProps) {
     const isEn = language === 'en';
     const [selectedCardIdx, setSelectedCardIdx] = useState<number | null>(null);
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -467,6 +469,37 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
         }
     };
 
+    // Dynamic Teaser Hooks
+    const userName = (metadata as any)?.readingData?.name || '';
+    const primaryTrait = report.traits?.[0]?.name;
+
+    const dynamicCoreHookKo = primaryTrait && userName 
+        ? `⚠️ ${userName}님의 아우라('${primaryTrait}')를 가로막는 오행 불균형이 감지되었습니다.`
+        : userName 
+        ? `⚠️ ${userName}님의 차트에서 심각한 오행 불균형이 감지되었습니다.`
+        : "⚠️ 사주 오행의 심각한 불균형이 감지되었습니다.";
+    const dynamicCoreHookEn = primaryTrait && userName
+        ? `⚠️ Critical element imbalance suppressing ${userName}'s '${primaryTrait}' nature detected.`
+        : userName
+        ? `⚠️ Critical element imbalance detected in ${userName}'s foundation.`
+        : "⚠️ Critical Element Imbalance Detected in your chart foundation.";
+
+    const dynamicCoreSubtitleKo = primaryTrait && userName
+        ? `⚠️ '${primaryTrait}' 기운과의 오행 충돌 감지`
+        : "⚠️ 사주 오행의 심각한 불균형 감지";
+    const dynamicCoreSubtitleEn = primaryTrait && userName
+        ? `⚠️ Element conflict with '${primaryTrait}'`
+        : "⚠️ Critical Element Imbalance Detected";
+
+    // Dynamic Blind Spot Hook
+    const dynamicBlindSpotPreviewKo = userName
+        ? `이 결정을 실행할 때 ${userName}님이 절대 놓치면 안 될 치명적 리스크가 하나 발견되었습니다. 교차 검증 중 포착된 이 충돌 신호를 무시하면...`
+        : `이 결정을 실행할 때 절대 놓치면 안 될 치명적 리스크가 하나 발견되었습니다. 교차 검증 중 포착된 이 충돌 신호를 무시하면...`;
+    
+    const dynamicBlindSpotPreviewEn = userName
+        ? `A critical blind spot has been detected for ${userName}. Ignoring this conflict signal discovered during cross-validation could lead to...`
+        : `A critical blind spot has been detected. Ignoring this conflict signal discovered during cross-validation could lead to...`;
+
     const firstMissingPremiumSection: PremiumSectionKey | null = (() => {
         if (!isPremium || isLoading || !onRetry) return null;
         if (!report.fortune_flow) return 'fortune_flow';
@@ -501,12 +534,22 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
 
     return (
         <div className="w-full max-w-2xl mx-auto pb-24 md:pb-32">
+            {/* FreeFocusSection: 비구독자는 최상단에, 프리미엄은 HeaderSection 다음에 */}
+            {!isPremium && (
+                <FreeFocusSection
+                    freeFocus={freeFocus}
+                    language={language}
+                    isPremium={false}
+                    userQuestion={userQuestion}
+                />
+            )}
+
             {/* Header */}
             {(metadata as any)?.readingData?.partnerName ? (
                 <CompatibilityHeader
                     userName={(metadata as any)?.readingData?.name || 'User'}
                     partnerName={(metadata as any)?.readingData?.partnerName}
-                    score={report.summary.trust_score * 20} // Convert 1-5 to percentage
+                    score={report.summary.trust_score * 20}
                     title={report.summary.title}
                     content={report.summary.content}
                     language={language}
@@ -518,11 +561,13 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 />
             )}
 
-            <FreeFocusSection
-                freeFocus={freeFocus}
-                language={language}
-                isPremium={Boolean(isPremium)}
-            />
+            {isPremium && (
+                <FreeFocusSection
+                    freeFocus={freeFocus}
+                    language={language}
+                    isPremium={true}
+                />
+            )}
 
             {/* Hidden Print Layout */}
             <div className="hidden">
@@ -559,8 +604,38 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
             {/* Traits */}
             <TraitsSection traits={report.traits} language={language} />
 
-            {/* Categorized Analysis - LINEAR LAYOUT */}
+            {/* Categorized Analysis — Premium: Verdict-First Layout */}
+            {isPremium ? (
+                <VerdictReport
+                    report={report}
+                    metadata={metadata as Record<string, unknown>}
+                    language={language}
+                    isLoading={isLoading}
+                    onRetry={onRetry}
+                    tarotCards={tarotCards}
+                    onCardClick={setSelectedCardIdx}
+                />
+            ) : (
             <div className="space-y-12 md:space-y-16 mt-8 md:mt-12">
+
+                {/* 0. Blind Spot Warning (PAYWALL WEDGE) */}
+                {!isPremium && (
+                    <motion.div
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true, margin: "-100px" }}
+                        variants={fadeInUp}
+                    >
+                        <BlindSpotTeaser
+                            title={isEn ? "⚠️ Critical Blind Spot Warning" : "⚠️ 치명적 사각지대 (Blind Spot) 경고"}
+                            previewText={isEn ? dynamicBlindSpotPreviewEn : dynamicBlindSpotPreviewKo}
+                            hiddenText={isEn ? "Conflicting planetary alignments suggest a high probability of severe misjudgment if you proceed without addressing the underlying root cause." : "별자리와 타로카드 배열에서 심각한 오판의 징후가 발견되었습니다. 이 문제를 해결하지 못하면 결정적인 순간에 발목을 잡힐 수 있습니다."}
+                            language={language || 'ko'}
+                            isLocked={true}
+                            onUnlock={handleUnlock}
+                        />
+                    </motion.div>
+                )}
 
                 {/* 1. Basic Analysis - FREE: summary + traits only, PREMIUM: all */}
                 <motion.section
@@ -576,9 +651,10 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                         // 실제 데이터가 있으면 블러 처리로 미리보기
                         <BlurredPreviewSection
                             title={isEn ? "Oracle Core Reading" : "오라클 코어 리딩"}
-                            subtitle={isEn ? "⚠️ Critical Element Imbalance Detected" : "⚠️ 사주 오행의 심각한 불균형 감지"}
+                            subtitle={isEn ? dynamicCoreSubtitleEn : dynamicCoreSubtitleKo}
                             onUnlock={handleUnlock}
                             language={language}
+                            userQuestion={userQuestion}
                         >
                             <CoreAnalysisSection data={report.core_analysis} sajuData={(metadata as any)?.sajuResult} language={language} />
                         </BlurredPreviewSection>
@@ -586,10 +662,11 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                         // 데이터가 없으면 기존 TeaserCard fallback
                         <TeaserCard
                             title={isEn ? "Oracle Core Reading" : "오라클 코어 리딩"}
-                            hook={isEn ? "⚠️ Critical Element Imbalance Detected in your chart foundation." : "⚠️ 사주 오행의 심각한 불균형이 감지되었습니다."}
+                            hook={isEn ? dynamicCoreHookEn : dynamicCoreHookKo}
                             type="danger"
                             onUnlock={handleUnlock}
                             language={language}
+                            userQuestion={userQuestion}
                         />
                     )}
 
@@ -901,8 +978,8 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                         ) : null
                     ) : null}
                 </motion.section>
-
             </div>
+            )}
 
             {/* Ghost Detector (Viral Hook) — Personal Report */}
             {(() => {

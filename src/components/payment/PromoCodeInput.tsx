@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Tag, Check, X, Loader2 } from 'lucide-react';
+import { Tag, Check, Loader2 } from 'lucide-react';
 
 interface PromoCodeInputProps {
     onApply: (codeId: string, discount: number, code: string) => void;
