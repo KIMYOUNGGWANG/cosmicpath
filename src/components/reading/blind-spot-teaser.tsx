@@ -80,12 +80,21 @@ export function BlindSpotTeaser({ title, previewText, hiddenText, language, isLo
                                 className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-800 border border-red-500/50 text-white font-bold text-xs px-4 py-2 rounded-full shadow-lg shadow-red-900/20 hover:shadow-red-500/40 transition-all"
                             >
                                 <Lock size={12} fill="currentColor" />
-                                {isEn ? 'Unlock to Reveal Risk' : '체크카드 잠금해제 및 확인'}
+                                {isEn ? 'Unlock to Reveal Risk' : '사각지대 리스크 확인하기'}
                             </motion.button>
                         </div>
                     )}
                 </div>
             </div>
+
+            {/* Danger Hazard Stripes (Only when locked) */}
+            {isLocked && (
+                <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay"
+                    style={{
+                        backgroundImage: `repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(239, 68, 68, 0.2) 10px, rgba(239, 68, 68, 0.2) 20px)`
+                    }}
+                />
+            )}
 
             {/* Background Texture */}
             <div className="absolute inset-0 pointer-events-none opacity-50 mix-blend-overlay"
