@@ -11,9 +11,10 @@ interface TeaserCardProps {
     type?: 'danger' | 'love' | 'money' | 'general';
     onUnlock: () => void;
     className?: string;
+    userQuestion?: string;
 }
 
-export function TeaserCard({ title, hook, language, type = 'general', onUnlock, className }: TeaserCardProps) {
+export function TeaserCard({ title, hook, language, type = 'general', onUnlock, className, userQuestion }: TeaserCardProps) {
     const isEn = language === 'en';
 
     // Type-specific styling and icons
@@ -81,6 +82,18 @@ export function TeaserCard({ title, hook, language, type = 'general', onUnlock, 
                     {hook}
                 </p>
             </div>
+
+            {/* Question Echo Panel */}
+            {userQuestion && userQuestion.trim().length >= 5 && (
+                <div className="mx-6 px-4 py-3 bg-white/5 border border-white/10 rounded-xl backdrop-blur-sm relative z-10 -mt-2 mb-4">
+                    <span className="text-[10px] text-acc-gold opacity-80 uppercase tracking-widest block mb-1">
+                        {isEn ? "Your Question" : "내 질문"}
+                    </span>
+                    <p className="text-sm font-medium text-white/90 line-clamp-2">
+                        &ldquo;{userQuestion}&rdquo;
+                    </p>
+                </div>
+            )}
 
             {/* Blurred Content Section */}
             <div className="relative p-6 pt-2">

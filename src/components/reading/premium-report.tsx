@@ -468,6 +468,28 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
         }
     };
 
+    // Dynamic Teaser Hooks
+    const userName = (metadata as any)?.readingData?.name || '';
+    const primaryTrait = report.traits?.[0]?.name;
+
+    const dynamicCoreHookKo = primaryTrait && userName 
+        ? `⚠️ ${userName}님의 아우라('${primaryTrait}')를 가로막는 오행 불균형이 감지되었습니다.`
+        : userName 
+        ? `⚠️ ${userName}님의 차트에서 심각한 오행 불균형이 감지되었습니다.`
+        : "⚠️ 사주 오행의 심각한 불균형이 감지되었습니다.";
+    const dynamicCoreHookEn = primaryTrait && userName
+        ? `⚠️ Critical element imbalance suppressing ${userName}'s '${primaryTrait}' nature detected.`
+        : userName
+        ? `⚠️ Critical element imbalance detected in ${userName}'s foundation.`
+        : "⚠️ Critical Element Imbalance Detected in your chart foundation.";
+
+    const dynamicCoreSubtitleKo = primaryTrait && userName
+        ? `⚠️ '${primaryTrait}' 기운과의 오행 충돌 감지`
+        : "⚠️ 사주 오행의 심각한 불균형 감지";
+    const dynamicCoreSubtitleEn = primaryTrait && userName
+        ? `⚠️ Element conflict with '${primaryTrait}'`
+        : "⚠️ Critical Element Imbalance Detected";
+
     const firstMissingPremiumSection: PremiumSectionKey | null = (() => {
         if (!isPremium || isLoading || !onRetry) return null;
         if (!report.fortune_flow) return 'fortune_flow';
@@ -589,9 +611,10 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                         // 실제 데이터가 있으면 블러 처리로 미리보기
                         <BlurredPreviewSection
                             title={isEn ? "Oracle Core Reading" : "오라클 코어 리딩"}
-                            subtitle={isEn ? "⚠️ Critical Element Imbalance Detected" : "⚠️ 사주 오행의 심각한 불균형 감지"}
+                            subtitle={isEn ? dynamicCoreSubtitleEn : dynamicCoreSubtitleKo}
                             onUnlock={handleUnlock}
                             language={language}
+                            userQuestion={userQuestion}
                         >
                             <CoreAnalysisSection data={report.core_analysis} sajuData={(metadata as any)?.sajuResult} language={language} />
                         </BlurredPreviewSection>
@@ -599,10 +622,11 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                         // 데이터가 없으면 기존 TeaserCard fallback
                         <TeaserCard
                             title={isEn ? "Oracle Core Reading" : "오라클 코어 리딩"}
-                            hook={isEn ? "⚠️ Critical Element Imbalance Detected in your chart foundation." : "⚠️ 사주 오행의 심각한 불균형이 감지되었습니다."}
+                            hook={isEn ? dynamicCoreHookEn : dynamicCoreHookKo}
                             type="danger"
                             onUnlock={handleUnlock}
                             language={language}
+                            userQuestion={userQuestion}
                         />
                     )}
 
