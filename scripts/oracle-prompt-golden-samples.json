@@ -99,6 +99,57 @@
       "expectedNotContains": [
         "You are a 'Life Strategist' who blends Eastern wisdom with Western Astrology to help people navigate their lives."
       ]
+    },
+    {
+      "id": "phase1_ko_career",
+      "type": "phase1",
+      "userData": {
+        "birthDate": "1993-07-15",
+        "birthTime": "14:20",
+        "context": "career",
+        "question": "이직 타이밍이 언제가 좋을까요?",
+        "language": "ko",
+        "characterId": "career_lyra",
+        "questionIntent": "career",
+        "selectionMode": "auto"
+      },
+      "expectedContains": [
+        "결정과 타이밍 오라클 규칙",
+        "절대 추측하지 마세요",
+        "불확실 표현 금지",
+        "데이터에 없는 글자, 사주 원국을 임의로 추정하거나 날짜를 창작하지 마세요",
+        "데이터 직접 인용 규칙 (절대 준수)"
+      ],
+      "expectedNotContains": [
+        "~가능성이 있습니다",
+        "~일 수 있어요",
+        "~할 수도 있습니다"
+      ]
+    },
+    {
+      "id": "phase1_ko_reunion",
+      "type": "phase1",
+      "userData": {
+        "birthDate": "1997-11-03",
+        "birthTime": "08:00",
+        "context": "love",
+        "question": "전 남자친구랑 재회할 수 있을까요?",
+        "language": "ko",
+        "characterId": "reunion_nova",
+        "questionIntent": "reunion",
+        "selectionMode": "auto"
+      },
+      "expectedContains": [
+        "결정과 타이밍 오라클 규칙",
+        "절대 추측하지 마세요",
+        "분석 순서: 감정 잔향이 아직 남아 있는지",
+        "금지 패턴: 재회를 확정적으로 약속하기; 미련을 가능성처럼 포장하기; 바뀌어야 할 패턴을 생략하기",
+        "데이터 직접 인용 규칙 (절대 준수)"
+      ],
+      "expectedNotContains": [
+        "재회할 가능성이 있어요",
+        "재회할 수 있을지도 모릅니다"
+      ]
     }
   ]
 }

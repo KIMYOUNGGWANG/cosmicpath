@@ -349,9 +349,16 @@ export function buildStructuredSystemPrompt(
     today,
   });
 
+  const koDataCitationRule = !isEn ? `# 데이터 직접 인용 규칙 (절대 준수)
+- 아래 제공된 사주 원국, 점성술 데이터, 타로 카드는 서버에서 정확히 계산된 확정 값입니다.
+- 이 데이터를 직접 인용하여 분석하세요. 추측, 날짜 창작, 데이터에 없는 글자 생성 절대 금지.
+- "~일 수 있다", "~가능성이 높다", "~할 수도 있습니다" 같은 표현 대신 데이터 기반 확정 판단으로 서술하세요.
+- 근거가 약하면 약하다고 명시하세요. 자신감 있는 말로 덮지 마세요.` : '';
+
   return [
     basePrompt,
     sharedPrelude,
+    ...(koDataCitationRule ? [koDataCitationRule] : []),
     schema,
     validationRules,
     isEn ? FEW_SHOT_EXAMPLES.en : FEW_SHOT_EXAMPLES.ko,
