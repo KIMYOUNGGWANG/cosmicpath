@@ -19,14 +19,10 @@ export function HeroSection({ language }: HeroSectionProps) {
         <HeroScene language={language}>
             <div className="mx-auto flex max-w-5xl flex-col items-center">
                 <div className="mb-6 inline-flex flex-wrap items-center justify-center gap-2 rounded-full border border-white/10 bg-black/20 px-4 py-2 backdrop-blur-xl">
-                    <span className="text-[10px] uppercase tracking-[0.34em] text-acc-gold">
-                        Oracle Path
-                    </span>
-                    <span className="hidden h-3 w-px bg-white/10 sm:block" />
                     <span className="text-[11px] text-white/62">
                         {isKo
-                            ? '관계 · 커리어 · 재물 · 타이밍 리딩'
-                            : 'Relationship · Career · Wealth · Timing Reading'}
+                            ? '사주 · 점성술 · 타로 통합 분석'
+                            : 'Saju · Astrology · Tarot — Cross Analysis'}
                     </span>
                 </div>
 
@@ -44,16 +40,16 @@ export function HeroSection({ language }: HeroSectionProps) {
                     )}
                 </h1>
 
-                <p className="mb-8 max-w-3xl break-keep text-lg font-light leading-relaxed text-moonlight md:text-2xl">
+                <p className="mb-8 max-w-3xl break-keep text-base font-light leading-relaxed text-moonlight sm:text-lg md:text-2xl">
                     {isKo ? (
                         <>
-                            사주, 점성술, 타로 세 가지가 같은 답을 가리킬 때만 <br className="hidden md:block" />
-                            지금 움직여도 된다고 알려드립니다.
+                            세 가지가 같은 답을 가리킬 때만 —{' '}
+                            <span className="font-medium text-white">지금 움직여도 된다고 알려드립니다.</span>
                         </>
                     ) : (
                         <>
-                            Saju, Astrology, and Tarot — when all three point the same way, <br className="hidden md:block" />
-                            that&apos;s when we tell you it&apos;s time to move.
+                            When Saju, Astrology, and Tarot all agree —{' '}
+                            <span className="font-medium text-white">that&apos;s when we tell you to move.</span>
                         </>
                     )}
                 </p>
@@ -106,7 +102,7 @@ export function HeroSection({ language }: HeroSectionProps) {
                                     landingVariant,
                                 },
                             }}
-                            className="inline-flex min-h-11 items-center justify-center rounded-full border border-acc-gold/20 bg-acc-gold/10 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-acc-gold transition-colors hover:border-acc-gold/40 hover:bg-acc-gold/16 hover:text-[#ffe39d]"
+                            className="hidden sm:inline-flex min-h-11 items-center justify-center rounded-full border border-acc-gold/20 bg-acc-gold/10 px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-acc-gold transition-colors hover:border-acc-gold/40 hover:bg-acc-gold/16 hover:text-[#ffe39d]"
                         >
                             이직 고민이라면 커리어 리딩부터 보기
                         </GrowthTrackedLink>
