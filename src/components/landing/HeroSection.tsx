@@ -33,13 +33,13 @@ export function HeroSection({ language }: HeroSectionProps) {
                 <h1 className="mb-6 max-w-5xl break-keep font-sans text-3xl font-bold leading-tight tracking-tight text-starlight sm:text-5xl md:text-6xl lg:text-7xl">
                     {isKo ? (
                         <>
-                            운세는 <span className="text-white/60">읽지 마세요.</span> <br className="md:hidden" />
-                            오라클의 <span className="text-acc-gold drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]">결정을 받으세요.</span>
+                            퇴사해도 될까, 고백해도 될까 — <br className="md:hidden" />
+                            <span className="text-acc-gold drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]">태어난 시간으로 분석합니다.</span>
                         </>
                     ) : (
                         <>
-                            DON&apos;T READ <span className="text-white/60">FORTUNES.</span> <br className="md:hidden" />
-                            GET A <span className="text-acc-gold drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]">DECISION.</span>
+                            Should I quit? Should I go for it? <br className="md:hidden" />
+                            <span className="text-acc-gold drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]">We read the timing.</span>
                         </>
                     )}
                 </h1>
@@ -47,15 +47,13 @@ export function HeroSection({ language }: HeroSectionProps) {
                 <p className="mb-8 max-w-3xl break-keep text-lg font-light leading-relaxed text-moonlight md:text-2xl">
                     {isKo ? (
                         <>
-                            모호한 위로나 뻔한 말은 진짜 결정에 도움이 되지 않습니다. <br className="hidden md:block" />
-                            사주, 점성, 타로 세 가지 데이터의 완벽한 교집합을 통해 <br className="md:hidden" />
-                            행동 지침이 명확한 <span className="font-medium text-white">단 하나의 팩트 결단</span>을 내려드립니다.
+                            사주, 점성술, 타로 세 가지가 같은 답을 가리킬 때만 <br className="hidden md:block" />
+                            지금 움직여도 된다고 알려드립니다.
                         </>
                     ) : (
                         <>
-                            Vague comfort won&apos;t help you make the hard choices. <br className="hidden md:block" />
-                            We cross-check Saju, Astrology, and Tarot to give you <br className="hidden md:block" />
-                            <span className="font-medium text-white">a single, actionable decision</span> you can actually rely on.
+                            Saju, Astrology, and Tarot — when all three point the same way, <br className="hidden md:block" />
+                            that&apos;s when we tell you it&apos;s time to move.
                         </>
                     )}
                 </p>
