@@ -14,6 +14,7 @@ import { EvidenceTooltip } from '../ui/confidence-badge';
 import { TarotDetailModal } from './tarot-detail-modal';
 import { ShareCard } from './share-card';
 import { BlindSpotTeaser } from './blind-spot-teaser';
+import { VerdictReport } from './verdict-report';
 import { TeaserCard } from '../sales/TeaserCard';
 import { BlurredPreviewSection } from '../sales/BlurredPreviewSection';
 import { StickyCTA } from '../common/sticky-cta';
@@ -603,7 +604,18 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
             {/* Traits */}
             <TraitsSection traits={report.traits} language={language} />
 
-            {/* Categorized Analysis - LINEAR LAYOUT */}
+            {/* Categorized Analysis — Premium: Verdict-First Layout */}
+            {isPremium ? (
+                <VerdictReport
+                    report={report}
+                    metadata={metadata as Record<string, unknown>}
+                    language={language}
+                    isLoading={isLoading}
+                    onRetry={onRetry}
+                    tarotCards={tarotCards}
+                    onCardClick={setSelectedCardIdx}
+                />
+            ) : (
             <div className="space-y-12 md:space-y-16 mt-8 md:mt-12">
 
                 {/* 0. Blind Spot Warning (PAYWALL WEDGE) */}
@@ -966,8 +978,8 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                         ) : null
                     ) : null}
                 </motion.section>
-
             </div>
+            )}
 
             {/* Ghost Detector (Viral Hook) — Personal Report */}
             {(() => {

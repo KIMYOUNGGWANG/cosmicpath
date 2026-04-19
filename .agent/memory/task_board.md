@@ -96,7 +96,17 @@
 - [x] **Step 2: Advisor Decision Contract** — 각 상담가의 `framework/styleRules/caution`를 실제 분석 순서, 금지 패턴, 출력 골격으로 승격하되, 가장 사용 빈도가 높은 질문 흐름부터 적용한다.
 - [x] **Step 3: Evidence Ordering** — `evidencePriority`를 실제 답변 구조에 반영해 generic 문장보다 근거 순서가 먼저 드러나게 한다.
 - [x] **Step 4: Prompt Regression & Golden Samples** — free 첫 결과, premium 핵심 phase, follow-up용 golden sample과 regression check를 추가해 generic drift와 advisor drift를 감시한다.
-- [ ] **Step 5: Paywall Blind Spot Hook** — 결제 전환율(Conversion) 극대화를 위해 손실 회피(Fear/Risk)를 자극하는 `BlindSpotTeaser`를 `PremiumReport` 컴포넌트의 유료 섹션 최상단에 전진 배치한다.
+- [x] **Step 5: Paywall Blind Spot Hook** — 결제 전환율(Conversion) 극대화를 위해 손실 회피(Fear/Risk)를 자극하는 `BlindSpotTeaser`를 `PremiumReport` 컴포넌트의 유료 섹션 최상단에 전진 배치한다.
+
+## 📱 Oracle Story Swiper UX Renewal Block (2026-04-18)
+*원칙: 기존 고품질 분석 데이터 구조를 유지하되 프론트엔드의 세로 스크롤을 가로 스와이프 카드로 개편.*
+
+- **Mission** — 긴 텍스트로 인한 가독성 하락을 막고 모바일 앱처럼 쾌감 있는 UX를 주기 위해 페이월 이후의 리포트를 'Oracle Story Swiper' 방식으로 갈아엎는다. 상세 텍스트는 서랍 인터페이스 속에 분리 배치한다.
+
+### Implementation Steps
+- [x] **Step 1: Story Swiper Framework** — `story-swiper.tsx`와 `deep-dive-drawer.tsx`의 뼈대를 Framer Motion 드래그 이벤트를 기반으로 구축한다. 모바일 터치 대응과 데스크탑 Fallback 내비게이션을 포함한다.
+- [x] **Step 2: Premium Data Parsing** — `premium-report.tsx`에 인입된 기존 텍스트 위주의 `report` 객체에서 리딩 슬라이드별(코어, 타로, 점성) 핵심 '한 줄 훅'을 추출하는 유틸 기능 작성.
+- [x] **Step 3: Component Integration** — 기존 렌더링되던 Linear Layout을 걷어내고, Story Swiper에 슬라이드를 마운트하여 스크린 테스트 진행.
 
 ### Progress Note
 - 2026-04-16 Night (2): Step 1 completed. `prompt-shared-rules.ts`에 결정/타이밍 오라클 base rule과 evidence-first 서술 규칙을 추가했고, `prompt-builder.ts`의 free/follow-up system prompt가 이 공통 규칙층을 직접 재사용하도록 정리했다. `phase-prompts.ts`는 Phase 1/1B의 중복 `Life Strategist` 머리말을 shared guide contract 기준의 얇은 phase overlay로 축소했다. `npm test`, `npm run build` 통과. `node scripts/verify-oracle-prompt-refactor.ts`는 현재 plain Node ESM import resolution 때문에 실행 실패하므로 Step 4에서 runnable verifier 경로를 함께 정리한다.
