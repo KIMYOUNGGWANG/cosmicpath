@@ -102,7 +102,7 @@ interface ErrorResponse {
 > - 운영 화면의 방문 규모 이해를 위해 `/api/growth/summary`는 기존 totals/series 외에 `visits.today`, `visits.last7Days`, `visits.last30Days`, `visits.dauMauRate`를 함께 제공할 수 있다. 이 값들은 모두 세션 기준 방문 신호이며 로그인 사용자 수와는 다르다.
 >
 > **Implementation Note (2026-04-16) — Reading Refactor Boundary**:
-> - `/api/reading` 내부 구현은 `request validation -> runtime assembly -> free generation -> premium phase orchestration -> persistence/resume` 순서의 서비스 경계로 재구성할 수 있다.
+> - `/api/reading` 내부 구현은 `request validation -> runtime assembly -> free generation -> premium orchestration -> persistence/resume` 순서의 서비스 경계로 재구성할 수 있다.
 > - free generation은 `free_focus`와 compact summary contract를 유지한 채 prompt/runtime 경계만 정리한다.
 > - premium generation은 multi-phase contract를 유지한 채 공통 시스템 규칙층과 phase overlay 조합 구조로 이동할 수 있다.
 > - reading runtime metadata는 later premium resume와 follow-up에서 재사용 가능한 source-of-truth로 취급한다.
@@ -123,7 +123,13 @@ interface ErrorResponse {
 > - `Grand Oracle Chat`은 `최근 reading metadata -> latest room summary -> request payload userContext` 순서로 context source-of-truth를 우선 탐색할 수 있다.
 > - room ownership, membership entitlement, free quota는 모두 서버가 판정해야 하며, quota 차감은 동시 요청 경쟁 조건을 고려한 atomic path로 다룬다.
 > - `council_briefing` 생성 실패 시에도 public response shape는 유지하고, empty response 대신 예측 가능한 fallback answer를 반환해야 한다.
-> - `/oracle-chat`, `/daily`, `/billing`, `SubscriptionModal`의 `oracle_chat` merchandising은 source-aware copy를 유지하되, 한 entry surface의 문구가 다른 entry surface를 덮어쓰지 않게 해야 한다.
+> - `/oracle-chat`, `/daily`, `/billing`, `SubscriptionModal`의 `oracle_chat` merchandising은 source-aware copy를 유지하되, 한 entry surface의 문구가 다른 entry surface를 덮어쓰지 않게 해야 가 한다.
+>
+> **Planned Contract Delta (2026-04-19) — Iceberg Model Foundation**:
+> - 오라클 리딩의 지불 가치와 가독성을 동시 충족시키기 위해 `Verdict-First + Deep Dive Archive` 형태의 빙산 모델을 채택한다.
+> - `/api/reading` 프리미엄 결과의 각 Phase별 JSON 스키마를 하드닝(인라인 텍스트 길이 강제, 근거 필수 표기)하여 데이터 볼륨을 대폭 확장하되 구조적 파손은 방지한다.
+> - 백엔드 병렬 호출은 타임아웃 위험을 고려해, 기존 8-Phase 체계를 유지하면서 각 Phase의 단일 프롬프트에서 도출하는 토큰 양을 극대화하는 방식을 우선한다.
+> - 결과 대기 UX 개선을 위해 `Time-Delayed Loading UX` 상태 전송은 클라이언트 사이드 mock-up이나 Server Sent Events(존재 시) 단계를 고도화하여 처리한다.
 
 ### 1. 오늘의 운세 (Daily Fortune) ✅ 구현됨
 

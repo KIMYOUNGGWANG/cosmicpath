@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, type UIEvent } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Briefcase, Calendar, ChevronDown, Coins, Droplets, Flame, Heart, Shield, Sparkles, Star, Target, TrendingUp, type LucideIcon, ScrollText, Zap } from 'lucide-react';
 import { EvidenceTooltip } from '../ui/confidence-badge';
 import { InsightCard, InsightHighlight } from './ui/InsightCard';
@@ -528,28 +528,38 @@ export function SpecialAnalysisSection({
         {isEn ? 'Oracle Edge Insight' : '오라클 심화 인사이트'}
       </h2>
       <div className="space-y-3">
-        {specials.map((item) => (
-          <div key={item.id} className={cn('accordion-item', openItems.has(item.id) && 'open')}>
-            <div className="accordion-header" onClick={() => toggleItem(item.id)}>
-              <h3 className="flex items-center gap-2 text-sm md:text-base">
-                <span>{item.icon}</span>
-                <span>{item.title}</span>
-              </h3>
-              <ChevronDown
-                size={20}
-                className={cn('accordion-icon transition-transform duration-300', openItems.has(item.id) && 'rotate-180')}
-              />
+        {specials.map((item) => {
+          const isOpen = openItems.has(item.id);
+          return (
+            <div key={item.id} className={cn('accordion-item', isOpen && 'open')}>
+              <div className="accordion-header flex cursor-pointer items-center justify-between p-4" onClick={() => toggleItem(item.id)}>
+                <h3 className="flex items-center gap-2 text-sm font-medium md:text-base text-white">
+                  <span className="text-xl">{item.icon}</span>
+                  <span>{item.title}</span>
+                </h3>
+                <ChevronDown
+                  size={20}
+                  className={cn('accordion-icon text-gray-400 transition-transform duration-300', isOpen && 'rotate-180')}
+                />
+              </div>
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-5 pb-5 pt-1">
+                      <p className="whitespace-pre-line leading-loose text-white/80">{item.content}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-            <div
-              className={cn(
-                'overflow-hidden transition-all duration-300',
-                openItems.has(item.id) ? 'max-h-[2000px] px-5 pb-5' : 'max-h-0'
-              )}
-            >
-              <p className="whitespace-pre-line text-sm leading-relaxed text-gray-300">{item.content}</p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
@@ -686,7 +696,7 @@ export function AstroDeepSection({
   language: 'ko' | 'en';
 }) {
   const isEn = language === 'en';
-  const [openItems, setOpenItems] = useState<string[]>(['sun_moon_dynamic']);
+  const [openItems, setOpenItems] = useState<string[]>([]);
 
   const toggleItem = (id: string) => {
     setOpenItems((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
@@ -732,7 +742,7 @@ export function AstroDeepSection({
             >
               <button
                 onClick={() => toggleItem(id)}
-                className="flex w-full items-center justify-between p-4 text-left"
+                className="flex w-full cursor-pointer items-center justify-between p-4 text-left"
               >
                 <div className="flex items-center gap-3">
                   <span className="text-xl">{icon}</span>
@@ -744,21 +754,25 @@ export function AstroDeepSection({
                 />
               </button>
 
-              {isOpen && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="px-4 pb-4"
-                >
-                  <div className="pl-9">
-                    <p className="whitespace-pre-line text-sm leading-relaxed text-gray-300">
-                      {sectionData.content}
-                    </p>
-                  </div>
-                </motion.div>
-              )}
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 pb-4">
+                      <div className="pl-9">
+                        <p className="whitespace-pre-line text-[15px] leading-loose text-white/80">
+                          {sectionData.content}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           );
         })}
@@ -847,7 +861,7 @@ export function FortuneFlowSection({
   language: 'ko' | 'en';
 }) {
   const isEn = language === 'en';
-  const [openItems, setOpenItems] = useState<Set<string>>(new Set(['major_luck']));
+  const [openItems, setOpenItems] = useState<Set<string>>(new Set());
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
 
   const toggleItem = (id: string) => {
@@ -1015,25 +1029,35 @@ export function FortuneFlowSection({
       )}
 
       <div className="space-y-3">
-        {items.map((item) => (
-          <div key={item.id} className={cn('accordion-item', openItems.has(item.id) && 'open')}>
-            <div className="accordion-header" onClick={() => toggleItem(item.id)}>
-              <h3 className="text-sm md:text-base">{item.title}</h3>
-              <ChevronDown
-                size={20}
-                className={cn('accordion-icon transition-transform duration-300', openItems.has(item.id) && 'rotate-180')}
-              />
+        {items.map((item) => {
+          const isOpen = openItems.has(item.id);
+          return (
+            <div key={item.id} className={cn('accordion-item', isOpen && 'open')}>
+              <div className="accordion-header flex cursor-pointer items-center justify-between p-4" onClick={() => toggleItem(item.id)}>
+                <h3 className="text-sm font-medium md:text-base text-white">{item.title}</h3>
+                <ChevronDown
+                  size={20}
+                  className={cn('accordion-icon text-gray-400 transition-transform duration-300', isOpen && 'rotate-180')}
+                />
+              </div>
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-5 pb-5 pt-1">
+                      <p className="whitespace-pre-line text-[15px] leading-loose text-white/80">{item.content}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-            <div
-              className={cn(
-                'overflow-hidden transition-all duration-300',
-                openItems.has(item.id) ? 'max-h-[2000px] px-5 pb-5' : 'max-h-0'
-              )}
-            >
-              <p className="whitespace-pre-line text-sm leading-relaxed text-gray-300">{item.content}</p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
@@ -1047,6 +1071,19 @@ export function LifeAreasSection({
   language: 'ko' | 'en';
 }) {
   const isEn = language === 'en';
+  const [openItems, setOpenItems] = useState<Set<string>>(new Set());
+
+  const toggleItem = (id: string) => {
+    setOpenItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
   const areas = [
     data.career && { id: 'career', icon: Briefcase, ...data.career },
@@ -1062,32 +1099,62 @@ export function LifeAreasSection({
         {isEn ? 'Detailed Life Analysis' : '영역별 상세 분석'}
       </h2>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {areas.map((area, index) => (
-          <InsightCard
-            key={area.id}
-            title={area.title}
-            icon={area.icon}
-            tag={area.tag}
-            delay={index * 0.1}
-            className="h-full"
-          >
-            {area.subsections && (
-              <div className="mb-6 flex flex-wrap gap-2">
-                {area.subsections.map((subsection, subsectionIndex) => (
-                  <span
-                    key={subsectionIndex}
-                    className="rounded-md border border-white/5 bg-white/5 px-2.5 py-1 text-xs text-secondary-300"
+      <div className="space-y-3">
+        {areas.map((area) => {
+          const isOpen = openItems.has(area.id);
+          const Icon = area.icon;
+          return (
+            <div key={area.id} className={cn('accordion-item rounded-2xl border transition-colors', isOpen ? 'border-acc-gold/30 bg-acc-gold/5' : 'border-white/10 bg-white/5')}>
+              <button
+                onClick={() => toggleItem(area.id)}
+                className="flex w-full cursor-pointer items-center justify-between p-4 text-left"
+              >
+                <div className="flex items-center gap-3 text-white">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-deep-navy shadow-inner">
+                    <Icon size={18} className="text-acc-gold" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold md:text-base">{area.title}</h3>
+                    {area.tag && <p className="text-xs text-acc-gold/80">{area.tag}</p>}
+                  </div>
+                </div>
+                <ChevronDown
+                  size={20}
+                  className={cn('text-gray-400 transition-transform duration-300', isOpen && 'rotate-180')}
+                />
+              </button>
+              
+              <AnimatePresence initial={false}>
+                {isOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: 'easeInOut' }}
+                    className="overflow-hidden"
                   >
-                    {subsection}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            <p className="whitespace-pre-line leading-relaxed text-secondary-100">{area.content}</p>
-          </InsightCard>
-        ))}
+                    <div className="px-5 pb-5 pt-2">
+                      {area.subsections && (
+                        <div className="mb-6 flex flex-wrap gap-2">
+                          {area.subsections.map((subsection, subsectionIndex) => (
+                            <span
+                              key={subsectionIndex}
+                              className="rounded-md border border-white/10 bg-black/20 px-2.5 py-1 text-xs text-white/70"
+                            >
+                              {subsection}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      
+                      <p className="whitespace-pre-line text-[15px] leading-loose text-white/80">{area.content}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
       </div>
 
       {data.compatibility && <CompatibilitySection data={data.compatibility} language={language} />}

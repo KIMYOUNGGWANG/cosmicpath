@@ -1,13 +1,37 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getOraclePersona } from '@/lib/ai/oracle-personas';
+
+const PREMIUM_ORACLE_MESSAGES_KO = [
+  '명반을 대조하는 중...',
+  '명리학의 뿌리를 캐는 중...',
+  '행성 궤도를 분석하는 중...',
+  '타로와 사주의 교점을 찾는 중...',
+  '과거의 패턴을 추적하는 중...',
+  '운명의 전환점을 탐색하는 중...',
+  '인생의 흐름도를 그리는 중...',
+  '최종 행동 지침을 도출하는 중...',
+];
+
+const PREMIUM_ORACLE_MESSAGES_EN = [
+  'Mapping your celestial chart...',
+  'Tracing the roots of your destiny...',
+  'Analyzing planetary alignments...',
+  'Cross-referencing Tarot and Saju...',
+  'Tracking patterns from the past...',
+  'Locating your pivotal turning points...',
+  'Drawing the arc of your life seasons...',
+  'Deriving your final oracle verdict...',
+];
 
 interface OracleCalibrationPanelProps {
   language: 'ko' | 'en';
   loadingLabel?: string;
   loadingPhase?: number;
   characterId?: string;
+  isPremium?: boolean;
   precisionMetadata?: {
     inputDate: string;
     inputTime: string;
@@ -146,6 +170,7 @@ export function OracleCalibrationPanel({
   loadingLabel,
   loadingPhase = 0,
   characterId,
+  isPremium = false,
   precisionMetadata,
   oracleCouncil,
   compact = false,
@@ -168,6 +193,30 @@ export function OracleCalibrationPanel({
     : showPrecisionDetails
       ? 'w-full max-w-3xl p-8 md:p-10'
       : 'w-full max-w-2xl p-6 md:p-8';
+
+  // Premium: 5초 간격으로 오라클 메시지 순환
+  const premiumMessages = language === 'ko' ? PREMIUM_ORACLE_MESSAGES_KO : PREMIUM_ORACLE_MESSAGES_EN;
+  const [premiumMessageIndex, setPremiumMessageIndex] = useState(0);
+  const [isPremiumMessageVisible, setIsPremiumMessageVisible] = useState(true);
+
+  useEffect(() => {
+    if (!isPremium) return;
+
+    const interval = setInterval(() => {
+      setIsPremiumMessageVisible(false);
+      setTimeout(() => {
+        setPremiumMessageIndex((prev) => (prev + 1) % premiumMessages.length);
+        setIsPremiumMessageVisible(true);
+      }, 400);
+    }, 4600);
+
+    return () => clearInterval(interval);
+  }, [isPremium, premiumMessages.length]);
+
+  const activeLoadingLabel = isPremium
+    ? premiumMessages[premiumMessageIndex]
+    : (loadingLabel || copy.loadingText);
+
 
   return (
     <div className={`relative overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.12),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] backdrop-blur-2xl ${containerSize}`}>
@@ -218,9 +267,21 @@ export function OracleCalibrationPanel({
           </div>
 
           <div className="space-y-2">
-            <p className="text-sm leading-relaxed text-white/70">
-              {loadingLabel || copy.loadingText}
-            </p>
+            <div className="relative min-h-[28px]">
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={isPremium ? premiumMessageIndex : 'static'}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: isPremium ? (isPremiumMessageVisible ? 1 : 0) : 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.35 }}
+                  className={`text-sm leading-relaxed ${isPremium ? 'text-acc-gold/90 font-medium tracking-wide' : 'text-white/70'}`}
+                >
+                  {isPremium && <span className="mr-1.5 opacity-70">✦</span>}
+                  {activeLoadingLabel}
+                </motion.p>
+              </AnimatePresence>
+            </div>
             <div className="h-[1px] w-full overflow-hidden rounded-full bg-white/10">
               <motion.div
                 className="h-full bg-gradient-to-r from-sky-300 via-acc-gold to-cyan-200"
@@ -230,6 +291,7 @@ export function OracleCalibrationPanel({
               />
             </div>
           </div>
+
 
           <div className="grid gap-2">
             {stages.map((stage, index) => {
