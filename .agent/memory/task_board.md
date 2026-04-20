@@ -3,6 +3,26 @@
 > 기준일: 2026-03-19 | 리서치: `RESEARCH/CosmicPath_Analysis_20260318`
 > 목표: **3개월 내 MAU 3,000 / 월 수익 500만원 / k-factor 1.5**
 
+## 🇺🇸 US Saju OBT Validation Block (2026-04-19)
+*원칙: 기존 글로벌 인프라(Stripe/Growth)를 재사용하면서 서양 젠지 타겟의 "단호한 Saju 리딩"을 가장 작고 빠르게 검증한다.*
+
+- **Mission** — K-오컬트 트렌드에 관심 있는 서양 젠지를 타겟으로, 기존 서양 점성술의 모호함을 깨는 'Saju Verdict-first' 영문 전용 OBT 랜딩 및 결과를 배포하여 유료 전환율(WTP)를 검증한다.
+
+### Scope Now
+- `app/en/saju/page.tsx` 전용 독립 영문 랜딩 구축 (다크 모드, 프리미엄 K-Occult 에스테틱 적용).
+- `POST /api/payment` 결제 시 `metadata: { language: 'en', source: 'us_obt' }` 주입 및 OBT 로직 연결.
+- 리딩 결과 도출 시 서양인용 용어 현지화(Localization) 및 단호한 체(Verdict) 명시 로직(프롬프트 오버레이) 적용.
+
+### Explicitly Out
+- 다국어 i18n 패키지 전면 도입 및 전역 라우팅 개편.
+- 영미권 맞춤 하드코어 구독 플랜 신설 (당장은 $15 일회성 결제로 WTP 검증).
+
+### Implementation Steps
+- [ ] **Step 1: OBT Landing UI** — `app/en/saju/page.tsx` 다크 모드 젠지 타겟 신규 랜딩 제작.
+- [ ] **Step 2: English Result UI Sandbox** — 영문 전용 결과 화면 인프라 구축 및 기존 API 응답 연결.
+- [ ] **Step 3: English Prompt Overlay** — 영어권 Verdict-first 전용 사주 용어 번역 & 오버레이 시스템 프롬프트 추가.
+- [ ] **Step 4: Payment & Analytics Sync** — Checkout Button 재활용 및 Growth Event 메타데이터 검수.
+
 ## 🧊 Iceberg Model Block (2026-04-19)
 *원칙: 결정은 맨 위에 선명하게(Verdict), 증거는 아래에 방대하게(Archive) 배치한다.*
 
