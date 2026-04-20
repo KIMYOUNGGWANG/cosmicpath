@@ -233,7 +233,7 @@ async function fetchWithRetry(
     options: RequestInit,
     maxRetries: number = 3,
     initialDelay: number = 1500,
-    timeoutMs: number = 12000
+    timeoutMs: number = 24000
 ): Promise<Response> {
     let lastError: Error | null = null;
 
@@ -642,7 +642,7 @@ export async function generateStructuredReport<T>(
 
         if (tier === 'basic') {
             return {
-                timeoutMs: isFallbackModel ? 12000 : 16000,
+                timeoutMs: isFallbackModel ? 20000 : 26000,
                 maxRetries: isFallbackModel ? 0 : 1,
                 maxOutputTokens: attempt > 0 ? 2304 : 1536,
                 initialDelayMs: 1500,

@@ -1019,7 +1019,14 @@ function CosmicPathContent() {
       }
     : undefined;
   const shouldHideProductHeader = !hasCheckedResume || (step === 'result' && isLoading);
-  const returnToInputWithDraft = () => {
+  const returnToInputWithDraft = (guideOverride?: { characterId?: string; selectionMode?: 'auto' | 'manual' }) => {
+    if (guideOverride?.characterId) {
+      setReadingData((prev) =>
+        prev
+          ? ({ ...prev, characterId: guideOverride.characterId, selectionMode: guideOverride.selectionMode ?? 'manual' } as typeof prev)
+          : prev
+      );
+    }
     setIsLoading(false);
     setLoadingPhase({ phase: 0, label: '' });
     setStep('input');
@@ -1139,6 +1146,28 @@ function CosmicPathContent() {
     void startReading(selectedCards, false, readingData, undefined, 1);
   };
 
+  const handleRematchGuide = async (targetGuideId: string) => {
+    void trackClientGrowthEvent({
+      event: 'guide_rematch_clicked',
+      source: 'guide_rematch_cta',
+      step: 'result',
+      language,
+      context: readingData?.context,
+      metadata: {
+        currentGuide: readingData?.characterId,
+        targetGuide: targetGuideId,
+        isPremium,
+      },
+    });
+
+    if (!isPremium) {
+      await ensureReadingReadyForPayment();
+      openPaymentModal('guide_rematch_cta');
+    } else {
+      returnToInputWithDraft({ characterId: targetGuideId, selectionMode: 'manual' });
+    }
+  };
+
   return (
     <ProductShell
       language={language}
@@ -1218,6 +1247,7 @@ function CosmicPathContent() {
               onRetryPremium={handleRetryPremiumResult}
               onRetryFree={handleRetryFreeResult}
               onReturnToInput={returnToInputWithDraft}
+              onRematchGuide={handleRematchGuide}
             />
           )}
         </AnimatePresence>

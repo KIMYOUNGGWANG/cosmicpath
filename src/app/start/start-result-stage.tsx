@@ -1,13 +1,23 @@
 'use client';
 
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, ChevronRight } from 'lucide-react';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import type { UnifiedReadingResult } from '@/lib/cosmic/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { ReadingData } from '@/components/reading/reading-input';
 import type { PremiumReportData } from '@/components/reading/premium-report';
+import {
+  ORACLE_CHARACTER_IDS,
+  getOraclePersona,
+  getRecommendedOracleCharacterId,
+  inferQuestionIntent,
+  getOracleIntentLabel,
+  type OracleCharacterId,
+  type OracleRecommendationContext,
+} from '@/lib/ai/oracle-personas';
 import type {
   PremiumReportState,
   PremiumReportViewMetadata,
@@ -62,7 +72,114 @@ type StartResultStageProps = {
   onRetryPremium: () => void;
   onRetryFree: () => void;
   onReturnToInput: () => void;
+  onRematchGuide: (targetGuideId: string) => void;
 };
+
+function GuideRematchCard({
+  readingData,
+  isPremium,
+  language,
+  onRematchGuide,
+}: {
+  readingData: ReadingData;
+  isPremium: boolean;
+  language: 'ko' | 'en';
+  onRematchGuide: (id: string) => void;
+}) {
+  const isEn = language === 'en';
+  const [selectedGuideId, setSelectedGuideId] = useState<OracleCharacterId | null>(null);
+
+  const questionIntent = inferQuestionIntent({
+    context: readingData.context as OracleRecommendationContext | null | undefined,
+    question: readingData.question,
+    partnerBirthDate: readingData.partnerBirthDate,
+    partnerName: readingData.partnerName,
+  });
+  const currentGuideId = readingData.characterId as OracleCharacterId;
+  const recommendedId = getRecommendedOracleCharacterId({
+    context: readingData.context as OracleRecommendationContext | null | undefined,
+    question: readingData.question,
+    questionIntent,
+  });
+
+  const alternatives = ORACLE_CHARACTER_IDS
+    .filter((id) => id !== currentGuideId)
+    .map((id) => {
+      const persona = getOraclePersona(id);
+      let score = 0;
+      if (id === recommendedId) score += 6;
+      if (persona.specialty === questionIntent) score += 4;
+      return { id, persona, score };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 2);
+
+  if (alternatives.length === 0) return null;
+
+  const targetId = selectedGuideId ?? alternatives[0].id;
+  const targetPersona = getOraclePersona(targetId);
+
+  return (
+    <div className="mt-6 rounded-[24px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.05),transparent_40%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-5 backdrop-blur-xl">
+      <p className="text-[10px] uppercase tracking-[0.26em] text-white/38">
+        {isEn ? 'Another perspective' : '다른 관점으로도 읽어드릴 수 있어요'}
+      </p>
+      <p className="mt-2 text-sm leading-6 text-white/65">
+        {isEn
+          ? 'The same question can reveal different angles with a different guide.'
+          : '같은 질문도 가이드에 따라 다른 면이 보입니다.'}
+      </p>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {alternatives.map(({ id, persona }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setSelectedGuideId(id as OracleCharacterId)}
+            className={`rounded-full border px-3 py-1.5 text-[11px] uppercase tracking-[0.2em] transition-all duration-200 ${
+              targetId === id
+                ? 'border-acc-gold/40 bg-acc-gold/10 text-acc-gold'
+                : 'border-white/12 bg-white/[0.03] text-white/55 hover:border-white/25 hover:text-white'
+            }`}
+          >
+            {persona.name}
+            <span className="ml-1.5 text-[10px] opacity-60">
+              {isEn ? getOracleIntentLabel(persona.specialty, 'en') : getOracleIntentLabel(persona.specialty, 'ko')}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-4 rounded-[18px] border border-white/10 bg-white/[0.03] p-4">
+        <p className="text-[11px] uppercase tracking-[0.22em] text-white/38">
+          {isEn ? targetPersona.titleEn : targetPersona.titleKo}
+        </p>
+        <p className="mt-2 text-sm leading-6 text-white/68">
+          {isEn ? targetPersona.strengthsEn[0] : targetPersona.strengthsKo[0]}
+        </p>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => onRematchGuide(targetId)}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-[20px] border border-white/15 bg-white/[0.04] px-5 py-3 text-[12px] uppercase tracking-[0.22em] text-white/78 transition-all duration-300 hover:border-acc-gold/30 hover:bg-acc-gold/5 hover:text-acc-gold"
+      >
+        <span>
+          {isPremium
+            ? (isEn ? `Re-read with ${targetPersona.name}` : `${targetPersona.name}(으)로 다시 보기`)
+            : (isEn ? `See full reading with ${targetPersona.name}` : `${targetPersona.name} 관점으로 전체 읽기`)}
+        </span>
+        <ChevronRight size={14} />
+      </button>
+
+      {!isPremium && (
+        <p className="mt-2 text-center text-[10px] text-white/30">
+          {isEn ? 'Premium required · Unlock once to read all guides' : '프리미엄 필요 · 한 번 결제로 전체 가이드 관점 열림'}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export function StartResultStage(props: StartResultStageProps) {
   return (
@@ -78,6 +195,7 @@ export function StartResultStage(props: StartResultStageProps) {
             language={props.language}
             loadingLabel={props.loadingPhase.label || (props.language === 'en' ? 'Preparing your reading...' : '리딩을 정리하는 중...')}
             loadingPhase={props.loadingPhase.phase}
+            isPremium={props.isPremium}
             characterId={props.metadata?.characterId ?? props.readingData?.characterId}
             precisionMetadata={props.metadata?.precisionMetadata ?? props.reportData?.precisionMetadata}
             oracleCouncil={props.metadata?.oracleCouncil ?? props.reportData?.oracleCouncil}
@@ -89,6 +207,15 @@ export function StartResultStage(props: StartResultStageProps) {
           <ErrorBoundary>
             <div className="mb-8 px-4 md:px-0">
               {props.unifiedResult ? <UnifiedReadingDisplay result={props.unifiedResult} /> : null}
+
+              {props.readingData && !props.isLoading && props.reportData?.summary && (
+                <GuideRematchCard
+                  readingData={props.readingData}
+                  isPremium={props.isPremium}
+                  language={props.language}
+                  onRematchGuide={props.onRematchGuide}
+                />
+              )}
 
               <div className="mt-8 flex flex-col items-center gap-4">
                 {(props.isPremium || props.hasPaidQuery) && !props.isInvitationMode && (
