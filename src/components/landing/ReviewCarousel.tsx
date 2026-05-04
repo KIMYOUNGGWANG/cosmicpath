@@ -61,7 +61,7 @@ export function ReviewCarousel({ language = 'ko' }: { language?: string }) {
     if (isLoading) {
         return (
             <section className="py-20 relative overflow-hidden bg-gradient-to-b from-[#030308] to-[#050510] min-h-[500px]">
-                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-soft-light" />
+                <div className="absolute inset-0 opacity-[0.15] mix-blend-soft-light" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
             </section>
         );
     }
@@ -71,7 +71,7 @@ export function ReviewCarousel({ language = 'ko' }: { language?: string }) {
     return (
         <section ref={sectionRef} className="py-20 relative overflow-hidden bg-gradient-to-b from-[#030308] to-[#050510] min-h-[500px]">
             {/* Background Elements */}
-            <div className="absolute inset-0 bg-[url('/noise.png')] opacity-20 mix-blend-soft-light pointer-events-none" />
+            <div className="absolute inset-0 opacity-[0.15] mix-blend-soft-light pointer-events-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
             <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-900/30 to-transparent" />
             <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-900/30 to-transparent" />
 

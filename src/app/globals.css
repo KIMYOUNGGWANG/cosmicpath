@@ -1,49 +1,99 @@
 @import "tailwindcss";
+@source not "../../insane-design";
 
 /* ================================
    CosmicPath - Deep Space Theme
+   Tailwind v4 @theme + :root tokens
    ================================ */
 
-:root {
-  /* Offline-safe font variables (avoid build-time network fetch from next/font/google) */
-  --font-cinzel: "Times New Roman", "Georgia", serif;
-  --font-outfit: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+@theme {
+  /* ── Colors ── */
+  --color-void: #06080c;
+  --color-surface: #0f141c;
+  --color-surface-2: #161c25;
+  --color-panel: rgba(17, 23, 31, 0.94);
+  --color-deep-navy: #080c15;
+
+  /* Text palette */
+  --color-starlight: #f5f7fb;
+  --color-moonlight: #c8d0e0;
+  --color-dim: #9aa4b2;
+  --color-fg-primary: #f5f7fb;
+  --color-fg-secondary: #9aa4b2;
+  --color-bg-void: #06080c;
+
+  /* Gold accents */
+  --color-gold: #d7b25d;
+  --color-gold-dim: #c49840;
+  --color-gold-2: #f0d594;
+  --color-acc-gold: #d7b25d;
+  --color-acc-gold-2: #f0d594;
+  --color-accent-gold: #d7b25d;
+
+  /* Signal colors */
+  --color-acc-blue: #80a0ff;
+  --color-acc-green: #46cb93;
+  --color-acc-red: #ff7c6d;
+  --color-star-yellow: #fbbf24;
+
+  /* Advisor / domain accents */
+  --color-acc-logic: #5b9cf6;
+  --color-acc-nebula: #9b72ef;
+  --color-saju-blue: #4a90d9;
+  --color-tarot-purple: #8b5cf6;
+  --color-aurora-purple: #9b72ef;
+  --color-aurora-cyan: #4dd9ef;
+
+  /* ── Fonts ── */
+  --font-cinzel: "Iowan Old Style", "Georgia", "Times New Roman", serif;
+  --font-outfit: "Avenir Next", "Segoe UI", "Noto Sans KR", "Helvetica Neue", sans-serif;
   --font-gowun-batang: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Serif KR", serif;
-  --font-noto-sans: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  --font-noto-sans: "Avenir Next", "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", "Menlo", "Consolas", monospace;
+}
+
+:root {
+  /* ── Legacy/internal CSS vars (referenced by non-Tailwind CSS rules) ── */
+  --font-cinzel: "Iowan Old Style", "Georgia", "Times New Roman", serif;
+  --font-outfit: "Avenir Next", "Segoe UI", "Noto Sans KR", "Helvetica Neue", sans-serif;
+  --font-gowun-batang: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Serif KR", serif;
+  --font-noto-sans: "Avenir Next", "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
   --font-mono: "JetBrains Mono", "SFMono-Regular", "Menlo", "Consolas", monospace;
 
-  /* Ethereal Brutalism - Cosmic Path Palette */
-  --bg-void: #050505;
-  /* メイン背景 (Main Background) */
-  --bg-deep: #0A0A0C;
-  /* セクション背景 (Section Background) */
-  --bg-surface: #121214;
-  /* カード/パネル背景 (Card/Panel Background) */
+  /* Responsive Web Board Palette */
+  --bg: #eceef2;
+  --grid: rgba(15, 23, 42, 0.06);
+  --void: #06080c;
+  --surface: #0f141c;
+  --surface-2: #161c25;
+  --panel: rgba(17, 23, 31, 0.94);
+  --line: rgba(255, 255, 255, 0.08);
+  --text: #f5f7fb;
+  --muted: #9aa4b2;
+  --gold: #d7b25d;
+  --gold-2: #f0d594;
+  --gold-dim: #c49840;
+  --blue: #80a0ff;
+  --green: #46cb93;
+  --red: #ff7c6d;
+  --soft: rgba(255, 255, 255, 0.04);
+  --shadow: 0 28px 80px rgba(20, 24, 31, 0.14);
 
-  /* Text & Foreground */
-  --fg-starlight: #E4E4E7;
-  /* H1, Highlights (Cold Silver) */
-  --fg-moonlight: #A1A1AA;
-  /* Body (Grayscale) */
-  --fg-dim: #52525B;
-  /* Inactive/Secondary */
-
-  /* Accents */
-  --acc-gold: #D4AF37;
-  /* Antique Gold */
-  --acc-nebula: #FF3B30;
-  /* Warning/Mars Red */
-  --acc-logic: #6366F1;
-  /* Data/Logic Indigo */
-  --saju-blue: #6366F1;
-  --tarot-purple: #8B5CF6;
-  --star-yellow: #D4AF37;
+  /* Previously undefined — now defined */
+  --deep-navy: #080c15;
+  --aurora-purple: #9b72ef;
+  --aurora-cyan: #4dd9ef;
+  --radius: 12px;
+  --accent-gold: #d7b25d;
+  --confidence-high: #22c55e;
+  --confidence-medium: #eab308;
+  --confidence-low: #ef4444;
 
   /* Semantic Mapping */
-  --background: var(--bg-void);
-  --foreground: var(--fg-starlight);
-  --text-muted: var(--fg-moonlight);
-  --glass-border: rgba(255, 255, 255, 0.08);
+  --background: var(--void);
+  --foreground: var(--text);
+  --text-muted: var(--muted);
+  --glass-border: var(--line);
 
   /* Motion Principles - PRD v2.0 */
   --ease-cosmic: cubic-bezier(0.16, 1, 0.3, 1);
