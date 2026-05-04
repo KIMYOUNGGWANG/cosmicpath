@@ -3,6 +3,62 @@
 > 기준일: 2026-03-19 | 리서치: `RESEARCH/CosmicPath_Analysis_20260318`
 > 목표: **3개월 내 MAU 3,000 / 월 수익 500만원 / k-factor 1.5**
 
+## 💰 Paywall Conversion Surgery + 무료 제한 Block (2026-05-04)
+*원칙: 무료 결과의 "페이월 가치 전달"을 먼저 수술하고, 그 후에 무료 횟수를 제한한다. 순서가 바뀌면 유저만 이탈하고 전환은 0.*
+
+- **Mission** — 결제 모달까지 도달하지만 이탈하는 유저의 전환율을 개선한다. 유저가 "$5.99로 정확히 무엇을 받는지" 알 수 있도록 UI를 수술하고, 동시에 무료 어뷰징과 LLM 비용을 통제한다.
+
+### Root Cause
+1. BlindSpotTeaser/BlurredPreviewSection: "Premium" 마케팅 문구만 있고, 잠긴 섹션의 **구체적 제목**(직업 타이밍, 연애 운, 재물 대운 등)이 안 보임.
+2. PaymentModal: "전체 해석 보기"라는 추상적 카피. **구체적으로 무엇이 들어있는지** 불렛 리스트가 없음.
+3. `402 QUOTA_EXCEEDED`: API는 반환하지만 프론트엔드에서 **아무 UX 처리 없이 generic 에러로 빠짐**.
+
+### Scope Now
+- PaymentModal의 `unlockBenefits` 배열 + 상단 카피를 **실제 프리미엄 섹션 이름 + 유저 맥락**으로 교체.
+- premium-report의 `!isPremium` 블록에 **잠긴 섹션 제목 리스트** UI를 블러 영역 위에 추가.
+- `/start` 결과 화면에서 `402 QUOTA_EXCEEDED` 에러를 감지해 **전용 UX**(결과 대신 "오늘 무료 한도 소진" + PaymentModal CTA)를 표시.
+- `FREE_READING_DAILY_LIMIT=1` 환경변수 변경 (Step 3 완료 후 배포).
+
+### Explicitly Out
+- API response shape 변경 (프론트엔드 전용 수술)
+- 이메일 기반 평생 제한 (이번 사이클 이후 검토)
+- 디바이스 핑거프린트 / 구독 플랜 신설
+- 프롬프트/백엔드 로직 변경
+
+### Implementation Steps
+- [x] **Step 1: PaymentModal Value Rewrite** ✅ — `unlockBenefits` 5개 구체적 섹션(Fortune Timing, Career·Wealth·Love, Blind Spot, Action Plan, Evidence)으로 교체. 상단 카피 "잠긴 5개 섹션" 으로 변경. 아이콘+리스트 레이아웃으로 전환.
+  - 현재 추상적 3줄("전체 해석", "나중에 다시 보기", "Stripe 안전 결제") → 구체적 5~6줄 불렛:
+    - 🔮 대운/세운 타이밍 분석 (Fortune Flow)
+    - 💼 직업·재물·연애 심층 해석 (Life Areas)
+    - ⚠️ 치명적 사각지대 경고 (Blind Spot)
+    - 📊 Action Plan TOP 3
+    - 🔒 사주/점성/타로 교차 검증 근거 (Evidence Tabs)
+  - 파일: `src/components/payment/PaymentModal.tsx` (L449~L483, L604~L611)
+- [x] **Step 2: Locked Section Teaser in Report** ✅ — `premium-report.tsx`에 `!isPremium` 블록 내 잠긴 섹션 5개 리스트 + 골드 CTA 버튼 추가. BlindSpotTeaser와 분리.
+  - 컴포넌트: 새 `LockedSectionList` 인라인 또는 별도 파일
+  - 위치: `BlindSpotTeaser` 직전 (L617~L628)
+  - 각 항목 클릭 시 `handleUnlock()` 호출 (기존 PaymentModal 연결)
+- [x] **Step 3: Quota Exceeded UX** ✅ — `start/page.tsx`에서 `402 QUOTA_EXCEEDED` 전용 분기 추가. `start-result-stage.tsx`에 전용 화면(카운트다운 + PaymentModal CTA + 섹션 요약) 구현.
+  - 파일: `src/app/start/start-result-stage.tsx` 또는 해당 에러 핸들링 위치
+  - 표시 내용: "오늘의 무료 사주를 이미 사용했습니다" + 남은 시간 카운트다운 + PaymentModal CTA
+  - `402` + `code: 'QUOTA_EXCEEDED'` 일 때만 전용 분기
+- [ ] **Step 4: Env Var Limit Apply** — `FREE_READING_DAILY_LIMIT=1`로 변경하여 IP당 하루 1회 무료 제한 적용.
+  - Vercel 환경변수 대시보드 또는 `.env.production`에서 변경
+  - **Step 3 배포 후에만** 적용 (UX 없이 제한만 걸면 유저 이탈만 발생)
+
+### Validation
+- `npm run build`
+- `npm test`
+- 수동 테스트: 무료 결과 → 블러 영역에서 잠긴 섹션 제목 확인 → PaymentModal 열기 → 구체적 불렛 리스트 확인
+- 수동 테스트: `FREE_READING_DAILY_LIMIT=1` 적용 후 2번째 무료 요청 → "오늘 한도 소진" UX 표시 확인
+- Growth event 확인: `paywall_open`, `paywall_item_clicked` 이벤트에 새 컨텍스트 반영 확인
+
+### Risks / Open Questions
+- PaymentModal 가치 불렛이 너무 길면 스크롤 피로 → 5~6줄 이하로 제한
+- `QUOTA_EXCEEDED` UX에서 "내일 다시 오세요" vs "지금 결제하세요" 균형 → A/B 테스트 후보
+- 무료 제한을 `1`로 하면 신규 유저 첫 경험이 한 번뿐 → 첫 결과 퀄리티가 더 중요해짐
+- 동일 IP 다중 유저(공유 와이파이) 오탐 → 현재 단계에서는 수용
+
 ## 🇺🇸 US Saju OBT Validation Block (2026-04-19)
 *원칙: 기존 글로벌 인프라(Stripe/Growth)를 재사용하면서 서양 젠지 타겟의 "단호한 Saju 리딩"을 가장 작고 빠르게 검증한다.*
 
@@ -232,3 +288,49 @@
 - [x] Sprint 8: Precision & Personality (v3.0)
 - [x] Sprint 8.1: Oracle Trust Hotfix
 - [x] Sprint 8.5: Specialist Oracle Advisors (v3.1)
+
+## 💻 Responsive Web UI/UX Pivot Block (2026-04-25)
+*원칙: 모바일 앱 흉내가 아니라 데스크톱의 넓은 시야와 앱의 집중력을 동시에 잡는 프리미엄 웹 인터페이스 구축.*
+
+- **Mission** — "결정을 받는 인터페이스"라는 컨셉에 맞추어 랜딩, 입력, 결과(한눈 요약), 개인 허브 화면을 2단 반응형 레이아웃으로 전면 개편한다.
+
+### Scope Now
+- **Global Theme**: `globals.css`와 Tailwind 설정을 통해 HSL 기반 Dark 테마 및 Iowan Old Style(또는 대체 세리프) 타이포그래피 전면 적용.
+- **Start Flow**: `app/start/page.tsx`를 데스크톱 최적화 2단 레이아웃(좌: 캔버스, 우: 가이드)으로 개편.
+- **Glanceable Result**: Premium Report를 3단(Verdict, Score Grid, Evidence Tabs) 가시성 중심 뷰로 재작성.
+- **My Oracle Hub**: `/my` 대시보드를 사이드바 + 컨텐츠 피드 구조로 개편.
+- **Guide Character**: '결' 캐릭터 요소를 랜딩과 주요 흐름의 안내자로 배치.
+
+### Explicitly Out
+- 기존 `/api/reading`, `/api/payment` 등 백엔드 로직 수정 및 데이터 스키마 변경 (프론트 뷰 재배치에만 집중).
+- 라이트 모드(Light Mode) 전환 기능 (다크 테마 고정).
+
+### Implementation Steps
+- [ ] **Step 1: Design System & Root Layout** — Tailwind Config 및 `globals.css` 변수(Void, Panel 등) 수정, Root Layout의 Max-width(1820px) 컨테이너 설정.
+- [ ] **Step 2: Responsive Start Flow** — 홈 랜딩 페이지와 시작 입력 흐름을 2단 캔버스로 리디자인.
+- [ ] **Step 3: Glanceable Premium Report** — 한눈 요약과 탭 구조를 가진 새로운 Result Layout으로 교체.
+- [ ] **Step 4: My Oracle Hub** — 사이드바 내비게이션 기반의 대시보드 구조 완성.
+
+## 📜 Result Page Verdict-First UX Block (Sprint 1: 2026-04-25)
+*원칙: 정보 나열형 문서가 아니라, 30초 내에 핵심 결정을 돕는 결정 지원 오라클로 UI/UX를 개편한다.*
+> 기반 문서: `CosmicPath_ResultPage_PRD_v1.0.md`
+
+- **Mission** — 스크롤 이탈을 막고 바이럴 루프를 만들기 위해 Destiny Moment를 최상단 히어로로 격상하고, Progressive Disclosure를 적용해 "행동" 중심의 레이아웃으로 변경한다.
+
+### Scope Now
+- **F-01 Hero Section**: Destiny Moment 카피 + 공유 버튼 + Trust Score 배지로 최상단 구성.
+- **F-02 Action TOP 3**: 히어로 직하단에 "지금 당장 할 일" 3가지 압축 노출.
+- **F-03 Progressive Disclosure**: 나머지 전체 상세 리포트 접기/펼치기.
+- **F-04 Tarot UX**: 3초 후 시각적 힌트(Glow pulse) 제공 및 수동 클릭 플립 애니메이션.
+- **F-06 Label Localization**: `ORACLE SYNTHESIS` 등 모호한 영문 레이블을 직관적 한글로 변경.
+
+### Explicitly Out
+- F-05 행동 체크리스트 서버 상태 동기화 (Sprint 2 계획)
+- 신규 섹션 추가, AI 프롬프트 및 로직 변경 (UI 재배치에 집중)
+
+### Implementation Steps
+- [x] **Step 1: F-01 & F-06 Hero & Labels** — Destiny Moment를 최상단으로 격상하고 한글 레이블(통합 분석 등) 적용. ✅ 2026-04-26
+- [x] **Step 2: F-02 Action TOP 3** — 행동의 창을 컴팩트 카드로 축약하여 히어로 하단에 배치. ✅ 2026-04-26 (DraftProposal ~96px, slice(0,3))
+- [x] **Step 3: F-03 Progressive Disclosure** — 상세 리포트 영역을 접기/펼치기 아코디언 컴포넌트로 래핑하고 `localStorage` 상태 유지 적용. ✅ 2026-04-26
+- [x] **Step 4: F-04 Tarot Flip Interaction** — 타로 카드 플립 애니메이션 구현 및 Glow pulse 시각적 힌트 적용. ✅ 2026-04-26 (3s 후 첫 카드만 자동, 나머지 수동)
+

@@ -9,6 +9,7 @@ import type { UnifiedReadingResult } from '@/lib/cosmic/schema';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { ReadingData } from '@/components/reading/reading-input';
 import type { PremiumReportData } from '@/components/reading/premium-report';
+import { DailyRetentionBanner } from '@/components/reading/DailyRetentionBanner';
 import {
   ORACLE_CHARACTER_IDS,
   getOraclePersona,
@@ -291,8 +292,70 @@ export function StartResultStage(props: StartResultStageProps) {
                 <ChatInterface readingId={props.shareUrl.split('/').pop()!} />
               </div>
             ) : null}
+
+            <div className="pb-12">
+              <DailyRetentionBanner language={props.language} />
+            </div>
           </ErrorBoundary>
         </div>
+      ) : props.streamContent.startsWith('__QUOTA_EXCEEDED__') ? (
+        /* ── Quota Exceeded Dedicated UX ── */
+        (() => {
+          const parts = props.streamContent.split('|');
+          const message = parts[1] || '';
+          const hoursLeft = parseInt(parts[2] || '0', 10);
+          return (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mx-auto my-20 max-w-lg rounded-[28px] border border-[#D4AF37]/20 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.08),transparent_50%)] p-8 md:p-12 text-center backdrop-blur-md shadow-[0_28px_60px_rgba(0,0,0,0.4)]"
+            >
+              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20">
+                <span className="text-3xl">🔒</span>
+              </div>
+              <h3 className="mb-3 text-xl font-bold text-white font-cinzel">
+                {props.language === 'en' ? "Today's Free Reading Used" : '오늘의 무료 사주를 이미 사용했습니다'}
+              </h3>
+              <p className="mb-6 text-sm font-light leading-relaxed text-white/60">
+                {message}
+              </p>
+
+              {/* Countdown Badge */}
+              {hoursLeft > 0 && (
+                <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/50">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D4AF37]/60 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D4AF37]" />
+                  </span>
+                  {props.language === 'en'
+                    ? `Next free reading in ~${hoursLeft}h`
+                    : `다음 무료 리딩까지 약 ${hoursLeft}시간`}
+                </div>
+              )}
+
+              {/* Premium CTA */}
+              <button
+                onClick={() => { void props.onUnlock(); }}
+                className="w-full rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#f0c35c] to-[#d88b16] py-4 font-bold text-black shadow-lg shadow-[#D4AF37]/20 transition-all hover:shadow-[#D4AF37]/40 hover:-translate-y-0.5 cursor-pointer"
+              >
+                {props.language === 'en' ? 'Unlock Full Premium Report' : '프리미엄 리포트 잠금 해제'}
+              </button>
+              <p className="mt-3 text-xs text-white/30">
+                {props.language === 'en'
+                  ? '5 locked sections · Fortune timing · Career · Love · Blind spot · Action plan'
+                  : '잠긴 5개 섹션 · 대운 타이밍 · 직업 · 연애 · 사각지대 · 행동 가이드'}
+              </p>
+
+              {/* Back to input */}
+              <button
+                onClick={props.onReturnToInput}
+                className="mt-6 text-xs text-white/35 underline decoration-white/15 underline-offset-4 transition-colors hover:text-white/60 cursor-pointer"
+              >
+                {props.language === 'en' ? 'Back to my inputs' : '작성한 내용으로 돌아가기'}
+              </button>
+            </motion.div>
+          );
+        })()
       ) : (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}

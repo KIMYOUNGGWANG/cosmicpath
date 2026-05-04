@@ -24,6 +24,17 @@
 > - 최근 reading metadata, birth context, latest room summary 복원은 모두 서버 truth 기준으로만 강화할 수 있다. 클라이언트가 보낸 membership flag, quota state, room ownership 힌트는 신뢰하지 않는다.
 > - free quota 초과는 계속 `402` + `details: 'ORACLE_CHAT_DAILY_LIMIT'` 계약을 유지하고, one-time reading paywall이 아니라 기존 membership paywall surface로 연결해야 한다.
 > - Oracle Chat trust hardening은 internal-only change로 다루며, 새 Stripe SKU, 새 `planType`, 새 `subscriptionStatus`, 새 public endpoint 추가는 이번 범위 밖이다.
+>
+> **Planned UI/UX Delta (2026-04-25) — Verdict-First Result Page**:
+> - Result Page(결과 리포트)를 'Verdict-First' 계층 구조로 개편하여 UI 렌더링 순서와 컴포넌트 레이아웃을 변경한다 (`CosmicPath_ResultPage_PRD_v1.0.md` 기준).
+> - 이 작업은 순수 프론트엔드 UI/UX 개편(히어로 섹션, Progressive Disclosure, 애니메이션)이며, 기존 `/api/reading` 결과 스키마는 **변경 없이 100% 재사용**한다.
+> - 행동 체크리스트(Action Checklist) 저장 기능(F-05)은 Sprint 2로 연기하며, 당분간 클라이언트 `localStorage`로 처리하므로 신규 API는 추가하지 않는다.
+>
+> **Planned Paywall Conversion Surgery (2026-05-04)**:
+> - 이 사이클은 결제 전환율 개선을 위한 **프론트엔드 전용 수술**이며, `/api/reading`, `/api/payment` 등의 request/response shape는 변경하지 않는다.
+> - `PaymentModal.tsx`의 카피와 가치 불렛 리스트, `premium-report.tsx`의 블러 영역 앞에 잠긴 섹션 제목 노출은 모두 presentation-layer 변경이다.
+> - `402 QUOTA_EXCEEDED` 응답은 이미 `/api/reading` route에 구현되어 있으며 (`plan-limits.ts`), 프론트엔드에서 이를 전용 UX로 처리하는 컴포넌트만 추가한다.
+> - `FREE_READING_DAILY_LIMIT` 환경변수를 `3`에서 `1`로 조정하는 것은 비즈니스 설정 변경이며, API 계약 변경이 아니다.
 
 ---
 

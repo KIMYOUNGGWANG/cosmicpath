@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { AnimatePresence } from 'framer-motion';
 import type { ReadingData } from '@/components/reading/reading-input';
@@ -98,6 +98,7 @@ function CosmicPathContent() {
     openReviewModal,
   } = useStartResultModals();
 
+  const router = useRouter();
   const searchParams = useSearchParams();
   const autoReferralCode =
     searchParams.get('referralCode') ||
@@ -146,6 +147,9 @@ function CosmicPathContent() {
       inviteCode,
       autoReferralCode,
       onDebug: debugStartFlow,
+      updateUrl: (url: string) => {
+        router.replace(url, { scroll: false });
+      }
     });
   };
 
@@ -669,6 +673,33 @@ function CosmicPathContent() {
                   ? 'This oracle phase is taking longer than usual. Please wait a moment and try again.'
                   : '이 오라클 단계가 평소보다 오래 걸리고 있습니다. 잠시 후 다시 시도해주세요.'
               );
+              return;
+            }
+
+            if (response.status === 402 && result?.code === 'QUOTA_EXCEEDED') {
+              // Quota exceeded - show dedicated UX instead of generic error
+              const hoursUntilReset = (() => {
+                const now = new Date();
+                const midnight = new Date(now);
+                midnight.setHours(24, 0, 0, 0);
+                return Math.ceil((midnight.getTime() - now.getTime()) / (1000 * 60 * 60));
+              })();
+
+              void trackClientGrowthEvent({
+                event: 'quota_exceeded',
+                source: 'start_reading',
+                step: 'reading',
+                language: activeLanguage,
+                context: dataToUse.context,
+                price: dynamicPrice || undefined,
+              });
+
+              setStreamContent(
+                activeLanguage === 'en'
+                  ? `__QUOTA_EXCEEDED__|You've used your free reading for today. Your next free reading refreshes in about ${hoursUntilReset} hour${hoursUntilReset !== 1 ? 's' : ''}. Unlock your full premium report now to see all 5 locked sections.|${hoursUntilReset}`
+                  : `__QUOTA_EXCEEDED__|오늘의 무료 사주를 이미 사용했습니다. 다음 무료 리딩은 약 ${hoursUntilReset}시간 후에 갱신됩니다. 지금 프리미엄 리포트를 잠금 해제하면 5개 섹션을 모두 볼 수 있습니다.|${hoursUntilReset}`
+              );
+              setIsLoading(false);
               return;
             }
 

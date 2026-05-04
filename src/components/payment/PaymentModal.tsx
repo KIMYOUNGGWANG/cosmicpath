@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, ScrollText, ShieldCheck, Sparkles, X } from 'lucide-react';
+import { Lock, ScrollText, ShieldCheck, Sparkles, X, TrendingUp, Briefcase, AlertTriangle, ListChecks, Search } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getReadingFallbackPriceLabel, normalizePriceLabel, READING_PRODUCT } from '@/lib/payment/payment-config';
 import { PromoCodeInput } from './PromoCodeInput';
@@ -406,6 +406,8 @@ export function PaymentModal({
                     referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
                     promoCodeId: promoCodeId || undefined,
                     discount: discount || undefined,
+                    language: eventLanguage,
+                    source: trackingSource,
                 }),
             });
 
@@ -447,36 +449,56 @@ export function PaymentModal({
     const unlockBenefits = isEnglish
         ? [
             {
-                title: 'Full reading',
-                description: 'See the full interpretation behind your free result, including timing, reasons, and next steps.',
-                Icon: ScrollText,
+                title: 'Fortune Timing Map',
+                description: 'See your 10-year major luck cycle and month-by-month opportunities, not just vague directions.',
+                Icon: TrendingUp,
             },
             {
-                title: 'Saved for later',
-                description: 'Your reading stays saved, so you can come back and continue where you left off.',
-                Icon: Sparkles,
+                title: 'Career · Wealth · Love Deep Dive',
+                description: 'Each life area gets its own reading with specific advice you can act on right away.',
+                Icon: Briefcase,
             },
             {
-                title: 'Safe checkout',
-                description: 'Payment and card handling are safely processed through Stripe.',
-                Icon: ShieldCheck,
+                title: 'Blind Spot Warning',
+                description: 'A critical risk detected by cross-checking Saju, Astrology, and Tarot — what you must not overlook.',
+                Icon: AlertTriangle,
+            },
+            {
+                title: 'Action Plan (Top 3)',
+                description: 'Three concrete next steps with timing, ranked by urgency from your chart.',
+                Icon: ListChecks,
+            },
+            {
+                title: 'Cross-Validation Evidence',
+                description: 'See exactly why Saju, Astrology, and Tarot all point to the same verdict.',
+                Icon: Search,
             },
         ]
         : [
             {
-                title: '전체 해석',
-                description: '무료 결과 뒤에 있는 타이밍, 이유, 다음 행동까지 한 번에 봅니다.',
-                Icon: ScrollText,
+                title: '대운·세운 타이밍 분석',
+                description: '10년 대운 주기와 월별 기회/경고를 구체적으로 보여줍니다.',
+                Icon: TrendingUp,
             },
             {
-                title: '나중에 다시 보기',
-                description: '결제 후 다시 와도 지금 보던 결과가 그대로 이어집니다.',
-                Icon: Sparkles,
+                title: '직업·재물·연애 심층 해석',
+                description: '각 영역별 맞춤 조언과 바로 실행 가능한 구체적 가이드를 받습니다.',
+                Icon: Briefcase,
             },
             {
-                title: 'Stripe 안전 결제',
-                description: '결제와 카드 정보는 Stripe에서 안전하게 처리됩니다.',
-                Icon: ShieldCheck,
+                title: '치명적 사각지대 경고',
+                description: '사주·점성·타로 교차 검증 중 발견된, 지금 반드시 알아야 할 리스크입니다.',
+                Icon: AlertTriangle,
+            },
+            {
+                title: 'Action Plan TOP 3',
+                description: '긴급도 순으로 정리된 세 가지 구체적 다음 행동과 타이밍입니다.',
+                Icon: ListChecks,
+            },
+            {
+                title: '3대 원천 교차 검증 근거',
+                description: '사주, 점성술, 타로가 왜 같은 결론을 가리키는지 직접 확인합니다.',
+                Icon: Search,
             },
         ];
 
@@ -528,18 +550,18 @@ export function PaymentModal({
                                         {isEnglish ? 'Full Reading' : '전체 해석 보기'}
                                     </div>
                                     <h3 className="mb-3 text-xl font-bold text-white md:text-2xl">
-                                        {isEnglish ? 'See the full reading behind your free result' : '무료 결과 뒤에 있는 전체 해석 보기'}
+                                        {isEnglish ? 'Your full report has 5 locked sections' : '잠긴 5개 섹션이 기다리고 있습니다'}
                                     </h3>
                                     <p className="text-sm leading-relaxed text-white/60">
                                         {isEnglish ? (
                                             <>
-                                                The free result shows the direction first.<br />
-                                                Payment opens the deeper reasons, timing, and next action.
+                                                The free result showed the direction.<br />
+                                                These sections reveal the timing, the risks, and exactly what to do next.
                                             </>
                                         ) : (
                                             <>
-                                                무료 결과는 방향까지 먼저 보여줍니다.<br />
-                                                결제하면 왜 그렇게 읽혔는지와 다음 행동까지 더 자세히 볼 수 있습니다.
+                                                무료 결과에서 방향은 확인하셨습니다.<br />
+                                                아래 섹션에서 타이밍, 리스크, 다음 행동을 구체적으로 알 수 있습니다.
                                             </>
                                         )}
                                     </p>
@@ -600,12 +622,14 @@ export function PaymentModal({
                                     className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition-[transform,border-color,background-color] duration-300 hover:-translate-y-1 hover:border-white/15 hover:bg-white/[0.045]"
                                 >
                                     <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-acc-gold">
-                                        {isEnglish ? 'What You Get Next' : '결제하면 바로 보이는 것'}
+                                        {isEnglish ? 'Locked Sections Inside' : '잠긴 프리미엄 섹션 목록'}
                                     </p>
-                                    <ul className="space-y-2 text-sm text-white/75">
-                                        <li>{isEnglish ? 'A clearer reason for why this result showed up now' : '왜 지금 이 결과가 나왔는지 더 선명한 설명'}</li>
-                                        <li>{isEnglish ? 'A more detailed timing read for when to move and when to wait' : '움직일 때와 기다릴 때를 나눠 보는 더 자세한 타이밍 해석'}</li>
-                                        <li>{isEnglish ? 'A practical next-step guide you can act on right away' : '바로 써먹을 수 있는 다음 행동 가이드'}</li>
+                                    <ul className="space-y-2.5 text-sm text-white/75">
+                                        <li className="flex items-center gap-2"><TrendingUp size={14} className="text-acc-gold/70 flex-shrink-0" />{isEnglish ? 'Fortune Timing Map — 10-year cycle + monthly breakdown' : '대운·세운 타이밍 분석 — 10년 주기 + 월별 세부'}</li>
+                                        <li className="flex items-center gap-2"><Briefcase size={14} className="text-acc-gold/70 flex-shrink-0" />{isEnglish ? 'Career · Wealth · Love — deep dive for each area' : '직업·재물·연애 — 영역별 심층 해석'}</li>
+                                        <li className="flex items-center gap-2"><AlertTriangle size={14} className="text-red-400/70 flex-shrink-0" />{isEnglish ? 'Blind Spot Warning — cross-validated risk alert' : '치명적 사각지대 — 교차 검증 리스크 경고'}</li>
+                                        <li className="flex items-center gap-2"><ListChecks size={14} className="text-acc-gold/70 flex-shrink-0" />{isEnglish ? 'Action Plan TOP 3 — ranked by urgency' : 'Action Plan TOP 3 — 긴급도 순 다음 행동'}</li>
+                                        <li className="flex items-center gap-2"><Search size={14} className="text-acc-gold/70 flex-shrink-0" />{isEnglish ? 'Cross-Validation Evidence — why all 3 sources agree' : '3대 원천 검증 근거 — 왜 같은 결론인지'}</li>
                                     </ul>
                                 </motion.div>
 
@@ -613,18 +637,20 @@ export function PaymentModal({
                                     initial={{ opacity: 0, y: 12 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.35, delay: 0.12 }}
-                                    className="mb-6 grid gap-3 sm:grid-cols-3"
+                                    className="mb-6 space-y-3"
                                 >
                                     {unlockBenefits.map(({ title, description, Icon }) => (
                                         <div
                                             key={title}
-                                            className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left"
+                                            className="flex items-start gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition-colors hover:border-white/15 hover:bg-white/[0.045]"
                                         >
-                                            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-acc-gold/20 bg-acc-gold/10 text-acc-gold">
+                                            <div className="mt-0.5 inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-acc-gold/20 bg-acc-gold/10 text-acc-gold">
                                                 <Icon className="h-4 w-4" />
                                             </div>
-                                            <p className="text-sm font-semibold text-white">{title}</p>
-                                            <p className="mt-2 text-xs leading-6 text-white/56">{description}</p>
+                                            <div>
+                                                <p className="text-sm font-semibold text-white">{title}</p>
+                                                <p className="mt-1 text-xs leading-5 text-white/50">{description}</p>
+                                            </div>
                                         </div>
                                     ))}
                                 </motion.div>

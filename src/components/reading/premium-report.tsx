@@ -8,6 +8,7 @@ import { useRef, useState, useEffect } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { Target, Zap, Lock, CircleHelp, Download, Printer, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import * as analytics from '@/lib/client-analytics';
 import { PrintLayout } from './PrintLayout';
 import { CosmicRadar } from './cosmic-radar';
 import { EvidenceTooltip } from '../ui/confidence-badge';
@@ -461,13 +462,24 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
         };
     }, [resolvedPriceProp]);
 
-    const handleUnlock = () => {
+    const handleUnlock = (source?: string | any) => {
+        const contextValue = typeof source === 'string' ? source : 'generic_locked_item';
+        analytics.trackEvent('paywall_item_clicked', { context: contextValue });
+        analytics.trackEvent('checkout_start', { step: 'click_cta' });
+        
         if (onUnlock) {
             onUnlock();
         } else {
             setIsCheckoutOpen(true);
         }
     };
+
+    // Phase B: Paywall View Tracking
+    useEffect(() => {
+        if (!isPremium) {
+            analytics.trackEvent('paywall_view', { step: 'rendered' });
+        }
+    }, [isPremium]);
 
     // Dynamic Teaser Hooks
     const userName = (metadata as any)?.readingData?.name || '';
@@ -533,41 +545,30 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
     const { openLoginModal } = useLoginModal();
 
     return (
-        <div className="w-full max-w-2xl mx-auto pb-24 md:pb-32">
+        <div className={`w-full mx-auto pb-24 md:pb-32 ${isPremium ? 'max-w-screen-2xl px-4 lg:px-8' : 'max-w-2xl'}`}>
             {/* FreeFocusSection: 비구독자는 최상단에, 프리미엄은 HeaderSection 다음에 */}
-            {!isPremium && (
-                <FreeFocusSection
-                    freeFocus={freeFocus}
-                    language={language}
-                    isPremium={false}
-                    userQuestion={userQuestion}
-                />
+            
+
+            {/* Header — 프리미엄 + final_verdict 있는 경우 VerdictReport의 HeroVerdictCard가 최상단을 담당 */}
+            {!(isPremium && report.final_verdict) && (
+                (metadata as any)?.readingData?.partnerName ? (
+                    <CompatibilityHeader
+                        userName={(metadata as any)?.readingData?.name || 'User'}
+                        partnerName={(metadata as any)?.readingData?.partnerName}
+                        score={report.summary.trust_score * 20}
+                        title={report.summary.title}
+                        content={report.summary.content}
+                        language={language}
+                    />
+                ) : (
+                    <HeaderSection
+                        summary={report.summary}
+                        language={language}
+                    />
+                )
             )}
 
-            {/* Header */}
-            {(metadata as any)?.readingData?.partnerName ? (
-                <CompatibilityHeader
-                    userName={(metadata as any)?.readingData?.name || 'User'}
-                    partnerName={(metadata as any)?.readingData?.partnerName}
-                    score={report.summary.trust_score * 20}
-                    title={report.summary.title}
-                    content={report.summary.content}
-                    language={language}
-                />
-            ) : (
-                <HeaderSection
-                    summary={report.summary}
-                    language={language}
-                />
-            )}
-
-            {isPremium && (
-                <FreeFocusSection
-                    freeFocus={freeFocus}
-                    language={language}
-                    isPremium={true}
-                />
-            )}
+            
 
             {/* Hidden Print Layout */}
             <div className="hidden">
@@ -579,406 +580,119 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 />
             </div>
 
-            {/* Cosmic Radar Section (New) */}
-            <CosmicRadarMemo report={report} metadata={metadata} language={language} />
-
-            {/* Destiny Dashboard — Saju Energy Visualization */}
-            {/* Destiny Dashboard — Saju Energy Visualization */}
-            {(metadata as any)?.sajuResult && (
-                <DestinyDashboardSection
-                    details={{
-                        hostSaju: (metadata as any).sajuResult,
-                        hostAstrology: (metadata as any)?.astrologyResult
-                    }}
-                    hasGuest={false}
-                    hostName={(metadata as any)?.readingData?.name || 'You'}
-                    guestName={undefined}
-                />
-            )}
-
-            {/* Tarot Spread Section */}
-            {tarotCards.length > 0 && (
-                <TarotSpreadSection cards={tarotCards} onCardClick={setSelectedCardIdx} language={language} />
-            )}
-
-            {/* Traits */}
-            <TraitsSection traits={report.traits} language={language} />
-
             {/* Categorized Analysis — Premium: Verdict-First Layout */}
-            {isPremium ? (
-                <VerdictReport
-                    report={report}
-                    metadata={metadata as Record<string, unknown>}
-                    language={language}
-                    isLoading={isLoading}
-                    onRetry={onRetry}
-                    tarotCards={tarotCards}
-                    onCardClick={setSelectedCardIdx}
-                />
-            ) : (
-            <div className="space-y-12 md:space-y-16 mt-8 md:mt-12">
+            <VerdictReport
+                report={report}
+                metadata={metadata as Record<string, unknown>}
+                language={language}
+                isLoading={isLoading}
+                onRetry={onRetry}
+                tarotCards={tarotCards}
+                onCardClick={setSelectedCardIdx}
+                isFreeView={!isPremium}
+                scoreGridNode={
+                    <>
+                        <CosmicRadarMemo report={report} metadata={metadata} language={language} />
+                        {(metadata as any)?.sajuResult && (
+                            <DestinyDashboardSection
+                                details={{
+                                    hostSaju: (metadata as any).sajuResult,
+                                    hostAstrology: (metadata as any)?.astrologyResult
+                                }}
+                                hasGuest={false}
+                                hostName={(metadata as any)?.readingData?.name || 'You'}
+                                guestName={undefined}
+                            />
+                        )}
+                        {tarotCards.length > 0 && (
+                            <TarotSpreadSection cards={tarotCards} onCardClick={setSelectedCardIdx} language={language} />
+                        )}
+                        {report.traits && (
+                            <TraitsSection traits={report.traits} language={language} />
+                        )}
+                    </>
+                }
+            />
 
-                {/* 0. Blind Spot Warning (PAYWALL WEDGE) */}
-                {!isPremium && (
+            {!isPremium && (
+                <div className="mt-8 px-4 md:px-6 mb-8">
+                    {/* Locked Premium Section List */}
                     <motion.div
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, margin: "-100px" }}
-                        variants={fadeInUp}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.15 }}
+                        className="rounded-2xl border border-[#D4AF37]/15 bg-gradient-to-b from-[#D4AF37]/5 to-transparent p-5 md:p-6"
                     >
-                        <BlindSpotTeaser
-                            title={isEn ? "⚠️ Critical Blind Spot Warning" : "⚠️ 치명적 사각지대 (Blind Spot) 경고"}
-                            previewText={isEn ? dynamicBlindSpotPreviewEn : dynamicBlindSpotPreviewKo}
-                            hiddenText={isEn ? "Conflicting planetary alignments suggest a high probability of severe misjudgment if you proceed without addressing the underlying root cause." : "별자리와 타로카드 배열에서 심각한 오판의 징후가 발견되었습니다. 이 문제를 해결하지 못하면 결정적인 순간에 발목을 잡힐 수 있습니다."}
-                            language={language || 'ko'}
-                            isLocked={true}
-                            onUnlock={handleUnlock}
-                        />
+                        <div className="flex items-center gap-2 mb-4">
+                            <Lock size={14} className="text-[#D4AF37]" />
+                            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
+                                {language === 'en' ? '5 Locked Sections' : '잠긴 프리미엄 섹션 5개'}
+                            </p>
+                        </div>
+                        <div className="space-y-2.5">
+                            {[
+                                {
+                                    icon: '🔮',
+                                    ko: '대운·세운 타이밍 분석 — 10년 주기 + 월별 기회',
+                                    en: 'Fortune Timing Map — 10-year cycle + monthly opportunities',
+                                },
+                                {
+                                    icon: '💼',
+                                    ko: '직업·재물·연애 심층 해석 — 영역별 맞춤 가이드',
+                                    en: 'Career · Wealth · Love Deep Dive — tailored for each area',
+                                },
+                                {
+                                    icon: '⚠️',
+                                    ko: '치명적 사각지대 경고 — 교차 검증 리스크',
+                                    en: 'Blind Spot Warning — cross-validated risk alert',
+                                },
+                                {
+                                    icon: '📊',
+                                    ko: 'Action Plan TOP 3 — 긴급도 순 다음 행동',
+                                    en: 'Action Plan TOP 3 — ranked by urgency',
+                                },
+                                {
+                                    icon: '🔒',
+                                    ko: '3대 원천 교차 검증 근거',
+                                    en: 'Cross-Validation Evidence — why all 3 agree',
+                                },
+                            ].map((item) => (
+                                <button
+                                    key={item.en}
+                                    onClick={() => handleUnlock('locked_section_list')}
+                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-white/8 bg-white/[0.02] text-left transition-all hover:bg-white/[0.06] hover:border-white/15 group cursor-pointer"
+                                >
+                                    <span className="text-base flex-shrink-0">{item.icon}</span>
+                                    <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">
+                                        {language === 'en' ? item.en : item.ko}
+                                    </span>
+                                    <Lock size={12} className="ml-auto text-white/20 group-hover:text-[#D4AF37]/60 transition-colors flex-shrink-0" />
+                                </button>
+                            ))}
+                        </div>
+                        <motion.button
+                            onClick={() => handleUnlock('locked_section_cta')}
+                            whileHover={{ y: -1 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="mt-5 w-full py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B4941F] text-black font-bold text-sm shadow-lg shadow-[#D4AF37]/15 transition-all hover:shadow-[#D4AF37]/30 cursor-pointer"
+                        >
+                            {language === 'en' ? 'Unlock All 5 Sections' : '5개 섹션 전체 잠금 해제'}
+                        </motion.button>
                     </motion.div>
-                )}
+                </div>
+            )}
 
-                {/* 1. Basic Analysis - FREE: summary + traits only, PREMIUM: all */}
-                <motion.section
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-100px" }}
-                    variants={fadeInUp}
-                >
-                    {/* Core Analysis */}
-                    {isPremium ? (
-                        report.core_analysis && <CoreAnalysisSection data={report.core_analysis} sajuData={(metadata as any)?.sajuResult} language={language} />
-                    ) : report.core_analysis ? (
-                        // 실제 데이터가 있으면 블러 처리로 미리보기
-                        <BlurredPreviewSection
-                            title={isEn ? "Oracle Core Reading" : "오라클 코어 리딩"}
-                            subtitle={isEn ? dynamicCoreSubtitleEn : dynamicCoreSubtitleKo}
-                            onUnlock={handleUnlock}
-                            language={language}
-                            userQuestion={userQuestion}
-                        >
-                            <CoreAnalysisSection data={report.core_analysis} sajuData={(metadata as any)?.sajuResult} language={language} />
-                        </BlurredPreviewSection>
-                    ) : (
-                        // 데이터가 없으면 기존 TeaserCard fallback
-                        <TeaserCard
-                            title={isEn ? "Oracle Core Reading" : "오라클 코어 리딩"}
-                            hook={isEn ? dynamicCoreHookEn : dynamicCoreHookKo}
-                            type="danger"
-                            onUnlock={handleUnlock}
-                            language={language}
-                            userQuestion={userQuestion}
-                        />
-                    )}
-
-
-                    {/* 🌌 Astro Deep Dive */}
-                    {isPremium ? (
-                        report.astro_deep && <AstroDeepSection data={report.astro_deep} language={language} />
-                    ) : report.astro_deep ? (
-                        <BlurredPreviewSection
-                            title={isEn ? "Deep Astrological Insight" : "점성술 심층 분석"}
-                            subtitle={isEn ? "🪐 Saturn's karmic challenge awaits" : "🪐 토성이 가리키는 업보(Karma)"}
-                            onUnlock={handleUnlock}
-                            language={language}
-                        >
-                            <AstroDeepSection data={report.astro_deep} language={language} />
-                        </BlurredPreviewSection>
-                    ) : (
-                        <TeaserCard
-                            title={isEn ? "Deep Astrological Insight" : "점성술 심층 분석"}
-                            hook={isEn ? "🪐 Saturn's position indicates a karmic challenge you must face." : "🪐 토성의 위치가 당신이 마주해야 할 업보(Karma)를 가리킵니다."}
-                            type="general"
-                            onUnlock={handleUnlock}
-                            language={language}
-                        />
-                    )}
-
-                    {/* 🔢 Numerology */}
-                    {isPremium ? (
-                        report.numerology && <NumerologySection data={report.numerology} language={language} />
-                    ) : report.numerology ? (
-                        <BlurredPreviewSection
-                            title={isEn ? "Soul Code (Numerology)" : "영혼의 코드 (수비학)"}
-                            subtitle={isEn ? "🔢 Your Life Path reveals a turning point" : "🔢 생명수가 가리키는 전환점"}
-                            onUnlock={handleUnlock}
-                            language={language}
-                        >
-                            <NumerologySection data={report.numerology} language={language} />
-                        </BlurredPreviewSection>
-                    ) : (
-                        <TeaserCard
-                            title={isEn ? "Soul Code (Numerology)" : "영혼의 코드 (수비학)"}
-                            hook={isEn ? "🔢 Your Life Path Number reveals a major turning point at age 30." : "🔢 당신의 '생명수'가 가리키는 인생의 결정적 전환점."}
-                            type="general"
-                            onUnlock={handleUnlock}
-                            language={language}
-                        />
-                    )}
-
-                    {/* Saju Sections (Renamed for EN: Elemental Blueprint) */}
-                    {isPremium ? (
-                        report.saju_sections && (
-                            <AccordionSection
-                                title={isEn ? "🌏 Elemental Blueprint (Eastern Insight)" : "📜 사주 기본 분석"}
-                                items={report.saju_sections}
-                                source="saju"
-                                language={language}
-                            />
-                        )
-                    ) : report.saju_sections ? (
-                        <BlurredPreviewSection
-                            title={isEn ? "Elemental Blueprint" : "사주 원국 정밀 분석"}
-                            subtitle={isEn ? "📜 60-year destiny cycle revealed" : "📜 60년 운명의 지도"}
-                            onUnlock={handleUnlock}
-                            language={language}
-                        >
-                            <AccordionSection
-                                title={isEn ? "🌏 Elemental Blueprint" : "📜 사주 기본 분석"}
-                                items={report.saju_sections}
-                                source="saju"
-                                language={language}
-                            />
-                        </BlurredPreviewSection>
-                    ) : (
-                        <TeaserCard
-                            title={isEn ? "Elemental Blueprint" : "사주 원국 정밀 분석"}
-                            hook={isEn ? "📜 Your birth chart holds the key to your 60-year destiny cycle." : "📜 내 사주팔자에 숨겨진 60년 운명의 지도를 확인하세요."}
-                            type="general"
-                            onUnlock={handleUnlock}
-                            language={language}
-                        />
-                    )}
-
-                </motion.section>
-
-                {/* 2. Destiny Flow - PAYWALL */}
-                <motion.section
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-100px" }}
-                    variants={fadeInUp}
-                >
-                    {report.fortune_flow ? (
-                        <FortuneFlowSection data={report.fortune_flow} language={language} />
-                    ) : isPremium ? (
-                        isLoading ? (
-                            <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 mx-4 md:px-6">
-                                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-acc-gold/50" />
-                                <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
-                                    {isEn ? "Syncing Cosmic Flow..." : "심층 운세 동기화 중..."}
-                                </p>
-                            </div>
-                        ) : firstMissingPremiumSection === 'fortune_flow' ? (
-                            <PremiumSectionInterruptionCard language={language} onRetry={onRetry} />
-                        ) : (
-                            null
-                        )
-                    ) : (
-                        <div className="px-4 md:px-6">
-                            <BlindSpotTeaser
-                                title={isEn ? "⚠️ WHAT TO WATCH NEXT" : "⚠️ 곧 주의해서 볼 흐름"}
-                                previewText={getTeaserText('flow')}
-                                hiddenText={isEn
-                                    ? "This period brings a rare alignment of Jupiter and Saturn, signaling a massive shift in your career path. Without preparation, you may miss this 12-year cycle opportunity."
-                                    : "이 시기에는 목성과 토성이 드물게 정렬하며, 당신의 커리어에 거대한 지각 변동을 예고합니다. 준비하지 않으면 12년 만에 오는 이 기회를 영영 놓칠 수 있습니다."
-                                }
-                                language={language}
-                                isLocked={true}
-                                onUnlock={handleUnlock}
-                            />
-                        </div>
-                    )}
-                </motion.section>
-
-                {/* 3. Life Areas & Soulmate - PAYWALL */}
-                <motion.section
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-100px" }}
-                    variants={fadeInUp}
-                >
-                    {report.life_areas ? (
-                        <>
-                            <LifeAreasSection data={report.life_areas} language={language} />
-                            {report.soulmate && <SoulmateSection data={report.soulmate} language={language} />}
-                        </>
-                    ) : isPremium ? (
-                        isLoading ? (
-                            <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 mx-4 md:px-6">
-                                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-star-yellow/50" />
-                                <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
-                                    {isEn ? "Unveiling Life Secrets..." : "영역별 상세 분석 조율 중..."}
-                                </p>
-                            </div>
-                        ) : firstMissingPremiumSection === 'life_areas' ? (
-                            <PremiumSectionInterruptionCard language={language} onRetry={onRetry} />
-                        ) : (
-                            null
-                        )
-                    ) : (
-                        <div className="px-4 md:px-6">
-                            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                <Target size={18} className="text-gold" />
-                                {isEn ? 'Life Areas & Soulmate' : '분야별 해석 & 인연'}
-                            </h2>
-                            <BlindSpotTeaser
-                                title={isEn ? "🔒 MORE DETAILED READING" : "🔒 더 자세한 해석"}
-                                previewText={getTeaserText('life')}
-                                hiddenText={isEn
-                                    ? "Your wealth luck flows strongly in the northeast direction this year. A crucial romantic encounter is waiting in late autumn."
-                                    : "올해 북동쪽 방향에서 재물운이 강력하게 들어오고 있습니다. 늦가을에는 인생을 바꿀 중요한 인연이 기다리고 있습니다."
-                                }
-                                language={language}
-                                isLocked={true}
-                                onUnlock={handleUnlock}
-                            />
-                        </div>
-                    )}
-                </motion.section>
-
-                {/* 4. Special Analysis & Lucky Assets - PAYWALL */}
-                <motion.section
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-100px" }}
-                    variants={fadeInUp}
-                >
-                    {report.special_analysis ? (
-                        <>
-                            <SpecialAnalysisSection data={report.special_analysis} language={language} />
-                            {report.lucky_assets && <LuckyAssetsGrid data={report.lucky_assets} language={language} />}
-                            {/* 🌀 Past Life Analysis (NEW - P2-1) */}
-                            {report.past_life && <PastLifeSection data={report.past_life} language={language} />}
-                            {/* Compatibility deep-dive block for older saved report payloads */}
-                            {report.deep_dive && !report.saju_sections && (
-                                <CompatibleDeepDiveSection data={report.deep_dive} language={language} />
-                            )}
-                        </>
-                    ) : isPremium ? (
-                        isLoading ? (
-                            <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 mx-4 md:px-6">
-                                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-purple-400/50" />
-                                <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
-                                    {isEn ? "Finalizing Action Plan..." : "특수 비책 및 솔루션 도출 중..."}
-                                </p>
-                            </div>
-                        ) : firstMissingPremiumSection === 'special_analysis' ? (
-                            <PremiumSectionInterruptionCard language={language} onRetry={onRetry} />
-                        ) : (
-                            null
-                        )
-                    ) : (
-                        <div className="px-4 md:px-6">
-                            <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                <Zap size={18} className="text-gold" />
-                                {isEn ? 'More Detailed Insight' : '더 자세한 분석'}
-                            </h2>
-                            <TeaserCard
-                                title={isEn ? 'More Detailed Insight' : '더 자세한 분석'}
-                                hook={isEn ? "⚡ Confirm your hidden 'Noble Person' and 'Danger Zones'." : "⚡ 당신을 도울 '천을귀인'과 피해야 할 '공망'을 확인하세요."}
-                                type="money"
-                                onUnlock={handleUnlock}
-                                language={language}
-                            />
-                        </div>
-                    )}
-                </motion.section>
-
-                {/* 5. Action Plan - PAYWALL */}
-                <motion.section
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-100px" }}
-                    variants={fadeInUp}
-                >
-                    {report.action_plan ? (
-                        <>
-                            <ActionPlanSection
-                                actionPlan={report.action_plan}
-                                trustScore={report.summary.trust_score}
-                                language={language}
-                            />
-                            {/* 📅 Date Selection (NEW - P1-3) */}
-                            {report.date_selection && (
-                                <DateSelectionSection data={report.date_selection} language={language} />
-                            )}
-                        </>
-                    ) : isPremium ? (
-                        isLoading ? (
-                            <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 mx-4 md:px-6">
-                                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-acc-gold/50" />
-                                <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
-                                    {isEn ? "Preparing Next Actions..." : "다음 행동을 정리하는 중..."}
-                                </p>
-                            </div>
-                        ) : firstMissingPremiumSection === 'action_plan' ? (
-                            <PremiumSectionInterruptionCard language={language} onRetry={onRetry} />
-                        ) : null
-                    ) : (
-                        <div className="px-4 md:px-6">
-                            <BlindSpotTeaser
-                                title={isEn ? "🎯 YOUR NEXT ACTION" : "🎯 지금 필요한 다음 행동"}
-                                previewText={isEn ? "To avoid the approaching crisis, you must act on..." : "다가오는 위기를 피하기 위해, 반드시 실행해야 할 행동은..."}
-                                hiddenText={isEn
-                                    ? "On the 15th, avoid signing any contracts. Instead, focus on reconnecting with a past ally who holds the key to your next breakthrough."
-                                    : "15일에는 어떤 계약도 피하십시오. 대신, 당신의 다음 돌파구를 쥐고 있는 과거의 귀인과 다시 연결되는 데 집중해야 합니다."
-                                }
-                                language={language}
-                                isLocked={true}
-                                onUnlock={handleUnlock}
-                            />
-                        </div>
-                    )}
-                </motion.section>
-
-                {/* 5.5 Final Verdict - The Grand Conclusion */}
-                <motion.section
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-100px" }}
-                    variants={fadeInUp}
-                >
-                    {report.final_verdict ? (
-                        <div className="px-4 md:px-0">
-                            <FinalVerdictCard data={report.final_verdict} />
-                        </div>
-                    ) : isPremium ? (
-                        isLoading ? (
-                            <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 mx-4 md:px-6">
-                                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-gold/50" />
-                                <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
-                                    {isEn ? "Wrapping the final verdict..." : "최종 결론을 정리하는 중..."}
-                                </p>
-                            </div>
-                        ) : firstMissingPremiumSection === 'final_verdict' ? (
-                            <PremiumSectionInterruptionCard language={language} onRetry={onRetry} />
-                        ) : null
-                    ) : null}
-                </motion.section>
-
-                {/* 6. Glossary - PAYWALL (Bonus) */}
-                <motion.section
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true, margin: "-100px" }}
-                    variants={fadeInUp}
-                >
-                    {report.glossary ? (
-                        <GlossarySection data={report.glossary} language={language} />
-                    ) : isPremium && report.final_verdict ? (
-                        isLoading ? (
-                            <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 mx-4 md:px-6">
-                                <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-purple-400/50" />
-                                <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
-                                    {isEn ? "Compiling your glossary..." : "용어집을 정리하는 중..."}
-                                </p>
-                            </div>
-                        ) : firstMissingPremiumSection === 'final_verdict' ? (
-                            <PremiumSectionInterruptionCard language={language} onRetry={onRetry} />
-                        ) : null
-                    ) : null}
-                </motion.section>
-            </div>
+            {!isPremium && (
+                <div className="mt-0 px-4 md:px-6 mb-16">
+                    <BlindSpotTeaser
+                        title={language === 'en' ? "⚠️ Critical Blind Spot Warning" : "⚠️ 치명적 사각지대 (Blind Spot) 경고"}
+                        previewText={language === 'en' ? "Conflicting planetary alignments suggest a high probability of severe misjudgment if you proceed without addressing the underlying root cause." : "별자리와 타로카드 배열에서 심각한 오판의 징후가 발견되었습니다."}
+                        hiddenText={language === 'en' ? "Unlock to see the full detailed reading and the missing pieces of your destiny." : "자세한 전체 결론과 해결책을 보려면 잠금을 해제하세요."}
+                        language={language || 'ko'}
+                        isLocked={true}
+                        onUnlock={handleUnlock}
+                    />
+                </div>
             )}
 
             {/* Ghost Detector (Viral Hook) — Personal Report */}
