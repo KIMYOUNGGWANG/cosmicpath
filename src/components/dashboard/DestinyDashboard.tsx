@@ -106,9 +106,9 @@ export function DestinyDashboard({
                     viewport={{ once: true }}
                     className="text-2xl md:text-3xl font-cinzel font-bold text-starlight mb-2"
                 >
-                    Destiny Dashboard
+                    운명 대시보드
                 </motion.h2>
-                <p className="text-sm text-dim uppercase tracking-widest">Real-Time Energy Analysis</p>
+                <p className="text-sm text-dim uppercase tracking-widest">실시간 에너지 분석</p>
             </div>
 
             <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-8">

@@ -361,9 +361,26 @@ function buildRelationHighlights(saju: SajuResult): string[] {
 }
 
 function buildDaeunPreview(saju: SajuResult): string[] {
-  return saju.daeun?.sequence.slice(0, 3).map((item) => (
-    `${item.startAge}-${item.endAge}세 ${item.stem}${item.branch}${item.tenGod ? ` (${item.tenGod})` : ''}`
-  )) ?? [];
+  const sequence = saju.daeun?.sequence;
+  if (!sequence?.length) return [];
+
+  const currentDaeun = saju.daeun?.currentDaeun;
+
+  // Find the index of the current daeun in the sequence
+  const currentIndex = currentDaeun
+    ? sequence.findIndex((item) => item.startAge === currentDaeun.startAge)
+    : -1;
+
+  // Select window: [prev, current, next] centered on the current daeun
+  // If no current daeun found, fall back to first 3
+  const startIndex = currentIndex > 0 ? currentIndex - 1 : 0;
+  const window = sequence.slice(startIndex, startIndex + 3);
+
+  return window.map((item) => {
+    const isCurrent = currentDaeun && item.startAge === currentDaeun.startAge;
+    const label = `${item.startAge}-${item.endAge}세 ${item.stem}${item.branch}${item.tenGod ? ` (${item.tenGod})` : ''}`;
+    return isCurrent ? `${label} ★현재` : label;
+  });
 }
 
 function buildZiweiSummary(chart: ZiweiChart): string {
@@ -426,7 +443,7 @@ function buildSajuIntentEvidence(
   const elementSummary = language === 'en'
     ? `dominant ${formatElementList(profile.dominantElements)}, lacking ${formatElementList(profile.lackingElements)}`
     : `강점 ${formatElementList(profile.dominantElements)}, 부족 ${formatElementList(profile.lackingElements)}`;
-  const daeunLead = profile.daeunPreview[0];
+  const daeunLead = profile.daeunPreview.find((item) => item.includes('★현재')) ?? profile.daeunPreview[0];
 
   switch (questionIntent) {
     case 'compatibility':

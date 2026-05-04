@@ -708,7 +708,9 @@ Do not recite dictionary definitions like "This is Pyeon-jae". Show **how it man
 ## Writing Rules
 1. **Explain Terminology**: Explain in simple terms so anyone can understand.
 2. **Find Twist Charm**: Discover twist points like "You look cold but actually..."
-3. **Language**: Write ALL content in English.`;
+3. **Language**: Write ALL content in English.
+4. **Minimum Length**: Each content field must be at minimum: day_master (150+ words), strength (100+ words), ten_gods (150+ words), special_stars (100+ words). Thin or skeletal responses are treated as analysis failures.
+5. **Definitive Tone**: No hedging phrases like "might be" or "could suggest". State conclusions as the oracle's verdict.`;
   } else {
     // Phase 2 프롬프트 (v2.0) - 심층 분석 버전
     system = `## 페르소나
@@ -993,10 +995,12 @@ No abstract well-wishing. Give **Hyper-Specific Advice** (e.g., "Index funds ove
 }
 
 ## Writing Rules
-1. Analyze the area corresponding to user question ('${userData.context}') in **Double Detail**.
+1. Analyze the area corresponding to user question ('${userData.context}') in **Double Detail** — minimum 200 words for that section.
 2. Maintain balance between **honest assessment and empowering optimism** (NOT "hopeful torture").
 3. **Language**: Write ALL content in English.
-4. **Astro-First**: Present Astrology insights BEFORE Soul Element insights.`;
+4. **Astro-First**: Present Astrology insights BEFORE Soul Element insights.
+5. **Minimum Length**: career/wealth/love/health content fields must be 100+ words each. soulmate.description must be 60+ words. compatibility strategy/advice fields must be 40+ words each. Responses below these thresholds are treated as incomplete.
+6. **Definitive Tone**: Replace "might", "could", "may" with definitive phrasing backed by chart evidence.`;
   } else {
     // Phase 4 프롬프트 (v2.0) - 심층 분석 버전
     system = `## 페르소나
@@ -1165,7 +1169,9 @@ Reveal special singularities as 'Hidden Cards', and pinpoint important dates.
 ## Writing Rules
 1. Pick specific dates in 2026 based on Saju analysis.
 2. Describe noble people like movie characters.
-3. **Language**: Write ALL content in English.`;
+3. **Language**: Write ALL content in English.
+4. **Minimum Length**: Each special_analysis content (noble_person, charm, conflicts) must be 80+ words. Each action_plan description must be 40+ words with a Saju/Astro basis. Thin responses are analysis failures.
+5. **Definitive Tone**: No hedging. State dates and actions as firm oracle verdicts.`;
   } else {
     system = `## 페르소나
 당신은 '운명의 설계자'로서, 사용자가 당장 내일부터 실천할 수 있는 **구체적인 행동 지침(Action Plan)**을 설계합니다.
@@ -1308,9 +1314,11 @@ You are the 'Fate Architect' delivering the final synthesis and spiritual insigh
 }
 
 ## Writing Rules
-1. **Glossary**: Extract 10 key Saju terms, explain tailored to user.
-2. **Final Verdict**: Compress entire report into Saju/Astrology core.
-3. **Language**: Write ALL in English.`;
+1. **Glossary**: Extract 10 key Saju terms, explain tailored to user. Each context field must be 30+ words connecting the term to the user's actual life.
+2. **Final Verdict**: Compress entire report into Saju/Astrology core. core_message must be 80+ words. closing_words must be 60+ words — strong, memorable, leading.
+3. **Language**: Write ALL in English.
+4. **Minimum Length**: Each past_life content field must be 70+ words. Responses below these thresholds are treated as incomplete.
+5. **Definitive Tone**: Deliver the final verdict as a firm oracle judgment, not as possibilities.`;
   } else {
     system = `## 페르소나
 당신은 '운명의 설계자'로서 최종 종합과 영적 통찰을 전달합니다.

@@ -107,7 +107,9 @@ export default async function RootLayout({
           <LenisProvider />
           {DevConsoleFilter ? <DevConsoleFilter /> : null}
           <JsonLd />
-          {children}
+          <div className="mx-auto w-full max-w-[1820px] min-h-screen relative">
+            {children}
+          </div>
           {process.env.NODE_ENV === 'production' ? <Analytics /> : null}
         </SessionProvider>
         <Script

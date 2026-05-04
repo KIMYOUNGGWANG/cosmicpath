@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createCheckoutSession, verifyCheckoutSession } from '@/lib/payment/stripe';
-import { READING_PRODUCT } from '@/lib/payment/payment-config';
+import { READING_PRODUCT, isProductAllowed } from '@/lib/payment/payment-config';
 import { validatePromotionCodeForCheckout } from '@/lib/promo-codes';
 import { stampRuntimeMetadata } from '@/lib/runtime-environment';
 import { auth } from '@/lib/auth';
@@ -13,7 +13,26 @@ import { extractReadingAccessKey, hasReadingAccess } from '@/lib/reading-access'
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { productId, email, readingId, accessKey, referralCode, promoCodeId, discount } = body;
+        const { productId, email, readingId, accessKey, referralCode, promoCodeId, discount, language, source } = body;
+        const normalizedLanguage = language === 'en' ? 'en' : 'ko';
+        const normalizedSource = typeof source === 'string' ? source.trim().slice(0, 64) : '';
+
+        // ── Phase A: 서버 사이드 productId 허용 목록 검증 ────────────────
+        // 클라이언트가 임의의 productId(test/dev 전용 SKU 등)를 넘겨
+        // 엉뚱한 가격으로 체크아웃 세션을 생성하는 것을 방지합니다.
+        const resolvedProductId = typeof productId === 'string' && productId.trim()
+            ? productId.trim()
+            : READING_PRODUCT.productId;
+
+        if (!isProductAllowed(resolvedProductId)) {
+            console.warn(`[Payment] Blocked unauthorized productId: "${resolvedProductId}"`);
+            return NextResponse.json(
+                { error: '허용되지 않은 상품입니다.' },
+                { status: 400 }
+            );
+        }
+        // ─────────────────────────────────────────────────────────────────
+
         const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
         const normalizedReadingId = typeof readingId === 'string' ? readingId.trim() : '';
         const normalizedAccessKey = typeof accessKey === 'string' ? accessKey.trim() : '';
@@ -75,18 +94,20 @@ export async function POST(request: NextRequest) {
         const origin = request.headers.get('origin') || 'http://localhost:3000';
 
         const session = await createCheckoutSession({
-            productId: productId || READING_PRODUCT.productId,
+            productId: resolvedProductId,
             successUrl: `${origin}/payment/success?session_id={CHECKOUT_SESSION_ID}&reading_id=${normalizedReadingId || ''}`,
             cancelUrl: `${origin}/start?canceled=true`,
             discountPercent: appliedDiscount || undefined,
             metadata: {
                 type: 'premium_reading',
-                productId: productId || READING_PRODUCT.productId,
+                productId: resolvedProductId,
                 email: normalizedEmail,
                 readingId: normalizedReadingId || '',
                 referralCode: referralCode || '',
                 promoCodeId: appliedPromoCodeId,
                 discount: appliedDiscount ? String(appliedDiscount) : '',
+                language: normalizedLanguage,
+                source: normalizedSource,
             },
         });
 

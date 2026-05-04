@@ -29,6 +29,8 @@ const DEEP_PHASE_PRIMARY_TIMEOUT_MS = 30000;
 const DEEP_PHASE_FALLBACK_TIMEOUT_MS = 24000;
 const FORTUNE_FLOW_PRIMARY_TIMEOUT_MS = 45000;
 const FORTUNE_FLOW_FALLBACK_TIMEOUT_MS = 42000;
+const PHASE_EIGHT_PRIMARY_TIMEOUT_MS = 45000;   // Past life + glossary + final verdict
+const PHASE_EIGHT_FALLBACK_TIMEOUT_MS = 42000;
 const MAX_ATTEMPTS_PER_MODEL = 2;
 const PHASE_OUTPUT_TOKEN_BUDGETS: Record<number, { initial: number; retry: number }> = {
     1: { initial: 4096, retry: 5120 },   // Summary + traits + core analysis
@@ -38,7 +40,7 @@ const PHASE_OUTPUT_TOKEN_BUDGETS: Record<number, { initial: number; retry: numbe
     5: { initial: 8192, retry: 10240 },  // Fortune flow
     6: { initial: 6656, retry: 8192 },   // Life areas + soulmate + compatibility
     7: { initial: 5120, retry: 6144 },   // Special analysis + action plan + date selection
-    8: { initial: 5632, retry: 7168 },   // Past life + glossary + final verdict
+    8: { initial: 7168, retry: 9216 },   // Past life + glossary + final verdict
 };
 
 function extractGoogleTextParts(parts: unknown): string {
@@ -67,6 +69,12 @@ function getPhaseRequestTimeoutMs(phaseNumber: number, modelName: string) {
         return modelName === PRIMARY_MODEL_NAME
             ? FORTUNE_FLOW_PRIMARY_TIMEOUT_MS
             : FORTUNE_FLOW_FALLBACK_TIMEOUT_MS;
+    }
+
+    if (phaseNumber === 8) {
+        return modelName === PRIMARY_MODEL_NAME
+            ? PHASE_EIGHT_PRIMARY_TIMEOUT_MS
+            : PHASE_EIGHT_FALLBACK_TIMEOUT_MS;
     }
 
     if (phaseNumber >= 2) {

@@ -20,7 +20,6 @@ import {
 import { SoulmateSection } from './SoulmateSection';
 import { LuckyAssetsGrid } from './LuckyAssetsGrid';
 import { GlossarySection } from './GlossarySection';
-import { FinalVerdictCard } from './FinalVerdictCard';
 import { 
     RefreshCw, 
     Sparkles, 
@@ -60,6 +59,8 @@ interface VerdictReportProps {
     onRetry?: () => void;
     tarotCards?: { name: string; isReversed: boolean }[];
     onCardClick?: (idx: number) => void;
+    scoreGridNode?: React.ReactNode;
+    isFreeView?: boolean;
 }
 
 // ─────────────────────────────────────────────
@@ -112,6 +113,24 @@ function HeroVerdictCard({
 
     const bardPercent = Math.round(trustScore * 20);
 
+    const handleShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: isEn ? 'My CosmicPath Verdict' : '나의 코스믹패스 결론',
+                    text: finalVerdict.core_message,
+                    url: window.location.href,
+                });
+            } catch (err) {
+                console.log('Share failed', err);
+            }
+        } else {
+            // Fallback to copy URL
+            navigator.clipboard.writeText(window.location.href);
+            alert(isEn ? 'Link copied to clipboard!' : '링크가 복사되었습니다!');
+        }
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -138,7 +157,7 @@ function HeroVerdictCard({
                 <div className="flex items-center gap-2">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-red-900/50 bg-[#2A0808]/80 text-red-400/90 text-[11px] font-semibold tracking-[0.2em] uppercase backdrop-blur-md">
                         <Sparkles size={12} className="opacity-80" />
-                        {isEn ? 'Oracle Verdict' : '오라클의 최종 결단'}
+                        {isEn ? 'Destiny Moment' : '통합 분석 (Destiny Moment)'}
                     </span>
                 </div>
 
@@ -156,24 +175,34 @@ function HeroVerdictCard({
                     )}
                 </div>
 
-                {/* Trust meter + cross-validation badge */}
-                <div className="flex flex-wrap items-center gap-4 mt-4 pt-6 border-t border-white/5">
-                    <div className="flex items-center gap-2">
-                        <CheckCircle2 size={14} className="text-[#D4AF37]/80" />
-                        <span className="text-stone-400 text-xs tracking-wide">
-                            {isEn ? 'Trinity Cross-verified' : '3대 원천 교차 검증률'} &nbsp;
-                        </span>
-                        <span className="text-[#D4AF37] text-xs font-serif italic">{bardPercent}%</span>
+                {/* Trust meter + cross-validation badge + Share */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-4 pt-6 border-t border-white/5">
+                    <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <CheckCircle2 size={14} className="text-[#D4AF37]/80" />
+                            <span className="text-stone-400 text-xs tracking-wide">
+                                {isEn ? 'Trinity Cross-verified' : '3대 원천 교차 검증률'} &nbsp;
+                            </span>
+                            <span className="text-[#D4AF37] text-xs font-serif italic">{bardPercent}%</span>
+                        </div>
+                        {/* Visual bar */}
+                        <div className="hidden md:block flex-1 h-[2px] bg-stone-800 overflow-hidden min-w-[100px] max-w-[200px]">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${bardPercent}%` }}
+                                transition={{ duration: 1.2, ease: 'easeOut', delay: 0.4 }}
+                                className="h-full bg-[#D4AF37]/80"
+                            />
+                        </div>
                     </div>
-                    {/* Visual bar */}
-                    <div className="flex-1 h-[2px] bg-stone-800 overflow-hidden max-w-[200px]">
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${bardPercent}%` }}
-                            transition={{ duration: 1.2, ease: 'easeOut', delay: 0.4 }}
-                            className="h-full bg-[#D4AF37]/80"
-                        />
-                    </div>
+                    
+                    {/* Share Button */}
+                    <button
+                        onClick={handleShare}
+                        className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition-colors text-sm font-medium z-20 cursor-pointer"
+                    >
+                        {isEn ? 'Share Verdict' : '결론 공유하기'}
+                    </button>
                 </div>
             </div>
         </motion.div>
@@ -205,7 +234,7 @@ function TabContent({
 }) {
     const isEn = language === 'en';
 
-    const detailLabel = isEn ? 'Full Reading' : '원문 상세 보기';
+    const detailLabel = isEn ? 'Full Reading' : '이 결론의 근거 보기';
     const hideLabel = isEn ? 'Collapse' : '접기';
 
     const renderDetailContent = () => {
@@ -274,11 +303,11 @@ function TabContent({
             {/* Expand toggle */}
             <button
                 onClick={onToggle}
-                className="w-full flex items-center justify-between py-3 px-1 text-white/40 hover:text-white/70 transition-colors text-xs tracking-widest uppercase group"
+                className="w-full flex items-center justify-between py-3 px-1 text-[#D4AF37]/60 hover:text-[#D4AF37] transition-colors text-xs tracking-widest uppercase group font-bold"
             >
                 <span>{isExpanded ? hideLabel : detailLabel}</span>
                 <motion.div animate={{ rotate: isExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                    <ChevronDown size={14} className="group-hover:text-white/70" />
+                    <ChevronDown size={14} className="group-hover:text-[#D4AF37]" />
                 </motion.div>
             </button>
 
@@ -309,7 +338,7 @@ function EvidenceTabs({
     language,
     tarotCards,
     onCardClick,
-}: Omit<VerdictReportProps, 'isLoading' | 'onRetry'>) {
+}: Omit<VerdictReportProps, 'isLoading' | 'onRetry' | 'isFreeView'>) {
     const isEn = language === 'en';
     const [activeTab, setActiveTab] = useState<TabId | null>(null);
     const [expandedTab, setExpandedTab] = useState<TabId | null>(null);
@@ -476,69 +505,162 @@ export function VerdictReport({
     onRetry,
     tarotCards,
     onCardClick,
+    scoreGridNode,
+    isFreeView,
 }: VerdictReportProps) {
     const isEn = language === 'en';
 
-    return (
-        <div className="w-full space-y-0 mt-8 md:mt-12 px-4 md:px-6">
+    const LS_KEY = 'cosmicpath_full_report_open';
+    const [showFullReport, setShowFullReport] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        return localStorage.getItem(LS_KEY) === 'true';
+    });
 
+    const toggleFullReport = () => {
+        const next = !showFullReport;
+        setShowFullReport(next);
+        localStorage.setItem(LS_KEY, next ? 'true' : 'false');
+    };
+
+    // If it's a Free View, we construct a mock finalVerdict from free_focus
+    const finalVerdict = isFreeView && report.free_focus ? {
+        title: '',
+        core_message: report.free_focus.action_conclusion,
+        saju_foundation: '',
+        astro_support: '',
+        tarot_insight: '',
+        action_priorities: [],
+        closing_words: report.free_focus.evidence_summary
+    } : report.final_verdict;
+
+    // Left column content (Verdict + Action Plan + Core)
+    const leftColumn = (
+        <div className="flex flex-col gap-8">
             {/* ── HERO: Oracle Verdict Card ── */}
             <HeroVerdictCard
-                finalVerdict={report.final_verdict}
+                finalVerdict={finalVerdict}
                 trustScore={report.summary?.trust_score ?? 3}
                 isLoading={isLoading}
                 language={language}
             />
 
-            {/* ── EVIDENCE TABS: Why the same verdict? ── */}
-            <EvidenceTabs
-                report={report}
-                metadata={metadata}
-                language={language}
-                tarotCards={tarotCards}
-                onCardClick={onCardClick}
-            />
-
-            {/* ── ACTION PLAN ── */}
-            {report.action_plan && (
+            {/* ── ACTION PLAN (Top 3) ── */}
+            {(!isFreeView && report.action_plan) && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5, duration: 0.5 }}
-                    className="mt-12"
                 >
                     <ActionPlanSection
-                        actionPlan={report.action_plan}
+                        actionPlan={report.action_plan.slice(0, 3)} // PRD F-02: Top 3 only initially, compact
                         trustScore={report.summary?.trust_score ?? 3}
                         language={language}
                     />
                 </motion.div>
             )}
 
-            {/* ── CORE ANALYSIS (optional deep) ── */}
-            {report.core_analysis && (
-                <div className="mt-10">
+            {/* ── PROGRESSIVE DISCLOSURE TOGGLE — mobile/tablet only (xl: hidden, content always shown) ── */}
+            {!isFreeView && !showFullReport && (
+                <div className="flex xl:hidden justify-center pt-4 pb-8">
+                    <button
+                        onClick={toggleFullReport}
+                        className="px-8 py-3 rounded-full bg-gradient-to-r from-[#D4AF37]/20 to-[#D4AF37]/5 border border-[#D4AF37]/30 text-[#D4AF37] font-semibold tracking-wide hover:from-[#D4AF37]/30 hover:to-[#D4AF37]/10 transition-all shadow-[0_0_20px_rgba(212,175,55,0.1)] flex items-center gap-2 cursor-pointer"
+                    >
+                        {isEn ? 'View Full Report' : '전체 리포트 보기 ↓'}
+                    </button>
+                </div>
+            )}
+
+            {/* ── CORE ANALYSIS (optional deep) - Hidden until expanded ── */}
+            {showFullReport && report.core_analysis && (
+                <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                >
                     <CoreAnalysisSection
                         data={report.core_analysis}
                         sajuData={(metadata as any)?.sajuResult}
                         language={language}
                     />
+                </motion.div>
+            )}
+        </div>
+    );
+
+    // Shared right column inner content (desktop: always visible, mobile: behind toggle)
+    const rightColumnContent = (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col gap-8"
+        >
+            {/* ── SCORE GRID: Cosmic Radar & Dashboard ── */}
+            {scoreGridNode && (
+                <div className="flex flex-col gap-6">
+                    {scoreGridNode}
                 </div>
             )}
 
-            {/* ── GLOSSARY ── */}
-            {report.glossary ? (
-                <div className="mt-10">
-                    <GlossarySection data={report.glossary} language={language} />
+            {/* ── PREMIUM CONTENT: Evidence Tabs & Glossary ── */}
+            {!isFreeView && (
+                <>
+                    <EvidenceTabs
+                        report={report}
+                        metadata={metadata}
+                        language={language}
+                        tarotCards={tarotCards}
+                        onCardClick={onCardClick}
+                    />
+                    {report.glossary ? (
+                        <GlossarySection data={report.glossary} language={language} />
+                    ) : isLoading && report.final_verdict ? (
+                        <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10">
+                            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-purple-400/50" />
+                            <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
+                                {isEn ? 'Compiling glossary...' : '용어집을 정리하는 중...'}
+                            </p>
+                        </div>
+                    ) : null}
+                </>
+            )}
+        </motion.div>
+    );
+
+    // Right column: desktop always shows, mobile gated behind showFullReport
+    const rightColumn = (
+        <div className="flex flex-col gap-8">
+            {/* Desktop xl+: always visible (no progressive disclosure gate) */}
+            <div className="hidden xl:block">
+                {rightColumnContent}
+            </div>
+            {/* Mobile / Tablet: show only when toggled or free user */}
+            {(isFreeView || showFullReport) && (
+                <div className="xl:hidden">
+                    {rightColumnContent}
                 </div>
-            ) : isLoading && report.final_verdict ? (
-                <div className="p-12 text-center bg-white/5 rounded-3xl border border-white/10 mt-10">
-                    <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-purple-400/50" />
-                    <p className="text-white/40 text-sm font-cinzel tracking-widest uppercase">
-                        {isEn ? 'Compiling glossary...' : '용어집을 정리하는 중...'}
-                    </p>
+            )}
+        </div>
+    );
+
+    return (
+        <div className="w-full mt-8 md:mt-12 px-4 md:px-6">
+            {/* ── Desktop 2-column layout (≥1280px) — mirrors result-layout spec ── */}
+            <div className="hidden xl:grid xl:gap-8 xl:items-start" style={{ gridTemplateColumns: '0.9fr 1.1fr' }}>
+                {/* Left: sticky verdict + action */}
+                <div className="xl:sticky xl:top-8 xl:self-start">
+                    {leftColumn}
                 </div>
-            ) : null}
+                {/* Right: scrollable evidence archive */}
+                <div>
+                    {rightColumn}
+                </div>
+            </div>
+
+            {/* ── Mobile / Tablet single-column stack (< 1280px) ── */}
+            <div className="xl:hidden space-y-8">
+                {leftColumn}
+                {rightColumn}
+            </div>
         </div>
     );
 }

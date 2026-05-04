@@ -23,64 +23,86 @@ export function StartInputStage(props: StartInputStageProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, y: -20 }}
-      className="mx-auto w-full max-w-4xl px-4 pt-24 pb-12 md:px-6 md:pt-32 md:pb-20"
+      className="mx-auto w-full max-w-[1820px] px-4 pt-24 pb-12 md:px-8 md:pt-32 md:pb-20 lg:px-12"
     >
-      <div className="mb-8 text-center md:mb-16">
-        <div className="mx-auto max-w-3xl rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.1),transparent_30%),linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] px-5 py-6 shadow-[0_24px_70px_rgba(2,6,23,0.24)] backdrop-blur-xl md:rounded-[32px] md:px-10 md:py-8">
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <span className="rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-acc-gold">
-              {props.language === 'en' ? 'Decision Timing Reading' : '결정 타이밍 리딩'}
-            </span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
-              {props.language === 'en' ? 'Free First Reading' : '첫 리딩 무료'}
-            </span>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8 lg:gap-16 items-start">
+        {/* Left Column: Input Canvas */}
+        <div className="flex-1 w-full max-w-4xl mx-auto lg:mx-0">
+          <div className="mb-8 md:mb-12">
+            <div className="rounded-[28px] border border-white/10 bg-panel px-6 py-8 shadow-2xl backdrop-blur-xl md:rounded-[32px] md:px-10 md:py-10">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-acc-gold">
+                  {props.language === 'en' ? 'Decision Timing Reading' : '결정 타이밍 리딩'}
+                </span>
+              </div>
+              <h1 className="mb-3 mt-4 font-cinzel text-[2rem] text-starlight md:mb-4 md:mt-5 md:text-5xl">
+                {props.language === 'en' ? 'Start With The Question' : '지금 고민되는 질문부터 적어보세요'}
+              </h1>
+              <p className="max-w-2xl text-sm leading-6 text-moonlight md:leading-7">
+                {props.language === 'en'
+                  ? 'Start with one real question, then choose the tarot card your intuition reaches for before the first result opens.'
+                  : '질문 하나와 핵심 정보로 시작하고, 직관이 끌리는 타로 카드를 고른 뒤 첫 결과를 여는 흐름으로 다시 다듬었습니다.'}
+              </p>
+            </div>
           </div>
-          <h1 className="mb-3 mt-4 font-cinzel text-[2rem] text-starlight md:mb-4 md:mt-5 md:text-5xl">
-            {props.language === 'en' ? 'Start With The Question' : '지금 고민되는 질문부터 적어보세요'}
-          </h1>
-          <p className="mx-auto max-w-2xl text-sm leading-6 text-white/60 md:leading-7">
-            {props.language === 'en'
-              ? 'Start with one real question, then choose the tarot card your intuition reaches for before the first result opens.'
-              : '질문 하나와 핵심 정보로 시작하고, 직관이 끌리는 타로 카드를 고른 뒤 첫 결과를 여는 흐름으로 다시 다듬었습니다.'}
-          </p>
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-[10px] uppercase tracking-[0.22em] text-white/45 md:mt-5">
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-              {props.language === 'en' ? 'Pick Domain' : '영역 고르기'}
-            </span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-              {props.language === 'en' ? 'Write Question' : '질문 적기'}
-            </span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-              {props.language === 'en' ? 'Core Saju Inputs' : '생년월일 입력'}
-            </span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-              {props.language === 'en' ? 'Choose Tarot' : '타로 고르기'}
-            </span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1">
-              {props.language === 'en' ? 'See Free Result' : '무료 결과 보기'}
-            </span>
+
+          <ReadingInput
+            initialData={props.initialData}
+            initialLanguage={props.language}
+            onLanguageChange={props.onLanguageChange}
+            onSubmit={(data) => {
+              props.onSubmit({
+                ...data,
+                birthTime: data.birthTime || '12:00',
+                calendarType: data.calendarType || 'solar',
+                unknownTime: data.unknownTime || false,
+              });
+            }}
+            isLoading={props.isLoading}
+            inviterName={props.inviterName}
+            inviteCode={props.inviteCode}
+            initialContext={props.initialContext}
+            initialQuestion={props.initialQuestion}
+          />
+        </div>
+
+        {/* Right Column: Guide Rail */}
+        <div className="hidden lg:flex flex-col gap-6 sticky top-32">
+          <div className="glass-card p-6 border-line bg-surface/80">
+            <div className="flex items-center gap-4 border-b border-white/10 pb-4 mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 border border-white/10">
+                <span className="font-cinzel text-acc-gold text-lg">결</span>
+              </div>
+              <div>
+                <h3 className="font-semibold text-starlight">Oracle Guide</h3>
+                <p className="text-xs text-moonlight">Analytic & Neutral</p>
+              </div>
+            </div>
+            
+            <p className="text-sm italic text-moonlight mb-6">
+              "막연한 운세가 아닌 행동의 방향을 잡기 위해, 질문은 구체적일수록 좋습니다."
+            </p>
+
+            <div className="space-y-4">
+              <h4 className="text-xs font-bold uppercase tracking-widest text-starlight">Input Tips</h4>
+              <ul className="space-y-3 text-sm text-moonlight">
+                <li className="flex gap-3">
+                  <span className="text-acc-gold">•</span>
+                  <span><strong>관계:</strong> 상대방과의 현재 상태를 포함해주세요.</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="text-acc-gold">•</span>
+                  <span><strong>커리어:</strong> 이직, 퇴사 등 고려 중인 옵션을 적어주세요.</span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="text-acc-gold">•</span>
+                  <span><strong>재물:</strong> 투자, 매매 등 구체적인 사안일수록 명확한 타이밍이 나옵니다.</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
-
-      <ReadingInput
-        initialData={props.initialData}
-        initialLanguage={props.language}
-        onLanguageChange={props.onLanguageChange}
-        onSubmit={(data) => {
-          props.onSubmit({
-            ...data,
-            birthTime: data.birthTime || '12:00',
-            calendarType: data.calendarType || 'solar',
-            unknownTime: data.unknownTime || false,
-          });
-        }}
-        isLoading={props.isLoading}
-        inviterName={props.inviterName}
-        inviteCode={props.inviteCode}
-        initialContext={props.initialContext}
-        initialQuestion={props.initialQuestion}
-      />
     </motion.div>
   );
 }

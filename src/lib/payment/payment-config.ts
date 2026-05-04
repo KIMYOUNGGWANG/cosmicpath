@@ -164,3 +164,25 @@ export function getSubscriptionFallbackPriceLabel(planType: ConsumerSubscription
 }
 
 export type ProductType = typeof READING_PRODUCT | typeof FOLLOW_UP_PRODUCT | typeof MATCH_PRODUCT;
+
+/**
+ * 서버 사이드 productId 허용 목록.
+ * payment/route.ts에서 클라이언트 요청의 productId를 검증하는 데 사용.
+ * 허용 목록 외의 productId로는 체크아웃 세션을 생성할 수 없음.
+ */
+export function getAllowedProductIds(): Set<string> {
+    return new Set([
+        READING_PRODUCT.productId,
+        FOLLOW_UP_PRODUCT.productId,
+        CHAT_CREDIT_SINGLE.productId,
+        CHAT_CREDIT_PACK.productId,
+        MATCH_PRODUCT.productId,
+    ].filter(Boolean));
+}
+
+export function isProductAllowed(productId: string | null | undefined): boolean {
+    if (!productId) return false;
+    const trimmed = productId.trim();
+    if (!trimmed) return false;
+    return getAllowedProductIds().has(trimmed);
+}

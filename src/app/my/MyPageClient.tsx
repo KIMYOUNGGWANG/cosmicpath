@@ -363,16 +363,64 @@ export default function MyPageClient({ initialSmsOracleProfile }: MyPageClientPr
     }
 
     return (
-        <div className="min-h-screen bg-[#050505] px-4 pb-12 pt-24 text-white">
-            <div className="mx-auto max-w-5xl">
-                <header className="mb-10">
-                    <h1 className="mb-2 text-3xl text-starlight md:text-4xl font-cinzel">
-                        My Journey
-                    </h1>
-                    <p className="font-outfit text-white/60">
-                        Your cosmic history, saved insights, and membership status.
-                    </p>
-                </header>
+        <div className="min-h-screen bg-[#050505] pb-12 pt-24 text-white">
+            <div className="mx-auto max-w-[1820px] px-4 lg:px-8">
+                <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] xl:grid-cols-[300px_1fr] gap-8 xl:gap-14 items-start">
+
+                    {/* ── SIDEBAR ── */}
+                    <aside className="hidden lg:flex flex-col gap-5 sticky top-28">
+                        {/* Nav */}
+                        <div className="rounded-[22px] border border-white/[0.08] bg-white/[0.03] p-4">
+                            <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">Navigation</p>
+                            <nav className="flex flex-col gap-1">
+                                <Link href="/my" className="flex items-center gap-3 rounded-xl bg-white/[0.06] px-3 py-3 text-sm font-semibold text-[#D4AF37]">
+                                    <Sparkles size={15} />
+                                    <span>My Hub</span>
+                                </Link>
+                                <Link href="/billing" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-white/60 transition-colors hover:bg-white/[0.05] hover:text-white">
+                                    <Crown size={15} />
+                                    <span>Membership</span>
+                                </Link>
+                                <Link href="/daily" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-white/60 transition-colors hover:bg-white/[0.05] hover:text-white">
+                                    <MessageSquareText size={15} />
+                                    <span>Daily Signal</span>
+                                </Link>
+                            </nav>
+                        </div>
+
+                        {/* Oracle Guide Card */}
+                        <div className="rounded-[22px] border border-white/[0.08] bg-white/[0.03] p-5">
+                            <div className="mb-4 flex items-center gap-3 border-b border-white/[0.06] pb-4">
+                                <div className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04]">
+                                    <span className="font-cinzel text-[#D4AF37] text-base">결</span>
+                                </div>
+                                <div>
+                                    <p className="text-sm font-semibold text-white">Oracle Guide</p>
+                                    <p className="text-xs text-white/40">Analytic &amp; Neutral</p>
+                                </div>
+                            </div>
+                            <p className="mb-5 text-sm italic leading-relaxed text-white/55">
+                                "이곳은 당신의 선택과 타이밍이 기록되는 공간입니다. 주기적인 점검이 가장 확실한 길을 만듭니다."
+                            </p>
+                            <Link
+                                href="/start?reset=true"
+                                className="inline-flex w-full items-center justify-center rounded-full border border-white/10 bg-white/[0.04] py-3 text-sm font-medium text-white transition-colors hover:bg-white/[0.08]"
+                            >
+                                새 질문 하기
+                            </Link>
+                        </div>
+                    </aside>
+
+                    {/* ── MAIN CONTENT ── */}
+                    <div className="min-w-0">
+                        <header className="mb-10">
+                            <h1 className="mb-2 text-3xl text-starlight md:text-4xl font-cinzel">
+                                My Oracle Hub
+                            </h1>
+                            <p className="font-outfit text-white/55">
+                                Your cosmic history, saved insights, and membership status.
+                            </p>
+                        </header>
 
                 <motion.section
                     initial={{ opacity: 0, y: 20 }}
@@ -739,18 +787,20 @@ export default function MyPageClient({ initialSmsOracleProfile }: MyPageClientPr
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="glass-card rounded-2xl py-20 text-center"
+                        className="rounded-[32px] border border-white/[0.07] bg-white/[0.02] p-12 text-center"
                     >
-                        <Sparkles className="mx-auto mb-4 h-12 w-12 text-[#D4AF37]/50" />
-                        <h3 className="mb-2 text-xl text-white font-cinzel">No Readings Yet</h3>
-                        <p className="mb-6 font-outfit text-white/60">
-                            Your destiny is waiting to be uncovered.
+                        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] shadow-[0_0_40px_rgba(212,175,55,0.12)]">
+                            <span className="font-cinzel text-[#D4AF37] text-3xl">결</span>
+                        </div>
+                        <h3 className="mb-3 text-xl text-starlight font-cinzel tracking-wide">아직 리딩 기록이 없습니다</h3>
+                        <p className="mb-8 max-w-sm mx-auto text-sm leading-relaxed text-white/50">
+                            오라클 가이드 결이 당신의 첫 질문을 기다리고 있습니다. 막연한 고민보다 구체적인 질문으로 시작해보세요.
                         </p>
                         <Link
                             href="/start?reset=true"
-                            className="rounded-full bg-gradient-to-r from-[#D4AF37] to-[#FDD835] px-8 py-3 font-bold text-black transition-all hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]"
+                            className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-[#D4AF37] px-10 font-bold text-black transition-all hover:bg-[#E7C867] hover:shadow-[0_0_24px_rgba(212,175,55,0.35)]"
                         >
-                            Start New Journey
+                            첫 질문 시작하기
                         </Link>
                     </motion.div>
                 ) : (
@@ -766,7 +816,7 @@ export default function MyPageClient({ initialSmsOracleProfile }: MyPageClientPr
                         }}
                         initial="hidden"
                         animate="show"
-                        className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+                        className="grid gap-4 sm:grid-cols-2"
                     >
                         {readings.map((reading) => {
                             const meta = parseReadingMetadata(reading.metadata);
@@ -823,7 +873,9 @@ export default function MyPageClient({ initialSmsOracleProfile }: MyPageClientPr
                         })}
                     </motion.div>
                 )}
-            </div>
+                    </div>{/* end main content */}
+                </div>{/* end grid */}
+            </div>{/* end max-width container */}
 
             <SubscriptionModal
                 isOpen={isSubscriptionModalOpen}

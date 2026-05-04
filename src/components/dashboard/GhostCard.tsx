@@ -224,8 +224,8 @@ export function GhostCard({ type, level, isLocked = false }: GhostCardProps) {
 
                 {/* Header */}
                 <div className="w-full flex justify-between items-center opacity-70 text-xs tracking-widest font-mono">
-                    <span>TYPE-0{Object.keys(GHOST_CONFIG).indexOf(type) + 1}</span>
-                    <span>LV.{level}</span>
+                    <span>유형 0{Object.keys(GHOST_CONFIG).indexOf(type) + 1}</span>
+                    <span>강도 {level}</span>
                 </div>
 
                 {/* Main Visual */}

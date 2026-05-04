@@ -133,6 +133,7 @@ export function syncResultUrl(options: {
   inviteCode?: string;
   autoReferralCode?: string;
   onDebug?: StartFlowDebugFn;
+  updateUrl?: (url: string) => void;
 }) {
   if (typeof window === 'undefined') return;
 
@@ -156,11 +157,15 @@ export function syncResultUrl(options: {
     currentUrl.searchParams.set('referralCode', options.autoReferralCode);
   }
 
-  window.history.replaceState(
-    options.readingId ? { readingId: options.readingId } : window.history.state,
-    '',
-    currentUrl.toString()
-  );
+  if (options.updateUrl) {
+    options.updateUrl(currentUrl.pathname + currentUrl.search);
+  } else {
+    window.history.replaceState(
+      options.readingId ? { readingId: options.readingId } : window.history.state,
+      '',
+      currentUrl.toString()
+    );
+  }
 
   options.onDebug?.('sync_result_url', {
     readingId: options.readingId || null,
