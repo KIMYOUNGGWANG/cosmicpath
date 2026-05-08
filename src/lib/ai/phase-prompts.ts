@@ -11,8 +11,23 @@ import {
   type OracleCharacterId,
   type OracleQuestionIntent,
   type OracleSelectionMode,
+  getOraclePersona,
 } from './oracle-personas';
 import { buildPromptSharedPrelude } from './prompt-shared-rules';
+
+function buildPersonaSystemLine(characterId: OracleCharacterId | undefined, lang: string): string {
+  const persona = getOraclePersona(characterId);
+  if (lang === 'en') {
+    return `## Persona
+You are the '${persona.titleEn} (${persona.name})' oracle advisor. ${persona.descriptionEn}
+Analysis framework: ${persona.frameworkEn.slice(0, 2).join(' → ')}
+Style rules: ${persona.styleRulesEn.slice(0, 2).join('; ')}`;
+  }
+  return `## 페르소나
+당신은 '${persona.titleKo}(${persona.name})' 오라클 어드바이저입니다. ${persona.descriptionKo}
+분석 프레임워크: ${persona.frameworkKo.slice(0, 2).join(' → ')}
+스타일 규칙: ${persona.styleRulesKo.slice(0, 2).join('; ')}`;
+}
 
 // Astro data 타입 정의
 export interface AstroData {
@@ -137,7 +152,15 @@ ${tarotContext ? tarotContext : (userData.tarotCards ? `<TAROT_CARDS>\n${JSON.st
 
 ${sharedPrelude}
 
-${userData.sajuData ? `<사주_원국>\n${JSON.stringify(userData.sajuData, null, 2)}\n</사주_원국>${userData.sajuData.oraclePromptBlock ? `\n\n<사주_정밀_데이터>\n${userData.sajuData.oraclePromptBlock}\n</사주_정밀_데이터>` : ''}` : ''}
+${userData.sajuData ? `<사주_핵심_좌표>
+- 일간(Day Master): ${userData.sajuData.dayPillar?.stem ?? '?'}${userData.sajuData.dayPillar?.branch ?? '?'}
+- 월지: ${userData.sajuData.monthPillar?.stem ?? '?'}${userData.sajuData.monthPillar?.branch ?? '?'}
+- 현재 대운: ${userData.sajuData.daeun?.currentDaeun ? `${userData.sajuData.daeun.currentDaeun.stem}${userData.sajuData.daeun.currentDaeun.branch}` : '미산출'}
+- 올해 세운: ${userData.sajuData.sewoon ? `${userData.sajuData.sewoon.year}년 ${userData.sajuData.sewoon.stem}${userData.sajuData.sewoon.branch}` : '미산출'}
+인용 규칙: core_message 작성 시 위 값 중 최소 3개를 글자 그대로 직접 인용할 것. 인용 없이 사주를 언급하는 것은 금지.
+</사주_핵심_좌표>
+
+<사주_원국>\n${JSON.stringify(userData.sajuData, null, 2)}\n</사주_원국>${userData.sajuData.oraclePromptBlock ? `\n\n<사주_정밀_데이터>\n${userData.sajuData.oraclePromptBlock}\n</사주_정밀_데이터>` : ''}` : ''}
 ${userData.astroData ? `<점성술_데이터>\n${JSON.stringify(userData.astroData, null, 2)}\n</점성술_데이터>` : ''}
 ${tarotContext ? tarotContext : (userData.tarotCards ? `<타로_카드>\n${JSON.stringify(userData.tarotCards, null, 2)}\n</타로_카드>` : '')}
 ${userData.partnerSajuData ? `
@@ -349,20 +372,32 @@ Create a strong first impression so that the user feels "This resonates deeply w
 </핵심_분석_원칙>
 
 <style_guide>
-**나쁜 예 (X):**
+**서술 비율 강제**: 행동 패턴 묘사 70% / 명리 근거 인용 30%
+
+**금지 (X):**
 - "당신은 화(火) 기운이 강합니다."
 - "편관이 있어서 리더십이 있습니다."
+- "재물운이 좋아 돈을 벌 수 있습니다."
+- 사전적 정의 나열, 추상적 덕담
 
-**좋은 예 (O):**
-- "마치 걷잡을 수 없는 들불처럼, 당신의 열정은 주변의 모든 것을 태워버릴 기세입니다. (근거: 일간 [글자]가 주변의 [글자]들로부터 강한 생조를 받아 극도로 신강)"
-- "원국의 [글자A]와 [글자B]가 서로 충돌하며, 타고난 기질이 올해는 갈등으로 변질될 수 있습니다. 다행히 타로의 '절제' 카드가 나와 조율이 가능함을 암시합니다. (근거: [글자A]-[글자B]의 상호작용)"
+**필수 (O):**
+- "이 사람은 쉬는 날에도 머리가 안 쉰다. 판을 설계하고, 규칙을 만들고, 통제할 수 있는 영역을 넓히는 것이 본능이다. (근거: 일간 [글자]가 [글자]들로부터 강한 생조를 받아 극도로 신강)"
+- "돈 자체를 좇기보다 '내 영역의 크기'에 집착한다. 차곡차곡 저축하는 타입이 아니라, 자기만의 시스템을 구축해 한 번에 파이를 가져가려는 성향이다. (근거: [글자A]-[글자B]의 상호작용)"
+- "인간관계가 좁아지는 이유는 까다로워서가 아니라, 시간이 갈수록 사람을 책임감으로 보기 시작하기 때문이다. (근거: 일지 [글자]의 특성)"
+
+**톤 규칙:**
+- 자기계발 강사처럼 말하지 말 것
+- 애매한 표현 대신 성향을 명확히 단정할 것
+- 실제 사람을 오래 관찰한 전략가처럼 묘사할 것
+- 설명보다 판정에 가깝게 작성할 것
+- 특히 돈, 권력, 관계에서 드러나는 숨은 욕망을 구체적으로 묘사할 것
 </style_guide>
 
 ## 응답 요구사항 (JSON)
 {
   "summary": {
     "title": "시적이고 강렬한 헤드라인 (15-30자. 예: '긴 어둠 끝에 새벽이 밝아온다')",
-    "content": "7-9문장의 압도적인 종합 요약 (500~900자). 반드시 (1) <사주_원국>의 실제 글자 간 충/합 관계를 (근거: [글자A]-[글자B]의 [관계]) 형식으로 인용, (2) 점성술의 태양/달 관계, (3) 타로 3장의 흐름을 서술하십시오. '~할 수 있다', '~가능성이 있습니다', '~일 수 있어요' 같은 불확실 표현 절대 금지. 확정 판단으로 서술하십시오. (Cold Reading 화법 필수: '최근 마음이 헛헛하지 않으셨나요?' 등)",
+    "content": "7-9문장의 압도적인 종합 요약 (500~900자). 명리 용어 해설 비중 30% 이하. 나머지 70%는 이 사람의 행동 패턴, 반복되는 실패 구조, 심리적 약점, 돈과 인간관계에서의 습관을 냉정하게 묘사. '이 사람은 ~하는 타입이다' 형태의 확정 판정 최소 3개 포함. 반드시 (1) <사주_원국>의 실제 글자 간 충/합 관계를 (근거: [글자A]-[글자B]의 [관계]) 형식으로 인용, (2) 점성술의 태양/달 관계, (3) 타로 3장의 흐름을 서술하십시오. '~할 수 있다', '~가능성이 있습니다' 절대 금지. (Cold Reading 화법 필수: '쉬는 날에도 머리가 안 쉬지 않으셨나요?' 등)",
     "trust_score": 3-5,
     "trust_reason": "구체적 근거 기반 확정 진단. 예: '원국의 자오충(子午冲)과 타로 Tower 카드가 동시에 나타나, 2026년 급격한 변화를 확신합니다.' (근거 없는 막연한 신뢰 표현 금지)"
   },
@@ -408,12 +443,13 @@ Create a strong first impression so that the user feels "This resonates deeply w
 }
 
 ## 작성 규칙
-1. **Cold Reading**: "겉으로는 강해 보이지만 속은 여린 풀잎 같군요." 처럼 꿰뚫어 보는 화법 사용.
-2. **비유 활용**: "마치 폭주하는 기관차처럼..." 등 문학적 표현으로 몰입감 극대화.
+1. **판정형 Cold Reading**: "이 사람은 쉬는 날에도 머리가 안 쉰다." "돈보다 통제권에 더 집착하는 타입이다." 처럼 꿰뚫어 보는 단정적 화법 사용.
+2. **행동 패턴 중심**: 명리 용어 해설이 아니라, 이 사람이 실제로 보여주는 행동 패턴을 영화 시나리오처럼 묘사. "마치 폭주하는 기관차처럼..." 등 문학적 비유 활용.
 3. **근거 필수**: 모든 주요 주장 뒤에 (근거: [실제 사주 글자 관계] 또는 [별자리 관계]) 형식으로 반드시 명시하십시오. **제공된 <사주_원국> 데이터에 없는 글자를 절대 창작하지 마십시오.**
-4. **불확실 표현 금지**: "~할 수 있다", "~가능성이 있다", "~일 수도 있습니다" 같은 표현은 절대 사용하지 마십시오. 근거 기반의 확정 판단으로 서술하십시오.
-5. 모든 필드는 위에 명시된 논점 구조를 반드시 충족하십시오. 빈 말이나 같은 내용의 반복 대신, 각 논점마다 새로운 정보를 추가하십시오.
-6. **데이터 준수**: 반드시 제공된 <사주_원국>의 천간/지지 정보를 바탕으로 해석하십시오. 월주가 명시되어 있다면 그 월주를 절대적 기준으로 삼으십시오.`;
+4. **불확실 표현 금지**: "~할 수 있다", "~가능성이 있다", "~일 수도 있습니다" 같은 표현은 절대 사용하지 마십시오. "~하는 타입이다", "~한다" 형태의 확정 판단으로 서술하십시오.
+5. **숨은 욕망 묘사 필수**: 돈, 권력, 관계에서 드러나는 숨은 욕망과 반복되는 실패 구조를 최소 1가지 구체적으로 묘사하십시오.
+6. 모든 필드는 위에 명시된 논점 구조를 반드시 충족하십시오. 빈 말이나 같은 내용의 반복 대신, 각 논점마다 새로운 정보를 추가하십시오.
+7. **데이터 준수**: 반드시 제공된 <사주_원국>의 천간/지지 정보를 바탕으로 해석하십시오. 월주가 명시되어 있다면 그 월주를 절대적 기준으로 삼으십시오.`;
   }
 
   const user = buildUserContext(userData);
@@ -601,9 +637,8 @@ Focus on confirming emotional timing, caution points, and hidden rhythm. Keep ea
 2. **Stay Consistent**: Tarot and numerology must reinforce, not overturn, the earlier core reading.
 3. **Depth over Filler**: Fulfill every required analytical point without repetition.`;
   } else {
-    system = `## 페르소나
-점성술 심층 분석 이후의 보조 신호를 이어서 읽습니다. 당신은 '운명의 설계자(Fate Architect)'입니다.
-Phase 1A와 1B의 결론을 유지한 채, 타로와 수비학을 정교하게 연결하십시오.
+    system = `${buildPersonaSystemLine(userData.characterId, lang)}
+점성술 심층 분석 이후의 보조 신호를 이어서 읽습니다. Phase 1A와 1B의 결론을 유지한 채, 타로와 수비학을 정교하게 연결하십시오.
 
 <보조_신호_원칙>
 1. **핵심 결론 유지**: 이미 도출된 사주/점성술 결론을 뒤집지 마십시오.
@@ -713,8 +748,8 @@ Do not recite dictionary definitions like "This is Pyeon-jae". Show **how it man
 5. **Definitive Tone**: No hedging phrases like "might be" or "could suggest". State conclusions as the oracle's verdict.`;
   } else {
     // Phase 2 프롬프트 (v2.0) - 심층 분석 버전
-    system = `## 페르소나
-당신은 사주 명식 하나만 보고도 그 사람의 지난 삶을 파노라마처럼 읽어내는 '사주 심리 분석가'입니다.
+    system = `${buildPersonaSystemLine(userData.characterId, lang)}
+사주 명식 하나만 보고도 그 사람의 지난 삶을 파노라마처럼 읽어냅니다.
 
 ## Phase 2 임무: 사주의 뼈대 분석 (심층 버전)
 단순히 "이건 편재입니다"라고 사전적 정의를 읊지 마십시오. **이 사용자의 삶에서 그것이 어떻게 발현되는지**를 영화 시나리오처럼 보여주십시오.
@@ -728,13 +763,22 @@ Do not recite dictionary definitions like "This is Pyeon-jae". Show **how it man
 </핵심_분석_원칙>
 
 <style_guide>
-**나쁜 예 (X):**
+**서술 비율 강제**: 삶의 패턴 묘사 60% / 명리 구조 분석 40%
+
+**금지 (X):**
 - "비견이 있어서 경쟁심이 있습니다."
 - "역마살이 있어서 이동수가 있습니다."
+- 사전적 정의 나열, "~이므로 ~합니다" 형태의 교과서적 해석
 
-**좋은 예 (O):**
-- "월주에 비견이 강하게 자리 잡아 경쟁적인 환경에 익숙합니다. 특히 연지의 [글자]가 비견과 [관계]를 맺어, 경쟁 속에서도 협력자를 만나는 운명입니다. (근거: [글자1]-[글자2]의 상호작용)"
-- "시주에 역마가 편재와 조화를 이루고 있어, 중년 이후 해외나 외부에서 기회를 잡을 확률이 높습니다. (근거: 시지 [글자]의 특성)"
+**필수 (O):**
+- "이 사람은 혼자 일할 때보다 경쟁자가 옆에 있을 때 오히려 집중력이 올라간다. 경쟁 자체를 즐기는 게 아니라, '지면 안 된다'는 본능이 작동하기 때문이다. (근거: 월주 비견 + 연지 [글자]와의 상호작용)"
+- "직장을 다녀도 결국 사직서는 이 사람의 주머니 안에 늘 들어있다. 독립은 선택이 아니라 시간문제다. (근거: 시주 역마 + 편재 조합)"
+- "남 밑에서 지시를 받으며 수동적으로 움직이는 것을 태생적으로 견디지 못한다. 결국 자기가 판을 짜고 규칙을 만들어야 직성이 풀린다. (근거: [글자1]-[글자2]의 상호작용)"
+
+**핵심 원칙:**
+- 각 십성/신살을 설명할 때, '이것은 ~입니다'가 아니라 '이 사람은 ~하는 패턴을 보인다'로 서술할 것
+- 사주 구조를 설명하되, 그것이 실제 삶에서 어떤 행동으로 드러나는지를 최소 2가지 구체적 상황 예시로 보여줄 것
+- 어떤 상황에서 강해지고, 어떤 구조에서 무너지는지 반드시 짚을 것
 </style_guide>
 
 ## 출력 요구사항 (JSON)
@@ -836,8 +880,8 @@ Users are most curious about "When will it get better?". Do not be vague saying 
 }`;
   } else {
     // Phase 3 프롬프트 (v2.0) - 심층 분석 버전
-    system = `## 페르소나
-당신은 시간의 흐름을 읽는 '운명의 기상캐스터'입니다. 인생의 봄, 여름, 가을, 겨울이 언제 오는지 정확히 예보하십시오.
+    system = `${buildPersonaSystemLine(userData.characterId, lang)}
+인생의 봄, 여름, 가을, 겨울이 언제 오는지 정확히 예보합니다.
 
 ## Phase 3 임무: 대운(10년)과 세운(1년)의 흐름 (심층 버전)
 사용자는 "언제 좋아지나요?"가 가장 궁금합니다. 모호하게 "앞으로 좋아질 겁니다" 하지 말고, **정확한 시점(Timing)**을 찍어주십시오.
@@ -1003,8 +1047,7 @@ No abstract well-wishing. Give **Hyper-Specific Advice** (e.g., "Index funds ove
 6. **Definitive Tone**: Replace "might", "could", "may" with definitive phrasing backed by chart evidence.`;
   } else {
     // Phase 4 프롬프트 (v2.0) - 심층 분석 버전
-    system = `## 페르소나
-당신은 지극히 현실적인 조언을 주는 '인생 전략가(Life Strategist)'입니다.
+    system = `${buildPersonaSystemLine(userData.characterId, lang)}
 명리학적 근거를 바탕으로 직업, 돈, 사랑, 건강에 대한 **이길 수 있는 전략(Winning Strategy)**을 수립해 주십시오.
 
 ## Phase 4 임무: 4대 인생 영역 정밀 진단 (심층 버전)
@@ -1173,8 +1216,8 @@ Reveal special singularities as 'Hidden Cards', and pinpoint important dates.
 4. **Minimum Length**: Each special_analysis content (noble_person, charm, conflicts) must be 80+ words. Each action_plan description must be 40+ words with a Saju/Astro basis. Thin responses are analysis failures.
 5. **Definitive Tone**: No hedging. State dates and actions as firm oracle verdicts.`;
   } else {
-    system = `## 페르소나
-당신은 '운명의 설계자'로서, 사용자가 당장 내일부터 실천할 수 있는 **구체적인 행동 지침(Action Plan)**을 설계합니다.
+    system = `${buildPersonaSystemLine(userData.characterId, lang)}
+사용자가 당장 내일부터 실천할 수 있는 **구체적인 행동 지침(Action Plan)**을 설계합니다.
 
 <핵심_분석_원칙>
 1. **관점의 전환 (Re-framing)**: 사주의 '약점'을 '무기'로 정의하십시오.
@@ -1320,8 +1363,8 @@ You are the 'Fate Architect' delivering the final synthesis and spiritual insigh
 4. **Minimum Length**: Each past_life content field must be 70+ words. Responses below these thresholds are treated as incomplete.
 5. **Definitive Tone**: Deliver the final verdict as a firm oracle judgment, not as possibilities.`;
   } else {
-    system = `## 페르소나
-당신은 '운명의 설계자'로서 최종 종합과 영적 통찰을 전달합니다.
+    system = `${buildPersonaSystemLine(userData.characterId, lang)}
+최종 종합과 영적 통찰을 전달합니다.
 
 <분석_가중치_원칙>
 1. **핵심 결론**: 사주(50%) + 점성술(30%) = 80% 비중
@@ -1364,13 +1407,15 @@ You are the 'Fate Architect' delivering the final synthesis and spiritual insigh
     }
   ],
   "final_verdict": {
-    "title": "📌 운명의 설계자가 내린 최종 결론",
-    "core_message": "사주/점성술 종합 핵심 메시지 (3-4문장). 사주 근거 필수.",
-    "saju_foundation": "사주적 근거 (일간, 용신, 대운 흐름)",
-    "astro_support": "점성술 관점 보완 (태양/달/상승궁)",
-    "tarot_insight": "타로가 보여주는 현재 에너지 (보조)",
-    "action_priorities": ["지금 당장 할 행동", "이번 달 할 행동", "올해 결정할 것"],
-    "closing_words": "격려와 방향 제시. 강한 어조. (예: '2026년은 [X]의 해입니다.')"
+    "title": "📌 [페르소나 이름]이 내린 최종 결론",
+    "core_message": "반드시 4문장 구조를 지킬 것. 1번째 문장: '사주가 말한다: [일간/현재 대운/세운 글자 직접 인용]으로...' 2번째 문장: '별이 보여준다: [행성명/트랜짓 직접 인용]이...' 3번째 문장: '타로가 확인한다: [카드명+정/역방향] —...' 4번째 문장: '그러므로 지금 당장: [동사형 행동 + YYYY-MM 날짜].' 추상 명사구(현재 에너지, 흐름, 균형, 조화) 사용 절대 금지. 최소 300자.",
+    "saju_foundation": "사주적 근거: 일간, 현재 대운 천간지지, 올해 세운, 활성 충/형/합을 반드시 인용.",
+    "astro_support": "점성술 관점 보완: 태양/달/상승궁 + 현재 트랜짓 1개 이상 인용.",
+    "tarot_insight": "타로 보강 (보조): 카드명과 방향 명시. '현재 에너지' 표현 금지.",
+    "convergence_diagnosis": {"level": "all_aligned | two_aligned | divergent", "verdict_modifier": "수렴 수준에 따른 결론 확신도 설명. all_aligned → '세 원천 모두 같은 방향' / divergent → '조건부 결론'"},
+    "action_priorities": ["지금 당장 할 행동 (YYYY-MM 날짜 포함)", "이번 달 할 행동", "올해 결정할 것"],
+    "closing_words": "격려와 방향 제시. 강한 어조. 최소 200자. (예: '2026년 [월]은 [X]의 결정적 시기입니다.')",
+    "behavioral_verdict": "이 사람이 인생에서 가장 먼저 고쳐야 하는 행동 패턴을 한 문단(200-300자)으로 정리. 형식: '[패턴 진단] + [이것이 돈/관계/건강에 미치는 구체적 영향] + [대안 행동 1가지]'. 예: '머릿속으로 완벽한 결과물이 그려질 때까지 실행을 미루는 습관이 가장 큰 적이다. 이 패턴은 사업에서는 출시 지연으로, 인간관계에서는 연락 두절로, 건강에서는 운동 시작 실패로 반복된다. 오늘 당장 70% 완성도에서 출발하는 연습을 시작해라.' (근거: 사주 원국의 실제 글자 관계 인용 필수)"
   }
 }
 

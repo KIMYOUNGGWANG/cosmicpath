@@ -76,27 +76,27 @@ const CONTEXT_CONFIG: Record<ReadingContext, ContextConfig> = {
   career: {
     focus: ['타이밍', '기회', '전략'],
     avoid: ['구체적 연봉', '퇴사 강요'],
-    tone: '전문적이고 격려하는',
+    tone: '단정적이고 꿰뚫어 보는',
     examples: {
-      good: '3월 15-22일 면접 최적기. 목성 10하우스 통과 + 식신 활성화',
+      good: '이 사람은 조직에서 의사결정권 없이 버티는 걸 태생적으로 못 견딘다. 3월 15-22일이 행동 최적기.',
       bad: '열심히 하면 승진할 겁니다'
     }
   },
   love: {
     focus: ['관계 흐름', '소통', '만남'],
     avoid: ['결혼 날짜 단정', '이별 예언'],
-    tone: '따뜻하고 공감하는',
+    tone: '냉정하되 정확한',
     examples: {
-      good: '도화살 시주 위치 → 4-5월 만남 가능성. 단, 겁재 주의',
+      good: '인간관계가 좁아지는 이유는 까다로워서가 아니라, 사람을 책임감으로 보기 시작하기 때문이다.',
       bad: '좋은 사람 만날 거예요'
     }
   },
   money: {
     focus: ['재정 흐름', '지출 관리', '리스크 점검'],
     avoid: ['구체 종목', '공격적 투자 권유', '금액 예측'],
-    tone: '신중하고 현실적인',
+    tone: '냉정하고 현실적인',
     examples: {
-      good: '편재 흐름이 보여도 큰 베팅보다 지출 균형과 현금 흐름 점검이 우선입니다',
+      good: '돈 자체를 좇기보다 통제 가능한 시스템에 집착하는 타입이다. 저축형이 아니라 판 키우기형.',
       bad: '돈 많이 벌 거예요'
     }
   },
@@ -137,34 +137,28 @@ const FEW_SHOT_EXAMPLES = {
 ## 예시 1: 직업 상담
 **입력**: "이직 타이밍이 궁금해요"
 **출력**:
-"일간 갑목(甲木)에 2026년 3월부터 화(火) 세운이 들어옵니다. 이는 당신의 창의력(木)이 인정받는(火) 시기입니다.
+"이직을 고민 중이라면, 이미 마음은 떠난 상태다. 이 사람은 현 직장에서 의사결정권이 없다는 것에 질려 있다. 남 밑에서 지시만 받으며 수동적으로 움직이는 것을 태생적으로 견디지 못하는 타입이다.
 
-**점성술**: Mars가 10하우스 통과 (3/15-4/20) → 커리어 추진력 최고조
-**타로**: The Chariot (정방향) → 목표 향한 강한 의지
+📊 분석 근거
+- 사주: 편관(偏官) 월주 배치 → 조직 내 통제권 욕구 강함. 3월부터 화(火) 세운 진입으로 행동력 극대화
+- 점성: Mars 10하우스 통과 (3/15-4/20) → 커리어 추진력 최고조
+- 타로: The Chariot (정방향) → 이미 결심은 서 있다
 
-**액션 플랜**:
-- 3/10 전: 이력서 업데이트
-- 3/15-22: 면접 최적 타이밍
-- 4월 이후: 협상 유리
-
-**주의**: 5월 토성 역행 시작 → 새 직장 적응 기간 필요"
+**지금 당장**: 3/10 전 이력서 완성. 3/15-22 면접 최적기. 5월 토성 역행 전에 결판내라."
 
 ---
 
 ## 예시 2: 연애 상담
 **입력**: "올해 연애운 어때요?"
 **출력**:
-"시주(時柱)에 도화살(桃花) 배치 → 타고난 매력. 단, 겁재와 인접 → 경쟁 상황 주의.
+"인간관계가 좁아지는 이유는 까다로워서가 아니라, 시간이 갈수록 사람을 책임감으로 보기 시작하기 때문이다. 연애도 마찬가지다. 가벼운 만남을 유지하는 능력이 부족하고, 만나면 곧바로 '이 사람과의 미래'를 계산하기 시작한다.
 
-**점성술**: Venus 7하우스 진입 (4-5월) → 만남 가능성 ↑
-**타로**: Two of Cups (역방향) → 현재는 자기 성장 시기
+📊 분석 근거
+- 사주: 시주(時柱) 도화살(桃花) → 타고난 매력 존재. 단 겁재 인접 → 경쟁 상황 주의
+- 점성: Venus 7하우스 진입 (4-5월) → 만남 확률 상승
+- 타로: Two of Cups (역방향) → 자기 성장이 먼저
 
-**조언**:
-- 4월: 새 취미/모임 통해 자연스러운 만남
-- 피할 것: 친구 소개팅 (겁재 작용 가능성)
-- 강화할 것: 개인 브랜딩 (도화 활용)
-
-매력은 충분합니다. 타이밍이 중요합니다."
+**지금 당장**: 4월에 새 취미/모임에 나가라. 친구 소개팅은 피해라(겁재 작용). 매력은 충분하다, 문제는 타이밍이다."
 `,
   en: `
 ## Example 1: Career
@@ -234,6 +228,11 @@ export function buildUserPrompt(
 
   // 데이터 요약
   const sajuData = formatSaju(saju);
+  const sajuPrecisionBlock = saju?.oraclePromptBlock
+    ? (isEn
+        ? `\n<SAJU_PRECISION_DATA>\n${saju.oraclePromptBlock}\n</SAJU_PRECISION_DATA>`
+        : `\n<사주_정밀_데이터>\n${saju.oraclePromptBlock}\n</사주_정밀_데이터>`)
+    : '';
   const astroData = formatAstrology(astrology);
   const tarotData = tarotCards
     .map(c => isEn ? `${c.nameEn} (${c.isReversed ? 'R' : 'U'})` : `${c.name} (${c.isReversed ? '역' : '정'})`)
@@ -250,7 +249,7 @@ export function buildUserPrompt(
 
   if (isEn) {
     return `# Analysis Data
-**User Saju (${Math.round(WEIGHTS.saju * 100)}%)**: ${sajuData}${partnerInfo}
+**User Saju (${Math.round(WEIGHTS.saju * 100)}%)**: ${sajuData}${sajuPrecisionBlock}${partnerInfo}
 **Astrology (${Math.round(WEIGHTS.astrology * 100)}%)**: ${astroData}
 **Tarot (${Math.round(WEIGHTS.tarot * 100)}%)**: ${tarotData}
 
@@ -276,7 +275,7 @@ ${guide.warnings.length > 0 ? `⚠️ Warnings: ${guide.warnings.join('; ')}` : 
   }
 
   return `# 분석 데이터
-**사용자 사주 (${Math.round(WEIGHTS.saju * 100)}%)**: ${sajuData}${partnerInfo}
+**사용자 사주 (${Math.round(WEIGHTS.saju * 100)}%)**: ${sajuData}${sajuPrecisionBlock}${partnerInfo}
 **점성술 (${Math.round(WEIGHTS.astrology * 100)}%)**: ${astroData}
 **타로 (${Math.round(WEIGHTS.tarot * 100)}%)**: ${tarotData}
 
