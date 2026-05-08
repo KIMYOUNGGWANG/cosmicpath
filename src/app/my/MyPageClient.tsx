@@ -363,7 +363,7 @@ export default function MyPageClient({ initialSmsOracleProfile }: MyPageClientPr
     }
 
     return (
-        <div className="min-h-screen bg-[#050505] pb-12 pt-24 text-white">
+        <div className="min-h-screen bg-[#050505] pb-24 pt-24 text-white lg:pb-12">
             <div className="mx-auto max-w-[1820px] px-4 lg:px-8">
                 <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] xl:grid-cols-[300px_1fr] gap-8 xl:gap-14 items-start">
 
@@ -422,11 +422,11 @@ export default function MyPageClient({ initialSmsOracleProfile }: MyPageClientPr
                             </p>
                         </header>
 
-                <motion.section
+                        <motion.section
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="relative mb-10 overflow-hidden rounded-[32px] border border-[#D4AF37]/20 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.16),transparent_36%),radial-gradient(circle_at_85%_18%,rgba(245,216,138,0.08),transparent_24%),linear-gradient(145deg,#0a0d16,#111827)] p-6 shadow-[0_36px_140px_rgba(0,0,0,0.42)]"
-                >
+                        >
                     <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-[#F4D88A]/70 to-transparent" />
                     <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                         <div className="max-w-2xl">
@@ -518,13 +518,13 @@ export default function MyPageClient({ initialSmsOracleProfile }: MyPageClientPr
                             </p>
                         </div>
                     </div>
-                </motion.section>
+                        </motion.section>
 
-                <motion.section
+                        <motion.section
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="mb-8 overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.05),transparent_34%),linear-gradient(145deg,#07111a,#0a1620)] p-5 shadow-[0_18px_64px_rgba(2,12,27,0.26)]"
-                >
+                        >
                     <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                         <div className="max-w-xl">
                             <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -781,9 +781,28 @@ export default function MyPageClient({ initialSmsOracleProfile }: MyPageClientPr
                             </div>
                         </div>
                     </div>
-                </motion.section>
+                        </motion.section>
 
-                {readings.length === 0 ? (
+                        {/* Reading History Section */}
+                        <div className="mb-6 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-lg font-semibold text-starlight font-cinzel">리딩 기록</h2>
+                                <p className="mt-1 text-xs text-white/40">
+                                    {readings.length > 0 ? `${readings.length}개의 오라클 기록` : "아직 리딩 기록이 없습니다"}
+                                </p>
+                            </div>
+                            {readings.length > 0 && (
+                                <Link
+                                    href="/start?reset=true"
+                                    className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-medium text-white/70 transition-colors hover:bg-white/[0.08] hover:text-white"
+                                >
+                                    <Sparkles size={11} />
+                                    새 질문
+                                </Link>
+                            )}
+                        </div>
+
+                        {readings.length === 0 ? (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -875,6 +894,8 @@ export default function MyPageClient({ initialSmsOracleProfile }: MyPageClientPr
                 )}
                     </div>{/* end main content */}
                 </div>{/* end grid */}
+
+
             </div>{/* end max-width container */}
 
             <SubscriptionModal

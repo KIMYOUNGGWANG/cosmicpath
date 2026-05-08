@@ -1,0 +1,68 @@
+Use case: ui-mockup
+Asset type: responsive web app design board
+Primary request: create a polished responsive web app UI design board for CosmicPath, shown as a premium product presentation board with multiple desktop and tablet web screens, not a mobile app board.
+
+Product:
+CosmicPath is a premium Korean oracle product that combines saju, tarot, and astrology into one decisive verdict. It is a web-based responsive application that should feel focused like an app, but spacious and information-rich like a high-end web product.
+
+Scene/backdrop:
+clean light gray presentation board with faint grid lines, subtle studio lighting, spacious layout, no clutter, no watermark
+
+Subject:
+show 4 to 5 large responsive web screens and one character panel:
+1. landing / web app shell
+2. question input flow
+3. glanceable result page
+4. personal hub / dashboard
+5. optional oracle chat or premium detail module
+6. one separate character concept panel for the brand guide
+
+Style/medium:
+high-fidelity product UI mockup, realistic responsive web app, premium SaaS-editorial hybrid, not wireframe, not illustration, not concept art
+
+Composition/framing:
+wide landscape board, large browser-style windows, clear spacing, one coherent design system, strong presentation-board composition, all screens fully visible, responsive web layouts with desktop proportions
+
+Lighting/mood:
+premium, dark, elegant, authoritative, editorial, high-trust, calm, refined
+
+Color palette:
+near-black app surfaces, restrained gold accents for verdict and CTA, evidence blue for analysis and tabs, soft white typography, muted gray support text, minimal green for active states
+
+Core design goals:
+- this must feel like a web-based responsive app, not a mobile-first phone board
+- one brand character must exist as a representative guide inside the product
+- the result page must be easy to scan at a glance
+- the result page should visually prioritize one-line verdict, evidence alignment, and next actions
+
+Character direction:
+the representative character is named "결"
+gender-neutral elegant oracle guide
+not cute mascot, not cartoon plush, not fantasy wizard
+minimal dark outfit, subtle gold details, calm expression, premium symbolic design, appears as a product guide and assistant
+
+Result page direction:
+the result page must show:
+- one-line final verdict first
+- confidence or evidence summary
+- 3 next actions
+- simple evidence tabs
+- chapter-like deeper sections
+- visually scannable layout with cards and sections that are easy to understand in 3 seconds
+
+Text (verbatim):
+"COSMICPATH RESPONSIVE APP SYSTEM"
+"운세를 읽는 서비스가 아니라 결정을 받는 인터페이스"
+"지금 가장 망설이는 질문을 한 문장으로 적어보세요"
+"이번 제안은 기다리기보다 먼저 움직이는 편이 유리합니다"
+"한눈 요약"
+"다음 행동"
+"근거 리포트"
+"My Oracle Hub"
+"결"
+
+Constraints:
+all screens must look like real responsive web product UI, no gibberish, no random unreadable fake labels, no watermark, no purple-heavy AI style, no soft wellness visuals, no mobile phone frames, no generic startup template look
+
+Avoid:
+mobile-only composition, phone mockups, neon purple gradients, playful game tarot UI, cartoon mascot, fantasy robes with staffs, cluttered dashboards, unreadable result pages, overdecorated landing pages

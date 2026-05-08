@@ -6,6 +6,7 @@ import JsonLd from "@/components/seo/json-ld";
 import { Analytics } from '@vercel/analytics/react';
 import SessionProvider from "@/components/providers/SessionProvider";
 import LenisProvider from "@/components/providers/LenisProvider";
+import MobileBottomNav from "@/components/layout/MobileBottomNav";
 
 export async function generateMetadata(): Promise<Metadata> {
   const headersList = await headers();
@@ -110,6 +111,7 @@ export default async function RootLayout({
           <div className="mx-auto w-full max-w-[1820px] min-h-screen relative">
             {children}
           </div>
+          <MobileBottomNav />
           {process.env.NODE_ENV === 'production' ? <Analytics /> : null}
         </SessionProvider>
         <Script

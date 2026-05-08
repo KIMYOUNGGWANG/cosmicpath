@@ -85,13 +85,13 @@ const FreeReadingTraitSchema = z.object({
 
 const FreeReadingReportSchema = z.object({
   free_focus: z.object({
-    action_conclusion: z.string().min(1).max(96),
-    evidence_summary: z.string().min(1).max(160),
+    action_conclusion: z.string().min(1).max(280),
+    evidence_summary: z.string().min(1).max(360),
     next_question: z.string().min(1).max(96),
   }),
   summary: z.object({
     title: z.string().min(1).max(40),
-    content: z.string().min(1).max(480),
+    content: z.string().min(1).max(720),
     trust_score: z.coerce.number().int().min(1).max(5),
     trust_reason: z.string().min(1).max(120),
   }),
@@ -100,8 +100,8 @@ const FreeReadingReportSchema = z.object({
 
 export const FreeReadingCoreSchema = z.object({
   free_focus: z.object({
-    action_conclusion: z.string().min(1).max(96),
-    evidence_summary: z.string().min(1).max(160),
+    action_conclusion: z.string().min(1).max(280),
+    evidence_summary: z.string().min(1).max(360),
     next_question: z.string().min(1).max(96),
   }),
   summary: z.object({
@@ -348,8 +348,8 @@ export function buildFreeSummaryPhaseTwoUserPrompt(params: {
   const previousSummary = isRecord(previousFreeReport.summary) ? previousFreeReport.summary : {};
 
   return params.language === 'en'
-    ? `${params.baseUserPrompt}\n\n# Phase 1 Outline\n- Action conclusion: ${sanitizeText(previousFreeFocus.action_conclusion)}\n- Evidence summary: ${sanitizeText(previousFreeFocus.evidence_summary)}\n- Next question: ${sanitizeText(previousFreeFocus.next_question)}\n- Headline: ${sanitizeText(previousSummary.title)}\n\n# Phase 2 Task\nWrite only the final summary.content as plain text.\n- 3-4 short sentences\n- max 480 characters\n- no JSON, markdown, bullets, or code fences\n- turn the outline into one readable, decision-useful paragraph`
-    : `${params.baseUserPrompt}\n\n# 1단계 아웃라인\n- 행동 결론: ${sanitizeText(previousFreeFocus.action_conclusion)}\n- 근거 요약: ${sanitizeText(previousFreeFocus.evidence_summary)}\n- 다음 질문: ${sanitizeText(previousFreeFocus.next_question)}\n- 헤드라인: ${sanitizeText(previousSummary.title)}\n\n# 2단계 작업\n최종 summary.content 본문만 plain text로 작성하세요.\n- 3~4개의 짧은 문장\n- 480자 이내\n- JSON, 마크다운, 불릿, 코드펜스 금지\n- 1단계 아웃라인을 실제 판단에 도움이 되는 한 문단으로 풀어쓰기`;
+    ? `${params.baseUserPrompt}\n\n# Phase 1 Outline\n- Action conclusion: ${sanitizeText(previousFreeFocus.action_conclusion)}\n- Evidence summary: ${sanitizeText(previousFreeFocus.evidence_summary)}\n- Next question: ${sanitizeText(previousFreeFocus.next_question)}\n- Headline: ${sanitizeText(previousSummary.title)}\n\n# Phase 2 Task\nWrite only the final summary.content as plain text.\n- 3-4 short sentences\n- max 720 characters\n- no JSON, markdown, bullets, or code fences\n- turn the outline into one readable, decision-useful paragraph\n- 5-7 sentences: intro + saju evidence + astro evidence + 1-2 actions + closing`
+    : `${params.baseUserPrompt}\n\n# 1단계 아웃라인\n- 행동 결론: ${sanitizeText(previousFreeFocus.action_conclusion)}\n- 근거 요약: ${sanitizeText(previousFreeFocus.evidence_summary)}\n- 다음 질문: ${sanitizeText(previousFreeFocus.next_question)}\n- 헤드라인: ${sanitizeText(previousSummary.title)}\n\n# 2단계 작업\n최종 summary.content 본문만 plain text로 작성하세요.\n- 5~7문장 (도입 1 + 사주 근거 1~2 + 점성 근거 1 + 행동 1~2 + 마무리 1)\n- 720자 이내\n- JSON, 마크다운, 불릿, 코드펜스 금지\n- 1단계 아웃라인을 실제 판단에 도움이 되는 한 문단으로 풀어쓰기`;
 }
 
 function buildFallbackActionConclusion(

@@ -1,0 +1,64 @@
+{
+  "session_id": "CosmicPath_MarketAnalysis_20260425",
+  "topic": "CosmicPath 제품 개선 방향성 - 국내외 시장 분석",
+  "created_at": "2026-04-25T00:00:00Z",
+  "updated_at": "2026-04-25T00:00:00Z",
+  "status": "PHASE_3_QUERYING",
+  "current_phase": 3,
+  "requirements": {
+    "focus": ["market_trends", "competitor_analysis", "global_expansion", "ux_features", "monetization"],
+    "output_format": "comprehensive_report",
+    "scope": {
+      "geography": ["Korea", "US", "UK", "Japan", "Southeast Asia"],
+      "timeframe": "2024-2026"
+    },
+    "sources": {
+      "required_types": ["industry_reports", "news", "app_stores", "competitor_analysis"],
+      "min_quality": "C"
+    },
+    "audience": "founder/product_team",
+    "product_context": {
+      "name": "CosmicPath",
+      "type": "AI-powered Saju + Astrology + Tarot Decision Interface",
+      "positioning": "결정을 받는 인터페이스 (Decision Interface, not just fortune reading)",
+      "pricing": {
+        "reading": "$9.99",
+        "compatibility": "$7.99",
+        "oracle_chat_single": "$1.99",
+        "oracle_chat_pack": "$3.99",
+        "subscription_monthly": "$9.99",
+        "subscription_annual": "$49.99"
+      },
+      "languages": ["Korean", "English"],
+      "tech": "Next.js + AI (Claude) + Stripe"
+    }
+  },
+  "plan": {
+    "subtopics": [
+      "global_astrology_spiritual_apps_market",
+      "competitor_analysis_costar_chani_nebula_korean",
+      "korean_saju_international_expansion",
+      "monetization_models_fortune_apps",
+      "ux_feature_trends_retention"
+    ],
+    "agent_assignments": [
+      "Agent 1: Global market size & trends",
+      "Agent 2: Competitor deep-dive",
+      "Agent 3: Korean Saju international expansion",
+      "Agent 4: Monetization models",
+      "Agent 5: UX/Feature benchmarking"
+    ]
+  },
+  "progress": {
+    "phase_1": "completed",
+    "phase_2": "completed",
+    "phase_3": "in_progress",
+    "phase_4": "pending",
+    "phase_5": "pending",
+    "phase_6": "pending",
+    "phase_7": "pending"
+  },
+  "sources_count": 0,
+  "artifacts": {},
+  "errors": []
+}

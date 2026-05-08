@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CosmicPath Mobile Design Board</title>
+  <style>
+    :root {
+      --board: #dfe4ea;
+      --board-line: rgba(17, 24, 39, 0.08);
+      --void: #06070a;
+      --graphite: #111318;
+      --ink: #171a20;
+      --panel: rgba(20, 23, 31, 0.92);
+      --panel-soft: rgba(255, 255, 255, 0.05);
+      --starlight: #f3f5f7;
+      --mist: #a5acb8;
+      --muted: #677080;
+      --gold: #d6b25e;
+      --blue: #6e8bff;
+      --red: #ff6a5e;
+      --green: #3fcf8e;
+      --line: rgba(255, 255, 255, 0.09);
+      --shadow: 0 28px 90px rgba(18, 20, 25, 0.18);
+      --phone-shadow: 0 32px 50px rgba(8, 10, 15, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.2)),
+        repeating-linear-gradient(
+          90deg,
+          transparent 0,
+          transparent 79px,
+          var(--board-line) 79px,
+          var(--board-line) 80px
+        ),
+        repeating-linear-gradient(
+          180deg,
+          transparent 0,
+          transparent 79px,
+          var(--board-line) 79px,
+          var(--board-line) 80px
+        ),
+        var(--board);
+      color: #111827;
+      font-family: "Avenir Next", "Segoe UI", "Noto Sans KR", sans-serif;
+    }
+
+    .board {
+      width: 1680px;
+      margin: 0 auto;
+      padding: 40px 36px 56px;
+    }
+
+    .board-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 30px;
+    }
+
+    .header-copy {
+      max-width: 760px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(17, 24, 39, 0.9);
+      color: #f8fafc;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: "Iowan Old Style", "Georgia", serif;
+      font-size: 42px;
+      line-height: 1.04;
+      letter-spacing: -0.02em;
+      color: #0f172a;
+    }
+
+    .header-copy p {
+      margin: 14px 0 0;
+      max-width: 660px;
+      font-size: 16px;
+      line-height: 1.7;
+      color: rgba(15, 23, 42, 0.72);
+    }
+
+    .legend {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      max-width: 420px;
+      justify-content: flex-end;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.58);
+      color: rgba(15, 23, 42, 0.78);
+      font-size: 12px;
+      box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+    }
+
+    .legend-swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .screens {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 28px 22px;
+    }
+
+    .artboard {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .artboard-label {
+      font-size: 13px;
+      color: rgba(15, 23, 42, 0.66);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .phone {
+      width: 290px;
+      height: 610px;
+      border-radius: 34px;
+      background: #f8fafc;
+      padding: 10px;
+      box-shadow: var(--phone-shadow);
+      position: relative;
+    }
+
+    .phone::before {
+      content: "";
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 110px;
+      height: 24px;
+      border-radius: 999px;
+      background: #0b0e14;
+      z-index: 3;
+    }
+
+    .screen {
+      height: 100%;
+      border-radius: 28px;
+      overflow: hidden;
+      background: radial-gradient(circle at top, rgba(214, 178, 94, 0.14), transparent 24%), var(--void);
+      position: relative;
+      color: var(--starlight);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+    }
+
+    .statusbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 18px 6px;
+      font-size: 12px;
+      color: rgba(243, 245, 247, 0.84);
+      position: relative;
+      z-index: 2;
+    }
+
+    .status-icons {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.8;
+    }
+
+    .bar {
+      width: 18px;
+      height: 8px;
+      border-radius: 999px;
+      border: 1px solid currentColor;
+      opacity: 0.8;
+      position: relative;
+    }
+
+    .bar::after {
+      content: "";
+      position: absolute;
+      left: 1px;
+      top: 1px;
+      bottom: 1px;
+      width: 11px;
+      border-radius: 999px;
+      background: currentColor;
+    }
+
+    .content {
+      padding: 10px 16px 16px;
+      height: calc(100% - 34px);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .nav-pill {
+      align-self: flex-start;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      color: rgba(243, 245, 247, 0.72);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .hero-panel,
+    .panel,
+    .preview-card,
+    .message,
+    .list-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-panel {
+      padding: 20px;
+      min-height: 196px;
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top right, rgba(110, 139, 255, 0.22), transparent 32%),
+        radial-gradient(circle at top left, rgba(214, 178, 94, 0.2), transparent 34%),
+        rgba(20, 23, 31, 0.96);
+    }
+
+    .hero-panel::after {
+      content: "";
+      position: absolute;
+      inset: auto -28px -46px auto;
+      width: 132px;
+      height: 132px;
+      border-radius: 50%;
+      border: 1px solid rgba(214, 178, 94, 0.12);
+      opacity: 0.5;
+    }
+
+    .overline {
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .screen h2,
+    .screen h3,
+    .screen h4,
+    .screen p {
+      margin: 0;
+    }
+
+    .hero-title,
+    .page-title {
+      font-family: "Iowan Old Style", "Georgia", serif;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-title {
+      margin-top: 12px;
+      font-size: 29px;
+      line-height: 1.12;
+    }
+
+    .hero-copy {
+      margin-top: 10px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--mist);
+      max-width: 230px;
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 16px;
+      border-radius: 999px;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+    }
+
+    .button.primary {
+      background: linear-gradient(135deg, #e6c578, var(--gold));
+      color: #0b0e14;
+    }
+
+    .button.secondary {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--starlight);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .mini-chip {
+      padding: 10px 12px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 11px;
+      color: rgba(243, 245, 247, 0.8);
+    }
+
+    .preview-card {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 140px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02)),
+        rgba(18, 21, 29, 0.92);
+    }
+
+    .preview-strip {
+      display: flex;
+      gap: 8px;
+    }
+
+    .preview-meter {
+      height: 7px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+
+    .preview-meter > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--gold), #eed59a);
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      color: rgba(243, 245, 247, 0.7);
+      letter-spacing: 0.03em;
+    }
+
+    .page-title {
+      font-size: 23px;
+      line-height: 1.15;
+    }
+
+    .step-track {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .step {
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(243, 245, 247, 0.52);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .step.active {
+      color: var(--gold);
+      border-color: rgba(214, 178, 94, 0.28);
+      background: rgba(214, 178, 94, 0.11);
+    }
+
+    .input-box {
+      padding: 16px;
+      min-height: 124px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: rgba(243, 245, 247, 0.9);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .hint-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .hint-item,
+    .tag,
+    .stat,
+    .slot,
+    .card-token {
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .hint-item {
+      padding: 12px;
+      font-size: 12px;
+      color: rgba(243, 245, 247, 0.76);
+      line-height: 1.5;
+    }
+
+    .hint-item strong {
+      color: var(--starlight);
+      font-weight: 700;
+    }
+
+    .selection-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .tarot-card {
+      height: 98px;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 50% 22%, rgba(214, 178, 94, 0.34), transparent 22%),
+        linear-gradient(180deg, rgba(14, 17, 23, 0.86), rgba(26, 29, 37, 0.98));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tarot-card::before,
+    .tarot-card::after {
+      content: "";
+      position: absolute;
+      inset: 11px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .tarot-card::after {
+      inset: 30px 24px;
+      border-radius: 50%;
+      border-color: rgba(214, 178, 94, 0.28);
+    }
+
+    .tarot-card.selected {
+      box-shadow: inset 0 0 0 2px rgba(214, 178, 94, 0.64), 0 12px 28px rgba(214, 178, 94, 0.22);
+      transform: translateY(-2px);
+    }
+
+    .result-hero {
+      padding: 18px;
+      border-radius: 24px;
+      background:
+        linear-gradient(180deg, rgba(214, 178, 94, 0.12), rgba(214, 178, 94, 0.05)),
+        rgba(18, 21, 29, 0.94);
+      border: 1px solid rgba(214, 178, 94, 0.25);
+    }
+
+    .result-hero h3 {
+      margin-top: 10px;
+      font-family: "Iowan Old Style", "Georgia", serif;
+      font-size: 24px;
+      line-height: 1.15;
+    }
+
+    .result-hero p {
+      margin-top: 10px;
+      color: rgba(243, 245, 247, 0.74);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .action-card {
+      padding: 16px;
+      border-radius: 20px;
+      background: rgba(110, 139, 255, 0.08);
+      border: 1px solid rgba(110, 139, 255, 0.18);
+    }
+
+    .action-card p:first-child {
+      color: var(--blue);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .evidence-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .tab {
+      padding: 12px 8px;
+      border-radius: 16px;
+      text-align: center;
+      font-size: 11px;
+      color: rgba(243, 245, 247, 0.55);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .tab.active {
+      color: var(--starlight);
+      background: rgba(110, 139, 255, 0.14);
+      border-color: rgba(110, 139, 255, 0.28);
+      box-shadow: inset 0 -2px 0 rgba(110, 139, 255, 0.75);
+    }
+
+    .evidence-panel {
+      padding: 16px;
+      border-radius: 20px;
+      background: rgba(18, 21, 29, 0.94);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: grid;
+      gap: 12px;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: 66px 1fr;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .metric-label {
+      color: rgba(243, 245, 247, 0.58);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .metric-bar {
+      height: 10px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .metric-bar > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+    }
+
+    .billing-card,
+    .membership-card,
+    .daily-card {
+      padding: 18px;
+    }
+
+    .price-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 11px;
+      border-radius: 999px;
+      background: rgba(214, 178, 94, 0.12);
+      border: 1px solid rgba(214, 178, 94, 0.22);
+      color: var(--gold);
+      font-size: 12px;
+      margin-top: 10px;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .stat {
+      padding: 14px;
+      min-height: 78px;
+    }
+
+    .stat b {
+      display: block;
+      margin-top: 12px;
+      font-size: 20px;
+      color: var(--starlight);
+      font-weight: 700;
+    }
+
+    .list-card {
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .list-item {
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .list-item .title {
+      color: var(--starlight);
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .list-item .meta {
+      color: var(--mist);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .messages {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .message {
+      padding: 14px 14px 13px;
+      background: rgba(20, 23, 31, 0.88);
+    }
+
+    .message.user {
+      align-self: flex-end;
+      width: 82%;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .message.oracle {
+      width: 92%;
+    }
+
+    .message .role {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+
+    .message p {
+      font-size: 12px;
+      line-height: 1.65;
+      color: rgba(243, 245, 247, 0.82);
+    }
+
+    .verdict-inline {
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(214, 178, 94, 0.08);
+      border: 1px solid rgba(214, 178, 94, 0.18);
+    }
+
+    .composer {
+      margin-top: auto;
+      display: grid;
+      grid-template-columns: 1fr 42px;
+      gap: 10px;
+      padding: 12px;
+      border-radius: 20px;
+      background: rgba(17, 19, 24, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .composer-field {
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(243, 245, 247, 0.56);
+      font-size: 12px;
+    }
+
+    .send {
+      border-radius: 14px;
+      background: linear-gradient(135deg, #e6c578, var(--gold));
+    }
+
+    .send::before {
+      content: "";
+      width: 14px;
+      height: 14px;
+      border-top: 2px solid #0b0e14;
+      border-right: 2px solid #0b0e14;
+      transform: rotate(45deg) translate(-1px, 2px);
+      display: block;
+      margin: 12px auto 0;
+    }
+
+    .nav-bottom {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 14px;
+      height: 54px;
+      border-radius: 18px;
+      background: rgba(17, 19, 24, 0.94);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+    }
+
+    .nav-bottom .item {
+      width: 22px;
+      height: 22px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      position: relative;
+    }
+
+    .nav-bottom .item.active {
+      background: rgba(214, 178, 94, 0.18);
+      box-shadow: inset 0 0 0 1px rgba(214, 178, 94, 0.22);
+    }
+
+    .nav-bottom .item.active::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -7px;
+      transform: translateX(-50%);
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+
+    .fine {
+      font-size: 11px;
+      color: rgba(243, 245, 247, 0.56);
+      line-height: 1.5;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="board">
+    <div class="board-header">
+      <div class="header-copy">
+        <div class="eyebrow">CosmicPath Mobile UI System</div>
+        <h1>결정을 받는 제품처럼 보이도록 다시 그린 CosmicPath 모바일 화면 시안</h1>
+        <p>
+          문서형 가이드를 실제 화면으로 풀어낸 10-screen mobile board. 랜딩, 시작, 타로 선택, 결과,
+          데일리, 결제, 마이, 오라클 챗까지 같은 제품 언어로 연결되도록 설계했다.
+        </p>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-swatch" style="background: var(--gold)"></span> Verdict Gold</div>
+        <div class="legend-item"><span class="legend-swatch" style="background: var(--blue)"></span> Evidence Blue</div>
+        <div class="legend-item"><span class="legend-swatch" style="background: var(--green)"></span> Active State</div>
+      </div>
+    </div>
+
+    <div class="screens">
+      <div class="artboard">
+        <div class="artboard-label">01 Home Hero</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="statusbar">
+              <span>9:41</span>
+              <div class="status-icons"><span class="dot"></span><span class="dot"></span><span class="bar"></span></div>
+            </div>
+            <div class="content">
+              <div class="nav-pill">Saju · Tarot · Astrology</div>
+              <div class="hero-panel">
+                <div class="overline">Decision Timing Oracle</div>
+                <h2 class="hero-title">운세가 아니라 결론을 받으세요</h2>
+                <p class="hero-copy">
+                  세 시스템이 같은 방향을 가리킬 때만 지금 움직일지, 멈출지, 기다릴지를 판정합니다.
+                </p>
+                <div class="cta-row">
+                  <div class="button primary">지금 시작하기</div>
+                  <div class="button secondary">오늘 흐름</div>
+                </div>
+              </div>
+              <div class="preview-card">
+                <div class="row">
+                  <div class="section-title">Live Verdict Preview</div>
+                  <div class="overline" style="letter-spacing:0.08em">Free</div>
+                </div>
+                <p style="font-size:18px;line-height:1.3;color:var(--starlight)">이번 커리어 결정은 5월 초 이전에 먼저 움직이는 쪽이 유리합니다</p>
+                <div class="preview-strip">
+                  <div class="mini-chip">사주 87%</div>
+                  <div class="mini-chip">점성 81%</div>
+                  <div class="mini-chip">타로 76%</div>
+                </div>
+                <div class="preview-meter"><span style="width:82%"></span></div>
+              </div>
+              <div class="mini-grid">
+                <div class="mini-chip">관계</div>
+                <div class="mini-chip">커리어</div>
+                <div class="mini-chip">재물</div>
+                <div class="mini-chip">타이밍</div>
+              </div>
+            </div>
+            <div class="nav-bottom">
+              <div class="item active"></div>
+              <div class="item"></div>
+              <div class="item"></div>
+              <div class="item"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="artboard">
+        <div class="artboard-label">02 Start Input</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="statusbar">
+              <span>9:41</span>
+              <div class="status-icons"><span class="dot"></span><span class="dot"></span><span class="bar"></span></div>
+            </div>
+            <div class="content">
+              <div class="step-track">
+                <div class="step active">Question</div>
+                <div class="step">Birth</div>
+                <div class="step">Tarot</div>
+                <div class="step">Result</div>
+              </div>
+              <div class="panel" style="padding:18px">
+                <div class="overline">Step 1</div>
+                <h3 class="page-title" style="margin-top:10px">지금 가장 망설이는 질문을 한 문장으로 적어보세요</h3>
+                <p class="fine" style="margin-top:10px">좋은 질문일수록 결과는 더 단호해집니다.</p>
+              </div>
+              <div class="input-box">퇴사 제안을 받아들여도 될까요, 아니면 이번 분기까지 기다리는 편이 맞을까요?</div>
+              <div class="hint-list">
+                <div class="hint-item"><strong>좋은 질문 예시</strong><br/>올해 상반기 안에 이직을 움직이는 편이 유리한가요?</div>
+                <div class="hint-item"><strong>추천 가이드</strong><br/>타이밍과 리스크를 함께 보는 커리어 리딩</div>
+              </div>
+              <div class="button primary" style="margin-top:auto">이 질문으로 계속</div>
+            </div>
+            <div class="nav-bottom">
+              <div class="item"></div>
+              <div class="item active"></div>
+              <div class="item"></div>
+              <div class="item"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="artboard">
+        <div class="artboard-label">03 Tarot Pick</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="statusbar">
+              <span>9:41</span>
+              <div class="status-icons"><span class="dot"></span><span class="dot"></span><span class="bar"></span></div>
+            </div>
+            <div class="content">
+              <div class="step-track">
+                <div class="step">Question</div>
+                <div class="step">Birth</div>
+                <div class="step active">Tarot</div>
+                <div class="step">Result</div>
+              </div>
+              <div class="panel" style="padding:18px">
+                <div class="overline">Choose 3 Cards</div>
+                <h3 class="page-title" style="margin-top:10px">설명보다 직관이 먼저 가는 카드 세 장을 고르세요</h3>
+                <p class="fine" style="margin-top:10px">선택은 놀이가 아니라 판정 전에 놓는 마지막 단서입니다.</p>
+              </div>
+              <div class="selection-grid">
+                <div class="tarot-card selected"></div>
+                <div class="tarot-card"></div>
+                <div class="tarot-card"></div>
+                <div class="tarot-card"></div>
+                <div class="tarot-card selected"></div>
+                <div class="tarot-card"></div>
+                <div class="tarot-card"></div>
+                <div class="tarot-card"></div>
+                <div class="tarot-card selected"></div>
+              </div>
+              <div class="panel" style="padding:14px">
+                <div class="row">
+                  <div class="section-title">Selected</div>
+                  <div class="overline" style="font-size:11px">3 / 3</div>
+                </div>
+                <div class="preview-strip" style="margin-top:10px">
+                  <div class="mini-chip">The Hermit</div>
+                  <div class="mini-chip">Wheel</div>
+                  <div class="mini-chip">Ace</div>
+                </div>
+              </div>
+              <div class="button primary">무료 결과 열기</div>
+            </div>
+            <div class="nav-bottom">
+              <div class="item"></div>
+              <div class="item active"></div>
+              <div class="item"></div>
+              <div class="item"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="artboard">
+        <div class="artboard-label">04 Verdict Result</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="statusbar">
+              <span>9:41</span>
+              <div class="status-icons"><span class="dot"></span><span class="dot"></span><span class="bar"></span></div>
+            </div>
+            <div class="content">
+              <div class="nav-pill">Free Result</div>
+              <div class="result-hero">
+                <div class="overline">Your Decisive Verdict</div>
+                <h3>이번 제안은 기다리기보다 먼저 움직이는 편이 유리합니다</h3>
+                <p>사주 흐름과 점성 타이밍이 모두 5월 초 이전의 추진을 지지하고, 타로도 망설임보다 실행을 선택하라고 말합니다.</p>
+              </div>
+              <div class="action-card">
+                <p>Next Action</p>
+                <div style="font-size:14px;line-height:1.65;color:var(--starlight)">이번 주 안에 조건 재확인, 상반기 기준선 설정, 감정이 아닌 일정 중심으로 결정하기</div>
+              </div>
+              <div class="evidence-tabs">
+                <div class="tab active">사주</div>
+                <div class="tab">점성</div>
+                <div class="tab">타로</div>
+              </div>
+              <div class="preview-card">
+                <div class="row">
+                  <div class="section-title">Why This Verdict</div>
+                  <div class="overline" style="font-size:11px;color:var(--blue)">Aligned</div>
+                </div>
+                <p class="fine">당장의 불안은 크지만, 운의 흐름은 지연보다 선제적 선택에서 더 큰 회복력을 보여줍니다.</p>
+              </div>
+              <div class="button primary">프리미엄 근거 열기</div>
+            </div>
+            <div class="nav-bottom">
+              <div class="item"></div>
+              <div class="item"></div>
+              <div class="item active"></div>
+              <div class="item"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="artboard">
+        <div class="artboard-label">05 Evidence Report</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="statusbar">
+              <span>9:41</span>
+              <div class="status-icons"><span class="dot"></span><span class="dot"></span><span class="bar"></span></div>
+            </div>
+            <div class="content">
+              <div class="panel" style="padding:18px">
+                <div class="row">
+                  <div class="overline">Premium Evidence</div>
+                  <div class="price-chip" style="margin-top:0">Unlocked</div>
+                </div>
+                <h3 class="page-title" style="margin-top:12px">세 시스템이 왜 같은 결론을 내렸는지 근거로 읽는 화면</h3>
+              </div>
+              <div class="evidence-tabs">
+                <div class="tab active">사주</div>
+                <div class="tab">점성</div>
+                <div class="tab">타로</div>
+              </div>
+              <div class="evidence-panel">
+                <div class="metric-row">
+                  <div class="metric-label">Timing</div>
+                  <div class="metric-bar"><span style="width:84%;background:linear-gradient(90deg,var(--gold),#f1ddab)"></span></div>
+                </div>
+                <div class="metric-row">
+                  <div class="metric-label">Risk</div>
+                  <div class="metric-bar"><span style="width:36%;background:linear-gradient(90deg,var(--red),#ff9d8e)"></span></div>
+                </div>
+                <div class="metric-row">
+                  <div class="metric-label">Clarity</div>
+                  <div class="metric-bar"><span style="width:79%;background:linear-gradient(90deg,var(--blue),#b4c1ff)"></span></div>
+                </div>
+                <p class="fine">현재 대운과 세운 흐름은 보류보다 이동에서 더 큰 에너지 효율을 보입니다. 조건 검토만 끝나면 미루는 비용이 더 커집니다.</p>
+              </div>
+              <div class="list-card">
+                <div class="list-item">
+                  <div class="title">Action Priority 1</div>
+                  <div class="meta">이번 주 안에 오퍼 조건과 역할 범위를 문서로 고정하기</div>
+                </div>
+                <div class="list-item">
+                  <div class="title">Action Priority 2</div>
+                  <div class="meta">감정이 흔들리는 시점보다 일정 기준으로 의사결정 닫기</div>
+                </div>
+              </div>
+            </div>
+            <div class="nav-bottom">
+              <div class="item"></div>
+              <div class="item"></div>
+              <div class="item active"></div>
+              <div class="item"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="artboard">
+        <div class="artboard-label">06 Daily Pulse</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="statusbar">
+              <span>9:41</span>
+              <div class="status-icons"><span class="dot"></span><span class="dot"></span><span class="bar"></span></div>
+            </div>
+            <div class="content">
+              <div class="daily-card panel">
+                <div class="row">
+                  <div class="overline">Today's Flow</div>
+                  <div class="price-chip" style="margin-top:0;color:var(--green);border-color:rgba(63,207,142,0.22);background:rgba(63,207,142,0.08)">Stable</div>
+                </div>
+                <h3 class="page-title" style="margin-top:10px">오늘은 큰 결정보다 기준을 정리하는 쪽이 좋습니다</h3>
+                <p class="fine" style="margin-top:10px">속도를 올리는 날이 아니라, 다음 움직임의 조건을 고정하는 날.</p>
+              </div>
+              <div class="stat-grid">
+                <div class="stat">
+                  <span class="section-title">Energy</span>
+                  <b>71%</b>
+                </div>
+                <div class="stat">
+                  <span class="section-title">Focus</span>
+                  <b>84%</b>
+                </div>
+              </div>
+              <div class="list-card">
+                <div class="list-item">
+                  <div class="title">오늘의 행동</div>
+                  <div class="meta">결정 그 자체보다 체크리스트와 기준 문장을 먼저 적기</div>
+                </div>
+                <div class="list-item">
+                  <div class="title">주의할 점</div>
+                  <div class="meta">충동적으로 답을 닫지 말고 오후 이후 다시 비교하기</div>
+                </div>
+              </div>
+              <div class="button secondary">오늘의 타로 조언 열기</div>
+            </div>
+            <div class="nav-bottom">
+              <div class="item"></div>
+              <div class="item"></div>
+              <div class="item"></div>
+              <div class="item active"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="artboard">
+        <div class="artboard-label">07 Billing</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="statusbar">
+              <span>9:41</span>
+              <div class="status-icons"><span class="dot"></span><span class="dot"></span><span class="bar"></span></div>
+            </div>
+            <div class="content">
+              <div class="billing-card panel">
+                <div class="overline">Membership</div>
+                <h3 class="page-title" style="margin-top:12px">Premium이 열려 있습니다</h3>
+                <div class="price-chip">Pro Annual · 2026.11.04 갱신</div>
+                <p class="fine" style="margin-top:12px">Grand Oracle Chat, daily premium, full evidence report, SMS signal이 모두 활성화된 상태입니다.</p>
+              </div>
+              <div class="stat-grid">
+                <div class="stat">
+                  <span class="section-title">Chat Access</span>
+                  <b>Unlimited</b>
+                </div>
+                <div class="stat">
+                  <span class="section-title">Daily Signal</span>
+                  <b>Active</b>
+                </div>
+              </div>
+              <div class="list-card">
+                <div class="list-item">
+                  <div class="title">혜택 관리</div>
+                  <div class="meta">현재 플랜, 다음 결제일, 연결된 번호와 perk 상태를 한 화면에서 관리</div>
+                </div>
+                <div class="list-item">
+                  <div class="title">해지 정책</div>
+                  <div class="meta">오늘 해지해도 만료일까지는 premium 상태가 유지됩니다</div>
+                </div>
+              </div>
+              <div class="split">
+                <div class="button primary">플랜 유지</div>
+                <div class="button secondary">해지 관리</div>
+              </div>
+            </div>
+            <div class="nav-bottom">
+              <div class="item"></div>
+              <div class="item active"></div>
+              <div class="item"></div>
+              <div class="item"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="artboard">
+        <div class="artboard-label">08 My Page</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="statusbar">
+              <span>9:41</span>
+              <div class="status-icons"><span class="dot"></span><span class="dot"></span><span class="bar"></span></div>
+            </div>
+            <div class="content">
+              <div class="membership-card panel">
+                <div class="row">
+                  <div class="overline">My Oracle Hub</div>
+                  <div class="price-chip" style="margin-top:0">Premium</div>
+                </div>
+                <h3 class="page-title" style="margin-top:10px">내 기록과 멤버십 상태를 한 번에 보는 허브</h3>
+              </div>
+              <div class="list-card">
+                <div class="list-item">
+                  <div class="title">최근 리딩 1</div>
+                  <div class="meta">커리어 타이밍 리딩 · 4월 23일 · 결론 먼저 움직이기</div>
+                </div>
+                <div class="list-item">
+                  <div class="title">최근 리딩 2</div>
+                  <div class="meta">관계 흐름 리딩 · 4월 20일 · 보류 후 재확인</div>
+                </div>
+                <div class="list-item">
+                  <div class="title">SMS Oracle</div>
+                  <div class="meta">010-***-2814 · 인증 완료 · 아침 8시 Daily Signal 수신 중</div>
+                </div>
+              </div>
+              <div class="split">
+                <div class="button primary">내 리딩 열기</div>
+                <div class="button secondary">멤버십 보기</div>
+              </div>
+            </div>
+            <div class="nav-bottom">
+              <div class="item"></div>
+              <div class="item"></div>
+              <div class="item active"></div>
+              <div class="item"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="artboard">
+        <div class="artboard-label">09 Oracle Chat</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="statusbar">
+              <span>9:41</span>
+              <div class="status-icons"><span class="dot"></span><span class="dot"></span><span class="bar"></span></div>
+            </div>
+            <div class="content">
+              <div class="panel" style="padding:16px">
+                <div class="overline">Grand Oracle</div>
+                <h3 class="page-title" style="margin-top:10px">오늘은 미루는 쪽보다 기준을 닫는 쪽이 좋습니다</h3>
+                <p class="fine" style="margin-top:10px">커리어 도메인 · daily hook active</p>
+              </div>
+              <div class="messages">
+                <div class="message user">
+                  <p>이번 제안을 바로 받아도 될지 아직 확신이 없어요.</p>
+                </div>
+                <div class="message oracle">
+                  <div class="role">Oracle Council</div>
+                  <p>불안의 크기와 결정의 적절함은 다릅니다. 이번 흐름에서는 정보 부족이 아니라 확신 부족이 문제입니다.</p>
+                  <div class="verdict-inline">
+                    <div class="overline" style="font-size:10px">Final Verdict</div>
+                    <p style="margin-top:8px">조건만 확정되면 이번 제안은 먼저 움직이는 편이 유리합니다.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="composer">
+                <div class="composer-field">지금 가장 헷갈리는 지점을 이어서 물어보세요</div>
+                <div class="send"></div>
+              </div>
+            </div>
+            <div class="nav-bottom">
+              <div class="item"></div>
+              <div class="item"></div>
+              <div class="item"></div>
+              <div class="item active"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="artboard">
+        <div class="artboard-label">10 Premium Upsell</div>
+        <div class="phone">
+          <div class="screen">
+            <div class="statusbar">
+              <span>9:41</span>
+              <div class="status-icons"><span class="dot"></span><span class="dot"></span><span class="bar"></span></div>
+            </div>
+            <div class="content">
+              <div class="hero-panel" style="min-height:176px">
+                <div class="overline">Unlock The Full Reason</div>
+                <h2 class="hero-title" style="font-size:27px">무료 결과는 결론까지, 프리미엄은 근거와 실행 순서까지</h2>
+                <p class="hero-copy">왜 이 결론이 나왔는지, 지금 무엇부터 해야 하는지를 챕터형 리포트로 이어줍니다.</p>
+              </div>
+              <div class="list-card">
+                <div class="list-item">
+                  <div class="title">판정 근거 공개</div>
+                  <div class="meta">사주, 점성, 타로가 같은 결론으로 모인 이유</div>
+                </div>
+                <div class="list-item">
+                  <div class="title">행동 우선순위</div>
+                  <div class="meta">바로 할 일, 미뤄야 할 일, 다시 확인할 기준</div>
+                </div>
+                <div class="list-item">
+                  <div class="title">Grand Oracle Chat</div>
+                  <div class="meta">결과를 본 뒤 추가 질문까지 이어서 검토</div>
+                </div>
+              </div>
+              <div class="button primary">프리미엄 리포트 열기</div>
+              <div class="button secondary">지금은 무료로 보기</div>
+            </div>
+            <div class="nav-bottom">
+              <div class="item"></div>
+              <div class="item active"></div>
+              <div class="item"></div>
+              <div class="item"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

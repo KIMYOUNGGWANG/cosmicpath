@@ -215,6 +215,10 @@ export interface PremiumReportData {
         tarot_insight: string;
         action_priorities: string[];
         closing_words: string;
+        convergence_diagnosis?: {
+            level: 'all_aligned' | 'two_aligned' | 'divergent';
+            verdict_modifier: string;
+        };
     };
     date_selection?: {
         auspicious?: {

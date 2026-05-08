@@ -1,0 +1,33 @@
+{
+  "slug": "cosmicpath",
+  "scale": {},
+  "families": [
+    {
+      "declaration": "var(--font-cinzel), var(--font-gowun-batang), serif",
+      "first_name": "var(--font-cinzel)",
+      "count": 1
+    },
+    {
+      "declaration": "var(--font-mono), monospace",
+      "first_name": "var(--font-mono)",
+      "count": 1
+    },
+    {
+      "declaration": "var(--font-noto-sans), var(--font-outfit), sans-serif",
+      "first_name": "var(--font-noto-sans)",
+      "count": 1
+    }
+  ],
+  "weights_used": {
+    "400": 1,
+    "500": 1,
+    "600": 6,
+    "700": 1,
+    "bold": 2
+  },
+  "stats": {
+    "scale_entries": 0,
+    "unique_families": 3,
+    "unique_weights": 5
+  }
+}

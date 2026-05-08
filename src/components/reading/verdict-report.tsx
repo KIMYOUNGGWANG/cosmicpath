@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import type { PremiumReportData } from './premium-report';
+import { ConsensusSignalMeter } from './ConsensusSignalMeter';
 import {
     ActionPlanSection,
     AccordionSection,
@@ -72,11 +73,13 @@ function HeroVerdictCard({
     trustScore,
     isLoading,
     language,
+    actionSummary,
 }: {
     finalVerdict?: PremiumReportData['final_verdict'];
     trustScore: number;
     isLoading?: boolean;
     language: 'ko' | 'en';
+    actionSummary?: string;
 }) {
     const isEn = language === 'en';
 
@@ -153,13 +156,26 @@ function HeroVerdictCard({
 
             {/* Content */}
             <div className="relative z-10 flex flex-col h-full p-8 md:p-12 gap-8">
-                {/* Seal badge - Vermillion/Dojang inspired */}
+                {/* Seal badge */}
                 <div className="flex items-center gap-2">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-red-900/50 bg-[#2A0808]/80 text-red-400/90 text-[11px] font-semibold tracking-[0.2em] uppercase backdrop-blur-md">
                         <Sparkles size={12} className="opacity-80" />
                         {isEn ? 'Destiny Moment' : '통합 분석 (Destiny Moment)'}
                     </span>
                 </div>
+
+                {/* Action summary — 지금 할 것 한 줄 */}
+                {actionSummary && (
+                    <div className="flex flex-col gap-2">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#D4AF37]/60">
+                            {isEn ? 'What to do now' : '지금 할 것'}
+                        </p>
+                        <p className="text-[#D4AF37] text-xl md:text-2xl font-semibold leading-snug">
+                            {actionSummary}
+                        </p>
+                        <div className="h-px w-12 bg-[#D4AF37]/30" />
+                    </div>
+                )}
 
                 {/* Core message — Typeset block */}
                 <div className="flex-1 flex flex-col justify-center gap-6">
@@ -542,7 +558,23 @@ export function VerdictReport({
                 trustScore={report.summary?.trust_score ?? 3}
                 isLoading={isLoading}
                 language={language}
+                actionSummary={report.action_plan?.[0]?.title}
             />
+
+            {/* ── CONSENSUS SIGNAL METER ── */}
+            {(() => {
+                const radar = (metadata as { radarScores?: { saju?: number; astrology?: number; tarot?: number } } | undefined)?.radarScores;
+                if (!radar || isFreeView) return null;
+                return (
+                    <ConsensusSignalMeter
+                        sajuScore={radar.saju ?? 60}
+                        astroScore={radar.astrology ?? 60}
+                        tarotScore={radar.tarot ?? 60}
+                        convergenceScore={report.oracleCouncil?.convergenceScore}
+                        language={language}
+                    />
+                );
+            })()}
 
             {/* ── ACTION PLAN (Top 3) ── */}
             {(!isFreeView && report.action_plan) && (

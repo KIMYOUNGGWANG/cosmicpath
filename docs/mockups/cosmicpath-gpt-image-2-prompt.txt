@@ -1,0 +1,67 @@
+Use case: ui-mockup
+Asset type: premium mobile app design board
+Primary request: create a polished mobile app UI design board for CosmicPath, showing 10 different smartphone screens arranged on a clean light-gray presentation board, similar to a professional Dribbble or Behance mobile UI showcase.
+
+Product:
+CosmicPath is a premium Korean oracle product that combines saju, tarot, and astrology into one decisive verdict. It is not a healing app and not a playful fortune app. It should feel like a premium decision tool.
+
+Scene/backdrop:
+clean light gray design-presentation board background with faint grid lines, subtle studio lighting, no clutter, no watermark
+
+Subject:
+10 realistic smartphone mockups showing these screens:
+1. home hero
+2. start question input
+3. tarot card selection
+4. free verdict result
+5. premium evidence report
+6. daily pulse
+7. billing and subscription
+8. my page / account hub
+9. grand oracle chat
+10. premium upsell
+
+Style/medium:
+high-fidelity product UI mockup, realistic mobile app design, not wireframe, not concept art, not illustration
+
+Composition/framing:
+wide landscape board, all 10 phones fully visible, evenly spaced in two rows, presentation-board composition, each screen visually distinct but part of one cohesive design system
+
+Lighting/mood:
+premium, dark, elegant, authoritative, editorial-product hybrid, calm and high-trust
+
+Color palette:
+near-black background inside the app screens, restrained gold accents for verdict and CTA, evidence blue for analysis, soft white typography, muted gray support text, minimal green only for active states
+
+UI direction:
+strong hierarchy, verdict-first layout, clear CTA placement, chapter-like premium report feeling, serious tarot selection, refined account pages, premium AI chat that feels like a private decision room
+
+Screen details:
+- Home hero must show a decisive Korean headline, premium CTA, and a visible report preview
+- Start input screen must show a large question field and step tracker
+- Tarot selection must feel ritualized and premium, not game-like
+- Result screen must show a bold final verdict first
+- Evidence report must use tabs and analysis bars
+- Billing screen must clearly show premium plan status and perks
+- My page must feel like an oracle hub with recent readings
+- Chat screen must feel like a trusted premium oracle conversation
+- Premium upsell must clearly compare free verdict vs full premium reasoning
+
+Text (verbatim):
+"COSMICPATH MOBILE UI SYSTEM"
+"운세가 아니라 결론을 받으세요"
+"지금 가장 망설이는 질문을 한 문장으로 적어보세요"
+"설명보다 직관이 먼저 가는 카드 세 장을 고르세요"
+"이번 제안은 기다리기보다 먼저 움직이는 편이 유리합니다"
+"세 시스템이 왜 같은 결론을 내렸는지 근거로 읽는 화면"
+"오늘은 큰 결정보다 기준을 정리하는 쪽이 좋습니다"
+"Premium이 열려 있습니다"
+"내 기록과 멤버십 상태를 한 번에 보는 허브"
+"오늘은 미루는 쪽보다 기준을 닫는 쪽이 좋습니다"
+"무료 결과는 결론까지, 프리미엄은 근거와 실행 순서까지"
+
+Constraints:
+all text must look like real app UI text, no gibberish, no random symbols, no watermark, no brand logos other than CosmicPath text, no purple-heavy AI style, no wellness app softness, no card soup, no cute cartoon style, no fantasy game style
+
+Avoid:
+neon purple gradients, generic fintech dashboard look, pastel wellness visuals, excessive glow, fake unreadable text, warped phones, overlapping devices, decorative clutter, stock app template feeling
