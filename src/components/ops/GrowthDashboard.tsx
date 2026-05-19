@@ -11,9 +11,16 @@ import {
 } from 'recharts';
 import {
     Activity,
+    ArrowRight,
+    BriefcaseBusiness,
     CalendarDays,
     CircleDollarSign,
+    Eye,
     Gauge,
+    Globe2,
+    HeartHandshake,
+    LockKeyhole,
+    MousePointerClick,
     Sparkles,
     TrendingUp,
     Users,
@@ -25,6 +32,8 @@ import type { GrowthSummary } from '@/lib/growth-metrics';
 interface GrowthDashboardProps {
     summary: GrowthSummary;
 }
+
+type CampaignFunnel = GrowthSummary['campaignFunnels'][number];
 
 function MetricCard({
     label,
@@ -195,6 +204,145 @@ function SignalChip({
     );
 }
 
+function CampaignIcon({ campaignKey }: { campaignKey: string }) {
+    switch (campaignKey) {
+        case 'career-timing':
+            return <BriefcaseBusiness className="h-5 w-5" />;
+        case 'relationship-contact':
+            return <HeartHandshake className="h-5 w-5" />;
+        case 'english-contact':
+            return <Globe2 className="h-5 w-5" />;
+        default:
+            return <Sparkles className="h-5 w-5" />;
+    }
+}
+
+function getCampaignSignal(funnel: CampaignFunnel) {
+    if (funnel.uniqueSessionCounts.paidConversions > 0) {
+        return { label: '결제 신호 있음', className: 'border-emerald-300/25 bg-emerald-300/10 text-emerald-100' };
+    }
+
+    if (funnel.uniqueSessionCounts.paywallViews > 0) {
+        return { label: 'Paywall 도달', className: 'border-amber-300/25 bg-amber-300/10 text-amber-100' };
+    }
+
+    if (funnel.uniqueSessionCounts.firstResultViews > 0) {
+        return { label: '결과 도달', className: 'border-sky-300/25 bg-sky-300/10 text-sky-100' };
+    }
+
+    if (funnel.uniqueSessionCounts.promptClicks > 0) {
+        return { label: 'CTA 반응', className: 'border-violet-300/25 bg-violet-300/10 text-violet-100' };
+    }
+
+    return { label: '트래픽 필요', className: 'border-white/10 bg-white/[0.04] text-white/54' };
+}
+
+function CampaignStep({
+    icon: Icon,
+    label,
+    value,
+    caption,
+}: {
+    icon: LucideIcon;
+    label: string;
+    value: string;
+    caption: string;
+}) {
+    return (
+        <div className="min-w-0 rounded-[18px] border border-white/8 bg-black/15 px-3 py-3">
+            <div className="flex items-center gap-2 text-white/52">
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate text-[11px] font-semibold uppercase tracking-[0.18em]">
+                    {label}
+                </span>
+            </div>
+            <strong className="mt-2 block font-[var(--font-outfit)] text-2xl tracking-[-0.05em] text-white">
+                {value}
+            </strong>
+            <p className="mt-1 truncate text-xs text-white/38">{caption}</p>
+        </div>
+    );
+}
+
+function CampaignFunnelRow({ funnel }: { funnel: CampaignFunnel }) {
+    const signal = getCampaignSignal(funnel);
+    const counts = funnel.uniqueSessionCounts;
+    const sourceLabel = funnel.topSources.length > 0
+        ? funnel.topSources.map((source) => `${source.source} ${source.count}`).join(' · ')
+        : funnel.sources.join(' · ');
+
+    return (
+        <div className="rounded-[26px] border border-white/10 bg-white/[0.04] p-4 sm:p-5">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                <div className="min-w-0 xl:max-w-[360px]">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] border border-white/10 bg-black/18 text-[hsl(42_79%_74%)]">
+                            <CampaignIcon campaignKey={funnel.key} />
+                        </div>
+                        <div className="min-w-0">
+                            <h3 className="truncate font-[var(--font-outfit)] text-xl font-semibold tracking-[-0.04em] text-white">
+                                {funnel.label}
+                            </h3>
+                            <p className="mt-1 truncate text-sm text-white/48">{funnel.description}</p>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                        <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${signal.className}`}>
+                            {signal.label}
+                        </span>
+                        <span className="rounded-full border border-white/10 bg-black/15 px-3 py-1 text-xs text-white/52">
+                            첫 캠페인 접촉 기준
+                        </span>
+                    </div>
+                </div>
+
+                <div className="grid min-w-0 flex-1 grid-cols-2 gap-2 md:grid-cols-5">
+                    <CampaignStep
+                        icon={Users}
+                        label="sessions"
+                        value={funnel.sessions.toLocaleString()}
+                        caption={`landing ${counts.landingViews.toLocaleString()}`}
+                    />
+                    <CampaignStep
+                        icon={MousePointerClick}
+                        label="cta"
+                        value={counts.promptClicks.toLocaleString()}
+                        caption={formatPercent(funnel.rates.landingToPromptRate)}
+                    />
+                    <CampaignStep
+                        icon={Eye}
+                        label="result"
+                        value={counts.firstResultViews.toLocaleString()}
+                        caption={formatPercent(funnel.rates.analysisToResultRate)}
+                    />
+                    <CampaignStep
+                        icon={LockKeyhole}
+                        label="paywall"
+                        value={counts.paywallViews.toLocaleString()}
+                        caption={formatPercent(funnel.rates.resultToPaywallRate)}
+                    />
+                    <CampaignStep
+                        icon={CircleDollarSign}
+                        label="paid"
+                        value={counts.paidConversions.toLocaleString()}
+                        caption={formatPercent(funnel.rates.resultToPaidRate)}
+                    />
+                </div>
+            </div>
+
+            <div className="mt-4 flex flex-col gap-2 border-t border-white/8 pt-4 text-xs text-white/42 sm:flex-row sm:items-center sm:justify-between">
+                <span className="truncate">source touches: {sourceLabel}</span>
+                <span className="inline-flex items-center gap-2 text-white/54">
+                    follow-up seed {counts.followupSeeds.toLocaleString()}
+                    <ArrowRight className="h-3.5 w-3.5" />
+                    checkout {counts.checkoutStarts.toLocaleString()}
+                </span>
+            </div>
+        </div>
+    );
+}
+
 export function GrowthDashboard({ summary }: GrowthDashboardProps) {
     const trailingSeries = summary.series.slice(-7);
     const avgDailyActive = Math.round(average(summary.series.map((point) => point.activeUsers)));
@@ -203,6 +351,7 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
         ? (summary.totals.shares / summary.totals.installs) * 100
         : 0;
     const topSources = summary.topSources.slice(0, 4);
+    const campaignFunnels = summary.campaignFunnels;
     const strongestSource = topSources[0]?.source ?? 'source pending';
     const hasPrimaryData = summary.series.some((point) =>
         point.firstResultViews > 0 ||
@@ -317,6 +466,34 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
                         <SignalChip label="30일 방문" value={formatCompact(summary.visits.last30Days)} />
                         <SignalChip label="가장 많이 들어온 곳" value={strongestSource} />
                     </div>
+                </div>
+            </section>
+
+            <section className="rounded-[34px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.1),transparent_22%),radial-gradient(circle_at_bottom_right,rgba(245,196,81,0.1),transparent_26%),linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-6 shadow-[0_28px_80px_rgba(2,6,23,0.28)] sm:p-7">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="max-w-3xl">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[hsl(42_79%_74%)]">
+                            캠페인 퍼널
+                        </p>
+                        <h2 className="mt-3 font-[var(--font-outfit)] text-2xl font-semibold tracking-[-0.04em] text-white sm:text-3xl">
+                            첫 접촉 이후 같은 세션에서 어디까지 갔는가
+                        </h2>
+                        <p className="mt-3 text-sm leading-7 text-white/55">
+                            관계/커리어 같은 캠페인을 source 단순 카운트가 아니라 같은 session의 후속 행동으로 묶어 봅니다.
+                            질문 원문은 읽지 않고 이벤트, source, sessionId만 사용합니다.
+                        </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2.5">
+                        <SignalChip label="집계" value="session stitched" />
+                        <SignalChip label="원문" value="미조회" />
+                    </div>
+                </div>
+
+                <div className="mt-6 grid gap-3">
+                    {campaignFunnels.map((funnel) => (
+                        <CampaignFunnelRow key={funnel.key} funnel={funnel} />
+                    ))}
                 </div>
             </section>
 

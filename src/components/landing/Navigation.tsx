@@ -28,6 +28,7 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
     const isEnglish = language === 'en';
+    const decisionStartHref = '/start?reset=true&entry=decision_timing_rebuild_v1';
 
     useDocumentScrollLock(isMobileMenuOpen);
 
@@ -118,7 +119,7 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                             PRO
                         </button>
                         <Link
-                            href="/start?reset=true"
+                            href={decisionStartHref}
                             className="inline-flex shrink-0 items-center justify-center rounded-full border border-white/20 px-5 py-2 font-cinzel text-xs font-bold uppercase tracking-widest text-white transition-all duration-300 hover:border-acc-gold hover:bg-acc-gold hover:text-deep-navy"
                         >
                             {isEnglish ? 'Start Free' : '무료로 시작'}
@@ -134,7 +135,7 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                             PRO
                         </button>
                         <Link
-                            href="/start?reset=true"
+                            href={decisionStartHref}
                             className="inline-flex items-center justify-center gap-1 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 font-cinzel text-[10px] font-bold uppercase tracking-widest text-white transition-all duration-300 hover:border-acc-gold hover:text-acc-gold"
                         >
                             {isEnglish ? 'Start' : '시작'}
@@ -212,8 +213,8 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                         icon: Sparkles,
                         iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
                         label: isEnglish ? 'START FREE' : '무료로 시작',
-                        subLabel: isEnglish ? 'Begin your cosmic journey' : '질문 하나로 바로 보기',
-                        href: '/start?reset=true',
+                        subLabel: isEnglish ? 'Get a move-or-wait verdict' : '움직일지 기다릴지 먼저 보기',
+                        href: decisionStartHref,
                     },
                 ]}
             />

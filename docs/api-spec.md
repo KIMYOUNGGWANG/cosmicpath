@@ -35,6 +35,363 @@
 > - `PaymentModal.tsx`의 카피와 가치 불렛 리스트, `premium-report.tsx`의 블러 영역 앞에 잠긴 섹션 제목 노출은 모두 presentation-layer 변경이다.
 > - `402 QUOTA_EXCEEDED` 응답은 이미 `/api/reading` route에 구현되어 있으며 (`plan-limits.ts`), 프론트엔드에서 이를 전용 UX로 처리하는 컴포넌트만 추가한다.
 > - `FREE_READING_DAILY_LIMIT` 환경변수를 `3`에서 `1`로 조정하는 것은 비즈니스 설정 변경이며, API 계약 변경이 아니다.
+>
+> **Revenue Recovery Experiment (2026-05-14) — $3.99 Career Timing Wedge**:
+> - 첫 달 약 $300 매출 이후 반복 매출이 끊긴 상태를 해결하기 위해, 신규 기능이 아니라 offer/landing/channel 실험을 우선한다.
+> - 원타임 리딩 가격은 $3.99 실험 가격으로 다루며, API request/response shape는 변경하지 않는다. Stripe price/product 설정 또는 fallback label만 비즈니스 설정으로 조정한다.
+> - 1차 wedge는 `/career/uncertainty -> /start?context=career&question=...&entry=career_timing_wedge_399 -> free result -> paywall -> checkout` 흐름이다.
+> - Growth attribution source는 `career_timing_wedge_399`로 고정한다.
+> - 기존 `/api/growth/track` canonical events로 `landing_view`, prompt CTA click, `first_result_view`, `paywall_open`, `checkout_success`를 읽고, 신규 분석 API는 추가하지 않는다.
+> - 이 실험은 관계/재물/글로벌 메시지를 잠시 후순위로 두며, "버틸지 옮길지" 커리어 결정 타이밍 메시지를 우선 검증한다.
+>
+> **Product Rebuild Contract (2026-05-15) — Decision Timing App v1**:
+> - CosmicPath의 전면 경험은 "사주·타로·점성술 메뉴"가 아니라 `Decision Timing Reading`으로 재구성한다.
+> - 1차 리빌드는 presentation-layer + prompt/runtime framing 변경으로 제한하며, `/api/reading`, `/api/payment`, `/api/growth/track` public response shape는 유지한다.
+> - 소비자-facing 핵심 promise는 "지금 움직일지 기다릴지, 무엇부터 해야 할지"다.
+> - Attribution source는 `decision_timing_rebuild_v1`로 고정한다.
+> - 사주·타로·점성술은 상품 전면 문구가 아니라 `why this verdict` 근거 레이어로 노출한다.
+> - 무료 결과 첫 fold는 `decision verdict`, `evidence summary`, `next action` 3요소를 기존 `free_focus`, `summary`, `metadata`에서 파생해 렌더링한다.
+> - 신규 DB migration, 새 Stripe SKU, 새 public reading schema는 이번 리빌드 범위 밖이다.
+
+---
+
+## Primary Product Flow — Decision Timing App v1
+
+**Actors**
+
+- Anonymous visitor: 로그인 없이 질문을 시작하고 무료 decision brief를 본다.
+- Paid reader: $3.99 결제 후 근거·타이밍·행동 순서를 연다.
+- Returning reader: `/daily` 또는 최근 리딩 연결을 통해 다음날 다시 들어온다.
+- Admin/operator: `/ops/growth`에서 source별 funnel을 확인한다.
+
+**Primary flow**
+
+```text
+/ landing
+  -> /start?entry=decision_timing_rebuild_v1
+  -> /api/reading free
+  -> free decision brief
+  -> /api/payment checkout
+  -> /api/reading premium resume
+  -> next-day /daily check-in
+```
+
+**Decision entry query contract**
+
+```typescript
+interface DecisionTimingEntryQuery {
+  entry?: "decision_timing_rebuild_v1" | "career_timing_wedge_399" | string;
+  context?: "career" | "love" | "money" | "health" | "general";
+  question?: string;
+  reset?: "true";
+}
+```
+
+**Decision brief display contract**
+
+This is a UI projection over the existing `/api/reading` response. It must not require a new response schema in v1.
+
+```typescript
+interface DecisionBriefViewModel {
+  verdict: string;
+  evidenceSummary: string;
+  nextAction: string;
+  evidenceSources: Array<"saju" | "tarot" | "astrology">;
+  unlockCopy: "근거·타이밍·행동 순서 잠금해제";
+}
+```
+
+**Growth event contract**
+
+```typescript
+type DecisionTimingGrowthEvent =
+  | "landing_view"
+  | "decision_question_submit"
+  | "first_result_view"
+  | "paywall_open"
+  | "checkout_success"
+  | "next_day_return";
+
+interface DecisionTimingGrowthMetadata {
+  source: "decision_timing_rebuild_v1";
+  context?: string;
+  entry?: string;
+  hasPrefilledQuestion?: boolean;
+  verdictVisible?: boolean;
+  unlockSurface?: "payment_modal" | "blurred_preview" | "result_cta";
+}
+```
+
+**Auth, Error, Empty-State Behavior**
+
+- `/`, `/start`, `/api/reading`, `/api/payment*`, `/api/growth/track` remain public where they are already public.
+- If `question` query is empty, `/start` shows the default decision prompt, not an empty canvas.
+- If birth data is missing, the intake explains it as "근거 정밀화" rather than a separate astrology form.
+- If `/api/reading` fails, show a centered retry state with the original question preserved.
+- If quota is exceeded, keep existing `402 QUOTA_EXCEEDED` handling and route the user to unlock, not a generic error.
+- If payment verification is delayed, keep the existing premium resume path and show a syncing state.
+
+**Non-Goals**
+
+- No new divination engines.
+- No human advisor marketplace.
+- No new subscription plan.
+- No native push/SMS automation in v1.
+- No major public API shape change.
+
+---
+
+## Campaign Contract — Relationship Contact Timing v1
+
+**Purpose**
+
+This is a campaign layer on top of the existing Decision Timing Reading product. It does not replace the core identity: CosmicPath remains an integrated saju + astrology + tarot analysis service.
+
+**Attribution source**
+
+```typescript
+type RelationshipContactTimingSource = "relationship_contact_timing_v1";
+```
+
+**Actors**
+
+- Anonymous visitor: enters from Threads/organic and asks whether to contact now or wait.
+- Free reader: sees a first decision brief without logging in.
+- Paid reader: unlocks why this verdict, contact timing, and risky message patterns.
+- Returning reader: optionally records whether they contacted, waited, or still feel unsure.
+- Admin/operator: reads the source-specific funnel in `/ops/growth`.
+
+**Primary flow**
+
+```text
+/relationship/contact-timing
+  -> prompt card click
+  -> /start?reset=true&context=love&entry=relationship_contact_timing_v1&question=...
+  -> /api/reading free
+  -> free decision brief
+  -> /api/payment checkout
+  -> /api/reading premium resume
+  -> follow-up opt-in / outcome seed
+```
+
+**Route query contract**
+
+```typescript
+interface RelationshipContactTimingEntryQuery {
+  reset?: "true";
+  context: "love";
+  entry: "relationship_contact_timing_v1";
+  question?: string;
+}
+```
+
+Recommended prompt card questions:
+
+```typescript
+const relationshipContactTimingPrompts = [
+  "지금 먼저 연락하는 게 맞을까, 조금 더 기다리는 게 맞을까?",
+  "상대가 다시 반응할 가능성이 있다면 내가 먼저 움직여야 할 타이밍일까?",
+  "이 관계에서 지금 보내면 안 되는 메시지와 해도 되는 행동은 뭐야?"
+] as const;
+```
+
+**Decision brief projection**
+
+This campaign reuses the existing `/api/reading` response. No public schema change is required in v1.
+
+```typescript
+interface RelationshipContactDecisionBrief {
+  verdict: "contact_now" | "wait" | "narrow" | "do_not_proceed_yet" | string;
+  verdictLabel: "지금 움직여도 됨" | "기다릴 것" | "선택지 축소" | "아직 진행 금지" | string;
+  evidenceSummary: string;
+  nextAction: string;
+  unlockCopy: "왜 이 판정인지 · 연락 타이밍 · 피해야 할 메시지";
+}
+```
+
+Mapping guidance:
+
+- `free_focus.action_conclusion` supplies the verdict copy.
+- `free_focus.evidence_summary` supplies the evidence summary.
+- `free_focus.next_question` or first premium `action_plan` item supplies the next action.
+- If the model does not produce a contact-specific label, the UI may use the generic decision labels already defined in Decision Timing v1.
+
+**Growth event contract**
+
+No new growth endpoint is required. Use existing `/api/growth/track`.
+
+```typescript
+type RelationshipContactGrowthEvent =
+  | "landing_view"
+  | "relationship_contact_prompt_clicked"
+  | "decision_question_submit"
+  | "first_result_view"
+  | "paywall_open"
+  | "checkout_start"
+  | "checkout_success"
+  | "relationship_followup_opt_in"
+  | "relationship_outcome_recorded";
+
+interface RelationshipContactGrowthMetadata {
+  source: "relationship_contact_timing_v1";
+  context: "love";
+  promptId?: "contact_now_or_wait" | "will_they_respond" | "message_to_avoid";
+  hasPrefilledQuestion?: boolean;
+  readingId?: string;
+  intendedAction?: "contact_now" | "wait" | "unsure";
+  outcome?: "positive_response" | "no_response" | "worse" | "relief" | "still_unsure";
+}
+```
+
+**Outcome seed contract**
+
+V1 should not introduce a statistical model or accuracy claim. If implemented, the first outcome seed may use existing growth tracking and local/session storage.
+
+```typescript
+interface RelationshipOutcomeSeed {
+  source: "relationship_contact_timing_v1";
+  readingId?: string;
+  question: string;
+  intendedAction?: "contact_now" | "wait" | "unsure";
+  followUpDueAt: string; // ISO date, usually now + 7 days
+  storage: "localStorage_v1" | "growth_event_only";
+}
+```
+
+Future DB-backed outcome cases are deferred until opt-in evidence exists.
+
+**Auth, Error, Empty-State Behavior**
+
+- Landing, `/start`, free reading, and `/api/growth/track` remain public.
+- If `question` is missing, `/start` should use the first relationship prompt as the actual starting question or show contact timing prompt chips.
+- If the user question implies danger, harassment, stalking, self-harm, legal conflict, medical risk, or financial risk, the UI should avoid action-command language and route to a safety/seek-help style response.
+- Payment verification and quota errors reuse existing Decision Timing behavior.
+- Empty recent-reading state should route back to `/relationship/contact-timing`, not a broad fortune menu.
+
+**Non-Goals**
+
+- No statistical prediction model in v1.
+- No claims of guaranteed relationship outcome accuracy.
+- No new payment product.
+- No new divination engine.
+- No automated email/SMS reminder until follow-up opt-in is proven.
+- No human advisor marketplace.
+
+---
+
+## Campaign Contract — English Contact Timing Probe v1
+
+**Purpose**
+
+This is the first overseas validation layer. It reuses the Relationship Contact Timing campaign, but narrows the English-language promise to a concrete decision: "Should I text them or wait?" It must not become a broad global relaunch.
+
+**Attribution source**
+
+```typescript
+type EnglishContactTimingSource = "en_relationship_contact_timing_v1";
+```
+
+**Actors**
+
+- English-speaking anonymous visitor: enters from TikTok, Threads, guide content, or shared links.
+- Free reader: sees a first contact-timing decision brief without logging in.
+- Paid reader: unlocks why this verdict, timing window, and message patterns to avoid.
+- Returning reader: optionally records whether they contacted, waited, or stayed unsure.
+- Admin/operator: compares `en_relationship_contact_timing_v1` with Korean `relationship_contact_timing_v1`.
+
+**Primary flow**
+
+```text
+/en/contact-timing or /relationship/contact-timing?lang=en
+  -> prompt card click
+  -> /start?reset=true&context=love&entry=en_relationship_contact_timing_v1&question=...
+  -> /api/reading free
+  -> free English contact decision brief
+  -> /api/payment checkout
+  -> /api/reading premium resume
+  -> 7-day follow-up opt-in / outcome seed
+```
+
+**Route query contract**
+
+```typescript
+interface EnglishContactTimingEntryQuery {
+  reset?: "true";
+  context: "love";
+  entry: "en_relationship_contact_timing_v1";
+  question?: string;
+  language?: "en";
+}
+```
+
+Recommended English prompt card questions:
+
+```typescript
+const englishContactTimingPrompts = [
+  "Should I text them now, or wait a little longer?",
+  "If there is still a chance, is this the right moment to move first?",
+  "What message should I avoid sending right now?"
+] as const;
+```
+
+**Decision brief projection**
+
+This probe reuses the existing `/api/reading` response. No public schema change is required.
+
+```typescript
+interface EnglishContactDecisionBrief {
+  verdict: "contact_now" | "wait" | "narrow" | "do_not_proceed_yet" | string;
+  verdictLabel: "Text now" | "Wait" | "Narrow the move" | "Do not proceed yet" | string;
+  evidenceSummary: string;
+  nextAction: string;
+  unlockCopy: "Unlock why this verdict, the timing window, and messages to avoid";
+}
+```
+
+**Growth event contract**
+
+Use existing `/api/growth/track`; do not add a new growth endpoint.
+
+```typescript
+type EnglishContactGrowthEvent =
+  | "landing_view"
+  | "english_contact_prompt_clicked"
+  | "decision_question_submit"
+  | "first_result_view"
+  | "paywall_open"
+  | "checkout_start"
+  | "checkout_success"
+  | "english_contact_followup_opt_in"
+  | "english_contact_outcome_recorded";
+
+interface EnglishContactGrowthMetadata {
+  source: "en_relationship_contact_timing_v1";
+  context: "love";
+  language: "en";
+  landingVariant?: "en_contact_timing_v1";
+  promptId?: "text_now_or_wait" | "right_moment_to_move" | "message_to_avoid";
+  hasPrefilledQuestion?: boolean;
+  readingId?: string;
+  intendedAction?: "contact_now" | "wait" | "unsure";
+  outcome?: "positive_response" | "no_response" | "worse" | "relief" | "still_unsure";
+}
+```
+
+**Auth, Error, Empty-State Behavior**
+
+- Landing, `/start`, free reading, and `/api/growth/track` remain public.
+- English users should see Google-first auth when login is required; Kakao may remain secondary.
+- English paywall, refund, and disclaimer copy must explain that the reading is decision support, not guaranteed relationship prediction.
+- If `question` is missing, use the first English prompt question as the actual starting question or show English prompt chips.
+- Dangerous, stalking, harassment, self-harm, legal, medical, or financial-risk questions must weaken action-command language and route to safety-oriented copy.
+- Payment verification, quota, and premium resume behavior reuse the existing Decision Timing behavior.
+
+**Non-Goals**
+
+- No full global relaunch.
+- No new public API, reading response schema, Stripe SKU, or subscription plan.
+- No statistical prediction model or accuracy claim.
+- No broad English SEO expansion until the contact timing probe has activation data.
 
 ---
 

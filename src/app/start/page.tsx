@@ -16,6 +16,7 @@ import {
   getSourceSummary,
   getStartPageSource,
   hasPremiumReportContent,
+  isDecisionTimingSource,
   normalizeStoredTarotCards,
   type PremiumReportState,
   type PremiumReportViewMetadata,
@@ -24,8 +25,6 @@ import {
   type ResumeRequestContext,
   type StartReadingFn,
   type TarotSelection,
-  type KeyTheme,
-  type SourceSummaryRecord,
 } from './start-page-helpers';
 import {
   reverifyPremiumCheckout,
@@ -61,6 +60,11 @@ const PaymentModal = dynamic(() => import('@/components/payment/PaymentModal').t
 const ReviewModal = dynamic(() => import('@/components/review/ReviewModal').then(mod => mod.ReviewModal));
 const ShareCardModal = dynamic(() => import('@/components/share/ShareCardModal').then(mod => mod.ShareCardModal));
 
+function getQueryLanguage(...values: Array<string | null>): 'ko' | 'en' | null {
+  const matched = values.find((value) => value === 'ko' || value === 'en');
+  return matched === 'ko' || matched === 'en' ? matched : null;
+}
+
 function CosmicPathContent() {
   const [step, setStep] = useState<ReadingStep>('input');
   const [readingData, setReadingData] = useState<ReadingData | null>(null);
@@ -72,9 +76,7 @@ function CosmicPathContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingPhase, setLoadingPhase] = useState<{ phase: number; label: string }>({ phase: 0, label: '' });
   const [metadata, setMetadata] = useState<ReadingMetadata | undefined>(undefined);
-  const [language, setLanguage] = useState<'ko' | 'en'>(() =>
-    typeof window !== 'undefined' ? readPreferredClientLanguage() : 'ko'
-  );
+  const [language, setLanguage] = useState<'ko' | 'en'>('ko');
 
   // Decision Guard State
   const [isDecisionAccepted, setIsDecisionAccepted] = useState(false);
@@ -106,9 +108,15 @@ function CosmicPathContent() {
     searchParams.get('promo') ||
     undefined;
   const entry = searchParams.get('entry');
+  const queryLanguage = getQueryLanguage(searchParams.get('lang'), searchParams.get('language'));
   const initialContext = getPrefilledReadingContext(searchParams.get('context'));
   const initialQuestion = getPrefilledQuestion(searchParams.get('question'));
   const landingSource = getStartPageSource(Boolean(searchParams.get('invite')), entry);
+  const activeLandingVariant =
+    landingSource === 'en_relationship_contact_timing_v1'
+      ? 'en_contact_timing_v1'
+      : getLandingVariant(language);
+  const isDecisionTimingEntry = isDecisionTimingSource(landingSource);
   const [hasCheckedResume, setHasCheckedResume] = useState(false);
 
   // Dynamic Price State (fetched from Stripe)
@@ -236,6 +244,13 @@ function CosmicPathContent() {
   }, []);
 
   useEffect(() => {
+    const nextLanguage = queryLanguage || readPreferredClientLanguage();
+
+    setLanguage((current) => current === nextLanguage ? current : nextLanguage);
+    localStorage.setItem(USER_LANGUAGE_STORAGE_KEY, nextLanguage);
+  }, [queryLanguage]);
+
+  useEffect(() => {
     if (hasTrackedLandingView.current) return;
 
     hasTrackedLandingView.current = true;
@@ -248,13 +263,13 @@ function CosmicPathContent() {
       referralCode: autoReferralCode,
       price: dynamicPrice || undefined,
       metadata: {
-        landingVariant: getLandingVariant(language),
+        landingVariant: activeLandingVariant,
         entry: entry || undefined,
         initialContext: initialContext || undefined,
         hasPrefilledQuestion: Boolean(initialQuestion),
       },
     });
-  }, [autoReferralCode, dynamicPrice, entry, initialContext, initialQuestion, landingSource, language, searchParams, step]);
+  }, [activeLandingVariant, autoReferralCode, dynamicPrice, entry, initialContext, initialQuestion, landingSource, language, searchParams, step]);
 
   // 🎫 Viral Invitation Verification
   useEffect(() => {
@@ -281,7 +296,7 @@ function CosmicPathContent() {
     hasTrackedFreeResult.current = true;
     void trackClientGrowthEvent({
       event: 'first_result_view',
-      source: 'start_result',
+      source: landingSource,
       step,
       language,
       context: readingData?.context,
@@ -289,10 +304,11 @@ function CosmicPathContent() {
       price: dynamicPrice || undefined,
       readingId: sessionStorage.getItem('pending_reading_id') || undefined,
       metadata: {
-        landingVariant: getLandingVariant(language),
+        landingVariant: activeLandingVariant,
+        entry: entry || undefined,
       },
     });
-  }, [dynamicPrice, isInvitationMode, isPremium, language, readingData, reportData, step]);
+  }, [activeLandingVariant, dynamicPrice, entry, isInvitationMode, isPremium, landingSource, language, readingData, reportData, step]);
 
   useEffect(() => {
     const isPaidSession =
@@ -306,7 +322,7 @@ function CosmicPathContent() {
     hasTrackedReportComplete.current = true;
     void trackClientGrowthEvent({
       event: 'report_complete',
-      source: 'start_result',
+      source: landingSource,
       step,
       language,
       context: readingData?.context,
@@ -314,8 +330,11 @@ function CosmicPathContent() {
       price: dynamicPrice || undefined,
       readingId: sessionStorage.getItem('pending_reading_id') || undefined,
       plan: 'premium_reading',
+      metadata: {
+        entry: entry || undefined,
+      },
     });
-  }, [dynamicPrice, isInvitationMode, isPremium, language, readingData, reportData, searchParams, step]);
+  }, [dynamicPrice, entry, isInvitationMode, isPremium, landingSource, language, readingData, reportData, searchParams, step]);
 
   // 🚨 beforeunload: 로딩 중 창 닫기 방지
   useEffect(() => {
@@ -368,13 +387,32 @@ function CosmicPathContent() {
     syncResultUrl(null);
     void trackClientGrowthEvent({
       event: 'analysis_start',
-      source: 'reading_input',
+      source: landingSource,
       step: 'input',
       language: data.language,
       context: data.context,
       invitationMode: isInvitationMode,
       price: dynamicPrice || undefined,
+      metadata: {
+        entry: entry || undefined,
+        questionLength: data.question.length,
+      },
     });
+    if (isDecisionTimingEntry) {
+      void trackClientGrowthEvent({
+        event: 'decision_question_submit',
+        source: landingSource,
+        step: 'input',
+        language: data.language,
+        context: data.context,
+        invitationMode: isInvitationMode,
+        price: dynamicPrice || undefined,
+        metadata: {
+          questionLength: data.question.length,
+          hasPrefilledQuestion: Boolean(initialQuestion),
+        },
+      });
+    }
     setLoadingPhase({ phase: 0, label: '' });
     setIsLoading(false);
     transitionToStep('tarot', 'input_submit');
@@ -391,7 +429,7 @@ function CosmicPathContent() {
 
     void trackClientGrowthEvent({
       event: 'tarot_complete',
-      source: 'tarot_picker',
+      source: landingSource,
       step: 'tarot',
       language,
       context: readingData?.context,
@@ -399,6 +437,7 @@ function CosmicPathContent() {
       price: dynamicPrice || undefined,
       metadata: {
         tarotCount: cards.length,
+        entry: entry || undefined,
       },
     });
 
@@ -420,7 +459,7 @@ function CosmicPathContent() {
     // Open payment modal instead of direct unlock, unless already premium
     if (isPremium) return;
     await ensureReadingReadyForPayment();
-    openPaymentModal('start_result_unlock');
+    openPaymentModal(entry ? landingSource : 'start_result_unlock');
   };
 
   const TOTAL_FREE_PHASES = 2;
@@ -687,7 +726,7 @@ function CosmicPathContent() {
 
               void trackClientGrowthEvent({
                 event: 'quota_exceeded',
-                source: 'start_reading',
+                source: landingSource,
                 step: 'reading',
                 language: activeLanguage,
                 context: dataToUse.context,
@@ -1270,6 +1309,7 @@ function CosmicPathContent() {
               hasPaidQuery={hasPaidQuery}
               isInvitationMode={isInvitationMode}
               dynamicPrice={dynamicPrice}
+              landingSource={landingSource}
               streamContent={streamContent}
               onInviteOwner={handleOwnerInvite}
               onInviteUpsell={handleInvitationUpsell}
@@ -1294,7 +1334,7 @@ function CosmicPathContent() {
         metadata={metadata}
         isDecisionAccepted={isDecisionAccepted}
         price={dynamicPrice}
-        trackingSource={paymentTrackingSource}
+        trackingSource={entry ? landingSource : paymentTrackingSource}
         autoReferralCode={autoReferralCode}
       />
 

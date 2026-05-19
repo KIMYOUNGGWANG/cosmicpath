@@ -5,7 +5,6 @@
  */
 
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 
 // Security headers configuration
 const securityHeaders = [
@@ -44,12 +43,11 @@ const securityHeaders = [
             "object-src 'none'",
             "base-uri 'self'",
             "form-action 'self'",
-            "upgrade-insecure-requests",
         ].join('; ')
     },
 ];
 
-export function proxy(request: NextRequest) {
+export function proxy() {
     // Clone the response
     const response = NextResponse.next();
 

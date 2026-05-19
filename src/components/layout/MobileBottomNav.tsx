@@ -37,7 +37,7 @@ export default function MobileBottomNav() {
                 return (
                     <Link
                         key={href}
-                        href={href === "/start" ? "/start?reset=true" : href}
+                        href={href === "/start" ? "/start?reset=true&entry=decision_timing_rebuild_v1" : href}
                         className={`flex flex-col items-center gap-1 px-4 py-1 transition-colors ${
                             isActive
                                 ? "text-[#D4AF37]"

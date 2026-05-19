@@ -14,6 +14,7 @@
 /coverage
 /playwright-report
 /test-results
+.playwright-mcp/
 
 # next.js
 /.next/
@@ -62,7 +63,9 @@ docs/marketing/*.md
 
 # utility scripts
 convert_threads_posts.py
+.tmp/
 .tmp/prompt-verify/
+relationship-contact-timing-*.png
 
 # local databases / backup artifacts
 dev.db

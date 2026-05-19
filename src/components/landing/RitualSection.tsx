@@ -112,7 +112,7 @@ export function RitualSection() {
                     </motion.div>
 
                     {/* The Core: High-Vibrancy Gold (Intuitive Action Point) */}
-                    <Link href="/start?reset=true" className="group relative z-30">
+                    <Link href="/start?reset=true&entry=decision_timing_rebuild_v1" className="group relative z-30">
                         {/* Radiant Aura: Dynamic Intensity */}
                         <motion.div
                             animate={{

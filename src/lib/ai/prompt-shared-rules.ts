@@ -89,8 +89,8 @@ export function buildPromptDepthRule(
 
   if (mode === 'free-core') {
     return language === 'en'
-      ? '# Free Depth Rule\n- This is phase 1 of a free reading. Deliver the clearest high-signal outline first and avoid exhaustive sub-analysis.\n- Return only `free_focus` and compact `summary` metadata in this phase.\n- Do not write the long summary body yet. Phase 2 will expand it later.\n- `free_focus.action_conclusion` MUST begin by directly answering the user\'s question. Example: "You asked about changing jobs — this is a good time to move." Starting with generic fortune flow language like "Your current energy..." is forbidden.\n- `free_focus.evidence_summary` must cite Saju (Day Master + current Daeun/Sewoon) AND at least one Astro signal. Tarot alone cannot fulfill this rule.\n- `free_focus.action_conclusion` must end with a concrete action verb phrase and a date (YYYY-MM format or "this week/month"). Vague closings like "consider this carefully" are forbidden.\n- FORBIDDEN abstract phrases: "current energy", "go with the flow", "balance/harmony", "inner voice", "the universe says", "time of change", "new beginning" — replace with specific chart data.\n- `free_focus` must always contain one decisive next move, one compact evidence summary, and one precise follow-up question.'
-      : '# 무료 깊이 규칙\n- 이것은 무료 리딩 1단계입니다. 가장 해상도 높은 아웃라인을 먼저 주고, 과도한 세부 분해는 피하세요.\n- 이 단계에서는 `free_focus`와 압축된 `summary` 메타데이터만 반환하세요.\n- 긴 summary 본문은 아직 쓰지 마세요. 본문은 2단계에서 확장합니다.\n- `free_focus.action_conclusion`은 반드시 사용자의 질문에 대한 직접 답변으로 시작해야 합니다. 예: "이직을 물어보셨는데, 지금 움직여도 됩니다." "당신의 현재 운세 흐름은..." 같은 포괄적 서술로 시작하는 것은 금지합니다.\n- `free_focus.action_conclusion`은 반드시 구체적 행동 동사 + 날짜(YYYY-MM 형식 또는 "이번 주/달")로 끝내야 합니다. "신중하게 고민해보세요" 같은 모호한 마무리 금지.\n- `free_focus.evidence_summary`는 사주(일간 + 현재 대운/세운 글자) + 점성술 신호 1개를 반드시 인용해야 합니다. 타로 단독 인용으로 이 규칙을 충족할 수 없습니다.\n- 금지 추상 명사구: "현재 에너지", "흐름을 타", "균형/조화", "내면의 목소리", "우주가 말한다", "변화의 시기", "새로운 시작" — 반드시 구체적 차트 데이터로 대체하세요.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 다음 질문 1개를 반드시 넣으세요.';
+      ? '# Free Depth Rule\n- This is phase 1 of a free reading. Deliver the clearest high-signal outline first and avoid exhaustive sub-analysis.\n- Return only `free_focus` and compact `summary` metadata in this phase.\n- Do not write the long summary body yet. Phase 2 will expand it later.\n- `free_focus.action_conclusion` MUST begin by directly answering the user\'s question. Example: "You asked about changing jobs — this is a good time to move." Starting with generic fortune flow language like "Your current energy..." is forbidden.\n- The first sentence must include a clear decision label: move now, wait, narrow the option, or do not proceed yet.\n- `free_focus.evidence_summary` must cite Saju (Day Master + current Daeun/Sewoon) AND at least one Astro signal. Tarot alone cannot fulfill this rule.\n- `free_focus.action_conclusion` must end with a concrete action verb phrase and a date (YYYY-MM format or "this week/month"). Vague closings like "consider this carefully" are forbidden.\n- FORBIDDEN abstract phrases: "current energy", "go with the flow", "balance/harmony", "inner voice", "the universe says", "time of change", "new beginning" — replace with specific chart data.\n- `free_focus` must always contain one decisive next move, one compact evidence summary, and one precise follow-up question.'
+      : '# 무료 깊이 규칙\n- 이것은 무료 리딩 1단계입니다. 가장 해상도 높은 아웃라인을 먼저 주고, 과도한 세부 분해는 피하세요.\n- 이 단계에서는 `free_focus`와 압축된 `summary` 메타데이터만 반환하세요.\n- 긴 summary 본문은 아직 쓰지 마세요. 본문은 2단계에서 확장합니다.\n- `free_focus.action_conclusion`은 반드시 사용자의 질문에 대한 직접 답변으로 시작해야 합니다. 예: "이직을 물어보셨는데, 지금 움직여도 됩니다." "당신의 현재 운세 흐름은..." 같은 포괄적 서술로 시작하는 것은 금지합니다.\n- 첫 문장에는 반드시 명확한 판정 라벨을 넣으세요: 지금 움직여도 됨, 기다릴 것, 선택지 축소, 아직 진행 금지.\n- `free_focus.action_conclusion`은 반드시 구체적 행동 동사 + 날짜(YYYY-MM 형식 또는 "이번 주/달")로 끝내야 합니다. "신중하게 고민해보세요" 같은 모호한 마무리 금지.\n- `free_focus.evidence_summary`는 사주(일간 + 현재 대운/세운 글자) + 점성술 신호 1개를 반드시 인용해야 합니다. 타로 단독 인용으로 이 규칙을 충족할 수 없습니다.\n- 금지 추상 명사구: "현재 에너지", "흐름을 타", "균형/조화", "내면의 목소리", "우주가 말한다", "변화의 시기", "새로운 시작" — 반드시 구체적 차트 데이터로 대체하세요.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 다음 질문 1개를 반드시 넣으세요.';
   }
 
   if (mode === 'free-phase2') {
@@ -100,8 +100,8 @@ export function buildPromptDepthRule(
   }
 
   return language === 'en'
-    ? '# Free Depth Rule\n- This is a free reading. Deliver the clearest high-signal summary first and avoid exhaustive sub-analysis.\n- Return only `free_focus`, `summary`, and `traits`.\n- `free_focus.action_conclusion` MUST begin by directly answering the user\'s question. Example: "You asked about changing jobs — this is a good time to move." Starting with generic fortune flow language like "Your current energy..." is forbidden.\n- `free_focus.action_conclusion` must end with a concrete verb phrase and a date (YYYY-MM or "this week/month"). Vague closings forbidden.\n- `free_focus.evidence_summary` must cite Saju (Day Master + current Daeun/Sewoon) AND one Astro signal. Tarot alone cannot fulfill this.\n- FORBIDDEN abstract phrases: "current energy", "go with the flow", "balance/harmony", "inner voice", "the universe says", "time of change" — replace with specific chart data.\n- `free_focus` must always contain one decisive next move, one compact evidence summary, and one precise follow-up question.'
-    : '# 무료 깊이 규칙\n- 이것은 무료 리딩입니다. 가장 해상도 높은 요약을 먼저 주고, 과도한 세부 분해는 피하세요.\n- 출력은 `free_focus`, `summary`, `traits`만 반환하세요.\n- `free_focus.action_conclusion`은 반드시 사용자의 질문에 대한 직접 답변으로 시작해야 합니다.\n- `free_focus.action_conclusion`은 반드시 구체적 행동 동사 + 날짜(YYYY-MM 형식 또는 "이번 주/달")로 끝내야 합니다.\n- `free_focus.evidence_summary`는 사주(일간 + 현재 대운/세운 글자) + 점성술 신호 1개를 반드시 인용해야 합니다. 타로 단독 인용 금지.\n- 금지 추상 명사구: "현재 에너지", "흐름을 타", "균형/조화", "내면의 목소리", "우주가 말한다", "변화의 시기", "새로운 시작" — 구체적 차트 데이터로 대체.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 다음 질문 1개를 반드시 넣으세요.';
+    ? '# Free Depth Rule\n- This is a free reading. Deliver the clearest high-signal summary first and avoid exhaustive sub-analysis.\n- Return only `free_focus`, `summary`, and `traits`.\n- `free_focus.action_conclusion` MUST begin by directly answering the user\'s question. Example: "You asked about changing jobs — this is a good time to move." Starting with generic fortune flow language like "Your current energy..." is forbidden.\n- The first sentence must include a clear decision label: move now, wait, narrow the option, or do not proceed yet.\n- `free_focus.action_conclusion` must end with a concrete verb phrase and a date (YYYY-MM or "this week/month"). Vague closings forbidden.\n- `free_focus.evidence_summary` must cite Saju (Day Master + current Daeun/Sewoon) AND one Astro signal. Tarot alone cannot fulfill this.\n- FORBIDDEN abstract phrases: "current energy", "go with the flow", "balance/harmony", "inner voice", "the universe says", "time of change" — replace with specific chart data.\n- `free_focus` must always contain one decisive next move, one compact evidence summary, and one precise follow-up question.'
+    : '# 무료 깊이 규칙\n- 이것은 무료 리딩입니다. 가장 해상도 높은 요약을 먼저 주고, 과도한 세부 분해는 피하세요.\n- 출력은 `free_focus`, `summary`, `traits`만 반환하세요.\n- `free_focus.action_conclusion`은 반드시 사용자의 질문에 대한 직접 답변으로 시작해야 합니다.\n- 첫 문장에는 반드시 명확한 판정 라벨을 넣으세요: 지금 움직여도 됨, 기다릴 것, 선택지 축소, 아직 진행 금지.\n- `free_focus.action_conclusion`은 반드시 구체적 행동 동사 + 날짜(YYYY-MM 형식 또는 "이번 주/달")로 끝내야 합니다.\n- `free_focus.evidence_summary`는 사주(일간 + 현재 대운/세운 글자) + 점성술 신호 1개를 반드시 인용해야 합니다. 타로 단독 인용 금지.\n- 금지 추상 명사구: "현재 에너지", "흐름을 타", "균형/조화", "내면의 목소리", "우주가 말한다", "변화의 시기", "새로운 시작" — 구체적 차트 데이터로 대체.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 다음 질문 1개를 반드시 넣으세요.';
 }
 
 export function buildPromptSharedPrelude(options: PromptSharedPreludeOptions) {
@@ -139,7 +139,7 @@ export function buildStructuredJsonSchema(
 \`\`\`json
 {
   "free_focus": {
-    "action_conclusion": "One concrete next move",
+    "action_conclusion": "Decision label plus one concrete next move",
     "evidence_summary": "1-2 lines grounded in Saju/Astro/Tarot evidence",
     "next_question": "One precise follow-up question"
   },
@@ -182,7 +182,7 @@ export function buildStructuredJsonSchema(
 \`\`\`json
 {
   "free_focus": {
-    "action_conclusion": "지금 붙잡을 행동 결론 1개",
+    "action_conclusion": "판정 라벨과 지금 붙잡을 행동 결론 1개",
     "evidence_summary": "사주/점성/타로 근거 기반 1-2줄 요약",
     "next_question": "바로 이어서 물어볼 다음 질문 1개"
   },
@@ -229,7 +229,7 @@ export function buildStructuredJsonSchema(
 \`\`\`json
 {
   "free_focus": {
-    "action_conclusion": "One concrete next move",
+    "action_conclusion": "Decision label plus one concrete next move",
     "evidence_summary": "1-2 lines grounded in Saju/Astro/Tarot evidence",
     "next_question": "One precise follow-up question"
   },
@@ -244,7 +244,7 @@ export function buildStructuredJsonSchema(
 \`\`\`json
 {
   "free_focus": {
-    "action_conclusion": "지금 붙잡을 행동 결론 1개",
+    "action_conclusion": "판정 라벨과 지금 붙잡을 행동 결론 1개",
     "evidence_summary": "사주/점성/타로 근거 기반 1-2줄 요약",
     "next_question": "바로 이어서 물어볼 다음 질문 1개"
   },
@@ -262,7 +262,7 @@ export function buildStructuredJsonSchema(
 \`\`\`json
 {
   "free_focus": {
-    "action_conclusion": "One concrete next move",
+    "action_conclusion": "Decision label plus one concrete next move",
     "evidence_summary": "1-2 lines grounded in Saju/Astro/Tarot evidence",
     "next_question": "One precise follow-up question"
   },
@@ -288,7 +288,7 @@ export function buildStructuredJsonSchema(
 \`\`\`json
 {
   "free_focus": {
-    "action_conclusion": "지금 붙잡을 행동 결론 1개",
+    "action_conclusion": "판정 라벨과 지금 붙잡을 행동 결론 1개",
     "evidence_summary": "사주/점성/타로 근거 기반 1-2줄 요약",
     "next_question": "바로 이어서 물어볼 다음 질문 1개"
   },

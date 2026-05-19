@@ -30,6 +30,7 @@ import { FinalVerdictCard } from './FinalVerdictCard';
 import { InsightCard, InsightHighlight } from './ui/InsightCard';
 import { DestinyDashboardSection } from '../dashboard/DestinyDashboardSection';
 import { GhostDetectorSection } from '../dashboard/GhostDetectorSection';
+import type { SajuResult } from '@/lib/engines/saju';
 import {
     ActionPlanSection,
     AccordionSection,
@@ -40,7 +41,6 @@ import {
     CoreAnalysisSection,
     DateSelectionSection,
     FortuneFlowSection,
-    FreeFocusSection,
     HeaderSection,
     LifeAreasSection,
     NumerologySection,
@@ -292,6 +292,7 @@ interface PremiumReportProps {
         astrologyResult?: Record<string, unknown>;
         readingData?: {
             name?: string;
+            partnerName?: string;
             [key: string]: unknown;
         };
         oraclePersona?: {
@@ -311,8 +312,8 @@ interface PremiumReportProps {
 }
 
 interface MetadataWithReadingData extends NonNullable<PremiumReportProps['metadata']> {
-    readingData?: any;
-    tarotCards?: any[];
+    readingData?: Record<string, unknown>;
+    tarotCards?: NonNullable<PremiumReportProps['metadata']>['tarotCards'];
 }
 
 type PremiumSectionKey =
@@ -321,6 +322,18 @@ type PremiumSectionKey =
     | 'special_analysis'
     | 'action_plan'
     | 'final_verdict';
+
+function isSajuResult(value: unknown): value is SajuResult {
+    if (!value || typeof value !== 'object') return false;
+    const candidate = value as Record<string, unknown>;
+
+    return (
+        'yeonPillar' in candidate &&
+        'monthPillar' in candidate &&
+        'dayPillar' in candidate &&
+        'hourPillar' in candidate
+    );
+}
 
 // ... (existing helper)
 
@@ -466,7 +479,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
         };
     }, [resolvedPriceProp]);
 
-    const handleUnlock = (source?: string | any) => {
+    const handleUnlock = (source?: string) => {
         const contextValue = typeof source === 'string' ? source : 'generic_locked_item';
         analytics.trackEvent('paywall_item_clicked', { context: contextValue });
         analytics.trackEvent('checkout_start', { step: 'click_cta' });
@@ -486,7 +499,9 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
     }, [isPremium]);
 
     // Dynamic Teaser Hooks
-    const userName = (metadata as any)?.readingData?.name || '';
+    const readingData = metadata?.readingData;
+    const userName = readingData?.name || '';
+    const sajuResult = isSajuResult(metadata?.sajuResult) ? metadata.sajuResult : null;
     const primaryTrait = report.traits?.[0]?.name;
 
     const dynamicCoreHookKo = primaryTrait && userName 
@@ -539,26 +554,19 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
             : `당신의 ${section} 영역에 숨겨진 치명적인 장애물이 있습니다...`;
     };
 
-    if (!report) return null;
-
     const tarotCards = metadata?.tarot || [];
-    const freeFocus = report.free_focus;
-
     // Auth & Save Logic
     const { data: session, status } = useSession();
     const { openLoginModal } = useLoginModal();
 
     return (
         <div className={`w-full mx-auto pb-24 md:pb-32 ${isPremium ? 'max-w-screen-2xl px-4 lg:px-8' : 'max-w-2xl'}`}>
-            {/* FreeFocusSection: 비구독자는 최상단에, 프리미엄은 HeaderSection 다음에 */}
-            
-
             {/* Header — 프리미엄 + final_verdict 있는 경우 VerdictReport의 HeroVerdictCard가 최상단을 담당 */}
             {!(isPremium && report.final_verdict) && (
-                (metadata as any)?.readingData?.partnerName ? (
+                readingData?.partnerName ? (
                     <CompatibilityHeader
-                        userName={(metadata as any)?.readingData?.name || 'User'}
-                        partnerName={(metadata as any)?.readingData?.partnerName}
+                        userName={readingData?.name || 'User'}
+                        partnerName={readingData.partnerName}
                         score={report.summary.trust_score * 20}
                         title={report.summary.title}
                         content={report.summary.content}
@@ -597,14 +605,14 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 scoreGridNode={
                     <>
                         <CosmicRadarMemo report={report} metadata={metadata} language={language} />
-                        {(metadata as any)?.sajuResult && (
+                        {metadata?.sajuResult && (
                             <DestinyDashboardSection
                                 details={{
-                                    hostSaju: (metadata as any).sajuResult,
-                                    hostAstrology: (metadata as any)?.astrologyResult
+                                    hostSaju: metadata.sajuResult,
+                                    hostAstrology: metadata.astrologyResult
                                 }}
                                 hasGuest={false}
-                                hostName={(metadata as any)?.readingData?.name || 'You'}
+                                hostName={readingData?.name || 'You'}
                                 guestName={undefined}
                             />
                         )}
@@ -636,29 +644,29 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                         <div className="space-y-2.5">
                             {[
                                 {
-                                    icon: '🔮',
-                                    ko: '대운·세운 타이밍 분석 — 10년 주기 + 월별 기회',
-                                    en: 'Fortune Timing Map — 10-year cycle + monthly opportunities',
+                                    icon: '01',
+                                    ko: '판정 근거 — 왜 움직임/대기 판정이 나왔는지',
+                                    en: 'Verdict Evidence — why this answer was chosen',
                                 },
                                 {
-                                    icon: '💼',
-                                    ko: '직업·재물·연애 심층 해석 — 영역별 맞춤 가이드',
-                                    en: 'Career · Wealth · Love Deep Dive — tailored for each area',
+                                    icon: '02',
+                                    ko: '타이밍 구간 — 움직일 때와 기다릴 때',
+                                    en: 'Timing Window — when to move and when to wait',
                                 },
                                 {
-                                    icon: '⚠️',
-                                    ko: '치명적 사각지대 경고 — 교차 검증 리스크',
-                                    en: 'Blind Spot Warning — cross-validated risk alert',
+                                    icon: '03',
+                                    ko: '실행 순서 — 먼저 할 일과 보류할 일',
+                                    en: 'Action Order — first, second, and hold',
                                 },
                                 {
-                                    icon: '📊',
-                                    ko: 'Action Plan TOP 3 — 긴급도 순 다음 행동',
-                                    en: 'Action Plan TOP 3 — ranked by urgency',
+                                    icon: '04',
+                                    ko: '리스크 경고 — 역효과 나는 움직임',
+                                    en: 'Risk Warning — the move that can backfire',
                                 },
                                 {
-                                    icon: '🔒',
-                                    ko: '3대 원천 교차 검증 근거',
-                                    en: 'Cross-Validation Evidence — why all 3 agree',
+                                    icon: '05',
+                                    ko: '신뢰도 확인 — 원천이 겹치는 지점',
+                                    en: 'Confidence Check — where the sources agree',
                                 },
                             ].map((item) => (
                                 <button
@@ -666,7 +674,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                     onClick={() => handleUnlock('locked_section_list')}
                                     className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-white/8 bg-white/[0.02] text-left transition-all hover:bg-white/[0.06] hover:border-white/15 group cursor-pointer"
                                 >
-                                    <span className="text-base flex-shrink-0">{item.icon}</span>
+                                    <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[10px] font-semibold text-[#D4AF37]">{item.icon}</span>
                                     <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">
                                         {language === 'en' ? item.en : item.ko}
                                     </span>
@@ -680,7 +688,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                             whileTap={{ scale: 0.98 }}
                             className="mt-5 w-full py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B4941F] text-black font-bold text-sm shadow-lg shadow-[#D4AF37]/15 transition-all hover:shadow-[#D4AF37]/30 cursor-pointer"
                         >
-                            {language === 'en' ? 'Unlock All 5 Sections' : '5개 섹션 전체 잠금 해제'}
+                            {language === 'en' ? 'Unlock Evidence, Timing, Action' : '근거·타이밍·행동 순서 열기'}
                         </motion.button>
                     </motion.div>
                 </div>
@@ -701,10 +709,10 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
 
             {/* Ghost Detector (Viral Hook) — Personal Report */}
             {(() => {
-                return (metadata as any)?.sajuResult && (
+                return sajuResult && (
                     <GhostDetectorSection
-                        sajuResult={(metadata as any).sajuResult}
-                        userName={(metadata as any)?.readingData?.name || 'You'}
+                        sajuResult={sajuResult}
+                        userName={readingData?.name || 'You'}
                     />
                 );
             })()}

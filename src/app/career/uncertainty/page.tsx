@@ -3,12 +3,33 @@ import Link from 'next/link';
 
 import { GrowthEventTracker, GrowthTrackedLink } from '@/components/common/GrowthTracking';
 
+const CAREER_TIMING_SOURCE = 'career_timing_wedge_399';
+const CAREER_TIMING_ENTRY = 'career_timing_wedge_399';
+const PRIMARY_CAREER_QUESTION = '지금 내 커리어에서 더 버텨야 할까, 아니면 방향을 바꿔야 할까?';
+
 export const metadata: Metadata = {
-  title: '버텨야 할지 옮겨야 할지 헷갈릴 때 | CosmicPath',
-  description: '지금 옮겨도 되는지, 더 버텨야 하는지, 무엇부터 준비해야 하는지 사주 기반으로 읽어보는 커리어 리딩 페이지입니다.',
+  title: '버틸지 옮길지 먼저 보기 | $3.99 커리어 타이밍 리딩 | CosmicPath',
+  description: '이직, 퇴사, 승진, 번아웃이 헷갈릴 때 지금 움직일지 더 기다릴지 먼저 보는 커리어 타이밍 리딩입니다. 첫 결과 무료, 전체 리딩 $3.99.',
   robots: {
-    index: false,
-    follow: false,
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: '/career/uncertainty',
+  },
+  openGraph: {
+    title: '버틸지 옮길지 먼저 보기 | CosmicPath',
+    description: '첫 결과 무료, 전체 커리어 타이밍 리딩 $3.99.',
+    url: '/career/uncertainty',
+    siteName: 'CosmicPath',
+    images: ['/og-image.png'],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '버틸지 옮길지 먼저 보기 | CosmicPath',
+    description: '첫 결과 무료, 전체 커리어 타이밍 리딩 $3.99.',
+    images: ['/og-image.png'],
   },
 };
 
@@ -39,11 +60,11 @@ export default function CareerUncertaintyPage() {
       <GrowthEventTracker
         trackingEvent={{
           event: 'landing_view',
-          source: 'career_uncertainty_experiment',
+          source: CAREER_TIMING_SOURCE,
           language: 'ko',
           context: 'career',
           metadata: {
-            experiment: 'future_uncertainty_career_angle',
+            experiment: CAREER_TIMING_ENTRY,
           },
         }}
       />
@@ -76,6 +97,9 @@ export default function CareerUncertaintyPage() {
               <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.2em] text-white/72">
                 이 일이 나랑 맞을까
               </span>
+              <span className="rounded-full border border-acc-gold/25 bg-acc-gold/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-acc-gold">
+                첫 결과 무료 · 전체 $3.99
+              </span>
             </div>
           </div>
         </section>
@@ -90,12 +114,12 @@ export default function CareerUncertaintyPage() {
                   reset: 'true',
                   context: 'career',
                   question: card.question,
-                  entry: 'career_uncertainty_experiment',
+                  entry: CAREER_TIMING_ENTRY,
                 },
               }}
               trackingEvent={{
                 event: 'career_uncertainty_cta_clicked',
-                source: 'career_uncertainty_experiment',
+                source: CAREER_TIMING_SOURCE,
                 step: 'prompt_card',
                 language: 'ko',
                 context: 'career',
@@ -109,8 +133,11 @@ export default function CareerUncertaintyPage() {
               <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white">{card.title}</h2>
               <p className="mt-4 break-keep text-sm leading-7 text-white/72">{card.summary}</p>
               <p className="mt-6 break-keep text-sm leading-7 text-moonlight">{`"${card.question}"`}</p>
+              <p className="mt-5 break-keep text-xs leading-6 text-white/52">
+                첫 결과를 무료로 보고, 근거·타이밍·행동 순서는 $3.99로 엽니다.
+              </p>
               <div className="mt-8 inline-flex items-center text-sm font-semibold text-acc-gold transition-transform duration-300 group-hover:translate-x-1">
-                이 질문으로 바로 보기
+                이 질문으로 먼저 보기
               </div>
             </GrowthTrackedLink>
           ))}
@@ -156,6 +183,7 @@ export default function CareerUncertaintyPage() {
             </h2>
             <p className="mt-4 break-keep text-sm leading-7 text-white/72">
               커리어 맥락이 이미 들어가 있어서, 뜬구름 잡는 설명 없이 지금 내 상황부터 바로 볼 수 있습니다.
+              무료 결과로 방향을 먼저 확인하고, 전체 리딩에서는 근거·타이밍·행동 순서를 엽니다.
             </p>
 
             <div className="mt-8 space-y-3">
@@ -165,13 +193,13 @@ export default function CareerUncertaintyPage() {
                   query: {
                     reset: 'true',
                     context: 'career',
-                    question: '지금 내 커리어에서 더 버텨야 할까, 아니면 방향을 바꿔야 할까?',
-                    entry: 'career_uncertainty_experiment',
+                    question: PRIMARY_CAREER_QUESTION,
+                    entry: CAREER_TIMING_ENTRY,
                   },
                 }}
                 trackingEvent={{
                   event: 'career_uncertainty_cta_clicked',
-                  source: 'career_uncertainty_experiment',
+                  source: CAREER_TIMING_SOURCE,
                   step: 'primary_cta',
                   language: 'ko',
                   context: 'career',
@@ -181,14 +209,14 @@ export default function CareerUncertaintyPage() {
                 }}
                 className="block w-full rounded-full bg-gradient-to-r from-acc-gold via-amber-300 to-acc-gold px-6 py-4 text-center text-lg font-bold tracking-tight text-deep-navy shadow-[0_0_24px_rgba(212,175,55,0.35)] transition-transform duration-300 hover:scale-[1.01]"
               >
-                내 커리어 리딩 시작하기
+                버틸지 옮길지 먼저 보기
               </GrowthTrackedLink>
 
               <GrowthTrackedLink
                 href="/daily"
                 trackingEvent={{
                   event: 'career_uncertainty_secondary_clicked',
-                  source: 'career_uncertainty_experiment',
+                  source: CAREER_TIMING_SOURCE,
                   step: 'secondary_cta',
                   language: 'ko',
                   context: 'career',

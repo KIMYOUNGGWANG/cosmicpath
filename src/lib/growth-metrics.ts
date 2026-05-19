@@ -25,6 +25,42 @@ interface GrowthSourcePoint {
     count: number;
 }
 
+interface CampaignFunnelEventCounts {
+    landingViews: number;
+    promptClicks: number;
+    questionSubmits: number;
+    analysisStarts: number;
+    firstResultViews: number;
+    paywallViews: number;
+    checkoutStarts: number;
+    paidConversions: number;
+    followupSeeds: number;
+    followupStarts: number;
+    dailyReturnsAfterReading: number;
+}
+
+export interface CampaignFunnelSummary {
+    key: string;
+    label: string;
+    description: string;
+    sources: string[];
+    sessions: number;
+    totalEvents: number;
+    eventCounts: CampaignFunnelEventCounts;
+    uniqueSessionCounts: CampaignFunnelEventCounts;
+    rates: {
+        landingToPromptRate: number;
+        landingToAnalysisRate: number;
+        analysisToResultRate: number;
+        resultToPaywallRate: number;
+        paywallToCheckoutRate: number;
+        checkoutToPaidRate: number;
+        resultToPaidRate: number;
+        resultToFollowupSeedRate: number;
+    };
+    topSources: GrowthSourcePoint[];
+}
+
 interface GrowthEventSummaryRow {
     createdAt: Date;
     event: string;
@@ -75,6 +111,7 @@ export interface GrowthSummary {
     };
     series: GrowthSeriesPoint[];
     topSources: GrowthSourcePoint[];
+    campaignFunnels: CampaignFunnelSummary[];
 }
 
 function toDayKey(date: Date): string {
@@ -83,6 +120,227 @@ function toDayKey(date: Date): string {
 
 function startOfUtcDay(date: Date): Date {
     return new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+}
+
+const CAMPAIGN_FUNNEL_DEFINITIONS = [
+    {
+        key: 'career-timing',
+        label: '커리어 타이밍',
+        description: '버틸지, 옮길지, 준비할지 판단하는 커리어 wedge',
+        sources: [
+            'career_timing_wedge_399',
+            'career_uncertainty_experiment',
+            'start_page_career_timing_wedge_399',
+            'start_page_career_uncertainty_experiment',
+        ],
+    },
+    {
+        key: 'relationship-contact',
+        label: '관계 연락 타이밍',
+        description: '지금 연락할지 기다릴지 판단하는 한국어 contact wedge',
+        sources: ['relationship_contact_timing_v1'],
+    },
+    {
+        key: 'english-contact',
+        label: 'English Contact Timing',
+        description: 'Should I text them or wait? 영어권 contact wedge',
+        sources: ['en_relationship_contact_timing_v1'],
+    },
+    {
+        key: 'decision-timing-home',
+        label: 'Decision Timing Home',
+        description: '홈/스타트에서 들어오는 범용 decision timing 리빌드',
+        sources: ['decision_timing_rebuild_v1', 'start_page_decision_timing_rebuild_v1'],
+    },
+] as const;
+
+type CampaignFunnelDefinition = (typeof CAMPAIGN_FUNNEL_DEFINITIONS)[number];
+
+interface CampaignSessionEvent {
+    createdAt: Date;
+    event: string;
+    canonicalEvent: string;
+    sessionId: string;
+    source: string;
+}
+
+interface CampaignFunnelBucket {
+    definition: CampaignFunnelDefinition;
+    sessions: number;
+    totalEvents: number;
+    eventCounts: CampaignFunnelEventCounts;
+    uniqueSessionCounts: CampaignFunnelEventCounts;
+    sourceCounter: Map<string, number>;
+}
+
+function createEmptyFunnelCounts(): CampaignFunnelEventCounts {
+    return {
+        landingViews: 0,
+        promptClicks: 0,
+        questionSubmits: 0,
+        analysisStarts: 0,
+        firstResultViews: 0,
+        paywallViews: 0,
+        checkoutStarts: 0,
+        paidConversions: 0,
+        followupSeeds: 0,
+        followupStarts: 0,
+        dailyReturnsAfterReading: 0,
+    };
+}
+
+function createCampaignFunnelBucket(definition: CampaignFunnelDefinition): CampaignFunnelBucket {
+    return {
+        definition,
+        sessions: 0,
+        totalEvents: 0,
+        eventCounts: createEmptyFunnelCounts(),
+        uniqueSessionCounts: createEmptyFunnelCounts(),
+        sourceCounter: new Map<string, number>(),
+    };
+}
+
+function getNormalizedGrowthSource(event: GrowthEventSummaryRow, metadata: Record<string, unknown>): string {
+    const channel = typeof event.channel === 'string' && event.channel.trim()
+        ? event.channel.trim()
+        : 'unknown';
+    const entry = typeof metadata.entry === 'string' && metadata.entry.trim()
+        ? metadata.entry.trim()
+        : null;
+    const experiment = typeof metadata.experiment === 'string' && metadata.experiment.trim()
+        ? metadata.experiment.trim()
+        : null;
+
+    if (channel === 'client' || channel === 'unknown' || channel.startsWith('/')) {
+        return entry || experiment || channel;
+    }
+
+    return channel;
+}
+
+function getCampaignDefinitionForSource(source: string): CampaignFunnelDefinition | null {
+    return CAMPAIGN_FUNNEL_DEFINITIONS.find((definition) =>
+        definition.sources.some((candidate) => candidate === source)
+    ) ?? null;
+}
+
+function getCampaignStageKeys(event: CampaignSessionEvent): Array<keyof CampaignFunnelEventCounts> {
+    const stageKeys: Array<keyof CampaignFunnelEventCounts> = [];
+
+    if (event.canonicalEvent === 'landing_view') stageKeys.push('landingViews');
+    if (
+        event.event === 'career_uncertainty_cta_clicked' ||
+        event.event === 'relationship_contact_prompt_clicked' ||
+        event.event === 'decision_timing_home_cta_clicked' ||
+        event.event === 'decision_timing_prompt_clicked'
+    ) {
+        stageKeys.push('promptClicks');
+    }
+    if (event.event === 'decision_question_submit') stageKeys.push('questionSubmits');
+    if (event.event === 'analysis_start') stageKeys.push('analysisStarts');
+    if (event.canonicalEvent === 'first_result_view') stageKeys.push('firstResultViews');
+    if (event.canonicalEvent === 'paywall_view') stageKeys.push('paywallViews');
+    if (event.canonicalEvent === 'checkout_start') stageKeys.push('checkoutStarts');
+    if (event.canonicalEvent === 'paid_conversion') stageKeys.push('paidConversions');
+    if (
+        event.event === 'relationship_contact_followup_seeded' ||
+        event.event === 'en_relationship_contact_followup_seeded'
+    ) {
+        stageKeys.push('followupSeeds');
+    }
+    if (event.canonicalEvent === 'followup_start') stageKeys.push('followupStarts');
+    if (event.canonicalEvent === 'daily_return_after_reading') {
+        stageKeys.push('dailyReturnsAfterReading');
+    }
+
+    return stageKeys;
+}
+
+function toRate(numerator: number, denominator: number): number {
+    return denominator > 0 ? Number(((numerator / denominator) * 100).toFixed(1)) : 0;
+}
+
+function getCampaignFunnels(
+    campaignEventsBySession: Map<string, CampaignSessionEvent[]>
+): CampaignFunnelSummary[] {
+    const buckets = new Map(
+        CAMPAIGN_FUNNEL_DEFINITIONS.map((definition) => [
+            definition.key,
+            createCampaignFunnelBucket(definition),
+        ])
+    );
+
+    for (const sessionEvents of campaignEventsBySession.values()) {
+        const sortedEvents = [...sessionEvents].sort(
+            (left, right) => left.createdAt.getTime() - right.createdAt.getTime()
+        );
+        const firstCampaignEvent = sortedEvents
+            .map((event) => ({
+                event,
+                definition: getCampaignDefinitionForSource(event.source),
+            }))
+            .find((entry) => entry.definition);
+
+        if (!firstCampaignEvent?.definition) {
+            continue;
+        }
+
+        const bucket = buckets.get(firstCampaignEvent.definition.key);
+        if (!bucket) {
+            continue;
+        }
+
+        const touchedStages = new Set<keyof CampaignFunnelEventCounts>();
+        bucket.sessions += 1;
+
+        for (const event of sortedEvents) {
+            if (event.createdAt < firstCampaignEvent.event.createdAt) {
+                continue;
+            }
+
+            bucket.totalEvents += 1;
+            bucket.sourceCounter.set(event.source, (bucket.sourceCounter.get(event.source) ?? 0) + 1);
+
+            for (const stageKey of getCampaignStageKeys(event)) {
+                bucket.eventCounts[stageKey] += 1;
+                touchedStages.add(stageKey);
+            }
+        }
+
+        for (const stageKey of touchedStages) {
+            bucket.uniqueSessionCounts[stageKey] += 1;
+        }
+    }
+
+    return Array.from(buckets.values()).map((bucket) => {
+        const uniqueCounts = bucket.uniqueSessionCounts;
+        const landingDenominator = uniqueCounts.landingViews || bucket.sessions;
+
+        return {
+            key: bucket.definition.key,
+            label: bucket.definition.label,
+            description: bucket.definition.description,
+            sources: [...bucket.definition.sources],
+            sessions: bucket.sessions,
+            totalEvents: bucket.totalEvents,
+            eventCounts: bucket.eventCounts,
+            uniqueSessionCounts: uniqueCounts,
+            rates: {
+                landingToPromptRate: toRate(uniqueCounts.promptClicks, landingDenominator),
+                landingToAnalysisRate: toRate(uniqueCounts.analysisStarts, landingDenominator),
+                analysisToResultRate: toRate(uniqueCounts.firstResultViews, uniqueCounts.analysisStarts),
+                resultToPaywallRate: toRate(uniqueCounts.paywallViews, uniqueCounts.firstResultViews),
+                paywallToCheckoutRate: toRate(uniqueCounts.checkoutStarts, uniqueCounts.paywallViews),
+                checkoutToPaidRate: toRate(uniqueCounts.paidConversions, uniqueCounts.checkoutStarts),
+                resultToPaidRate: toRate(uniqueCounts.paidConversions, uniqueCounts.firstResultViews),
+                resultToFollowupSeedRate: toRate(uniqueCounts.followupSeeds, uniqueCounts.firstResultViews),
+            },
+            topSources: Array.from(bucket.sourceCounter.entries())
+                .sort((left, right) => right[1] - left[1])
+                .slice(0, 4)
+                .map(([source, count]) => ({ source, count })),
+        };
+    });
 }
 
 export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
@@ -119,6 +377,7 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
     const visitSessionsToday = new Set<string>();
     const visitSessionsLast7Days = new Set<string>();
     const visitSessionsLast30Days = new Set<string>();
+    const campaignEventsBySession = new Map<string, CampaignSessionEvent[]>();
 
     for (let index = 0; index < safeDays; index += 1) {
         const currentDate = new Date(rangeStart.getTime() + index * DAY_IN_MS);
@@ -185,15 +444,23 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
             continue;
         }
 
-        const source = typeof event.channel === 'string' && event.channel.trim()
-            ? event.channel.trim()
-            : 'unknown';
+        const source = getNormalizedGrowthSource(event, metadata);
 
         sourceCounter.set(source, (sourceCounter.get(source) ?? 0) + 1);
 
         if (sessionId) {
             activeUsersByDay.get(dayKey)?.add(sessionId);
             activeUsersAcrossRange.add(sessionId);
+            const sessionEvents = campaignEventsBySession.get(sessionId) ?? [];
+            sessionEvents.push({
+                createdAt: event.createdAt,
+                event: event.event,
+                canonicalEvent,
+                sessionId,
+                source,
+            });
+            campaignEventsBySession.set(sessionId, sessionEvents);
+
             if (canonicalEvent === 'daily_active') {
                 const existingDays = dailyActiveDaysBySession.get(sessionId) ?? new Set<string>();
                 existingDays.add(dayKey);
@@ -331,5 +598,6 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
         },
         series,
         topSources,
+        campaignFunnels: getCampaignFunnels(campaignEventsBySession),
     };
 }

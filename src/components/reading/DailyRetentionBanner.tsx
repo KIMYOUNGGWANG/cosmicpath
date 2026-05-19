@@ -30,7 +30,6 @@ export function DailyRetentionBanner({ language = 'ko' }: DailyRetentionBannerPr
     try {
       const lastDate = localStorage.getItem(LAST_READING_KEY);
       if (lastDate === today) {
-        setVisible(false);
         return;
       }
     } catch {
@@ -71,15 +70,15 @@ export function DailyRetentionBanner({ language = 'ko' }: DailyRetentionBannerPr
         {/* 텍스트 */}
         <div className="flex-1 min-w-0">
           <p className="text-[10px] uppercase tracking-[0.22em] text-cyan-300/50 mb-0.5">
-            {isEn ? 'Daily Ritual' : '내일의 운세'}
+            {isEn ? 'Tomorrow Check-In' : '내일 결정 체크인'}
           </p>
           <p className="text-[13.5px] font-medium leading-snug text-white/80 group-hover:text-white/95">
             {isEn
-              ? 'Come back tomorrow — your daily tarot is waiting'
-              : '내일 이 시간 다시 오세요 — 오늘의 타로가 기다려요'}
+              ? 'Come back tomorrow and check whether the timing shifted'
+              : '내일 다시 와서 이 결정의 타이밍이 바뀌었는지 확인하세요'}
           </p>
           <p className="mt-0.5 text-[11px] text-cyan-300/55">
-            {isEn ? 'Resets at midnight · Free every day →' : '자정 갱신 · 매일 무료 →'}
+            {isEn ? 'Resets at midnight · Free daily signal →' : '자정 갱신 · 매일 무료 신호 →'}
           </p>
         </div>
 

@@ -23,6 +23,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.85,
         },
         {
+            url: `${baseUrl}/career/uncertainty`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly',
+            priority: 0.8,
+        },
+        {
+            url: `${baseUrl}/relationship/contact-timing`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly',
+            priority: 0.82,
+        },
+        {
+            url: `${baseUrl}/en/contact-timing`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly',
+            priority: 0.82,
+        },
+        {
             url: `${baseUrl}/terms`,
             lastModified: new Date(),
             changeFrequency: 'monthly',

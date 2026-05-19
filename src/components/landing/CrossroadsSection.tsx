@@ -54,7 +54,8 @@ export function CrossroadsSection() {
         };
         fetchPrice();
     }, []);
-    const displayPrice = dynamicPrice || '결제 단계에서 확인';
+    const displayPrice = dynamicPrice || '$3.99';
+    const decisionStartHref = '/start?reset=true&entry=decision_timing_rebuild_v1';
 
     return (
         <section className="relative min-h-screen py-20 flex items-center justify-center bg-void overflow-hidden">
@@ -99,30 +100,29 @@ export function CrossroadsSection() {
                     </h2>
                     <p className="text-moonlight text-base md:text-lg mb-10 md:mb-12 max-w-xl mx-auto font-light">
                         질문 하나만 적으면 첫 결과가 바로 열립니다. <br />
-                        지금 움직일지 더 기다릴지 먼저 확인해보세요.
+                        관계, 커리어, 돈 중 어디서든 지금 움직일지 더 기다릴지 먼저 확인해보세요.
                     </p>
 
                     {/* Magnetic Button Area */}
                     <div className="relative group inline-block">
                         <Link
-                            href="/start?reset=true"
+                            href={decisionStartHref}
                             className="relative z-10 flex flex-col items-center justify-center px-16 py-6 bg-white text-deep-navy rounded-xl hover:scale-105 transition-all duration-300 shadow-[0_0_40px_rgba(255,255,255,0.4)] group-hover:shadow-[0_0_60px_rgba(255,255,255,0.6)]"
                         >
                             <div className="flex items-center gap-3">
-                                <span className="font-bold tracking-widest text-lg md:text-2xl">무료 결과 먼저 보기</span>
-                                <span className="animate-pulse">✨</span>
+                                <span className="font-bold tracking-widest text-lg md:text-2xl">움직일지 기다릴지 먼저 보기</span>
                             </div>
 
                             {/* Badger for Discount */}
                             <div className="absolute -top-4 -right-4 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-bounce">
-                                85% SAVE
+                                첫 결과 무료
                             </div>
 
                             <span className="text-sm font-medium mt-1 text-gray-500 group-hover:text-deep-navy/80 transition-colors">
                                 {dynamicPrice ? (
                                     <span className="line-through opacity-50 mr-2">{originalPrice}</span>
                                 ) : null}
-                                <span className="font-bold text-red-500 text-lg">{displayPrice}</span>
+                                전체 리딩 <span className="font-bold text-red-500 text-lg">{displayPrice}</span>
                             </span>
                         </Link>
                     </div>

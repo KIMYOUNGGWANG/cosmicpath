@@ -22,7 +22,7 @@ export const READING_PRODUCT = {
     name: 'CosmicPath 통합 운명 리포트',
     description: '사주 + 점성술 + 타로 통합 분석 프리미엄 결과지',
     currency: 'USD',
-    price: 999, // $9.99 fallback label when live lookup is delayed
+    price: 399, // $3.99 fallback label when live lookup is delayed
     followUpQuestions: 0,
     stripeConfigured: hasRealStripeLookupId(readingProductId, 'prod'),
 } as const;

@@ -86,6 +86,13 @@ const SUPPORTED_READING_CONTEXTS: ReadonlySet<ReadingContext> = new Set([
   'general',
 ]);
 
+const DECISION_TIMING_ENTRY_SOURCES: ReadonlySet<string> = new Set([
+  'decision_timing_rebuild_v1',
+  'career_timing_wedge_399',
+  'relationship_contact_timing_v1',
+  'en_relationship_contact_timing_v1',
+]);
+
 export function getPrefilledReadingContext(value: string | null): ReadingContext | undefined {
   if (!value) return undefined;
 
@@ -111,11 +118,23 @@ export function getStartPageSource(hasInvite: boolean, entry: string | null): st
     return 'start_page_invite';
   }
 
-  if (!entry) {
+  const normalizedEntry = entry?.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '_');
+
+  if (!normalizedEntry) {
     return 'start_page';
   }
 
-  return `start_page_${entry.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '_')}`.slice(0, 64);
+  if (
+    DECISION_TIMING_ENTRY_SOURCES.has(normalizedEntry)
+  ) {
+    return normalizedEntry;
+  }
+
+  return `start_page_${normalizedEntry}`.slice(0, 64);
+}
+
+export function isDecisionTimingSource(source: string): boolean {
+  return DECISION_TIMING_ENTRY_SOURCES.has(source);
 }
 
 export function getSourceSummary(value: unknown, fallback: string) {
@@ -187,13 +206,13 @@ export function getReadingPhaseLabels(language: 'ko' | 'en', tier: 'free' | 'pre
   if (tier === 'free') {
     const labelsKo = [
       '',
-      '질문의 핵심 흐름을 읽는 중... (1/2)',
-      '근거 포인트와 첫 결과를 정리 중... (2/2)',
+      '움직일지 기다릴지 먼저 판정하는 중... (1/2)',
+      '근거와 다음 행동을 압축하는 중... (2/2)',
     ];
     const labelsEn = [
       '',
-      'Reading the core pattern of your question... (1/2)',
-      'Organizing the evidence points and first result... (2/2)',
+      'Judging whether to move or wait... (1/2)',
+      'Compressing the evidence and next action... (2/2)',
     ];
 
     return language === 'en' ? labelsEn : labelsKo;

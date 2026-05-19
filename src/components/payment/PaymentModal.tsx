@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, ScrollText, ShieldCheck, Sparkles, X, TrendingUp, Briefcase, AlertTriangle, ListChecks, Search } from 'lucide-react';
+import { Lock, X, TrendingUp, AlertTriangle, ListChecks, Search, ShieldCheck } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getReadingFallbackPriceLabel, normalizePriceLabel, READING_PRODUCT } from '@/lib/payment/payment-config';
 import { PromoCodeInput } from './PromoCodeInput';
@@ -56,8 +56,14 @@ export function PaymentModal({
     const [discount, setDiscount] = useState<number>(0);
     const [appliedReferralCode, setAppliedReferralCode] = useState<string | null>(null);
     const isEnglish = metadata?.language === 'en' || readingData?.language === 'en';
+    const isRelationshipContactTiming =
+        trackingSource === 'relationship_contact_timing_v1' ||
+        trackingSource === 'en_relationship_contact_timing_v1';
     const eventLanguage = isEnglish ? 'en' : 'ko';
-    const landingVariant = getLandingVariant(eventLanguage);
+    const landingVariant =
+        trackingSource === 'en_relationship_contact_timing_v1'
+            ? 'en_contact_timing_v1'
+            : getLandingVariant(eventLanguage);
     const getStoredReadingAccessKey = () => {
         if (typeof window === 'undefined') return null;
         return (
@@ -160,7 +166,7 @@ export function PaymentModal({
                 event: 'paywall_close',
                 source: sourceSuffix ? `${trackingSource}_${sourceSuffix}` : trackingSource,
                 step: 'payment_modal',
-                language: metadata?.language,
+                language: eventLanguage,
                 context: readingData?.context as string | undefined,
                 invitationMode: Boolean(metadata?.inviteCode),
                 referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
@@ -171,7 +177,7 @@ export function PaymentModal({
                     landingVariant,
                 },
             }),
-        [appliedReferralCode, landingVariant, metadata, readingData, resolvedAutoReferralCode, trackedPriceLabel, trackingSource]
+        [appliedReferralCode, eventLanguage, landingVariant, metadata, readingData, resolvedAutoReferralCode, trackedPriceLabel, trackingSource]
     );
 
     useEffect(() => {
@@ -181,7 +187,7 @@ export function PaymentModal({
             event: 'paywall_open',
             source: trackingSource,
             step: 'payment_modal',
-            language: metadata?.language,
+            language: eventLanguage,
             context: readingData?.context as string | undefined,
             invitationMode: Boolean(metadata?.inviteCode),
             referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
@@ -194,7 +200,7 @@ export function PaymentModal({
                 landingVariant,
             },
         });
-    }, [appliedReferralCode, isOpen, landingVariant, metadata, readingData, resolvedAutoReferralCode, trackedPriceLabel, trackingSource]);
+    }, [appliedReferralCode, eventLanguage, isOpen, landingVariant, metadata, readingData, resolvedAutoReferralCode, trackedPriceLabel, trackingSource]);
 
     // Handle browser back button - close modal instead of navigating away
     useEffect(() => {
@@ -297,7 +303,7 @@ export function PaymentModal({
                 event: 'checkout_start',
                 source: trackingSource,
                 step: 'payment_modal',
-                language: metadata?.language,
+                language: eventLanguage,
                 context: readingData?.context as string | undefined,
                 invitationMode: Boolean(metadata?.inviteCode),
                 referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
@@ -376,7 +382,7 @@ export function PaymentModal({
                     event: 'checkout_success',
                     source: trackingSource,
                     step: 'payment_modal',
-                    language: metadata?.language,
+                    language: eventLanguage,
                     context: readingData?.context as string | undefined,
                     invitationMode: Boolean(metadata?.inviteCode),
                     referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
@@ -425,7 +431,7 @@ export function PaymentModal({
                 event: 'checkout_failure',
                 source: trackingSource,
                 step: 'payment_modal',
-                language: metadata?.language,
+                language: eventLanguage,
                 context: readingData?.context as string | undefined,
                 invitationMode: Boolean(metadata?.inviteCode),
                 referralCode: appliedReferralCode || resolvedAutoReferralCode || undefined,
@@ -449,58 +455,94 @@ export function PaymentModal({
     const unlockBenefits = isEnglish
         ? [
             {
-                title: 'Fortune Timing Map',
-                description: 'See your 10-year major luck cycle and month-by-month opportunities, not just vague directions.',
+                title: 'Why This Verdict',
+                description: 'See which Saju, Astrology, and Tarot signals made the answer lean move, wait, or narrow the option.',
+                Icon: Search,
+            },
+            {
+                title: 'When To Act',
+                description: 'Open the timing window, including the better action month and the window to avoid.',
                 Icon: TrendingUp,
             },
             {
-                title: 'Career · Wealth · Love Deep Dive',
-                description: 'Each life area gets its own reading with specific advice you can act on right away.',
-                Icon: Briefcase,
-            },
-            {
-                title: 'Blind Spot Warning',
-                description: 'A critical risk detected by cross-checking Saju, Astrology, and Tarot — what you must not overlook.',
-                Icon: AlertTriangle,
-            },
-            {
-                title: 'Action Plan (Top 3)',
-                description: 'Three concrete next steps with timing, ranked by urgency from your chart.',
+                title: 'Action Order',
+                description: 'Turn the verdict into a ranked sequence so you know what to do first, second, and what to hold.',
                 Icon: ListChecks,
             },
             {
-                title: 'Cross-Validation Evidence',
-                description: 'See exactly why Saju, Astrology, and Tarot all point to the same verdict.',
-                Icon: Search,
+                title: 'Risk To Avoid',
+                description: 'The blind spot that could make a good timing window fail if you rush the wrong part.',
+                Icon: AlertTriangle,
+            },
+            {
+                title: 'Source Confidence',
+                description: 'Check whether the three systems agree strongly or whether the result needs a more cautious read.',
+                Icon: ShieldCheck,
             },
         ]
         : [
             {
-                title: '대운·세운 타이밍 분석',
-                description: '10년 대운 주기와 월별 기회/경고를 구체적으로 보여줍니다.',
+                title: '왜 이 판정인지',
+                description: '사주, 점성술, 타로 중 어떤 신호 때문에 움직임/대기/축소 판정이 나왔는지 엽니다.',
+                Icon: Search,
+            },
+            {
+                title: '언제 움직일지',
+                description: '실행하기 좋은 시점과 피해야 할 구간을 월 단위 타이밍으로 확인합니다.',
                 Icon: TrendingUp,
             },
             {
-                title: '직업·재물·연애 심층 해석',
-                description: '각 영역별 맞춤 조언과 바로 실행 가능한 구체적 가이드를 받습니다.',
-                Icon: Briefcase,
-            },
-            {
-                title: '치명적 사각지대 경고',
-                description: '사주·점성·타로 교차 검증 중 발견된, 지금 반드시 알아야 할 리스크입니다.',
-                Icon: AlertTriangle,
-            },
-            {
-                title: 'Action Plan TOP 3',
-                description: '긴급도 순으로 정리된 세 가지 구체적 다음 행동과 타이밍입니다.',
+                title: '실행 순서',
+                description: '판정을 실제 행동으로 바꾸기 위해 먼저 할 일, 보류할 일, 확인할 일을 정리합니다.',
                 Icon: ListChecks,
             },
             {
-                title: '3대 원천 교차 검증 근거',
-                description: '사주, 점성술, 타로가 왜 같은 결론을 가리키는지 직접 확인합니다.',
-                Icon: Search,
+                title: '피해야 할 리스크',
+                description: '타이밍이 좋아도 실패하게 만드는 사각지대와 무리수를 먼저 막습니다.',
+                Icon: AlertTriangle,
+            },
+            {
+                title: '근거 신뢰도',
+                description: '세 원천이 강하게 같은 방향인지, 조심스럽게 읽어야 하는 결과인지 확인합니다.',
+                Icon: ShieldCheck,
             },
         ];
+    const relationshipUnlockBenefits = isEnglish
+        ? [
+            {
+                title: 'Why This Verdict',
+                description: 'See which Saju, Astrology, and Tarot signals made the answer lean contact, wait, narrow, or hold.',
+                Icon: Search,
+            },
+            {
+                title: 'Contact Timing',
+                description: 'Open whether to send now, wait a beat, or change the first move.',
+                Icon: TrendingUp,
+            },
+            {
+                title: 'Message To Avoid',
+                description: 'Spot the kind of long explanation, pressure check, or test message that can backfire.',
+                Icon: AlertTriangle,
+            },
+        ]
+        : [
+            {
+                title: '왜 이 판정인지',
+                description: '사주, 점성술, 타로 중 어떤 신호 때문에 연락/대기/축소 판정이 나왔는지 엽니다.',
+                Icon: Search,
+            },
+            {
+                title: '연락 타이밍',
+                description: '지금 보내도 되는지, 한 박자 기다려야 하는지, 먼저 바꿔야 할 첫 행동을 확인합니다.',
+                Icon: TrendingUp,
+            },
+            {
+                title: '피해야 할 메시지',
+                description: '장문 설명, 확인 압박, 떠보기처럼 관계를 더 꼬이게 만드는 말을 먼저 걸러냅니다.',
+                Icon: AlertTriangle,
+            },
+        ];
+    const visibleUnlockBenefits = isRelationshipContactTiming ? relationshipUnlockBenefits : unlockBenefits;
 
     if (!isMounted) return null;
 
@@ -547,21 +589,35 @@ export function PaymentModal({
                                 >
                                     <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-acc-gold/20 bg-acc-gold/10 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.26em] text-acc-gold">
                                         <Lock className="h-4 w-4" />
-                                        {isEnglish ? 'Full Reading' : '전체 해석 보기'}
+                                        {isEnglish ? 'Decision Timing Unlock' : '결정 타이밍 잠금해제'}
                                     </div>
                                     <h3 className="mb-3 text-xl font-bold text-white md:text-2xl">
-                                        {isEnglish ? 'Your full report has 5 locked sections' : '잠긴 5개 섹션이 기다리고 있습니다'}
+                                        {isRelationshipContactTiming
+                                            ? (isEnglish ? 'Open why, contact timing, and what to avoid' : '왜 이 판정인지, 연락 타이밍, 피해야 할 메시지를 여세요')
+                                            : (isEnglish ? 'Open the evidence, timing, and action order' : '근거·타이밍·행동 순서를 여세요')}
                                     </h3>
                                     <p className="text-sm leading-relaxed text-white/60">
-                                        {isEnglish ? (
+                                        {isRelationshipContactTiming ? (
+                                            isEnglish ? (
+                                                <>
+                                                    The free brief showed the first contact verdict.<br />
+                                                    Unlock why it leaned that way, when to move, and which message can backfire.
+                                                </>
+                                            ) : (
+                                                <>
+                                                    무료 브리프에서 연락 판정은 확인했습니다.<br />
+                                                    이제 왜 그런지, 언제 움직일지, 어떤 말은 피해야 하는지 확인하세요.
+                                                </>
+                                            )
+                                        ) : isEnglish ? (
                                             <>
-                                                The free result showed the direction.<br />
-                                                These sections reveal the timing, the risks, and exactly what to do next.
+                                                The free brief showed the verdict.<br />
+                                                Unlock why it was chosen, when to act, what to avoid, and what to do next.
                                             </>
                                         ) : (
                                             <>
-                                                무료 결과에서 방향은 확인하셨습니다.<br />
-                                                아래 섹션에서 타이밍, 리스크, 다음 행동을 구체적으로 알 수 있습니다.
+                                                무료 브리프에서 판정은 확인했습니다.<br />
+                                                이제 왜 그런지, 언제 움직일지, 무엇을 피할지, 어떤 순서로 할지 확인하세요.
                                             </>
                                         )}
                                     </p>
@@ -625,11 +681,21 @@ export function PaymentModal({
                                         {isEnglish ? 'Locked Sections Inside' : '잠긴 프리미엄 섹션 목록'}
                                     </p>
                                     <ul className="space-y-2.5 text-sm text-white/75">
-                                        <li className="flex items-center gap-2"><TrendingUp size={14} className="text-acc-gold/70 flex-shrink-0" />{isEnglish ? 'Fortune Timing Map — 10-year cycle + monthly breakdown' : '대운·세운 타이밍 분석 — 10년 주기 + 월별 세부'}</li>
-                                        <li className="flex items-center gap-2"><Briefcase size={14} className="text-acc-gold/70 flex-shrink-0" />{isEnglish ? 'Career · Wealth · Love — deep dive for each area' : '직업·재물·연애 — 영역별 심층 해석'}</li>
-                                        <li className="flex items-center gap-2"><AlertTriangle size={14} className="text-red-400/70 flex-shrink-0" />{isEnglish ? 'Blind Spot Warning — cross-validated risk alert' : '치명적 사각지대 — 교차 검증 리스크 경고'}</li>
-                                        <li className="flex items-center gap-2"><ListChecks size={14} className="text-acc-gold/70 flex-shrink-0" />{isEnglish ? 'Action Plan TOP 3 — ranked by urgency' : 'Action Plan TOP 3 — 긴급도 순 다음 행동'}</li>
-                                        <li className="flex items-center gap-2"><Search size={14} className="text-acc-gold/70 flex-shrink-0" />{isEnglish ? 'Cross-Validation Evidence — why all 3 sources agree' : '3대 원천 검증 근거 — 왜 같은 결론인지'}</li>
+                                        {isRelationshipContactTiming ? (
+                                            <>
+                                                <li className="flex items-center gap-2"><Search size={14} className="text-acc-gold/70 flex-shrink-0" />{isEnglish ? 'Verdict Evidence — why this contact answer was chosen' : '판정 근거 — 왜 연락/대기 답이 나왔는지'}</li>
+                                                <li className="flex items-center gap-2"><TrendingUp size={14} className="text-acc-gold/70 flex-shrink-0" />{isEnglish ? 'Contact Timing — send now, wait, or narrow the move' : '연락 타이밍 — 지금 보낼지, 기다릴지, 축소할지'}</li>
+                                                <li className="flex items-center gap-2"><AlertTriangle size={14} className="text-red-400/70 flex-shrink-0" />{isEnglish ? 'Message Risk — what not to send first' : '메시지 리스크 — 먼저 보내면 안 되는 말'}</li>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <li className="flex items-center gap-2"><Search size={14} className="text-acc-gold/70 flex-shrink-0" />{isEnglish ? 'Verdict Evidence — why this answer was chosen' : '판정 근거 — 왜 이 답이 나왔는지'}</li>
+                                                <li className="flex items-center gap-2"><TrendingUp size={14} className="text-acc-gold/70 flex-shrink-0" />{isEnglish ? 'Timing Window — when to move and when to wait' : '타이밍 구간 — 움직일 때와 기다릴 때'}</li>
+                                                <li className="flex items-center gap-2"><ListChecks size={14} className="text-acc-gold/70 flex-shrink-0" />{isEnglish ? 'Action Order — first, second, and hold' : '실행 순서 — 먼저 할 일과 보류할 일'}</li>
+                                                <li className="flex items-center gap-2"><AlertTriangle size={14} className="text-red-400/70 flex-shrink-0" />{isEnglish ? 'Risk Warning — the move that can backfire' : '리스크 경고 — 역효과 나는 움직임'}</li>
+                                                <li className="flex items-center gap-2"><ShieldCheck size={14} className="text-acc-gold/70 flex-shrink-0" />{isEnglish ? 'Confidence Check — where the sources agree' : '신뢰도 확인 — 원천이 겹치는 지점'}</li>
+                                            </>
+                                        )}
                                     </ul>
                                 </motion.div>
 
@@ -639,7 +705,7 @@ export function PaymentModal({
                                     transition={{ duration: 0.35, delay: 0.12 }}
                                     className="mb-6 space-y-3"
                                 >
-                                    {unlockBenefits.map(({ title, description, Icon }) => (
+                                    {visibleUnlockBenefits.map(({ title, description, Icon }) => (
                                         <div
                                             key={title}
                                             className="flex items-start gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition-colors hover:border-white/15 hover:bg-white/[0.045]"
@@ -726,8 +792,8 @@ export function PaymentModal({
                                     {isLoading
                                         ? (isEnglish ? 'Processing...' : '처리 중...')
                                         : (Number(discount) === 100
-                                            ? (isEnglish ? 'See Full Reading for Free' : '무료로 전체 해석 보기')
-                                            : (isEnglish ? 'See Full Reading' : '전체 해석 보기'))}
+                                            ? (isEnglish ? 'Open Decision Timing for Free' : '무료로 결정 타이밍 열기')
+                                            : (isEnglish ? 'Open Evidence, Timing, Action' : '근거·타이밍·행동 순서 열기'))}
                                 </motion.button>
 
                                 <p className="mt-4 text-center text-xs text-white/35">

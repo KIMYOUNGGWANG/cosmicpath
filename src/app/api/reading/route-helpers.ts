@@ -358,32 +358,32 @@ function buildFallbackActionConclusion(
 ): string {
   const fallbackMap: Record<OracleQuestionIntent, Record<ReadingLanguage, string>> = {
     general: {
-      ko: '지금은 감정 반응보다 패턴을 먼저 읽고 다음 한 수를 정리하세요.',
-      en: 'Read the pattern first instead of reacting emotionally, then decide your next move.',
+      ko: '선택지 축소: 지금은 감정 반응보다 패턴을 먼저 읽고, 이번 주 안에 기준 3개로 다음 한 수를 정리하세요.',
+      en: 'Narrow the option: read the pattern before reacting emotionally, then define three decision criteria this week.',
     },
     compatibility: {
-      ko: '상대를 바꾸려 하기보다 지금은 소통 방식부터 조정하는 쪽이 유리합니다.',
-      en: 'Instead of trying to change the other person, adjust your communication pattern first.',
+      ko: '지금 움직여도 됨: 상대를 바꾸려 하기보다 이번 주 안에 소통 방식부터 작게 조정하세요.',
+      en: 'Move now: instead of trying to change the other person, adjust one communication pattern this week.',
     },
     reunion: {
-      ko: '재회를 서두르기보다 먼저 흐름을 안정시키고 반응 신호를 확인하세요.',
-      en: 'Instead of rushing reunion, stabilize the flow first and confirm response signals.',
+      ko: '기다릴 것: 재회를 서두르기보다 이번 달에는 흐름을 안정시키고 반응 신호를 확인하세요.',
+      en: 'Wait: instead of rushing reunion, stabilize the flow and confirm response signals this month.',
     },
     wealth: {
-      ko: '확장보다 현금 흐름과 리스크 관리부터 먼저 정리하세요.',
-      en: 'Prioritize cash flow and risk control before expansion.',
+      ko: '아직 진행 금지: 확장보다 이번 달 현금 흐름과 손실 리스크를 먼저 정리하세요.',
+      en: 'Do not proceed yet: prioritize cash flow and downside control this month before expansion.',
     },
     timing: {
-      ko: '지금은 밀어붙이기보다 움직일 시점과 기다릴 시점을 분리해 판단하세요.',
-      en: 'Separate move-now moments from wait-longer moments before pushing ahead.',
+      ko: '선택지 축소: 지금은 밀어붙이기보다 이번 주에 움직일 일과 기다릴 일을 분리하세요.',
+      en: 'Narrow the option: separate what to move on and what to wait on this week before pushing ahead.',
     },
     career: {
-      ko: '결정을 서두르기보다 커리어 신호를 먼저 확인하고 준비를 정리하세요.',
-      en: 'Before making the decision, confirm the career signals and tighten your preparation.',
+      ko: '기다릴 것: 결정을 서두르기보다 이번 달 커리어 신호를 확인하고 준비를 정리하세요.',
+      en: 'Wait: before making the career decision, confirm the signals and tighten your preparation this month.',
     },
     business: {
-      ko: '확장보다 병목과 수익 구조를 먼저 검증하는 쪽이 맞습니다.',
-      en: 'Validate the bottleneck and revenue structure before trying to expand.',
+      ko: '아직 진행 금지: 확장보다 이번 주 병목과 수익 구조부터 먼저 검증하세요.',
+      en: 'Do not proceed yet: validate the bottleneck and revenue structure this week before expanding.',
     },
   };
 

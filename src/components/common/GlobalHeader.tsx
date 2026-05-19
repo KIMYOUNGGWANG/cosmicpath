@@ -22,6 +22,7 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
     const { openLoginModal } = useLoginModal();
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const decisionStartHref = '/start?reset=true&entry=decision_timing_rebuild_v1';
 
     useDocumentScrollLock(isMobileMenuOpen);
 
@@ -75,7 +76,7 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
                         </button>
 
                         <a
-                            href="/start?reset=true"
+                            href={decisionStartHref}
                             className="inline-flex shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 px-4 pb-[6px] pt-[10px] font-bold uppercase leading-none tracking-[0.16em] text-starlight transition-all duration-300 hover:border-acc-gold hover:bg-acc-gold hover:text-deep-navy 2xl:px-5 text-[11px] 2xl:text-xs backdrop-blur-sm"
                         >
                             {isEn ? 'New Journey' : '다시 시작하기'}
@@ -85,7 +86,7 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
                     {/* Compact Navigation */}
                     <div className="z-20 flex items-center gap-2 xl:hidden">
                         <a
-                            href="/start?reset=true"
+                            href={decisionStartHref}
                             className="mr-1 inline-flex items-center justify-center rounded-full border border-white/20 bg-white/5 px-3 py-1.5 font-cinzel text-[10px] font-bold uppercase tracking-[0.22em] text-white transition-all duration-300 hover:border-acc-gold hover:text-acc-gold sm:px-4 sm:tracking-[0.26em] backdrop-blur-sm"
                         >
                             <Sparkles size={12} className="text-gold" />
@@ -132,7 +133,7 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
                         label: isEn ? 'New Journey' : '운세 다시보기',
                         subLabel: isEn ? 'Start a new analysis' : '새로운 운세 분석 시작',
                         onClick: () => {
-                            window.location.href = '/start?reset=true';
+                            window.location.href = decisionStartHref;
                         },
                     },
                 ]}

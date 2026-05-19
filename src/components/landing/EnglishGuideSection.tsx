@@ -78,7 +78,7 @@ export function EnglishGuideSection() {
                                 Browse All English Guides
                             </GrowthTrackedLink>
                             <GrowthTrackedLink
-                                href="/start?reset=true"
+                                href="/start?reset=true&entry=decision_timing_rebuild_v1"
                                 trackingEvent={{
                                     event: 'guide_cta_clicked',
                                     source: 'landing_english_guide_section',

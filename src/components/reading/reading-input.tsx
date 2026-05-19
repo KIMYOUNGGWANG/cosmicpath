@@ -511,16 +511,16 @@ export function ReadingInput({
                     <div>
                         <div className="flex flex-wrap items-center gap-2">
                             <span className="rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-acc-gold">
-                                {isEn ? 'First Reading Free' : '첫 리딩 무료'}
+                                {isEn ? 'First Verdict Free' : '첫 판정 무료'}
                             </span>
                             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
-                                {isEn ? 'Question + Tarot + Result' : '질문 + 타로 선택 + 결과'}
+                                {isEn ? 'Question + Evidence + Action' : '질문 + 근거 + 행동'}
                             </span>
                         </div>
                         <p className="mt-2 text-sm leading-6 text-white/62">
                             {isEn
-                                ? 'Ask one real question, add your birth details, and choose the tarot cards your intuition reaches for before the first result opens.'
-                                : '지금 고민 하나와 생년월일을 적고, 직관이 끌리는 타로 카드를 고른 뒤 첫 결과를 여는 흐름으로 다시 정리했어요.'}
+                                ? 'Ask one decision you are actually stuck on. Your birth details and tarot selection sharpen the verdict instead of turning this into a generic reading.'
+                                : '진짜로 막힌 결정 하나를 적어주세요. 생년월일과 타로 선택은 막연한 운세가 아니라 판정의 근거를 더 선명하게 만드는 데 씁니다.'}
                         </p>
                     </div>
                     {isEn ? (
@@ -546,8 +546,8 @@ export function ReadingInput({
                             </label>
                             <p className="mt-2 text-sm leading-6 text-white/58">
                                 {isEn
-                                    ? 'Start with the question before the coordinates. Once the oracle knows what you are trying to decide, your birth timing can sharpen the route.'
-                                    : '질문부터 시작합니다. 뭘 결정해야 하는지 먼저 알아야, 생년월일도 그 질문을 더 정확하게 읽어줄 수 있어요.'}
+                                    ? 'Choose the area, then write the decision. The first result will answer whether to move, wait, or narrow the option.'
+                                    : '영역을 고르고, 실제 결정을 적어주세요. 첫 결과는 움직일지, 기다릴지, 선택지를 좁힐지부터 답합니다.'}
                             </p>
                         </div>
                         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
@@ -617,8 +617,8 @@ export function ReadingInput({
                         </div>
                         <p className="mt-2 text-[11px] leading-5 text-white/38">
                             {isEn
-                                ? 'A concrete question makes the action window, follow-up guidance, and premium upgrade feel much sharper from the first reading.'
-                                : '질문이 구체적일수록 첫 결과가 더 바로 이해되고, 다음에 뭘 물어볼지도 선명해집니다.'}
+                                ? 'Concrete questions produce sharper verdicts, cleaner evidence, and a more useful action window.'
+                                : '질문이 구체적일수록 판정, 근거, 행동 시점이 훨씬 날카롭게 나옵니다.'}
                         </p>
                     </div>
                 </div>
@@ -1148,7 +1148,7 @@ export function ReadingInput({
                             ? (isEn ? 'CALCULATING...' : 'CALCULATING...')
                             : (inviteCode
                                 ? (isEn ? 'SEE FREE COMPATIBILITY' : '무료 궁합 결과 보기')
-                                : (isEn ? 'SEE FREE RESULT' : '내 결과 먼저 보기')
+                                : (isEn ? 'SEE MY FREE VERDICT' : '무료 판정 먼저 보기')
                             )
                         }
                     </span>
@@ -1156,8 +1156,8 @@ export function ReadingInput({
                 </button>
                 <p className="text-center text-[11px] tracking-[0.16em] text-white/38 uppercase">
                     {isEn
-                        ? 'You answer once, then the first result opens right away.'
-                        : '입력 한 번이면 첫 결과가 바로 열립니다.'}
+                        ? 'One intake opens the first verdict, evidence, and next action.'
+                        : '한 번 입력하면 판정, 근거, 다음 행동이 먼저 열립니다.'}
                 </p>
             </div>
 

@@ -36,12 +36,12 @@ export function StartInputStage(props: StartInputStageProps) {
                 </span>
               </div>
               <h1 className="mb-3 mt-4 font-cinzel text-[2rem] text-starlight md:mb-4 md:mt-5 md:text-5xl">
-                {props.language === 'en' ? 'Start With The Question' : '지금 고민되는 질문부터 적어보세요'}
+                {props.language === 'en' ? 'Move Now, Or Wait?' : '지금 움직일지, 기다릴지 먼저 정리해볼까요'}
               </h1>
               <p className="max-w-2xl text-sm leading-6 text-moonlight md:leading-7">
                 {props.language === 'en'
-                  ? 'Start with one real question, then choose the tarot card your intuition reaches for before the first result opens.'
-                  : '질문 하나와 핵심 정보로 시작하고, 직관이 끌리는 타로 카드를 고른 뒤 첫 결과를 여는 흐름으로 다시 다듬었습니다.'}
+                  ? 'Start with one real decision. The free result will show the first verdict, the evidence, and the next action before the full report.'
+                  : '진짜로 망설이는 질문 하나부터 넣어주세요. 무료 결과에서 판정, 근거, 다음 행동을 먼저 보여주고 전체 리포트는 그 뒤에 엽니다.'}
               </p>
             </div>
           </div>
@@ -80,7 +80,7 @@ export function StartInputStage(props: StartInputStageProps) {
             </div>
             
             <p className="text-sm italic text-moonlight mb-6">
-              "막연한 운세가 아닌 행동의 방향을 잡기 위해, 질문은 구체적일수록 좋습니다."
+              막연한 운세가 아닌 행동의 방향을 잡기 위해, 질문은 구체적일수록 좋습니다.
             </p>
 
             <div className="space-y-4">
