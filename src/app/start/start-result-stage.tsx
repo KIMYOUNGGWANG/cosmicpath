@@ -88,7 +88,7 @@ function getRelationshipVerdictLabel(value: string, isEn: boolean) {
   const normalized = value.toLowerCase();
 
   if (normalized.includes('기다') || normalized.includes('wait')) {
-    return isEn ? 'Wait' : '기다릴 것';
+    return isEn ? 'Wait' : '대기';
   }
 
   if (
@@ -98,7 +98,7 @@ function getRelationshipVerdictLabel(value: string, isEn: boolean) {
     normalized.includes('hold') ||
     normalized.includes('avoid')
   ) {
-    return isEn ? 'Do not proceed yet' : '아직 진행 금지';
+    return isEn ? 'Hold' : '보류';
   }
 
   if (
@@ -107,7 +107,7 @@ function getRelationshipVerdictLabel(value: string, isEn: boolean) {
     normalized.includes('narrow') ||
     normalized.includes('short')
   ) {
-    return isEn ? 'Narrow the option' : '선택지 축소';
+    return isEn ? 'Narrow' : '축소';
   }
 
   if (
@@ -116,7 +116,7 @@ function getRelationshipVerdictLabel(value: string, isEn: boolean) {
     normalized.includes('contact') ||
     normalized.includes('move')
   ) {
-    return isEn ? 'You can move now' : '지금 움직여도 됨';
+    return isEn ? 'Contact' : '연락';
   }
 
   return value;
@@ -128,8 +128,8 @@ function isRelationshipContactTimingSource(source: string) {
 
 function getRelationshipFollowupEvent(source: string) {
   return source === 'en_relationship_contact_timing_v1'
-    ? 'english_contact_followup_opt_in'
-    : 'relationship_followup_opt_in';
+    ? 'en_relationship_contact_followup_seeded'
+    : 'relationship_contact_followup_seeded';
 }
 
 function getRelationshipLandingVariant(source: string, isEn: boolean) {

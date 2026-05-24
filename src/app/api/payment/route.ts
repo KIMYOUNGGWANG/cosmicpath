@@ -226,11 +226,22 @@ export async function GET(request: NextRequest) {
             }
         }
 
+        const checkoutSource =
+            typeof result.session?.metadata?.source === 'string' && result.session.metadata.source.trim()
+                ? result.session.metadata.source.trim()
+                : null;
+        const checkoutLanguage =
+            result.session?.metadata?.language === 'en' || result.session?.metadata?.language === 'ko'
+                ? result.session.metadata.language
+                : null;
+
         return NextResponse.json({
             status: result.success ? 'paid' : 'unpaid',
             customer_email: result.customerEmail,
             payment_type: result.type || 'premium_reading',
             reading_id: result.readingId || null,
+            source: checkoutSource,
+            language: checkoutLanguage,
             credits_applied: chatCreditApplied,
             credits_total: chatCreditTotal ?? null,
         });

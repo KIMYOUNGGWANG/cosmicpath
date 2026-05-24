@@ -8,6 +8,8 @@ const RELATIONSHIP_CONTACT_SOURCE = 'relationship_contact_timing_v1';
 const RELATIONSHIP_CONTACT_ENTRY = 'relationship_contact_timing_v1';
 const PRIMARY_CONTACT_QUESTION = '지금 먼저 연락하는 게 맞을까, 조금 더 기다리는 게 맞을까?';
 
+type RelationshipContactSearchParams = Record<string, string | string[] | undefined>;
+
 export const metadata: Metadata = {
   title: '지금 연락할까, 기다릴까 | 연애 연락 타이밍 리딩 | CosmicPath',
   description: '상대에게 지금 연락할지, 더 기다릴지, 보내면 안 되는 메시지는 무엇인지 사주·점성술·타로 통합분석으로 먼저 봅니다.',
@@ -70,7 +72,35 @@ function startHref(question: string) {
   };
 }
 
-export default function RelationshipContactTimingPage() {
+function getSearchParam(searchParams: RelationshipContactSearchParams, key: string) {
+  const value = searchParams[key];
+  if (Array.isArray(value)) return value[0];
+  return value;
+}
+
+function buildCampaignMetadata(searchParams: RelationshipContactSearchParams) {
+  const utmSource = getSearchParam(searchParams, 'utm_source');
+  const utmCampaign = getSearchParam(searchParams, 'utm_campaign');
+  const utmContent = getSearchParam(searchParams, 'utm_content');
+
+  return {
+    experiment: RELATIONSHIP_CONTACT_ENTRY,
+    ...(utmSource ? { utmSource } : {}),
+    ...(utmCampaign ? { utmCampaign } : {}),
+    ...(utmContent ? { utmContent } : {}),
+  };
+}
+
+interface RelationshipContactTimingPageProps {
+  searchParams?: Promise<RelationshipContactSearchParams>;
+}
+
+export default async function RelationshipContactTimingPage({
+  searchParams,
+}: RelationshipContactTimingPageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const campaignMetadata = buildCampaignMetadata(resolvedSearchParams);
+
   return (
     <main className="min-h-screen bg-[#090b10] px-4 py-6 text-starlight md:px-8">
       <GrowthEventTracker
@@ -79,9 +109,7 @@ export default function RelationshipContactTimingPage() {
           source: RELATIONSHIP_CONTACT_SOURCE,
           language: 'ko',
           context: 'love',
-          metadata: {
-            experiment: RELATIONSHIP_CONTACT_ENTRY,
-          },
+          metadata: campaignMetadata,
         }}
       />
 
@@ -116,6 +144,7 @@ export default function RelationshipContactTimingPage() {
                   language: 'ko',
                   context: 'love',
                   metadata: {
+                    ...campaignMetadata,
                     promptId: 'primary',
                     hasPrefilledQuestion: true,
                   },
@@ -143,6 +172,7 @@ export default function RelationshipContactTimingPage() {
                     language: 'ko',
                     context: 'love',
                     metadata: {
+                      ...campaignMetadata,
                       promptId: card.id,
                       hasPrefilledQuestion: true,
                     },

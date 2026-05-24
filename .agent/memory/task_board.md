@@ -91,7 +91,7 @@ CosmicPath는 **사주·점성술·타로 통합분석 서비스**로 남는다.
 - [x] **Step 3: Contact Timing Result Framing** — 무료 결과 첫 fold에서 `연락/대기/축소/보류` 판정 라벨이 보이게 카피와 fallback을 조정한다.
 - [x] **Step 4: Evidence-Led Paywall** — 유료 가치를 "상대 속마음 확정"이 아니라 `왜 이 판정인지 · 연락 타이밍 · 피해야 할 메시지`로 설명한다.
 - [x] **Step 5: Outcome Seed** — 결과 하단에 "7일 뒤 이 결정 확인하기" opt-in/CTA를 추가하고 growth event로 follow-up 의사를 기록한다.
-- [ ] **Step 6: Threads Batch** — 14일치 관계/연락 타이밍 훅 28개를 작성하고 모든 링크를 `/relationship/contact-timing`로 고정한다.
+- [x] **Step 6: Threads Batch** — 14일치 관계/연락 타이밍 훅 28개를 작성하고 모든 링크를 `/relationship/contact-timing`로 고정한다.
 - [ ] **Step 7: Readout** — `/ops/growth`에서 `relationship_contact_timing_v1` source 기준 landing → prompt → free result → paywall → checkout → follow-up opt-in을 확인한다.
 
 ## Scope Later
@@ -139,6 +139,13 @@ npm run build
 - 완료: 랜딩 route, prompt CTA, start attribution source, contact-specific decision brief, relationship paywall copy, localStorage follow-up seed, sitemap.
 - 검증: targeted ESLint PASS, `npm run lint` PASS, `git diff --check` PASS, `npm run build` PASS.
 - 수동 확인: `/relationship/contact-timing` desktop/mobile 렌더링 PASS. `/start`는 dev 서버의 Turbopack `CPU doesn't support the bmi2 instructions` panic 영향으로 브라우저 확인이 불안정했으나 production build route/type check는 PASS.
+
+구현 메모(2026-05-24):
+- 완료: follow-up seed 이벤트명을 `relationship_contact_followup_seeded` / `en_relationship_contact_followup_seeded`로 정합화하고 legacy opt-in 이벤트도 `/ops/growth` seed로 집계.
+- 완료: English contact CTA 이벤트를 English Contact Timing funnel prompt click으로 집계.
+- 완료: Stripe success verification이 checkout metadata `source`를 반환하고 `/payment/success`의 `checkout_success` 이벤트가 같은 campaign source로 기록되도록 정리.
+- 완료: `/relationship/contact-timing` landing/prompt 이벤트에 `utm_source`, `utm_campaign`, `utm_content` metadata 기록.
+- 완료: 한국어 Threads 14일치 28개 훅을 `docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json`에 작성하고 모든 링크를 `relationship_contact_timing_v1` UTM으로 고정.
 
 ## Risks / Open Questions
 

@@ -231,6 +231,7 @@ function getCampaignStageKeys(event: CampaignSessionEvent): Array<keyof Campaign
     if (
         event.event === 'career_uncertainty_cta_clicked' ||
         event.event === 'relationship_contact_prompt_clicked' ||
+        event.event === 'english_contact_prompt_clicked' ||
         event.event === 'decision_timing_home_cta_clicked' ||
         event.event === 'decision_timing_prompt_clicked'
     ) {
@@ -244,7 +245,9 @@ function getCampaignStageKeys(event: CampaignSessionEvent): Array<keyof Campaign
     if (event.canonicalEvent === 'paid_conversion') stageKeys.push('paidConversions');
     if (
         event.event === 'relationship_contact_followup_seeded' ||
-        event.event === 'en_relationship_contact_followup_seeded'
+        event.event === 'en_relationship_contact_followup_seeded' ||
+        event.event === 'relationship_followup_opt_in' ||
+        event.event === 'english_contact_followup_opt_in'
     ) {
         stageKeys.push('followupSeeds');
     }

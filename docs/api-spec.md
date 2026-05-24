@@ -202,7 +202,7 @@ This campaign reuses the existing `/api/reading` response. No public schema chan
 ```typescript
 interface RelationshipContactDecisionBrief {
   verdict: "contact_now" | "wait" | "narrow" | "do_not_proceed_yet" | string;
-  verdictLabel: "지금 움직여도 됨" | "기다릴 것" | "선택지 축소" | "아직 진행 금지" | string;
+  verdictLabel: "연락" | "대기" | "축소" | "보류" | string;
   evidenceSummary: string;
   nextAction: string;
   unlockCopy: "왜 이 판정인지 · 연락 타이밍 · 피해야 할 메시지";
@@ -229,19 +229,24 @@ type RelationshipContactGrowthEvent =
   | "paywall_open"
   | "checkout_start"
   | "checkout_success"
-  | "relationship_followup_opt_in"
+  | "relationship_contact_followup_seeded"
   | "relationship_outcome_recorded";
 
 interface RelationshipContactGrowthMetadata {
   source: "relationship_contact_timing_v1";
   context: "love";
-  promptId?: "contact_now_or_wait" | "will_they_respond" | "message_to_avoid";
+  promptId?: "primary" | "contact_or_wait" | "response_timing" | "message_risk";
   hasPrefilledQuestion?: boolean;
+  utmSource?: string;
+  utmCampaign?: string;
+  utmContent?: string;
   readingId?: string;
   intendedAction?: "contact_now" | "wait" | "unsure";
   outcome?: "positive_response" | "no_response" | "worse" | "relief" | "still_unsure";
 }
 ```
+
+Legacy dashboard compatibility: existing `relationship_followup_opt_in` and `english_contact_followup_opt_in` events must continue to count as follow-up seed events in `/ops/growth`, but newly emitted relationship contact events use `relationship_contact_followup_seeded` and `en_relationship_contact_followup_seeded`.
 
 **Outcome seed contract**
 
@@ -341,7 +346,7 @@ This probe reuses the existing `/api/reading` response. No public schema change 
 ```typescript
 interface EnglishContactDecisionBrief {
   verdict: "contact_now" | "wait" | "narrow" | "do_not_proceed_yet" | string;
-  verdictLabel: "Text now" | "Wait" | "Narrow the move" | "Do not proceed yet" | string;
+  verdictLabel: "Contact" | "Wait" | "Narrow" | "Hold" | string;
   evidenceSummary: string;
   nextAction: string;
   unlockCopy: "Unlock why this verdict, the timing window, and messages to avoid";
@@ -361,7 +366,7 @@ type EnglishContactGrowthEvent =
   | "paywall_open"
   | "checkout_start"
   | "checkout_success"
-  | "english_contact_followup_opt_in"
+  | "en_relationship_contact_followup_seeded"
   | "english_contact_outcome_recorded";
 
 interface EnglishContactGrowthMetadata {
@@ -895,6 +900,8 @@ interface PaymentCheckoutRequest {
   referralCode?: string;    // optional
   promoCodeId?: string;     // optional
   discount?: number;        // optional, promo 검증용 기대 할인율
+  language?: 'ko' | 'en';    // optional, checkout attribution
+  source?: string;           // optional, campaign attribution source
 }
 ```
 
@@ -917,6 +924,8 @@ interface PaymentVerifyResponse {
   customer_email: string | null;
   payment_type: string;     // e.g. 'premium_reading' | 'chat_credit'
   reading_id: string | null;
+  source: string | null;     // checkout metadata source for growth attribution
+  language: 'ko' | 'en' | null;
   credits_applied: boolean;
   credits_total: number | null;
 }
@@ -926,6 +935,7 @@ interface PaymentVerifyResponse {
 - `POST /api/payment`는 one-time oracle reading checkout을 생성한다.
 - `readingId`가 포함되면 현재 로그인 사용자 또는 해당 reading의 `accessKey` 보유자만 checkout을 시작할 수 있다.
 - `GET /api/payment?session_id=...`는 Stripe checkout 결과를 검증하고, 결제 레코드 upsert 및 리딩 premium/chat credit 동기화를 함께 수행한다.
+- `/payment/success`는 `GET /api/payment`의 `source`를 `checkout_success` growth event source로 사용해 캠페인 funnel의 checkout success가 landing/paywall/checkout start와 같은 source에 묶이게 한다.
 - 이 endpoint는 `/payment/success`와 결과 복구 흐름에서 webhook race condition 완화를 위해 사용된다.
 
 **Error**

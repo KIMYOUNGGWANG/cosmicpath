@@ -58,18 +58,26 @@ function PaymentSuccessContent() {
                         typeof result.reading_id === 'string' && result.reading_id
                             ? result.reading_id
                             : readingId;
+                    const resolvedSource =
+                        typeof result.source === 'string' && result.source
+                            ? result.source
+                            : 'payment_success_page';
+                    const resolvedLanguage: SupportedLanguage =
+                        result.language === 'en' || result.language === 'ko'
+                            ? result.language
+                            : language;
 
                     setStatus('success');
                     void trackClientGrowthEvent({
                         event: 'checkout_success',
-                        source: 'payment_success_page',
+                        source: resolvedSource,
                         step: 'payment_verification',
-                        language,
+                        language: resolvedLanguage,
                         readingId: resolvedReadingId || undefined,
                         plan: result.payment_type || 'premium_reading',
                         metadata: {
                             sessionId,
-                            landingVariant: getLandingVariant(language),
+                            landingVariant: getLandingVariant(resolvedLanguage),
                         },
                     });
                     // Mark payment completed in storage for start/page.tsx to pick up

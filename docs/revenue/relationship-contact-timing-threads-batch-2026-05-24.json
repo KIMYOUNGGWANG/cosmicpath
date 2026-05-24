@@ -1,0 +1,239 @@
+{
+  "campaign": "CosmicPath Korean Relationship Contact Timing Wedge",
+  "source": "relationship_contact_timing_v1",
+  "url": "/relationship/contact-timing",
+  "primaryCta": "연락할지 기다릴지 먼저 보기",
+  "priceCopy": "첫 결과 무료, 전체 리딩 $3.99",
+  "rules": [
+    "관계/연락 타이밍 고민을 먼저 말하고, 사주는 근거 레이어로 둔다.",
+    "상대 마음을 100% 맞힌다는 문구를 쓰지 않는다.",
+    "모든 포스트는 /relationship/contact-timing으로 보낸다.",
+    "링크는 utm_source=threads, utm_campaign=relationship_contact_timing_v1, utm_content=<post_id>를 포함한다."
+  ],
+  "posts": [
+    {
+      "id": "ko_contact_timing_d01_am",
+      "day": 1,
+      "slot": "AM",
+      "hook": "먼저 연락하고 싶은데 손이 멈추는 건, 마음이 없어서가 아니라 타이밍이 애매해서다.",
+      "body": "지금 필요한 건 상대 마음 확정이 아니라 연락, 대기, 축소, 보류 중 어디가 덜 무리수인지 보는 것.",
+      "cta": "연락할지 기다릴지 먼저 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d01_am"
+    },
+    {
+      "id": "ko_contact_timing_d01_pm",
+      "day": 1,
+      "slot": "PM",
+      "hook": "장문을 쓰고 있다면, 내용보다 타이밍을 먼저 봐야 할 때일 수 있다.",
+      "body": "좋은 말도 압박처럼 도착하는 순간이 있다. 보내도 되는 말과 지금은 피해야 할 말을 나눠 봐야 한다.",
+      "cta": "첫 판정 무료: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d01_pm"
+    },
+    {
+      "id": "ko_contact_timing_d02_am",
+      "day": 2,
+      "slot": "AM",
+      "hook": "기다리는 게 성숙함인지, 그냥 회피인지 헷갈릴 때가 제일 어렵다.",
+      "body": "그래서 답은 무조건 기다림이 아니다. 연락, 대기, 축소, 보류 중 지금 관계가 버틸 수 있는 움직임을 봐야 한다.",
+      "cta": "지금 움직여도 되는지 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d02_am"
+    },
+    {
+      "id": "ko_contact_timing_d02_pm",
+      "day": 2,
+      "slot": "PM",
+      "hook": "친구 셋에게 카톡 검사받고 있다면, 이미 메시지가 너무 무거운 걸 수도 있다.",
+      "body": "이럴 땐 문장 다듬기보다 첫 행동의 크기를 줄여야 한다. 지금은 연락인지, 작은 신호인지, 보류인지부터.",
+      "cta": "연락 타이밍 판정: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d02_pm"
+    },
+    {
+      "id": "ko_contact_timing_d03_am",
+      "day": 3,
+      "slot": "AM",
+      "hook": "좋은 메시지도 잘못된 타이밍에 보내면 관계를 더 닫아버린다.",
+      "body": "문제는 뭐라고 말할지가 아니라, 지금 그 말이 들어갈 자리가 있는지다.",
+      "cta": "타이밍 먼저 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d03_am"
+    },
+    {
+      "id": "ko_contact_timing_d03_pm",
+      "day": 3,
+      "slot": "PM",
+      "hook": "밤에 갑자기 연락하고 싶어질 때, 그건 용기가 아니라 불안일 수 있다.",
+      "body": "감정은 진짜여도 행동 타이밍은 틀릴 수 있다. 보내기 전에 한 번만 판정을 분리해보자.",
+      "cta": "연락할까 기다릴까: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d03_pm"
+    },
+    {
+      "id": "ko_contact_timing_d04_am",
+      "day": 4,
+      "slot": "AM",
+      "hook": "솔직한 말이라고 다 좋은 연락은 아니다.",
+      "body": "내 불안을 상대가 해결해주길 바라는 메시지는, 부드럽게 써도 압박으로 도착한다.",
+      "cta": "피해야 할 메시지 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d04_am"
+    },
+    {
+      "id": "ko_contact_timing_d04_pm",
+      "day": 4,
+      "slot": "PM",
+      "hook": "상대가 조용해졌을 때 필요한 건 더 긴 설명이 아니라 더 작은 움직임일 수 있다.",
+      "body": "지금 관계가 버틸 수 있는 건 직접 연락인지, 짧은 신호인지, 아니면 아무것도 안 하는 건지 갈라봐야 한다.",
+      "cta": "다음 행동 좁히기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d04_pm"
+    },
+    {
+      "id": "ko_contact_timing_d05_am",
+      "day": 5,
+      "slot": "AM",
+      "hook": "연락하는 것과 감정 재판을 다시 여는 건 완전히 다르다.",
+      "body": "하나는 관계를 움직이고, 하나는 상대를 방어하게 만든다. 지금 가능한 첫 행동만 봐야 한다.",
+      "cta": "첫 행동 판정: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d05_am"
+    },
+    {
+      "id": "ko_contact_timing_d05_pm",
+      "day": 5,
+      "slot": "PM",
+      "hook": "같은 카톡을 계속 고치고 있다면, 문장이 아니라 판정이 필요한 상태다.",
+      "body": "연락, 대기, 축소, 보류. 먼저 여기서 하나로 좁히면 문장도 훨씬 가벼워진다.",
+      "cta": "첫 판정 받기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d05_pm"
+    },
+    {
+      "id": "ko_contact_timing_d06_am",
+      "day": 6,
+      "slot": "AM",
+      "hook": "답장이 오는지만 보면 안 된다. 보내고 나서 내가 무너질지도 봐야 한다.",
+      "body": "어떤 연락은 반응을 얻지만 내 평정은 잃게 만든다. 좋은 타이밍은 나를 덜 흔들리게 한다.",
+      "cta": "연락 리스크 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d06_am"
+    },
+    {
+      "id": "ko_contact_timing_d06_pm",
+      "day": 6,
+      "slot": "PM",
+      "hook": "첫 움직임이 너무 크면, 감정이 맞아도 관계가 못 받는다.",
+      "body": "이럴 땐 예/아니오보다 축소가 답일 수 있다. 작게 열어야 닫히지 않는다.",
+      "cta": "움직임 크기 줄이기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d06_pm"
+    },
+    {
+      "id": "ko_contact_timing_d07_am",
+      "day": 7,
+      "slot": "AM",
+      "hook": "확신을 얻으려고 보내는 연락은 대체로 더 큰 불확실성을 만든다.",
+      "body": "지금 메시지가 관계를 여는지, 아니면 확인 시험이 되는지 먼저 분리해야 한다.",
+      "cta": "보내기 전 확인: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d07_am"
+    },
+    {
+      "id": "ko_contact_timing_d07_pm",
+      "day": 7,
+      "slot": "PM",
+      "hook": "잊힐까 봐 보내는 연락은, 보통 내가 원하는 분위기로 도착하지 않는다.",
+      "body": "두려움은 문장을 길게 만든다. 타이밍은 첫 행동을 짧게 만든다.",
+      "cta": "연락할지 기다릴지 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d07_pm"
+    },
+    {
+      "id": "ko_contact_timing_d08_am",
+      "day": 8,
+      "slot": "AM",
+      "hook": "상대의 침묵이 전부 신호는 아니다. 내 반응도 데이터다.",
+      "body": "조급함, 서운함, 기대, 체념 중 무엇이 나를 움직이는지에 따라 지금 보낼 메시지는 달라진다.",
+      "cta": "연락 판정 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d08_am"
+    },
+    {
+      "id": "ko_contact_timing_d08_pm",
+      "day": 8,
+      "slot": "PM",
+      "hook": "내 마음은 연락하고 싶은데, 관계는 아직 연락을 못 받을 때가 있다.",
+      "body": "마음이 틀렸다는 뜻이 아니다. 움직임의 크기와 시간이 안 맞는다는 뜻이다.",
+      "cta": "타이밍 창 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d08_pm"
+    },
+    {
+      "id": "ko_contact_timing_d09_am",
+      "day": 9,
+      "slot": "AM",
+      "hook": "내가 아직 좋아한다는 증명용 연락이면, 잠깐 멈추는 게 낫다.",
+      "body": "관계를 여는 연락과 내 감정을 증명하는 연락은 다르다. 차이를 보면 무리수가 줄어든다.",
+      "cta": "연락 목적 분리하기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d09_am"
+    },
+    {
+      "id": "ko_contact_timing_d09_pm",
+      "day": 9,
+      "slot": "PM",
+      "hook": "첫 문장 하나가 부드러운 가능성을 협상 자리로 바꿔버릴 수 있다.",
+      "body": "그래서 메시지보다 먼저 지금 가능한 압력의 크기를 봐야 한다.",
+      "cta": "피해야 할 첫 문장 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d09_pm"
+    },
+    {
+      "id": "ko_contact_timing_d10_am",
+      "day": 10,
+      "slot": "AM",
+      "hook": "상대가 날 좋아하는지보다 지금 내가 뭘 해야 하는지가 더 중요할 때가 있다.",
+      "body": "CosmicPath는 상대 마음을 확정한다고 말하지 않는다. 대신 지금 움직여도 되는지 판단 기준을 준다.",
+      "cta": "결정 타이밍 리딩: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d10_am"
+    },
+    {
+      "id": "ko_contact_timing_d10_pm",
+      "day": 10,
+      "slot": "PM",
+      "hook": "어떤 카톡은 소통이 아니라 감정 영수증이다.",
+      "body": "내가 얼마나 힘들었는지 증명하려는 메시지는 관계를 움직이기보다 과거를 다시 세운다.",
+      "cta": "메시지 리스크 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d10_pm"
+    },
+    {
+      "id": "ko_contact_timing_d11_am",
+      "day": 11,
+      "slot": "AM",
+      "hook": "상대가 답장하면 그 다음엔 뭘 할지 정해져 있나요?",
+      "body": "보낼지 말지만 보면 부족하다. 답이 왔을 때 지킬 선과 다음 행동까지 같이 봐야 한다.",
+      "cta": "다음 행동까지 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d11_am"
+    },
+    {
+      "id": "ko_contact_timing_d11_pm",
+      "day": 11,
+      "slot": "PM",
+      "hook": "가장 강한 연락은 가끔 아무 확인도 요구하지 않는 연락이다.",
+      "body": "상대가 나를 안심시켜줘야 완성되는 메시지는, 아무리 부드러워도 부담이 된다.",
+      "cta": "확인 압박 줄이기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d11_pm"
+    },
+    {
+      "id": "ko_contact_timing_d12_am",
+      "day": 12,
+      "slot": "AM",
+      "hook": "타이밍이 작은 신호만 허락하는데, 나는 장문을 보내려 할 때가 있다.",
+      "body": "그럴 땐 정답이 보류가 아니라 축소일 수 있다. 작게 열고 반응을 봐야 한다.",
+      "cta": "축소할지 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d12_am"
+    },
+    {
+      "id": "ko_contact_timing_d12_pm",
+      "day": 12,
+      "slot": "PM",
+      "hook": "완벽한 신호를 기다리다 진짜 열린 순간을 지나칠 수도 있다.",
+      "body": "타이밍은 확신이 아니라, 지금 움직임이 받쳐지는지 보는 기준이다.",
+      "cta": "연락 타이밍 읽기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d12_pm"
+    },
+    {
+      "id": "ko_contact_timing_d13_am",
+      "day": 13,
+      "slot": "AM",
+      "hook": "그 사람의 침묵보다 내 조급함이 더 정확한 힌트일 때가 있다.",
+      "body": "지금 나는 grounded인지, resentful인지, testing인지. 이 상태가 첫 메시지의 결을 바꾼다.",
+      "cta": "내 상태까지 같이 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d13_am"
+    },
+    {
+      "id": "ko_contact_timing_d13_pm",
+      "day": 13,
+      "slot": "PM",
+      "hook": "모르는 상태를 견디기 힘들어서 보내는 연락이면, 잠깐 멈춰야 한다.",
+      "body": "그 메시지는 관계에게 아직 줄 수 없는 확신을 요구할 가능성이 높다.",
+      "cta": "대기인지 연락인지 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d13_pm"
+    },
+    {
+      "id": "ko_contact_timing_d14_am",
+      "day": 14,
+      "slot": "AM",
+      "hook": "좋은 연애 조언은 답을 주기보다 질문을 바꿔준다.",
+      "body": "그 사람이 날 좋아할까보다, 지금 이 타이밍이 깨끗한 첫 움직임을 허락하는지가 더 실용적이다.",
+      "cta": "타이밍 질문으로 시작: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d14_am"
+    },
+    {
+      "id": "ko_contact_timing_d14_pm",
+      "day": 14,
+      "slot": "PM",
+      "hook": "보낸 뒤 2분마다 휴대폰을 확인할 메시지라면, 먼저 타이밍을 봐야 한다.",
+      "body": "보내고 나서 더 흔들릴 행동은 지금의 나에게 맞는 행동이 아닐 수 있다.",
+      "cta": "보내기 전 판정: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d14_pm"
+    }
+  ]
+}
