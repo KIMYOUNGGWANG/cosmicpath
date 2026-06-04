@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { getReadingFallbackPriceLabel, normalizePriceLabel, READING_PRODUCT } from '@/lib/payment/payment-config';
 
 export const PRICE_CONTRACT_MISMATCH_CODE = 'READING_PRICE_CONTRACT_MISMATCH' as const;
+export const PRICE_LOOKUP_FALLBACK_CODE = 'READING_PRICE_LOOKUP_FALLBACK' as const;
 
 type ReadingPriceLookupState = 'ready' | 'loading' | 'fallback' | 'contract_mismatch';
 
@@ -22,6 +23,7 @@ interface UseReadingPriceResult {
     readonly showPriceContractMismatch: boolean;
     readonly showPriceFallbackCopy: boolean;
     readonly hasPriceContractMismatch: boolean;
+    readonly hasBlockingPriceIssue: boolean;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -53,6 +55,8 @@ export function useReadingPrice({
     const [fetchedPrice, setFetchedPrice] = useState<string | null>(null);
     const [lookupState, setLookupState] = useState<ReadingPriceLookupState>('ready');
     const hasPriceContractMismatch = !resolvedPriceProp && lookupState === 'contract_mismatch';
+    const hasPriceLookupFallback = !resolvedPriceProp && lookupState === 'fallback';
+    const hasBlockingPriceIssue = hasPriceContractMismatch || hasPriceLookupFallback;
     const dynamicPrice = resolvedPriceProp || normalizePriceLabel(fetchedPrice);
 
     useEffect(() => {
@@ -119,7 +123,9 @@ export function useReadingPrice({
             (isEnglish ? 'Shown at checkout' : '결제 단계에서 확인');
         const trackedPriceLabel = hasPriceContractMismatch
             ? PRICE_CONTRACT_MISMATCH_CODE
-            : effectivePriceLabel || fallbackPriceLabel || 'checkout_visible';
+            : hasPriceLookupFallback
+                ? PRICE_LOOKUP_FALLBACK_CODE
+                : effectivePriceLabel || fallbackPriceLabel || 'checkout_visible';
 
         return {
             dynamicPrice,
@@ -128,9 +134,21 @@ export function useReadingPrice({
             hasConcreteDisplayedPrice: /\d/.test(displayedPriceLabel),
             trackedPriceLabel,
             showPriceLoadingState: isOpen && !resolvedPriceProp && lookupState === 'loading',
-            showPriceContractMismatch: isOpen && hasPriceContractMismatch,
-            showPriceFallbackCopy: isOpen && !resolvedPriceProp && lookupState === 'fallback',
+            showPriceContractMismatch: isOpen && hasBlockingPriceIssue,
+            showPriceFallbackCopy: isOpen && !hasBlockingPriceIssue && !resolvedPriceProp && lookupState === 'fallback',
             hasPriceContractMismatch,
+            hasBlockingPriceIssue,
         };
-    }, [discount, dynamicPrice, fallbackPriceLabel, hasPriceContractMismatch, isEnglish, isOpen, lookupState, resolvedPriceProp]);
+    }, [
+        discount,
+        dynamicPrice,
+        fallbackPriceLabel,
+        hasBlockingPriceIssue,
+        hasPriceContractMismatch,
+        hasPriceLookupFallback,
+        isEnglish,
+        isOpen,
+        lookupState,
+        resolvedPriceProp,
+    ]);
 }

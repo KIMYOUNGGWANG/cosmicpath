@@ -86,7 +86,7 @@ export function PaymentModal({
     const offerName = isRelationshipContactTiming
         ? READING_PRODUCT.name
         : (isEnglish ? 'Full Decision Timing Report' : '전체 결정 타이밍 리포트');
-    const isCheckoutPausedForPriceMismatch = priceState.hasPriceContractMismatch && !isFreePromo;
+    const isCheckoutPausedForPriceIssue = priceState.hasBlockingPriceIssue && !isFreePromo;
 
     useDocumentScrollLock(isOpen);
 
@@ -178,10 +178,10 @@ export function PaymentModal({
     }, []);
 
     const handlePayment = async () => {
-        if (priceState.hasPriceContractMismatch && !isFreePromo) {
+        if (priceState.hasBlockingPriceIssue && !isFreePromo) {
             alert(isEnglish
-                ? 'Checkout is paused because the live Stripe price does not match the USD 9 report contract.'
-                : '라이브 Stripe 가격이 USD 9 리포트 계약과 일치하지 않아 결제를 잠시 막았습니다.');
+                ? 'Checkout is paused because the live Stripe price could not be confirmed as USD 9.'
+                : '라이브 Stripe 가격을 USD 9로 확인하지 못해 결제를 잠시 막았습니다.');
             return;
         }
         if (isFreePromo && !email) {
@@ -262,7 +262,7 @@ export function PaymentModal({
                 isLoading={isLoading}
                 discount={discount}
                 resolvedAutoReferralCode={resolvedAutoReferralCode}
-                isCheckoutPausedForPriceMismatch={isCheckoutPausedForPriceMismatch}
+                isCheckoutPausedForPriceMismatch={isCheckoutPausedForPriceIssue}
                 onEmailChange={handleEmailChange}
                 onPromoApply={handlePromoApply}
                 onPayment={handlePayment}

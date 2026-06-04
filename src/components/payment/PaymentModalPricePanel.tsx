@@ -32,12 +32,12 @@ export function PaymentModalPricePanel({
                 {showPriceContractMismatch ? (
                     <div className="mt-2 space-y-1">
                         <p className="text-sm font-semibold text-red-200">
-                            {isEnglish ? 'Stripe price mismatch' : 'Stripe 가격 설정 불일치'}
+                            {isEnglish ? 'Stripe price confirmation paused' : 'Stripe 가격 확인 보류'}
                         </p>
                         <p className="text-xs leading-5 text-white/48">
                             {isEnglish
-                                ? 'The live Stripe price does not match USD 9, so checkout is paused until the product is corrected.'
-                                : '라이브 Stripe 가격이 USD 9와 일치하지 않아 상품 가격을 수정할 때까지 결제를 막았습니다.'}
+                                ? 'The live Stripe price could not be confirmed as USD 9, so checkout is paused until the product is corrected.'
+                                : '라이브 Stripe 가격을 USD 9로 확인하지 못해 상품 설정을 확인할 때까지 결제를 막았습니다.'}
                         </p>
                     </div>
                 ) : discountedPriceLabel ? (

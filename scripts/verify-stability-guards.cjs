@@ -251,9 +251,14 @@ function run() {
     'Reading price hook should preserve Stripe price-contract mismatch as a distinct checkout state'
   );
   assertMatch(
+    'src/components/payment/use-reading-price.ts',
+    /PRICE_LOOKUP_FALLBACK_CODE[\s\S]*READING_PRICE_LOOKUP_FALLBACK[\s\S]*hasBlockingPriceIssue/s,
+    'Reading price hook should track fallback price lookup as a blocking checkout state'
+  );
+  assertMatch(
     'src/components/payment/PaymentModalPricePanel.tsx',
-    /showPriceContractMismatch[\s\S]*Stripe 가격 설정 불일치/s,
-    'Payment modal price panel should surface a price-contract mismatch'
+    /showPriceContractMismatch[\s\S]*Stripe 가격 확인 보류/s,
+    'Payment modal price panel should surface blocked Stripe price confirmation'
   );
   assertMatch(
     'src/components/payment/PaymentModalForm.tsx',
@@ -262,13 +267,18 @@ function run() {
   );
   assertMatch(
     'src/components/payment/PaymentModal.tsx',
-    /const isCheckoutPausedForPriceMismatch = priceState\.hasPriceContractMismatch && !isFreePromo/,
-    'PaymentModal should pause paid checkout when the price contract mismatches'
+    /const isCheckoutPausedForPriceIssue = priceState\.hasBlockingPriceIssue && !isFreePromo/,
+    'PaymentModal should pause paid checkout when Stripe price confirmation is blocked'
   );
   assertMatch(
-    'tests/e2e/next-move-report.spec.ts',
-    /paywall pauses checkout when Stripe price contract mismatches[\s\S]*READING_PRICE_CONTRACT_MISMATCH[\s\S]*결제 일시 중지/,
+    'tests/e2e/next-move-report-paywall-price.spec.ts',
+    /READING_PRICE_CONTRACT_MISMATCH[\s\S]*paywall pauses checkout when Stripe price contract mismatches[\s\S]*결제 일시 중지/,
     'Next Move E2E should prove Stripe price mismatch blocks the paywall checkout button'
+  );
+  assertMatch(
+    'tests/e2e/next-move-report-paywall-price.spec.ts',
+    /metadata:\s*\{\s*fallback:\s*'true'\s*\}[\s\S]*paywall pauses checkout when live Stripe price falls back[\s\S]*결제 일시 중지/,
+    'Next Move E2E should prove fallback Stripe price lookup blocks the paywall checkout button'
   );
   assertNoMatch(
     'src/components/payment/PaymentModal.tsx',
