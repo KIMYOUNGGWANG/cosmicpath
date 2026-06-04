@@ -141,6 +141,36 @@ interface DecisionTimingGrowthMetadata {
 
 ---
 
+## Next Move Report MVP Contract (2026-06-03)
+
+**Purpose**
+
+This is a positioning and offer update on top of the existing Decision Timing Reading flow. It does not add a new public API, a new reading response schema, or a new payment endpoint. `Next Move Report` is the public acquisition brand and paid offer name for this MVP; CosmicPath remains only legacy/internal context where existing routes, historical docs, or operating/legal references still require it.
+
+**Attribution source**
+
+```typescript
+type NextMoveReportSource = "next_move_report_mvp_v1";
+```
+
+**Offer contract**
+
+- Entry flow: `/start?entry=next_move_report_mvp_v1`
+- Free result contract: unchanged existing `/api/reading` free decision brief
+- Premium unlock label: `Next Move Report Full Report`
+- Fallback price label: `$9.00`
+- Fallback Stripe amount: `900` cents USD
+- Stripe product env: `NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID` and `NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID_TEST` must point to a one-time USD 9 reading product. If a configured live Stripe product returns any other amount, `/api/payment/price` must block the response instead of silently showing `$9.00`.
+- Saju, tarot, astrology, and birth-data inputs are optional evidence and precision layers; they are not the public product title.
+
+**Compatibility note**
+
+- The prior `career_timing_wedge_399` experiment and its `$3.99` fallback remain historical experiment references only.
+- The active MVP fallback offer for `next_move_report_mvp_v1` is `$9.00`, even while older docs, screenshots, or analytics notes may still mention CosmicPath decision timing wording or the earlier $3.99 wedge.
+- This change is business-copy and fallback-config only; `/api/payment`, `/api/payment/price`, and `/api/reading` response shapes remain unchanged.
+
+---
+
 ## Campaign Contract — Relationship Contact Timing v1
 
 **Purpose**

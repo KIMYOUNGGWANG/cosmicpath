@@ -72,4 +72,22 @@ require_match "src/app/payment/success/page.tsx" "source: resolvedSource"
 require_match "docs/api-spec.md" "relationship_contact_followup_seeded"
 require_match "docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json" "utm_campaign=relationship_contact_timing_v1"
 
+require_match "src/app/start/start-page-helpers.ts" "next_move_report_mvp_v1"
+require_match "src/app/start/start-page-helpers.ts" "relationship_contact_timing_v1"
+require_match "src/app/start/start-page-helpers.ts" "en_relationship_contact_timing_v1"
+require_match "src/lib/payment/payment-config.ts" "Next Move Report Full Report"
+require_match "src/lib/payment/payment-config.ts" "price: 900"
+require_match "docs/api-spec.md" 'Next Move Report MVP Contract (2026-06-03)'
+require_match "docs/api-spec.md" '$9.00'
+
+require_match "docs/revenue/next-move-report-mvp-operating-loop.md" "300 targeted visits"
+require_match "docs/revenue/next-move-report-mvp-operating-loop.md" "45 question starts"
+require_match "docs/revenue/next-move-report-mvp-operating-loop.md" "30 free verdicts"
+require_match "docs/revenue/next-move-report-mvp-operating-loop.md" "8 paywall opens"
+require_match "docs/revenue/next-move-report-mvp-operating-loop.md" "2 paid conversions"
+require_match "docs/revenue/next-move-report-mvp-operating-loop.md" "8 follow-up seeds"
+require_match "docs/revenue/next-move-report-mvp-operating-loop.md" "BLOCK LAUNCH"
+require_match "docs/revenue/next-move-report-mvp-operating-loop.md" "Weeks 9-12"
+require_match "docs/revenue/next-move-report-mvp-operating-loop.md" "Out of scope"
+
 echo "Refactor regression checks passed"

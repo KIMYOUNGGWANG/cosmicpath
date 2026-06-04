@@ -50,6 +50,7 @@ cosmicpath_prd_v3
 # documentation (except README)
 *.md
 !README.md
+!docs/revenue/next-move-report-mvp-operating-loop.md
 !marketing/strategy.md
 !marketing/copy.md
 !marketing/threads_150_posts.md

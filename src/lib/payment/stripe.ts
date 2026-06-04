@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { devLog } from '@/lib/dev-logger';
 import { safeIncrementUsageCounter } from '@/lib/usage-metrics';
+import { READING_PRODUCT } from '@/lib/payment/payment-config';
 
 // Lazy initialization to avoid build-time errors
 let stripeInstance: Stripe | null = null;
@@ -37,6 +38,23 @@ function isRecoverableStripeLookupError(error: unknown) {
     }
 
     return /No such (product|price)|resource_missing|STRIPE_SECRET_KEY is not configured|Price is not active/i.test(error.message);
+}
+
+export function isReadingPriceContractMismatch(error: unknown) {
+    return error instanceof Error && error.message.includes('READING_PRICE_CONTRACT_MISMATCH');
+}
+
+function assertReadingProductPriceContract(input: { productId: string; price: Stripe.Price }) {
+    if (input.productId !== READING_PRODUCT.productId) return;
+
+    const unitAmount = input.price.unit_amount;
+    const currency = input.price.currency.toUpperCase();
+
+    if (unitAmount !== READING_PRODUCT.price || currency !== READING_PRODUCT.currency) {
+        throw new Error(
+            `READING_PRICE_CONTRACT_MISMATCH expected ${READING_PRODUCT.price} ${READING_PRODUCT.currency}, got ${unitAmount ?? 'null'} ${currency}`
+        );
+    }
 }
 
 function getCachedPrice(cacheKey: string) {
@@ -115,6 +133,8 @@ export async function getProductPrice(productId: string, targetCurrency: string 
         if (!price) {
             throw new Error('No active price found for this product');
         }
+
+        assertReadingProductPriceContract({ productId, price });
 
         devLog.log(`[Stripe] Resolved price: ${price.unit_amount} ${price.currency} for product ${productId}`);
 
@@ -246,6 +266,8 @@ export async function createCheckoutSession({
         if (!priceId) {
             throw new Error('Default price not found for product');
         }
+
+        assertReadingProductPriceContract({ productId, price });
 
         const shouldApplyDiscount =
             typeof discountPercent === 'number' &&

@@ -123,16 +123,28 @@ function getRelationshipVerdictLabel(value: string, isEn: boolean) {
 }
 
 function isRelationshipContactTimingSource(source: string) {
-  return source === 'relationship_contact_timing_v1' || source === 'en_relationship_contact_timing_v1';
+  return (
+    source === 'next_move_report_mvp_v1' ||
+    source === 'relationship_contact_timing_v1' ||
+    source === 'en_relationship_contact_timing_v1'
+  );
 }
 
 function getRelationshipFollowupEvent(source: string) {
+  if (source === 'next_move_report_mvp_v1') {
+    return 'next_move_report_followup_seeded';
+  }
+
   return source === 'en_relationship_contact_timing_v1'
     ? 'en_relationship_contact_followup_seeded'
     : 'relationship_contact_followup_seeded';
 }
 
 function getRelationshipLandingVariant(source: string, isEn: boolean) {
+  if (source === 'next_move_report_mvp_v1') {
+    return 'next_move_report_mvp_v1';
+  }
+
   if (source === 'en_relationship_contact_timing_v1') {
     return 'en_contact_timing_v1';
   }
@@ -320,7 +332,9 @@ function RelationshipOutcomeSeed({
 
     try {
       const storageKey =
-        landingSource === 'en_relationship_contact_timing_v1'
+        landingSource === 'next_move_report_mvp_v1'
+          ? 'next_move_report_decision_seed'
+          : landingSource === 'en_relationship_contact_timing_v1'
           ? 'cosmic_en_relationship_contact_timing_seed'
           : 'cosmic_relationship_contact_timing_seed';
       localStorage.setItem(storageKey, JSON.stringify(seed));

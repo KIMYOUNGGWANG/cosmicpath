@@ -78,6 +78,31 @@ interface GrowthActivationSnapshot {
     resultToPaidConversionRate: number;
 }
 
+export const NEXT_MOVE_REPORT_DECISION_THRESHOLDS = {
+    visits: 300,
+    days: 14,
+    questionStarts: 45,
+    freeVerdicts: 30,
+    paywallOpens: 8,
+    paidConversions: 2,
+    followupSeeds: 8,
+} as const;
+
+interface NextMoveDecisionGate {
+    label: string;
+    description: string;
+    thresholds: typeof NEXT_MOVE_REPORT_DECISION_THRESHOLDS;
+    current: {
+        visits: number;
+        days: number;
+        questionStarts: number;
+        freeVerdicts: number;
+        paywallOpens: number;
+        paidConversions: number;
+        followupSeeds: number;
+    };
+}
+
 export interface GrowthSummary {
     dateRange: {
         from: string;
@@ -112,6 +137,7 @@ export interface GrowthSummary {
     series: GrowthSeriesPoint[];
     topSources: GrowthSourcePoint[];
     campaignFunnels: CampaignFunnelSummary[];
+    nextMoveDecisionGate: NextMoveDecisionGate;
 }
 
 function toDayKey(date: Date): string {
@@ -136,9 +162,13 @@ const CAMPAIGN_FUNNEL_DEFINITIONS = [
     },
     {
         key: 'relationship-contact',
-        label: '관계 연락 타이밍',
-        description: '지금 연락할지 기다릴지 판단하는 한국어 contact wedge',
-        sources: ['relationship_contact_timing_v1'],
+        label: 'Next Move Report / 관계 연락 타이밍',
+        description: 'Next Move Report와 기존 연락 타이밍 히스토리를 함께 보는 contact-or-wait funnel',
+        sources: [
+            'next_move_report_mvp_v1',
+            'relationship_contact_timing_v1',
+            'en_relationship_contact_timing_v1',
+        ],
     },
     {
         key: 'english-contact',
@@ -244,6 +274,7 @@ function getCampaignStageKeys(event: CampaignSessionEvent): Array<keyof Campaign
     if (event.canonicalEvent === 'checkout_start') stageKeys.push('checkoutStarts');
     if (event.canonicalEvent === 'paid_conversion') stageKeys.push('paidConversions');
     if (
+        event.event === 'next_move_report_followup_seeded' ||
         event.event === 'relationship_contact_followup_seeded' ||
         event.event === 'en_relationship_contact_followup_seeded' ||
         event.event === 'relationship_followup_opt_in' ||
@@ -552,6 +583,9 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
         .sort((left, right) => right[1] - left[1])
         .slice(0, 6)
         .map(([source, count]) => ({ source, count }));
+    const campaignFunnels = getCampaignFunnels(campaignEventsBySession);
+    const nextMoveFunnel = campaignFunnels.find((funnel) => funnel.key === 'relationship-contact');
+    const nextMoveCounts = nextMoveFunnel?.uniqueSessionCounts ?? createEmptyFunnelCounts();
 
     return {
         dateRange: {
@@ -601,6 +635,20 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
         },
         series,
         topSources,
-        campaignFunnels: getCampaignFunnels(campaignEventsBySession),
+        campaignFunnels,
+        nextMoveDecisionGate: {
+            label: 'Next Move Report 14-day decision gate',
+            description: 'visits 300 or 14 days, question starts 45, free verdicts 30, paywall opens 8, paid conversions 2, follow-up seeds 8',
+            thresholds: NEXT_MOVE_REPORT_DECISION_THRESHOLDS,
+            current: {
+                visits: nextMoveCounts.landingViews || nextMoveFunnel?.sessions || 0,
+                days: safeDays,
+                questionStarts: nextMoveCounts.questionSubmits,
+                freeVerdicts: nextMoveCounts.firstResultViews,
+                paywallOpens: nextMoveCounts.paywallViews,
+                paidConversions: nextMoveCounts.paidConversions,
+                followupSeeds: nextMoveCounts.followupSeeds,
+            },
+        },
     };
 }

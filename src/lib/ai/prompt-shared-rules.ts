@@ -55,6 +55,23 @@ export function buildDecisionTimingCoreRule(
     : '# 인생 전략가 규칙\n- 당신은 이 사람을 10년 관찰해 온 인생 전략가다. generic한 라이프 코치나 무책임한 예언자가 아니다.\n- 위로하려 하지 말고, 패턴을 해석해라. 듣기 좋은 말보다 실제 성향을 우선해서 설명해라.\n- 누구에게나 적용될 수 있는 뻔한 조언은 금지한다.\n- 단정적 판정 화법: "~일 수 있다", "~같다", "~가능성이 있다" 최소화. 확정 판단 우선.\n- 콜드리딩 화법 필수: "쉬는 날에도 머리가 안 쉬지 않으셨나요?" 등 꿰뚫어 보는 묘사.\n- 자기계발 강사처럼 말하지 말 것. 애매한 표현 대신 성향을 명확히 단정할 것.\n- 실제 사람을 관찰한 듯 현실적으로 묘사할 것. 설명보다 판정에 가깝게 작성할 것.\n- 절대 추측하지 마세요. 제공된 계산 데이터를 기반으로 확정적으로 분석하세요.\n- 아래 제공된 <사주_원국>의 실제 천간/지지 글자만 사용하세요. 데이터에 없는 글자, 사주 원국을 임의로 추정하거나 날짜를 창작하지 마세요.';
 }
 
+export function buildRelationshipDecisionSafetyRule(
+  language: PromptRuleLanguage,
+  format: PromptRuleFormat = 'markdown'
+) {
+  const inlineRule = language === 'en'
+    ? 'Relationship safety: never promise a guaranteed reply, reunion, or relationship outcome; banned claims include guaranteed reply, make them respond, 무조건 답장, 반드시 연락. If the question involves stalking, surveillance, repeated checking, coercion, threats, or pressure after a boundary, choose Hold and give a safety boundary.'
+    : '관계 안전 규칙: 답장, 재회, 관계 결과를 보장하지 마세요. 금지 표현은 guaranteed reply, make them respond, 무조건 답장, 반드시 연락입니다. stalking, 감시, 반복 확인, 협박, 거절 뒤 압박, 스토킹 문맥이면 보류 판정과 안전 경계를 먼저 제시하세요.';
+
+  if (format === 'inline') {
+    return inlineRule;
+  }
+
+  return language === 'en'
+    ? '# Relationship Decision Safety Rule\n- Decision support only: never promise a guaranteed reply, reunion, confession, or relationship outcome.\n- Banned claims include: guaranteed reply, make them respond, 무조건 답장, 반드시 연락, 100%.\n- If the question mentions stalking, surveillance, repeated checking, coercion, threats, or pressure after a boundary, choose Hold and prioritize safety over timing.\n- Saju, astrology, and tarot are evidence labels for why the verdict leans contact, wait, narrow, or hold; they are not proof of the other person’s mind.'
+    : '# 관계/DM 안전 규칙\n- 의사결정 보조만 제공하세요. 답장, 재회, 고백 성공, 관계 결과를 보장하지 마세요.\n- 금지 표현: guaranteed reply, make them respond, 무조건 답장, 반드시 연락, 100%.\n- stalking, 감시, 반복 확인, 협박, 거절 뒤 압박, 스토킹 문맥이면 타이밍보다 안전을 우선하고 보류 판정을 먼저 제시하세요.\n- 사주, 점성술, 타로는 연락/대기/축소/보류 판정이 나온 이유를 설명하는 근거 레이어일 뿐, 상대 마음을 증명하는 도구가 아닙니다.';
+}
+
 export function buildEvidenceFirstNarrativeRule(
   language: PromptRuleLanguage,
   format: PromptRuleFormat = 'markdown'
@@ -107,8 +124,12 @@ export function buildPromptDepthRule(
 export function buildPromptSharedPrelude(options: PromptSharedPreludeOptions) {
   const detailLevel = options.detailLevel ?? 'compact';
   const format = options.format ?? 'markdown';
+  const relationshipSafetyIntents = new Set<OracleQuestionIntent>(['compatibility', 'reunion', 'timing']);
   const blocks = [
     buildDecisionTimingCoreRule(options.language, format),
+    options.questionIntent && relationshipSafetyIntents.has(options.questionIntent)
+      ? buildRelationshipDecisionSafetyRule(options.language, format)
+      : '',
     buildEvidenceFirstNarrativeRule(options.language, format),
     buildOraclePersonaBlock(options.characterId, options.language, {
       questionIntent: options.questionIntent,

@@ -89,6 +89,7 @@ const SUPPORTED_READING_CONTEXTS: ReadonlySet<ReadingContext> = new Set([
 const DECISION_TIMING_ENTRY_SOURCES: ReadonlySet<string> = new Set([
   'decision_timing_rebuild_v1',
   'career_timing_wedge_399',
+  'next_move_report_mvp_v1',
   'relationship_contact_timing_v1',
   'en_relationship_contact_timing_v1',
 ]);

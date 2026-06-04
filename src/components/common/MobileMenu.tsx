@@ -115,7 +115,7 @@ export function MobileMenu({ isOpen, onClose, menuItems }: MobileMenuProps) {
                         {/* Menu Footer */}
                         <div className="p-6 border-t border-white/5 bg-black/20">
                             <p className="text-[10px] text-gray-600 text-center font-cinzel">
-                                © 2026 COSMIC PATH
+                                © 2026 NEXT MOVE REPORT
                             </p>
                         </div>
                     </motion.div>

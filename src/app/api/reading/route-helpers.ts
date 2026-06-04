@@ -148,6 +148,65 @@ const FREE_READING_TITLES: Record<OracleQuestionIntent, Record<ReadingLanguage, 
   },
 };
 
+const RELATIONSHIP_SAFETY_INTENTS = new Set<OracleQuestionIntent>(['compatibility', 'reunion', 'timing']);
+const HIGH_RISK_RELATIONSHIP_TERMS = [
+  '스토킹',
+  '감시',
+  '몰래',
+  '집 앞',
+  '회사 앞',
+  '찾아가',
+  '찾아갈',
+  '따라가',
+  '계속 확인',
+  '계속 전화',
+  '계속 연락',
+  '거절했는데',
+  '차단했는데',
+  '협박',
+  '압박',
+  'stalk',
+  'stalking',
+  'surveillance',
+  'follow them',
+  'show up',
+  'blocked me',
+  'threat',
+  'pressure',
+] as const;
+
+function isHighRiskRelationshipQuestion(question: string | undefined): boolean {
+  const normalized = question?.trim().toLowerCase();
+  if (!normalized) return false;
+
+  return HIGH_RISK_RELATIONSHIP_TERMS.some((term) => normalized.includes(term.toLowerCase()));
+}
+
+function shouldApplyRelationshipSafetyHold(params: {
+  questionIntent: OracleQuestionIntent;
+  question?: string;
+}) {
+  return RELATIONSHIP_SAFETY_INTENTS.has(params.questionIntent) && isHighRiskRelationshipQuestion(params.question);
+}
+
+function buildRelationshipSafetyFreeFocus(language: ReadingLanguage): FreeFocusPayload {
+  const safetyContractKeywords = ['보류', 'Hold', '스토킹', 'pressure'] as const;
+
+  if (language === 'en') {
+    return {
+      action_conclusion: `${safetyContractKeywords[1]}: do not send another message right now. Step back from repeated checking, surveillance, or pressure and choose a safer boundary instead.`,
+      evidence_summary: `The relationship signal is high-risk because the question includes ${safetyContractKeywords[3]} or surveillance behavior; the safest verdict is to pause, not optimize timing.`,
+      next_question: 'What boundary can I keep without checking or pressuring them again?',
+    };
+  }
+
+  return {
+    action_conclusion: `${safetyContractKeywords[0]}: 지금은 추가 연락을 보내지 마세요. 반복 확인, 감시, 압박 대신 안전한 거리와 경계를 먼저 잡아야 합니다.`,
+    evidence_summary: `질문에 ${safetyContractKeywords[2]}, 감시, 압박 신호가 있어 연락 타이밍보다 안전 경계를 우선합니다.`,
+    next_question: '상대를 다시 확인하거나 압박하지 않고 지킬 수 있는 경계는 무엇인가요?',
+  };
+}
+
 const CONFIDENCE_TEXT_EN = {
   very_high: {
     message: 'Saju, natal timing, and tarot are converging in the same direction.',
@@ -610,6 +669,7 @@ function buildDeterministicFreeReport(params: {
   astrology: ReturnType<typeof calculateAstrology>;
   cards: TarotCard[];
   questionIntent: OracleQuestionIntent;
+  question?: string;
   advisorEvidenceSummary: string;
   language: ReadingLanguage;
 }): FreeReadingReport {
@@ -636,6 +696,13 @@ function buildDeterministicFreeReport(params: {
     [sajuLine, astroLine].filter(Boolean).join(' '),
     140
   ) || freeFocus.evidence_summary;
+  const safetyFreeFocus = shouldApplyRelationshipSafetyHold(params)
+    ? buildRelationshipSafetyFreeFocus(params.language)
+    : null;
+  const resolvedFreeFocus = safetyFreeFocus ?? {
+    ...freeFocus,
+    evidence_summary: evidenceSummary,
+  };
   const tarotDescription = tarotLine || (
     params.language === 'en'
       ? `${tarotCard?.nameEn || 'Tarot'}${tarotCard?.isReversed ? ' reversed' : ''} reflects the immediate emotional weather around this question.`
@@ -643,16 +710,13 @@ function buildDeterministicFreeReport(params: {
   );
 
   return {
-    free_focus: {
-      ...freeFocus,
-      evidence_summary: evidenceSummary,
-    },
+    free_focus: resolvedFreeFocus,
     summary: {
       title: FREE_READING_TITLES[params.questionIntent][params.language],
       content: takeLeadSentences(
         [
-          freeFocus.action_conclusion,
-          evidenceSummary,
+          resolvedFreeFocus.action_conclusion,
+          resolvedFreeFocus.evidence_summary,
           confidenceCopy.recommendation,
         ].filter(Boolean).join(' '),
         380
@@ -713,6 +777,7 @@ export function finalizeFreeReport(params: {
   astrology: ReturnType<typeof calculateAstrology>;
   cards: TarotCard[];
   questionIntent: OracleQuestionIntent;
+  question?: string;
   advisorEvidenceSummary: string;
   language: ReadingLanguage;
   previousReport?: unknown;
@@ -725,18 +790,24 @@ export function finalizeFreeReport(params: {
   const currentCoreReport = isRecord(params.coreReport) ? params.coreReport : {};
   const currentFreeFocus = isRecord(currentCoreReport.free_focus) ? currentCoreReport.free_focus : {};
   const currentSummary = isRecord(currentCoreReport.summary) ? currentCoreReport.summary : {};
+  const safetyFreeFocus = shouldApplyRelationshipSafetyHold(params)
+    ? buildRelationshipSafetyFreeFocus(params.language)
+    : null;
 
   return FreeReadingReportSchema.parse({
     free_focus: {
       action_conclusion:
+        safetyFreeFocus?.action_conclusion ||
         sanitizeText(currentFreeFocus.action_conclusion) ||
         sanitizeText(previousFreeFocus.action_conclusion) ||
         deterministicFallback.free_focus.action_conclusion,
       evidence_summary:
+        safetyFreeFocus?.evidence_summary ||
         sanitizeText(currentFreeFocus.evidence_summary) ||
         sanitizeText(previousFreeFocus.evidence_summary) ||
         deterministicFallback.free_focus.evidence_summary,
       next_question:
+        safetyFreeFocus?.next_question ||
         sanitizeText(currentFreeFocus.next_question) ||
         sanitizeText(previousFreeFocus.next_question) ||
         deterministicFallback.free_focus.next_question,

@@ -19,21 +19,285 @@ function assertNoMatch(filePath, pattern, message) {
   }
 }
 
+function pureLoc(filePath) {
+  return read(filePath)
+    .split(/\r?\n/)
+    .filter((line) => {
+      const trimmed = line.trim();
+      return trimmed !== '' && !trimmed.startsWith('//') && !trimmed.startsWith('#');
+    })
+    .length;
+}
+
+function assertPureLocAtMost(filePath, maxLoc, message) {
+  const count = pureLoc(filePath);
+  if (count > maxLoc) {
+    throw new Error(`${message}: ${count} > ${maxLoc} [${filePath}]`);
+  }
+}
+
 function run() {
-  assertMatch(
+  assertPureLocAtMost(
     'src/components/payment/PaymentModal.tsx',
-    /getReadingFallbackPriceLabel/,
-    'PaymentModal should use a fallback price label'
+    250,
+    'PaymentModal should stay below the 250 pure LOC ceiling after extracting checkout, frame, and paywall UI responsibilities'
+  );
+  assertPureLocAtMost(
+    'src/components/payment/PaymentModalFrame.tsx',
+    250,
+    'PaymentModalFrame should stay below the 250 pure LOC ceiling'
+  );
+  assertPureLocAtMost(
+    'src/components/payment/PaymentModalContent.tsx',
+    250,
+    'PaymentModalContent should stay below the 250 pure LOC ceiling'
+  );
+  assertPureLocAtMost(
+    'src/components/payment/PaymentModalForm.tsx',
+    250,
+    'PaymentModalForm should stay below the 250 pure LOC ceiling'
+  );
+  assertPureLocAtMost(
+    'src/components/payment/PaymentModalPricePanel.tsx',
+    250,
+    'PaymentModalPricePanel should stay below the 250 pure LOC ceiling'
+  );
+  assertPureLocAtMost(
+    'src/components/payment/PaymentModalSections.tsx',
+    250,
+    'PaymentModalSections should stay below the 250 pure LOC ceiling'
+  );
+  assertPureLocAtMost(
+    'src/components/payment/payment-modal-copy.ts',
+    250,
+    'Payment modal copy should stay below the 250 pure LOC ceiling'
+  );
+
+  assertMatch(
+    'src/app/start/start-page-helpers.ts',
+    /next_move_report_mvp_v1/,
+    'Start flow should recognize the Next Move Report MVP source'
+  );
+  assertMatch(
+    'src/lib/payment/payment-config.ts',
+    /Next Move Report Full Report[\s\S]*price:\s*900/,
+    'Reading product should expose the Next Move Report $9 fallback contract'
+  );
+  assertMatch(
+    'src/lib/payment/stripe.ts',
+    /assertReadingProductPriceContract[\s\S]*READING_PRODUCT\.price[\s\S]*READING_PRICE_CONTRACT_MISMATCH/,
+    'Stripe live reading product lookup should block prices that do not match the $9 contract'
+  );
+  assertMatch(
+    'src/app/api/payment/price/route.ts',
+    /isReadingPriceContractMismatch[\s\S]*status:\s*409/,
+    'Price endpoint should not silently fallback when live Stripe reading price violates the $9 contract'
+  );
+  assertMatch(
+    'src/app/relationship/contact-timing/page.tsx',
+    /Next Move Report/,
+    'Relationship MVP route should use the public Next Move Report brand'
+  );
+  assertNoMatch(
+    'src/app/relationship/contact-timing/page.tsx',
+    /\$3\.99/,
+    'Relationship MVP route should not show the old $3.99 offer'
+  );
+  assertNoMatch(
+    'src/components/landing/Navigation.tsx',
+    /href="\/daily"|href="\/career\/uncertainty"|>\s*PRO\s*</,
+    'Primary landing navigation should not expose legacy Daily/Career/PRO acquisition'
+  );
+  assertMatch(
+    'src/lib/ai/prompt-shared-rules.ts',
+    /buildRelationshipDecisionSafetyRule[\s\S]*guaranteed reply[\s\S]*무조건 답장[\s\S]*stalking[\s\S]*스토킹/i,
+    'Shared prompt rules should include explicit relationship reply-guarantee and stalking boundaries'
+  );
+  assertMatch(
+    'src/app/api/reading/route-helpers.ts',
+    /계속 확인/,
+    'Free reading high-risk terms should include repeated checking'
+  );
+  assertMatch(
+    'src/app/api/reading/route-helpers.ts',
+    /찾아가/,
+    'Free reading high-risk terms should include showing-up behavior'
+  );
+  assertMatch(
+    'src/app/api/reading/route-helpers.ts',
+    /buildRelationshipSafetyFreeFocus[\s\S]*보류[\s\S]*Hold[\s\S]*스토킹[\s\S]*pressure/i,
+    'Free reading fallback should convert high-risk relationship pressure into hold guidance'
   );
   assertMatch(
     'src/components/payment/PaymentModal.tsx',
+    /const isRelationshipContactTiming[\s\S]*trackingSource === 'next_move_report_mvp_v1'/,
+    'PaymentModal should treat Next Move as relationship contact timing'
+  );
+  assertMatch(
+    'src/components/payment/payment-modal-copy.ts',
+    /message pressure or surveillance[\s\S]*감시성 확인/i,
+    'Payment modal copy should preserve relationship contact timing safety copy'
+  );
+  assertMatch(
+    'src/lib/growth-metrics.ts',
+    /key:\s*'relationship-contact'[\s\S]*next_move_report_mvp_v1[\s\S]*relationship_contact_timing_v1/,
+    'Growth readout should group Next Move with relationship contact history'
+  );
+  assertMatch(
+    'src/lib/growth-metrics.ts',
+    /NEXT_MOVE_REPORT_DECISION_THRESHOLDS[\s\S]*visits:\s*300[\s\S]*days:\s*14[\s\S]*questionStarts:\s*45[\s\S]*freeVerdicts:\s*30[\s\S]*paywallOpens:\s*8[\s\S]*paidConversions:\s*2[\s\S]*followupSeeds:\s*8/,
+    'Growth readout should encode the 14-day Next Move decision thresholds'
+  );
+  assertMatch(
+    'src/components/ops/GrowthDashboard.tsx',
+    /Next Move Report 14-day decision gate[\s\S]*visits 300 or 14 days[\s\S]*question starts 45[\s\S]*paid conversions 2/,
+    'Ops dashboard should render the Next Move continuation thresholds'
+  );
+  assertMatch(
+    'src/app/relationship/contact-timing/page.tsx',
+    /href="\/terms"[\s\S]*href="\/privacy"/,
+    'Next Move public route should keep terms and privacy links visible'
+  );
+  assertMatch(
+    'src/app/terms/page.tsx',
+    /decision-support content/,
+    'Terms should disclose Next Move decision-support content'
+  );
+  assertMatch(
+    'src/app/terms/page.tsx',
+    /no guaranteed relationship outcome[\s\S]*not therapy, medical, diagnostic, legal, or financial advice/s,
+    'Terms should disclose Next Move relationship outcome and professional-advice boundaries'
+  );
+  assertMatch(
+    'src/app/terms/page.tsx',
+    /USD 9 one-off digital report[\s\S]*Stripe checkout/s,
+    'Terms should disclose the Next Move $9 Stripe checkout boundary'
+  );
+  assertMatch(
+    'src/app/terms/page.tsx',
+    /refund request may be limited once the report is generated or opened/,
+    'Terms should disclose the generated/opened digital-report refund boundary'
+  );
+  assertMatch(
+    'src/app/privacy/page.tsx',
+    /relationship\/DM context[\s\S]*optional birth data[\s\S]*report restore and storage[\s\S]*analytics[\s\S]*do not paste highly sensitive third-party secrets/s,
+    'Privacy policy should disclose Next Move relationship input, optional birth data, restore, analytics, and sensitive third-party secret boundaries'
+  );
+  assertMatch(
+    'src/components/seo/json-ld.tsx',
+    /name:\s*'Next Move Report'[\s\S]*legalName:\s*"Tony's Company"/,
+    'Global JSON-LD should expose Next Move Report as the public organization name with the legal operator separated'
+  );
+  assertNoMatch(
+    'src/components/seo/json-ld.tsx',
+    /name:\s*'CosmicPath'/,
+    'Global JSON-LD should not expose CosmicPath as the public acquisition organization name'
+  );
+  assertMatch(
+    'src/app/en/contact-timing/page.tsx',
+    /title:\s*'Next Move Report \| Contact or Wait'[\s\S]*siteName:\s*'Next Move Report'[\s\S]*First verdict free · Full report \$9[\s\S]*Next Move Report[\s\S]*decision support only/s,
+    'English contact timing route should be fully rebranded while indexed'
+  );
+  assertNoMatch(
+    'src/app/en/contact-timing/page.tsx',
+    /\$3\.99|COSMICPATH|siteName:\s*'CosmicPath'/,
+    'English contact timing route should not leak half-rebranded CosmicPath or $3.99 acquisition copy'
+  );
+  assertMatch(
+    'src/components/landing/EnglishGuideSection.tsx',
+    /href="\/en\/contact-timing"[\s\S]*Next Move Report/s,
+    'English landing guide section should keep the MVP contact timing route as the primary English path'
+  );
+  assertMatch(
+    'src/app/sitemap.ts',
+    /\/relationship\/contact-timing[\s\S]*\/terms[\s\S]*\/privacy/s,
+    'Sitemap should include the MVP route and legal pages'
+  );
+  assertNoMatch(
+    'src/app/sitemap.ts',
+    /\/daily|\/career\/uncertainty/,
+    'Sitemap should not promote legacy Daily or Career acquisition routes during the Next Move MVP'
+  );
+
+  assertMatch(
+    'src/components/payment/use-reading-price.ts',
+    /getReadingFallbackPriceLabel/,
+    'Reading price hook should use a fallback price label'
+  );
+  assertMatch(
+    'src/components/payment/PaymentModalPricePanel.tsx',
     /Syncing live Stripe price|Stripe 실시간 가격을 확인하는 중입니다/,
     'PaymentModal should expose a loading state for price lookup'
+  );
+  assertMatch(
+    'src/components/payment/use-reading-price.ts',
+    /PRICE_CONTRACT_MISMATCH_CODE[\s\S]*READING_PRICE_CONTRACT_MISMATCH[\s\S]*setLookupState\('contract_mismatch'\)/,
+    'Reading price hook should preserve Stripe price-contract mismatch as a distinct checkout state'
+  );
+  assertMatch(
+    'src/components/payment/PaymentModalPricePanel.tsx',
+    /showPriceContractMismatch[\s\S]*Stripe 가격 설정 불일치/s,
+    'Payment modal price panel should surface a price-contract mismatch'
+  );
+  assertMatch(
+    'src/components/payment/PaymentModalForm.tsx',
+    /isCheckoutPausedForPriceMismatch[\s\S]*결제 일시 중지/s,
+    'Payment modal form should show paid checkout as paused on a price-contract mismatch'
+  );
+  assertMatch(
+    'src/components/payment/PaymentModal.tsx',
+    /const isCheckoutPausedForPriceMismatch = priceState\.hasPriceContractMismatch && !isFreePromo/,
+    'PaymentModal should pause paid checkout when the price contract mismatches'
+  );
+  assertMatch(
+    'tests/e2e/next-move-report.spec.ts',
+    /paywall pauses checkout when Stripe price contract mismatches[\s\S]*READING_PRICE_CONTRACT_MISMATCH[\s\S]*결제 일시 중지/,
+    'Next Move E2E should prove Stripe price mismatch blocks the paywall checkout button'
   );
   assertNoMatch(
     'src/components/payment/PaymentModal.tsx',
     /price \|\| fetchedPrice \|\| '\.\.\.'/,
     'PaymentModal should not fall back to an ellipsis price placeholder'
+  );
+  assertMatch(
+    'src/components/payment/use-reading-checkout.ts',
+    /startReadingCheckout[\s\S]*ReadingCheckoutResult/,
+    'Reading checkout module should expose a typed checkout orchestration boundary'
+  );
+  assertMatch(
+    'src/components/payment/use-reading-checkout.ts',
+    /\/api\/reading\/save[\s\S]*\/api\/promo\/redeem[\s\S]*\/api\/payment/,
+    'Reading checkout module should own reading save, promo redemption, and Stripe checkout creation'
+  );
+  assertMatch(
+    'src/components/payment/use-reading-checkout.ts',
+    /ReadingCheckoutResult[\s\S]*kind:\s*'redirect'[\s\S]*kind:\s*'free_promo'/,
+    'Reading checkout module should return typed checkout outcomes for paid redirects and free promo unlocks'
+  );
+  assertMatch(
+    'src/components/payment/PaymentModal.tsx',
+    /useReadingCheckout/,
+    'PaymentModal should delegate checkout orchestration to useReadingCheckout'
+  );
+  assertMatch(
+    'src/components/payment/PaymentModalFrame.tsx',
+    /createPortal[\s\S]*AnimatePresence[\s\S]*Close payment modal/,
+    'PaymentModalFrame should own the portal, animation shell, and close control'
+  );
+  assertNoMatch(
+    'src/components/payment/PaymentModal.tsx',
+    /fetch\('\/api\/reading\/save'|fetch\('\/api\/promo\/redeem'|fetch\('\/api\/payment'/,
+    'PaymentModal should not directly implement reading save, promo redeem, or Stripe checkout fetch calls'
+  );
+  assertMatch(
+    'tests/e2e/next-move-report-paywall-checkout.spec.ts',
+    /paywall starts paid checkout with saved reading context[\s\S]*prod_next_move_report_[\s\S]*qa-access-key/,
+    'Next Move checkout E2E should prove paid checkout keeps the saved reading context'
+  );
+  assertMatch(
+    'tests/e2e/next-move-report-paywall-checkout.spec.ts',
+    /paywall redeems free promo with email and no Stripe checkout request[\s\S]*promo-free-qa[\s\S]*paymentRequestCount\)\.toBe\(0\)/,
+    'Next Move checkout E2E should prove free promo redemption does not create a Stripe checkout request'
   );
 
   assertMatch(

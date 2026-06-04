@@ -11,18 +11,18 @@ function hasRealStripeLookupId(value: string | undefined, type: 'prod' | 'price'
 }
 
 const readingProductId = process.env.NODE_ENV === 'development'
-    ? (process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID_TEST || 'prod_TgwKnGfpJBusty')
-    : (process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID || 'prod_ThdoB65NmPU37y');
+    ? (process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID_TEST || 'prod_next_move_report_test_TBD')
+    : (process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID || 'prod_next_move_report_live_TBD');
 
 export const READING_PRODUCT = {
     id: 'cosmicpath_reading_v1',
     // Live 모드 전환 시 .env 에 NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID 를 설정해주세요.
     // 개발 모드에서는 테스트용 ID를 우선 사용합니다.
     productId: readingProductId,
-    name: 'CosmicPath 통합 운명 리포트',
-    description: '사주 + 점성술 + 타로 통합 분석 프리미엄 결과지',
+    name: 'Next Move Report Full Report',
+    description: 'Next Move Report decision timing premium unlock',
     currency: 'USD',
-    price: 399, // $3.99 fallback label when live lookup is delayed
+    price: 900,
     followUpQuestions: 0,
     stripeConfigured: hasRealStripeLookupId(readingProductId, 'prod'),
 } as const;

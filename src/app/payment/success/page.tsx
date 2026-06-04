@@ -14,6 +14,11 @@ function PaymentSuccessContent() {
     const router = useRouter();
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const [checkoutContext, setCheckoutContext] = useState<{
+        source?: string;
+        language?: SupportedLanguage;
+        readingId?: string | null;
+    }>({});
 
     const sessionId = searchParams.get('session_id');
     const readingId = searchParams.get('reading_id');
@@ -23,6 +28,18 @@ function PaymentSuccessContent() {
         () => 'ko'
     );
     const isEnglish = language === 'en';
+    const isNextMovePayment = checkoutContext.source === 'next_move_report_mvp_v1';
+    const buildPaidReturnPath = (targetReadingId?: string | null) => {
+        const params = new URLSearchParams({ paid: 'true' });
+        const source = checkoutContext.source;
+        const resolvedLanguage = checkoutContext.language || language;
+
+        if (targetReadingId) params.set('reading_id', targetReadingId);
+        if (source === 'next_move_report_mvp_v1') params.set('entry', source);
+        if (resolvedLanguage) params.set('lang', resolvedLanguage);
+
+        return `/start?${params.toString()}`;
+    };
 
     useEffect(() => {
         const verifyPayment = async () => {
@@ -67,6 +84,11 @@ function PaymentSuccessContent() {
                             ? result.language
                             : language;
 
+                    setCheckoutContext({
+                        source: resolvedSource,
+                        language: resolvedLanguage,
+                        readingId: resolvedReadingId || null,
+                    });
                     setStatus('success');
                     void trackClientGrowthEvent({
                         event: 'checkout_success',
@@ -83,13 +105,19 @@ function PaymentSuccessContent() {
                     // Mark payment completed in storage for start/page.tsx to pick up
                     sessionStorage.setItem('payment_completed', 'true');
                     sessionStorage.setItem('is_premium_user', 'true');
+                    sessionStorage.setItem('payment_source', resolvedSource);
+                    sessionStorage.setItem('payment_language', resolvedLanguage);
                     if (resolvedReadingId) {
                         sessionStorage.setItem('pending_reading_id', resolvedReadingId);
                         sessionStorage.setItem('payment_reading_id', resolvedReadingId);
                     }
 
                     setTimeout(() => {
-                        router.replace(`/start?paid=true${resolvedReadingId ? `&reading_id=${resolvedReadingId}` : ''}`);
+                        const params = new URLSearchParams({ paid: 'true' });
+                        if (resolvedReadingId) params.set('reading_id', resolvedReadingId);
+                        if (resolvedSource === 'next_move_report_mvp_v1') params.set('entry', resolvedSource);
+                        params.set('lang', resolvedLanguage);
+                        router.replace(`/start?${params.toString()}`);
                     }, 1000);
                 } else {
                     setStatus('error');
@@ -151,7 +179,19 @@ function PaymentSuccessContent() {
                     <div>
                         <h1 className="text-2xl font-bold text-white mb-2">{isEnglish ? 'Payment complete!' : '결제가 완료되었습니다!'}</h1>
                         <p className="text-white/60 text-sm leading-relaxed">
-                            {isEnglish ? (
+                            {isNextMovePayment ? (
+                                isEnglish ? (
+                                    <>
+                                        Your Next Move Report full report is opening now.<br />
+                                        We will move you back to the result in a moment.
+                                    </>
+                                ) : (
+                                    <>
+                                        Next Move Report 전체 리포트를 여는 중입니다.<br />
+                                        곧 연락 타이밍 결과로 돌아갑니다.
+                                    </>
+                                )
+                            ) : isEnglish ? (
                                 <>
                                     Your Korean saju decision reading is being prepared now.<br />
                                     We will move you back to the result in a moment.
@@ -167,7 +207,7 @@ function PaymentSuccessContent() {
                     <button
                         onClick={() => {
                             const resolvedReadingId = sessionStorage.getItem('payment_reading_id') || readingId;
-                            router.replace(`/start?paid=true${resolvedReadingId ? `&reading_id=${resolvedReadingId}` : ''}`);
+                            router.replace(buildPaidReturnPath(resolvedReadingId));
                         }}
                         className="w-full py-4 bg-[#A184FF] text-white font-bold rounded-2xl flex items-center justify-center gap-2"
                     >

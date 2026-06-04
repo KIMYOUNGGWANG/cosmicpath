@@ -33,22 +33,22 @@ export async function generateMetadata(): Promise<Metadata> {
 
     if (isKorean) {
         return {
-            title: 'CosmicPath | 지금 움직여도 될지 읽어주는 사주 리딩',
-            description: '연애, 커리어, 재물, 일상. 애매한 선택 앞에서 지금 움직일지 더 기다릴지, 사주·타로·별자리로 읽어드립니다.',
+            title: 'Next Move Report | 연락할까, 기다릴까',
+            description: '관계와 DM 앞에서 지금 연락할지 기다릴지 먼저 판정합니다. 첫 판정은 무료, 풀 리포트는 $9입니다.',
             openGraph: {
-                title: 'CosmicPath | 지금 움직여도 될지 읽어주는 사주 리딩',
-                description: '연애, 커리어, 재물, 일상. 애매한 선택 앞에서 지금 움직일지 더 기다릴지, 사주·타로·별자리로 읽어드립니다.',
+                title: 'Next Move Report | 연락할까, 기다릴까',
+                description: '관계와 DM 앞에서 지금 연락할지 기다릴지 먼저 판정합니다. 첫 판정은 무료, 풀 리포트는 $9입니다.',
                 images: ['/og-image.png'],
             },
         };
     }
 
     return {
-        title: 'CosmicPath | Decision Timing Oracle',
-        description: 'Read the timing, risk, and next move behind your relationship, career, wealth, or daily decisions.',
+        title: 'Next Move Report | Contact or Wait',
+        description: 'Get a first verdict on whether to contact them or wait. First verdict free, full report $9.',
         openGraph: {
-            title: 'CosmicPath | Decision Timing Oracle',
-            description: 'Read the timing, risk, and next move behind your relationship, career, wealth, or daily decisions.',
+            title: 'Next Move Report | Contact or Wait',
+            description: 'Get a first verdict on whether to contact them or wait. First verdict free, full report $9.',
             images: ['/og-image.png'],
         },
     };

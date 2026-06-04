@@ -1,0 +1,287 @@
+import { expect, test } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+
+const contactQuestion = '지금 먼저 연락할까?';
+const startPath = `/start?reset=true&context=love&entry=next_move_report_mvp_v1&lang=ko&question=${encodeURIComponent(contactQuestion)}`;
+
+test.describe('Next Move Report MVP', () => {
+    test('mvp route is branded and routes to start', async ({ page }) => {
+        await page.goto('/relationship/contact-timing');
+
+        await expect(page).toHaveTitle(/Next Move Report/i);
+        await expect(page.getByRole('link', { name: /Next Move Report/i })).toBeVisible();
+        await expect(page.getByText(/연락할까/).first()).toBeVisible();
+        await expect(page.getByText(/기다릴까/).first()).toBeVisible();
+        await expect(page.getByText(/첫 판정 무료/).first()).toBeVisible();
+        await expect(page.getByText(/\$9/).first()).toBeVisible();
+
+        const primaryCta = page.getByRole('link', { name: /먼저 보기|첫 판정/i }).first();
+        await expect(primaryCta).toHaveAttribute('href', /entry=next_move_report_mvp_v1/);
+        await expect(primaryCta).toHaveAttribute('href', /context=love/);
+    });
+
+    test('home and nav contain only MVP acquisition', async ({ page }) => {
+        await page.goto('/');
+
+        await expect(page).toHaveTitle(/Next Move Report/i);
+        const heroCta = page.getByRole('link', { name: /무료로 첫 판정 보기|See My First Verdict/i }).first();
+        await expect(heroCta).toBeVisible();
+        await expect(heroCta).toHaveAttribute('href', '/relationship/contact-timing');
+        await expect(page.locator('nav a[href="/daily"]')).toHaveCount(0);
+        await expect(page.locator('nav a[href="/career/uncertainty"]')).toHaveCount(0);
+        await expect(page.getByRole('button', { name: /^PRO$/i })).toHaveCount(0);
+    });
+
+    test('start keeps Next Move source and prefilled question', async ({ page }) => {
+        await page.goto(startPath);
+
+        await expect(page.locator('textarea').first()).toHaveValue(contactQuestion);
+        await expect(page.getByText(/연락 타이밍 질문/).first()).toBeVisible();
+        await expect(page.getByText(/선택 근거 레이어/).first()).toBeVisible();
+        await expect(page.getByText(/무료 결과는 연락 판정, 근거 요약, 다음 연락 행동/).first()).toBeVisible();
+        await expect(page).toHaveURL(/entry=next_move_report_mvp_v1/);
+
+        const resultStage = readFileSync(path.join(process.cwd(), 'src/app/start/start-result-stage.tsx'), 'utf8');
+
+        expect(resultStage).toContain("source === 'next_move_report_mvp_v1'");
+        expect(resultStage).toContain('next_move_report_followup_seeded');
+        expect(resultStage).toContain('next_move_report_decision_seed');
+    });
+
+    test('start handles empty Next Move question safely', async ({ page }) => {
+        await page.goto('/start?reset=true&context=love&entry=next_move_report_mvp_v1&lang=ko&question=');
+
+        await expect(page.locator('body')).not.toContainText(/Application error|Unhandled Runtime Error|Next\.js/);
+        await expect(page.locator('textarea').first()).toBeVisible();
+        await expect(page.getByText(/연락 타이밍 질문/).first()).toBeVisible();
+    });
+
+    test('paywall shows USD 9 Next Move offer', async ({ page }) => {
+        await page.route('**/api/growth/track', async (route) => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({ ok: true }),
+            });
+        });
+        await page.route('**/api/payment/price**', async (route) => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    productId: 'prod_next_move_test',
+                    priceId: 'price_next_move_test',
+                    amount: 9,
+                    currency: 'USD',
+                    formattedPrice: '$9.00',
+                    metadata: {},
+                }),
+            });
+        });
+        await page.route('**/api/reading', async (route) => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    success: true,
+                    phase: 1,
+                    report: {
+                        free_focus: {
+                            action_conclusion: '연락: 오늘은 짧게 한 번만 보내도 됩니다.',
+                            evidence_summary: '사주와 점성술 신호가 짧은 확인 메시지 쪽으로 기울어 있습니다.',
+                            next_question: '첫 문장을 얼마나 짧게 줄일 수 있나요?',
+                        },
+                        summary: {
+                            title: '짧은 연락은 가능하지만 압박은 줄이세요',
+                            content: '짧은 확인 메시지만 유효합니다.',
+                            trust_score: 4,
+                            trust_reason: '관계 타이밍 신호가 겹칩니다.',
+                        },
+                        traits: [],
+                    },
+                    isPremium: false,
+                    metadata: {
+                        language: 'ko',
+                        tarotCards: [],
+                    },
+                }),
+            });
+        });
+        await page.route('**/api/reading/save', async (route) => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    id: 'qa-next-move-reading',
+                    accessKey: 'qa-access-key',
+                }),
+            });
+        });
+
+        await page.goto(startPath);
+        await page.getByRole('button', { name: /무료 판정 먼저 보기/ }).click();
+        await page.getByRole('button', { name: /타로 없이 무료 판정 보기/ }).click();
+        await expect(page.getByText(/연락 판정/).first()).toBeVisible();
+
+        await page.getByRole('button', { name: /연락 타이밍 열기/ }).click();
+
+        await expect(page.getByText(/Next Move Report Full Report/i).first()).toBeVisible();
+        await expect(page.getByText('$9.00').first()).toBeVisible();
+        await expect(page.getByText(/왜 이 판정인지/).first()).toBeVisible();
+        await expect(page.getByText(/연락 타이밍/).first()).toBeVisible();
+        await expect(page.getByText(/피해야 할 메시지/).first()).toBeVisible();
+        await expect(page.getByRole('button', { name: /^PRO$/i })).toHaveCount(0);
+    });
+
+    test('paywall pauses checkout when Stripe price contract mismatches', async ({ page }) => {
+        await page.route('**/api/growth/track', async (route) => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({ ok: true }),
+            });
+        });
+        await page.route('**/api/payment/price**', async (route) => {
+            await route.fulfill({
+                status: 409,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    error: 'Reading product price contract mismatch',
+                    code: 'READING_PRICE_CONTRACT_MISMATCH',
+                }),
+            });
+        });
+        await page.route('**/api/reading', async (route) => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    success: true,
+                    phase: 1,
+                    report: {
+                        free_focus: {
+                            action_conclusion: '연락: 오늘은 짧게 한 번만 보내도 됩니다.',
+                            evidence_summary: '사주와 점성술 신호가 짧은 확인 메시지 쪽으로 기울어 있습니다.',
+                            next_question: '첫 문장을 얼마나 짧게 줄일 수 있나요?',
+                        },
+                        summary: {
+                            title: '짧은 연락은 가능하지만 압박은 줄이세요',
+                            content: '짧은 확인 메시지만 유효합니다.',
+                            trust_score: 4,
+                            trust_reason: '관계 타이밍 신호가 겹칩니다.',
+                        },
+                        traits: [],
+                    },
+                    isPremium: false,
+                    metadata: {
+                        language: 'ko',
+                        tarotCards: [],
+                    },
+                }),
+            });
+        });
+        await page.route('**/api/reading/save', async (route) => {
+            await route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    id: 'qa-next-move-reading',
+                    accessKey: 'qa-access-key',
+                }),
+            });
+        });
+        await page.route('**/api/payment', async (route) => {
+            throw new Error(`Checkout API should stay blocked: ${route.request().url()}`);
+        });
+
+        await page.goto(startPath);
+        await page.getByRole('button', { name: /무료 판정 먼저 보기/ }).click();
+        await page.getByRole('button', { name: /타로 없이 무료 판정 보기/ }).click();
+        await expect(page.getByText(/연락 판정/).first()).toBeVisible();
+
+        await page.getByRole('button', { name: /연락 타이밍 열기/ }).click();
+
+        await expect(page.getByText(/Stripe 가격 설정 불일치/).first()).toBeVisible();
+        await expect(page.getByText(/라이브 Stripe 가격이 USD 9와 일치하지 않아/).first()).toBeVisible();
+        await expect(page.getByRole('button', { name: /결제 일시 중지/ })).toBeDisabled();
+        await expect(page.getByText('$9.00')).toHaveCount(0);
+    });
+
+    test('legacy routes remain directly reachable', async ({ request }) => {
+        const legacyRoutes = [
+            '/daily',
+            '/daily/tarot',
+            '/k-destiny',
+            '/oracle-chat',
+            '/en/saju',
+            '/career/uncertainty',
+        ] as const;
+
+        for (const route of legacyRoutes) {
+            const response = await request.get(route, { maxRedirects: 0 });
+            expect(response.status(), `${route} should not be deleted`).not.toBe(404);
+            expect(response.status(), `${route} should not 5xx`).toBeLessThan(500);
+        }
+    });
+
+    test('ops groups Next Move with relationship history', async () => {
+        const growthMetrics = readFileSync(path.join(process.cwd(), 'src/lib/growth-metrics.ts'), 'utf8');
+
+        expect(growthMetrics).toContain('next_move_report_mvp_v1');
+        expect(growthMetrics).toContain('relationship_contact_timing_v1');
+        expect(growthMetrics).toContain('en_relationship_contact_timing_v1');
+        expect(growthMetrics).toMatch(/key:\s*'relationship-contact'[\s\S]*next_move_report_mvp_v1[\s\S]*relationship_contact_timing_v1/);
+    });
+
+    test('trust pages expose Next Move boundaries', async ({ page }) => {
+        await page.goto('/relationship/contact-timing');
+
+        await expect(page.locator('footer a[href="/terms"]').first()).toBeVisible();
+        await expect(page.locator('footer a[href="/privacy"]').first()).toBeVisible();
+
+        await page.goto('/terms');
+
+        await expect(page.getByText(/Next Move Report/i).first()).toBeVisible();
+        await expect(page.getByText(/decision-support content/i).first()).toBeVisible();
+        await expect(page.getByText(/no guaranteed relationship outcome/i).first()).toBeVisible();
+        await expect(page.getByText(/not therapy, medical, diagnostic, legal, or financial advice/i).first()).toBeVisible();
+        await expect(page.getByText(/USD 9 one-off digital report/i).first()).toBeVisible();
+        await expect(page.getByText(/Stripe checkout/i).first()).toBeVisible();
+        await expect(page.getByText(/refund request may be limited once the report is generated or opened/i).first()).toBeVisible();
+
+        await page.goto('/privacy');
+
+        await expect(page.getByText(/relationship\/DM context/i).first()).toBeVisible();
+        await expect(page.getByText(/optional birth data/i).first()).toBeVisible();
+        await expect(page.getByText(/report restore and storage/i).first()).toBeVisible();
+        await expect(page.getByText(/analytics/i).first()).toBeVisible();
+        await expect(page.getByText(/do not paste highly sensitive third-party secrets/i).first()).toBeVisible();
+    });
+
+    test('english probe is not half rebranded', async ({ page, request }) => {
+        await page.goto('/en/contact-timing');
+
+        const robots = await page.locator('meta[name="robots"]').getAttribute('content');
+        const isNoIndex = robots?.toLowerCase().includes('noindex') ?? false;
+
+        if (!isNoIndex) {
+            await expect(page).toHaveTitle(/Next Move Report/i);
+            await expect(page.getByRole('link', { name: /Next Move Report/i }).first()).toBeVisible();
+            await expect(page.getByText(/Full report \$9/i).first()).toBeVisible();
+            await expect(page.getByText(/decision support only/i).first()).toBeVisible();
+            await expect(page.locator('body')).not.toContainText('$3.99');
+            await expect(page.locator('body')).not.toContainText('COSMICPATH');
+        }
+
+        const sitemap = await request.get('/sitemap.xml');
+        expect(sitemap.ok()).toBe(true);
+
+        const sitemapXml = await sitemap.text();
+        expect(sitemapXml).toContain('/relationship/contact-timing');
+        expect(sitemapXml).toContain('/terms');
+        expect(sitemapXml).toContain('/privacy');
+        expect(sitemapXml).not.toContain('/career/uncertainty');
+        expect(sitemapXml).not.toContain('/daily</loc>');
+    });
+});

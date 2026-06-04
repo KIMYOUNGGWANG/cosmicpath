@@ -31,7 +31,7 @@ export function EnglishGuideSection() {
                         </h2>
                         <p className="mt-5 max-w-2xl text-base leading-8 text-white/70 md:text-lg">
                             English-speaking users do not need a full metaphysics lesson first. These guides explain the category,
-                            bridge the BaZi overlap, and show how CosmicPath turns Korean saju into a decision timing reading.
+                            bridge the BaZi overlap, and keep Next Move Report focused on a real contact-or-wait decision.
                         </p>
 
                         <div className="mt-8 grid gap-3 md:grid-cols-3">
@@ -60,6 +60,24 @@ export function EnglishGuideSection() {
 
                         <div className="mt-8 flex flex-wrap gap-3">
                             <GrowthTrackedLink
+                                href="/en/contact-timing"
+                                trackingEvent={{
+                                    event: 'english_contact_prompt_clicked',
+                                    source: 'landing_english_guide_section',
+                                    step: 'cta',
+                                    language: 'en',
+                                    context: 'love',
+                                    metadata: {
+                                        landingVariant,
+                                        ctaLocation: 'section_primary',
+                                        ctaTarget: 'en_contact_timing',
+                                    },
+                                }}
+                                className="inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F4D88A] to-[#D4AF37] px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition-transform duration-300 hover:scale-[1.02]"
+                            >
+                                Open Next Move Report
+                            </GrowthTrackedLink>
+                            <GrowthTrackedLink
                                 href="/guides"
                                 trackingEvent={{
                                     event: 'guide_cta_clicked',
@@ -69,31 +87,13 @@ export function EnglishGuideSection() {
                                     context: 'guide',
                                     metadata: {
                                         landingVariant,
-                                        ctaLocation: 'section_primary',
-                                        ctaTarget: 'guides_hub',
-                                    },
-                                }}
-                                className="inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F4D88A] to-[#D4AF37] px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition-transform duration-300 hover:scale-[1.02]"
-                            >
-                                Browse All English Guides
-                            </GrowthTrackedLink>
-                            <GrowthTrackedLink
-                                href="/start?reset=true&entry=decision_timing_rebuild_v1"
-                                trackingEvent={{
-                                    event: 'guide_cta_clicked',
-                                    source: 'landing_english_guide_section',
-                                    step: 'cta',
-                                    language: 'en',
-                                    context: 'guide',
-                                    metadata: {
-                                        landingVariant,
                                         ctaLocation: 'section_secondary',
-                                        ctaTarget: 'start_reading',
+                                        ctaTarget: 'guides_hub',
                                     },
                                 }}
                                 className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white/78 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
                             >
-                                Start the Reading First
+                                Browse English Guides
                             </GrowthTrackedLink>
                         </div>
                     </div>

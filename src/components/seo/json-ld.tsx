@@ -2,7 +2,8 @@ export default function JsonLd() {
     const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'Organization',
-        name: 'CosmicPath',
+        name: 'Next Move Report',
+        legalName: "Tony's Company",
         url: process.env.NEXT_PUBLIC_APP_URL || 'https://cosmicpath.app',
         logo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://cosmicpath.app'}/favicon.ico`, // Ideally use a high-res logo
         sameAs: [

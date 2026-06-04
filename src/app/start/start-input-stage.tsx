@@ -12,11 +12,14 @@ type StartInputStageProps = {
   inviteCode?: string;
   initialContext?: ReadingContext;
   initialQuestion?: string;
+  landingSource?: string;
   onLanguageChange: (language: 'ko' | 'en') => void;
   onSubmit: (data: ReadingData) => void;
 };
 
 export function StartInputStage(props: StartInputStageProps) {
+  const isNextMoveReportEntry = props.landingSource === 'next_move_report_mvp_v1';
+
   return (
     <motion.div
       key="input"
@@ -32,16 +35,24 @@ export function StartInputStage(props: StartInputStageProps) {
             <div className="rounded-[28px] border border-white/10 bg-panel px-6 py-8 shadow-2xl backdrop-blur-xl md:rounded-[32px] md:px-10 md:py-10">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-acc-gold">
-                  {props.language === 'en' ? 'Decision Timing Reading' : '결정 타이밍 리딩'}
+                  {isNextMoveReportEntry
+                    ? 'Next Move Report'
+                    : (props.language === 'en' ? 'Decision Timing Reading' : '결정 타이밍 리딩')}
                 </span>
               </div>
               <h1 className="mb-3 mt-4 font-cinzel text-[2rem] text-starlight md:mb-4 md:mt-5 md:text-5xl">
-                {props.language === 'en' ? 'Move Now, Or Wait?' : '지금 움직일지, 기다릴지 먼저 정리해볼까요'}
+                {isNextMoveReportEntry
+                  ? (props.language === 'en' ? 'Contact them, or wait?' : '연락할까, 기다릴까부터 정리해볼까요')
+                  : (props.language === 'en' ? 'Move Now, Or Wait?' : '지금 움직일지, 기다릴지 먼저 정리해볼까요')}
               </h1>
               <p className="max-w-2xl text-sm leading-6 text-moonlight md:leading-7">
-                {props.language === 'en'
-                  ? 'Start with one real decision. The free result will show the first verdict, the evidence, and the next action before the full report.'
-                  : '진짜로 망설이는 질문 하나부터 넣어주세요. 무료 결과에서 판정, 근거, 다음 행동을 먼저 보여주고 전체 리포트는 그 뒤에 엽니다.'}
+                {isNextMoveReportEntry
+                  ? (props.language === 'en'
+                      ? 'Start with the relationship or DM decision. The free result shows the contact verdict, evidence summary, and next message move before the full report.'
+                      : '연락 타이밍 질문 하나부터 넣어주세요. 무료 결과는 연락 판정, 근거 요약, 다음 연락 행동을 먼저 보여주고 전체 리포트는 그 뒤에 엽니다.')
+                  : (props.language === 'en'
+                      ? 'Start with one real decision. The free result will show the first verdict, the evidence, and the next action before the full report.'
+                      : '진짜로 망설이는 질문 하나부터 넣어주세요. 무료 결과에서 판정, 근거, 다음 행동을 먼저 보여주고 전체 리포트는 그 뒤에 엽니다.')}
               </p>
             </div>
           </div>
@@ -63,6 +74,7 @@ export function StartInputStage(props: StartInputStageProps) {
             inviteCode={props.inviteCode}
             initialContext={props.initialContext}
             initialQuestion={props.initialQuestion}
+            isNextMoveReportEntry={isNextMoveReportEntry}
           />
         </div>
 
@@ -75,12 +87,16 @@ export function StartInputStage(props: StartInputStageProps) {
               </div>
               <div>
                 <h3 className="font-semibold text-starlight">Oracle Guide</h3>
-                <p className="text-xs text-moonlight">Analytic & Neutral</p>
+                <p className="text-xs text-moonlight">
+                  {isNextMoveReportEntry ? 'Contact Timing & Safety' : 'Analytic & Neutral'}
+                </p>
               </div>
             </div>
             
             <p className="text-sm italic text-moonlight mb-6">
-              막연한 운세가 아닌 행동의 방향을 잡기 위해, 질문은 구체적일수록 좋습니다.
+              {isNextMoveReportEntry
+                ? '상대 반응을 보장하지 않고, 지금 보낼지 기다릴지와 피해야 할 압박 신호만 분리합니다.'
+                : '막연한 운세가 아닌 행동의 방향을 잡기 위해, 질문은 구체적일수록 좋습니다.'}
             </p>
 
             <div className="space-y-4">
@@ -88,15 +104,15 @@ export function StartInputStage(props: StartInputStageProps) {
               <ul className="space-y-3 text-sm text-moonlight">
                 <li className="flex gap-3">
                   <span className="text-acc-gold">•</span>
-                  <span><strong>관계:</strong> 상대방과의 현재 상태를 포함해주세요.</span>
+                  <span><strong>관계:</strong> 먼저 보낼 메시지, 마지막 연락, 지금의 거리감을 포함해주세요.</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-acc-gold">•</span>
-                  <span><strong>커리어:</strong> 이직, 퇴사 등 고려 중인 옵션을 적어주세요.</span>
+                  <span><strong>근거:</strong> 사주, 타로, 점성술은 선택 근거 레이어로만 씁니다.</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="text-acc-gold">•</span>
-                  <span><strong>재물:</strong> 투자, 매매 등 구체적인 사안일수록 명확한 타이밍이 나옵니다.</span>
+                  <span><strong>안전:</strong> 압박, 확인 집착, 스토킹성 행동은 보류 신호로 다룹니다.</span>
                 </li>
               </ul>
             </div>

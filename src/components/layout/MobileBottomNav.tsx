@@ -4,20 +4,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
     Calendar,
-    Crown,
-    MessageSquareText,
     Sparkles,
 } from "lucide-react";
 
 const NAV_ITEMS = [
     { href: "/my", icon: Sparkles, label: "Hub" },
-    { href: "/billing", icon: Crown, label: "멤버십" },
-    { href: "/daily", icon: MessageSquareText, label: "Daily" },
-    { href: "/start", icon: Calendar, label: "새 질문" },
+    { href: "/relationship/contact-timing", icon: Calendar, label: "Next" },
 ] as const;
 
 /** Routes where the mobile bottom nav should be visible */
-const VISIBLE_ROUTES = ["/my", "/billing", "/daily", "/start", "/career", "/oracle-chat", "/orders"];
+const VISIBLE_ROUTES = ["/my", "/start", "/orders", "/relationship"];
 
 export default function MobileBottomNav() {
     const pathname = usePathname();
@@ -37,7 +33,7 @@ export default function MobileBottomNav() {
                 return (
                     <Link
                         key={href}
-                        href={href === "/start" ? "/start?reset=true&entry=decision_timing_rebuild_v1" : href}
+                        href={href}
                         className={`flex flex-col items-center gap-1 px-4 py-1 transition-colors ${
                             isActive
                                 ? "text-[#D4AF37]"

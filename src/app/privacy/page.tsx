@@ -26,7 +26,8 @@ export default async function PrivacyPage() {
                             <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
                                 <h2 className="mb-4 text-xl font-cinzel text-white">English Summary</h2>
                                 <p>
-                                    This English summary explains what personal information CosmicPath collects during the current global validation cycle.
+                                    This English summary explains what personal information Next Move Report collects during the current validation cycle.
+                                    The product may process relationship/DM context that you type, optional birth data, and technical data for report restore and storage.
                                     The Korean governing version remains below for legal reference.
                                 </p>
                             </section>
@@ -35,27 +36,34 @@ export default async function PrivacyPage() {
                                 <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
                                     <h2 className="mb-3 text-lg font-cinzel text-white">What We Collect</h2>
                                     <p>
-                                        We may collect nickname, birth date, birth time, gender, optional birthplace, email, payment confirmation data, and technical access data such as device type, IP, cookies, and language.
+                                        We may collect your question, relationship/DM context, optional birth data, nickname, email, payment confirmation data, and technical access data such as device type, IP, cookies, and language.
                                     </p>
                                 </div>
                                 <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
                                     <h2 className="mb-3 text-lg font-cinzel text-white">Why We Use It</h2>
                                     <p>
-                                        The data is used to generate readings, deliver paid content, manage accounts, prevent abuse, and improve the service through analytics.
+                                        The data is used to generate readings, deliver paid content, support report restore and storage, prevent abuse, and improve the service through analytics.
+                                    </p>
+                                </div>
+                                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+                                    <h2 className="mb-3 text-lg font-cinzel text-white">Sensitive Details</h2>
+                                    <p>
+                                        Please do not paste highly sensitive third-party secrets, private identifiers, passwords, addresses, or screenshots from another person's private account.
                                     </p>
                                 </div>
                                 <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
                                     <h2 className="mb-3 text-lg font-cinzel text-white">Retention and Processors</h2>
                                     <p>
-                                        Some records are retained to meet Korean legal requirements. Payment, email delivery, hosting, and analytics may involve service providers such as Stripe, AWS, Resend, and Google.
+                                        Some records are retained to meet Korean legal requirements. Payment, email delivery, hosting, and analytics may involve Stripe, AWS, Resend, and Google.
                                     </p>
                                 </div>
-                                <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
-                                    <h2 className="mb-3 text-lg font-cinzel text-white">Contact</h2>
-                                    <p>
-                                        If you need access, correction, or deletion support, contact the privacy manager at yongjl12@naver.com.
-                                    </p>
-                                </div>
+                            </section>
+
+                            <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+                                <h2 className="mb-3 text-lg font-cinzel text-white">Contact</h2>
+                                <p>
+                                    If you need access, correction, or deletion support, contact the privacy manager at yongjl12@naver.com.
+                                </p>
                             </section>
 
                             <section className="rounded-3xl border border-white/10 bg-black/20 p-6">
@@ -85,7 +93,11 @@ export default async function PrivacyPage() {
                                 <tbody>
                                     <tr className="transition-colors hover:bg-white/[0.02]">
                                         <td className="border border-white/10 p-4 font-medium">분석 서비스 이용 (필수)</td>
-                                        <td className="border border-white/10 p-4">닉네임, 생년월일, 출생시간, 성별, 태어난 장소(선택 시)</td>
+                                        <td className="border border-white/10 p-4">질문 내용, 관계/DM 맥락, 닉네임, 생년월일, 출생시간, 성별, 태어난 장소(선택 시)</td>
+                                    </tr>
+                                    <tr className="transition-colors hover:bg-white/[0.02]">
+                                        <td className="border border-white/10 p-4 font-medium">Next Move Report 선택 정보</td>
+                                        <td className="border border-white/10 p-4">연락 여부 판단을 위해 입력한 상황 설명, 메시지 초안, 선택적 출생정보, 선택적 타로 선택 정보</td>
                                     </tr>
                                     <tr className="transition-colors hover:bg-white/[0.02]">
                                         <td className="border border-white/10 p-4 font-medium">결제 및 결과 발송 (선택)</td>
@@ -103,11 +115,21 @@ export default async function PrivacyPage() {
                     <section>
                         <h2 className="mb-4 text-xl font-cinzel text-white">2. 개인정보의 처리 목적</h2>
                         <ul className="list-disc space-y-2 pl-5">
-                            <li><strong>분석 리포트 제공:</strong> AI 기반 사주/점성술/타로 리포트 생성 및 전송</li>
+                            <li><strong>분석 리포트 제공:</strong> AI 기반 관계/DM 결정 보조 리포트와 사주/점성술/타로 리포트 생성 및 전송</li>
+                            <li><strong>리포트 복원 및 보관:</strong> 결제 후 결과 조회, 저장된 리포트 복원, 고객 지원을 위한 최소 정보 확인</li>
                             <li><strong>회원 관리:</strong> 서비스 이용에 따른 본인 확인 및 부정 이용 방지</li>
                             <li><strong>결제 및 정산:</strong> 유료 콘텐츠 대금 결제 및 환불 처리</li>
                             <li><strong>서비스 개선:</strong> 신규 서비스 개발 및 이용 통계 분석</li>
                         </ul>
+                    </section>
+
+                    <section>
+                        <h2 className="mb-4 text-xl font-cinzel text-white">2-1. 관계/DM 입력 시 주의사항</h2>
+                        <p>
+                            Next Move Report는 이용자가 직접 입력한 관계/DM 맥락을 바탕으로 참고용 판정을 생성합니다.
+                            타인의 주민등록번호, 연락처, 주소, 비밀번호, 계정 화면, 사적인 대화 전문 등 고도로 민감한 제3자 비밀은 입력하지 마십시오.
+                            필요한 경우 상대방을 식별할 수 없는 별명이나 요약문으로 바꾸어 입력해 주세요.
+                        </p>
                     </section>
 
                     <section>

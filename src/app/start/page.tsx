@@ -112,6 +112,8 @@ function CosmicPathContent() {
   const initialContext = getPrefilledReadingContext(searchParams.get('context'));
   const initialQuestion = getPrefilledQuestion(searchParams.get('question'));
   const landingSource = getStartPageSource(Boolean(searchParams.get('invite')), entry);
+  const isNextMoveReportEntry = landingSource === 'next_move_report_mvp_v1';
+  const effectiveInitialContext = isNextMoveReportEntry ? (initialContext ?? 'love') : initialContext;
   const activeLandingVariant =
     landingSource === 'en_relationship_contact_timing_v1'
       ? 'en_contact_timing_v1'
@@ -1265,8 +1267,9 @@ function CosmicPathContent() {
               isLoading={isLoading}
               inviterName={inviterName}
               inviteCode={inviteCode}
-              initialContext={initialContext}
+              initialContext={effectiveInitialContext}
               initialQuestion={initialQuestion}
+              landingSource={landingSource}
               onLanguageChange={setLanguage}
               onSubmit={handleInputSubmit}
             />
@@ -1275,6 +1278,7 @@ function CosmicPathContent() {
           {step === 'tarot' && (
             <StartTarotStage
               language={language}
+              isNextMoveReportEntry={isNextMoveReportEntry}
               onSelect={handleTarotComplete}
             />
           )}

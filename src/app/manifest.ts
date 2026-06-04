@@ -2,9 +2,9 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: 'CosmicPath | AI Driven Destiny Navigation',
-        short_name: 'CosmicPath',
-        description: 'Navigate your destiny with AI-powered Saju, Astrology, and Tarot analysis.',
+        name: 'Next Move Report',
+        short_name: 'Next Move',
+        description: 'A relationship and DM decision report for whether to contact them or wait.',
         start_url: '/',
         display: 'standalone',
         background_color: '#0a0a0a',

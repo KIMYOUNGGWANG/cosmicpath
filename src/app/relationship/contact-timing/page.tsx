@@ -4,15 +4,15 @@ import { ArrowRight, Clock3, MessageCircle, ShieldAlert } from 'lucide-react';
 
 import { GrowthEventTracker, GrowthTrackedLink } from '@/components/common/GrowthTracking';
 
-const RELATIONSHIP_CONTACT_SOURCE = 'relationship_contact_timing_v1';
-const RELATIONSHIP_CONTACT_ENTRY = 'relationship_contact_timing_v1';
+const RELATIONSHIP_CONTACT_SOURCE = 'next_move_report_mvp_v1';
+const RELATIONSHIP_CONTACT_ENTRY = 'next_move_report_mvp_v1';
 const PRIMARY_CONTACT_QUESTION = '지금 먼저 연락하는 게 맞을까, 조금 더 기다리는 게 맞을까?';
 
 type RelationshipContactSearchParams = Record<string, string | string[] | undefined>;
 
 export const metadata: Metadata = {
-  title: '지금 연락할까, 기다릴까 | 연애 연락 타이밍 리딩 | CosmicPath',
-  description: '상대에게 지금 연락할지, 더 기다릴지, 보내면 안 되는 메시지는 무엇인지 사주·점성술·타로 통합분석으로 먼저 봅니다.',
+  title: 'Next Move Report | 연락할까, 기다릴까',
+  description: '상대에게 지금 연락할지 기다릴지 먼저 판정하고, 사주·점성술·타로는 선택적 근거 레이어로만 참고합니다.',
   robots: {
     index: true,
     follow: true,
@@ -21,17 +21,17 @@ export const metadata: Metadata = {
     canonical: '/relationship/contact-timing',
   },
   openGraph: {
-    title: '지금 연락할까, 기다릴까 | CosmicPath',
-    description: '첫 결과 무료. 연락/대기/축소 판정을 먼저 보고, 전체 리딩에서 연락 타이밍과 피해야 할 메시지를 엽니다.',
+    title: 'Next Move Report | 연락할까, 기다릴까',
+    description: '첫 판정 무료. 전체 리포트에서는 판정 근거, 연락 타이밍, 메시지 리스크를 엽니다.',
     url: '/relationship/contact-timing',
-    siteName: 'CosmicPath',
+    siteName: 'Next Move Report',
     images: ['/og-image.png'],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: '지금 연락할까, 기다릴까 | CosmicPath',
-    description: '상대에게 지금 움직여도 되는지 먼저 보는 연애 연락 타이밍 리딩.',
+    title: 'Next Move Report | 연락할까, 기다릴까',
+    description: '상대에게 지금 움직여도 되는지 먼저 보는 관계/DM 결정 리포트.',
     images: ['/og-image.png'],
   },
 };
@@ -116,22 +116,22 @@ export default async function RelationshipContactTimingPage({
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-4xl flex-col">
         <header className="flex items-center justify-between">
           <Link href="/" className="text-sm font-semibold text-white/70 transition-colors hover:text-white">
-            CosmicPath
+            Next Move Report
           </Link>
-          <span className="text-sm text-white/42">첫 결과 무료 · 전체 리딩 $3.99</span>
+          <span className="text-sm text-white/42">첫 판정 무료 · 풀 리포트 $9</span>
         </header>
 
         <section className="flex flex-1 flex-col justify-center py-12">
           <div className="max-w-2xl">
-            <p className="text-sm font-semibold text-[#f1c66b]">연애 연락 타이밍</p>
+            <p className="text-sm font-semibold text-[#f1c66b]">Next Move Report</p>
             <h1 className="mt-4 break-keep text-5xl font-bold leading-[1.03] text-white md:text-7xl">
-              지금 연락할까,
+              연락할까,
               <br />
               기다릴까
             </h1>
             <p className="mt-6 max-w-xl break-keep text-base leading-8 text-white/68 md:text-lg">
-              사주·점성술·타로를 교차해서 지금은 연락, 대기, 축소 중 어디에 가까운지 먼저 봅니다.
-              상대 마음을 확정하지 않고, 지금 실수하지 않을 판단 기준을 정리합니다.
+              지금은 연락, 대기, 축소, 보류 중 어디에 가까운지 먼저 판정합니다.
+              사주·점성술·타로는 선택적 근거 레이어로만 쓰고, 상대 마음이나 답장을 보장하지 않습니다.
             </p>
 
             <div className="mt-8">
@@ -196,8 +196,16 @@ export default async function RelationshipContactTimingPage({
           </div>
         </section>
 
-        <footer className="pb-2 text-sm leading-6 text-white/38">
-          유료 리딩은 왜 이 판정인지, 연락 타이밍, 피해야 할 메시지를 엽니다.
+        <footer className="flex flex-col gap-3 pb-2 text-sm leading-6 text-white/38 sm:flex-row sm:items-center sm:justify-between">
+          <span>풀 리포트는 왜 이 판정인지, 연락 타이밍, 피해야 할 메시지 리스크를 엽니다.</span>
+          <span className="flex gap-4 text-xs uppercase tracking-widest">
+            <Link href="/terms" className="transition-colors hover:text-white">
+              이용약관
+            </Link>
+            <Link href="/privacy" className="transition-colors hover:text-white">
+              개인정보처리방침
+            </Link>
+          </span>
         </footer>
       </div>
     </main>

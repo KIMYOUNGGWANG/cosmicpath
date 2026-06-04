@@ -34,6 +34,7 @@ interface GrowthDashboardProps {
 }
 
 type CampaignFunnel = GrowthSummary['campaignFunnels'][number];
+type NextMoveDecisionGate = GrowthSummary['nextMoveDecisionGate'];
 
 function MetricCard({
     label,
@@ -343,6 +344,53 @@ function CampaignFunnelRow({ funnel }: { funnel: CampaignFunnel }) {
     );
 }
 
+function NextMoveDecisionGateCard({ gate }: { gate: NextMoveDecisionGate }) {
+    const rows = [
+        { label: 'visits', current: gate.current.visits, target: gate.thresholds.visits },
+        { label: 'days', current: gate.current.days, target: gate.thresholds.days },
+        { label: 'question starts', current: gate.current.questionStarts, target: gate.thresholds.questionStarts },
+        { label: 'free verdicts', current: gate.current.freeVerdicts, target: gate.thresholds.freeVerdicts },
+        { label: 'paywall opens', current: gate.current.paywallOpens, target: gate.thresholds.paywallOpens },
+        { label: 'paid conversions', current: gate.current.paidConversions, target: gate.thresholds.paidConversions },
+        { label: 'follow-up seeds', current: gate.current.followupSeeds, target: gate.thresholds.followupSeeds },
+    ];
+
+    return (
+        <div className="rounded-[26px] border border-acc-gold/20 bg-[linear-gradient(135deg,rgba(245,196,81,0.12),rgba(255,255,255,0.035))] p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="max-w-3xl">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-acc-gold">
+                        <Gauge className="h-3.5 w-3.5" />
+                        continue / revise / stop
+                    </div>
+                    <h3 className="mt-3 font-[var(--font-outfit)] text-2xl font-semibold tracking-[-0.04em] text-white">
+                        Next Move Report 14-day decision gate
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-white/58">
+                        visits 300 or 14 days · question starts 45 · free verdicts 30 · paywall opens 8 · paid conversions 2 · follow-up seeds 8.
+                        질문 원문은 보지 않고 이벤트 단계와 source만 봅니다.
+                    </p>
+                </div>
+                <div className="rounded-[20px] border border-white/10 bg-black/18 px-4 py-3 text-sm text-white/70">
+                    <span className="text-white/42">window</span>
+                    <strong className="ml-2 text-white">{gate.current.days}d / {gate.thresholds.days}d</strong>
+                </div>
+            </div>
+
+            <div className="mt-5 grid gap-2 md:grid-cols-4">
+                {rows.map((row) => (
+                    <div key={row.label} className="rounded-[18px] border border-white/8 bg-black/15 px-3 py-3">
+                        <p className="truncate text-[11px] uppercase tracking-[0.18em] text-white/42">{row.label}</p>
+                        <strong className="mt-2 block text-xl tracking-[-0.04em] text-white">
+                            {formatCompact(row.current)} / {formatCompact(row.target)}
+                        </strong>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export function GrowthDashboard({ summary }: GrowthDashboardProps) {
     const trailingSeries = summary.series.slice(-7);
     const avgDailyActive = Math.round(average(summary.series.map((point) => point.activeUsers)));
@@ -491,6 +539,7 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
                 </div>
 
                 <div className="mt-6 grid gap-3">
+                    <NextMoveDecisionGateCard gate={summary.nextMoveDecisionGate} />
                     {campaignFunnels.map((funnel) => (
                         <CampaignFunnelRow key={funnel.key} funnel={funnel} />
                     ))}

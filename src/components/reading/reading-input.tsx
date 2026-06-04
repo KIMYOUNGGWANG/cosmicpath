@@ -31,6 +31,7 @@ interface ReadingInputProps {
     initialContext?: ReadingContext;
     initialQuestion?: string;
     initialData?: Partial<ReadingData>;
+    isNextMoveReportEntry?: boolean;
 }
 
 export interface ReadingData {
@@ -292,6 +293,7 @@ export function ReadingInput({
     initialContext,
     initialQuestion,
     initialData,
+    isNextMoveReportEntry = false,
 }: ReadingInputProps) {
     const [name, setName] = useState(initialData?.name ?? '');
     const [gender, setGender] = useState<'male' | 'female'>(initialData?.gender ?? 'male');
@@ -370,21 +372,36 @@ export function ReadingInput({
             return left.order - right.order;
         })
         .slice(0, 2);
-    const coreFieldsComplete = Boolean(name.trim() && birthDate && (unknownTime || birthTime) && question.trim());
-    const coreSignals = [
-        name.trim()
-            ? (isEn ? `Name ${name.trim()}` : `이름 ${name.trim()}`)
-            : (isEn ? 'Name Needed' : '이름 필요'),
-        calendarType === 'solar'
-            ? (isEn ? 'Solar Calendar' : '양력')
-            : (isEn ? 'Lunar Calendar' : '음력'),
-        cityName.trim()
-            ? (isEn ? `Birth City ${cityName.trim()}` : `출생지 ${cityName.trim()}`)
-            : (isEn ? 'Birth City Recommended' : '출생지 권장'),
-        unknownTime
-            ? (isEn ? 'Time Unknown' : '시간 모름')
-            : `${isEn ? 'Birth Time' : '생시'} ${birthTime}`,
-    ];
+    const coreFieldsComplete = isNextMoveReportEntry
+        ? Boolean(question.trim())
+        : Boolean(name.trim() && birthDate && (unknownTime || birthTime) && question.trim());
+    const coreSignals = isNextMoveReportEntry
+        ? [
+            name.trim()
+                ? (isEn ? `Name ${name.trim()}` : `이름 ${name.trim()}`)
+                : (isEn ? 'Name Optional' : '이름 선택'),
+            birthDate
+                ? (isEn ? `Birth Date ${birthDate}` : `생년월일 ${birthDate}`)
+                : (isEn ? 'Birth Data Optional' : '생년월일 선택'),
+            unknownTime || !birthTime
+                ? (isEn ? 'Unknown Time OK' : '생시 몰라도 진행')
+                : `${isEn ? 'Birth Time' : '생시'} ${birthTime}`,
+            isEn ? 'Evidence Layer' : '선택 근거 레이어',
+        ]
+        : [
+            name.trim()
+                ? (isEn ? `Name ${name.trim()}` : `이름 ${name.trim()}`)
+                : (isEn ? 'Name Needed' : '이름 필요'),
+            calendarType === 'solar'
+                ? (isEn ? 'Solar Calendar' : '양력')
+                : (isEn ? 'Lunar Calendar' : '음력'),
+            cityName.trim()
+                ? (isEn ? `Birth City ${cityName.trim()}` : `출생지 ${cityName.trim()}`)
+                : (isEn ? 'Birth City Recommended' : '출생지 권장'),
+            unknownTime
+                ? (isEn ? 'Time Unknown' : '시간 모름')
+                : `${isEn ? 'Birth Time' : '생시'} ${birthTime}`,
+        ];
 
     // 포맷팅 헬퍼 함수
     const handleDateChange = (val: string, setter: (v: string) => void) => {
@@ -440,11 +457,16 @@ export function ReadingInput({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        const resolvedName = name.trim() || (isNextMoveReportEntry ? (isEn ? 'Next Move Reader' : '익명') : '');
+        const resolvedBirthDate = birthDate || (isNextMoveReportEntry ? '1990-01-01' : '');
+        const resolvedBirthTime = birthTime || '12:00';
+        const resolvedUnknownTime = isNextMoveReportEntry ? (unknownTime || !birthTime) : unknownTime;
+
         onSubmit({
-            name: name.trim(),
+            name: resolvedName,
             gender,
-            birthDate,
-            birthTime,
+            birthDate: resolvedBirthDate,
+            birthTime: resolvedBirthTime,
             characterId: selectedCharacterId,
             questionIntent: inferredQuestionIntent,
             selectionMode,
@@ -452,7 +474,7 @@ export function ReadingInput({
             question: question.trim(),
             language,
             calendarType,
-            unknownTime,
+            unknownTime: resolvedUnknownTime,
             cityName: cityName.trim() || undefined,
             // 상대방 정보 (입력된 경우에만 포함)
             ...(showPartnerInfo && partnerBirthDate ? {
@@ -518,9 +540,13 @@ export function ReadingInput({
                             </span>
                         </div>
                         <p className="mt-2 text-sm leading-6 text-white/62">
-                            {isEn
-                                ? 'Ask one decision you are actually stuck on. Your birth details and tarot selection sharpen the verdict instead of turning this into a generic reading.'
-                                : '진짜로 막힌 결정 하나를 적어주세요. 생년월일과 타로 선택은 막연한 운세가 아니라 판정의 근거를 더 선명하게 만드는 데 씁니다.'}
+                            {isNextMoveReportEntry
+                                ? (isEn
+                                    ? 'Ask the contact-or-wait decision first. Birth details and tarot are optional evidence layers that can sharpen why the verdict was chosen.'
+                                    : '연락할까, 기다릴까 질문을 먼저 적어주세요. 생년월일과 타로는 왜 이 판정인지 선명하게 만드는 선택 근거 레이어입니다.')
+                                : (isEn
+                                    ? 'Ask one decision you are actually stuck on. Your birth details and tarot selection sharpen the verdict instead of turning this into a generic reading.'
+                                    : '진짜로 막힌 결정 하나를 적어주세요. 생년월일과 타로 선택은 막연한 운세가 아니라 판정의 근거를 더 선명하게 만드는 데 씁니다.')}
                         </p>
                     </div>
                     {isEn ? (
@@ -542,12 +568,18 @@ export function ReadingInput({
                     <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                         <div>
                             <label className="block text-xs text-acc-gold tracking-widest uppercase">
-                                {isEn ? '01. Decision Domain' : '01. Decision Domain (고민 영역)'}
+                                {isNextMoveReportEntry
+                                    ? (isEn ? '01. Contact Timing Question' : '01. 연락 타이밍 질문')
+                                    : (isEn ? '01. Decision Domain' : '01. Decision Domain (고민 영역)')}
                             </label>
                             <p className="mt-2 text-sm leading-6 text-white/58">
-                                {isEn
-                                    ? 'Choose the area, then write the decision. The first result will answer whether to move, wait, or narrow the option.'
-                                    : '영역을 고르고, 실제 결정을 적어주세요. 첫 결과는 움직일지, 기다릴지, 선택지를 좁힐지부터 답합니다.'}
+                                {isNextMoveReportEntry
+                                    ? (isEn
+                                        ? 'Write the DM or relationship move you are considering. The first result answers contact, wait, narrow, or hold.'
+                                        : '고민 중인 DM이나 관계 행동을 적어주세요. 첫 결과는 연락, 대기, 축소, 보류 중 어디에 가까운지부터 답합니다.')
+                                    : (isEn
+                                        ? 'Choose the area, then write the decision. The first result will answer whether to move, wait, or narrow the option.'
+                                        : '영역을 고르고, 실제 결정을 적어주세요. 첫 결과는 움직일지, 기다릴지, 선택지를 좁힐지부터 답합니다.')}
                             </p>
                         </div>
                         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
@@ -615,10 +647,14 @@ export function ReadingInput({
                                 </button>
                             ))}
                         </div>
-                        <p className="mt-2 text-[11px] leading-5 text-white/38">
-                            {isEn
-                                ? 'Concrete questions produce sharper verdicts, cleaner evidence, and a more useful action window.'
-                                : '질문이 구체적일수록 판정, 근거, 행동 시점이 훨씬 날카롭게 나옵니다.'}
+                            <p className="mt-2 text-[11px] leading-5 text-white/38">
+                            {isNextMoveReportEntry
+                                ? (isEn
+                                    ? 'Concrete context produces a sharper contact verdict, cleaner evidence, and a safer message boundary.'
+                                    : '상황이 구체적일수록 연락 판정, 근거 요약, 다음 연락 행동이 더 안전하고 선명해집니다.')
+                                : (isEn
+                                    ? 'Concrete questions produce sharper verdicts, cleaner evidence, and a more useful action window.'
+                                    : '질문이 구체적일수록 판정, 근거, 행동 시점이 훨씬 날카롭게 나옵니다.')}
                         </p>
                     </div>
                 </div>
@@ -810,18 +846,26 @@ export function ReadingInput({
                     <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                         <div>
                             <label className="block text-xs text-acc-gold tracking-widest uppercase">
-                                {inviterName
+                                {isNextMoveReportEntry
+                                    ? (isEn ? '02. Optional Evidence Layer' : '02. 선택 근거 레이어')
+                                    : inviterName
                                     ? (isEn ? `02. Saju Essentials (${inviterName} invited you)` : `02. 핵심 사주 입력 (${inviterName}님의 초대)`)
                                     : (isEn ? '02. Saju Essentials' : '02. 핵심 사주 입력')}
                             </label>
                             <p className="mt-2 text-sm leading-6 text-white/58">
-                                {isEn
-                                    ? 'For numerology and true-solar-time calibration, the first read now uses your name, birth date, birth city, birth time, gender, and solar/lunar calendar.'
-                                    : '수비학과 진태양시 보정을 함께 쓰기 때문에, 이제 첫 결과에도 이름, 생년월일, 출생 도시, 태어난 시간, 성별, 양력/음력을 함께 받습니다.'}
+                                {isNextMoveReportEntry
+                                    ? (isEn
+                                        ? 'Add birth details only when you want Saju, astrology, or numerology to sharpen the rationale. The contact verdict can start from the question alone.'
+                                        : '사주, 점성술, 수비학 근거를 더 선명하게 보고 싶을 때만 생년월일 정보를 더하세요. 연락 판정은 질문 하나로도 시작할 수 있습니다.')
+                                    : (isEn
+                                        ? 'For numerology and true-solar-time calibration, the first read now uses your name, birth date, birth city, birth time, gender, and solar/lunar calendar.'
+                                        : '수비학과 진태양시 보정을 함께 쓰기 때문에, 이제 첫 결과에도 이름, 생년월일, 출생 도시, 태어난 시간, 성별, 양력/음력을 함께 받습니다.')}
                             </p>
                         </div>
                         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
-                            {isEn ? 'Quality First' : '퀄리티 우선'}
+                            {isNextMoveReportEntry
+                                ? (isEn ? 'Optional Precision' : '선택 정밀도')
+                                : (isEn ? 'Quality First' : '퀄리티 우선')}
                         </span>
                     </div>
 
@@ -835,7 +879,7 @@ export function ReadingInput({
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 placeholder={isEn ? 'Name used for numerology' : '수비학에 반영할 이름'}
-                                required
+                                required={!isNextMoveReportEntry}
                                 className="mt-3 block min-h-[48px] w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-starlight transition-colors placeholder:text-white/25 focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none"
                             />
                             <p className="mt-2 text-[11px] leading-5 text-white/42">
@@ -857,7 +901,7 @@ export function ReadingInput({
                                 placeholder="YYYY-MM-DD"
                                 maxLength={10}
                                 pattern="\d{4}-\d{2}-\d{2}"
-                                required
+                                required={!isNextMoveReportEntry}
                                 className="mt-3 block min-h-[48px] w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 font-mono text-base text-starlight transition-colors placeholder:text-white/20 focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none"
                             />
                             <p className="mt-2 text-[10px] text-dim font-mono tracking-widest">YYYY-MM-DD</p>
@@ -1012,9 +1056,13 @@ export function ReadingInput({
 
                         <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                             <p className="max-w-2xl text-sm leading-6 text-white/58">
-                                {isEn
-                                    ? 'The first result now uses the quality-critical inputs up front: name for numerology, birth city for calibration, and the core saju fields for the initial read.'
-                                    : '무료 결과도 이제 이름, 출생 도시, 핵심 사주 입력을 먼저 반영합니다. 수비학과 보정 정확도를 초반부터 같이 잡는 구조입니다.'}
+                                {isNextMoveReportEntry
+                                    ? (isEn
+                                        ? 'The free contact verdict starts from your question. If you skip birth data, the system uses neutral defaults and labels those layers as optional evidence, not the product promise.'
+                                        : '무료 연락 판정은 질문에서 먼저 시작합니다. 생년월일을 비우면 중립 기본값으로 진행하고, 해당 레이어는 상품명이 아닌 선택 근거로만 표시합니다.')
+                                    : (isEn
+                                        ? 'The first result now uses the quality-critical inputs up front: name for numerology, birth city for calibration, and the core saju fields for the initial read.'
+                                        : '무료 결과도 이제 이름, 출생 도시, 핵심 사주 입력을 먼저 반영합니다. 수비학과 보정 정확도를 초반부터 같이 잡는 구조입니다.')}
                             </p>
                         </div>
                     </div>
@@ -1140,7 +1188,7 @@ export function ReadingInput({
             <div className="flex flex-col items-center justify-center gap-3 pt-1">
                 <button
                     type="submit"
-                    disabled={!name.trim() || !birthDate || !question.trim() || (!unknownTime && !birthTime) || isLoading}
+                    disabled={isNextMoveReportEntry ? (!question.trim() || isLoading) : (!name.trim() || !birthDate || !question.trim() || (!unknownTime && !birthTime) || isLoading)}
                     className={`group relative w-full overflow-hidden rounded-full border border-acc-gold/30 bg-gradient-to-r from-acc-gold via-[#f1cf74] to-[#c98d2d] px-8 py-3.5 text-deep-navy shadow-[0_18px_36px_rgba(212,175,55,0.18)] transition-all duration-300 hover:scale-[1.01] hover:shadow-[0_22px_46px_rgba(212,175,55,0.24)] md:w-auto md:px-10 ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
                 >
                     <span className="relative z-10 font-cinzel text-sm font-bold uppercase tracking-[0.3em]">
