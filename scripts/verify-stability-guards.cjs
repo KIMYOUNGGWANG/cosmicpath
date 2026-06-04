@@ -96,18 +96,13 @@ function run() {
   );
   assertMatch(
     'src/lib/payment/payment-config.ts',
-    /Next Move Report Full Report[\s\S]*price:\s*900/,
-    'Reading product should expose the Next Move Report $9 fallback contract'
+    /prod_TgwKnGfpJBusty[\s\S]*prod_ThdoB65NmPU37y[\s\S]*Next Move Report Full Report[\s\S]*price:\s*999/s,
+    'Reading product should reuse the existing Stripe reading products with the legacy fallback label'
   );
-  assertMatch(
+  assertNoMatch(
     'src/lib/payment/stripe.ts',
-    /assertReadingProductPriceContract[\s\S]*READING_PRODUCT\.price[\s\S]*READING_PRICE_CONTRACT_MISMATCH/,
-    'Stripe live reading product lookup should block prices that do not match the $9 contract'
-  );
-  assertMatch(
-    'src/app/api/payment/price/route.ts',
-    /isReadingPriceContractMismatch[\s\S]*status:\s*409/,
-    'Price endpoint should not silently fallback when live Stripe reading price violates the $9 contract'
+    /READING_PRICE_CONTRACT_MISMATCH|assertReadingProductPriceContract/,
+    'Stripe reading lookup should use the existing product price instead of enforcing a Next Move-only price contract'
   );
   assertMatch(
     'src/app/relationship/contact-timing/page.tsx',
@@ -186,8 +181,8 @@ function run() {
   );
   assertMatch(
     'src/app/terms/page.tsx',
-    /USD 9 one-off digital report[\s\S]*Stripe checkout/s,
-    'Terms should disclose the Next Move $9 Stripe checkout boundary'
+    /one-off digital report[\s\S]*Stripe checkout/s,
+    'Terms should disclose the Next Move one-off Stripe checkout boundary'
   );
   assertMatch(
     'src/app/terms/page.tsx',
@@ -211,7 +206,7 @@ function run() {
   );
   assertMatch(
     'src/app/en/contact-timing/page.tsx',
-    /title:\s*'Next Move Report \| Contact or Wait'[\s\S]*siteName:\s*'Next Move Report'[\s\S]*First verdict free · Full report \$9[\s\S]*Next Move Report[\s\S]*decision support only/s,
+    /title:\s*'Next Move Report \| Contact or Wait'[\s\S]*siteName:\s*'Next Move Report'[\s\S]*First verdict free · Full report via Stripe[\s\S]*Next Move Report[\s\S]*decision support only/s,
     'English contact timing route should be fully rebranded while indexed'
   );
   assertNoMatch(
@@ -247,23 +242,18 @@ function run() {
   );
   assertMatch(
     'src/components/payment/use-reading-price.ts',
-    /PRICE_CONTRACT_MISMATCH_CODE[\s\S]*READING_PRICE_CONTRACT_MISMATCH[\s\S]*setLookupState\('contract_mismatch'\)/,
-    'Reading price hook should preserve Stripe price-contract mismatch as a distinct checkout state'
-  );
-  assertMatch(
-    'src/components/payment/use-reading-price.ts',
     /PRICE_LOOKUP_FALLBACK_CODE[\s\S]*READING_PRICE_LOOKUP_FALLBACK[\s\S]*hasBlockingPriceIssue/s,
     'Reading price hook should track fallback price lookup as a blocking checkout state'
   );
   assertMatch(
     'src/components/payment/PaymentModalPricePanel.tsx',
-    /showPriceContractMismatch[\s\S]*Stripe 가격 확인 보류/s,
+    /showPriceConfirmationBlocked[\s\S]*Stripe 가격 확인 보류/s,
     'Payment modal price panel should surface blocked Stripe price confirmation'
   );
   assertMatch(
     'src/components/payment/PaymentModalForm.tsx',
-    /isCheckoutPausedForPriceMismatch[\s\S]*결제 일시 중지/s,
-    'Payment modal form should show paid checkout as paused on a price-contract mismatch'
+    /isCheckoutPausedForPriceIssue[\s\S]*결제 일시 중지/s,
+    'Payment modal form should show paid checkout as paused when price confirmation is blocked'
   );
   assertMatch(
     'src/components/payment/PaymentModal.tsx',
@@ -272,8 +262,8 @@ function run() {
   );
   assertMatch(
     'tests/e2e/next-move-report-paywall-price.spec.ts',
-    /READING_PRICE_CONTRACT_MISMATCH[\s\S]*paywall pauses checkout when Stripe price contract mismatches[\s\S]*결제 일시 중지/,
-    'Next Move E2E should prove Stripe price mismatch blocks the paywall checkout button'
+    /paywall pauses checkout when live Stripe price is unavailable[\s\S]*결제 일시 중지/,
+    'Next Move E2E should prove unavailable Stripe price lookup blocks the paywall checkout button'
   );
   assertMatch(
     'tests/e2e/next-move-report-paywall-price.spec.ts',
@@ -317,7 +307,7 @@ function run() {
   );
   assertMatch(
     'tests/e2e/next-move-report-paywall-checkout.spec.ts',
-    /paywall starts paid checkout with saved reading context[\s\S]*prod_next_move_report_[\s\S]*qa-access-key/,
+    /paywall starts paid checkout with saved reading context[\s\S]*expect\.stringMatching\(\s*\/\^prod_\/\s*\)[\s\S]*qa-access-key/,
     'Next Move checkout E2E should prove paid checkout keeps the saved reading context'
   );
   assertMatch(

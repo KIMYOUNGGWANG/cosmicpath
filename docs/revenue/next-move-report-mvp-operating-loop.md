@@ -2,7 +2,7 @@
 
 Date: 2026-06-03
 Scope: relationship/DM decision report for contact-or-wait questions.
-Offer: free first verdict, then USD 9 one-off digital report through Stripe.
+Offer: free first verdict, then one-off digital report through the existing Stripe reading checkout.
 
 ## Weekly Operating Budget
 
@@ -38,7 +38,7 @@ Decision rules:
 | REVISE ENTRY | 300 visits but fewer than 25 question starts |
 | REVISE OFFER | 30 free verdicts but 0 paid conversions |
 | HOLD EXPANSION | Fewer than 8 follow-up seeds |
-| BLOCK LAUNCH | Stripe live price not USD 9 while UI says USD 9 |
+| BLOCK LAUNCH | UI price copy does not match the existing Stripe checkout price |
 
 ## 12-Week Loop
 
@@ -57,7 +57,7 @@ Each weekly review should answer:
 | --- | --- |
 | Are visitors starting questions? | landing views and question starts |
 | Are free verdicts useful enough? | free verdicts, support notes, and follow-up seeds |
-| Is the USD 9 offer clear? | paywall opens, checkout starts, paid conversions |
+| Is the paid offer clear? | paywall opens, checkout starts, paid conversions |
 | Is relationship safety intact? | banned-claim checks, trust page checks, and high-risk prompt reviews |
 | Is legacy containment intact? | sitemap/nav guards and direct legacy route checks |
 
@@ -71,7 +71,7 @@ Do not launch or scale if:
 
 | Block | Reason |
 | --- | --- |
-| Stripe live price is not USD 9 while UI says USD 9 | Payment trust risk |
+| UI price copy does not match the existing Stripe checkout price | Payment trust risk |
 | The free verdict cannot render before paywall | MVP promise broken |
 | Legal pages do not mention relationship/DM context and optional birth data | Trust boundary missing |
 | Generated copy guarantees a reply, reunion, or relationship outcome | Safety boundary broken |

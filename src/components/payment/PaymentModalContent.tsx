@@ -13,7 +13,7 @@ interface PaymentModalContentProps {
     readonly discountedPriceLabel: string | null;
     readonly displayedPriceLabel: string;
     readonly hasConcreteDisplayedPrice: boolean;
-    readonly showPriceContractMismatch: boolean;
+    readonly showPriceConfirmationBlocked: boolean;
     readonly showPriceLoadingState: boolean;
     readonly showPriceFallbackCopy: boolean;
     readonly isFreePromo: boolean;
@@ -23,7 +23,7 @@ interface PaymentModalContentProps {
     readonly isLoading: boolean;
     readonly discount: number;
     readonly resolvedAutoReferralCode: string | null;
-    readonly isCheckoutPausedForPriceMismatch: boolean;
+    readonly isCheckoutPausedForPriceIssue: boolean;
     readonly onEmailChange: (value: string) => void;
     readonly onPromoApply: (id: string, discount: number, code: string) => void;
     readonly onPayment: () => void;
@@ -73,7 +73,7 @@ export function PaymentModalContent(props: PaymentModalContentProps) {
                     discountedPriceLabel={props.discountedPriceLabel}
                     displayedPriceLabel={props.displayedPriceLabel}
                     hasConcreteDisplayedPrice={props.hasConcreteDisplayedPrice}
-                    showPriceContractMismatch={props.showPriceContractMismatch}
+                    showPriceConfirmationBlocked={props.showPriceConfirmationBlocked}
                     showPriceLoadingState={props.showPriceLoadingState}
                     showPriceFallbackCopy={props.showPriceFallbackCopy}
                     discount={props.discount}
@@ -102,7 +102,7 @@ export function PaymentModalContent(props: PaymentModalContentProps) {
                 isLoading={props.isLoading}
                 discount={props.discount}
                 resolvedAutoReferralCode={props.resolvedAutoReferralCode}
-                isCheckoutPausedForPriceMismatch={props.isCheckoutPausedForPriceMismatch}
+                isCheckoutPausedForPriceIssue={props.isCheckoutPausedForPriceIssue}
                 onEmailChange={props.onEmailChange}
                 onPromoApply={props.onPromoApply}
                 onPayment={props.onPayment}

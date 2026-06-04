@@ -39,10 +39,10 @@ export async function mockDefaultReadingPrice(page: Page): Promise<string[]> {
             contentType: 'application/json',
             body: JSON.stringify({
                 productId,
-                priceId: 'price_next_move_test',
-                amount: 9,
+                priceId: 'price_existing_reading_test',
+                amount: 9.99,
                 currency: 'USD',
-                formattedPrice: '$9.00',
+                formattedPrice: '$9.99',
                 metadata: {},
             }),
         });

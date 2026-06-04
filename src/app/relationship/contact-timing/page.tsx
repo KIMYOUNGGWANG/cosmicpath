@@ -118,7 +118,7 @@ export default async function RelationshipContactTimingPage({
           <Link href="/" className="text-sm font-semibold text-white/70 transition-colors hover:text-white">
             Next Move Report
           </Link>
-          <span className="text-sm text-white/42">첫 판정 무료 · 풀 리포트 $9</span>
+          <span className="text-sm text-white/42">첫 판정 무료 · 풀 리포트 결제</span>
         </header>
 
         <section className="flex flex-1 flex-col justify-center py-12">

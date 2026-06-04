@@ -31,7 +31,7 @@ test.describe('Next Move Report checkout behavior', () => {
         expect(saveRequests).toHaveLength(1);
         expect(paymentRequests).toHaveLength(1);
         expect(paymentRequests.at(0)).toMatchObject({
-            productId: expect.stringMatching(/^prod_next_move_report_/),
+            productId: expect.stringMatching(/^prod_/),
             readingId: 'qa-next-move-reading',
             accessKey: 'qa-access-key',
             language: 'ko',

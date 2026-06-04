@@ -10,7 +10,7 @@ interface PaymentModalFormProps {
     readonly isLoading: boolean;
     readonly discount: number;
     readonly resolvedAutoReferralCode: string | null;
-    readonly isCheckoutPausedForPriceMismatch: boolean;
+    readonly isCheckoutPausedForPriceIssue: boolean;
     readonly onEmailChange: (value: string) => void;
     readonly onPromoApply: (id: string, discount: number, code: string) => void;
     readonly onPayment: () => void;
@@ -19,11 +19,11 @@ interface PaymentModalFormProps {
 function checkoutButtonLabel({
     isEnglish,
     isLoading,
-    isCheckoutPausedForPriceMismatch,
+    isCheckoutPausedForPriceIssue,
     discount,
-}: Pick<PaymentModalFormProps, 'isEnglish' | 'isLoading' | 'isCheckoutPausedForPriceMismatch' | 'discount'>): string {
+}: Pick<PaymentModalFormProps, 'isEnglish' | 'isLoading' | 'isCheckoutPausedForPriceIssue' | 'discount'>): string {
     if (isLoading) return isEnglish ? 'Processing...' : '처리 중...';
-    if (isCheckoutPausedForPriceMismatch) return isEnglish ? 'Checkout paused' : '결제 일시 중지';
+    if (isCheckoutPausedForPriceIssue) return isEnglish ? 'Checkout paused' : '결제 일시 중지';
     if (discount === 100) return isEnglish ? 'Open Decision Timing for Free' : '무료로 결정 타이밍 열기';
     return isEnglish ? 'Open Evidence, Timing, Action' : '근거·타이밍·행동 순서 열기';
 }
@@ -37,12 +37,12 @@ export function PaymentModalForm({
     isLoading,
     discount,
     resolvedAutoReferralCode,
-    isCheckoutPausedForPriceMismatch,
+    isCheckoutPausedForPriceIssue,
     onEmailChange,
     onPromoApply,
     onPayment,
 }: PaymentModalFormProps) {
-    const disabled = isLoading || isCheckoutPausedForPriceMismatch;
+    const disabled = isLoading || isCheckoutPausedForPriceIssue;
 
     return (
         <>
@@ -94,7 +94,7 @@ export function PaymentModalForm({
                     : 'bg-gradient-to-r from-acc-gold via-[#f0c35c] to-[#d88b16] text-black shadow-acc-gold/30'
                 } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-acc-gold/60`}
             >
-                {checkoutButtonLabel({ isEnglish, isLoading, isCheckoutPausedForPriceMismatch, discount })}
+                {checkoutButtonLabel({ isEnglish, isLoading, isCheckoutPausedForPriceIssue, discount })}
             </motion.button>
             <p className="mt-4 text-center text-xs text-white/35">
                 {isEnglish

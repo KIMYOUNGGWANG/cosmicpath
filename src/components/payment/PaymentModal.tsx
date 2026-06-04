@@ -180,8 +180,8 @@ export function PaymentModal({
     const handlePayment = async () => {
         if (priceState.hasBlockingPriceIssue && !isFreePromo) {
             alert(isEnglish
-                ? 'Checkout is paused because the live Stripe price could not be confirmed as USD 9.'
-                : '라이브 Stripe 가격을 USD 9로 확인하지 못해 결제를 잠시 막았습니다.');
+                ? 'Checkout is paused because the live Stripe price could not be confirmed.'
+                : '라이브 Stripe 가격을 확인하지 못해 결제를 잠시 막았습니다.');
             return;
         }
         if (isFreePromo && !email) {
@@ -252,7 +252,7 @@ export function PaymentModal({
                 discountedPriceLabel={priceState.discountedPriceLabel}
                 displayedPriceLabel={priceState.displayedPriceLabel}
                 hasConcreteDisplayedPrice={priceState.hasConcreteDisplayedPrice}
-                showPriceContractMismatch={priceState.showPriceContractMismatch}
+                showPriceConfirmationBlocked={priceState.showPriceConfirmationBlocked}
                 showPriceLoadingState={priceState.showPriceLoadingState}
                 showPriceFallbackCopy={priceState.showPriceFallbackCopy}
                 isFreePromo={isFreePromo}
@@ -262,7 +262,7 @@ export function PaymentModal({
                 isLoading={isLoading}
                 discount={discount}
                 resolvedAutoReferralCode={resolvedAutoReferralCode}
-                isCheckoutPausedForPriceMismatch={isCheckoutPausedForPriceIssue}
+                isCheckoutPausedForPriceIssue={isCheckoutPausedForPriceIssue}
                 onEmailChange={handleEmailChange}
                 onPromoApply={handlePromoApply}
                 onPayment={handlePayment}

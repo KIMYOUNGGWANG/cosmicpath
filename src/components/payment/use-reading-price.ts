@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getReadingFallbackPriceLabel, normalizePriceLabel, READING_PRODUCT } from '@/lib/payment/payment-config';
 
-export const PRICE_CONTRACT_MISMATCH_CODE = 'READING_PRICE_CONTRACT_MISMATCH' as const;
 export const PRICE_LOOKUP_FALLBACK_CODE = 'READING_PRICE_LOOKUP_FALLBACK' as const;
 
-type ReadingPriceLookupState = 'ready' | 'loading' | 'fallback' | 'contract_mismatch';
+type ReadingPriceLookupState = 'ready' | 'loading' | 'fallback';
 
 interface UseReadingPriceInput {
     readonly isOpen: boolean;
@@ -20,9 +19,8 @@ interface UseReadingPriceResult {
     readonly hasConcreteDisplayedPrice: boolean;
     readonly trackedPriceLabel: string;
     readonly showPriceLoadingState: boolean;
-    readonly showPriceContractMismatch: boolean;
+    readonly showPriceConfirmationBlocked: boolean;
     readonly showPriceFallbackCopy: boolean;
-    readonly hasPriceContractMismatch: boolean;
     readonly hasBlockingPriceIssue: boolean;
 }
 
@@ -40,10 +38,6 @@ function getFormattedPrice(value: unknown): string | null {
         : null;
 }
 
-function getResponseCode(value: unknown): unknown {
-    return isRecord(value) ? value.code : null;
-}
-
 export function useReadingPrice({
     isOpen,
     price,
@@ -54,9 +48,8 @@ export function useReadingPrice({
     const resolvedPriceProp = normalizePriceLabel(price);
     const [fetchedPrice, setFetchedPrice] = useState<string | null>(null);
     const [lookupState, setLookupState] = useState<ReadingPriceLookupState>('ready');
-    const hasPriceContractMismatch = !resolvedPriceProp && lookupState === 'contract_mismatch';
     const hasPriceLookupFallback = !resolvedPriceProp && lookupState === 'fallback';
-    const hasBlockingPriceIssue = hasPriceContractMismatch || hasPriceLookupFallback;
+    const hasBlockingPriceIssue = hasPriceLookupFallback;
     const dynamicPrice = resolvedPriceProp || normalizePriceLabel(fetchedPrice);
 
     useEffect(() => {
@@ -72,10 +65,6 @@ export function useReadingPrice({
                 const payload: unknown = await response.json();
 
                 if (!response.ok) {
-                    if (getResponseCode(payload) === PRICE_CONTRACT_MISMATCH_CODE && isMounted) {
-                        setLookupState('contract_mismatch');
-                        return;
-                    }
                     if (isMounted) setLookupState('fallback');
                     return;
                 }
@@ -121,11 +110,9 @@ export function useReadingPrice({
             effectivePriceLabel ||
             fallbackPriceLabel ||
             (isEnglish ? 'Shown at checkout' : '결제 단계에서 확인');
-        const trackedPriceLabel = hasPriceContractMismatch
-            ? PRICE_CONTRACT_MISMATCH_CODE
-            : hasPriceLookupFallback
-                ? PRICE_LOOKUP_FALLBACK_CODE
-                : effectivePriceLabel || fallbackPriceLabel || 'checkout_visible';
+        const trackedPriceLabel = hasPriceLookupFallback
+            ? PRICE_LOOKUP_FALLBACK_CODE
+            : effectivePriceLabel || fallbackPriceLabel || 'checkout_visible';
 
         return {
             dynamicPrice,
@@ -134,9 +121,8 @@ export function useReadingPrice({
             hasConcreteDisplayedPrice: /\d/.test(displayedPriceLabel),
             trackedPriceLabel,
             showPriceLoadingState: isOpen && !resolvedPriceProp && lookupState === 'loading',
-            showPriceContractMismatch: isOpen && hasBlockingPriceIssue,
+            showPriceConfirmationBlocked: isOpen && hasBlockingPriceIssue,
             showPriceFallbackCopy: isOpen && !hasBlockingPriceIssue && !resolvedPriceProp && lookupState === 'fallback',
-            hasPriceContractMismatch,
             hasBlockingPriceIssue,
         };
     }, [
@@ -144,7 +130,6 @@ export function useReadingPrice({
         dynamicPrice,
         fallbackPriceLabel,
         hasBlockingPriceIssue,
-        hasPriceContractMismatch,
         hasPriceLookupFallback,
         isEnglish,
         isOpen,

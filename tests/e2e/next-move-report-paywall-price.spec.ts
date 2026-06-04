@@ -13,15 +13,12 @@ async function mockCheckoutBlocked(page: Page): Promise<void> {
     });
 }
 
-async function mockPriceContractMismatch(page: Page): Promise<void> {
+async function mockUnavailableReadingPrice(page: Page): Promise<void> {
     await page.route('**/api/payment/price**', async (route) => {
         await route.fulfill({
-            status: 409,
+            status: 500,
             contentType: 'application/json',
-            body: JSON.stringify({
-                error: 'Reading product price contract mismatch',
-                code: 'READING_PRICE_CONTRACT_MISMATCH',
-            }),
+            body: JSON.stringify({ error: 'Price lookup unavailable' }),
         });
     });
 }
@@ -32,11 +29,11 @@ async function mockFallbackReadingPrice(page: Page): Promise<void> {
             status: 200,
             contentType: 'application/json',
             body: JSON.stringify({
-                productId: 'prod_next_move_report_live_TBD',
+                productId: 'prod_ThdoB65NmPU37y',
                 priceId: '',
-                amount: 9,
+                amount: 9.99,
                 currency: 'USD',
-                formattedPrice: '$9.00',
+                formattedPrice: '$9.99',
                 metadata: { fallback: 'true' },
             }),
         });
@@ -50,8 +47,8 @@ async function mockPriceGuardBasics(page: Page): Promise<void> {
     await mockCheckoutBlocked(page);
 }
 
-test.describe('Next Move Report paywall price contract', () => {
-    test('paywall shows USD 9 Next Move offer', async ({ page }) => {
+test.describe('Next Move Report paywall price lookup', () => {
+    test('paywall shows existing Stripe reading offer', async ({ page }) => {
         await mockGrowthTracking(page);
         await mockDefaultReadingPrice(page);
         await mockReadingGeneration(page);
@@ -59,23 +56,23 @@ test.describe('Next Move Report paywall price contract', () => {
 
         await openNextMovePaywall(page);
 
-        await expect(page.getByText('$9.00').first()).toBeVisible();
+        await expect(page.getByText('$9.99').first()).toBeVisible();
         await expect(page.getByText(/왜 이 판정인지/).first()).toBeVisible();
         await expect(page.getByText(/연락 타이밍/).first()).toBeVisible();
         await expect(page.getByText(/피해야 할 메시지/).first()).toBeVisible();
         await expect(page.getByRole('button', { name: /^PRO$/i })).toHaveCount(0);
     });
 
-    test('paywall pauses checkout when Stripe price contract mismatches', async ({ page }) => {
+    test('paywall pauses checkout when live Stripe price is unavailable', async ({ page }) => {
         await mockPriceGuardBasics(page);
-        await mockPriceContractMismatch(page);
+        await mockUnavailableReadingPrice(page);
 
         await openNextMovePaywall(page);
 
         await expect(page.getByText(/Stripe 가격 확인 보류/).first()).toBeVisible();
-        await expect(page.getByText(/라이브 Stripe 가격을 USD 9로 확인하지 못해/).first()).toBeVisible();
+        await expect(page.getByText(/라이브 Stripe 가격을 확인하지 못해/).first()).toBeVisible();
         await expect(page.getByRole('button', { name: /결제 일시 중지/ })).toBeDisabled();
-        await expect(page.getByText('$9.00')).toHaveCount(0);
+        await expect(page.getByText('$9.99')).toHaveCount(0);
     });
 
     test('paywall pauses checkout when live Stripe price falls back', async ({ page }) => {
@@ -85,8 +82,8 @@ test.describe('Next Move Report paywall price contract', () => {
         await openNextMovePaywall(page);
 
         await expect(page.getByText(/Stripe 가격 확인 보류/).first()).toBeVisible();
-        await expect(page.getByText(/라이브 Stripe 가격을 USD 9로 확인하지 못해/).first()).toBeVisible();
+        await expect(page.getByText(/라이브 Stripe 가격을 확인하지 못해/).first()).toBeVisible();
         await expect(page.getByRole('button', { name: /결제 일시 중지/ })).toBeDisabled();
-        await expect(page.getByText('$9.00')).toHaveCount(0);
+        await expect(page.getByText('$9.99')).toHaveCount(0);
     });
 });

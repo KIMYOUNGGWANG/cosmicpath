@@ -14,7 +14,7 @@ test.describe('Next Move Report MVP', () => {
         await expect(page.getByText(/연락할까/).first()).toBeVisible();
         await expect(page.getByText(/기다릴까/).first()).toBeVisible();
         await expect(page.getByText(/첫 판정 무료/).first()).toBeVisible();
-        await expect(page.getByText(/\$9/).first()).toBeVisible();
+        await expect(page.getByText(/풀 리포트 결제/).first()).toBeVisible();
 
         const primaryCta = page.getByRole('link', { name: /먼저 보기|첫 판정/i }).first();
         await expect(primaryCta).toHaveAttribute('href', /entry=next_move_report_mvp_v1/);
@@ -96,7 +96,7 @@ test.describe('Next Move Report MVP', () => {
         await expect(page.getByText(/decision-support content/i).first()).toBeVisible();
         await expect(page.getByText(/no guaranteed relationship outcome/i).first()).toBeVisible();
         await expect(page.getByText(/not therapy, medical, diagnostic, legal, or financial advice/i).first()).toBeVisible();
-        await expect(page.getByText(/USD 9 one-off digital report/i).first()).toBeVisible();
+        await expect(page.getByText(/one-off digital report/i).first()).toBeVisible();
         await expect(page.getByText(/Stripe checkout/i).first()).toBeVisible();
         await expect(page.getByText(/refund request may be limited once the report is generated or opened/i).first()).toBeVisible();
 
@@ -118,7 +118,7 @@ test.describe('Next Move Report MVP', () => {
         if (!isNoIndex) {
             await expect(page).toHaveTitle(/Next Move Report/i);
             await expect(page.getByRole('link', { name: /Next Move Report/i }).first()).toBeVisible();
-            await expect(page.getByText(/Full report \$9/i).first()).toBeVisible();
+            await expect(page.getByText(/Full report via Stripe/i).first()).toBeVisible();
             await expect(page.getByText(/decision support only/i).first()).toBeVisible();
             await expect(page.locator('body')).not.toContainText('$3.99');
             await expect(page.locator('body')).not.toContainText('COSMICPATH');

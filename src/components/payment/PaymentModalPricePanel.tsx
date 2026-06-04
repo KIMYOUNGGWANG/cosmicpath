@@ -6,7 +6,7 @@ interface PaymentModalPricePanelProps {
     readonly discountedPriceLabel: string | null;
     readonly displayedPriceLabel: string;
     readonly hasConcreteDisplayedPrice: boolean;
-    readonly showPriceContractMismatch: boolean;
+    readonly showPriceConfirmationBlocked: boolean;
     readonly showPriceLoadingState: boolean;
     readonly showPriceFallbackCopy: boolean;
     readonly discount: number;
@@ -18,7 +18,7 @@ export function PaymentModalPricePanel({
     discountedPriceLabel,
     displayedPriceLabel,
     hasConcreteDisplayedPrice,
-    showPriceContractMismatch,
+    showPriceConfirmationBlocked,
     showPriceLoadingState,
     showPriceFallbackCopy,
     discount,
@@ -29,15 +29,15 @@ export function PaymentModalPricePanel({
                 <p className="text-[10px] uppercase tracking-[0.26em] text-white/42">
                     {isEnglish ? 'Current Unlock Price' : '현재 전체 해석 가격'}
                 </p>
-                {showPriceContractMismatch ? (
+                {showPriceConfirmationBlocked ? (
                     <div className="mt-2 space-y-1">
                         <p className="text-sm font-semibold text-red-200">
                             {isEnglish ? 'Stripe price confirmation paused' : 'Stripe 가격 확인 보류'}
                         </p>
                         <p className="text-xs leading-5 text-white/48">
                             {isEnglish
-                                ? 'The live Stripe price could not be confirmed as USD 9, so checkout is paused until the product is corrected.'
-                                : '라이브 Stripe 가격을 USD 9로 확인하지 못해 상품 설정을 확인할 때까지 결제를 막았습니다.'}
+                                ? 'The live Stripe price could not be confirmed, so checkout is paused until the product is available.'
+                                : '라이브 Stripe 가격을 확인하지 못해 상품을 확인할 때까지 결제를 막았습니다.'}
                         </p>
                     </div>
                 ) : discountedPriceLabel ? (

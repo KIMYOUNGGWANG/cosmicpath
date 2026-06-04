@@ -36,14 +36,14 @@ export default async function TermsPage() {
                                 <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
                                     <h2 className="mb-3 text-lg font-cinzel text-white">What You Buy</h2>
                                     <p>
-                                        The paid unlock is a USD 9 one-off digital report purchased through Stripe checkout.
+                                        The paid unlock is a one-off digital report purchased through Stripe checkout at the price shown there.
                                         It gives you access to deeper evidence, contact timing, and message-risk framing.
                                     </p>
                                 </div>
                                 <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
                                     <h2 className="mb-3 text-lg font-cinzel text-white">Refund Boundary</h2>
                                     <p>
-                                        For the USD 9 one-off digital report, a refund request may be limited once the report is generated or opened.
+                                        For one-off digital reports, a refund request may be limited once the report is generated or opened.
                                         If the content stays unopened, a refund request may be made within 7 days.
                                     </p>
                                 </div>
@@ -128,7 +128,7 @@ export default async function TermsPage() {
                         <h2 className="mb-4 text-xl font-cinzel text-white">제7조 (유료 콘텐츠의 구매 및 결제)</h2>
                         <ol className="list-decimal space-y-2 pl-5">
                             <li>이용자는 회사가 제공하는 결제 방식(신용카드, 간편결제 등)을 통해 유료 콘텐츠를 구매할 수 있습니다.</li>
-                            <li>Next Move Report 풀 리포트는 MVP 기간에 USD 9 단건 디지털 리포트로 제공되며 Stripe checkout을 통해 결제됩니다.</li>
+                            <li>Next Move Report 풀 리포트는 MVP 기간에 Stripe checkout에 표시되는 가격의 단건 디지털 리포트로 제공됩니다.</li>
                             <li>결제와 관련된 보안 책임은 이용자에게 있으며, 이용자의 부주의로 인한 결제 정보 노출에 대해 회사는 책임을 지지 않습니다.</li>
                             <li>회사는 정책 및 결제 업체의 기준에 따라 결제 수단별 결제 한도를 부여할 수 있습니다.</li>
                         </ol>
@@ -138,7 +138,7 @@ export default async function TermsPage() {
                         <h2 className="mb-4 text-xl font-cinzel text-accent-gold">제8조 (청약 철회 및 환불)</h2>
                         <ol className="list-decimal space-y-2 pl-5">
                             <li>전자상거래법 제17조 제2항에 따라, <strong>디지털 콘텐츠의 분석이 시작되었거나 결과가 생성된 경우</strong>에는 다시 판매하기 곤란한 가치가 있는 것으로 보아 청약 철회가 제한됩니다.</li>
-                            <li>USD 9 단건 디지털 리포트는 결과가 생성되었거나 열람된 뒤 환불 요청이 제한될 수 있습니다.</li>
+                            <li>단건 디지털 리포트는 결과가 생성되었거나 열람된 뒤 환불 요청이 제한될 수 있습니다.</li>
                             <li>이용자는 구매 후 콘텐츠를 열람하지 않은 상태에서 7일 이내에 청약 철회를 요청할 수 있습니다.</li>
                             <li>회사의 귀책 사유로 서비스를 정상적으로 이용하지 못한 경우 회사는 결제 금액을 전액 환불합니다.</li>
                             <li>무료로 지급받은 포인트, 쿠폰, 이벤트 당첨 상품 등은 환불 대상에서 제외됩니다.</li>

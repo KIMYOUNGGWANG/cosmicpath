@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPriceById, getProductPrice, isReadingPriceContractMismatch } from '@/lib/payment/stripe';
+import { getPriceById, getProductPrice } from '@/lib/payment/stripe';
 import {
     CHAT_CREDIT_PACK,
     CHAT_CREDIT_SINGLE,
@@ -113,19 +113,7 @@ export async function GET(request: NextRequest) {
             : await getProductPrice(productId, READING_PRODUCT.currency);
 
         return NextResponse.json(priceData);
-    } catch (error) {
-        if (isReadingPriceContractMismatch(error)) {
-            return NextResponse.json(
-                {
-                    error: 'Configured Stripe reading price does not match the Next Move Report $9 contract.',
-                    code: 'READING_PRICE_CONTRACT_MISMATCH',
-                    expectedAmount: READING_PRODUCT.price,
-                    expectedCurrency: READING_PRODUCT.currency,
-                },
-                { status: 409 }
-            );
-        }
-
+    } catch {
         return NextResponse.json(
             buildFallbackPriceResponse({
                 priceId: new URL(request.url).searchParams.get('priceId'),

@@ -13,7 +13,7 @@ const PRIMARY_CONTACT_QUESTION = 'Should I text them now, or wait a little longe
 export const metadata: Metadata = {
   title: 'Next Move Report | Contact or Wait',
   description:
-    'Get a first contact-or-wait verdict for a relationship or DM decision. First verdict free, full report $9.',
+    'Get a first contact-or-wait verdict for a relationship or DM decision. First verdict free, full report through Stripe.',
   robots: {
     index: true,
     follow: true,
@@ -108,7 +108,7 @@ export default function EnglishContactTimingPage() {
             <Link href="/" className="text-sm font-semibold tracking-[0.24em] text-white/72 transition-colors hover:text-white">
               Next Move Report
             </Link>
-            <span className="text-sm text-white/48">First verdict free · Full report $9</span>
+            <span className="text-sm text-white/48">First verdict free · Full report via Stripe</span>
           </header>
 
           <div className="grid flex-1 items-center gap-10 py-16 lg:grid-cols-[minmax(0,1fr)_420px]">

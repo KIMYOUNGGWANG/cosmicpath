@@ -10,9 +10,14 @@ function hasRealStripeLookupId(value: string | undefined, type: 'prod' | 'price'
     return pattern.test(trimmed) && !/(test|live|tbd)/i.test(trimmed);
 }
 
+function resolveStripeLookupId(value: string | undefined, fallback: string, type: 'prod' | 'price'): string {
+    const trimmed = value?.trim();
+    return trimmed && hasRealStripeLookupId(trimmed, type) ? trimmed : fallback;
+}
+
 const readingProductId = process.env.NODE_ENV === 'development'
-    ? (process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID_TEST || 'prod_next_move_report_test_TBD')
-    : (process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID || 'prod_next_move_report_live_TBD');
+    ? resolveStripeLookupId(process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID_TEST, 'prod_TgwKnGfpJBusty', 'prod')
+    : resolveStripeLookupId(process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID, 'prod_ThdoB65NmPU37y', 'prod');
 
 export const READING_PRODUCT = {
     id: 'cosmicpath_reading_v1',
@@ -22,7 +27,7 @@ export const READING_PRODUCT = {
     name: 'Next Move Report Full Report',
     description: 'Next Move Report decision timing premium unlock',
     currency: 'USD',
-    price: 900,
+    price: 999,
     followUpQuestions: 0,
     stripeConfigured: hasRealStripeLookupId(readingProductId, 'prod'),
 } as const;
