@@ -7,7 +7,7 @@ type CheckCase = {
   historyText?: string;
 };
 
-const MODEL = 'gemini-3-flash-preview';
+const MODEL = 'gemini-3.5-flash';
 
 function getApiKey(): string {
   const apiKey = process.env.GOOGLE_AI_API_KEY;

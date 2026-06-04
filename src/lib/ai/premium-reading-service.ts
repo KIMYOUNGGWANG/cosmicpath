@@ -20,7 +20,7 @@ import {
 } from './phase-prompts';
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
-const PRIMARY_MODEL_NAME = 'gemini-3-flash-preview';
+const PRIMARY_MODEL_NAME = 'gemini-3.5-flash';
 const FALLBACK_MODEL_NAME = 'gemini-2.5-flash';
 const FAST_PHASE_REQUEST_TIMEOUT_MS = 18000;
 const PHASE_ONE_PRIMARY_TIMEOUT_MS = 36000;

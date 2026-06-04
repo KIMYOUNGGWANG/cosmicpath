@@ -23,12 +23,12 @@ export const MODEL_CONFIG: Record<ModelTier, {
     },
     basic: {
         provider: 'google',
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-3.5-flash',
         fallback: { provider: 'google', model: 'gemini-2.5-flash' },
     },
     premium: {
         provider: 'google',
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-3.5-flash',
         fallback: { provider: 'google', model: 'gemini-2.5-flash' },
     },
 };
@@ -781,7 +781,7 @@ export async function generateStructuredReport<T>(
         throw lastError || new Error('Structured report generation failed');
     };
 
-    const primaryModel = config.provider === 'google' ? config.model : 'gemini-3-flash-preview';
+    const primaryModel = config.provider === 'google' ? config.model : 'gemini-3.5-flash';
     const allowStructuredFallback = config.fallback?.provider === 'google';
 
     try {
