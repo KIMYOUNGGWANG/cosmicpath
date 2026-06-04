@@ -1,0 +1,4 @@
+scripts/create-stripe-weekly-price.cjs:104:        unit_amount: 399,
+src/lib/payment/payment-config.ts:68:    price: 399, // $3.99 in cents
+scripts/create-stripe-subscriptions.cjs:28:        unitAmount: 399, // $3.99
+scripts/create-stripe-subscriptions-live.cjs:27:        unitAmount: 399,

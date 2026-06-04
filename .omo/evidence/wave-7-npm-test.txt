@@ -1,0 +1,5 @@
+
+> cosmicpath@0.1.0 test
+> bash scripts/test-refactor-regression.sh
+
+Refactor regression checks passed

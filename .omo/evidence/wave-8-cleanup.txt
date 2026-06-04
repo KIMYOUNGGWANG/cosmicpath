@@ -1,0 +1,5 @@
+Command: lsof -nP -iTCP:3100 -sTCP:LISTEN
+Exit: 1
+Output:
+
+Result: no listener remained on TCP port 3100 after Wave 8 document verification.

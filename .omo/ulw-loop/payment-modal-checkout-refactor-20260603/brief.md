@@ -1,0 +1,1 @@
+Extract PaymentModal checkout and session creation into typed payment modules without changing Next Move Report paywall behavior; preserve paid checkout, free promo redemption, Stripe price mismatch blocking, analytics, storage, and redirects while proving the slice with characterization tests, observable browser or HTTP QA artifacts, cleanup receipts, and reviewer approval.

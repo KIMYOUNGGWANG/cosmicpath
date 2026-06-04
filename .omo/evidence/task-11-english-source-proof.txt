@@ -1,0 +1,10 @@
+src/components/landing/EnglishGuideSection.tsx:34:                            bridge the BaZi overlap, and keep Next Move Report focused on a real contact-or-wait decision.
+src/components/landing/EnglishGuideSection.tsx:78:                                Open Next Move Report
+src/app/en/contact-timing/page.tsx:14:  title: 'Next Move Report | Contact or Wait',
+src/app/en/contact-timing/page.tsx:25:    title: 'Next Move Report | Contact or Wait',
+src/app/en/contact-timing/page.tsx:29:    siteName: 'Next Move Report',
+src/app/en/contact-timing/page.tsx:35:    title: 'Next Move Report | Contact or Wait',
+src/app/en/contact-timing/page.tsx:98:          alt="Next Move Report decision timing visual"
+src/app/en/contact-timing/page.tsx:109:              Next Move Report
+src/app/en/contact-timing/page.tsx:196:            Next Move Report decision support only. No guaranteed relationship outcome, no pressure tactics, no unsafe advice.
+src/app/en/contact-timing/page.tsx:111:            <span className="text-sm text-white/48">First verdict free · Full report $9</span>

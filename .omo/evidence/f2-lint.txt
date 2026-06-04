@@ -1,0 +1,7 @@
+
+> cosmicpath@0.1.0 lint
+> npm run lint:target
+
+
+> cosmicpath@0.1.0 lint:target
+> eslint src/app/api/invite src/app/api/ops src/app/api/plan src/app/api/reading/route.ts src/app/api/webhook/stripe src/app/blog src/app/billing src/lib/ai/llm-client.ts src/lib/blog src/lib/email/sender.ts src/lib/followup-jobs.ts src/lib/growth-events.ts src/lib/ops-alert.ts src/lib/payment src/lib/plan-limits.ts src/lib/usage-metrics.ts src/components/blog src/components/oracle-chat/CreditPurchaseModal.tsx src/components/payment/SubscriptionModal.tsx src/components/Pricing/PricingSection.tsx src/components/Mirror/MirrorSection.tsx src/components/landing/Navigation.tsx src/app/sitemap.ts

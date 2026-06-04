@@ -1,0 +1,153 @@
+tests/e2e/next-move-report.spec.ts:6:const startPath = `/start?reset=true&context=love&entry=next_move_report_mvp_v1&lang=ko&question=${encodeURIComponent(contactQuestion)}`;
+tests/e2e/next-move-report.spec.ts:8:test.describe('Next Move Report MVP', () => {
+tests/e2e/next-move-report.spec.ts:12:        await expect(page).toHaveTitle(/Next Move Report/i);
+tests/e2e/next-move-report.spec.ts:13:        await expect(page.getByRole('link', { name: /Next Move Report/i })).toBeVisible();
+tests/e2e/next-move-report.spec.ts:20:        await expect(primaryCta).toHaveAttribute('href', /entry=next_move_report_mvp_v1/);
+tests/e2e/next-move-report.spec.ts:27:        await expect(page).toHaveTitle(/Next Move Report/i);
+tests/e2e/next-move-report.spec.ts:41:        await expect(page).toHaveURL(/entry=next_move_report_mvp_v1/);
+tests/e2e/next-move-report.spec.ts:45:        expect(resultStage).toContain("source === 'next_move_report_mvp_v1'");
+tests/e2e/next-move-report.spec.ts:51:        await page.goto('/start?reset=true&context=love&entry=next_move_report_mvp_v1&question=');
+tests/e2e/next-move-report.spec.ts:127:        await expect(page.getByText(/Next Move Report Full Report/i).first()).toBeVisible();
+tests/e2e/next-move-report.spec.ts:155:        expect(growthMetrics).toContain('next_move_report_mvp_v1');
+tests/e2e/next-move-report.spec.ts:156:        expect(growthMetrics).toContain('relationship_contact_timing_v1');
+tests/e2e/next-move-report.spec.ts:157:        expect(growthMetrics).toContain('en_relationship_contact_timing_v1');
+tests/e2e/next-move-report.spec.ts:158:        expect(growthMetrics).toMatch(/key:\s*'relationship-contact'[\s\S]*next_move_report_mvp_v1[\s\S]*relationship_contact_timing_v1/);
+tests/e2e/next-move-report.spec.ts:169:        await expect(page.getByText(/Next Move Report/i).first()).toBeVisible();
+tests/e2e/next-move-report.spec.ts:193:            await expect(page).toHaveTitle(/Next Move Report/i);
+tests/e2e/next-move-report.spec.ts:194:            await expect(page.getByRole('link', { name: /Next Move Report/i }).first()).toBeVisible();
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:3:  "source": "relationship_contact_timing_v1",
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:11:    "링크는 utm_source=threads, utm_campaign=relationship_contact_timing_v1, utm_content=<post_id>를 포함한다."
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:20:      "cta": "연락할지 기다릴지 먼저 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d01_am"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:28:      "cta": "첫 판정 무료: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d01_pm"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:36:      "cta": "지금 움직여도 되는지 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d02_am"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:44:      "cta": "연락 타이밍 판정: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d02_pm"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:52:      "cta": "타이밍 먼저 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d03_am"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:60:      "cta": "연락할까 기다릴까: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d03_pm"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:68:      "cta": "피해야 할 메시지 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d04_am"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:76:      "cta": "다음 행동 좁히기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d04_pm"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:84:      "cta": "첫 행동 판정: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d05_am"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:92:      "cta": "첫 판정 받기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d05_pm"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:100:      "cta": "연락 리스크 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d06_am"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:108:      "cta": "움직임 크기 줄이기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d06_pm"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:116:      "cta": "보내기 전 확인: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d07_am"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:124:      "cta": "연락할지 기다릴지 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d07_pm"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:132:      "cta": "연락 판정 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d08_am"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:140:      "cta": "타이밍 창 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d08_pm"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:148:      "cta": "연락 목적 분리하기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d09_am"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:156:      "cta": "피해야 할 첫 문장 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d09_pm"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:164:      "cta": "결정 타이밍 리딩: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d10_am"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:172:      "cta": "메시지 리스크 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d10_pm"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:180:      "cta": "다음 행동까지 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d11_am"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:188:      "cta": "확인 압박 줄이기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d11_pm"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:196:      "cta": "축소할지 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d12_am"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:204:      "cta": "연락 타이밍 읽기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d12_pm"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:212:      "cta": "내 상태까지 같이 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d13_am"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:220:      "cta": "대기인지 연락인지 보기: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d13_pm"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:228:      "cta": "타이밍 질문으로 시작: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d14_am"
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:236:      "cta": "보내기 전 판정: /relationship/contact-timing?utm_source=threads&utm_campaign=relationship_contact_timing_v1&utm_content=ko_contact_timing_d14_pm"
+scripts/test-refactor-regression.sh:73:require_match "docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json" "utm_campaign=relationship_contact_timing_v1"
+scripts/test-refactor-regression.sh:75:require_match "src/app/start/start-page-helpers.ts" "next_move_report_mvp_v1"
+scripts/test-refactor-regression.sh:76:require_match "src/app/start/start-page-helpers.ts" "relationship_contact_timing_v1"
+scripts/test-refactor-regression.sh:77:require_match "src/app/start/start-page-helpers.ts" "en_relationship_contact_timing_v1"
+scripts/test-refactor-regression.sh:78:require_match "src/lib/payment/payment-config.ts" "Next Move Report Full Report"
+scripts/test-refactor-regression.sh:80:require_match "docs/api-spec.md" 'Next Move Report MVP Contract (2026-06-03)'
+tests/e2e/smoke.spec.ts:7:        await expect(page).toHaveTitle(/Next Move Report/i);
+docs/revenue/english-contact-timing-threads-batch-2026-05-15.json:3:  "source": "en_relationship_contact_timing_v1",
+scripts/verify-stability-guards.cjs:25:    /next_move_report_mvp_v1/,
+scripts/verify-stability-guards.cjs:26:    'Start flow should recognize the Next Move Report MVP source'
+scripts/verify-stability-guards.cjs:30:    /Next Move Report Full Report[\s\S]*price:\s*900/,
+scripts/verify-stability-guards.cjs:31:    'Reading product should expose the Next Move Report $9 fallback contract'
+scripts/verify-stability-guards.cjs:45:    /Next Move Report/,
+scripts/verify-stability-guards.cjs:46:    'Relationship MVP route should use the public Next Move Report brand'
+scripts/verify-stability-guards.cjs:70:    /trackingSource === 'next_move_report_mvp_v1'[\s\S]*message pressure or surveillance/i,
+scripts/verify-stability-guards.cjs:75:    /key:\s*'relationship-contact'[\s\S]*next_move_report_mvp_v1[\s\S]*relationship_contact_timing_v1/,
+scripts/verify-stability-guards.cjs:85:    /Next Move Report 14-day decision gate[\s\S]*visits 300 or 14 days[\s\S]*question starts 45[\s\S]*paid conversions 2/,
+scripts/verify-stability-guards.cjs:120:    /title:\s*'Next Move Report \| Contact or Wait'[\s\S]*siteName:\s*'Next Move Report'[\s\S]*First verdict free · Full report \$9[\s\S]*Next Move Report[\s\S]*decision support only/s,
+scripts/verify-stability-guards.cjs:130:    /href="\/en\/contact-timing"[\s\S]*Next Move Report/s,
+src/lib/payment/payment-config.ts:22:    name: 'Next Move Report Full Report',
+src/lib/payment/payment-config.ts:23:    description: 'Next Move Report decision timing premium unlock',
+src/lib/growth-metrics.ts:165:        label: 'Next Move Report / 관계 연락 타이밍',
+src/lib/growth-metrics.ts:166:        description: 'Next Move Report와 기존 연락 타이밍 히스토리를 함께 보는 contact-or-wait funnel',
+src/lib/growth-metrics.ts:168:            'next_move_report_mvp_v1',
+src/lib/growth-metrics.ts:169:            'relationship_contact_timing_v1',
+src/lib/growth-metrics.ts:170:            'en_relationship_contact_timing_v1',
+src/lib/growth-metrics.ts:177:        sources: ['en_relationship_contact_timing_v1'],
+src/lib/growth-metrics.ts:640:            label: 'Next Move Report 14-day decision gate',
+src/components/ops/GrowthDashboard.tsx:367:                        Next Move Report 14-day decision gate
+src/components/landing/Footer.tsx:47:                        © 2026 Next Move Report by {isEnglish ? 'Tony\'s Company' : '토니스컴퍼니'}. All rights reserved.
+src/components/payment/PaymentModal.tsx:60:        trackingSource === 'next_move_report_mvp_v1' ||
+src/components/payment/PaymentModal.tsx:61:        trackingSource === 'relationship_contact_timing_v1' ||
+src/components/payment/PaymentModal.tsx:62:        trackingSource === 'en_relationship_contact_timing_v1';
+src/components/payment/PaymentModal.tsx:65:        trackingSource === 'next_move_report_mvp_v1'
+src/components/payment/PaymentModal.tsx:66:            ? 'next_move_report_mvp_v1'
+src/components/payment/PaymentModal.tsx:67:            : trackingSource === 'en_relationship_contact_timing_v1'
+src/components/landing/EnglishGuideSection.tsx:34:                            bridge the BaZi overlap, and keep Next Move Report focused on a real contact-or-wait decision.
+src/components/landing/EnglishGuideSection.tsx:78:                                Open Next Move Report
+src/components/landing/HeroSection.tsx:12:    const decisionEntry = 'next_move_report_mvp_v1';
+src/components/landing/HeroSection.tsx:61:                                ? 'Next Move Report · 첫 판정 무료'
+src/components/landing/HeroSection.tsx:62:                                : 'Next Move Report · First verdict free'}
+src/components/common/GlobalHeader.tsx:133:                        label: isEn ? 'Next Move Report' : '무료 첫 판정',
+src/app/relationship/contact-timing/page.tsx:7:const RELATIONSHIP_CONTACT_SOURCE = 'next_move_report_mvp_v1';
+src/app/relationship/contact-timing/page.tsx:8:const RELATIONSHIP_CONTACT_ENTRY = 'next_move_report_mvp_v1';
+src/app/relationship/contact-timing/page.tsx:14:  title: 'Next Move Report | 연락할까, 기다릴까',
+src/app/relationship/contact-timing/page.tsx:24:    title: 'Next Move Report | 연락할까, 기다릴까',
+src/app/relationship/contact-timing/page.tsx:27:    siteName: 'Next Move Report',
+src/app/relationship/contact-timing/page.tsx:33:    title: 'Next Move Report | 연락할까, 기다릴까',
+src/app/relationship/contact-timing/page.tsx:119:            Next Move Report
+src/app/relationship/contact-timing/page.tsx:126:            <p className="text-sm font-semibold text-[#f1c66b]">Next Move Report</p>
+src/app/layout.tsx:19:    creator: "Next Move Report",
+src/app/layout.tsx:20:    publisher: "Next Move Report",
+src/app/layout.tsx:37:      title: { default: "Next Move Report | 연락할까, 기다릴까", template: "%s | Next Move Report" },
+src/app/layout.tsx:44:        title: "Next Move Report | 연락할까, 기다릴까",
+src/app/layout.tsx:46:        siteName: "Next Move Report",
+src/app/layout.tsx:47:        images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Next Move Report" }],
+src/app/layout.tsx:51:        title: "Next Move Report | 연락할까, 기다릴까",
+src/app/layout.tsx:61:    title: { default: "Next Move Report | Contact or Wait", template: "%s | Next Move Report" },
+src/app/layout.tsx:68:      title: "Next Move Report | Contact or Wait",
+src/app/layout.tsx:70:      siteName: "Next Move Report",
+src/app/layout.tsx:71:      images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Next Move Report" }],
+src/app/layout.tsx:75:      title: "Next Move Report | Contact or Wait",
+src/app/manifest.ts:5:        name: 'Next Move Report',
+src/app/start/page.tsx:115:  const isNextMoveReportEntry = landingSource === 'next_move_report_mvp_v1';
+src/app/start/page.tsx:118:    landingSource === 'en_relationship_contact_timing_v1'
+src/app/start/start-page-helpers.ts:92:  'next_move_report_mvp_v1',
+src/app/start/start-page-helpers.ts:93:  'relationship_contact_timing_v1',
+src/app/start/start-page-helpers.ts:94:  'en_relationship_contact_timing_v1',
+src/app/terms/page.tsx:29:                                    These terms explain how Next Move Report delivers relationship decision-support content as digital content.
+src/app/terms/page.tsx:82:                            <li>&quot;서비스&quot;란 회사가 이용자에게 제공하는 Next Move Report 관계/DM 의사결정 보조 콘텐츠, 사주, 점성술, 타로 기반 AI 분석 결과 및 관련 콘텐츠 일체를 의미합니다.</li>
+src/app/terms/page.tsx:113:                            <li>Next Move Report는 연락할지 기다릴지에 대한 참고용 판정과 근거를 제공하며, 상대의 답장, 재회, 관계 결과를 보장하지 않습니다.</li>
+src/app/terms/page.tsx:131:                            <li>Next Move Report 풀 리포트는 MVP 기간에 USD 9 단건 디지털 리포트로 제공되며 Stripe checkout을 통해 결제됩니다.</li>
+src/app/start/start-result-stage.tsx:127:    source === 'next_move_report_mvp_v1' ||
+src/app/start/start-result-stage.tsx:128:    source === 'relationship_contact_timing_v1' ||
+src/app/start/start-result-stage.tsx:129:    source === 'en_relationship_contact_timing_v1'
+src/app/start/start-result-stage.tsx:134:  if (source === 'next_move_report_mvp_v1') {
+src/app/start/start-result-stage.tsx:138:  return source === 'en_relationship_contact_timing_v1'
+src/app/start/start-result-stage.tsx:144:  if (source === 'next_move_report_mvp_v1') {
+src/app/start/start-result-stage.tsx:145:    return 'next_move_report_mvp_v1';
+src/app/start/start-result-stage.tsx:148:  if (source === 'en_relationship_contact_timing_v1') {
+src/app/start/start-result-stage.tsx:335:        landingSource === 'next_move_report_mvp_v1'
+src/app/start/start-result-stage.tsx:337:          : landingSource === 'en_relationship_contact_timing_v1'
+src/app/start/start-input-stage.tsx:21:  const isNextMoveReportEntry = props.landingSource === 'next_move_report_mvp_v1';
+src/app/start/start-input-stage.tsx:39:                    ? 'Next Move Report'
+src/app/page.tsx:36:            title: 'Next Move Report | 연락할까, 기다릴까',
+src/app/page.tsx:39:                title: 'Next Move Report | 연락할까, 기다릴까',
+src/app/page.tsx:47:        title: 'Next Move Report | Contact or Wait',
+src/app/page.tsx:50:            title: 'Next Move Report | Contact or Wait',
+src/app/payment/success/page.tsx:31:    const isNextMovePayment = checkoutContext.source === 'next_move_report_mvp_v1';
+src/app/payment/success/page.tsx:38:        if (source === 'next_move_report_mvp_v1') params.set('entry', source);
+src/app/payment/success/page.tsx:118:                        if (resolvedSource === 'next_move_report_mvp_v1') params.set('entry', resolvedSource);
+src/app/payment/success/page.tsx:185:                                        Your Next Move Report full report is opening now.<br />
+src/app/payment/success/page.tsx:190:                                        Next Move Report 전체 리포트를 여는 중입니다.<br />
+src/app/en/contact-timing/page.tsx:8:const EN_CONTACT_SOURCE = 'en_relationship_contact_timing_v1';
+src/app/en/contact-timing/page.tsx:9:const EN_CONTACT_ENTRY = 'en_relationship_contact_timing_v1';
+src/app/en/contact-timing/page.tsx:14:  title: 'Next Move Report | Contact or Wait',
+src/app/en/contact-timing/page.tsx:25:    title: 'Next Move Report | Contact or Wait',
+src/app/en/contact-timing/page.tsx:29:    siteName: 'Next Move Report',
+src/app/en/contact-timing/page.tsx:35:    title: 'Next Move Report | Contact or Wait',
+src/app/en/contact-timing/page.tsx:98:          alt="Next Move Report decision timing visual"
+src/app/en/contact-timing/page.tsx:109:              Next Move Report
+src/app/en/contact-timing/page.tsx:196:            Next Move Report decision support only. No guaranteed relationship outcome, no pressure tactics, no unsafe advice.
+src/app/privacy/page.tsx:29:                                    This English summary explains what personal information Next Move Report collects during the current validation cycle.
+src/app/privacy/page.tsx:99:                                        <td className="border border-white/10 p-4 font-medium">Next Move Report 선택 정보</td>
+src/app/privacy/page.tsx:129:                            Next Move Report는 이용자가 직접 입력한 관계/DM 맥락을 바탕으로 참고용 판정을 생성합니다.
+src/app/api/payment/price/route.ts:120:                    error: 'Configured Stripe reading price does not match the Next Move Report $9 contract.',

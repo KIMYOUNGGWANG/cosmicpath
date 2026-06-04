@@ -1,0 +1,11 @@
+terms_has_next_move=true
+terms_has_usd9=true
+terms_has_refund=true
+privacy_has_relationship_dm=true
+privacy_has_optional_birth=true
+privacy_has_sensitive_warning=true
+sitemap_has_mvp=true
+sitemap_has_terms=true
+sitemap_has_privacy=true
+sitemap_has_daily=false
+sitemap_has_career=false

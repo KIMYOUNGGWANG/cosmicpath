@@ -1,0 +1,6 @@
+/daily status=200 ok=true
+/daily/tarot status=200 ok=true
+/k-destiny status=200 ok=true
+/oracle-chat status=307 ok=true
+/en/saju status=200 ok=true
+/career/uncertainty status=200 ok=true

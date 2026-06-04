@@ -1,0 +1,404 @@
+tests/e2e/next-move-report.spec.ts:31:        await expect(page.getByRole('button', { name: /^PRO$/i })).toHaveCount(0);
+tests/e2e/next-move-report.spec.ts:132:        await expect(page.getByRole('button', { name: /^PRO$/i })).toHaveCount(0);
+docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json:9:    "상대 마음을 100% 맞힌다는 문구를 쓰지 않는다.",
+tests/e2e/smoke.spec.ts:17:        await expect(page.getByRole('button', { name: /^PRO$/i })).toHaveCount(0);
+tests/e2e/smoke.spec.ts:27:        await expect(page.getByRole('link', { name: /커리어 고민|K-Destiny|PRO/i })).toHaveCount(0);
+src/lib/oracle-access.ts:3:import { isSubscriptionActive } from '@/lib/subscription';
+src/lib/oracle-access.ts:108:            subscriptionStatus: true,
+src/lib/oracle-access.ts:109:            subscriptionExpiresAt: true,
+src/lib/oracle-access.ts:118:        user.subscriptionStatus,
+src/lib/oracle-access.ts:119:        user.subscriptionExpiresAt
+docs/mockups/cosmicpath-responsive-web-board.html:255:    .meter > span { display:block; height:100%; background: linear-gradient(90deg, var(--gold), var(--gold-2)); }
+docs/mockups/cosmicpath-responsive-web-board.html:429:    .bar > span { display:block; height:100%; }
+docs/mockups/cosmicpath-gpt-image-2-prompt.txt:19:7. billing and subscription
+src/lib/payment/payment-config.ts:14:    ? (process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID_TEST || 'prod_next_move_report_test_TBD')
+src/lib/payment/payment-config.ts:15:    : (process.env.NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID || 'prod_next_move_report_live_TBD');
+src/lib/payment/payment-config.ts:17:export const READING_PRODUCT = {
+src/lib/payment/payment-config.ts:19:    // Live 모드 전환 시 .env 에 NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID 를 설정해주세요.
+src/lib/payment/payment-config.ts:31:    ? (process.env.NEXT_PUBLIC_STRIPE_FOLLOWUP_PRODUCT_ID_TEST || 'prod_TestFollowUpId')
+src/lib/payment/payment-config.ts:32:    : (process.env.NEXT_PUBLIC_STRIPE_FOLLOWUP_PRODUCT_ID || 'prod_LiveFollowUpId');
+src/lib/payment/payment-config.ts:34:export const FOLLOW_UP_PRODUCT = {
+src/lib/payment/payment-config.ts:74:    ? (process.env.NEXT_PUBLIC_STRIPE_MATCH_PRODUCT_ID_TEST || 'prod_TestMatchId')
+src/lib/payment/payment-config.ts:75:    : (process.env.NEXT_PUBLIC_STRIPE_MATCH_PRODUCT_ID || 'prod_LiveMatchId');
+src/lib/payment/payment-config.ts:77:export const MATCH_PRODUCT = {
+src/lib/payment/payment-config.ts:98:const subscriptionPriceIds = {
+src/lib/payment/payment-config.ts:100:        ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY || 'price_pro_weekly_TBD')
+src/lib/payment/payment-config.ts:101:        : (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY || 'price_pro_weekly_TBD'),
+src/lib/payment/payment-config.ts:103:        ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY || 'price_1T7Ken0RiEHwZwUJ9BYSpD74')
+src/lib/payment/payment-config.ts:104:        : (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY || 'price_1T7Ken0RiEHwZwUJ9BYSpD74'),
+src/lib/payment/payment-config.ts:106:        ? (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY_TEST || process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY || 'price_1T7Ken0RiEHwZwUJydDuq9Tq')
+src/lib/payment/payment-config.ts:107:        : (process.env.NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY || 'price_1T7Ken0RiEHwZwUJydDuq9Tq'),
+src/lib/payment/payment-config.ts:113:export const SUBSCRIPTION_PRICE_IDS = subscriptionPriceIds;
+src/lib/payment/payment-config.ts:116:    pro_weekly: hasRealStripeLookupId(subscriptionPriceIds.pro_weekly, 'price'),
+src/lib/payment/payment-config.ts:117:    pro_monthly: hasRealStripeLookupId(subscriptionPriceIds.pro_monthly, 'price'),
+src/lib/payment/payment-config.ts:118:    pro_yearly: hasRealStripeLookupId(subscriptionPriceIds.pro_yearly, 'price'),
+src/lib/payment/payment-config.ts:119:    couple_monthly: hasRealStripeLookupId(subscriptionPriceIds.couple_monthly, 'price'),
+src/lib/payment/payment-config.ts:159:    return formatUsdFromCents(READING_PRODUCT.price);
+src/lib/payment/payment-config.ts:166:export type ProductType = typeof READING_PRODUCT | typeof FOLLOW_UP_PRODUCT | typeof MATCH_PRODUCT;
+src/lib/payment/payment-config.ts:175:        READING_PRODUCT.productId,
+src/lib/payment/payment-config.ts:176:        FOLLOW_UP_PRODUCT.productId,
+src/lib/payment/payment-config.ts:179:        MATCH_PRODUCT.productId,
+src/lib/cosmic/schema.ts:11:    'CAREER_PROMOTION',// 승진/합격
+src/lib/saju/saju-engine.ts:760:    '<ORACLE_PRECISION_PROFILE>',
+src/lib/saju/saju-engine.ts:773:    '</ORACLE_PRECISION_PROFILE>',
+src/lib/audit-logger.ts:11:    | 'PROMO_USED'
+src/lib/audit-logger.ts:12:    | 'PROMO_INVALID_ATTEMPT'
+src/lib/audit-logger.ts:77:    const warningEvents: AuditEventType[] = ['RATE_LIMIT_EXCEEDED', 'PROMO_INVALID_ATTEMPT', 'VALIDATION_FAILED'];
+src/lib/safe-error.ts:19:    'PROMO_INVALID',
+src/lib/safe-error.ts:20:    'PROMO_EXPIRED',
+src/lib/payment/stripe.ts:4:import { READING_PRODUCT } from '@/lib/payment/payment-config';
+src/lib/payment/stripe.ts:48:    if (input.productId !== READING_PRODUCT.productId) return;
+src/lib/payment/stripe.ts:53:    if (unitAmount !== READING_PRODUCT.price || currency !== READING_PRODUCT.currency) {
+src/lib/payment/stripe.ts:55:            `READING_PRICE_CONTRACT_MISMATCH expected ${READING_PRODUCT.price} ${READING_PRODUCT.currency}, got ${unitAmount ?? 'null'} ${currency}`
+docs/mockups/cosmicpath-mobile-board.html:172:      height: 100%;
+docs/mockups/cosmicpath-mobile-board.html:228:      height: calc(100% - 34px);
+docs/mockups/cosmicpath-mobile-board.html:384:      height: 100%;
+docs/mockups/cosmicpath-mobile-board.html:598:      height: 100%;
+src/lib/sms-oracle.ts:11:import { isSubscriptionActive } from '@/lib/subscription';
+src/lib/sms-oracle.ts:51:    subscriptionStatus: string;
+src/lib/sms-oracle.ts:52:    subscriptionExpiresAt: Date | null;
+src/lib/sms-oracle.ts:326:      subscriptionStatus: true,
+src/lib/sms-oracle.ts:327:      subscriptionExpiresAt: true,
+src/lib/sms-oracle.ts:335:  return isSubscriptionActive(user.subscriptionStatus, user.subscriptionExpiresAt);
+src/lib/sms-oracle.ts:521:          subscriptionStatus: true,
+src/lib/sms-oracle.ts:522:          subscriptionExpiresAt: true,
+src/lib/sms-oracle.ts:787:    subscriber.user.subscriptionStatus,
+src/lib/sms-oracle.ts:788:    subscriber.user.subscriptionExpiresAt
+src/lib/sms-oracle.ts:879:          subscriptionStatus: true,
+src/lib/sms-oracle.ts:880:          subscriptionExpiresAt: true,
+src/lib/ops-metrics.ts:61:    subscriptions: {
+src/lib/ops-metrics.ts:415:                subscriptionStatus: 'pro',
+src/lib/ops-metrics.ts:417:                    { subscriptionExpiresAt: null },
+src/lib/ops-metrics.ts:418:                    { subscriptionExpiresAt: { gte: new Date() } },
+src/lib/ops-metrics.ts:424:                subscriptionStatus: 'couple',
+src/lib/ops-metrics.ts:426:                    { subscriptionExpiresAt: null },
+src/lib/ops-metrics.ts:427:                    { subscriptionExpiresAt: { gte: new Date() } },
+src/lib/ops-metrics.ts:433:                subscriptionStatus: { in: ['pro', 'couple'] },
+src/lib/ops-metrics.ts:434:                subscriptionExpiresAt: {
+src/lib/ops-metrics.ts:540:        subscriptions: {
+src/lib/ai/oracle-personas.ts:576:        '<ORACLE_GUIDE_PROFILE>',
+src/lib/ai/oracle-personas.ts:588:        '</ORACLE_GUIDE_PROFILE>',
+src/lib/ai/oracle-personas.ts:611:      '<ORACLE_GUIDE_PROFILE>',
+src/lib/ai/oracle-personas.ts:631:      '</ORACLE_GUIDE_PROFILE>',
+src/lib/oracle-chat.ts:3:import { isSubscriptionActive } from '@/lib/subscription';
+src/lib/oracle-chat.ts:395:      subscriptionStatus: true,
+src/lib/oracle-chat.ts:396:      subscriptionExpiresAt: true,
+src/lib/oracle-chat.ts:405:    isUnlimited: isSubscriptionActive(user.subscriptionStatus, user.subscriptionExpiresAt),
+src/lib/ai/prompt-shared-rules.ts:63:    ? 'Relationship safety: never promise a guaranteed reply, reunion, or relationship outcome; banned claims include guaranteed reply, make them respond, 무조건 답장, 반드시 연락. If the question involves stalking, surveillance, repeated checking, coercion, threats, or pressure after a boundary, choose Hold and give a safety boundary.'
+src/lib/ai/prompt-shared-rules.ts:64:    : '관계 안전 규칙: 답장, 재회, 관계 결과를 보장하지 마세요. 금지 표현은 guaranteed reply, make them respond, 무조건 답장, 반드시 연락입니다. stalking, 감시, 반복 확인, 협박, 거절 뒤 압박, 스토킹 문맥이면 보류 판정과 안전 경계를 먼저 제시하세요.';
+src/lib/ai/prompt-shared-rules.ts:71:    ? '# Relationship Decision Safety Rule\n- Decision support only: never promise a guaranteed reply, reunion, confession, or relationship outcome.\n- Banned claims include: guaranteed reply, make them respond, 무조건 답장, 반드시 연락, 100%.\n- If the question mentions stalking, surveillance, repeated checking, coercion, threats, or pressure after a boundary, choose Hold and prioritize safety over timing.\n- Saju, astrology, and tarot are evidence labels for why the verdict leans contact, wait, narrow, or hold; they are not proof of the other person’s mind.'
+src/lib/ai/prompt-shared-rules.ts:72:    : '# 관계/DM 안전 규칙\n- 의사결정 보조만 제공하세요. 답장, 재회, 고백 성공, 관계 결과를 보장하지 마세요.\n- 금지 표현: guaranteed reply, make them respond, 무조건 답장, 반드시 연락, 100%.\n- stalking, 감시, 반복 확인, 협박, 거절 뒤 압박, 스토킹 문맥이면 타이밍보다 안전을 우선하고 보류 판정을 먼저 제시하세요.\n- 사주, 점성술, 타로는 연락/대기/축소/보류 판정이 나온 이유를 설명하는 근거 레이어일 뿐, 상대 마음을 증명하는 도구가 아닙니다.';
+src/lib/ai/prompt-shared-rules.ts:446:- Follow the guide's Decision Sequence, Evidence Sequence, Answer Skeleton, and Forbidden Patterns from <ORACLE_GUIDE_PROFILE>.
+src/hooks/useDocumentScrollLock.ts:51:    body.style.width = '100%';
+src/lib/ai/match-phase-prompts.ts:181:const MASTER_PERSONA_PROMPT = `## 🎭 The Fate Architect (Master Persona)
+src/lib/ai/match-phase-prompts.ts:228:${MASTER_PERSONA_PROMPT}
+src/lib/engines/element-calculator.ts:47:    jeonggi: 1.0,   // 정기: 가장 강한 영향 (100%)
+src/components/Mirror/MirrorSection.tsx:6:import { READING_PRODUCT } from '@/lib/payment/payment-config';
+src/components/Mirror/MirrorSection.tsx:31:                const response = await fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`, {
+src/app/icon.tsx:14:                    width: '100%',
+src/app/icon.tsx:15:                    height: '100%',
+src/app/match/[id]/result/page.tsx:549:                                                        initial={{ x: '-100%' }}
+src/app/match/[id]/result/page.tsx:550:                                                        animate={{ x: '100%' }}
+src/app/my/MyPageClient.tsx:99:function getMembershipSummary(subscription: SubscriptionStatusPayload): string {
+src/app/my/MyPageClient.tsx:100:    switch (subscription.status) {
+src/app/my/MyPageClient.tsx:182:    const [subscription, setSubscription] = useState<SubscriptionStatusPayload>(EMPTY_SUBSCRIPTION);
+src/app/my/MyPageClient.tsx:211:            const [readingsResponse, subscriptionResponse] = await Promise.all([
+src/app/my/MyPageClient.tsx:213:                fetch("/api/subscription/status", { cache: "no-store" }),
+src/app/my/MyPageClient.tsx:221:            if (subscriptionResponse.ok) {
+src/app/my/MyPageClient.tsx:222:                const subscriptionPayload = await subscriptionResponse.json();
+src/app/my/MyPageClient.tsx:224:                    status: subscriptionPayload.status ?? "free",
+src/app/my/MyPageClient.tsx:225:                    expiresAt: subscriptionPayload.expiresAt ?? null,
+src/app/my/MyPageClient.tsx:226:                    stripeCustomerId: subscriptionPayload.stripeCustomerId ?? null,
+src/app/my/MyPageClient.tsx:227:                    plan: subscriptionPayload.plan ?? null,
+src/app/my/MyPageClient.tsx:240:    const isSmsMembershipActive = subscription.status !== "free";
+src/app/my/MyPageClient.tsx:445:                                    {getPlanLabel(subscription.plan)}
+src/app/my/MyPageClient.tsx:448:                                    className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${getBadgeClasses(subscription.status)}`}
+src/app/my/MyPageClient.tsx:450:                                    {getTierBadge(subscription.status)}
+src/app/my/MyPageClient.tsx:454:                                {getMembershipSummary(subscription)}
+src/app/my/MyPageClient.tsx:476:                            {subscription.status === "free" ? (
+src/app/my/MyPageClient.tsx:501:                                {subscription.status === "free" ? "Free" : "Premium"}
+src/app/my/MyPageClient.tsx:509:                                {formatExpiry(subscription.expiresAt)}
+src/app/my/MyPageClient.tsx:517:                                {subscription.stripeCustomerId ? "Stripe connected" : "Not connected"}
+src/app/cosmic-test/page.tsx:14:        primaryTags: ['CAREER_PROMOTION', 'NEW_START', 'WEALTH_LOSS'],
+src/app/cosmic-test/page.tsx:22:                detectedTags: ['CAREER_PROMOTION', 'WEALTH_WINDFALL'],
+src/app/cosmic-test/page.tsx:28:                detectedTags: ['CAREER_PROMOTION', 'NEW_START'],
+src/app/career/uncertainty/page.tsx:36:const PROMPT_CARDS = [
+src/app/career/uncertainty/page.tsx:108:          {PROMPT_CARDS.map((card) => (
+src/components/share/CosmicShareCard.tsx:35:                    background: 'linear-gradient(180deg, #0F1419 0%, #1A1F2E 50%, #0D1117 100%)',
+src/app/share/[id]/SharedPageClient.tsx:262:        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.18),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_28%),linear-gradient(180deg,#040612_0%,#070b19_44%,#0b0f1f_100%)]" />
+src/app/share/[id]/SharedPageClient.tsx:285:        <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.24),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.16),transparent_26%),linear-gradient(180deg,#040612_0%,#070b19_44%,#0b0f1f_100%)]" />
+src/app/share/[id]/SharedPageClient.tsx:328:      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.18),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_28%),linear-gradient(180deg,#040612_0%,#070b19_44%,#0b0f1f_100%)]" />
+src/app/relationship/contact-timing/page.tsx:39:const PROMPT_CARDS = [
+src/app/relationship/contact-timing/page.tsx:161:            {PROMPT_CARDS.map((card) => {
+src/app/globals.css:114:  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+src/app/globals.css:143:    100% {
+src/app/globals.css:154:  width: 100%;
+src/app/globals.css:155:  height: 100%;
+src/app/globals.css:205:    radial-gradient(ellipse at center, #0A0A0C 0%, #050505 100%);
+src/app/globals.css:213:  background: linear-gradient(135deg, var(--gold) 0%, var(--aurora-cyan) 100%);
+src/app/globals.css:244:  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
+src/app/globals.css:291:  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
+src/app/globals.css:389:  width: 100%;
+src/app/globals.css:390:  height: 100%;
+src/app/globals.css:402:  width: 100%;
+src/app/globals.css:403:  height: 100%;
+src/app/globals.css:412:  background: linear-gradient(135deg, #1a1230 0%, #2d1b4e 100%);
+src/app/globals.css:417:  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
+src/app/globals.css:448:  100% {
+src/app/globals.css:472:  100% {
+src/app/globals.css:506:  100% {
+src/app/globals.css:538:    transform: translateX(-100%);
+src/app/globals.css:541:  100% {
+src/app/globals.css:542:    transform: translateX(100%);
+src/app/globals.css:662:  100% {
+src/app/globals.css:688:  100% {
+src/app/globals.css:933:  width: 100%;
+src/app/globals.css:997:  background-size: 400% 100%;
+src/app/globals.css:1006:  100% {
+src/app/globals.css:1014:  background-size: 100% 100%;
+src/components/share/SharePanel.tsx:407:                            background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+src/app/k-destiny/KDestinyExperience.tsx:119:        background: `radial-gradient(circle at 18% 16%, ${activeResult.auraColorHex[0]}66 0%, transparent 35%), radial-gradient(circle at 85% 20%, ${activeResult.auraColorHex[1]}66 0%, transparent 40%), linear-gradient(145deg, #070b17 10%, #111a2e 55%, #0f1422 100%)`,
+src/app/en/contact-timing/page.tsx:41:const PROMPT_CARDS = [
+src/app/en/contact-timing/page.tsx:157:              {PROMPT_CARDS.map((card) => {
+src/app/ops/growth/page.tsx:34:        <main className="min-h-screen bg-[linear-gradient(180deg,#050816_0%,#0B1023_42%,#120C29_100%)] px-6 py-10 text-white">
+src/app/ops/payments/page.tsx:34:        <main className="min-h-screen bg-[linear-gradient(180deg,#050816_0%,#0B1023_42%,#120C29_100%)] px-6 py-10 text-white">
+src/app/ops/reviews/page.tsx:46:        <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(245,196,81,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.14),transparent_26%),linear-gradient(180deg,#050816_0%,#0B1023_42%,#120C29_100%)] px-6 py-10 text-white">
+src/app/ops/trust/page.tsx:34:        <main className="min-h-screen bg-[linear-gradient(180deg,#050816_0%,#0B1023_42%,#120C29_100%)] px-6 py-10 text-white">
+src/app/billing/page.tsx:32:    subscriptionId: string;
+src/app/billing/page.tsx:142:            : 'border-[hsl(22_73%_46%_/0.38)] bg-[linear-gradient(135deg,rgba(249,115,22,0.16),rgba(244,63,94,0.08))] text-[hsl(33_100%_88%)]';
+src/app/billing/page.tsx:205:            const response = await fetch('/api/subscription/status', {
+src/app/billing/page.tsx:217:            console.error('Failed to load subscription status:', error);
+src/app/billing/page.tsx:232:            const response = await fetch('/api/subscription/cancel', {
+src/app/billing/page.tsx:253:            console.error('Failed to cancel subscription:', error);
+src/app/billing/page.tsx:262:            <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,#1b1731_0%,#06070c_58%,#03040a_100%)]">
+src/app/billing/page.tsx:279:        <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,#18142d_0%,#0b1020_30%,#05070d_72%,#03040a_100%)] px-5 pb-20 pt-24 text-white md:px-8">
+src/app/billing/page.tsx:408:                                    className="group inline-flex min-h-12 items-center justify-center rounded-full border border-[hsl(21_78%_45%_/0.24)] bg-[linear-gradient(135deg,rgba(251,146,60,0.18),rgba(244,63,94,0.12))] px-6 py-3 text-sm font-semibold text-[hsl(29_100%_91%)] shadow-[0_16px_50px_rgba(251,146,60,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_60px_rgba(251,146,60,0.24)] disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.03] disabled:text-white/36 disabled:shadow-none"
+src/app/billing/page.tsx:470:                                <p>지금 구조에서 새 Checkout을 여러 갈래로 열면 Stripe에 중복 subscription 이 생성될 가능성이 있습니다.</p>
+src/app/billing/page.tsx:471:                                <p>안전한 다음 단계는 Stripe Billing Portal 또는 전용 `subscription update` API 입니다.</p>
+src/app/ops/page.tsx:41:        <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(245,196,81,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.14),transparent_26%),linear-gradient(180deg,#050816_0%,#0B1023_42%,#120C29_100%)] px-6 py-10 text-white">
+src/app/ops/readings/page.tsx:45:        <main className="min-h-screen bg-[linear-gradient(180deg,#050816_0%,#0B1023_42%,#120C29_100%)] px-6 py-10 text-white">
+src/components/Pricing/PricingSection.tsx:6:import { READING_PRODUCT } from '@/lib/payment/payment-config';
+src/components/Pricing/PricingSection.tsx:21:                const response = await fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`, {
+src/components/Pricing/PricingSection.tsx:59:            guarantee: "7일 이내 만족하지 못할 시 100% 환불"
+src/components/Pricing/PricingSection.tsx:73:            guarantee: "100% Money-back within 7 days"
+src/app/ops/advisors/page.tsx:34:        <main className="min-h-screen bg-[linear-gradient(180deg,#050816_0%,#0B1023_42%,#120C29_100%)] px-6 py-10 text-white">
+src/app/en/saju/SajuLandingExperience.tsx:96:                                : 'linear-gradient(135deg, #D4AF37 0%, #B8962E 100%)',
+src/app/billing/success/page.tsx:24:                const response = await fetch('/api/subscription/status', {
+src/app/billing/success/page.tsx:33:                console.error('Failed to verify subscription status:', error);
+src/components/daily/DailySealedWidget.tsx:465:                        className={`group relative mx-auto flex h-[296px] w-[min(100%,25rem)] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[30px] border shadow-2xl transition-[transform,box-shadow,border-color] duration-300 hover:scale-[1.02] hover:-rotate-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acc-gold/70 ${
+src/app/en/saju/sections/SajuHero.tsx:65:                    background: 'linear-gradient(160deg, #E4E4E7 30%, #A1A1AA 100%)',
+src/app/en/saju/sections/SajuHero.tsx:136:                        background: 'linear-gradient(135deg, #D4AF37 0%, #B8962E 100%)',
+src/components/ops/TrustOpsDashboard.tsx:223:                                <ResponsiveContainer width="100%" height="100%">
+src/components/ops/TrustOpsDashboard.tsx:267:                            <ResponsiveContainer width="100%" height="100%">
+src/app/start/page.tsx:1004:      '#승진': 'CAREER_PROMOTION', '#취업': 'CAREER_PROMOTION', '#명예': 'CAREER_PROMOTION',
+src/components/ops/PaymentOpsDashboard.tsx:177:                        <OpsSignalChip label="구독 중" value={`${summary.subscriptions.activePro + summary.subscriptions.activeCouple}`} />
+src/components/ops/PaymentOpsDashboard.tsx:220:                                <ResponsiveContainer width="100%" height="100%">
+src/components/ops/PaymentOpsDashboard.tsx:250:                                value={summary.subscriptions.activePro.toLocaleString()}
+src/components/ops/PaymentOpsDashboard.tsx:255:                                value={summary.subscriptions.activeCouple.toLocaleString()}
+src/components/ops/PaymentOpsDashboard.tsx:260:                                value={summary.subscriptions.expiringSoon.toLocaleString()}
+src/components/ops/PaymentOpsDashboard.tsx:305:                        <ResponsiveContainer width="100%" height="100%">
+src/app/en/saju/sections/SajuCheckoutCTA.tsx:67:                                : 'linear-gradient(135deg, #D4AF37 0%, #B8962E 100%)',
+src/app/en/saju/result/SajuResultError.tsx:25:                style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #B8962E 100%)' }}
+src/components/ops/AdvisorOpsDashboard.tsx:211:                                <ResponsiveContainer width="100%" height="100%">
+src/components/ops/AdvisorOpsDashboard.tsx:246:                        <ResponsiveContainer width="100%" height="100%">
+src/components/ops/OpsAccessState.tsx:18:        <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(245,196,81,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.16),transparent_26%),linear-gradient(180deg,#050816_0%,#0B1023_42%,#120C29_100%)] px-6 py-10 text-white">
+src/components/ops/GrowthDashboard.tsx:602:                                <ResponsiveContainer width="100%" height="100%">
+src/components/payment/PaymentModal.tsx:8:import { getReadingFallbackPriceLabel, normalizePriceLabel, READING_PRODUCT } from '@/lib/payment/payment-config';
+src/components/payment/PaymentModal.tsx:101:        ? READING_PRODUCT.name
+src/components/payment/PaymentModal.tsx:124:        fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`, { cache: 'no-store' })
+src/components/payment/PaymentModal.tsx:182:                plan: READING_PRODUCT.id,
+src/components/payment/PaymentModal.tsx:205:            plan: READING_PRODUCT.id,
+src/components/payment/PaymentModal.tsx:261:        // 이메일 유효성 검사 (프로모션 100% 할인이 아닐 때만 필수)
+src/components/payment/PaymentModal.tsx:319:                plan: isFreePromo ? 'promo_free_unlock' : READING_PRODUCT.id,
+src/components/payment/PaymentModal.tsx:415:                    productId: READING_PRODUCT.productId,
+src/components/payment/PaymentModal.tsx:447:                plan: isFreePromo ? 'promo_free_unlock' : READING_PRODUCT.id,
+src/app/en/saju/sections/SajuBirthForm.tsx:145:                                : 'linear-gradient(135deg, #D4AF37 0%, #B8962E 100%)',
+src/app/en/saju/sections/SajuBirthForm.tsx:167:                            '✦ One-time payment · No subscription',
+src/components/ops/ReadingSupportDashboard.tsx:245:                                <ResponsiveContainer width="100%" height="100%">
+src/components/orders/OrderLookupModal.tsx:300:                                                    {order.type === 'PROMO' ? '🎁 프로모션 운세' : (order.amount === 4500 ? '☕️ 커피 한 잔의 운세' : '심화 분석 리포트')}
+src/components/orders/OrderLookupModal.tsx:337:                            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-32px)] max-w-md z-[9999]"
+src/components/orders/OrderLookupModal.tsx:346:                            initial={{ y: '100%' }}
+src/components/orders/OrderLookupModal.tsx:348:                            exit={{ y: '100%' }}
+src/components/common/MobileMenu.tsx:39:                        initial={{ x: '100%' }}
+src/components/common/MobileMenu.tsx:41:                        exit={{ x: '100%' }}
+src/components/oracle-chat/CreditPurchaseModal.tsx:275:                            {/* Upsell to PRO */}
+src/components/payment/SubscriptionModal.tsx:465:                throw new Error(`Failed to load ${planType} subscription price`);
+src/components/payment/SubscriptionModal.tsx:598:            const response = await fetch('/api/subscription/create', {
+src/components/payment/SubscriptionModal.tsx:652:                            aria-labelledby="subscription-modal-title"
+src/components/payment/SubscriptionModal.tsx:690:                                            id="subscription-modal-title"
+src/components/payment/SubscriptionModal.tsx:743:                                                            layoutId="subscription-selected-outline"
+src/components/common/DailyPulse.tsx:100:                    background: `linear-gradient(135deg, ${todayElement.color}15 0%, ${todayElement.color}05 100%)`,
+src/components/common/DailyPulse.tsx:150:                animate={{ x: ['-100%', '100%'] }}
+src/components/match/MatchVisuals.tsx:61:                    <linearGradient id="matchRadarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+src/components/match/MatchVisuals.tsx:64:                        <stop offset="100%" stopColor="#6366F1" stopOpacity="0.6" />
+src/components/reading/FortuneTimelineChart.tsx:125:                            <stop offset="100%" stopColor={dominantColor.stroke} stopOpacity="0.05" />
+src/app/brand/page.tsx:15:                    실제 서비스 UI 컴포넌트를 사용하여 프로덕트의 정체성을 100% 반영합니다.
+src/components/landing/Navigation.tsx:55:                    hidden: { y: '-100%' },
+src/components/common/GlobalHeader.tsx:44:                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
+src/components/landing/CrossroadsSection.tsx:6:import { READING_PRODUCT } from '@/lib/payment/payment-config';
+src/components/landing/CrossroadsSection.tsx:41:                const response = await fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`, { cache: 'no-store' });
+src/components/reading/premium-report-sections.tsx:1327:                  <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")` }} />
+src/app/api/og/aura/route.tsx:92:                        width: '100%',
+src/app/api/og/aura/route.tsx:93:                        height: '100%',
+src/app/api/og/aura/route.tsx:98:                            'linear-gradient(135deg, #050816 0%, #101727 45%, #161f31 100%)',
+src/app/api/og/aura/route.tsx:116:                            width: '100%',
+src/components/reading/FollowUpChat.tsx:171:                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)',
+src/components/reading/FollowUpChat.tsx:184:                            background: 'radial-gradient(circle, rgba(212, 175, 55, 0.3) 0%, rgba(139, 92, 246, 0.2) 100%)',
+src/components/reading/FollowUpChat.tsx:326:                                    background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
+src/components/reading/FollowUpChat.tsx:330:                                <div className="absolute inset-0 bg-white/20 sm:translate-x-[-100%] sm:group-hover:translate-x-[100%] transition-transform duration-700 blur-md rounded-xl" />
+src/components/reading/FollowUpChat.tsx:374:                                    ? 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)'
+src/app/api/orders/route.ts:62:            status: 'PROMO',
+src/app/api/orders/route.ts:64:            type: 'PROMO'
+src/app/api/og/route.tsx:20:                        height: '100%',
+src/app/api/og/route.tsx:21:                        width: '100%',
+src/app/api/daily/fortune/route.ts:6:import { isSubscriptionActive } from '@/lib/subscription';
+src/app/api/daily/fortune/route.ts:142:            subscriptionStatus: true,
+src/app/api/daily/fortune/route.ts:143:            subscriptionExpiresAt: true,
+src/app/api/daily/fortune/route.ts:151:    return isSubscriptionActive(user.subscriptionStatus, user.subscriptionExpiresAt);
+src/components/landing/ReviewCarousel.tsx:64:                <div className="absolute inset-0 opacity-[0.15] mix-blend-soft-light" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
+src/components/landing/ReviewCarousel.tsx:74:            <div className="absolute inset-0 opacity-[0.15] mix-blend-soft-light pointer-events-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
+src/components/reading/CompatibilityOverlay.tsx:116:                            <stop offset="100%" stopColor="#D4AF37" stopOpacity="0.1" />
+src/components/reading/CompatibilityOverlay.tsx:120:                            <stop offset="100%" stopColor="#A855F7" stopOpacity="0.1" />
+src/app/api/webhook/stripe/route.ts:44:let subscriptionColumnsAvailableCache: boolean | undefined;
+src/app/api/webhook/stripe/route.ts:53:function resolvePlanIdFromSubscription(subscription: Stripe.Subscription): SubscriptionPlanId | null {
+src/app/api/webhook/stripe/route.ts:54:    const metadataPlan = parsePlanId(subscription.metadata?.planId);
+src/app/api/webhook/stripe/route.ts:57:    const firstPriceId = subscription.items.data[0]?.price?.id;
+src/app/api/webhook/stripe/route.ts:74:function getCustomerIdFromSubscription(subscription: Stripe.Subscription): string | null {
+src/app/api/webhook/stripe/route.ts:75:    if (typeof subscription.customer === 'string') return subscription.customer;
+src/app/api/webhook/stripe/route.ts:76:    return subscription.customer?.id ?? null;
+src/app/api/webhook/stripe/route.ts:79:function getSubscriptionPeriodEnd(subscription: Stripe.Subscription): number | null {
+src/app/api/webhook/stripe/route.ts:80:    const periodEnds = subscription.items.data
+src/app/api/webhook/stripe/route.ts:115:    if (subscriptionColumnsAvailableCache !== undefined) {
+src/app/api/webhook/stripe/route.ts:116:        return subscriptionColumnsAvailableCache;
+src/app/api/webhook/stripe/route.ts:121:        subscriptionColumnsAvailableCache = false;
+src/app/api/webhook/stripe/route.ts:131:            'subscription_status',
+src/app/api/webhook/stripe/route.ts:132:            'subscription_expires_at',
+src/app/api/webhook/stripe/route.ts:134:            'stripe_subscription_id'
+src/app/api/webhook/stripe/route.ts:139:    subscriptionColumnsAvailableCache =
+src/app/api/webhook/stripe/route.ts:140:        names.has('subscription_status') &&
+src/app/api/webhook/stripe/route.ts:141:        names.has('subscription_expires_at') &&
+src/app/api/webhook/stripe/route.ts:143:        names.has('stripe_subscription_id');
+src/app/api/webhook/stripe/route.ts:145:    return subscriptionColumnsAvailableCache;
+src/app/api/webhook/stripe/route.ts:148:async function resolveUserIdFromSubscription(subscription: Stripe.Subscription): Promise<string | null> {
+src/app/api/webhook/stripe/route.ts:149:    const metadataUserId = subscription.metadata?.userId?.trim();
+src/app/api/webhook/stripe/route.ts:152:    const stripeCustomerId = getCustomerIdFromSubscription(subscription);
+src/app/api/webhook/stripe/route.ts:185:         SET subscription_status = $1,
+src/app/api/webhook/stripe/route.ts:186:             subscription_expires_at = $2::timestamptz,
+src/app/api/webhook/stripe/route.ts:188:             stripe_subscription_id = $4
+src/app/api/webhook/stripe/route.ts:619:            event.type === 'customer.subscription.created' ||
+src/app/api/webhook/stripe/route.ts:620:            event.type === 'customer.subscription.updated' ||
+src/app/api/webhook/stripe/route.ts:621:            event.type === 'customer.subscription.deleted'
+src/app/api/webhook/stripe/route.ts:623:            const subscription = event.data.object as Stripe.Subscription;
+src/app/api/webhook/stripe/route.ts:624:            const planId = resolvePlanIdFromSubscription(subscription);
+src/app/api/webhook/stripe/route.ts:625:            const isActive = activeSubscriptionStatuses.has(subscription.status);
+src/app/api/webhook/stripe/route.ts:626:            const stripeCustomerId = getCustomerIdFromSubscription(subscription);
+src/app/api/webhook/stripe/route.ts:627:            const userId = await resolveUserIdFromSubscription(subscription);
+src/app/api/webhook/stripe/route.ts:628:            const periodEnd = getSubscriptionPeriodEnd(subscription);
+src/app/api/webhook/stripe/route.ts:632:                    `[Webhook] Subscription event skipped: user not resolved (${event.type}, subscriptionId=${subscription.id})`
+src/app/api/webhook/stripe/route.ts:645:                    event.type === 'customer.subscription.deleted' ? null : subscription.id,
+src/app/api/webhook/stripe/route.ts:650:                    '[Webhook] Subscription columns are missing. Run migration before relying on DB subscription status.'
+src/app/api/og/match/[id]/route.tsx:81:                    width: '100%',
+src/app/api/og/match/[id]/route.tsx:82:                    height: '100%',
+src/app/api/og/match/[id]/route.tsx:87:                        'radial-gradient(circle at 16% 18%, rgba(255,255,255,0.08), transparent 26%), linear-gradient(135deg, #050816 0%, #101426 44%, #1A1036 100%)',
+src/app/api/og/match/[id]/route.tsx:114:                        width: '100%',
+src/app/api/daily/tarot/route.ts:6:import { isSubscriptionActive } from '@/lib/subscription';
+src/app/api/daily/tarot/route.ts:48:            subscriptionStatus: true,
+src/app/api/daily/tarot/route.ts:49:            subscriptionExpiresAt: true,
+src/app/api/daily/tarot/route.ts:57:    return isSubscriptionActive(user.subscriptionStatus, user.subscriptionExpiresAt);
+src/components/reading/blind-spot-teaser.tsx:102:                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+src/components/reading/premium-report.tsx:28:import { normalizePriceLabel, READING_PRODUCT } from '@/lib/payment/payment-config';
+src/components/reading/premium-report.tsx:462:        fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`, { cache: 'no-store' })
+src/app/api/og/reading/[id]/route.tsx:35:            width: '100%',
+src/app/api/og/reading/[id]/route.tsx:36:            height: '100%',
+src/app/api/og/reading/[id]/route.tsx:41:              'radial-gradient(circle at top left, rgba(139, 92, 246, 0.22), transparent 32%), radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.18), transparent 28%), linear-gradient(135deg, #050816 0%, #0b1023 45%, #140f2d 100%)',
+src/app/api/og/reading/[id]/route.tsx:58:              width: '100%',
+src/app/api/og/reading/[id]/route.tsx:249:                    width: '100%',
+src/app/api/og/reading/[id]/route.tsx:259:                      height: '100%',
+src/app/api/og/reading/[id]/route.tsx:262:                        'linear-gradient(90deg, #8B5CF6 0%, #A78BFA 45%, #F5C451 100%)',
+src/components/reading/deep-dive-drawer.tsx:46:                        initial={{ y: '100%' }}
+src/components/reading/deep-dive-drawer.tsx:48:                        exit={{ y: '100%' }}
+src/components/reading/deep-dive-drawer.tsx:68:                                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+src/components/reading/cosmic-radar.tsx:82:                    <linearGradient id="radarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+src/components/reading/cosmic-radar.tsx:85:                        <stop offset="100%" stopColor="var(--star-yellow)" stopOpacity="0.8" />
+src/components/reading/cosmic-radar.tsx:87:                    <linearGradient id="radarStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+src/components/reading/cosmic-radar.tsx:90:                        <stop offset="100%" stopColor="var(--star-yellow)" />
+src/components/reading/ElementHarmony.tsx:99:                                    <stop offset="100%" stopColor="rgba(212, 175, 55, 0)" />
+src/components/reading/verdict-report.tsx:93:                        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+src/components/reading/verdict-report.tsx:153:                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+src/components/reading/verdict-report.tsx:594:            {/* ── PROGRESSIVE DISCLOSURE TOGGLE — mobile/tablet only (xl: hidden, content always shown) ── */}
+src/app/api/match/[id]/pay/route.ts:5:import { MATCH_PRODUCT } from '@/lib/payment/payment-config';
+src/app/api/match/[id]/pay/route.ts:40:            productId: MATCH_PRODUCT.productId,
+src/app/api/payment/route.ts:3:import { READING_PRODUCT, isProductAllowed } from '@/lib/payment/payment-config';
+src/app/api/payment/route.ts:25:            : READING_PRODUCT.productId;
+src/app/api/payment/route.ts:85:                    { error: '100% 할인 코드는 직접 사용 흐름으로만 처리됩니다.' },
+src/app/api/subscription/create/route.ts:47:            return 'NEXT_PUBLIC_STRIPE_PRICE_PRO_WEEKLY_TEST';
+src/app/api/subscription/create/route.ts:49:            return 'NEXT_PUBLIC_STRIPE_PRICE_PRO_MONTHLY_TEST';
+src/app/api/subscription/create/route.ts:51:            return 'NEXT_PUBLIC_STRIPE_PRICE_PRO_YEARLY_TEST';
+src/app/api/subscription/create/route.ts:108:            mode: 'subscription',
+src/app/api/subscription/create/route.ts:119:            subscription_data: {
+src/app/api/payment/price/route.ts:8:    MATCH_PRODUCT,
+src/app/api/payment/price/route.ts:9:    READING_PRODUCT,
+src/app/api/payment/price/route.ts:20:    const fallbackProductId = requestedProductId || READING_PRODUCT.productId;
+src/app/api/payment/price/route.ts:21:    const subscriptionFallbacks: Record<string, number> = {
+src/app/api/payment/price/route.ts:26:        [READING_PRODUCT.productId]: {
+src/app/api/payment/price/route.ts:27:            amount: READING_PRODUCT.price / 100,
+src/app/api/payment/price/route.ts:28:            formattedPrice: formatUsdFromCents(READING_PRODUCT.price),
+src/app/api/payment/price/route.ts:30:        [MATCH_PRODUCT.productId]: {
+src/app/api/payment/price/route.ts:31:            amount: MATCH_PRODUCT.price / 100,
+src/app/api/payment/price/route.ts:32:            formattedPrice: formatUsdFromCents(MATCH_PRODUCT.price),
+src/app/api/payment/price/route.ts:43:    const subscriptionAmount = requestedPriceId ? subscriptionFallbacks[requestedPriceId] : undefined;
+src/app/api/payment/price/route.ts:45:    const amount = subscriptionAmount ?? productFallback?.amount ?? READING_PRODUCT.price / 100;
+src/app/api/payment/price/route.ts:46:    const formattedPrice = subscriptionAmount
+src/app/api/payment/price/route.ts:47:        ? formatUsdAmount(subscriptionAmount)
+src/app/api/payment/price/route.ts:48:        : productFallback?.formattedPrice ?? formatUsdFromCents(READING_PRODUCT.price);
+src/app/api/payment/price/route.ts:51:        productId: fallbackProductId || READING_PRODUCT.id,
+src/app/api/payment/price/route.ts:54:        currency: READING_PRODUCT.currency,
+src/app/api/payment/price/route.ts:66:    if (productId === READING_PRODUCT.productId) return READING_PRODUCT.stripeConfigured;
+src/app/api/payment/price/route.ts:67:    if (productId === MATCH_PRODUCT.productId) return MATCH_PRODUCT.stripeConfigured;
+src/app/api/payment/price/route.ts:91:        const productId = searchParams.get('productId')?.trim() || READING_PRODUCT.productId;
+src/app/api/payment/price/route.ts:112:            ? await getPriceById(priceId, READING_PRODUCT.currency)
+src/app/api/payment/price/route.ts:113:            : await getProductPrice(productId, READING_PRODUCT.currency);
+src/app/api/payment/price/route.ts:122:                    expectedAmount: READING_PRODUCT.price,
+src/app/api/payment/price/route.ts:123:                    expectedCurrency: READING_PRODUCT.currency,
+src/app/api/payment/price/route.ts:132:                productId: new URL(request.url).searchParams.get('productId') || READING_PRODUCT.productId,
+src/app/api/subscription/cancel/route.ts:33:function isActiveSubscription(subscription: Stripe.Subscription | null): subscription is Stripe.Subscription {
+src/app/api/subscription/cancel/route.ts:34:    return !!subscription && activeSubscriptionStatuses.has(subscription.status);
+src/app/api/subscription/cancel/route.ts:37:function resolvePeriodEndTimestamp(subscription: Stripe.Subscription): number | null {
+src/app/api/subscription/cancel/route.ts:38:    const periodEnds = subscription.items.data
+src/app/api/subscription/cancel/route.ts:46:function getCurrentPeriodEnd(subscription: Stripe.Subscription): string {
+src/app/api/subscription/cancel/route.ts:47:    const periodEnd = resolvePeriodEndTimestamp(subscription);
+src/app/api/subscription/cancel/route.ts:58:        const subscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+src/app/api/subscription/cancel/route.ts:59:        return isActiveSubscription(subscription) ? subscription : null;
+src/app/api/subscription/cancel/route.ts:61:        devLog.error('[Stripe] Failed to retrieve subscription by id:', error);
+src/app/api/subscription/cancel/route.ts:83:    const subscriptions = await stripe.subscriptions.list({
+src/app/api/subscription/cancel/route.ts:89:    return subscriptions.data.find(isActiveSubscription) ?? null;
+src/app/api/subscription/cancel/route.ts:95:): Promise<{ stripeCustomerId: string | null; subscription: Stripe.Subscription | null }> {
+src/app/api/subscription/cancel/route.ts:96:    const subscriptionById = await findSubscriptionById(stripe, input.stripeSubscriptionId);
+src/app/api/subscription/cancel/route.ts:97:    if (subscriptionById) {
+src/app/api/subscription/cancel/route.ts:99:            typeof subscriptionById.customer === 'string'
+src/app/api/subscription/cancel/route.ts:100:                ? subscriptionById.customer
+src/app/api/subscription/cancel/route.ts:101:                : subscriptionById.customer?.id ?? input.stripeCustomerId;
+src/app/api/subscription/cancel/route.ts:105:            subscription: subscriptionById,
+src/app/api/subscription/cancel/route.ts:109:    const subscriptionByCustomer = await findSubscriptionByCustomer(stripe, input.stripeCustomerId);
+src/app/api/subscription/cancel/route.ts:110:    if (subscriptionByCustomer) {
+src/app/api/subscription/cancel/route.ts:113:            subscription: subscriptionByCustomer,
+src/app/api/subscription/cancel/route.ts:121:            subscription: null,
+src/app/api/subscription/cancel/route.ts:127:        subscription: await findSubscriptionByCustomer(stripe, stripeCustomerId),
+src/app/api/subscription/cancel/route.ts:168:        const { stripeCustomerId, subscription } = await findActiveSubscription(stripe, user);
+src/app/api/subscription/cancel/route.ts:170:        if (!subscription) {
+src/app/api/subscription/cancel/route.ts:174:        if (subscription.cancel_at_period_end) {
+src/app/api/subscription/cancel/route.ts:177:                subscriptionId: subscription.id,
+src/app/api/subscription/cancel/route.ts:179:                currentPeriodEnd: getCurrentPeriodEnd(subscription),
+src/app/api/subscription/cancel/route.ts:183:        const canceledSubscription = await stripe.subscriptions.update(subscription.id, {
+src/app/api/subscription/cancel/route.ts:195:            subscriptionId: canceledSubscription.id,
+src/app/api/subscription/cancel/route.ts:200:        devLog.error('Error cancelling subscription:', error);
+src/app/api/subscription/status/route.ts:13:const subscriptionPlanSchema = z.enum(SUBSCRIPTION_PLAN_IDS);
+src/app/api/subscription/status/route.ts:39:    const parsed = subscriptionPlanSchema.safeParse(raw);
+src/app/api/subscription/status/route.ts:44:    subscription: Stripe.Subscription
+src/app/api/subscription/status/route.ts:46:    const metadataPlan = parsePlanId(subscription.metadata?.planId);
+src/app/api/subscription/status/route.ts:49:    const firstPriceId = subscription.items.data[0]?.price?.id;
+src/app/api/subscription/status/route.ts:66:function getSubscriptionPeriodEnd(subscription: Stripe.Subscription): number | null {
+src/app/api/subscription/status/route.ts:67:    const periodEnds = subscription.items.data
+src/app/api/subscription/status/route.ts:118:        const subscriptions = await stripe.subscriptions.list({
+src/app/api/subscription/status/route.ts:124:        const activeSubscription = subscriptions.data.find((subscription) =>
+src/app/api/subscription/status/route.ts:125:            activeSubscriptionStatuses.has(subscription.status)

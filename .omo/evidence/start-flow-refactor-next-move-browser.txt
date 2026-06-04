@@ -1,0 +1,36 @@
+[2m[WebServer] [22m(node:5841) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:5842) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+[2m[WebServer] [22m We detected multiple lockfiles and selected the directory of /Users/kim-young-gwang/package-lock.json as the root directory.
+[2m[WebServer] [22m To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+[2m[WebServer] [22m   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+[2m[WebServer] [22m Detected additional lockfiles:
+[2m[WebServer] [22m   * /Users/kim-young-gwang/Desktop/projects/cosmicpath/pnpm-lock.yaml
+[2m[WebServer] [22m
+[2m[WebServer] [22m⚠ Turbopack's filesystem cache has been deleted because we previously detected an internal error in Turbopack. Builds or page loads may be slower as a result.
+[2m[WebServer] [22m(node:5970) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 3 tests using 1 worker
+
+(node:5971) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:5971) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium] › tests/e2e/next-move-report.spec.ts:36:9 › Next Move Report MVP › start keeps Next Move source and prefilled question (1.8s)
+[2m[WebServer] [22m(node:5982) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:5983) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 [chromium] › tests/e2e/next-move-report.spec.ts:61:9 › Next Move Report MVP › paywall shows USD 9 Next Move offer (3.0s)
+[2m[WebServer] [22m(node:5984) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:5986) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:5987) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  3 [chromium] › tests/e2e/next-move-report.spec.ts:138:9 › Next Move Report MVP › paywall pauses checkout when Stripe price contract mismatches (2.7s)
+
+  3 passed (17.0s)

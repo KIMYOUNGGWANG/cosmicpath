@@ -1,0 +1,129 @@
+src/hooks/useDocumentScrollLock.ts:51:    body.style.width = '100%';
+src/components/share/CosmicShareCard.tsx:35:                    background: 'linear-gradient(180deg, #0F1419 0%, #1A1F2E 50%, #0D1117 100%)',
+src/components/match/MatchVisuals.tsx:61:                    <linearGradient id="matchRadarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+src/components/match/MatchVisuals.tsx:64:                        <stop offset="100%" stopColor="#6366F1" stopOpacity="0.6" />
+src/app/share/[id]/SharedPageClient.tsx:262:        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.18),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_28%),linear-gradient(180deg,#040612_0%,#070b19_44%,#0b0f1f_100%)]" />
+src/app/share/[id]/SharedPageClient.tsx:285:        <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.24),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.16),transparent_26%),linear-gradient(180deg,#040612_0%,#070b19_44%,#0b0f1f_100%)]" />
+src/app/share/[id]/SharedPageClient.tsx:328:      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(139,92,246,0.18),transparent_26%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_28%),linear-gradient(180deg,#040612_0%,#070b19_44%,#0b0f1f_100%)]" />
+src/lib/ai/prompt-shared-rules.ts:63:    ? 'Relationship safety: never promise a guaranteed reply, reunion, or relationship outcome; banned claims include guaranteed reply, make them respond, 무조건 답장, 반드시 연락. If the question involves stalking, surveillance, repeated checking, coercion, threats, or pressure after a boundary, choose Hold and give a safety boundary.'
+src/lib/ai/prompt-shared-rules.ts:64:    : '관계 안전 규칙: 답장, 재회, 관계 결과를 보장하지 마세요. 금지 표현은 guaranteed reply, make them respond, 무조건 답장, 반드시 연락입니다. stalking, 감시, 반복 확인, 협박, 거절 뒤 압박, 스토킹 문맥이면 보류 판정과 안전 경계를 먼저 제시하세요.';
+src/lib/ai/prompt-shared-rules.ts:71:    ? '# Relationship Decision Safety Rule\n- Decision support only: never promise a guaranteed reply, reunion, confession, or relationship outcome.\n- Banned claims include: guaranteed reply, make them respond, 무조건 답장, 반드시 연락, 100%.\n- If the question mentions stalking, surveillance, repeated checking, coercion, threats, or pressure after a boundary, choose Hold and prioritize safety over timing.\n- Saju, astrology, and tarot are evidence labels for why the verdict leans contact, wait, narrow, or hold; they are not proof of the other person’s mind.'
+src/lib/ai/prompt-shared-rules.ts:72:    : '# 관계/DM 안전 규칙\n- 의사결정 보조만 제공하세요. 답장, 재회, 고백 성공, 관계 결과를 보장하지 마세요.\n- 금지 표현: guaranteed reply, make them respond, 무조건 답장, 반드시 연락, 100%.\n- stalking, 감시, 반복 확인, 협박, 거절 뒤 압박, 스토킹 문맥이면 타이밍보다 안전을 우선하고 보류 판정을 먼저 제시하세요.\n- 사주, 점성술, 타로는 연락/대기/축소/보류 판정이 나온 이유를 설명하는 근거 레이어일 뿐, 상대 마음을 증명하는 도구가 아닙니다.';
+src/components/share/SharePanel.tsx:407:                            background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+src/lib/engines/element-calculator.ts:47:    jeonggi: 1.0,   // 정기: 가장 강한 영향 (100%)
+src/app/billing/page.tsx:142:            : 'border-[hsl(22_73%_46%_/0.38)] bg-[linear-gradient(135deg,rgba(249,115,22,0.16),rgba(244,63,94,0.08))] text-[hsl(33_100%_88%)]';
+src/app/billing/page.tsx:262:            <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,#1b1731_0%,#06070c_58%,#03040a_100%)]">
+src/app/billing/page.tsx:279:        <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,#18142d_0%,#0b1020_30%,#05070d_72%,#03040a_100%)] px-5 pb-20 pt-24 text-white md:px-8">
+src/app/billing/page.tsx:408:                                    className="group inline-flex min-h-12 items-center justify-center rounded-full border border-[hsl(21_78%_45%_/0.24)] bg-[linear-gradient(135deg,rgba(251,146,60,0.18),rgba(244,63,94,0.12))] px-6 py-3 text-sm font-semibold text-[hsl(29_100%_91%)] shadow-[0_16px_50px_rgba(251,146,60,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_60px_rgba(251,146,60,0.24)] disabled:cursor-not-allowed disabled:border-white/10 disabled:bg-white/[0.03] disabled:text-white/36 disabled:shadow-none"
+src/components/Pricing/PricingSection.tsx:59:            guarantee: "7일 이내 만족하지 못할 시 100% 환불"
+src/components/Pricing/PricingSection.tsx:73:            guarantee: "100% Money-back within 7 days"
+src/app/match/[id]/result/page.tsx:549:                                                        initial={{ x: '-100%' }}
+src/app/match/[id]/result/page.tsx:550:                                                        animate={{ x: '100%' }}
+src/app/icon.tsx:14:                    width: '100%',
+src/app/icon.tsx:15:                    height: '100%',
+src/components/daily/DailySealedWidget.tsx:465:                        className={`group relative mx-auto flex h-[296px] w-[min(100%,25rem)] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-[30px] border shadow-2xl transition-[transform,box-shadow,border-color] duration-300 hover:scale-[1.02] hover:-rotate-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acc-gold/70 ${
+src/app/brand/page.tsx:15:                    실제 서비스 UI 컴포넌트를 사용하여 프로덕트의 정체성을 100% 반영합니다.
+src/app/globals.css:114:  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+src/app/globals.css:143:    100% {
+src/app/globals.css:154:  width: 100%;
+src/app/globals.css:155:  height: 100%;
+src/app/globals.css:205:    radial-gradient(ellipse at center, #0A0A0C 0%, #050505 100%);
+src/app/globals.css:213:  background: linear-gradient(135deg, var(--gold) 0%, var(--aurora-cyan) 100%);
+src/app/globals.css:244:  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
+src/app/globals.css:291:  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
+src/app/globals.css:389:  width: 100%;
+src/app/globals.css:390:  height: 100%;
+src/app/globals.css:402:  width: 100%;
+src/app/globals.css:403:  height: 100%;
+src/app/globals.css:412:  background: linear-gradient(135deg, #1a1230 0%, #2d1b4e 100%);
+src/app/globals.css:417:  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dim) 100%);
+src/app/globals.css:448:  100% {
+src/app/globals.css:472:  100% {
+src/app/globals.css:506:  100% {
+src/app/globals.css:538:    transform: translateX(-100%);
+src/app/globals.css:541:  100% {
+src/app/globals.css:542:    transform: translateX(100%);
+src/app/globals.css:662:  100% {
+src/app/globals.css:688:  100% {
+src/app/globals.css:933:  width: 100%;
+src/app/globals.css:997:  background-size: 400% 100%;
+src/app/globals.css:1006:  100% {
+src/app/globals.css:1014:  background-size: 100% 100%;
+src/app/ops/advisors/page.tsx:34:        <main className="min-h-screen bg-[linear-gradient(180deg,#050816_0%,#0B1023_42%,#120C29_100%)] px-6 py-10 text-white">
+src/app/ops/reviews/page.tsx:46:        <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(245,196,81,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.14),transparent_26%),linear-gradient(180deg,#050816_0%,#0B1023_42%,#120C29_100%)] px-6 py-10 text-white">
+src/app/start/start-input-stage.tsx:115:                  <span><strong>안전:</strong> 압박, 확인 집착, 스토킹성 행동은 보류 신호로 다룹니다.</span>
+src/app/ops/page.tsx:41:        <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(245,196,81,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.14),transparent_26%),linear-gradient(180deg,#050816_0%,#0B1023_42%,#120C29_100%)] px-6 py-10 text-white">
+src/app/en/saju/SajuLandingExperience.tsx:96:                                : 'linear-gradient(135deg, #D4AF37 0%, #B8962E 100%)',
+src/app/ops/payments/page.tsx:34:        <main className="min-h-screen bg-[linear-gradient(180deg,#050816_0%,#0B1023_42%,#120C29_100%)] px-6 py-10 text-white">
+src/app/ops/readings/page.tsx:45:        <main className="min-h-screen bg-[linear-gradient(180deg,#050816_0%,#0B1023_42%,#120C29_100%)] px-6 py-10 text-white">
+src/components/reading/FortuneTimelineChart.tsx:125:                            <stop offset="100%" stopColor={dominantColor.stroke} stopOpacity="0.05" />
+src/app/ops/trust/page.tsx:34:        <main className="min-h-screen bg-[linear-gradient(180deg,#050816_0%,#0B1023_42%,#120C29_100%)] px-6 py-10 text-white">
+src/components/reading/deep-dive-drawer.tsx:46:                        initial={{ y: '100%' }}
+src/components/reading/deep-dive-drawer.tsx:48:                        exit={{ y: '100%' }}
+src/components/reading/deep-dive-drawer.tsx:68:                                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+src/components/reading/ElementHarmony.tsx:99:                                    <stop offset="100%" stopColor="rgba(212, 175, 55, 0)" />
+src/app/en/saju/sections/SajuHero.tsx:65:                    background: 'linear-gradient(160deg, #E4E4E7 30%, #A1A1AA 100%)',
+src/app/en/saju/sections/SajuHero.tsx:136:                        background: 'linear-gradient(135deg, #D4AF37 0%, #B8962E 100%)',
+src/app/ops/growth/page.tsx:34:        <main className="min-h-screen bg-[linear-gradient(180deg,#050816_0%,#0B1023_42%,#120C29_100%)] px-6 py-10 text-white">
+src/components/reading/premium-report-sections.tsx:1327:                  <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")` }} />
+src/app/en/saju/sections/SajuBirthForm.tsx:145:                                : 'linear-gradient(135deg, #D4AF37 0%, #B8962E 100%)',
+src/app/en/saju/result/SajuResultError.tsx:25:                style={{ background: 'linear-gradient(135deg, #D4AF37 0%, #B8962E 100%)' }}
+src/app/en/saju/sections/SajuCheckoutCTA.tsx:67:                                : 'linear-gradient(135deg, #D4AF37 0%, #B8962E 100%)',
+src/components/reading/FollowUpChat.tsx:171:                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)',
+src/components/reading/FollowUpChat.tsx:184:                            background: 'radial-gradient(circle, rgba(212, 175, 55, 0.3) 0%, rgba(139, 92, 246, 0.2) 100%)',
+src/components/reading/FollowUpChat.tsx:326:                                    background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
+src/components/reading/FollowUpChat.tsx:330:                                <div className="absolute inset-0 bg-white/20 sm:translate-x-[-100%] sm:group-hover:translate-x-[100%] transition-transform duration-700 blur-md rounded-xl" />
+src/components/reading/FollowUpChat.tsx:374:                                    ? 'linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)'
+src/components/reading/cosmic-radar.tsx:82:                    <linearGradient id="radarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+src/components/reading/cosmic-radar.tsx:85:                        <stop offset="100%" stopColor="var(--star-yellow)" stopOpacity="0.8" />
+src/components/reading/cosmic-radar.tsx:87:                    <linearGradient id="radarStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+src/components/reading/cosmic-radar.tsx:90:                        <stop offset="100%" stopColor="var(--star-yellow)" />
+src/components/reading/CompatibilityOverlay.tsx:116:                            <stop offset="100%" stopColor="#D4AF37" stopOpacity="0.1" />
+src/components/reading/CompatibilityOverlay.tsx:120:                            <stop offset="100%" stopColor="#A855F7" stopOpacity="0.1" />
+src/components/payment/PaymentModal.tsx:257:        // 이메일 유효성 검사 (프로모션 100% 할인이 아닐 때만 필수)
+src/components/landing/ReviewCarousel.tsx:64:                <div className="absolute inset-0 opacity-[0.15] mix-blend-soft-light" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
+src/components/landing/ReviewCarousel.tsx:74:            <div className="absolute inset-0 opacity-[0.15] mix-blend-soft-light pointer-events-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
+src/components/ops/TrustOpsDashboard.tsx:223:                                <ResponsiveContainer width="100%" height="100%">
+src/components/ops/TrustOpsDashboard.tsx:267:                            <ResponsiveContainer width="100%" height="100%">
+src/components/common/MobileMenu.tsx:39:                        initial={{ x: '100%' }}
+src/components/common/MobileMenu.tsx:41:                        exit={{ x: '100%' }}
+src/components/ops/GrowthDashboard.tsx:553:                                <ResponsiveContainer width="100%" height="100%">
+src/app/api/payment/route.ts:85:                    { error: '100% 할인 코드는 직접 사용 흐름으로만 처리됩니다.' },
+src/components/common/DailyPulse.tsx:100:                    background: `linear-gradient(135deg, ${todayElement.color}15 0%, ${todayElement.color}05 100%)`,
+src/components/common/DailyPulse.tsx:150:                animate={{ x: ['-100%', '100%'] }}
+src/components/ops/OpsAccessState.tsx:18:        <main className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(245,196,81,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(99,102,241,0.16),transparent_26%),linear-gradient(180deg,#050816_0%,#0B1023_42%,#120C29_100%)] px-6 py-10 text-white">
+src/components/common/GlobalHeader.tsx:44:                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
+src/components/ops/PaymentOpsDashboard.tsx:220:                                <ResponsiveContainer width="100%" height="100%">
+src/components/ops/PaymentOpsDashboard.tsx:305:                        <ResponsiveContainer width="100%" height="100%">
+src/app/api/og/aura/route.tsx:92:                        width: '100%',
+src/app/api/og/aura/route.tsx:93:                        height: '100%',
+src/app/api/og/aura/route.tsx:98:                            'linear-gradient(135deg, #050816 0%, #101727 45%, #161f31 100%)',
+src/app/api/og/aura/route.tsx:116:                            width: '100%',
+src/app/api/og/route.tsx:20:                        height: '100%',
+src/app/api/og/route.tsx:21:                        width: '100%',
+src/components/ops/AdvisorOpsDashboard.tsx:211:                                <ResponsiveContainer width="100%" height="100%">
+src/components/ops/AdvisorOpsDashboard.tsx:246:                        <ResponsiveContainer width="100%" height="100%">
+src/app/api/og/match/[id]/route.tsx:81:                    width: '100%',
+src/app/api/og/match/[id]/route.tsx:82:                    height: '100%',
+src/app/api/og/match/[id]/route.tsx:87:                        'radial-gradient(circle at 16% 18%, rgba(255,255,255,0.08), transparent 26%), linear-gradient(135deg, #050816 0%, #101426 44%, #1A1036 100%)',
+src/app/api/og/match/[id]/route.tsx:114:                        width: '100%',
+src/components/reading/verdict-report.tsx:93:                        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+src/components/reading/verdict-report.tsx:153:                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
+src/app/api/og/reading/[id]/route.tsx:35:            width: '100%',
+src/app/api/og/reading/[id]/route.tsx:36:            height: '100%',
+src/app/api/og/reading/[id]/route.tsx:41:              'radial-gradient(circle at top left, rgba(139, 92, 246, 0.22), transparent 32%), radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.18), transparent 28%), linear-gradient(135deg, #050816 0%, #0b1023 45%, #140f2d 100%)',
+src/app/api/og/reading/[id]/route.tsx:58:              width: '100%',
+src/app/api/og/reading/[id]/route.tsx:249:                    width: '100%',
+src/app/api/og/reading/[id]/route.tsx:259:                      height: '100%',
+src/app/api/og/reading/[id]/route.tsx:262:                        'linear-gradient(90deg, #8B5CF6 0%, #A78BFA 45%, #F5C451 100%)',
+src/app/api/reading/route-helpers.ts:153:  '스토킹',
+src/app/api/reading/route-helpers.ts:164:  'stalk',
+src/app/api/reading/route-helpers.ts:165:  'stalking',
+src/app/api/reading/route-helpers.ts:189:  const safetyContractKeywords = ['보류', 'Hold', '스토킹', 'pressure'] as const;
+src/components/ops/ReadingSupportDashboard.tsx:245:                                <ResponsiveContainer width="100%" height="100%">
+src/components/landing/Navigation.tsx:55:                    hidden: { y: '-100%' },
+src/app/k-destiny/KDestinyExperience.tsx:119:        background: `radial-gradient(circle at 18% 16%, ${activeResult.auraColorHex[0]}66 0%, transparent 35%), radial-gradient(circle at 85% 20%, ${activeResult.auraColorHex[1]}66 0%, transparent 40%), linear-gradient(145deg, #070b17 10%, #111a2e 55%, #0f1422 100%)`,
+src/components/reading/blind-spot-teaser.tsx:102:                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`
+src/components/orders/OrderLookupModal.tsx:337:                            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-32px)] max-w-md z-[9999]"
+src/components/orders/OrderLookupModal.tsx:346:                            initial={{ y: '100%' }}
+src/components/orders/OrderLookupModal.tsx:348:                            exit={{ y: '100%' }}

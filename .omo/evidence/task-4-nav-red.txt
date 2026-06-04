@@ -1,0 +1,81 @@
+[2m[WebServer] [22m(node:94229) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:94230) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+[2m[WebServer] [22m We detected multiple lockfiles and selected the directory of /Users/kim-young-gwang/package-lock.json as the root directory.
+[2m[WebServer] [22m To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+[2m[WebServer] [22m   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+[2m[WebServer] [22m Detected additional lockfiles:
+[2m[WebServer] [22m   * /Users/kim-young-gwang/Desktop/projects/cosmicpath/pnpm-lock.yaml
+[2m[WebServer] [22m
+[2m[WebServer] [22m⚠ Turbopack's filesystem cache has been deleted because we previously detected an internal error in Turbopack. Builds or page loads may be slower as a result.
+[2m[WebServer] [22m(node:94232) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:94233) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:94233) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m[browser] THREE.WebGLRenderer: A WebGL context could not be created. Reason:  Could not create a WebGL context, VENDOR = 0xffff, DEVICE = 0xffff, GL_VENDOR = Google Inc. (Google), GL_RENDERER = ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver-5.0.0), GL_VERSION = 5.0.0, Sandboxed = no, Optimus = no, AMD switchable = no, Reset notification strategy = 0x8252, ErrorMessage = BindToCurrentSequence failed: .
+[2m[WebServer] [22m[browser] THREE.WebGLRenderer: A WebGL context could not be created. Reason:  Could not create a WebGL context, VENDOR = 0xffff, DEVICE = 0xffff, GL_VENDOR = Google Inc. (Google), GL_RENDERER = ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver-5.0.0), GL_VERSION = 5.0.0, Sandboxed = no, Optimus = no, AMD switchable = no, Reset notification strategy = 0x8252, ErrorMessage = BindToCurrentSequence failed: .
+[2m[WebServer] [22m[browser] THREE.WebGLRenderer: Error creating WebGL context.
+[2m[WebServer] [22m[browser] ⨯ unhandledRejection: Error: Error creating WebGL context.
+[2m[WebServer] [22m(node:94243) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m[browser] THREE.WebGLRenderer: A WebGL context could not be created. Reason:  Could not create a WebGL context, VENDOR = 0xffff, DEVICE = 0xffff, GL_VENDOR = Google Inc. (Google), GL_RENDERER = ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver-5.0.0), GL_VERSION = 5.0.0, Sandboxed = no, Optimus = no, AMD switchable = no, Reset notification strategy = 0x8252, ErrorMessage = BindToCurrentSequence failed: .
+[2m[WebServer] [22m[browser] THREE.WebGLRenderer: A WebGL context could not be created. Reason:  Could not create a WebGL context, VENDOR = 0xffff, DEVICE = 0xffff, GL_VENDOR = Google Inc. (Google), GL_RENDERER = ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver-5.0.0), GL_VERSION = 5.0.0, Sandboxed = no, Optimus = no, AMD switchable = no, Reset notification strategy = 0x8252, ErrorMessage = BindToCurrentSequence failed: .
+[2m[WebServer] [22m[browser] THREE.WebGLRenderer: A WebGL context could not be created. Reason:  Could not create a WebGL context, VENDOR = 0xffff, DEVICE = 0xffff, GL_VENDOR = Google Inc. (Google), GL_RENDERER = ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver-5.0.0), GL_VERSION = 5.0.0, Sandboxed = no, Optimus = no, AMD switchable = no, Reset notification strategy = 0x8252, ErrorMessage = BindToCurrentSequence failed: .
+[2m[WebServer] [22m[browser] THREE.WebGLRenderer: A WebGL context could not be created. Reason:  Could not create a WebGL context, VENDOR = 0xffff, DEVICE = 0xffff, GL_VENDOR = Google Inc. (Google), GL_RENDERER = ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver-5.0.0), GL_VERSION = 5.0.0, Sandboxed = no, Optimus = no, AMD switchable = no, Reset notification strategy = 0x8252, ErrorMessage = BindToCurrentSequence failed: .
+[2m[WebServer] [22m[browser] THREE.WebGLRenderer: Error creating WebGL context.
+[2m[WebServer] [22m[browser] ⨯ unhandledRejection: Error: Error creating WebGL context.
+[2m[WebServer] [22m(node:94245) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m
+[2m[WebServer] [22mthread 'tokio-runtime-worker' (22404743) panicked at /Users/geist/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/qfilter-0.3.0-alpha.2/src/lib.rs:709:9:
+[2m[WebServer] [22mCPU doesn't support the bmi2 instructions
+[2m[WebServer] [22mnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+[2m[WebServer] [22m
+[2m[WebServer] [22mthread 'tokio-runtime-worker' (22404750) panicked at /Users/geist/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/qfilter-0.3.0-alpha.2/src/lib.rs:709:9:
+[2m[WebServer] [22mCPU doesn't support the bmi2 instructions
+[2m[WebServer] [22m
+[2m[WebServer] [22mthread 'tokio-runtime-worker' (22404742) panicked at /Users/geist/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/qfilter-0.3.0-alpha.2/src/lib.rs:709:9:
+[2m[WebServer] [22mCPU doesn't support the bmi2 instructions
+[2m[WebServer] [22m
+[2m[WebServer] [22mthread 'tokio-runtime-worker' (22404745) panicked at /Users/geist/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/qfilter-0.3.0-alpha.2/src/lib.rs:709:9:
+[2m[WebServer] [22mCPU doesn't support the bmi2 instructions
+  ✘  1 [chromium] › tests/e2e/next-move-report.spec.ts:24:9 › Next Move Report MVP › home and nav contain only MVP acquisition (5.6s)
+
+
+  1) [chromium] › tests/e2e/next-move-report.spec.ts:24:9 › Next Move Report MVP › home and nav contain only MVP acquisition
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveTitle[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Expected pattern: [32m/Next Move Report/i[39m
+    Received string:  [31m"CosmicPath | Decision Timing Oracle"[39m
+    Timeout: 5000ms
+
+    Call log:
+    [2m  - Expect "toHaveTitle" with timeout 5000ms[22m
+    [2m    9 × unexpected value "CosmicPath | Decision Timing Oracle"[22m
+
+
+      25 |         await page.goto('/');
+      26 |
+    > 27 |         await expect(page).toHaveTitle(/Next Move Report/i);
+         |                            ^
+      28 |         await expect(page.locator('a[href="/relationship/contact-timing"]').first()).toBeVisible();
+      29 |         await expect(page.locator('nav a[href="/daily"]')).toHaveCount(0);
+      30 |         await expect(page.locator('nav a[href="/career/uncertainty"]')).toHaveCount(0);
+        at /Users/kim-young-gwang/Desktop/projects/cosmicpath/tests/e2e/next-move-report.spec.ts:27:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/next-move-report-Next-Move-12358-ontain-only-MVP-acquisition-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/next-move-report-Next-Move-12358-ontain-only-MVP-acquisition-chromium/error-context.md
+
+  1 failed
+    [chromium] › tests/e2e/next-move-report.spec.ts:24:9 › Next Move Report MVP › home and nav contain only MVP acquisition

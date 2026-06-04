@@ -1,0 +1,238 @@
+[2m[WebServer] [22m(node:57016) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:57017) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+[2m[WebServer] [22m We detected multiple lockfiles and selected the directory of /Users/kim-young-gwang/package-lock.json as the root directory.
+[2m[WebServer] [22m To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+[2m[WebServer] [22m   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+[2m[WebServer] [22m Detected additional lockfiles:
+[2m[WebServer] [22m   * /Users/kim-young-gwang/Desktop/projects/cosmicpath/pnpm-lock.yaml
+[2m[WebServer] [22m
+[2m[WebServer] [22m(node:57020) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 10 tests using 1 worker
+
+(node:57021) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:57021) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [chromium] › tests/e2e/next-move-report.spec.ts:9:9 › Next Move Report MVP › mvp route is branded and routes to start (608ms)
+[2m[WebServer] [22m⨯ Error: aborted
+[2m[WebServer] [22m    at ignore-listed frames {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m⨯ Error: aborted
+[2m[WebServer] [22m    at ignore-listed frames {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+[2m[WebServer] [22m⨯ Error: aborted
+[2m[WebServer] [22m    at ignore-listed frames {
+[2m[WebServer] [22m  code: [32m'ECONNRESET'[39m
+[2m[WebServer] [22m}
+  ✓   2 [chromium] › tests/e2e/next-move-report.spec.ts:24:9 › Next Move Report MVP › home and nav contain only MVP acquisition (915ms)
+[2m[WebServer] [22m[browser] THREE.WebGLRenderer: A WebGL context could not be created. Reason:  Could not create a WebGL context, VENDOR = 0xffff, DEVICE = 0xffff, GL_VENDOR = Google Inc. (Google), GL_RENDERER = ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver-5.0.0), GL_VERSION = 5.0.0, Sandboxed = no, Optimus = no, AMD switchable = no, Reset notification strategy = 0x8252, ErrorMessage = BindToCurrentSequence failed: .
+[2m[WebServer] [22m[browser] THREE.WebGLRenderer: A WebGL context could not be created. Reason:  Could not create a WebGL context, VENDOR = 0xffff, DEVICE = 0xffff, GL_VENDOR = Google Inc. (Google), GL_RENDERER = ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (LLVM 10.0.0) (0x0000C0DE)), SwiftShader driver-5.0.0), GL_VERSION = 5.0.0, Sandboxed = no, Optimus = no, AMD switchable = no, Reset notification strategy = 0x8252, ErrorMessage = BindToCurrentSequence failed: .
+[2m[WebServer] [22m[browser] THREE.WebGLRenderer: Error creating WebGL context.
+[2m[WebServer] [22m[browser] ⨯ unhandledRejection: Error: Error creating WebGL context.
+[2m[WebServer] [22m(node:57034) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:57035) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   3 [chromium] › tests/e2e/next-move-report.spec.ts:36:9 › Next Move Report MVP › start keeps Next Move source and prefilled question (2.3s)
+  ✓   4 [chromium] › tests/e2e/next-move-report.spec.ts:52:9 › Next Move Report MVP › start handles empty Next Move question safely (701ms)
+[2m[WebServer] [22m(node:57038) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   5 [chromium] › tests/e2e/next-move-report.spec.ts:60:9 › Next Move Report MVP › paywall shows USD 9 Next Move offer (2.6s)
+[2m[WebServer] [22m(node:57039) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m[GrowthEvent] Failed to persist event {
+[2m[WebServer] [22m  event: [32m'install'[39m,
+[2m[WebServer] [22m  readingId: [90mundefined[39m,
+[2m[WebServer] [22m  referralCode: [90mundefined[39m,
+[2m[WebServer] [22m  error: Error [PrismaClientInitializationError]:
+[2m[WebServer] [22m  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$projects$2f$cosmicpath$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].growthEvent.create()` invocation in
+[2m[WebServer] [22m  /Users/kim-young-gwang/Desktop/projects/cosmicpath/.next/dev/server/chunks/[root-of-the-server]__08~b3md._.js:381:193
+[2m[WebServer] [22m
+[2m[WebServer] [22m    378     originalEvent: input.event,
+[2m[WebServer] [22m    379     ...input.metadata
+[2m[WebServer] [22m    380 });
+[2m[WebServer] [22m  → 381 await __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$projects$2f$cosmicpath$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].growthEvent.create(
+[2m[WebServer] [22m  Can't reach database server at `aws-0-us-west-2.pooler.supabase.com:6543`
+[2m[WebServer] [22m
+[2m[WebServer] [22m  Please make sure your database server is running at `aws-0-us-west-2.pooler.supabase.com:6543`.
+[2m[WebServer] [22m      at <unknown> (src/lib/growth-events.ts:23:30)
+[2m[WebServer] [22m      at async trackGrowthEvent (src/lib/growth-events.ts:23:5)
+[2m[WebServer] [22m      at async POST (src/app/api/growth/track/route.ts:54:9)
+[2m[WebServer] [22m    [90m21 |[0m     });
+[2m[WebServer] [22m    [90m22 |[0m
+[2m[WebServer] [22m  [31m[1m>[0m [90m23 |[0m     [36mawait[0m prisma.growthEvent.create({
+[2m[WebServer] [22m    [90m   |[0m                              [31m[1m^[0m
+[2m[WebServer] [22m    [90m24 |[0m       data: {
+[2m[WebServer] [22m    [90m25 |[0m         event: input.event,
+[2m[WebServer] [22m    [90m26 |[0m         readingId: input.readingId, {
+[2m[WebServer] [22m    clientVersion: [32m'5.22.0'[39m,
+[2m[WebServer] [22m    errorCode: [90mundefined[39m
+[2m[WebServer] [22m  }
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[GrowthEvent] Failed to persist event {
+[2m[WebServer] [22m  event: [32m'daily_active'[39m,
+[2m[WebServer] [22m  readingId: [90mundefined[39m,
+[2m[WebServer] [22m  referralCode: [90mundefined[39m,
+[2m[WebServer] [22m  error: Error [PrismaClientInitializationError]:
+[2m[WebServer] [22m  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$projects$2f$cosmicpath$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].growthEvent.create()` invocation in
+[2m[WebServer] [22m  /Users/kim-young-gwang/Desktop/projects/cosmicpath/.next/dev/server/chunks/[root-of-the-server]__08~b3md._.js:381:193
+[2m[WebServer] [22m
+[2m[WebServer] [22m    378     originalEvent: input.event,
+[2m[WebServer] [22m    379     ...input.metadata
+[2m[WebServer] [22m    380 });
+[2m[WebServer] [22m  → 381 await __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$projects$2f$cosmicpath$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].growthEvent.create(
+[2m[WebServer] [22m  Can't reach database server at `aws-0-us-west-2.pooler.supabase.com:6543`
+[2m[WebServer] [22m
+[2m[WebServer] [22m  Please make sure your database server is running at `aws-0-us-west-2.pooler.supabase.com:6543`.
+[2m[WebServer] [22m      at <unknown> (src/lib/growth-events.ts:23:30)
+[2m[WebServer] [22m      at async trackGrowthEvent (src/lib/growth-events.ts:23:5)
+[2m[WebServer] [22m      at async POST (src/app/api/growth/track/route.ts:54:9)
+[2m[WebServer] [22m    [90m21 |[0m     });
+[2m[WebServer] [22m    [90m22 |[0m
+[2m[WebServer] [22m  [31m[1m>[0m [90m23 |[0m     [36mawait[0m prisma.growthEvent.create({
+[2m[WebServer] [22m    [90m   |[0m                              [31m[1m^[0m
+[2m[WebServer] [22m    [90m24 |[0m       data: {
+[2m[WebServer] [22m    [90m25 |[0m         event: input.event,
+[2m[WebServer] [22m    [90m26 |[0m         readingId: input.readingId, {
+[2m[WebServer] [22m    clientVersion: [32m'5.22.0'[39m,
+[2m[WebServer] [22m    errorCode: [90mundefined[39m
+[2m[WebServer] [22m  }
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[GrowthEvent] Failed to persist event {
+[2m[WebServer] [22m  event: [32m'landing_view'[39m,
+[2m[WebServer] [22m  readingId: [90mundefined[39m,
+[2m[WebServer] [22m  referralCode: [90mundefined[39m,
+[2m[WebServer] [22m  error: Error [PrismaClientInitializationError]:
+[2m[WebServer] [22m  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$projects$2f$cosmicpath$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].growthEvent.create()` invocation in
+[2m[WebServer] [22m  /Users/kim-young-gwang/Desktop/projects/cosmicpath/.next/dev/server/chunks/[root-of-the-server]__08~b3md._.js:381:193
+[2m[WebServer] [22m
+[2m[WebServer] [22m    378     originalEvent: input.event,
+[2m[WebServer] [22m    379     ...input.metadata
+[2m[WebServer] [22m    380 });
+[2m[WebServer] [22m  → 381 await __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$projects$2f$cosmicpath$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].growthEvent.create(
+[2m[WebServer] [22m  Can't reach database server at `aws-0-us-west-2.pooler.supabase.com:6543`
+[2m[WebServer] [22m
+[2m[WebServer] [22m  Please make sure your database server is running at `aws-0-us-west-2.pooler.supabase.com:6543`.
+[2m[WebServer] [22m      at <unknown> (src/lib/growth-events.ts:23:30)
+[2m[WebServer] [22m      at async trackGrowthEvent (src/lib/growth-events.ts:23:5)
+[2m[WebServer] [22m      at async POST (src/app/api/growth/track/route.ts:54:9)
+[2m[WebServer] [22m    [90m21 |[0m     });
+[2m[WebServer] [22m    [90m22 |[0m
+[2m[WebServer] [22m  [31m[1m>[0m [90m23 |[0m     [36mawait[0m prisma.growthEvent.create({
+[2m[WebServer] [22m    [90m   |[0m                              [31m[1m^[0m
+[2m[WebServer] [22m    [90m24 |[0m       data: {
+[2m[WebServer] [22m    [90m25 |[0m         event: input.event,
+[2m[WebServer] [22m    [90m26 |[0m         readingId: input.readingId, {
+[2m[WebServer] [22m    clientVersion: [32m'5.22.0'[39m,
+[2m[WebServer] [22m    errorCode: [90mundefined[39m
+[2m[WebServer] [22m  }
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[GrowthEvent] Failed to persist event {
+[2m[WebServer] [22m  event: [32m'install'[39m,
+[2m[WebServer] [22m  readingId: [90mundefined[39m,
+[2m[WebServer] [22m  referralCode: [90mundefined[39m,
+[2m[WebServer] [22m  error: Error [PrismaClientInitializationError]:
+[2m[WebServer] [22m  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$projects$2f$cosmicpath$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].growthEvent.create()` invocation in
+[2m[WebServer] [22m  /Users/kim-young-gwang/Desktop/projects/cosmicpath/.next/dev/server/chunks/[root-of-the-server]__08~b3md._.js:381:193
+[2m[WebServer] [22m
+[2m[WebServer] [22m    378     originalEvent: input.event,
+[2m[WebServer] [22m    379     ...input.metadata
+[2m[WebServer] [22m    380 });
+[2m[WebServer] [22m  → 381 await __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$projects$2f$cosmicpath$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].growthEvent.create(
+[2m[WebServer] [22m  Can't reach database server at `aws-0-us-west-2.pooler.supabase.com:6543`
+[2m[WebServer] [22m
+[2m[WebServer] [22m  Please make sure your database server is running at `aws-0-us-west-2.pooler.supabase.com:6543`.
+[2m[WebServer] [22m      at <unknown> (src/lib/growth-events.ts:23:30)
+[2m[WebServer] [22m      at async trackGrowthEvent (src/lib/growth-events.ts:23:5)
+[2m[WebServer] [22m      at async POST (src/app/api/growth/track/route.ts:54:9)
+[2m[WebServer] [22m    [90m21 |[0m     });
+[2m[WebServer] [22m    [90m22 |[0m
+[2m[WebServer] [22m  [31m[1m>[0m [90m23 |[0m     [36mawait[0m prisma.growthEvent.create({
+[2m[WebServer] [22m    [90m   |[0m                              [31m[1m^[0m
+[2m[WebServer] [22m    [90m24 |[0m       data: {
+[2m[WebServer] [22m    [90m25 |[0m         event: input.event,
+[2m[WebServer] [22m    [90m26 |[0m         readingId: input.readingId, {
+[2m[WebServer] [22m    clientVersion: [32m'5.22.0'[39m,
+[2m[WebServer] [22m    errorCode: [90mundefined[39m
+[2m[WebServer] [22m  }
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[GrowthEvent] Failed to persist event {
+[2m[WebServer] [22m  event: [32m'daily_active'[39m,
+[2m[WebServer] [22m  readingId: [90mundefined[39m,
+[2m[WebServer] [22m  referralCode: [90mundefined[39m,
+[2m[WebServer] [22m  error: Error [PrismaClientInitializationError]:
+[2m[WebServer] [22m  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$projects$2f$cosmicpath$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].growthEvent.create()` invocation in
+[2m[WebServer] [22m  /Users/kim-young-gwang/Desktop/projects/cosmicpath/.next/dev/server/chunks/[root-of-the-server]__08~b3md._.js:381:193
+[2m[WebServer] [22m
+[2m[WebServer] [22m    378     originalEvent: input.event,
+[2m[WebServer] [22m    379     ...input.metadata
+[2m[WebServer] [22m    380 });
+[2m[WebServer] [22m  → 381 await __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$projects$2f$cosmicpath$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].growthEvent.create(
+[2m[WebServer] [22m  Can't reach database server at `aws-0-us-west-2.pooler.supabase.com:6543`
+[2m[WebServer] [22m
+[2m[WebServer] [22m  Please make sure your database server is running at `aws-0-us-west-2.pooler.supabase.com:6543`.
+[2m[WebServer] [22m      at <unknown> (src/lib/growth-events.ts:23:30)
+[2m[WebServer] [22m      at async trackGrowthEvent (src/lib/growth-events.ts:23:5)
+[2m[WebServer] [22m      at async POST (src/app/api/growth/track/route.ts:54:9)
+[2m[WebServer] [22m    [90m21 |[0m     });
+[2m[WebServer] [22m    [90m22 |[0m
+[2m[WebServer] [22m  [31m[1m>[0m [90m23 |[0m     [36mawait[0m prisma.growthEvent.create({
+[2m[WebServer] [22m    [90m   |[0m                              [31m[1m^[0m
+[2m[WebServer] [22m    [90m24 |[0m       data: {
+[2m[WebServer] [22m    [90m25 |[0m         event: input.event,
+[2m[WebServer] [22m    [90m26 |[0m         readingId: input.readingId, {
+[2m[WebServer] [22m    clientVersion: [32m'5.22.0'[39m,
+[2m[WebServer] [22m    errorCode: [90mundefined[39m
+[2m[WebServer] [22m  }
+[2m[WebServer] [22m}
+[2m[WebServer] [22m[GrowthEvent] Failed to persist event {
+[2m[WebServer] [22m  event: [32m'landing_view'[39m,
+[2m[WebServer] [22m  readingId: [90mundefined[39m,
+[2m[WebServer] [22m  referralCode: [90mundefined[39m,
+[2m[WebServer] [22m  error: Error [PrismaClientInitializationError]:
+[2m[WebServer] [22m  Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$projects$2f$cosmicpath$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].growthEvent.create()` invocation in
+[2m[WebServer] [22m  /Users/kim-young-gwang/Desktop/projects/cosmicpath/.next/dev/server/chunks/[root-of-the-server]__08~b3md._.js:381:193
+[2m[WebServer] [22m
+[2m[WebServer] [22m    378     originalEvent: input.event,
+[2m[WebServer] [22m    379     ...input.metadata
+[2m[WebServer] [22m    380 });
+[2m[WebServer] [22m  → 381 await __TURBOPACK__imported__module__$5b$project$5d2f$Desktop$2f$projects$2f$cosmicpath$2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["prisma"].growthEvent.create(
+[2m[WebServer] [22m  Can't reach database server at `aws-0-us-west-2.pooler.supabase.com:6543`
+[2m[WebServer] [22m
+[2m[WebServer] [22m  Please make sure your database server is running at `aws-0-us-west-2.pooler.supabase.com:6543`.
+[2m[WebServer] [22m      at <unknown> (src/lib/growth-events.ts:23:30)
+[2m[WebServer] [22m      at async trackGrowthEvent (src/lib/growth-events.ts:23:5)
+[2m[WebServer] [22m      at async POST (src/app/api/growth/track/route.ts:54:9)
+[2m[WebServer] [22m    [90m21 |[0m     });
+[2m[WebServer] [22m    [90m22 |[0m
+[2m[WebServer] [22m  [31m[1m>[0m [90m23 |[0m     [36mawait[0m prisma.growthEvent.create({
+[2m[WebServer] [22m    [90m   |[0m                              [31m[1m^[0m
+[2m[WebServer] [22m    [90m24 |[0m       data: {
+[2m[WebServer] [22m    [90m25 |[0m         event: input.event,
+[2m[WebServer] [22m    [90m26 |[0m         readingId: input.readingId, {
+[2m[WebServer] [22m    clientVersion: [32m'5.22.0'[39m,
+[2m[WebServer] [22m    errorCode: [90mundefined[39m
+[2m[WebServer] [22m  }
+[2m[WebServer] [22m}
+[2m[WebServer] [22m(node:57041) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:57042) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   6 [chromium] › tests/e2e/next-move-report.spec.ts:137:9 › Next Move Report MVP › paywall pauses checkout when Stripe price contract mismatches (2.6s)
+  ✓   7 [chromium] › tests/e2e/next-move-report.spec.ts:211:9 › Next Move Report MVP › legacy routes remain directly reachable (2.3s)
+  ✓   8 [chromium] › tests/e2e/next-move-report.spec.ts:228:9 › Next Move Report MVP › ops groups Next Move with relationship history (2ms)
+[2m[WebServer] [22m(node:57044) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   9 [chromium] › tests/e2e/next-move-report.spec.ts:237:9 › Next Move Report MVP › trust pages expose Next Move boundaries (1.1s)
+[2m[WebServer] [22m(node:57045) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  10 [chromium] › tests/e2e/next-move-report.spec.ts:262:9 › Next Move Report MVP › english probe is not half rebranded (662ms)
+
+  10 passed (23.2s)

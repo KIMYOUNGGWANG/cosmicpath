@@ -1,0 +1,71 @@
+[2m[WebServer] [22m(node:92980) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:92981) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+[2m[WebServer] [22m We detected multiple lockfiles and selected the directory of /Users/kim-young-gwang/package-lock.json as the root directory.
+[2m[WebServer] [22m To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+[2m[WebServer] [22m   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+[2m[WebServer] [22m Detected additional lockfiles:
+[2m[WebServer] [22m   * /Users/kim-young-gwang/Desktop/projects/cosmicpath/pnpm-lock.yaml
+[2m[WebServer] [22m
+[2m[WebServer] [22m⚠ Turbopack's filesystem cache has been deleted because we previously detected an internal error in Turbopack. Builds or page loads may be slower as a result.
+[2m[WebServer] [22m(node:92983) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:92984) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:92984) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:92994) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:92995) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m
+[2m[WebServer] [22mthread 'tokio-runtime-worker' (22402269) panicked at /Users/geist/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/qfilter-0.3.0-alpha.2/src/lib.rs:709:9:
+[2m[WebServer] [22mCPU doesn't support the bmi2 instructions
+[2m[WebServer] [22mnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+[2m[WebServer] [22m
+[2m[WebServer] [22mthread 'tokio-runtime-worker' (22402261) panicked at /Users/geist/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/qfilter-0.3.0-alpha.2/src/lib.rs:709:9:
+[2m[WebServer] [22mCPU doesn't support the bmi2 instructions
+[2m[WebServer] [22m
+[2m[WebServer] [22mthread 'tokio-runtime-worker' (22402260) panicked at /Users/geist/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/qfilter-0.3.0-alpha.2/src/lib.rs:709:9:
+[2m[WebServer] [22mCPU doesn't support the bmi2 instructions
+[2m[WebServer] [22m
+[2m[WebServer] [22mthread 'tokio-runtime-worker' (22402259) panicked at /Users/geist/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/qfilter-0.3.0-alpha.2/src/lib.rs:709:9:
+[2m[WebServer] [22mCPU doesn't support the bmi2 instructions
+  ✘  1 [chromium] › tests/e2e/next-move-report.spec.ts:9:9 › Next Move Report MVP › mvp route is branded and routes to start (5.6s)
+
+
+  1) [chromium] › tests/e2e/next-move-report.spec.ts:9:9 › Next Move Report MVP › mvp route is branded and routes to start
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveTitle[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Expected pattern: [32m/Next Move Report/i[39m
+    Received string:  [31m"지금 연락할까, 기다릴까 | 연애 연락 타이밍 리딩 | CosmicPath | CosmicPath"[39m
+    Timeout: 5000ms
+
+    Call log:
+    [2m  - Expect "toHaveTitle" with timeout 5000ms[22m
+    [2m    9 × unexpected value "지금 연락할까, 기다릴까 | 연애 연락 타이밍 리딩 | CosmicPath | CosmicPath"[22m
+
+
+      10 |         await page.goto('/relationship/contact-timing');
+      11 |
+    > 12 |         await expect(page).toHaveTitle(/Next Move Report/i);
+         |                            ^
+      13 |         await expect(page.getByRole('link', { name: /Next Move Report/i })).toBeVisible();
+      14 |         await expect(page.getByText(/연락할까/).first()).toBeVisible();
+      15 |         await expect(page.getByText(/기다릴까/).first()).toBeVisible();
+        at /Users/kim-young-gwang/Desktop/projects/cosmicpath/tests/e2e/next-move-report.spec.ts:12:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/next-move-report-Next-Move-1b0a1-branded-and-routes-to-start-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/next-move-report-Next-Move-1b0a1-branded-and-routes-to-start-chromium/error-context.md
+
+  1 failed
+    [chromium] › tests/e2e/next-move-report.spec.ts:9:9 › Next Move Report MVP › mvp route is branded and routes to start

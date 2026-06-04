@@ -1,0 +1,2 @@
+After Wave 4 HTTP and browser QA, the dev server process on port 3100 was stopped.
+`lsof -nP -iTCP:3100 -sTCP:LISTEN` exited 1 with no listener output.

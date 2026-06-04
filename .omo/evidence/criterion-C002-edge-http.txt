@@ -1,0 +1,3 @@
+price_status=200
+price_body_has_9=true
+empty_question_screenshot=.omo/evidence/criterion-C002-empty-question.png

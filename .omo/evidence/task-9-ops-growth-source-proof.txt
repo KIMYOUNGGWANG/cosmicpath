@@ -1,0 +1,12 @@
+src/components/ops/GrowthDashboard.tsx:37:type NextMoveDecisionGate = GrowthSummary['nextMoveDecisionGate'];
+src/components/ops/GrowthDashboard.tsx:212:        case 'relationship-contact':
+src/components/ops/GrowthDashboard.tsx:367:                        Next Move Report 14-day decision gate
+src/components/ops/GrowthDashboard.tsx:370:                        visits 300 or 14 days · question starts 45 · free verdicts 30 · paywall opens 8 · paid conversions 2 · follow-up seeds 8.
+src/components/ops/GrowthDashboard.tsx:542:                    <NextMoveDecisionGateCard gate={summary.nextMoveDecisionGate} />
+src/lib/growth-metrics.ts:140:    nextMoveDecisionGate: NextMoveDecisionGate;
+src/lib/growth-metrics.ts:164:        key: 'relationship-contact',
+src/lib/growth-metrics.ts:168:            'next_move_report_mvp_v1',
+src/lib/growth-metrics.ts:587:    const nextMoveFunnel = campaignFunnels.find((funnel) => funnel.key === 'relationship-contact');
+src/lib/growth-metrics.ts:639:        nextMoveDecisionGate: {
+src/lib/growth-metrics.ts:640:            label: 'Next Move Report 14-day decision gate',
+src/lib/growth-metrics.ts:641:            description: 'visits 300 or 14 days, question starts 45, free verdicts 30, paywall opens 8, paid conversions 2, follow-up seeds 8',

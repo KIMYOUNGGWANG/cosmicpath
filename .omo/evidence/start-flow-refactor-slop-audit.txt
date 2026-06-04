@@ -1,0 +1,5 @@
+AI slop audit: passed
+Scope: changed start-flow files, regression anchors, and evidence artifacts.
+Criteria: no oversized edited start-flow file above 250 nonblank non-comment LOC; targeted eslint/regression/build/browser evidence refreshed.
+LOC evidence: .omo/evidence/start-flow-refactor-loc-audit.txt
+Cleanup evidence: .omo/evidence/start-flow-refactor-final-port-check.txt

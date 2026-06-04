@@ -42,11 +42,12 @@ test.describe('Next Move Report MVP', () => {
         await expect(page.getByText(/무료 결과는 연락 판정, 근거 요약, 다음 연락 행동/).first()).toBeVisible();
         await expect(page).toHaveURL(/entry=next_move_report_mvp_v1/);
 
-        const resultStage = readFileSync(path.join(process.cwd(), 'src/app/start/start-result-stage.tsx'), 'utf8');
+        const relationshipHelpers = readFileSync(path.join(process.cwd(), 'src/app/start/start-result-relationship.ts'), 'utf8');
+        const followupPanel = readFileSync(path.join(process.cwd(), 'src/app/start/start-result-followup-panel.tsx'), 'utf8');
 
-        expect(resultStage).toContain("source === 'next_move_report_mvp_v1'");
-        expect(resultStage).toContain('next_move_report_followup_seeded');
-        expect(resultStage).toContain('next_move_report_decision_seed');
+        expect(relationshipHelpers).toContain("source === 'next_move_report_mvp_v1'");
+        expect(relationshipHelpers).toContain('next_move_report_followup_seeded');
+        expect(followupPanel).toContain('next_move_report_decision_seed');
     });
 
     test('start handles empty Next Move question safely', async ({ page }) => {

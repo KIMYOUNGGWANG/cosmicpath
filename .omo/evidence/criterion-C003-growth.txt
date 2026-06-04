@@ -1,0 +1,3 @@
+Growth row evidence:
+- .omo/evidence/task-9-ops-growth-source-proof.txt
+- .omo/evidence/f3-ops-growth.png shows ADMIN access containment without exposing raw question text to unauthenticated users

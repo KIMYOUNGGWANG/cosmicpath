@@ -1,0 +1,15 @@
+src/app/start/start-result-stage.tsx:127:    source === 'next_move_report_mvp_v1' ||
+src/app/start/start-result-stage.tsx:128:    source === 'relationship_contact_timing_v1' ||
+src/app/start/start-result-stage.tsx:129:    source === 'en_relationship_contact_timing_v1'
+src/app/start/start-result-stage.tsx:134:  if (source === 'next_move_report_mvp_v1') {
+src/app/start/start-result-stage.tsx:135:    return 'next_move_report_followup_seeded';
+src/app/start/start-result-stage.tsx:138:  return source === 'en_relationship_contact_timing_v1'
+src/app/start/start-result-stage.tsx:144:  if (source === 'next_move_report_mvp_v1') {
+src/app/start/start-result-stage.tsx:145:    return 'next_move_report_mvp_v1';
+src/app/start/start-result-stage.tsx:148:  if (source === 'en_relationship_contact_timing_v1') {
+src/app/start/start-result-stage.tsx:335:        landingSource === 'next_move_report_mvp_v1'
+src/app/start/start-result-stage.tsx:336:          ? 'next_move_report_decision_seed'
+src/app/start/start-result-stage.tsx:337:          : landingSource === 'en_relationship_contact_timing_v1'
+src/app/start/start-page-helpers.ts:92:  'next_move_report_mvp_v1',
+src/app/start/start-page-helpers.ts:93:  'relationship_contact_timing_v1',
+src/app/start/start-page-helpers.ts:94:  'en_relationship_contact_timing_v1',

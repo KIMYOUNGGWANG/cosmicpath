@@ -1,0 +1,70 @@
+[2m[WebServer] [22m(node:7209) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:7210) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+[2m[WebServer] [22m We detected multiple lockfiles and selected the directory of /Users/kim-young-gwang/package-lock.json as the root directory.
+[2m[WebServer] [22m To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+[2m[WebServer] [22m   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+[2m[WebServer] [22m Detected additional lockfiles:
+[2m[WebServer] [22m   * /Users/kim-young-gwang/Desktop/projects/cosmicpath/pnpm-lock.yaml
+[2m[WebServer] [22m
+[2m[WebServer] [22m(node:7212) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:7326) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:7326) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:7337) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:7338) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:7339) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m[browser] Failed to load chat status: Error: Reading not found
+[2m[WebServer] [22m    at ChatInterface.useCallback[fetchStatus] (src/components/oracle-chat/ChatInterface.tsx:79:23)
+[2m[WebServer] [22m  77 |                 }
+[2m[WebServer] [22m  78 |
+[2m[WebServer] [22m> 79 |                 throw new Error(errorMessage || 'Failed to load chat status');
+[2m[WebServer] [22m     |                       ^
+[2m[WebServer] [22m  80 |             }
+[2m[WebServer] [22m  81 |
+[2m[WebServer] [22m  82 |             setAccessError(null); (src/components/oracle-chat/ChatInterface.tsx:87:21)
+[2m[WebServer] [22m[browser] Failed to load chat status: Error: Reading not found
+[2m[WebServer] [22m    at ChatInterface.useCallback[fetchStatus] (src/components/oracle-chat/ChatInterface.tsx:79:23)
+[2m[WebServer] [22m  77 |                 }
+[2m[WebServer] [22m  78 |
+[2m[WebServer] [22m> 79 |                 throw new Error(errorMessage || 'Failed to load chat status');
+[2m[WebServer] [22m     |                       ^
+[2m[WebServer] [22m  80 |             }
+[2m[WebServer] [22m  81 |
+[2m[WebServer] [22m  82 |             setAccessError(null); (src/components/oracle-chat/ChatInterface.tsx:87:21)
+  ✓  1 [chromium] › tests/e2e/next-move-report-paywall-checkout.spec.ts:96:9 › Next Move Report checkout behavior › paywall starts paid checkout with saved reading context (4.9s)
+[2m[WebServer] [22m(node:7340) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m[browser] Failed to load chat status: Error: Reading not found
+[2m[WebServer] [22m    at ChatInterface.useCallback[fetchStatus] (src/components/oracle-chat/ChatInterface.tsx:79:23)
+[2m[WebServer] [22m  77 |                 }
+[2m[WebServer] [22m  78 |
+[2m[WebServer] [22m> 79 |                 throw new Error(errorMessage || 'Failed to load chat status');
+[2m[WebServer] [22m     |                       ^
+[2m[WebServer] [22m  80 |             }
+[2m[WebServer] [22m  81 |
+[2m[WebServer] [22m  82 |             setAccessError(null); (src/components/oracle-chat/ChatInterface.tsx:87:21)
+[2m[WebServer] [22m(node:7342) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m[browser] Failed to load chat status: Error: Reading not found
+[2m[WebServer] [22m    at ChatInterface.useCallback[fetchStatus] (src/components/oracle-chat/ChatInterface.tsx:79:23)
+[2m[WebServer] [22m  77 |                 }
+[2m[WebServer] [22m  78 |
+[2m[WebServer] [22m> 79 |                 throw new Error(errorMessage || 'Failed to load chat status');
+[2m[WebServer] [22m     |                       ^
+[2m[WebServer] [22m  80 |             }
+[2m[WebServer] [22m  81 |
+[2m[WebServer] [22m  82 |             setAccessError(null); (src/components/oracle-chat/ChatInterface.tsx:87:21)
+  ✓  2 [chromium] › tests/e2e/next-move-report-paywall-checkout.spec.ts:130:9 › Next Move Report checkout behavior › paywall redeems free promo with email and no Stripe checkout request (4.3s)
+
+  2 passed (18.5s)

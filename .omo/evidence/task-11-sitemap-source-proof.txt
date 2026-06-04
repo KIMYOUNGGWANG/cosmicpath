@@ -1,0 +1,7 @@
+src/app/sitemap.ts:3:export default function sitemap(): MetadataRoute.Sitemap {
+src/app/sitemap.ts:10:            changeFrequency: 'daily',
+src/app/sitemap.ts:16:            changeFrequency: 'daily',
+src/app/sitemap.ts:20:            url: `${baseUrl}/relationship/contact-timing`,
+src/app/sitemap.ts:32:            url: `${baseUrl}/terms`,
+src/app/sitemap.ts:38:            url: `${baseUrl}/privacy`,
+src/app/robots.ts:12:        sitemap: `${baseUrl}/sitemap.xml`,

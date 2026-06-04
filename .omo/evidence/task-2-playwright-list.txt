@@ -1,0 +1,14 @@
+Listing tests:
+  [chromium] › next-move-report.spec.ts:9:9 › Next Move Report MVP › mvp route is branded and routes to start
+  [chromium] › next-move-report.spec.ts:24:9 › Next Move Report MVP › home and nav contain only MVP acquisition
+  [chromium] › next-move-report.spec.ts:34:9 › Next Move Report MVP › start keeps Next Move source and prefilled question
+  [chromium] › next-move-report.spec.ts:42:9 › Next Move Report MVP › start handles empty Next Move question safely
+  [chromium] › next-move-report.spec.ts:50:9 › Next Move Report MVP › legacy routes remain directly reachable
+  [chromium] › next-move-report.spec.ts:67:9 › Next Move Report MVP › ops groups Next Move with relationship history
+  [mobile-chrome] › next-move-report.spec.ts:9:9 › Next Move Report MVP › mvp route is branded and routes to start
+  [mobile-chrome] › next-move-report.spec.ts:24:9 › Next Move Report MVP › home and nav contain only MVP acquisition
+  [mobile-chrome] › next-move-report.spec.ts:34:9 › Next Move Report MVP › start keeps Next Move source and prefilled question
+  [mobile-chrome] › next-move-report.spec.ts:42:9 › Next Move Report MVP › start handles empty Next Move question safely
+  [mobile-chrome] › next-move-report.spec.ts:50:9 › Next Move Report MVP › legacy routes remain directly reachable
+  [mobile-chrome] › next-move-report.spec.ts:67:9 › Next Move Report MVP › ops groups Next Move with relationship history
+Total: 12 tests in 1 file

@@ -1,0 +1,21 @@
+
+> cosmicpath@0.1.0 verify:stability
+> node scripts/verify-stability-guards.cjs
+
+/Users/kim-young-gwang/Desktop/projects/cosmicpath/scripts/verify-stability-guards.cjs:11
+    throw new Error(`${message} [${filePath}]`);
+    ^
+
+Error: Relationship MVP route should use the public Next Move Report brand [src/app/relationship/contact-timing/page.tsx]
+    at assertMatch (/Users/kim-young-gwang/Desktop/projects/cosmicpath/scripts/verify-stability-guards.cjs:11:11)
+    at run (/Users/kim-young-gwang/Desktop/projects/cosmicpath/scripts/verify-stability-guards.cjs:33:3)
+    at Object.<anonymous> (/Users/kim-young-gwang/Desktop/projects/cosmicpath/scripts/verify-stability-guards.cjs:110:1)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+
+Node.js v22.20.0

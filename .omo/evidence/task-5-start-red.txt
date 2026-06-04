@@ -1,0 +1,72 @@
+[2m[WebServer] [22m(node:39828) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:39829) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+[2m[WebServer] [22m We detected multiple lockfiles and selected the directory of /Users/kim-young-gwang/package-lock.json as the root directory.
+[2m[WebServer] [22m To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+[2m[WebServer] [22m   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+[2m[WebServer] [22m Detected additional lockfiles:
+[2m[WebServer] [22m   * /Users/kim-young-gwang/Desktop/projects/cosmicpath/pnpm-lock.yaml
+[2m[WebServer] [22m
+[2m[WebServer] [22m⚠ Turbopack's filesystem cache has been deleted because we previously detected an internal error in Turbopack. Builds or page loads may be slower as a result.
+[2m[WebServer] [22m(node:39831) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:39832) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:39832) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:39842) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:39844) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m
+[2m[WebServer] [22mthread 'tokio-runtime-worker' (22463604) panicked at /Users/geist/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/qfilter-0.3.0-alpha.2/src/lib.rs:709:9:
+[2m[WebServer] [22mCPU doesn't support the bmi2 instructions
+[2m[WebServer] [22mnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+[2m[WebServer] [22m
+[2m[WebServer] [22mthread 'tokio-runtime-worker' (22463613) panicked at /Users/geist/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/qfilter-0.3.0-alpha.2/src/lib.rs:709:9:
+[2m[WebServer] [22mCPU doesn't support the bmi2 instructions
+[2m[WebServer] [22m
+[2m[WebServer] [22mthread 'tokio-runtime-worker' (22463607) panicked at /Users/geist/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/qfilter-0.3.0-alpha.2/src/lib.rs:709:9:
+[2m[WebServer] [22mCPU doesn't support the bmi2 instructions
+[2m[WebServer] [22m
+[2m[WebServer] [22mthread 'tokio-runtime-worker' (22463616) panicked at /Users/geist/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/qfilter-0.3.0-alpha.2/src/lib.rs:709:9:
+[2m[WebServer] [22mCPU doesn't support the bmi2 instructions
+  ✘  1 [chromium] › tests/e2e/next-move-report.spec.ts:34:9 › Next Move Report MVP › start keeps Next Move source and prefilled question (6.8s)
+
+
+  1) [chromium] › tests/e2e/next-move-report.spec.ts:34:9 › Next Move Report MVP › start keeps Next Move source and prefilled question
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByText(/연락 타이밍 질문/).first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByText(/연락 타이밍 질문/).first()[22m
+
+
+      36 |
+      37 |         await expect(page.locator('textarea').first()).toHaveValue(contactQuestion);
+    > 38 |         await expect(page.getByText(/연락 타이밍 질문/).first()).toBeVisible();
+         |                                                           ^
+      39 |         await expect(page.getByText(/선택 근거 레이어/).first()).toBeVisible();
+      40 |         await expect(page.getByText(/무료 결과는 연락 판정, 근거 요약, 다음 연락 행동/).first()).toBeVisible();
+      41 |         await expect(page).toHaveURL(/entry=next_move_report_mvp_v1/);
+        at /Users/kim-young-gwang/Desktop/projects/cosmicpath/tests/e2e/next-move-report.spec.ts:38:59
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/next-move-report-Next-Move-79998-urce-and-prefilled-question-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/next-move-report-Next-Move-79998-urce-and-prefilled-question-chromium/error-context.md
+
+  1 failed
+    [chromium] › tests/e2e/next-move-report.spec.ts:34:9 › Next Move Report MVP › start keeps Next Move source and prefilled question

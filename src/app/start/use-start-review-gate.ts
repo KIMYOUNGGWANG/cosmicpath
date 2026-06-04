@@ -13,20 +13,29 @@ type UseStartReviewGateOptions = {
 };
 
 export function useStartReviewGate(options: UseStartReviewGateOptions) {
+  const {
+    hasDismissedReview,
+    hasReportSummary,
+    isLoading,
+    openReviewModal,
+    paidFromSearchParams,
+    step,
+  } = options;
+
   useEffect(() => {
-    const isPaidSession = options.paidFromSearchParams || sessionStorage.getItem('payment_completed') === 'true';
+    const isPaidSession = paidFromSearchParams || sessionStorage.getItem('payment_completed') === 'true';
     const hasReviewed = localStorage.getItem('review_submitted') === 'true';
     const isPromoUser = sessionStorage.getItem('promo_user') === 'true';
     const isPremiumStatus = sessionStorage.getItem('is_premium_user') === 'true';
 
-    if (!options.hasReportSummary) return;
+    if (!hasReportSummary) return;
 
     const shouldShow =
       (isPaidSession || isPromoUser || isPremiumStatus) &&
       !hasReviewed &&
-      !options.hasDismissedReview &&
-      options.step === 'result' &&
-      !options.isLoading;
+      !hasDismissedReview &&
+      step === 'result' &&
+      !isLoading;
 
     if (!shouldShow) {
       return;
@@ -40,7 +49,7 @@ export function useStartReviewGate(options: UseStartReviewGateOptions) {
 
       const scrollPercent = (scrollY + innerHeight) / scrollHeight;
       if (scrollPercent >= 0.7) {
-        options.openReviewModal();
+        openReviewModal();
         window.removeEventListener('scroll', handleScroll);
       }
     };
@@ -51,11 +60,11 @@ export function useStartReviewGate(options: UseStartReviewGateOptions) {
       window.removeEventListener('scroll', handleScroll);
     };
   }, [
-    options.hasDismissedReview,
-    options.hasReportSummary,
-    options.isLoading,
-    options.openReviewModal,
-    options.paidFromSearchParams,
-    options.step,
+    hasDismissedReview,
+    hasReportSummary,
+    isLoading,
+    openReviewModal,
+    paidFromSearchParams,
+    step,
   ]);
 }

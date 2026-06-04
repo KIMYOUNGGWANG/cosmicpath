@@ -1,0 +1,16 @@
+C002 price mismatch browser evidence
+
+Command:
+npx playwright test tests/e2e/next-move-report.spec.ts --project=chromium --grep "paywall pauses checkout when Stripe price contract mismatches"
+
+Result:
+Running 1 test using 1 worker
+PASS tests/e2e/next-move-report.spec.ts:137:9
+Next Move Report MVP > paywall pauses checkout when Stripe price contract mismatches
+1 passed (17.7s)
+
+Observed behavior covered by the test:
+The paywall receives READING_PRICE_CONTRACT_MISMATCH and keeps the checkout button paused with the Korean paused label.
+
+Cleanup:
+lsof -nP -iTCP:3100 -sTCP:LISTEN exited 1 with no listener output.

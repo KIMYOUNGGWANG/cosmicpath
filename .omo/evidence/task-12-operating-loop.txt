@@ -1,0 +1,12 @@
+20:Run the first gate at 300 targeted visits or 14 days, whichever comes first.
+26:| Targeted visits | 300 targeted visits |
+27:| Question starts | 45 question starts |
+28:| Free verdicts | 30 free verdicts |
+29:| Paywall opens | 8 paywall opens |
+30:| Paid conversions | 2 paid conversions |
+31:| Follow-up seeds | 8 follow-up seeds |
+37:| PASS | 300 targeted visits or 14 days, 45 question starts, 30 free verdicts, 8 paywall opens, 2 paid conversions, and 8 follow-up seeds |
+39:| REVISE OFFER | 30 free verdicts but 0 paid conversions |
+40:| HOLD EXPANSION | Fewer than 8 follow-up seeds |
+47:| Weeks 1-2 | Launch and measure the first wedge without adding new products |
+50:| Weeks 9-12 | Scale winning content and consider email/Kakao follow-up after follow-up seeds prove intent |

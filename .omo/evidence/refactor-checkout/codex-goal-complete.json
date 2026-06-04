@@ -1,0 +1,12 @@
+{
+  "goal": {
+    "threadId": "019e8f34-69af-7450-b5d7-b68dd5093236",
+    "objective": "Continue the Next Move Report refactor in small verified slices, starting with extracting PaymentModal checkout/session creation logic into typed modules without changing user-facing paywall behavior; prove each slice with characterization tests, RED/GREEN evidence where applicable, real browser or HTTP QA artifacts, cleanup receipts, and reviewer approval before declaring done.",
+    "status": "complete",
+    "tokensUsed": 276375,
+    "timeUsedSeconds": 1394,
+    "createdAt": 1780546497,
+    "updatedAt": 1780547891
+  },
+  "note": "Captured from update_goal result. A follow-up get_goal returned null because the goal was already complete."
+}

@@ -1,0 +1,147 @@
+
+> cosmicpath@0.1.0 build
+> prisma generate && bash scripts/run-next-with-native-fallbacks.sh build
+
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/@prisma/client in 262ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Easily identify and fix slow SQL queries in your app. Optimize helps you enhance your visibility: https://pris.ly/--optimize
+
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/kim-young-gwang/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles:
+   * /Users/kim-young-gwang/Desktop/projects/cosmicpath/pnpm-lock.yaml
+
+▲ Next.js 16.2.1 (Turbopack)
+- Environments: .env.local, .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 11.8s
+  Running TypeScript ...
+  Finished TypeScript in 8.5s ...
+  Collecting page data using 17 workers ...
+  Generating static pages using 17 workers (0/99) ...
+  Generating static pages using 17 workers (24/99)
+  Generating static pages using 17 workers (49/99)
+  Generating static pages using 17 workers (74/99)
+✓ Generating static pages using 17 workers (99/99) in 457ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /api/aura/generate
+├ ƒ /api/auth/[...nextauth]
+├ ƒ /api/auth/otp/send
+├ ƒ /api/auth/otp/verify
+├ ƒ /api/daily/fortune
+├ ƒ /api/daily/tarot
+├ ƒ /api/email/drip/schedule
+├ ƒ /api/email/drip/send
+├ ƒ /api/email/send-result
+├ ƒ /api/growth/summary
+├ ƒ /api/growth/track
+├ ƒ /api/invite/code
+├ ƒ /api/invite/create
+├ ƒ /api/invite/redeem
+├ ƒ /api/invite/track
+├ ƒ /api/invite/verify
+├ ƒ /api/match/[id]
+├ ƒ /api/match/[id]/analyze
+├ ƒ /api/match/[id]/pay
+├ ƒ /api/match/[id]/unlock
+├ ƒ /api/match/create
+├ ƒ /api/match/join
+├ ƒ /api/og
+├ ƒ /api/og/aura
+├ ƒ /api/og/match/[id]
+├ ƒ /api/og/reading/[id]
+├ ƒ /api/ops/followups/run
+├ ƒ /api/ops/usage/counters
+├ ƒ /api/oracle-chat/daily-hook
+├ ƒ /api/oracle-chat/history
+├ ƒ /api/oracle-chat/message
+├ ƒ /api/orders
+├ ƒ /api/orders/public
+├ ƒ /api/payment
+├ ƒ /api/payment/chat-credit
+├ ƒ /api/payment/price
+├ ƒ /api/plan/limits
+├ ƒ /api/promo/redeem
+├ ƒ /api/promo/validate
+├ ƒ /api/reading
+├ ƒ /api/reading/claim-share-reward
+├ ƒ /api/reading/followup
+├ ƒ /api/reading/followup/stream
+├ ƒ /api/reading/save
+├ ƒ /api/referral/reward
+├ ƒ /api/review
+├ ƒ /api/review/admin
+├ ƒ /api/sms-oracle/daily-hook
+├ ƒ /api/sms-oracle/inbound
+├ ƒ /api/sms-oracle/register
+├ ƒ /api/sms-oracle/verify
+├ ƒ /api/subscription/cancel
+├ ƒ /api/subscription/create
+├ ƒ /api/subscription/status
+├ ƒ /api/user/link
+├ ƒ /api/user/readings
+├ ƒ /api/viral/career-test
+├ ƒ /api/webhook/stripe
+├ ƒ /api/webhook/stripe/reconcile
+├ ƒ /api/webhooks/stripe
+├ ƒ /api/webhooks/stripe/reconcile
+├ ƒ /auth/error
+├ ƒ /billing
+├ ƒ /billing/cancel
+├ ƒ /billing/success
+├ ○ /blog
+├ ƒ /blog/[slug]
+├ ƒ /brand
+├ ƒ /career/uncertainty
+├ ƒ /cosmic-test
+├ ƒ /daily
+├ ƒ /daily/tarot
+├ ƒ /en/contact-timing
+├ ƒ /en/saju
+├ ƒ /en/saju/result
+├ ƒ /guides
+├ ƒ /guides/[slug]
+├ ○ /icon
+├ ƒ /k-destiny
+├ ƒ /login
+├ ○ /manifest.webmanifest
+├ ƒ /match/[id]/join
+├ ƒ /match/[id]/result
+├ ƒ /match/new
+├ ƒ /my
+├ ƒ /ops
+├ ƒ /ops/advisors
+├ ƒ /ops/growth
+├ ƒ /ops/payments
+├ ƒ /ops/readings
+├ ƒ /ops/reviews
+├ ƒ /ops/trust
+├ ƒ /oracle-chat
+├ ƒ /orders
+├ ƒ /payment/success
+├ ƒ /privacy
+├ ƒ /relationship/contact-timing
+├ ○ /robots.txt
+├ ƒ /share/[id]
+├ ○ /sitemap.xml
+├ ƒ /start
+├ ƒ /terms
+└ ƒ /viral/career-test
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand

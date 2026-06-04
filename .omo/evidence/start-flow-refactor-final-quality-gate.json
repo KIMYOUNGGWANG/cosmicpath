@@ -1,0 +1,37 @@
+{
+  "aiSlopCleaner": {
+    "status": "passed",
+    "evidence": ".omo/evidence/start-flow-refactor-slop-audit.txt"
+  },
+  "verification": {
+    "status": "passed",
+    "commands": [
+      "npm run verify:stability",
+      "npm test",
+      "./node_modules/.bin/eslint <changed start-flow and e2e files>",
+      "npm run build",
+      "npx playwright test tests/e2e/next-move-report.spec.ts --project=chromium --grep <Next Move critical browser cases>",
+      "npx playwright test tests/e2e/next-move-report-paywall-checkout.spec.ts --project=chromium",
+      "git diff --check"
+    ],
+    "evidence": ".omo/evidence/start-flow-refactor-final-stability.txt, .omo/evidence/start-flow-refactor-final-regression.txt, .omo/evidence/start-flow-refactor-final-eslint.txt, .omo/evidence/start-flow-refactor-final-build.txt, .omo/evidence/start-flow-refactor-next-move-browser.txt, .omo/evidence/start-flow-refactor-paywall-checkout.txt, .omo/evidence/start-flow-refactor-final-diff-check.txt, .omo/evidence/start-flow-refactor-final-port-check.txt"
+  },
+  "codeReview": {
+    "recommendation": "APPROVE",
+    "architectStatus": "CLEAR",
+    "evidence": "UNCONDITIONAL APPROVAL from resume_payment_micro_reviewer and start_surface_micro_reviewer; both returned APPROVE/CLEAR with no findings."
+  },
+  "criteriaCoverage": {
+    "totalCriteria": 3,
+    "passCount": 3,
+    "adversarialClassesCovered": [
+      "stale_state",
+      "cancel_resume",
+      "misleading_success_output",
+      "dirty_worktree",
+      "hung_commands",
+      "flaky_tests",
+      "malformed_input"
+    ]
+  }
+}

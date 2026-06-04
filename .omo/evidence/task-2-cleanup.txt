@@ -1,0 +1,1 @@
+cleanup: Playwright webServer exited; lsof -nP -iTCP:3100 -sTCP:LISTEN returned no listeners after RED run. No tmux sessions or manual browser contexts were started for Task 2 harness.

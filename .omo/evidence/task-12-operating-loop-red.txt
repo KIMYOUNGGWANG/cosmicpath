@@ -1,0 +1,6 @@
+
+> cosmicpath@0.1.0 test
+> bash scripts/test-refactor-regression.sh
+
+grep: docs/revenue/next-move-report-mvp-operating-loop.md: No such file or directory
+Missing expected pattern in docs/revenue/next-move-report-mvp-operating-loop.md: 300 targeted visits

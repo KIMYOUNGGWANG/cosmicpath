@@ -1,0 +1,91 @@
+[2m[WebServer] [22m(node:27795) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:27796) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+[2m[WebServer] [22m We detected multiple lockfiles and selected the directory of /Users/kim-young-gwang/package-lock.json as the root directory.
+[2m[WebServer] [22m To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+[2m[WebServer] [22m   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+[2m[WebServer] [22m Detected additional lockfiles:
+[2m[WebServer] [22m   * /Users/kim-young-gwang/Desktop/projects/cosmicpath/pnpm-lock.yaml
+[2m[WebServer] [22m
+[2m[WebServer] [22m(node:27799) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 1 test using 1 worker
+
+(node:27800) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:27800) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:27810) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:27811) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m(node:27812) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[2m[WebServer] [22m(Use `node --trace-warnings ...` to show where the warning was created)
+[2m[WebServer] [22m[browser] Failed to load chat status: Error: Reading not found
+[2m[WebServer] [22m    at ChatInterface.useCallback[fetchStatus] (src/components/oracle-chat/ChatInterface.tsx:79:23)
+[2m[WebServer] [22m  77 |                 }
+[2m[WebServer] [22m  78 |
+[2m[WebServer] [22m> 79 |                 throw new Error(errorMessage || 'Failed to load chat status');
+[2m[WebServer] [22m     |                       ^
+[2m[WebServer] [22m  80 |             }
+[2m[WebServer] [22m  81 |
+[2m[WebServer] [22m  82 |             setAccessError(null); (src/components/oracle-chat/ChatInterface.tsx:87:21)
+[2m[WebServer] [22m[browser] Failed to load chat status: Error: Reading not found
+[2m[WebServer] [22m    at ChatInterface.useCallback[fetchStatus] (src/components/oracle-chat/ChatInterface.tsx:79:23)
+[2m[WebServer] [22m  77 |                 }
+[2m[WebServer] [22m  78 |
+[2m[WebServer] [22m> 79 |                 throw new Error(errorMessage || 'Failed to load chat status');
+[2m[WebServer] [22m     |                       ^
+[2m[WebServer] [22m  80 |             }
+[2m[WebServer] [22m  81 |
+[2m[WebServer] [22m  82 |             setAccessError(null); (src/components/oracle-chat/ChatInterface.tsx:87:21)
+[2m[WebServer] [22m
+[2m[WebServer] [22mthread 'tokio-runtime-worker' (22577813) panicked at /Users/geist/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/qfilter-0.3.0-alpha.2/src/lib.rs:709:9:
+[2m[WebServer] [22mCPU doesn't support the bmi2 instructions
+[2m[WebServer] [22mnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+[2m[WebServer] [22m
+[2m[WebServer] [22mthread 'tokio-runtime-worker' (22577806) panicked at /Users/geist/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/qfilter-0.3.0-alpha.2/src/lib.rs:709:9:
+[2m[WebServer] [22mCPU doesn't support the bmi2 instructions
+[2m[WebServer] [22m
+[2m[WebServer] [22mthread 'tokio-runtime-worker' (22577812) panicked at /Users/geist/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/qfilter-0.3.0-alpha.2/src/lib.rs:709:9:
+[2m[WebServer] [22mCPU doesn't support the bmi2 instructions
+[2m[WebServer] [22m
+[2m[WebServer] [22mthread 'tokio-runtime-worker' (22577814) panicked at /Users/geist/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/qfilter-0.3.0-alpha.2/src/lib.rs:709:9:
+[2m[WebServer] [22mCPU doesn't support the bmi2 instructions
+  ✘  1 [chromium] › tests/e2e/next-move-report.spec.ts:58:9 › Next Move Report MVP › paywall shows USD 9 Next Move offer (9.1s)
+
+
+  1) [chromium] › tests/e2e/next-move-report.spec.ts:58:9 › Next Move Report MVP › paywall shows USD 9 Next Move offer
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: getByText(/Next Move Report Full Report/i).first()
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByText(/Next Move Report Full Report/i).first()[22m
+
+
+      125 |         await page.getByRole('button', { name: /연락 타이밍 열기/ }).click();
+      126 |
+    > 127 |         await expect(page.getByText(/Next Move Report Full Report/i).first()).toBeVisible();
+          |                                                                               ^
+      128 |         await expect(page.getByText('$9.00').first()).toBeVisible();
+      129 |         await expect(page.getByText(/왜 이 판정인지/).first()).toBeVisible();
+      130 |         await expect(page.getByText(/연락 타이밍/).first()).toBeVisible();
+        at /Users/kim-young-gwang/Desktop/projects/cosmicpath/tests/e2e/next-move-report.spec.ts:127:79
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/next-move-report-Next-Move-60222-shows-USD-9-Next-Move-offer-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/next-move-report-Next-Move-60222-shows-USD-9-Next-Move-offer-chromium/error-context.md
+
+  1 failed
+    [chromium] › tests/e2e/next-move-report.spec.ts:58:9 › Next Move Report MVP › paywall shows USD 9 Next Move offer

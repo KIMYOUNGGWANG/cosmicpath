@@ -1,0 +1,2 @@
+66:Do not add paid ads, Toss/KRW checkout, subscriptions, custom consulting, SaaS onboarding, human advisor marketplace, native apps, or a broad CosmicPath relaunch during this MVP. These terms are out-of-scope constraints, not operating steps.
+78:| Primary nav promotes Daily, Career, PRO, or subscriptions | Legacy containment broken |

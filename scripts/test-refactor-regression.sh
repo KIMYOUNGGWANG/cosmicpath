@@ -22,8 +22,9 @@ require_absence() {
   fi
 }
 
-require_match "src/app/start/page.tsx" "from './start-input-stage'"
-require_match "src/app/start/page.tsx" "from './start-result-stage'"
+require_match "src/app/start/page.tsx" "from './start-page-stages'"
+require_match "src/app/start/start-page-stages.tsx" "from './start-input-stage'"
+require_match "src/app/start/start-page-stages.tsx" "from './start-result-stage'"
 require_match "src/app/start/page.tsx" "useStartResume"
 require_match "src/app/start/page.tsx" "useStartResultModals"
 require_match "src/app/start/page.tsx" "useStartReviewGate"
@@ -54,7 +55,9 @@ require_match "src/app/api/reading/followup/stream/route.ts" "mergeFollowUpMetad
 
 require_match "src/app/api/payment/route.ts" "session_id"
 require_match "src/app/api/payment/route.ts" "accessKey"
-require_match "src/app/start/use-start-resume.ts" "getStoredReadingAccessKey"
+require_match "src/app/start/use-start-resume.ts" "start-resume-snapshot"
+require_match "src/app/start/start-resume-snapshot.ts" "hydrateResumeSnapshotFromServer"
+require_match "src/app/start/start-resume-snapshot-state.ts" "getStoredReadingAccessKey"
 
 # Grand Oracle Chat Trust Hardening (2026-04-17)
 require_match "src/lib/oracle-chat.ts" "getOptionalSajuSummary(latestReadingContext)"
@@ -63,8 +66,8 @@ require_match "src/components/payment/SubscriptionModal.tsx" "DAILY_PAYWALL_COPY
 
 # Relationship Contact Timing Wedge (2026-05-24)
 require_match "src/app/relationship/contact-timing/page.tsx" "utm_source"
-require_match "src/app/start/start-result-stage.tsx" "relationship_contact_followup_seeded"
-require_match "src/app/start/start-result-stage.tsx" "en_relationship_contact_followup_seeded"
+require_match "src/app/start/start-result-relationship.ts" "relationship_contact_followup_seeded"
+require_match "src/app/start/start-result-relationship.ts" "en_relationship_contact_followup_seeded"
 require_match "src/lib/growth-metrics.ts" "english_contact_prompt_clicked"
 require_match "src/lib/growth-metrics.ts" "relationship_followup_opt_in"
 require_match "src/app/api/payment/route.ts" "source: checkoutSource"

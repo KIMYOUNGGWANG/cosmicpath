@@ -1,0 +1,5 @@
+
+> cosmicpath@0.1.0 test
+> bash scripts/test-refactor-regression.sh
+
+Missing expected pattern in src/app/start/start-page-helpers.ts: next_move_report_mvp_v1

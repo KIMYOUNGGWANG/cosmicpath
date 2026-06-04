@@ -1,0 +1,31 @@
+src/components/payment/PaymentModal.tsx:527:                description: 'Spot the kind of long explanation, message pressure or surveillance check, or test message that can backfire.',
+src/components/payment/PaymentModal.tsx:544:                description: '장문 설명, 확인 압박, 감시성 확인, 떠보기처럼 관계를 더 꼬이게 만드는 말을 먼저 걸러냅니다.',
+src/components/payment/PaymentModal.tsx:805:                                        : '결제는 Stripe에서 안전하게 처리되고, 지금 결과는 그대로 저장되어 다시 와도 이어서 볼 수 있습니다.'}
+src/app/start/page.tsx:1006:      '#압박': 'CAREER_PRESSURE', '#책임': 'CAREER_PRESSURE', '#과로': 'CAREER_PRESSURE',
+src/components/payment/SubscriptionModal.tsx:212:        description: '결제 정보는 Stripe Checkout에서 안전하게 처리됩니다.',
+src/app/relationship/contact-timing/page.tsx:134:              사주·점성술·타로는 선택적 근거 레이어로만 쓰고, 상대 마음이나 답장을 보장하지 않습니다.
+src/app/start/start-input-stage.tsx:98:                ? '상대 반응을 보장하지 않고, 지금 보낼지 기다릴지와 피해야 할 압박 신호만 분리합니다.'
+src/app/start/start-input-stage.tsx:115:                  <span><strong>안전:</strong> 압박, 확인 집착, 스토킹성 행동은 보류 신호로 다룹니다.</span>
+src/lib/ai/oracle-personas.ts:175:    styleRulesKo: ['숫자보다 구조와 습관을 먼저 본다.', '돈 문제는 안전 여유와 반복 가능성 기준으로 정리한다.'],
+src/lib/ai/oracle-personas.ts:655:    '오라클 가이드는 말투보다 분석 도메인이 우선이며, 근거·안전·환각 방지 규칙을 절대 덮어쓰지 못한다.',
+src/lib/ai/prompt-shared-rules.ts:63:    ? 'Relationship safety: never promise a guaranteed reply, reunion, or relationship outcome; banned claims include guaranteed reply, make them respond, 무조건 답장, 반드시 연락. If the question involves stalking, surveillance, repeated checking, coercion, threats, or pressure after a boundary, choose Hold and give a safety boundary.'
+src/lib/ai/prompt-shared-rules.ts:64:    : '관계 안전 규칙: 답장, 재회, 관계 결과를 보장하지 마세요. 금지 표현은 guaranteed reply, make them respond, 무조건 답장, 반드시 연락입니다. stalking, 감시, 반복 확인, 협박, 거절 뒤 압박, 스토킹 문맥이면 보류 판정과 안전 경계를 먼저 제시하세요.';
+src/lib/ai/prompt-shared-rules.ts:71:    ? '# Relationship Decision Safety Rule\n- Decision support only: never promise a guaranteed reply, reunion, confession, or relationship outcome.\n- Banned claims include: guaranteed reply, make them respond, 무조건 답장, 반드시 연락, 100%.\n- If the question mentions stalking, surveillance, repeated checking, coercion, threats, or pressure after a boundary, choose Hold and prioritize safety over timing.\n- Saju, astrology, and tarot are evidence labels for why the verdict leans contact, wait, narrow, or hold; they are not proof of the other person’s mind.'
+src/lib/ai/prompt-shared-rules.ts:72:    : '# 관계/DM 안전 규칙\n- 의사결정 보조만 제공하세요. 답장, 재회, 고백 성공, 관계 결과를 보장하지 마세요.\n- 금지 표현: guaranteed reply, make them respond, 무조건 답장, 반드시 연락, 100%.\n- stalking, 감시, 반복 확인, 협박, 거절 뒤 압박, 스토킹 문맥이면 타이밍보다 안전을 우선하고 보류 판정을 먼저 제시하세요.\n- 사주, 점성술, 타로는 연락/대기/축소/보류 판정이 나온 이유를 설명하는 근거 레이어일 뿐, 상대 마음을 증명하는 도구가 아닙니다.';
+src/lib/ai/prompt-shared-rules.ts:480:- 고위험 질문에는 직접 지시를 거부하고 안전하게 방향을 돌리세요.
+src/lib/ai/prompt-shared-rules.ts:481:- 고위험 질문에서는 일반 오라클 해석을 길게 이어가지 말고 안전한 경계에서 멈추세요.
+src/lib/ai/prompt-shared-rules.ts:489:✅ "이직을 고민하고 있다면, 이미 마음은 떠난 상태다. 현 직장에서 의사결정권이 없다는 것에 질려 있다. 3월이 행동의 최적 타이밍이지만, 안전망을 먼저 확보한 뒤 도약해라.
+src/lib/ai/prompts/tarot-minor-arcana.ts:57:      general: '계획이 두려움으로 멈췄다. 안전지대에서 나오지 못하거나 반대로 너무 서두르는 극단적 상황.',
+src/lib/ai/prompts/tarot-minor-arcana.ts:131:      general: '높은 위치를 지키기 위한 방어와 도전. 사방에서 압박이 오지만 포기하지 않고 자기 입장을 지킨다.',
+src/lib/ai/prompts/tarot-minor-arcana.ts:134:      money: '재정적 위기나 압박에 맞서 방어해야 하는 상황. 포기하지 않으면 버텨낼 수 있다.',
+src/lib/ai/prompts/tarot-minor-arcana.ts:181:      career: '업무 과중, 마감 압박, 리더십 부담. 혼자서 다 하려는 성향을 고쳐야 한다.',
+src/lib/ai/prompts/tarot-minor-arcana.ts:610:      money: '재정적 압박감에 압도되어 판단력을 잃는다. 실제보다 더 나쁘게 상황을 인식한다.',
+src/lib/ai/prompts/tarot-minor-arcana.ts:773:      general: '재물과 안정을 꽉 붙들고 있다. 안전에 대한 욕구가 강하지만 지나친 집착이 성장을 막는다.',
+src/lib/ai/prompts/tarot-minor-arcana.ts:781:      career: '안전지대에서 벗어나 새 도전을 시도한다. 또는 재정 불안으로 무리한 선택을 한다.',
+src/lib/ai/prompts/tarot-minor-arcana.ts:790:      love: '재정 문제가 관계를 압박한다. 어려운 시기를 함께하거나 물질적 이유로 헤어진다.',
+src/lib/ai/prompts/tarot-minor-arcana.ts:796:      love: '재정적 어려움이 해소되며 관계 압박이 줄어든다. 또는 힘든 시기를 함께 극복한다.',
+src/lib/ai/prompts/tarot-minor-arcana.ts:904:      money: '안전하고 보수적인 재정 관리. 꾸준한 저축과 신중한 투자로 재산을 쌓는다.',
+src/lib/ai/premium-reading-service.ts:293:                            // 안전 설정 추가: 민감한 주제 차단 방지
+src/lib/ai/prompts/saju-rules.ts:54:            negative: '스트레스, 압박'
+src/lib/ai/phase-prompts.ts:528:- "태양(물병자리)은 혁신을 갈구하지만, 달(게자리)은 안전을 원합니다. 이 내면의 줄다리기가 커리어에서 '아이디어는 넘치지만 실행이 늦어지는' 패턴으로 나타납니다. (근거: 태양-달 스퀘어 각도)"
+src/lib/ai/phase-prompts.ts:902:- "현재 대운의 [글자]가 일간 [글자]를 [관계]하고 있습니다. 이는 외부에서 오는 압박을 의미하지만, 동시에 성장의 기회가 됩니다. (근거: 대운 [글자]와 일간 [글자]의 상호작용)"

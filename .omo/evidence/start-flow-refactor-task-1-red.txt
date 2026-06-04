@@ -1,0 +1,21 @@
+
+> cosmicpath@0.1.0 verify:stability
+> node scripts/verify-stability-guards.cjs
+
+/Users/kim-young-gwang/Desktop/projects/cosmicpath/scripts/verify-stability-guards.cjs:35
+    throw new Error(`${message}: ${count} > ${maxLoc} [${filePath}]`);
+    ^
+
+Error: Start page should stay below the 250 pure LOC ceiling after extracting start-flow orchestration: 1213 > 250 [src/app/start/page.tsx]
+    at assertPureLocAtMost (/Users/kim-young-gwang/Desktop/projects/cosmicpath/scripts/verify-stability-guards.cjs:35:11)
+    at run (/Users/kim-young-gwang/Desktop/projects/cosmicpath/scripts/verify-stability-guards.cjs:40:3)
+    at Object.<anonymous> (/Users/kim-young-gwang/Desktop/projects/cosmicpath/scripts/verify-stability-guards.cjs:354:1)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+    at Module.load (node:internal/modules/cjs/loader:1441:32)
+    at Function._load (node:internal/modules/cjs/loader:1263:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
+
+Node.js v22.20.0

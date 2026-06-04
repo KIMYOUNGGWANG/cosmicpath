@@ -1,0 +1,3 @@
+GET /api/payment/price?productId=prod_next_move_report_live_TBD
+status=200
+{"productId":"prod_next_move_report_live_TBD","priceId":"","amount":9,"currency":"USD","formattedPrice":"$9.00","metadata":{"fallback":"true","lookupTarget":"product"}}

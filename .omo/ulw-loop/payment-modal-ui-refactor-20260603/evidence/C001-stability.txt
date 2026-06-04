@@ -1,0 +1,19 @@
+C001 stability and pure LOC evidence
+
+Command:
+npm run verify:stability
+
+Result:
+verify:stability passed
+
+Pure LOC:
+src/components/payment/PaymentModal.tsx: 244
+src/components/payment/PaymentModalFrame.tsx: 59
+src/components/payment/PaymentModalContent.tsx: 108
+src/components/payment/PaymentModalForm.tsx: 102
+src/components/payment/PaymentModalPricePanel.tsx: 81
+src/components/payment/PaymentModalSections.tsx: 48
+src/components/payment/payment-modal-copy.ts: 187
+
+Cleanup:
+lsof -nP -iTCP:3100 -sTCP:LISTEN exited 1 with no listener output.

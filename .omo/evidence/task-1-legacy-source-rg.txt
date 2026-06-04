@@ -1,0 +1,12 @@
+scripts/test-refactor-regression.sh:73:require_match "docs/revenue/relationship-contact-timing-threads-batch-2026-05-24.json" "utm_campaign=relationship_contact_timing_v1"
+scripts/test-refactor-regression.sh:76:require_match "src/app/start/start-page-helpers.ts" "relationship_contact_timing_v1"
+scripts/test-refactor-regression.sh:77:require_match "src/app/start/start-page-helpers.ts" "en_relationship_contact_timing_v1"
+src/lib/growth-metrics.ts:141:        sources: ['relationship_contact_timing_v1'],
+src/lib/growth-metrics.ts:147:        sources: ['en_relationship_contact_timing_v1'],
+src/app/start/page.tsx:116:    landingSource === 'en_relationship_contact_timing_v1'
+src/app/start/start-result-stage.tsx:126:  return source === 'relationship_contact_timing_v1' || source === 'en_relationship_contact_timing_v1';
+src/app/start/start-result-stage.tsx:130:  return source === 'en_relationship_contact_timing_v1'
+src/app/start/start-result-stage.tsx:136:  if (source === 'en_relationship_contact_timing_v1') {
+src/app/start/start-result-stage.tsx:323:        landingSource === 'en_relationship_contact_timing_v1'
+src/app/start/start-page-helpers.ts:93:  'relationship_contact_timing_v1',
+src/app/start/start-page-helpers.ts:94:  'en_relationship_contact_timing_v1',

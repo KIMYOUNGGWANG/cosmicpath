@@ -1,0 +1,22 @@
+C003 checkout regression browser evidence
+
+Command:
+npx playwright test tests/e2e/next-move-report-paywall-checkout.spec.ts --project=chromium
+
+Result:
+Running 2 tests using 1 worker
+PASS tests/e2e/next-move-report-paywall-checkout.spec.ts:96:9
+Next Move Report checkout behavior > paywall starts paid checkout with saved reading context
+PASS tests/e2e/next-move-report-paywall-checkout.spec.ts:130:9
+Next Move Report checkout behavior > paywall redeems free promo with email and no Stripe checkout request
+2 passed (20.4s)
+
+Observed behavior covered by the tests:
+Paid checkout keeps the saved reading context.
+Free promo redemption requires email and does not create a Stripe checkout request.
+
+Notes:
+The run printed an existing browser-side chat-status warning for a missing reading, but both paywall checkout assertions passed.
+
+Cleanup:
+lsof -nP -iTCP:3100 -sTCP:LISTEN exited 1 with no listener output.

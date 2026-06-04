@@ -1,0 +1,7 @@
+Manual QA passed:
+- start URL preserved next_move_report_mvp_v1 and prefilled question
+- free verdict rendered before paywall
+- paywall showed Next Move Report Full Report and $9.00
+- empty question did not crash
+- English probe showed Next Move Report and Full report $9
+- /ops/growth showed protected ADMIN access state in an unauthenticated browser

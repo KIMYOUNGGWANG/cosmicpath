@@ -38,6 +38,22 @@ function assertPureLocAtMost(filePath, maxLoc, message) {
 
 function run() {
   assertPureLocAtMost(
+    'src/app/start/page.tsx',
+    250,
+    'Start page should stay below the 250 pure LOC ceiling after extracting start-flow orchestration'
+  );
+  assertPureLocAtMost(
+    'src/app/start/use-start-resume.ts',
+    250,
+    'Start resume hook should stay below the 250 pure LOC ceiling after splitting snapshot and premium resume logic'
+  );
+  assertPureLocAtMost(
+    'src/app/start/start-result-stage.tsx',
+    250,
+    'Start result stage should stay below the 250 pure LOC ceiling after extracting result action panels'
+  );
+
+  assertPureLocAtMost(
     'src/components/payment/PaymentModal.tsx',
     250,
     'PaymentModal should stay below the 250 pure LOC ceiling after extracting checkout, frame, and paywall UI responsibilities'

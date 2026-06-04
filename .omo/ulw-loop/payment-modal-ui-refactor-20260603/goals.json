@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "createdAt": "2026-06-04T04:47:47.884Z",
+  "updatedAt": "2026-06-04T05:02:39.986Z",
+  "briefPath": ".omo/ulw-loop/payment-modal-ui-refactor-20260603/brief.md",
+  "goalsPath": ".omo/ulw-loop/payment-modal-ui-refactor-20260603/goals.json",
+  "ledgerPath": ".omo/ulw-loop/payment-modal-ui-refactor-20260603/ledger.jsonl",
+  "codexGoalMode": "aggregate",
+  "goals": [
+    {
+      "id": "G001-refactor-the-next-move-report-paymen",
+      "title": "Refactor the Next Move Report PaymentModal UI shell so src/components...",
+      "objective": "Refactor the Next Move Report PaymentModal UI shell so src/components/payment/PaymentModal.tsx stays below 250 pure LOC by extracting the portal/modal frame and keeping paywall copy, benefits, price panel, promo/email form, and checkout orchestration in separate typed modules. Preserve paid checkout, free promo, Stripe price mismatch pause, tracking, and relationship safety copy. Verify with stability guards, targeted lint/build/tests, and real browser Playwright paywall scenarios. Do not commit.",
+      "status": "complete",
+      "successCriteria": [
+        {
+          "id": "C001",
+          "scenario": "CLI/data scenario: run npm run verify:stability and pure-LOC checks to prove PaymentModal.tsx plus extracted payment UI modules are under the 250 pure LOC ceiling and guard copy moved to the right files.",
+          "userModel": "happy",
+          "expectedEvidence": ".omo/ulw-loop/payment-modal-ui-refactor-20260603/evidence/C001-stability.txt with command output showing verify:stability passed and LOC values.",
+          "capturedEvidence": ".omo/ulw-loop/payment-modal-ui-refactor-20260603/evidence/C001-stability.txt: npm run verify:stability passed; PaymentModal.tsx pure LOC 244; extracted payment UI modules all <=250 pure LOC | cleanup: lsof -nP -iTCP:3100 -sTCP:LISTEN returned no listener",
+          "status": "pass",
+          "capturedAt": "2026-06-04T04:52:01.927Z"
+        },
+        {
+          "id": "C002",
+          "scenario": "Browser scenario: run Playwright Chromium paywall test filtered to Stripe price-contract mismatch and confirm the real paywall disables checkout with the Korean paused label when READING_PRICE_CONTRACT_MISMATCH is returned.",
+          "userModel": "edge",
+          "expectedEvidence": ".omo/ulw-loop/payment-modal-ui-refactor-20260603/evidence/C002-price-mismatch-playwright.txt with Playwright output showing the mismatch paywall test passed and cleanup receipt for no port 3100 listener.",
+          "capturedEvidence": ".omo/ulw-loop/payment-modal-ui-refactor-20260603/evidence/C002-price-mismatch-playwright.txt: Chromium Playwright mismatch paywall test passed; checkout stayed paused on READING_PRICE_CONTRACT_MISMATCH with Korean paused label | cleanup: lsof -nP -iTCP:3100 -sTCP:LISTEN returned no listener",
+          "status": "pass",
+          "capturedAt": "2026-06-04T04:52:55.964Z"
+        },
+        {
+          "id": "C003",
+          "scenario": "Browser regression scenario: run Playwright Chromium checkout suite proving paid checkout preserves saved reading context and free promo redemption does not create a Stripe checkout request.",
+          "userModel": "regression",
+          "expectedEvidence": ".omo/ulw-loop/payment-modal-ui-refactor-20260603/evidence/C003-checkout-regression-playwright.txt with Playwright output showing both checkout tests passed and cleanup receipt for no port 3100 listener.",
+          "capturedEvidence": ".omo/ulw-loop/payment-modal-ui-refactor-20260603/evidence/C003-checkout-regression-playwright.txt: Chromium Playwright checkout suite passed 2 tests; paid checkout preserved saved reading context; free promo did not create a Stripe checkout request | cleanup: lsof -nP -iTCP:3100 -sTCP:LISTEN returned no listener",
+          "status": "pass",
+          "capturedAt": "2026-06-04T04:53:40.411Z"
+        }
+      ],
+      "attempt": 1,
+      "createdAt": "2026-06-04T04:47:47.884Z",
+      "updatedAt": "2026-06-04T05:02:39.986Z",
+      "startedAt": "2026-06-04T04:48:20.076Z",
+      "completedAt": "2026-06-04T05:02:39.986Z",
+      "evidence": "C001 stability/LOC passed; C002 Stripe price mismatch browser scenario passed; C003 paid/free checkout browser regression passed; final verification passed npm test, npm run build, targeted eslint, verify:stability, git diff --check, and cleanup checks"
+    }
+  ],
+  "codexObjective": "Complete the durable ulw-loop plan in .omo/ulw-loop/payment-modal-ui-refactor-20260603/goals.json, including later accepted/appended stories, under the original brief constraints; use .omo/ulw-loop/payment-modal-ui-refactor-20260603/ledger.jsonl as the audit trail.",
+  "aggregateCompletion": {
+    "status": "complete",
+    "completedAt": "2026-06-04T05:02:39.986Z",
+    "evidence": "C001 stability/LOC passed; C002 Stripe price mismatch browser scenario passed; C003 paid/free checkout browser regression passed; final verification passed npm test, npm run build, targeted eslint, verify:stability, git diff --check, and cleanup checks",
+    "codexGoal": {
+      "goal": {
+        "threadId": "019e8f34-69af-7450-b5d7-b68dd5093236",
+        "objective": "Complete the durable ulw-loop plan in .omo/ulw-loop/payment-modal-ui-refactor-20260603/goals.json, including later accepted/appended stories, under the original brief constraints; use .omo/ulw-loop/payment-modal-ui-refactor-20260603/ledger.jsonl as the audit trail.",
+        "status": "complete",
+        "tokensUsed": 94992,
+        "timeUsedSeconds": 834,
+        "createdAt": 1780548503,
+        "updatedAt": 1780549338
+      },
+      "remainingTokens": null,
+      "completionBudgetReport": "Goal achieved. Report final usage from this tool result's structured goal fields."
+    }
+  }
+}

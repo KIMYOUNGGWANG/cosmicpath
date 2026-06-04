@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "createdAt": "2026-06-04T04:19:12.529Z",
+  "updatedAt": "2026-06-04T04:40:26.663Z",
+  "briefPath": ".omo/ulw-loop/payment-modal-checkout-refactor-20260603/brief.md",
+  "goalsPath": ".omo/ulw-loop/payment-modal-checkout-refactor-20260603/goals.json",
+  "ledgerPath": ".omo/ulw-loop/payment-modal-checkout-refactor-20260603/ledger.jsonl",
+  "codexGoalMode": "aggregate",
+  "goals": [
+    {
+      "id": "G001-extract-paymentmodal-checkout-and-se",
+      "title": "Extract PaymentModal checkout and session creation into typed payment...",
+      "objective": "Extract PaymentModal checkout and session creation into typed payment modules without changing Next Move Report paywall behavior; preserve paid checkout, free promo redemption, Stripe price mismatch blocking, analytics, storage, and redirects while proving the slice with characterization tests, observable browser or HTTP QA artifacts, cleanup receipts, and reviewer approval.",
+      "status": "complete",
+      "successCriteria": [
+        {
+          "id": "C001",
+          "scenario": "Paid checkout from the Next Move paywall saves pending reading context, posts /api/payment with productId, saved readingId/accessKey, source, language, and referral fields, then navigates to the mocked checkout URL.",
+          "userModel": "happy",
+          "expectedEvidence": "Automated Playwright paywall checkout characterization; real browser or HTTP-visible artifact for /api/reading/save and /api/payment; cleanup receipt for test server/processes.",
+          "capturedEvidence": "Paid checkout preserved and characterized. Evidence: .omo/evidence/refactor-checkout/browser-qa.md and .omo/evidence/refactor-checkout/final-verification.md. Commands passed: npx playwright test tests/e2e/next-move-report-paywall-checkout.spec.ts --project=chromium (2 passed); npm run verify:stability; targeted eslint; npm run build; git diff --check. Browser route mocks captured /api/reading/save and /api/payment with readingId qa-next-move-reading, accessKey qa-access-key, source next_move_report_mvp_v1, language ko, and browser navigation to mocked checkout URL.",
+          "status": "pass",
+          "capturedAt": "2026-06-04T04:33:33.654Z",
+          "notes": "Cleanup receipt: lsof -nP -iTCP:3100 -sTCP:LISTEN returned no listener after Playwright."
+        },
+        {
+          "id": "C002",
+          "scenario": "Free 100 percent promo from the paywall requires a valid email, redeems /api/promo/redeem with readingId and user agent, makes zero /api/payment requests, sets premium/promo session flags, tracks success, and redirects to /start?paid=true with reading id when available.",
+          "userModel": "edge",
+          "expectedEvidence": "Automated characterization for invalid and valid promo-email paths; observable request/session artifact proving /api/promo/redeem occurs and /api/payment request count stays zero; cleanup receipt for test server/processes.",
+          "capturedEvidence": "Free promo path preserved and characterized. Evidence: .omo/evidence/refactor-checkout/browser-qa.md and .omo/evidence/refactor-checkout/final-verification.md. Command passed: npx playwright test tests/e2e/next-move-report-paywall-checkout.spec.ts --project=chromium (2 passed). Browser test proves blank and invalid email errors, /api/promo/redeem with codeId promo-free-qa/email qa@example.com/readingId qa-next-move-reading, /api/payment request count remains 0, session flags payment_completed/promo_user/is_premium_user become true, and redirect reaches /start?paid=true&reading_id=qa-next-move-reading.",
+          "status": "pass",
+          "capturedAt": "2026-06-04T04:33:41.537Z",
+          "notes": "Cleanup receipt: lsof -nP -iTCP:3100 -sTCP:LISTEN returned no listener after Playwright."
+        },
+        {
+          "id": "C003",
+          "scenario": "Stripe price mismatch still pauses paid checkout after extraction, PaymentModal delegates checkout persistence/session creation to the typed payment module, and PaymentModal pure LOC decreases from the 726-line baseline.",
+          "userModel": "regression",
+          "expectedEvidence": "RED then GREEN stability guard or targeted static test for the new checkout boundary; existing mismatch Playwright test remains green; ESLint/build/diff-check receipts; before/after LOC receipt.",
+          "capturedEvidence": "Price mismatch and refactor boundary preserved. Evidence: .omo/evidence/refactor-checkout/red-green.md, .omo/evidence/refactor-checkout/browser-qa.md, and .omo/evidence/refactor-checkout/final-verification.md. RED: npm run verify:stability failed before implementation because src/components/payment/use-reading-checkout.ts was missing. GREEN: npm run verify:stability passed after extraction; targeted eslint passed; npm run build passed; git diff --check passed. Existing paywall regression passed with npx playwright test tests/e2e/next-move-report.spec.ts --project=chromium --grep paywall (2 passed), including Stripe price mismatch disabled checkout. PaymentModal pure LOC decreased from 726 to 616; new use-reading-checkout.ts is 223 LOC.",
+          "status": "pass",
+          "capturedAt": "2026-06-04T04:33:51.646Z",
+          "notes": "Cleanup receipt: lsof -nP -iTCP:3100 -sTCP:LISTEN returned no listener after Playwright. A parallel Playwright attempt failed due webServer conflict, then the command was rerun alone and passed."
+        }
+      ],
+      "attempt": 1,
+      "createdAt": "2026-06-04T04:19:12.529Z",
+      "updatedAt": "2026-06-04T04:40:26.663Z",
+      "startedAt": "2026-06-04T04:19:47.617Z",
+      "completedAt": "2026-06-04T04:40:26.663Z",
+      "evidence": "PaymentModal checkout/session refactor slice complete. Implemented src/components/payment/use-reading-checkout.ts and delegated PaymentModal checkout persistence/session creation to useReadingCheckout. Evidence: .omo/evidence/refactor-checkout/red-green.md, browser-qa.md, final-verification.md, slop-audit.md, final-quality-gate.json. C001/C002/C003 all recorded pass in ULW ledger. Reviewer returned APPROVE with architect status CLEAR. Commands passed: npm test, npm run verify:stability, targeted eslint, checkout Playwright 2 passed, paywall grep Playwright 2 passed, npm run build, git diff --check, and cleanup no listener on port 3100."
+    }
+  ],
+  "codexObjective": "Complete the durable ulw-loop plan in .omo/ulw-loop/payment-modal-checkout-refactor-20260603/goals.json, including later accepted/appended stories, under the original brief constraints; use .omo/ulw-loop/payment-modal-checkout-refactor-20260603/ledger.jsonl as the audit trail.",
+  "aggregateCompletion": {
+    "status": "complete",
+    "completedAt": "2026-06-04T04:40:26.663Z",
+    "evidence": "PaymentModal checkout/session refactor slice complete. Implemented src/components/payment/use-reading-checkout.ts and delegated PaymentModal checkout persistence/session creation to useReadingCheckout. Evidence: .omo/evidence/refactor-checkout/red-green.md, browser-qa.md, final-verification.md, slop-audit.md, final-quality-gate.json. C001/C002/C003 all recorded pass in ULW ledger. Reviewer returned APPROVE with architect status CLEAR. Commands passed: npm test, npm run verify:stability, targeted eslint, checkout Playwright 2 passed, paywall grep Playwright 2 passed, npm run build, git diff --check, and cleanup no listener on port 3100.",
+    "codexGoal": {
+      "goal": {
+        "threadId": "019e8f34-69af-7450-b5d7-b68dd5093236",
+        "objective": "Complete the durable ulw-loop plan in .omo/ulw-loop/payment-modal-checkout-refactor-20260603/goals.json, including later accepted/appended stories, under the original brief constraints; use .omo/ulw-loop/payment-modal-checkout-refactor-20260603/ledger.jsonl as the audit trail.",
+        "status": "complete",
+        "tokensUsed": 0,
+        "timeUsedSeconds": 6,
+        "createdAt": 1780547934,
+        "updatedAt": 1780547941
+      },
+      "note": "Aggregate Codex goal created after the initial slice-scoped goal completed because the ULW checkpoint requires the aggregate objective to match exactly."
+    }
+  }
+}

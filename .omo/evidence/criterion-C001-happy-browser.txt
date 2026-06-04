@@ -1,0 +1,18 @@
+Happy browser flow passed on localhost:3100.
+
+Evidence:
+- Route screenshot: .omo/evidence/criterion-C001-route.png
+- Start screenshot: .omo/evidence/criterion-C001-start.png
+- Result screenshot: .omo/evidence/criterion-C001-result.png
+- Paywall/result flow screenshot: .omo/evidence/f3-start-flow.png
+- Real API free-focus evidence: .omo/evidence/f3-real-reading-api.txt
+- Automated desktop spec: .omo/evidence/f2-playwright-desktop.txt
+- Automated mobile spec: .omo/evidence/f2-playwright-mobile.txt
+
+Assertions:
+- /relationship/contact-timing shows Next Move Report, 연락할까, 기다릴까, first verdict free, and $9.
+- Primary CTA preserves entry=next_move_report_mvp_v1 and context=love.
+- /start preserves the prefilled relationship question.
+- Free verdict renders before the paywall.
+- Paywall shows Next Move Report Full Report and $9.00.
+- Direct /api/reading integration returns free_focus.action_conclusion, evidence_summary, and next_question for next_move_report_mvp_v1-equivalent love/timing input.

@@ -1,0 +1,12 @@
+{
+  "goal": {
+    "threadId": "019e8f34-69af-7450-b5d7-b68dd5093236",
+    "objective": "Complete the durable ulw-loop plan in .omo/ulw-loop/payment-modal-checkout-refactor-20260603/goals.json, including later accepted/appended stories, under the original brief constraints; use .omo/ulw-loop/payment-modal-checkout-refactor-20260603/ledger.jsonl as the audit trail.",
+    "status": "complete",
+    "tokensUsed": 0,
+    "timeUsedSeconds": 6,
+    "createdAt": 1780547934,
+    "updatedAt": 1780547941
+  },
+  "note": "Aggregate Codex goal created after the initial slice-scoped goal completed because the ULW checkpoint requires the aggregate objective to match exactly."
+}

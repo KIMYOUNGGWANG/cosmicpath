@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "createdAt": "2026-06-04T05:42:22.527Z",
+  "updatedAt": "2026-06-04T06:50:45.791Z",
+  "briefPath": ".omo/ulw-loop/start-flow-refactor-wave-20260604/brief.md",
+  "goalsPath": ".omo/ulw-loop/start-flow-refactor-wave-20260604/goals.json",
+  "ledgerPath": ".omo/ulw-loop/start-flow-refactor-wave-20260604/ledger.jsonl",
+  "codexGoalMode": "aggregate",
+  "goals": [
+    {
+      "id": "G001-execute-omo-plans-start-flow-refacto",
+      "title": "Execute .omo/plans/start-flow-refactor-wave.md completely: conservati...",
+      "objective": "Execute .omo/plans/start-flow-refactor-wave.md completely: conservative start-flow refactor for Next Move Report MVP, no intentional product behavior changes, preserve /start prefill/source tracking, free verdict, USD 9 Stripe paywall, paid/free checkout, resume recovery, invitation and modal behavior. Add RED->GREEN guards, implement all 8 planned tasks, keep start-flow files under the plan LOC caps, and collect CLI/browser evidence for each acceptance criterion. Do not commit automatically unless the user asks after implementation.",
+      "status": "complete",
+      "successCriteria": [
+        {
+          "id": "C001",
+          "scenario": "RED->GREEN refactor guard evidence",
+          "userModel": "regression",
+          "expectedEvidence": "Capture a failing RED run after adding start-flow LOC/source guards, then a final passing GREEN run showing npm run verify:stability, npm test, npm run build, and targeted eslint succeed after all refactor tasks.",
+          "capturedEvidence": "RED .omo/evidence/start-flow-refactor-task-1-red.txt; GREEN .omo/evidence/start-flow-refactor-final-stability.txt, .omo/evidence/start-flow-refactor-final-regression.txt, .omo/evidence/start-flow-refactor-final-eslint.txt, .omo/evidence/start-flow-refactor-final-build.txt, .omo/evidence/start-flow-refactor-loc-audit.txt, .omo/evidence/start-flow-refactor-final-diff-check.txt. cleanup: closed reviewer agents; .omo/evidence/start-flow-refactor-final-port-check.txt shows no listener on tcp:3100",
+          "status": "pass",
+          "capturedAt": "2026-06-04T06:48:41.786Z",
+          "notes": "Start-flow LOC guards pass; npm run verify:stability, npm test, targeted eslint, and npm run build passed after final refactor."
+        },
+        {
+          "id": "C002",
+          "scenario": "Browser happy path: Next Move start to 9 dollar paywall",
+          "userModel": "happy",
+          "expectedEvidence": "Playwright evidence that /start reset with context love, entry next_move_report_mvp_v1, Korean language, and a prefilled question preserves Next Move source and question, completes a free verdict, and shows the Next Move Report 9 dollar paywall.",
+          "capturedEvidence": ".omo/evidence/start-flow-refactor-next-move-browser.txt shows Playwright passed start keeps Next Move source and prefilled question; paywall shows USD 9 Next Move offer. Supporting build/lint evidence refreshed. cleanup: Playwright webServer closed; .omo/evidence/start-flow-refactor-final-port-check.txt shows no listener on tcp:3100",
+          "status": "pass",
+          "capturedAt": "2026-06-04T06:49:06.971Z",
+          "notes": "Browser happy path preserved /start reset context love, entry next_move_report_mvp_v1, Korean prefilled question, free verdict path, and Next Move Report Full Report .00 paywall."
+        },
+        {
+          "id": "C003",
+          "scenario": "Browser edge/regression: checkout, mismatch, resume",
+          "userModel": "regression",
+          "expectedEvidence": "Playwright evidence that Stripe price mismatch keeps checkout disabled with the Korean paused label, paid checkout still posts saved reading context, free promo avoids Stripe checkout, and resume/reset recovery still works.",
+          "capturedEvidence": ".omo/evidence/start-flow-refactor-next-move-browser.txt shows Stripe mismatch checkout pause; .omo/evidence/start-flow-refactor-paywall-checkout.txt shows paid checkout posts saved reading context and free promo avoids Stripe checkout; resume/payment micro-review returned APPROVE/CLEAR UNCONDITIONAL APPROVAL. cleanup: Playwright webServer closed; .omo/evidence/start-flow-refactor-final-port-check.txt shows no listener on tcp:3100",
+          "status": "pass",
+          "capturedAt": "2026-06-04T06:49:15.180Z",
+          "notes": "Regression coverage includes mismatch disabled checkout, paid checkout readingId/accessKey/source payload, free promo paid=true recovery path, reset=true start path, and resume storage review."
+        }
+      ],
+      "attempt": 1,
+      "createdAt": "2026-06-04T05:42:22.527Z",
+      "updatedAt": "2026-06-04T06:50:45.791Z",
+      "startedAt": "2026-06-04T05:42:54.924Z",
+      "completedAt": "2026-06-04T06:50:45.791Z",
+      "evidence": "All criteria pass: C001 RED/GREEN guard evidence; C002 Next Move browser happy path; C003 checkout mismatch, paid checkout, free promo, and resume review. Final verification passed: stability, npm test, targeted eslint, build, Playwright suites, diff-check, LOC audit, no tcp:3100 listener. Code review fallback micro-reviewers returned APPROVE/CLEAR UNCONDITIONAL APPROVAL."
+    }
+  ],
+  "codexObjective": "Complete the durable ulw-loop plan in .omo/ulw-loop/start-flow-refactor-wave-20260604/goals.json, including later accepted/appended stories, under the original brief constraints; use .omo/ulw-loop/start-flow-refactor-wave-20260604/ledger.jsonl as the audit trail.",
+  "aggregateCompletion": {
+    "status": "complete",
+    "completedAt": "2026-06-04T06:50:45.791Z",
+    "evidence": "All criteria pass: C001 RED/GREEN guard evidence; C002 Next Move browser happy path; C003 checkout mismatch, paid checkout, free promo, and resume review. Final verification passed: stability, npm test, targeted eslint, build, Playwright suites, diff-check, LOC audit, no tcp:3100 listener. Code review fallback micro-reviewers returned APPROVE/CLEAR UNCONDITIONAL APPROVAL.",
+    "codexGoal": {
+      "goal": {
+        "threadId": "019e8f34-69af-7450-b5d7-b68dd5093236",
+        "objective": "Complete the durable ulw-loop plan in .omo/ulw-loop/start-flow-refactor-wave-20260604/goals.json, including later accepted/appended stories, under the original brief constraints; use .omo/ulw-loop/start-flow-refactor-wave-20260604/ledger.jsonl as the audit trail.",
+        "status": "complete",
+        "tokensUsed": 490346,
+        "timeUsedSeconds": 4015,
+        "createdAt": 1780551782,
+        "updatedAt": 1780555798
+      },
+      "source": "update_goal(status=complete) result"
+    }
+  }
+}
