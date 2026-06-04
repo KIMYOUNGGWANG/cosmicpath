@@ -30,11 +30,11 @@ test.describe('SEO Landing Pages', () => {
         await expectStructuredData(page, 'CollectionPage');
     });
 
-    test('match new page has title and page structured data', async ({ page }) => {
+    test('match new page has archive title and global structured data', async ({ page }) => {
         await page.goto('/match/new');
 
-        await expect(page).toHaveTitle(/궁합 초대 링크 만들기/i);
-        await expect(page.getByRole('heading', { name: /Cosmic Affinity/i })).toBeVisible();
-        await expectStructuredData(page, 'https://cosmicpath.app/match/new');
+        await expect(page).toHaveTitle(/Cosmic Compatibility Readings/i);
+        await expect(page.getByRole('heading', { name: /궁합 실험실은/i })).toBeVisible();
+        await expectStructuredData(page, 'Organization');
     });
 });

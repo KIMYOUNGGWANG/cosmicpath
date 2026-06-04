@@ -26,7 +26,7 @@ export default async function TermsPage() {
                             <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
                                 <h2 className="mb-4 text-xl font-cinzel text-white">English Summary</h2>
                                 <p>
-                                    These terms explain how Next Move Report delivers relationship decision-support content as digital content.
+                                    These terms explain how Next Move Report delivers decision-support content as digital content.
                                     Saju, astrology, and tarot may appear only as optional evidence layers.
                                     This English summary is provided for clarity during the current validation cycle. The Korean governing version remains below.
                                 </p>
@@ -37,7 +37,7 @@ export default async function TermsPage() {
                                     <h2 className="mb-3 text-lg font-cinzel text-white">What You Buy</h2>
                                     <p>
                                         The paid unlock is a one-off digital report purchased through Stripe checkout at the price shown there.
-                                        It gives you access to deeper evidence, contact timing, and message-risk framing.
+                                        It gives you access to deeper evidence, timing, next-action order, and risk framing.
                                     </p>
                                 </div>
                                 <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
@@ -50,7 +50,7 @@ export default async function TermsPage() {
                                 <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
                                     <h2 className="mb-3 text-lg font-cinzel text-white">Decision Disclaimer</h2>
                                     <p>
-                                        Readings are AI-generated interpretive content with no guaranteed relationship outcome.
+                                        Readings are AI-generated interpretive content with no guaranteed relationship, career, money, health, or life outcome.
                                         They are not therapy, medical, diagnostic, legal, or financial advice.
                                     </p>
                                 </div>
@@ -79,7 +79,7 @@ export default async function TermsPage() {
                     <section>
                         <h2 className="mb-4 text-xl font-cinzel text-white">제2조 (용어의 정의)</h2>
                         <ol className="list-decimal space-y-2 pl-5">
-                            <li>&quot;서비스&quot;란 회사가 이용자에게 제공하는 Next Move Report 관계/DM 의사결정 보조 콘텐츠, 사주, 점성술, 타로 기반 AI 분석 결과 및 관련 콘텐츠 일체를 의미합니다.</li>
+                            <li>&quot;서비스&quot;란 회사가 이용자에게 제공하는 Next Move Report 의사결정 보조 콘텐츠, 사주, 점성술, 타로 기반 AI 분석 결과 및 관련 콘텐츠 일체를 의미합니다.</li>
                             <li>&quot;이용자&quot;란 본 약관에 따라 회사가 제공하는 서비스를 이용하는 회원 및 비회원을 말합니다.</li>
                             <li>&quot;유료 콘텐츠&quot;란 이용자가 서비스를 이용함에 있어 별도의 대가를 지불하고 구매하는 디지털 상품(심층 리포트 등)을 의미합니다.</li>
                             <li>&quot;결제&quot;란 이용자가 유료 콘텐츠를 이용하기 위하여 회사가 정한 결제 수단을 통해 일정 금액을 지불하는 행위를 의미합니다.</li>
@@ -109,8 +109,8 @@ export default async function TermsPage() {
                     <section>
                         <h2 className="mb-4 text-xl font-cinzel text-white">제5조 (서비스의 내용 및 변경)</h2>
                         <ol className="list-decimal space-y-2 pl-5">
-                            <li>회사는 AI 기술을 활용한 관계/DM 결정 보조 리포트와 사주명리학, 점성술, 타로 분석 결과를 디지털 콘텐츠 형태로 제공합니다.</li>
-                            <li>Next Move Report는 연락할지 기다릴지에 대한 참고용 판정과 근거를 제공하며, 상대의 답장, 재회, 관계 결과를 보장하지 않습니다.</li>
+                            <li>회사는 AI 기술을 활용한 의사결정 보조 리포트와 사주명리학, 점성술, 타로 분석 결과를 디지털 콘텐츠 형태로 제공합니다.</li>
+                            <li>Next Move Report는 이용자가 입력한 선택에 대한 참고용 판정과 근거를 제공하며, 상대의 답장, 재회, 커리어, 금전, 건강, 인생 결과를 보장하지 않습니다.</li>
                             <li>사주, 점성술, 타로는 선택적 근거 레이어이며 상품명 또는 결과 보장의 근거가 아닙니다.</li>
                             <li>회사는 서비스 개선 또는 운영상 상당한 이유가 있는 경우 서비스의 전부 또는 일부를 수정, 변경, 중단할 수 있습니다.</li>
                         </ol>

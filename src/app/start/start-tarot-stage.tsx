@@ -12,6 +12,7 @@ const TarotPicker = dynamic(() => import('@/components/reading/tarot-picker').th
 type StartTarotStageProps = {
   language: 'ko' | 'en';
   isNextMoveReportEntry?: boolean;
+  isRelationshipContactEntry?: boolean;
   onSelect: (cards: TarotSelection[]) => void;
 };
 
@@ -36,8 +37,12 @@ export function StartTarotStage(props: StartTarotStageProps) {
           <p className="text-lg font-light italic tracking-wide text-white/70">
             {props.isNextMoveReportEntry
               ? (props.language === 'en'
-                  ? 'Pick one card if you want tarot evidence, or skip and get the contact verdict from the question alone.'
-                  : '타로 근거를 더하고 싶으면 카드 1장을 고르세요. 질문만으로도 무료 연락 판정을 바로 볼 수 있습니다.')
+                  ? props.isRelationshipContactEntry
+                    ? 'Pick one card if you want tarot evidence, or skip and get the contact verdict from the question alone.'
+                    : 'Pick one card if you want tarot evidence, or skip and get the decision brief from the question alone.'
+                  : props.isRelationshipContactEntry
+                    ? '타로 근거를 더하고 싶으면 카드 1장을 고르세요. 질문만으로도 무료 연락 판정을 바로 볼 수 있습니다.'
+                    : '타로 근거를 더하고 싶으면 카드 1장을 고르세요. 질문만으로도 무료 결정 브리프를 바로 볼 수 있습니다.')
               : (props.language === 'en'
                   ? 'Pause for a breath. Pick the card that feels like your current path.'
                   : '숨을 한 번 고르고, 지금 내 흐름과 가장 닿아 있는 카드를 선택해보세요.')}

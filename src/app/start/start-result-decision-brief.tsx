@@ -1,4 +1,4 @@
-import { Lock, MessageCircle, ScrollText, Shield, Target } from 'lucide-react';
+import { AlertTriangle, Clock3, ListChecks, Lock, MessageCircle, Shield, Target } from 'lucide-react';
 import type { UnifiedReadingResult } from '@/lib/cosmic/schema';
 import type { ReadingData } from '@/components/reading/reading-input';
 import type { PremiumReportState } from './start-page-helpers';
@@ -7,6 +7,26 @@ import {
   getRelationshipVerdictLabel,
   isRelationshipContactTimingSource,
 } from './start-result-relationship';
+
+function getDecisionVerdictLabel(
+  value: string | undefined,
+  isRelationshipContactTiming: boolean,
+  isEn: boolean
+) {
+  if (isRelationshipContactTiming) {
+    if (value === 'move_now') return isEn ? 'Contact' : '연락';
+    if (value === 'wait_with_deadline') return isEn ? 'Wait' : '대기';
+    if (value === 'narrow_first') return isEn ? 'Narrow' : '축소';
+    if (value === 'hold_or_stop') return isEn ? 'Hold' : '보류';
+  }
+
+  if (value === 'move_now') return isEn ? 'Move now' : '지금 움직이기';
+  if (value === 'wait_with_deadline') return isEn ? 'Wait with a deadline' : '기한을 두고 기다리기';
+  if (value === 'narrow_first') return isEn ? 'Narrow first' : '선택지 먼저 좁히기';
+  if (value === 'hold_or_stop') return isEn ? 'Hold or stop' : '보류 또는 중단';
+
+  return isEn ? 'First verdict' : '첫 판정';
+}
 
 type DecisionBriefCardProps = {
   language: 'ko' | 'en';
@@ -23,7 +43,11 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
   const isEn = props.language === 'en';
   const isRelationshipContactTiming = isRelationshipContactTimingSource(props.landingSource);
   const freeFocus = props.reportData.free_focus;
-  const actionPlanItem = props.reportData.action_plan?.[0];
+  const decisionLabel = getDecisionVerdictLabel(
+    freeFocus?.decision_label,
+    isRelationshipContactTiming,
+    isEn
+  );
   const rawVerdict = compactText(
     freeFocus?.action_conclusion || props.reportData.summary?.title,
     isEn ? 'The first verdict is ready.' : '첫 판정이 준비되었습니다.',
@@ -39,33 +63,57 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
       : '사주, 점성술, 타로를 교차해서 이 결론으로 수렴하는 근거를 먼저 확인했습니다.',
     260
   );
-  const nextMove = compactText(
-    actionPlanItem
-      ? `${actionPlanItem.title}: ${actionPlanItem.description}`
-      : freeFocus?.next_question,
+  const delayedChoice = compactText(
+    freeFocus?.delayed_choice || props.readingData?.question,
+    isEn ? 'The delayed choice you brought into this reading.' : '이번 리딩에 가져온 미뤄둔 선택입니다.',
+    180
+  );
+  const timingBoundary = compactText(
+    freeFocus?.timing_boundary,
+    isEn ? 'Open the full report to refine the action window.' : '전체 리포트에서 행동 시점을 더 세밀하게 확인하세요.',
+    220
+  );
+  const firstAction = compactText(
+    freeFocus?.first_action,
     isRelationshipContactTiming
       ? (isEn
-          ? 'Before sending a long message, open the timing window and the message risk pattern.'
-          : '장문으로 밀어붙이기 전에 연락 타이밍과 피해야 할 메시지를 먼저 확인하세요.')
+          ? 'Choose one safer relationship move before sending a long message.'
+          : '장문을 보내기 전에 더 안전한 첫 행동 하나를 정하세요.')
       : (isEn
-          ? 'Use the full report to open the exact timing window and action order.'
-          : '전체 리포트에서 정확한 행동 시점과 실행 순서를 이어서 확인하세요.'),
+          ? 'Use the full report to turn this verdict into an exact action order.'
+          : '전체 리포트에서 이 판정을 정확한 실행 순서로 이어가세요.'),
     220
+  );
+  const avoid = compactText(
+    freeFocus?.avoid,
+    isEn ? 'Do not rush the part that can backfire.' : '역효과가 날 수 있는 움직임은 먼저 피하세요.',
+    220
+  );
+  const confidenceNote = compactText(
+    freeFocus?.confidence_note || evidence,
+    evidence,
+    260
   );
   const priceLabel = props.dynamicPrice || (isEn ? 'checkout price' : '결제 단계 가격');
   const blocks = [
     {
-      label: isRelationshipContactTiming ? (isEn ? 'Contact Verdict' : '연락 판정') : (isEn ? 'Verdict' : '판정'),
-      value: verdict,
+      label: isRelationshipContactTiming ? (isEn ? 'Contact Verdict' : '연락 판정') : (isEn ? 'Decision' : '판정'),
+      value: `${decisionLabel}: ${verdict}`,
       Icon: isRelationshipContactTiming ? MessageCircle : Target,
     },
-    { label: isEn ? 'Evidence' : '근거 요약', value: evidence, Icon: Shield },
+    { label: isEn ? 'Delayed Choice' : '미룬 선택', value: delayedChoice, Icon: Shield },
+    { label: isEn ? 'Timing Boundary' : '타이밍 경계', value: timingBoundary, Icon: Clock3 },
     {
       label: isRelationshipContactTiming
-        ? (isEn ? 'Next Message Move' : '다음 연락 행동')
-        : (isEn ? (actionPlanItem ? 'Next Action' : 'Next Prompt') : (actionPlanItem ? '다음 행동' : '다음 확인 질문')),
-      value: nextMove,
-      Icon: ScrollText,
+        ? (isEn ? 'First Safer Move' : '첫 안전 행동')
+        : (isEn ? 'First Action' : '첫 행동'),
+      value: firstAction,
+      Icon: ListChecks,
+    },
+    {
+      label: isEn ? 'Avoid' : '피할 것',
+      value: avoid,
+      Icon: AlertTriangle,
     },
   ];
 
@@ -80,7 +128,7 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
             <h2 className="mt-3 text-2xl font-bold leading-tight text-white md:text-3xl">
               {isRelationshipContactTiming
                 ? (isEn ? 'Read this before you text them.' : '연락하기 전 이 세 가지만 먼저 보세요.')
-                : (isEn ? 'Read this before the long report.' : '긴 리포트 전에 이 세 가지만 먼저 보세요.')}
+                : (isEn ? 'Move now, wait, narrow, or stop?' : '움직일지, 기다릴지, 좁힐지, 멈출지 먼저 보세요.')}
             </h2>
             {props.readingData?.question ? (
               <p className="mt-3 max-w-2xl text-sm leading-6 text-white/58">
@@ -102,7 +150,7 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
           ) : null}
         </div>
       </div>
-      <div className="grid gap-3 px-5 py-5 sm:px-7 md:grid-cols-3">
+      <div className="grid gap-3 px-5 py-5 sm:px-7 md:grid-cols-2 xl:grid-cols-4">
         {blocks.map(({ label, value, Icon }) => (
           <article key={label} className="rounded-[22px] border border-white/10 bg-black/20 p-4">
             <div className="mb-3 flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-white/42">
@@ -115,6 +163,15 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
       </div>
       {!props.isPremium ? (
         <div className="border-t border-white/8 px-5 py-4 sm:px-7">
+          {freeFocus?.copy_ready_message ? (
+            <p className="mb-3 rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-3 text-sm leading-6 text-white/72">
+              &ldquo;{freeFocus.copy_ready_message}&rdquo;
+            </p>
+          ) : null}
+          <p className="mb-2 flex items-start gap-2 text-xs leading-5 text-white/55">
+            <Shield className="mt-0.5 h-3.5 w-3.5 shrink-0 text-acc-gold" />
+            <span>{confidenceNote}</span>
+          </p>
           <p className="text-xs leading-5 text-white/45">
             {isEn
               ? (isRelationshipContactTiming

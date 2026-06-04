@@ -2,7 +2,7 @@
 
 import { useState, useEffect, type UIEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Briefcase, Calendar, ChevronDown, Coins, Droplets, Flame, Heart, Shield, Sparkles, Star, Target, TrendingUp, type LucideIcon, ScrollText, Zap } from 'lucide-react';
+import { Activity, AlertTriangle, Briefcase, Calendar, ChevronDown, Coins, Droplets, Flame, Heart, Shield, Sparkles, Star, Target, TrendingUp, type LucideIcon, ScrollText, Zap } from 'lucide-react';
 import { EvidenceTooltip } from '../ui/confidence-badge';
 import { InsightCard, InsightHighlight } from './ui/InsightCard';
 import { DraftProposal } from './draft-proposal';
@@ -111,6 +111,17 @@ export function HeaderSection({
   );
 }
 
+type FreeFocusDecisionLabel = NonNullable<PremiumReportData['free_focus']>['decision_label'];
+
+function getFreeFocusVerdictLabel(decisionLabel: FreeFocusDecisionLabel, isEn: boolean) {
+  if (decisionLabel === 'move_now') return isEn ? 'Move now' : '지금 움직이기';
+  if (decisionLabel === 'wait_with_deadline') return isEn ? 'Wait with a deadline' : '기한을 두고 기다리기';
+  if (decisionLabel === 'narrow_first') return isEn ? 'Narrow first' : '선택지 먼저 좁히기';
+  if (decisionLabel === 'hold_or_stop') return isEn ? 'Hold or stop' : '보류 또는 중단';
+
+  return isEn ? 'First verdict' : '첫 판정';
+}
+
 export function FreeFocusSection({
   freeFocus,
   language,
@@ -127,6 +138,13 @@ export function FreeFocusSection({
   if (!freeFocus) {
     return null;
   }
+
+  const verdictLabel = getFreeFocusVerdictLabel(freeFocus.decision_label, isEn);
+  const delayedChoice = freeFocus.delayed_choice || userQuestion || freeFocus.next_question;
+  const timingBoundary = freeFocus.timing_boundary || freeFocus.next_question;
+  const firstAction = freeFocus.first_action || freeFocus.action_conclusion;
+  const avoid = freeFocus.avoid || (isEn ? 'Do not rush the part that can backfire.' : '역효과가 날 수 있는 움직임은 먼저 피하세요.');
+  const confidenceNote = freeFocus.confidence_note || freeFocus.evidence_summary;
 
   return (
     <motion.section
@@ -150,36 +168,54 @@ export function FreeFocusSection({
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-gold/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.26em] text-gold/80">
               <Sparkles size={12} />
-              {isEn ? 'First Oracle Answer' : '첫 오라클 결론'}
+              {verdictLabel}
             </div>
             <h2 className="mt-3 text-lg font-semibold text-white md:text-2xl">
               {isEn
-                ? 'Read the shortest clear answer before you dive deeper.'
-                : '더 깊이 들어가기 전에, 지금 가장 분명한 답부터 읽어보세요.'}
+                ? 'Read the decision brief before you dive deeper.'
+                : '더 깊이 들어가기 전에, 결정 브리프부터 읽어보세요.'}
             </h2>
           </div>
           <p className="max-w-md text-sm leading-relaxed text-white/60">
             {isPremium
               ? isEn
-                ? 'This is the current high-signal reading distilled into one move, one basis, and one next prompt.'
-                : '지금 흐름에서 가장 신호가 강한 결론을 행동, 근거, 다음 질문으로 압축한 블록입니다.'
+                ? 'This is the current high-signal reading distilled into a verdict, timing boundary, first action, and risk.'
+                : '지금 흐름에서 가장 신호가 강한 결론을 판정, 타이밍 경계, 첫 행동, 리스크로 압축한 블록입니다.'
               : isEn
-                ? 'Free users see the highest-confidence direction first, so the reading feels useful immediately.'
-                : '무료 결과에서도 바로 쓸 수 있는 방향을 먼저 보여줘서, 첫 화면에서 바로 도움이 되게 만들었습니다.'}
+                ? 'Free users see the delayed choice, the timing boundary, and the first useful action immediately.'
+                : '무료 결과에서도 미룬 선택, 타이밍 경계, 첫 행동을 바로 볼 수 있게 만들었습니다.'}
           </p>
         </div>
 
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <InsightCard title={isEn ? 'Next Move' : '지금 붙잡을 행동'} icon={Target} delay={0}>
-            <p>{freeFocus.action_conclusion}</p>
+        <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <InsightCard title={isEn ? 'Delayed Choice' : '미룬 선택'} icon={ScrollText} delay={0}>
+            <p>{delayedChoice}</p>
           </InsightCard>
-          <InsightCard title={isEn ? 'Why This Reads True' : '왜 이렇게 읽혔는가'} icon={Shield} delay={0.08}>
-            <p>{freeFocus.evidence_summary}</p>
+          <InsightCard title={isEn ? 'Timing Boundary' : '타이밍 경계'} icon={Calendar} delay={0.08}>
+            <p>{timingBoundary}</p>
           </InsightCard>
-          <InsightCard title={isEn ? 'Ask This Next' : '이어서 물어볼 질문'} icon={ScrollText} delay={0.16}>
-            <p>{freeFocus.next_question}</p>
+          <InsightCard title={isEn ? 'First Action' : '첫 행동'} icon={Target} delay={0.16}>
+            <p>{firstAction}</p>
+          </InsightCard>
+          <InsightCard title={isEn ? 'Avoid' : '피할 것'} icon={AlertTriangle} delay={0.24}>
+            <p>{avoid}</p>
           </InsightCard>
         </div>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <InsightCard title={isEn ? 'Verdict' : '판정'} icon={Shield} delay={0.28}>
+            <p>{freeFocus.action_conclusion}</p>
+          </InsightCard>
+          <InsightCard title={isEn ? 'Confidence' : '근거와 확신'} icon={Shield} delay={0.32}>
+            <p>{confidenceNote}</p>
+            <p className="mt-3 text-white/58">{freeFocus.evidence_summary}</p>
+          </InsightCard>
+        </div>
+        {freeFocus.copy_ready_message ? (
+          <div className="mt-4 rounded-[20px] border border-white/10 bg-white/[0.04] px-5 py-4 text-sm leading-6 text-white/72">
+            &ldquo;{freeFocus.copy_ready_message}&rdquo;
+          </div>
+        ) : null}
       </div>
     </motion.section>
   );

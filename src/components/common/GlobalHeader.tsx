@@ -22,7 +22,7 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
     const { openLoginModal } = useLoginModal();
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const decisionStartHref = '/relationship/contact-timing';
+    const decisionStartHref = '/start?reset=true&entry=decision_timing_rebuild_v1';
 
     useDocumentScrollLock(isMobileMenuOpen);
 
@@ -131,7 +131,7 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
                         icon: Sparkles,
                         iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
                         label: isEn ? 'Next Move Report' : '무료 첫 판정',
-                        subLabel: isEn ? 'Contact or wait' : '연락할지 기다릴지 보기',
+                        subLabel: isEn ? 'End one delayed choice' : '미뤄둔 선택 끝내기',
                         onClick: () => {
                             window.location.href = decisionStartHref;
                         },

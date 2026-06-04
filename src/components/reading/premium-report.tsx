@@ -74,6 +74,13 @@ export interface PremiumReportData {
         title: string;
     };
     free_focus?: {
+        decision_label?: 'move_now' | 'wait_with_deadline' | 'narrow_first' | 'hold_or_stop';
+        delayed_choice?: string;
+        timing_boundary?: string;
+        first_action?: string;
+        avoid?: string;
+        confidence_note?: string;
+        copy_ready_message?: string;
         action_conclusion: string;
         evidence_summary: string;
         next_question: string;

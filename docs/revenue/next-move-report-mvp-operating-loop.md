@@ -1,8 +1,30 @@
 # Next Move Report MVP Operating Loop
 
-Date: 2026-06-03
-Scope: relationship/DM decision report for contact-or-wait questions.
+Date: 2026-06-04
+Scope: question-first decision report for choices users are delaying.
 Offer: free first verdict, then one-off digital report through the existing Stripe reading checkout.
+
+## Product Direction Lock
+
+Next Move Report is no longer framed as a product for deciding whether to wait for a reply.
+
+Primary wedge:
+
+> 내가 미루고 있는 선택을 오늘 끝내주는 앱.
+
+User-facing promise:
+
+- Korean: "미뤄둔 선택 하나를 적으면, 오늘 보낼 말과 다음 행동을 정리해준다."
+- English: "Turn one decision you have been putting off into today's next move."
+
+The relationship contact flow remains a campaign wedge, not the whole product. Contact timing, career timing, money decisions, apologies, follow-ups, proposals, and boundary-setting all fit only when the output ends in a concrete action.
+
+Product job:
+
+1. Name the delayed choice.
+2. Decide whether to move, wait, narrow, or stop.
+3. Draft the safest next line or next action.
+4. Set a small time boundary so the user is not stuck waiting.
 
 ## Weekly Operating Budget
 
@@ -10,7 +32,7 @@ Use five focused hours per week:
 
 | Budget | Work |
 | --- | --- |
-| 2h | Content creation for relationship/DM hooks pointing to `/relationship/contact-timing` |
+| 2h | Content creation for delayed-choice hooks pointing to `/start?entry=decision_timing_rebuild_v1` |
 | 1h | Copy/report iteration based on free verdict and paywall friction |
 | 1h | User evidence review from questions, follow-up seeds, and support notes |
 | 1h | Metrics/readout in `/ops/growth` and manual evidence updates |
@@ -58,7 +80,7 @@ Each weekly review should answer:
 | Are visitors starting questions? | landing views and question starts |
 | Are free verdicts useful enough? | free verdicts, support notes, and follow-up seeds |
 | Is the paid offer clear? | paywall opens, checkout starts, paid conversions |
-| Is relationship safety intact? | banned-claim checks, trust page checks, and high-risk prompt reviews |
+| Is safety intact? | banned-claim checks, trust page checks, and high-risk prompt reviews |
 | Is legacy containment intact? | sitemap/nav guards and direct legacy route checks |
 
 ## Out of scope
@@ -73,6 +95,6 @@ Do not launch or scale if:
 | --- | --- |
 | UI price copy does not match the existing Stripe checkout price | Payment trust risk |
 | The free verdict cannot render before paywall | MVP promise broken |
-| Legal pages do not mention relationship/DM context and optional birth data | Trust boundary missing |
-| Generated copy guarantees a reply, reunion, or relationship outcome | Safety boundary broken |
+| Legal pages do not mention decision-support context and optional birth data | Trust boundary missing |
+| Generated copy guarantees a reply, reunion, career, money, or relationship outcome | Safety boundary broken |
 | Primary nav promotes Daily, Career, PRO, or subscriptions | Legacy containment broken |

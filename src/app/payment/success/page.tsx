@@ -28,14 +28,18 @@ function PaymentSuccessContent() {
         () => 'ko'
     );
     const isEnglish = language === 'en';
-    const isNextMovePayment = checkoutContext.source === 'next_move_report_mvp_v1';
+    const isNextMovePayment =
+        checkoutContext.source === 'next_move_report_mvp_v1';
+    const isDecisionTimingPayment = checkoutContext.source === 'decision_timing_rebuild_v1';
     const buildPaidReturnPath = (targetReadingId?: string | null) => {
         const params = new URLSearchParams({ paid: 'true' });
         const source = checkoutContext.source;
         const resolvedLanguage = checkoutContext.language || language;
 
         if (targetReadingId) params.set('reading_id', targetReadingId);
-        if (source === 'next_move_report_mvp_v1') params.set('entry', source);
+        if (source === 'next_move_report_mvp_v1' || source === 'decision_timing_rebuild_v1') {
+            params.set('entry', source);
+        }
         if (resolvedLanguage) params.set('lang', resolvedLanguage);
 
         return `/start?${params.toString()}`;
@@ -115,7 +119,9 @@ function PaymentSuccessContent() {
                     setTimeout(() => {
                         const params = new URLSearchParams({ paid: 'true' });
                         if (resolvedReadingId) params.set('reading_id', resolvedReadingId);
-                        if (resolvedSource === 'next_move_report_mvp_v1') params.set('entry', resolvedSource);
+                        if (resolvedSource === 'next_move_report_mvp_v1' || resolvedSource === 'decision_timing_rebuild_v1') {
+                            params.set('entry', resolvedSource);
+                        }
                         params.set('lang', resolvedLanguage);
                         router.replace(`/start?${params.toString()}`);
                     }, 1000);
@@ -188,7 +194,19 @@ function PaymentSuccessContent() {
                                 ) : (
                                     <>
                                         Next Move Report 전체 리포트를 여는 중입니다.<br />
-                                        곧 연락 타이밍 결과로 돌아갑니다.
+                                        곧 결과로 돌아갑니다.
+                                    </>
+                                )
+                            ) : isDecisionTimingPayment ? (
+                                isEnglish ? (
+                                    <>
+                                        Your decision timing full report is opening now.<br />
+                                        We will move you back to the result in a moment.
+                                    </>
+                                ) : (
+                                    <>
+                                        결정 타이밍 전체 리포트를 여는 중입니다.<br />
+                                        곧 결과로 돌아갑니다.
                                     </>
                                 )
                             ) : isEnglish ? (

@@ -163,7 +163,7 @@ const CAMPAIGN_FUNNEL_DEFINITIONS = [
     {
         key: 'relationship-contact',
         label: 'Next Move Report / 관계 연락 타이밍',
-        description: 'Next Move Report와 기존 연락 타이밍 히스토리를 함께 보는 contact-or-wait funnel',
+        description: 'Next Move Report의 관계 연락 타이밍 캠페인 히스토리를 보는 narrow wedge funnel',
         sources: [
             'next_move_report_mvp_v1',
             'relationship_contact_timing_v1',
@@ -179,7 +179,7 @@ const CAMPAIGN_FUNNEL_DEFINITIONS = [
     {
         key: 'decision-timing-home',
         label: 'Decision Timing Home',
-        description: '홈/스타트에서 들어오는 범용 decision timing 리빌드',
+        description: '홈/스타트에서 들어오는 미뤄둔 선택 정리 리빌드',
         sources: ['decision_timing_rebuild_v1', 'start_page_decision_timing_rebuild_v1'],
     },
 ] as const;
@@ -584,8 +584,8 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
         .slice(0, 6)
         .map(([source, count]) => ({ source, count }));
     const campaignFunnels = getCampaignFunnels(campaignEventsBySession);
-    const nextMoveFunnel = campaignFunnels.find((funnel) => funnel.key === 'relationship-contact');
-    const nextMoveCounts = nextMoveFunnel?.uniqueSessionCounts ?? createEmptyFunnelCounts();
+    const decisionTimingFunnel = campaignFunnels.find((funnel) => funnel.key === 'decision-timing-home');
+    const decisionTimingCounts = decisionTimingFunnel?.uniqueSessionCounts ?? createEmptyFunnelCounts();
 
     return {
         dateRange: {
@@ -637,17 +637,17 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
         topSources,
         campaignFunnels,
         nextMoveDecisionGate: {
-            label: 'Next Move Report 14-day decision gate',
+            label: 'Decision Timing 14-day decision gate',
             description: 'visits 300 or 14 days, question starts 45, free verdicts 30, paywall opens 8, paid conversions 2, follow-up seeds 8',
             thresholds: NEXT_MOVE_REPORT_DECISION_THRESHOLDS,
             current: {
-                visits: nextMoveCounts.landingViews || nextMoveFunnel?.sessions || 0,
+                visits: decisionTimingCounts.landingViews || decisionTimingFunnel?.sessions || 0,
                 days: safeDays,
-                questionStarts: nextMoveCounts.questionSubmits,
-                freeVerdicts: nextMoveCounts.firstResultViews,
-                paywallOpens: nextMoveCounts.paywallViews,
-                paidConversions: nextMoveCounts.paidConversions,
-                followupSeeds: nextMoveCounts.followupSeeds,
+                questionStarts: decisionTimingCounts.questionSubmits,
+                freeVerdicts: decisionTimingCounts.firstResultViews,
+                paywallOpens: decisionTimingCounts.paywallViews,
+                paidConversions: decisionTimingCounts.paidConversions,
+                followupSeeds: decisionTimingCounts.followupSeeds,
             },
         },
     };

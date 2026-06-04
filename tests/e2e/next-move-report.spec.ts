@@ -25,9 +25,10 @@ test.describe('Next Move Report MVP', () => {
         await page.goto('/');
 
         await expect(page).toHaveTitle(/Next Move Report/i);
-        const heroCta = page.getByRole('link', { name: /무료로 첫 판정 보기|See My First Verdict/i }).first();
+        const heroCta = page.getByRole('link', { name: /미뤄둔 선택 끝내기|End One Choice/i }).first();
         await expect(heroCta).toBeVisible();
-        await expect(heroCta).toHaveAttribute('href', '/relationship/contact-timing');
+        await expect(heroCta).toHaveAttribute('href', '/start?reset=true&entry=decision_timing_rebuild_v1');
+        await expect(page.locator('a[href="/relationship/contact-timing"]')).toHaveCount(0);
         await expect(page.locator('nav a[href="/daily"]')).toHaveCount(0);
         await expect(page.locator('nav a[href="/career/uncertainty"]')).toHaveCount(0);
         await expect(page.getByRole('button', { name: /^PRO$/i })).toHaveCount(0);
@@ -78,9 +79,13 @@ test.describe('Next Move Report MVP', () => {
     test('ops groups Next Move with relationship history', async () => {
         const growthMetrics = readFileSync(path.join(process.cwd(), 'src/lib/growth-metrics.ts'), 'utf8');
 
+        expect(growthMetrics).toContain('decision-timing-home');
+        expect(growthMetrics).toContain('decisionTimingFunnel');
+        expect(growthMetrics).toContain('decision_timing_rebuild_v1');
         expect(growthMetrics).toContain('next_move_report_mvp_v1');
         expect(growthMetrics).toContain('relationship_contact_timing_v1');
         expect(growthMetrics).toContain('en_relationship_contact_timing_v1');
+        expect(growthMetrics).toMatch(/key:\s*'decision-timing-home'[\s\S]*decision_timing_rebuild_v1/);
         expect(growthMetrics).toMatch(/key:\s*'relationship-contact'[\s\S]*next_move_report_mvp_v1[\s\S]*relationship_contact_timing_v1/);
     });
 
@@ -94,7 +99,7 @@ test.describe('Next Move Report MVP', () => {
 
         await expect(page.getByText(/Next Move Report/i).first()).toBeVisible();
         await expect(page.getByText(/decision-support content/i).first()).toBeVisible();
-        await expect(page.getByText(/no guaranteed relationship outcome/i).first()).toBeVisible();
+        await expect(page.getByText(/no guaranteed relationship, career, money, health, or life outcome/i).first()).toBeVisible();
         await expect(page.getByText(/not therapy, medical, diagnostic, legal, or financial advice/i).first()).toBeVisible();
         await expect(page.getByText(/one-off digital report/i).first()).toBeVisible();
         await expect(page.getByText(/Stripe checkout/i).first()).toBeVisible();
@@ -102,11 +107,11 @@ test.describe('Next Move Report MVP', () => {
 
         await page.goto('/privacy');
 
-        await expect(page.getByText(/relationship\/DM context/i).first()).toBeVisible();
-        await expect(page.getByText(/optional birth data/i).first()).toBeVisible();
-        await expect(page.getByText(/report restore and storage/i).first()).toBeVisible();
+        await expect(page.getByText(/질문 내용, 결정 맥락/i).first()).toBeVisible();
+        await expect(page.getByText(/결정 보조를 위해 입력한 상황 설명/i).first()).toBeVisible();
+        await expect(page.getByText(/리포트 복원 및 보관/i).first()).toBeVisible();
         await expect(page.getByText(/analytics/i).first()).toBeVisible();
-        await expect(page.getByText(/do not paste highly sensitive third-party secrets/i).first()).toBeVisible();
+        await expect(page.getByText(/고도로 민감한 제3자 비밀/i).first()).toBeVisible();
     });
 
     test('english probe is not half rebranded', async ({ page, request }) => {

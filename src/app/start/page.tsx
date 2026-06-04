@@ -229,7 +229,8 @@ function CosmicPathContent() {
         loadingPhase={loadingPhase} searchPaid={paidFromSearchParams}
         readingData={readingData} inviterName={inviterName} inviteCode={inviteCode}
         initialContext={effectiveInitialContext} initialQuestion={initialQuestion}
-        landingSource={landingSource} isNextMoveReportEntry={isNextMoveReportEntry}
+        landingSource={landingSource} isDecisionTimingEntry={isDecisionTimingEntry}
+        isNextMoveReportEntry={isNextMoveReportEntry}
         metadata={metadata} reportData={reportData}
         hasPreciseBirthLocation={hasPreciseBirthLocation} unifiedResult={unifiedResult}
         premiumReportData={premiumReportData} premiumReportMetadata={premiumReportMetadata}

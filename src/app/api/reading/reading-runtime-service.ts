@@ -15,6 +15,10 @@ import {
   type OracleQuestionIntent,
   type OracleSelectionMode,
 } from '@/lib/ai/oracle-personas';
+import {
+  buildDecisionActionContract,
+  type DecisionActionContract,
+} from '@/lib/ai/decision-action-contract';
 import type { ReadingContext } from '@/lib/ai/prompt-builder';
 import {
   extractStoredReadingRuntime,
@@ -30,6 +34,7 @@ export type AssembledReadingRuntime = {
   partnerSaju: StoredLegacySajuResult | null;
   astrology: ReturnType<typeof calculateAstrology>;
   resolvedQuestionIntent: OracleQuestionIntent;
+  decisionAction: DecisionActionContract;
   resolvedCharacterId: ReturnType<typeof resolveOracleCharacterId>;
   effectiveSelectionMode: OracleSelectionMode;
   advisorProfile: ReturnType<typeof buildOracleAdvisorProfile>;
@@ -108,6 +113,7 @@ export async function assembleReadingRuntime(
       partnerSaju,
       astrology: storedRuntime.astrology,
       resolvedQuestionIntent: storedRuntime.questionIntent,
+      decisionAction: storedRuntime.decisionAction,
       resolvedCharacterId: storedRuntime.characterId,
       effectiveSelectionMode: storedRuntime.selectionMode,
       advisorProfile: storedRuntime.advisorProfile,
@@ -154,6 +160,10 @@ export async function assembleReadingRuntime(
     partnerBirthDate: params.partnerBirthDate,
     partnerName: params.partnerName,
   });
+  const decisionAction = buildDecisionActionContract({
+    context: params.context,
+    question: params.question,
+  });
   const effectiveSelectionMode = params.selectionMode;
   const resolvedCharacterId = effectiveSelectionMode === 'manual'
     ? resolveOracleCharacterId(params.characterId)
@@ -180,6 +190,7 @@ export async function assembleReadingRuntime(
     partnerSaju,
     astrology,
     resolvedQuestionIntent,
+    decisionAction,
     resolvedCharacterId,
     effectiveSelectionMode,
     advisorProfile,

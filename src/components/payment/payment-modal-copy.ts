@@ -47,17 +47,17 @@ export function getPaywallIntroCopy({
 
     return isEnglish
         ? {
-            title: 'Open the evidence, timing, and action order',
+            title: 'Open the evidence, timing, and safest next action',
             bodyLines: [
                 'The free brief showed the verdict.',
-                'Unlock why it was chosen, when to act, what to avoid, and what to do next.',
+                'Unlock why it was chosen, when to act, what to avoid, and the safest next line or step.',
             ],
         }
         : {
-            title: '근거·타이밍·행동 순서를 여세요',
+            title: '근거·타이밍·안전한 다음 행동을 여세요',
             bodyLines: [
                 '무료 브리프에서 판정은 확인했습니다.',
-                '이제 왜 그런지, 언제 움직일지, 무엇을 피할지, 어떤 순서로 할지 확인하세요.',
+                '이제 왜 그런지, 언제 움직일지, 무엇을 피할지, 어떤 말이나 행동부터 할지 확인하세요.',
             ],
         };
 }
@@ -84,14 +84,14 @@ export function getLockedSections({
         ? [
             { label: 'Verdict Evidence — why this answer was chosen', Icon: Search, tone: 'gold' },
             { label: 'Timing Window — when to move and when to wait', Icon: TrendingUp, tone: 'gold' },
-            { label: 'Action Order — first, second, and hold', Icon: ListChecks, tone: 'gold' },
+            { label: 'Next Action — the safest line or step to take first', Icon: ListChecks, tone: 'gold' },
             { label: 'Risk Warning — the move that can backfire', Icon: AlertTriangle, tone: 'red' },
             { label: 'Confidence Check — where the sources agree', Icon: ShieldCheck, tone: 'gold' },
         ]
         : [
             { label: '판정 근거 — 왜 이 답이 나왔는지', Icon: Search, tone: 'gold' },
             { label: '타이밍 구간 — 움직일 때와 기다릴 때', Icon: TrendingUp, tone: 'gold' },
-            { label: '실행 순서 — 먼저 할 일과 보류할 일', Icon: ListChecks, tone: 'gold' },
+            { label: '다음 행동 — 먼저 할 말이나 첫 단계', Icon: ListChecks, tone: 'gold' },
             { label: '리스크 경고 — 역효과 나는 움직임', Icon: AlertTriangle, tone: 'red' },
             { label: '신뢰도 확인 — 원천이 겹치는 지점', Icon: ShieldCheck, tone: 'gold' },
         ];

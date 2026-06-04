@@ -40,6 +40,9 @@ export function MobileMenu({ isOpen, onClose, menuItems }: MobileMenuProps) {
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        role="dialog"
+                        aria-label="Mobile menu"
+                        aria-modal="true"
                         className="fixed top-0 right-0 z-[9999] flex h-full w-[280px] flex-col border-l border-white/10 bg-[#0f0f15] shadow-2xl xl:hidden sm:w-[320px]"
                     >
                         {/* Menu Header */}

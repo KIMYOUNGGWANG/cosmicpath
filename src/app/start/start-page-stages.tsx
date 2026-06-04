@@ -32,6 +32,7 @@ type StartPageStagesProps = {
   readonly initialContext?: ReadingData['context'];
   readonly initialQuestion?: string;
   readonly landingSource: string;
+  readonly isDecisionTimingEntry: boolean;
   readonly isNextMoveReportEntry: boolean;
   readonly metadata?: ReadingMetadata;
   readonly reportData: PremiumReportState | null;
@@ -85,7 +86,8 @@ export function StartPageStages(props: StartPageStagesProps) {
         {props.step === 'tarot' && (
           <StartTarotStage
             language={props.language}
-            isNextMoveReportEntry={props.isNextMoveReportEntry}
+            isNextMoveReportEntry={props.isNextMoveReportEntry || props.isDecisionTimingEntry}
+            isRelationshipContactEntry={props.isNextMoveReportEntry}
             onSelect={props.onTarotComplete}
           />
         )}

@@ -33,22 +33,22 @@ export async function generateMetadata(): Promise<Metadata> {
 
     if (isKorean) {
         return {
-            title: 'Next Move Report | 연락할까, 기다릴까',
-            description: '관계와 DM 앞에서 지금 연락할지 기다릴지 먼저 판정합니다. 첫 판정은 무료, 풀 리포트는 $9입니다.',
+            title: 'Next Move Report | 미뤄둔 선택 끝내기',
+            description: '찝찝하게 미뤄둔 선택 하나를 오늘 보낼 말과 다음 행동으로 정리합니다. 첫 판정은 무료, 풀 리포트는 $9입니다.',
             openGraph: {
-                title: 'Next Move Report | 연락할까, 기다릴까',
-                description: '관계와 DM 앞에서 지금 연락할지 기다릴지 먼저 판정합니다. 첫 판정은 무료, 풀 리포트는 $9입니다.',
+                title: 'Next Move Report | 미뤄둔 선택 끝내기',
+                description: '찝찝하게 미뤄둔 선택 하나를 오늘 보낼 말과 다음 행동으로 정리합니다. 첫 판정은 무료, 풀 리포트는 $9입니다.',
                 images: ['/og-image.png'],
             },
         };
     }
 
     return {
-        title: 'Next Move Report | Contact or Wait',
-        description: 'Get a first verdict on whether to contact them or wait. First verdict free, full report $9.',
+        title: 'Next Move Report | End One Delayed Choice',
+        description: "Turn one decision you have been putting off into today's next move. First verdict free, full report $9.",
         openGraph: {
-            title: 'Next Move Report | Contact or Wait',
-            description: 'Get a first verdict on whether to contact them or wait. First verdict free, full report $9.',
+            title: 'Next Move Report | End One Delayed Choice',
+            description: "Turn one decision you have been putting off into today's next move. First verdict free, full report $9.",
             images: ['/og-image.png'],
         },
     };

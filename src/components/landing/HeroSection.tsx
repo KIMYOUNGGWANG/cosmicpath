@@ -9,44 +9,44 @@ interface HeroSectionProps {
 export function HeroSection({ language }: HeroSectionProps) {
     const isKo = language === 'ko';
     const landingVariant = getLandingVariant(language);
-    const decisionEntry = 'next_move_report_mvp_v1';
-    const startHref = '/relationship/contact-timing';
+    const decisionEntry = 'decision_timing_rebuild_v1';
+    const startHref = `/start?reset=true&entry=${decisionEntry}`;
     const decisionSignals = isKo
-        ? ['관계', 'DM', '연락', '타이밍']
-        : ['Relationship', 'DM', 'Contact', 'Timing'];
+        ? ['선택', '문장', '행동', '타이밍']
+        : ['Decision', 'Words', 'Action', 'Timing'];
     const quickQuestions = isKo
         ? [
             {
-                label: '관계',
+                label: '팔로업',
                 context: 'love',
-                question: '지금 먼저 연락하는 게 맞을까, 기다리는 게 맞을까?',
+                question: '답장을 더 기다릴지, 오늘 한 번 더 보내고 정리할지 정하고 싶어.',
             },
             {
-                label: 'DM',
-                context: 'love',
-                question: '오늘 DM을 보내도 될까, 하루 더 기다리는 게 나을까?',
+                label: '커리어',
+                context: 'career',
+                question: '미루고 있는 이직 결정을 오늘 어디까지 움직이면 좋을까?',
             },
             {
-                label: '메시지',
-                context: 'love',
-                question: '지금 보내면 부담스러울 문장과 안전한 문장은 뭐야?',
+                label: '경계',
+                context: 'general',
+                question: '계속 미루고 있는 불편한 말을 오늘 어떻게 꺼내야 할까?',
             },
         ]
         : [
             {
-                label: 'Love',
+                label: 'Follow-up',
                 context: 'love',
-                question: 'Should I reach out now, or would waiting create a better opening?',
+                question: 'Should I wait for a reply, send one clean follow-up, or close the loop today?',
             },
             {
-                label: 'DM',
-                context: 'love',
-                question: 'Should I send this DM today, or wait one more day?',
+                label: 'Career',
+                context: 'career',
+                question: 'What is the smallest next move I should take on the job decision I keep delaying?',
             },
             {
-                label: 'Message',
-                context: 'love',
-                question: 'What message would add pressure, and what safer line could I send?',
+                label: 'Boundary',
+                context: 'general',
+                question: 'How should I say the uncomfortable thing I have been avoiding?',
             },
         ];
 
@@ -66,13 +66,13 @@ export function HeroSection({ language }: HeroSectionProps) {
                     <h1 className="mb-6 max-w-3xl break-keep font-cinzel text-4xl font-bold leading-tight tracking-tight text-starlight sm:text-5xl md:text-6xl lg:text-[64px]">
                         {isKo ? (
                             <>
-                                연락할까, 기다릴까 <br className="hidden md:block" />
-                                <span className="text-acc-gold drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]">먼저 판정합니다</span>
+                                미뤄둔 선택을 <br className="hidden md:block" />
+                                <span className="text-acc-gold drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]">오늘 끝내세요</span>
                             </>
                         ) : (
                             <>
-                                Contact, or wait? <br className="hidden md:block" />
-                                <span className="text-acc-gold drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]">Get the verdict first</span>
+                                End one delayed choice <br className="hidden md:block" />
+                                <span className="text-acc-gold drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]">with today&apos;s next move</span>
                             </>
                         )}
                     </h1>
@@ -80,11 +80,11 @@ export function HeroSection({ language }: HeroSectionProps) {
                     <p className="mb-10 max-w-2xl break-keep text-base font-light leading-relaxed text-moonlight sm:text-lg md:text-xl">
                         {isKo ? (
                             <>
-                                관계와 DM 앞에서 지금 움직일지 대기할지 먼저 봅니다. 사주, 점성술, 타로는 선택적 근거 레이어로만 쓰고 답장이나 결과를 보장하지 않습니다.
+                                찝찝하게 미뤄둔 선택 하나를 적으면, 움직일지 기다릴지와 오늘 보낼 말, 다음 행동을 먼저 정리합니다. 사주, 점성술, 타로는 선택적 근거 레이어로만 씁니다.
                             </>
                         ) : (
                             <>
-                                Ask one relationship question. The report gives a contact-or-wait verdict first, with Saju, astrology, and tarot kept as optional evidence layers.
+                                Bring one decision you keep postponing. The report turns it into a move, wait, narrow, or stop verdict with today&apos;s safest next action.
                             </>
                         )}
                     </p>
@@ -115,7 +115,7 @@ export function HeroSection({ language }: HeroSectionProps) {
                             className="group relative inline-flex w-full sm:w-auto min-h-[56px] items-center justify-center rounded-full bg-gradient-to-r from-acc-gold via-amber-300 to-acc-gold bg-[length:200%_auto] px-8 py-4 text-lg font-bold tracking-tight text-deep-navy shadow-[0_0_20px_rgba(212,175,55,0.4)] transition-all duration-300 hover:scale-[1.02] hover:shadow-[0_0_40px_rgba(212,175,55,0.6)]"
                         >
                             <span className="relative z-10 flex items-center gap-2">
-                                {isKo ? '무료로 첫 판정 보기' : 'See My First Verdict'}
+                                {isKo ? '미뤄둔 선택 끝내기' : 'End One Choice'}
                                 <svg className="h-5 w-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                                 </svg>

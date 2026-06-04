@@ -25,7 +25,7 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const isEnglish = language === 'en';
-    const decisionStartHref = '/relationship/contact-timing';
+    const decisionStartHref = '/start?reset=true&entry=decision_timing_rebuild_v1';
 
     useDocumentScrollLock(isMobileMenuOpen);
 
@@ -155,7 +155,7 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                         icon: Sparkles,
                         iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
                         label: isEnglish ? 'NEXT MOVE REPORT' : '무료 첫 판정',
-                        subLabel: isEnglish ? 'Contact or wait' : '연락할지 기다릴지 먼저 보기',
+                        subLabel: isEnglish ? 'End one delayed choice' : '미뤄둔 선택 끝내기',
                         href: decisionStartHref,
                     },
                 ]}

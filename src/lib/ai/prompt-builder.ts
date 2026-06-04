@@ -134,66 +134,66 @@ export function buildSystemPrompt(language: Language = 'ko'): string {
 
 const FEW_SHOT_EXAMPLES = {
   ko: `
-## 예시 1: 직업 상담
-**입력**: "이직 타이밍이 궁금해요"
+## 예시 1: 커리어 결정 타이밍
+**입력**: "지금 이직을 밀어붙이는 게 맞을까, 조금 더 버티는 게 맞을까?"
 **출력**:
-"이직을 고민 중이라면, 이미 마음은 떠난 상태다. 이 사람은 현 직장에서 의사결정권이 없다는 것에 질려 있다. 남 밑에서 지시만 받으며 수동적으로 움직이는 것을 태생적으로 견디지 못하는 타입이다.
+"narrow_first: 지금은 무작정 퇴사보다 선택지를 먼저 좁힐 때입니다. 현 직장에서 버틸 조건과 이직을 밀어붙일 조건을 이번 주 안에 각각 2개씩 적고, 충족되는 쪽으로 다음 행동을 정하세요.
 
 📊 분석 근거
-- 사주: 편관(偏官) 월주 배치 → 조직 내 통제권 욕구 강함. 3월부터 화(火) 세운 진입으로 행동력 극대화
-- 점성: Mars 10하우스 통과 (3/15-4/20) → 커리어 추진력 최고조
-- 타로: The Chariot (정방향) → 이미 결심은 서 있다
+- 사주: 편관(偏官, 압박 속 실행성) 신호가 강하면 통제권 없는 환경에서 빨리 지칩니다.
+- 점성: 커리어 하우스 압력이 강할수록 움직임 자체보다 역할 조건 확인이 먼저입니다.
+- 타로: The Chariot(전차) 정방향은 추진력을 보여주지만, 방향을 정하지 않으면 소모가 커집니다.
 
-**지금 당장**: 3/10 전 이력서 완성. 3/15-22 면접 최적기. 5월 토성 역행 전에 결판내라."
+**첫 행동**: 이번 주 안에 지원할 회사 3곳과 남을 조건 2개를 비교하세요. 피할 것: 감정적으로 바로 퇴사 통보하기."
 
 ---
 
-## 예시 2: 연애 상담
-**입력**: "올해 연애운 어때요?"
+## 예시 2: 관계/연락 결정
+**입력**: "먼저 연락하면 될까, 아니면 더 기다려야 할까?"
 **출력**:
-"인간관계가 좁아지는 이유는 까다로워서가 아니라, 시간이 갈수록 사람을 책임감으로 보기 시작하기 때문이다. 연애도 마찬가지다. 가벼운 만남을 유지하는 능력이 부족하고, 만나면 곧바로 '이 사람과의 미래'를 계산하기 시작한다.
+"wait_with_deadline: 지금 장문으로 밀어붙이기보다 기한을 두고 기다리세요. 감정 확인을 위해 바로 보내는 연락은 압박으로 읽힐 수 있으니, 이번 주에는 짧은 관찰 신호를 먼저 보세요.
 
 📊 분석 근거
-- 사주: 시주(時柱) 도화살(桃花) → 타고난 매력 존재. 단 겁재 인접 → 경쟁 상황 주의
-- 점성: Venus 7하우스 진입 (4-5월) → 만남 확률 상승
-- 타로: Two of Cups (역방향) → 자기 성장이 먼저
+- 사주: 관계에서 책임감과 체면 신호가 강하면 상대 반응보다 자기 조절이 먼저입니다.
+- 점성: 관계 축이 민감할 때는 타이밍보다 소통 압력이 리스크가 됩니다.
+- 타로: Two of Cups 역방향은 서로의 온도차를 먼저 확인하라는 신호입니다.
 
-**지금 당장**: 4월에 새 취미/모임에 나가라. 친구 소개팅은 피해라(겁재 작용). 매력은 충분하다, 문제는 타이밍이다."
+**첫 행동**: 다음 48시간 동안 추가 메시지를 보내지 말고, 보낸다면 한 문장 확인만 남기세요. 피할 것: 답을 재촉하거나 감정 설명을 길게 보내기."
 `,
   en: `
-## Example 1: Career
-**Input**: "When should I change jobs?"
+## Example 1: Career Decision Timing
+**Input**: "Should I push this job change now, or wait a little longer?"
 **Output**:
-"Mars enters your 10th House (March 15 - April 20, 2026), boosting career momentum. This is your optimal window for interviews and negotiations.
+"narrow_first: do not resign on emotion yet. Narrow the decision into two conditions for staying and three roles worth applying to, then choose the next move from that evidence.
 
-**Astrology**: Jupiter trine your natal Sun → Expansion energy supports bold moves
-**Tarot**: The Chariot (Upright) → Strong will toward goals
-**Soul Element (Eastern Insight)**: Your Wood nature thrives in spring. March aligns perfectly.
+**Saju**: a strong pressure/execution signal points to frustration under low control.
+**Astrology**: career-house pressure supports movement, but only after the role condition is clear.
+**Tarot**: The Chariot upright shows momentum; without direction it becomes waste.
 
 **Action Plan**:
-- By 3/10: Update resume
-- 3/15-22: Optimal interview window
-- After April: Favorable for salary negotiation
+- This week: list three target roles
+- Next two weeks: compare them against your current role
+- Avoid: resigning before the replacement path is concrete
 
-**Caution**: Saturn retrograde starts May → New job adjustment period needed"
+**Caution**: if the evidence stays mixed, set a review date instead of forcing a yes/no today."
 
 ---
 
-## Example 2: Love
-**Input**: "Love fortune this year?"
+## Example 2: Relationship Contact Timing
+**Input**: "Will they respond if I message first, or should I wait?"
 **Output**:
-"Venus enters your 7th House (April-May), opening the door for meaningful connections. Your chart shows strong romantic potential but with a caution flag.
+"wait_with_deadline: wait before sending a long message. The useful decision is not whether they are guaranteed to respond, but whether your first move lowers or raises pressure.
 
-**Astrology**: Venus-Mars trine → Magnetic attraction energy
-**Tarot**: Two of Cups (Reversed) → Focus on self-growth before committing
-**Soul Element**: Fire-dominant nature means passion runs hot—balance with patience.
+**Saju**: the relationship pattern shows sensitivity to pride and timing.
+**Astrology**: the relationship axis is reactive, so pressure can backfire.
+**Tarot**: Two of Cups reversed says the rhythm is not equal yet.
 
 **Advice**:
-- April: Natural meetings via new hobbies/social groups
-- Avoid: Rushing into commitments (Mars square suggests impatience)
-- Enhance: Personal branding, let your natural charm shine
+- Wait 48 hours before another message
+- If you send one, keep it to one neutral line
+- Avoid: testing, repeated checking, or emotional essays
 
-Your attraction power is strong. Timing and patience are key."
+No reply or reunion is guaranteed; this is decision support for the safest next move."
 `
 };
 
@@ -351,7 +351,7 @@ export function buildStructuredSystemPrompt(
   const koDataCitationRule = !isEn ? `# 데이터 직접 인용 규칙 (절대 준수)
 - 아래 제공된 사주 원국, 점성술 데이터, 타로 카드는 서버에서 정확히 계산된 확정 값입니다.
 - 이 데이터를 직접 인용하여 분석하세요. 추측, 날짜 창작, 데이터에 없는 글자 생성 절대 금지.
-- "~일 수 있다", "~가능성이 높다", "~할 수도 있습니다" 같은 표현 대신 데이터 기반 확정 판단으로 서술하세요.
+- "~일 수 있다", "~가능성이 높다", "~할 수도 있습니다" 같은 표현을 남발하지 말고 데이터가 받쳐주는 범위에서 선명하게 서술하세요.
 - 근거가 약하면 약하다고 명시하세요. 자신감 있는 말로 덮지 마세요.` : '';
 
   return [

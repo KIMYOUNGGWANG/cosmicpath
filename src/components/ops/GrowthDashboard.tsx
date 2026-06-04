@@ -364,11 +364,11 @@ function NextMoveDecisionGateCard({ gate }: { gate: NextMoveDecisionGate }) {
                         continue / revise / stop
                     </div>
                     <h3 className="mt-3 font-[var(--font-outfit)] text-2xl font-semibold tracking-[-0.04em] text-white">
-                        Next Move Report 14-day decision gate
+                        Decision Timing 14-day decision gate
                     </h3>
                     <p className="mt-2 text-sm leading-6 text-white/58">
                         visits 300 or 14 days · question starts 45 · free verdicts 30 · paywall opens 8 · paid conversions 2 · follow-up seeds 8.
-                        질문 원문은 보지 않고 이벤트 단계와 source만 봅니다.
+                        canonical source는 decision_timing_rebuild_v1이고, 관계 연락은 별도 campaign wedge로만 봅니다.
                     </p>
                 </div>
                 <div className="rounded-[20px] border border-white/10 bg-black/18 px-4 py-3 text-sm text-white/70">

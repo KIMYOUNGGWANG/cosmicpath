@@ -31,7 +31,7 @@ export function EnglishGuideSection() {
                         </h2>
                         <p className="mt-5 max-w-2xl text-base leading-8 text-white/70 md:text-lg">
                             English-speaking users do not need a full metaphysics lesson first. These guides explain the category,
-                            bridge the BaZi overlap, and keep Next Move Report focused on a real contact-or-wait decision.
+                            bridge the BaZi overlap, and keep Next Move Report focused on a real delayed choice.
                         </p>
 
                         <div className="mt-8 grid gap-3 md:grid-cols-3">
@@ -60,17 +60,17 @@ export function EnglishGuideSection() {
 
                         <div className="mt-8 flex flex-wrap gap-3">
                             <GrowthTrackedLink
-                                href="/en/contact-timing"
+                                href="/start?reset=true&entry=decision_timing_rebuild_v1&lang=en"
                                 trackingEvent={{
-                                    event: 'english_contact_prompt_clicked',
+                                    event: 'decision_timing_prompt_clicked',
                                     source: 'landing_english_guide_section',
                                     step: 'cta',
                                     language: 'en',
-                                    context: 'love',
+                                    context: 'general',
                                     metadata: {
                                         landingVariant,
                                         ctaLocation: 'section_primary',
-                                        ctaTarget: 'en_contact_timing',
+                                        ctaTarget: 'decision_timing_rebuild_v1',
                                     },
                                 }}
                                 className="inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F4D88A] to-[#D4AF37] px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition-transform duration-300 hover:scale-[1.02]"

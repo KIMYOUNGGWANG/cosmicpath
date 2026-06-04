@@ -47,12 +47,12 @@ export function buildDecisionTimingCoreRule(
   if (format === 'inline') {
     return language === 'en'
       ? 'Core role: You are an evidence-led oracle for decisions and timing. Lead with the clearest next move, why it matters now, and the main risk to watch. Do not drift into generic life coaching or fate-only language.'
-      : '핵심 역할: 당신은 이 사람을 10년 관찰해 온 인생 전략가다. 위로하려 하지 말고, 패턴을 해석해라. 가장 선명한 다음 행동, 지금 그게 중요한 이유, 주의할 리스크를 먼저 말해라. generic한 라이프 코치식 위로나 막연한 운명론은 금지.';
+      : '핵심 역할: 당신은 근거 기반 결정 타이밍 오라클이다. 가장 선명한 다음 행동, 지금 그게 중요한 이유, 주의할 리스크를 먼저 말해라. generic한 라이프 코치식 위로나 막연한 운명론은 금지.';
   }
 
   return language === 'en'
     ? '# Decision Timing Oracle\n- You are an evidence-led oracle for decisions and timing, not a generic life coach or reckless fortune teller.\n- Lead with the clearest next move, why it matters now, and the main risk to watch.\n- Warmth is allowed, but it must never replace judgment, evidence, or specificity.'
-    : '# 인생 전략가 규칙\n- 당신은 이 사람을 10년 관찰해 온 인생 전략가다. generic한 라이프 코치나 무책임한 예언자가 아니다.\n- 위로하려 하지 말고, 패턴을 해석해라. 듣기 좋은 말보다 실제 성향을 우선해서 설명해라.\n- 누구에게나 적용될 수 있는 뻔한 조언은 금지한다.\n- 단정적 판정 화법: "~일 수 있다", "~같다", "~가능성이 있다" 최소화. 확정 판단 우선.\n- 콜드리딩 화법 필수: "쉬는 날에도 머리가 안 쉬지 않으셨나요?" 등 꿰뚫어 보는 묘사.\n- 자기계발 강사처럼 말하지 말 것. 애매한 표현 대신 성향을 명확히 단정할 것.\n- 실제 사람을 관찰한 듯 현실적으로 묘사할 것. 설명보다 판정에 가깝게 작성할 것.\n- 절대 추측하지 마세요. 제공된 계산 데이터를 기반으로 확정적으로 분석하세요.\n- 아래 제공된 <사주_원국>의 실제 천간/지지 글자만 사용하세요. 데이터에 없는 글자, 사주 원국을 임의로 추정하거나 날짜를 창작하지 마세요.';
+    : '# 결정 타이밍 오라클\n- 당신은 근거 기반 결정 타이밍 오라클이다. generic한 라이프 코치나 무책임한 예언자가 아니다.\n- 사용자의 예측형 질문을 판정, 타이밍 경계, 첫 행동, 리스크로 변환하세요.\n- 누구에게나 적용될 수 있는 뻔한 조언은 금지한다.\n- 근거가 강하면 결론을 선명하게 말하고, 근거가 약하면 불확실성을 숨기지 마세요.\n- 자기계발 강사처럼 말하지 말 것. 애매한 위로 대신 실제 선택에 도움이 되는 기준을 남길 것.\n- 절대 추측하지 마세요. 제공된 계산 데이터를 기반으로 분석하세요.\n- 아래 제공된 <사주_원국>의 실제 천간/지지 글자만 사용하세요. 데이터에 없는 글자, 사주 원국을 임의로 추정하거나 날짜를 창작하지 마세요.';
 }
 
 export function buildRelationshipDecisionSafetyRule(
@@ -106,8 +106,8 @@ export function buildPromptDepthRule(
 
   if (mode === 'free-core') {
     return language === 'en'
-      ? '# Free Depth Rule\n- This is phase 1 of a free reading. Deliver the clearest high-signal outline first and avoid exhaustive sub-analysis.\n- Return only `free_focus` and compact `summary` metadata in this phase.\n- Do not write the long summary body yet. Phase 2 will expand it later.\n- `free_focus.action_conclusion` MUST begin by directly answering the user\'s question. Example: "You asked about changing jobs — this is a good time to move." Starting with generic fortune flow language like "Your current energy..." is forbidden.\n- The first sentence must include a clear decision label: move now, wait, narrow the option, or do not proceed yet.\n- `free_focus.evidence_summary` must cite Saju (Day Master + current Daeun/Sewoon) AND at least one Astro signal. Tarot alone cannot fulfill this rule.\n- `free_focus.action_conclusion` must end with a concrete action verb phrase and a date (YYYY-MM format or "this week/month"). Vague closings like "consider this carefully" are forbidden.\n- FORBIDDEN abstract phrases: "current energy", "go with the flow", "balance/harmony", "inner voice", "the universe says", "time of change", "new beginning" — replace with specific chart data.\n- `free_focus` must always contain one decisive next move, one compact evidence summary, and one precise follow-up question.'
-      : '# 무료 깊이 규칙\n- 이것은 무료 리딩 1단계입니다. 가장 해상도 높은 아웃라인을 먼저 주고, 과도한 세부 분해는 피하세요.\n- 이 단계에서는 `free_focus`와 압축된 `summary` 메타데이터만 반환하세요.\n- 긴 summary 본문은 아직 쓰지 마세요. 본문은 2단계에서 확장합니다.\n- `free_focus.action_conclusion`은 반드시 사용자의 질문에 대한 직접 답변으로 시작해야 합니다. 예: "이직을 물어보셨는데, 지금 움직여도 됩니다." "당신의 현재 운세 흐름은..." 같은 포괄적 서술로 시작하는 것은 금지합니다.\n- 첫 문장에는 반드시 명확한 판정 라벨을 넣으세요: 지금 움직여도 됨, 기다릴 것, 선택지 축소, 아직 진행 금지.\n- `free_focus.action_conclusion`은 반드시 구체적 행동 동사 + 날짜(YYYY-MM 형식 또는 "이번 주/달")로 끝내야 합니다. "신중하게 고민해보세요" 같은 모호한 마무리 금지.\n- `free_focus.evidence_summary`는 사주(일간 + 현재 대운/세운 글자) + 점성술 신호 1개를 반드시 인용해야 합니다. 타로 단독 인용으로 이 규칙을 충족할 수 없습니다.\n- 금지 추상 명사구: "현재 에너지", "흐름을 타", "균형/조화", "내면의 목소리", "우주가 말한다", "변화의 시기", "새로운 시작" — 반드시 구체적 차트 데이터로 대체하세요.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 다음 질문 1개를 반드시 넣으세요.';
+      ? '# Free Depth Rule\n- This is phase 1 of a free reading. Deliver the clearest high-signal outline first and avoid exhaustive sub-analysis.\n- Return only `free_focus` and compact `summary` metadata in this phase.\n- Do not write the long summary body yet. Phase 2 will expand it later.\n- `free_focus.action_conclusion` MUST begin by directly answering the user\'s question. Example: "You asked about changing jobs — this is a good time to move." Starting with generic fortune flow language like "Your current energy..." is forbidden.\n- The first sentence must include a clear decision label: move_now, wait_with_deadline, narrow_first, or hold_or_stop.\n- Required `free_focus` fields: decision_label, delayed_choice, timing_boundary, first_action, avoid, confidence_note, action_conclusion, evidence_summary, next_question; copy_ready_message is optional.\n- `free_focus.evidence_summary` must cite Saju (Day Master + current Daeun/Sewoon) AND at least one Astro signal. Tarot alone cannot fulfill this rule.\n- `free_focus.action_conclusion` must end with a concrete action verb phrase and a date (YYYY-MM format or "this week/month"). Vague closings like "consider this carefully" are forbidden.\n- FORBIDDEN abstract phrases: "current energy", "go with the flow", "balance/harmony", "inner voice", "the universe says", "time of change", "new beginning" — replace with specific chart data.\n- `free_focus` must always contain one decisive next move, one compact evidence summary, one timing boundary, one risk to avoid, and one precise follow-up question.'
+      : '# 무료 깊이 규칙\n- 이것은 무료 리딩 1단계입니다. 가장 해상도 높은 아웃라인을 먼저 주고, 과도한 세부 분해는 피하세요.\n- 이 단계에서는 `free_focus`와 압축된 `summary` 메타데이터만 반환하세요.\n- 긴 summary 본문은 아직 쓰지 마세요. 본문은 2단계에서 확장합니다.\n- `free_focus.action_conclusion`은 반드시 사용자의 질문에 대한 직접 답변으로 시작해야 합니다. 예: "이직을 물어보셨는데, 지금 움직여도 됩니다." "당신의 현재 운세 흐름은..." 같은 포괄적 서술로 시작하는 것은 금지합니다.\n- 첫 문장에는 반드시 명확한 판정 라벨을 넣으세요: move_now, wait_with_deadline, narrow_first, hold_or_stop.\n- 필수 `free_focus` 필드: decision_label, delayed_choice, timing_boundary, first_action, avoid, confidence_note, action_conclusion, evidence_summary, next_question. copy_ready_message는 선택입니다.\n- `free_focus.action_conclusion`은 반드시 구체적 행동 동사 + 날짜(YYYY-MM 형식 또는 "이번 주/달")로 끝내야 합니다. "신중하게 고민해보세요" 같은 모호한 마무리 금지.\n- `free_focus.evidence_summary`는 사주(일간 + 현재 대운/세운 글자) + 점성술 신호 1개를 반드시 인용해야 합니다. 타로 단독 인용으로 이 규칙을 충족할 수 없습니다.\n- 금지 추상 명사구: "현재 에너지", "흐름을 타", "균형/조화", "내면의 목소리", "우주가 말한다", "변화의 시기", "새로운 시작" — 반드시 구체적 차트 데이터로 대체하세요.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 타이밍 경계 1개, 피할 리스크 1개, 다음 질문 1개를 반드시 넣으세요.';
   }
 
   if (mode === 'free-phase2') {
@@ -117,8 +117,8 @@ export function buildPromptDepthRule(
   }
 
   return language === 'en'
-    ? '# Free Depth Rule\n- This is a free reading. Deliver the clearest high-signal summary first and avoid exhaustive sub-analysis.\n- Return only `free_focus`, `summary`, and `traits`.\n- `free_focus.action_conclusion` MUST begin by directly answering the user\'s question. Example: "You asked about changing jobs — this is a good time to move." Starting with generic fortune flow language like "Your current energy..." is forbidden.\n- The first sentence must include a clear decision label: move now, wait, narrow the option, or do not proceed yet.\n- `free_focus.action_conclusion` must end with a concrete verb phrase and a date (YYYY-MM or "this week/month"). Vague closings forbidden.\n- `free_focus.evidence_summary` must cite Saju (Day Master + current Daeun/Sewoon) AND one Astro signal. Tarot alone cannot fulfill this.\n- FORBIDDEN abstract phrases: "current energy", "go with the flow", "balance/harmony", "inner voice", "the universe says", "time of change" — replace with specific chart data.\n- `free_focus` must always contain one decisive next move, one compact evidence summary, and one precise follow-up question.'
-    : '# 무료 깊이 규칙\n- 이것은 무료 리딩입니다. 가장 해상도 높은 요약을 먼저 주고, 과도한 세부 분해는 피하세요.\n- 출력은 `free_focus`, `summary`, `traits`만 반환하세요.\n- `free_focus.action_conclusion`은 반드시 사용자의 질문에 대한 직접 답변으로 시작해야 합니다.\n- 첫 문장에는 반드시 명확한 판정 라벨을 넣으세요: 지금 움직여도 됨, 기다릴 것, 선택지 축소, 아직 진행 금지.\n- `free_focus.action_conclusion`은 반드시 구체적 행동 동사 + 날짜(YYYY-MM 형식 또는 "이번 주/달")로 끝내야 합니다.\n- `free_focus.evidence_summary`는 사주(일간 + 현재 대운/세운 글자) + 점성술 신호 1개를 반드시 인용해야 합니다. 타로 단독 인용 금지.\n- 금지 추상 명사구: "현재 에너지", "흐름을 타", "균형/조화", "내면의 목소리", "우주가 말한다", "변화의 시기", "새로운 시작" — 구체적 차트 데이터로 대체.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 다음 질문 1개를 반드시 넣으세요.';
+    ? '# Free Depth Rule\n- This is a free reading. Deliver the clearest high-signal summary first and avoid exhaustive sub-analysis.\n- Return only `free_focus`, `summary`, and `traits`.\n- `free_focus.action_conclusion` MUST begin by directly answering the user\'s question. Example: "You asked about changing jobs — this is a good time to move." Starting with generic fortune flow language like "Your current energy..." is forbidden.\n- The first sentence must include a clear decision label: move_now, wait_with_deadline, narrow_first, or hold_or_stop.\n- Required `free_focus` fields: decision_label, delayed_choice, timing_boundary, first_action, avoid, confidence_note, action_conclusion, evidence_summary, next_question; copy_ready_message is optional.\n- `free_focus.action_conclusion` must end with a concrete verb phrase and a date (YYYY-MM or "this week/month"). Vague closings forbidden.\n- `free_focus.evidence_summary` must cite Saju (Day Master + current Daeun/Sewoon) AND one Astro signal. Tarot alone cannot fulfill this.\n- FORBIDDEN abstract phrases: "current energy", "go with the flow", "balance/harmony", "inner voice", "the universe says", "time of change" — replace with specific chart data.\n- `free_focus` must always contain one decisive next move, one compact evidence summary, one timing boundary, one risk to avoid, and one precise follow-up question.'
+    : '# 무료 깊이 규칙\n- 이것은 무료 리딩입니다. 가장 해상도 높은 요약을 먼저 주고, 과도한 세부 분해는 피하세요.\n- 출력은 `free_focus`, `summary`, `traits`만 반환하세요.\n- `free_focus.action_conclusion`은 반드시 사용자의 질문에 대한 직접 답변으로 시작해야 합니다.\n- 첫 문장에는 반드시 명확한 판정 라벨을 넣으세요: move_now, wait_with_deadline, narrow_first, hold_or_stop.\n- 필수 `free_focus` 필드: decision_label, delayed_choice, timing_boundary, first_action, avoid, confidence_note, action_conclusion, evidence_summary, next_question. copy_ready_message는 선택입니다.\n- `free_focus.action_conclusion`은 반드시 구체적 행동 동사 + 날짜(YYYY-MM 형식 또는 "이번 주/달")로 끝내야 합니다.\n- `free_focus.evidence_summary`는 사주(일간 + 현재 대운/세운 글자) + 점성술 신호 1개를 반드시 인용해야 합니다. 타로 단독 인용 금지.\n- 금지 추상 명사구: "현재 에너지", "흐름을 타", "균형/조화", "내면의 목소리", "우주가 말한다", "변화의 시기", "새로운 시작" — 구체적 차트 데이터로 대체.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 타이밍 경계 1개, 피할 리스크 1개, 다음 질문 1개를 반드시 넣으세요.';
 }
 
 export function buildPromptSharedPrelude(options: PromptSharedPreludeOptions) {
@@ -160,6 +160,13 @@ export function buildStructuredJsonSchema(
 \`\`\`json
 {
   "free_focus": {
+    "decision_label": "move_now|wait_with_deadline|narrow_first|hold_or_stop",
+    "delayed_choice": "The choice the user has been postponing",
+    "timing_boundary": "When to act, wait, review, or stop",
+    "first_action": "The first concrete action to take today",
+    "avoid": "The move or risk to avoid first",
+    "confidence_note": "One sentence about source agreement or uncertainty",
+    "copy_ready_message": "Optional line or message only when useful",
     "action_conclusion": "Decision label plus one concrete next move",
     "evidence_summary": "1-2 lines grounded in Saju/Astro/Tarot evidence",
     "next_question": "One precise follow-up question"
@@ -203,6 +210,13 @@ export function buildStructuredJsonSchema(
 \`\`\`json
 {
   "free_focus": {
+    "decision_label": "move_now|wait_with_deadline|narrow_first|hold_or_stop",
+    "delayed_choice": "사용자가 미루고 있는 선택",
+    "timing_boundary": "움직일지, 기다릴지, 재검토할지, 멈출지의 시간 경계",
+    "first_action": "오늘 바로 할 첫 행동",
+    "avoid": "먼저 피해야 할 행동이나 리스크",
+    "confidence_note": "근거 일치도 또는 불확실성 한 문장",
+    "copy_ready_message": "필요할 때만 쓰는 선택적 문장 또는 메시지",
     "action_conclusion": "판정 라벨과 지금 붙잡을 행동 결론 1개",
     "evidence_summary": "사주/점성/타로 근거 기반 1-2줄 요약",
     "next_question": "바로 이어서 물어볼 다음 질문 1개"
@@ -250,6 +264,13 @@ export function buildStructuredJsonSchema(
 \`\`\`json
 {
   "free_focus": {
+    "decision_label": "move_now|wait_with_deadline|narrow_first|hold_or_stop",
+    "delayed_choice": "The choice the user has been postponing",
+    "timing_boundary": "When to act, wait, review, or stop",
+    "first_action": "The first concrete action to take today",
+    "avoid": "The move or risk to avoid first",
+    "confidence_note": "One sentence about source agreement or uncertainty",
+    "copy_ready_message": "Optional line or message only when useful",
     "action_conclusion": "Decision label plus one concrete next move",
     "evidence_summary": "1-2 lines grounded in Saju/Astro/Tarot evidence",
     "next_question": "One precise follow-up question"
@@ -265,6 +286,13 @@ export function buildStructuredJsonSchema(
 \`\`\`json
 {
   "free_focus": {
+    "decision_label": "move_now|wait_with_deadline|narrow_first|hold_or_stop",
+    "delayed_choice": "사용자가 미루고 있는 선택",
+    "timing_boundary": "움직일지, 기다릴지, 재검토할지, 멈출지의 시간 경계",
+    "first_action": "오늘 바로 할 첫 행동",
+    "avoid": "먼저 피해야 할 행동이나 리스크",
+    "confidence_note": "근거 일치도 또는 불확실성 한 문장",
+    "copy_ready_message": "필요할 때만 쓰는 선택적 문장 또는 메시지",
     "action_conclusion": "판정 라벨과 지금 붙잡을 행동 결론 1개",
     "evidence_summary": "사주/점성/타로 근거 기반 1-2줄 요약",
     "next_question": "바로 이어서 물어볼 다음 질문 1개"
@@ -283,6 +311,13 @@ export function buildStructuredJsonSchema(
 \`\`\`json
 {
   "free_focus": {
+    "decision_label": "move_now|wait_with_deadline|narrow_first|hold_or_stop",
+    "delayed_choice": "The choice the user has been postponing",
+    "timing_boundary": "When to act, wait, review, or stop",
+    "first_action": "The first concrete action to take today",
+    "avoid": "The move or risk to avoid first",
+    "confidence_note": "One sentence about source agreement or uncertainty",
+    "copy_ready_message": "Optional line or message only when useful",
     "action_conclusion": "Decision label plus one concrete next move",
     "evidence_summary": "1-2 lines grounded in Saju/Astro/Tarot evidence",
     "next_question": "One precise follow-up question"
@@ -309,6 +344,13 @@ export function buildStructuredJsonSchema(
 \`\`\`json
 {
   "free_focus": {
+    "decision_label": "move_now|wait_with_deadline|narrow_first|hold_or_stop",
+    "delayed_choice": "사용자가 미루고 있는 선택",
+    "timing_boundary": "움직일지, 기다릴지, 재검토할지, 멈출지의 시간 경계",
+    "first_action": "오늘 바로 할 첫 행동",
+    "avoid": "먼저 피해야 할 행동이나 리스크",
+    "confidence_note": "근거 일치도 또는 불확실성 한 문장",
+    "copy_ready_message": "필요할 때만 쓰는 선택적 문장 또는 메시지",
     "action_conclusion": "판정 라벨과 지금 붙잡을 행동 결론 1개",
     "evidence_summary": "사주/점성/타로 근거 기반 1-2줄 요약",
     "next_question": "바로 이어서 물어볼 다음 질문 1개"
@@ -349,7 +391,7 @@ export function buildStructuredValidationRules(
 3. Each section must cite at least 1 source (Saju/Astro/Tarot)
 4. No vague phrases: "soon", "maybe", "probably"
 5. final_verdict.core_message MUST cite Saju + Astrology primarily
-6. free_focus MUST be present and each field must be a single clear sentence
+6. free_focus MUST include decision_label, delayed_choice, timing_boundary, first_action, avoid, confidence_note, action_conclusion, evidence_summary, and next_question; copy_ready_message is optional.
 ` : `
 # 검증 규칙
 1. 모든 날짜는 ${options.today} 이후여야 함
@@ -357,7 +399,7 @@ export function buildStructuredValidationRules(
 3. 각 섹션은 최소 1개 출처(사주/점성/타로) 인용
 4. 애매한 표현 금지: "곧", "아마", "~할 수도"
 5. final_verdict.core_message는 반드시 사주 + 점성술 기반
-6. free_focus는 반드시 포함하고, 각 필드는 한눈에 읽히는 한 문장이어야 함
+6. free_focus는 decision_label, delayed_choice, timing_boundary, first_action, avoid, confidence_note, action_conclusion, evidence_summary, next_question을 반드시 포함하고, copy_ready_message는 선택
 `;
   }
 
@@ -366,18 +408,18 @@ export function buildStructuredValidationRules(
 # Validation Rules
 1. Return ONLY the two top-level keys: free_focus and summary
 2. Every string must stay on one line with no raw line breaks
-3. Keep lengths: action_conclusion <= 250 chars, evidence_summary <= 320 chars, next_question <= 96 chars, title <= 40 chars
+3. Keep lengths: delayed_choice <= 160 chars, timing_boundary <= 180 chars, first_action <= 180 chars, avoid <= 180 chars, confidence_note <= 180 chars, copy_ready_message <= 180 chars, action_conclusion <= 250 chars, evidence_summary <= 320 chars, next_question <= 96 chars, title <= 40 chars
 4. No vague filler like "maybe", "probably", "soon"
 5. Do not include summary.content, trust_score, or trust_reason in this phase
-6. free_focus MUST be present. action_conclusion must be 2-3 specific sentences. evidence_summary must name at least one concrete signal and explain why it points this way.
+6. free_focus MUST include decision_label, delayed_choice, timing_boundary, first_action, avoid, confidence_note, action_conclusion, evidence_summary, and next_question. decision_label must be move_now, wait_with_deadline, narrow_first, or hold_or_stop.
 ` : `
 # 검증 규칙
 1. 최상위 키는 free_focus, summary 두 가지만 반환
 2. 모든 문자열은 줄바꿈 없이 한 줄로 유지
-3. 길이: action_conclusion 250자 이하, evidence_summary 320자 이하, next_question 96자 이하, title 40자 이하
+3. 길이: delayed_choice 160자 이하, timing_boundary 180자 이하, first_action 180자 이하, avoid 180자 이하, confidence_note 180자 이하, copy_ready_message 180자 이하, action_conclusion 250자 이하, evidence_summary 320자 이하, next_question 96자 이하, title 40자 이하
 4. "곧", "아마", "~할 수도" 같은 애매한 표현 금지
 5. 이 단계에서는 summary.content, trust_score, trust_reason을 넣지 말 것
-6. free_focus는 반드시 포함. action_conclusion은 2~3문장으로 구체적으로. evidence_summary는 반드시 구체적인 근거(기둥명/행성/카드)를 명시하고 왜 그 방향인지 설명할 것.
+6. free_focus는 decision_label, delayed_choice, timing_boundary, first_action, avoid, confidence_note, action_conclusion, evidence_summary, next_question을 반드시 포함. decision_label은 move_now, wait_with_deadline, narrow_first, hold_or_stop 중 하나.
 `;
   }
 
@@ -387,18 +429,18 @@ export function buildStructuredValidationRules(
 2. traits must contain 2-4 items and use only saju|astro|tarot for type
 3. trust_score must be an integer from 1 to 5
 4. Every string must stay on one line with no raw line breaks
-5. Keep lengths: action_conclusion <= 250 chars, evidence_summary <= 320 chars, next_question <= 96 chars, title <= 40 chars, content <= 480 chars, trust_reason <= 120 chars, each trait description <= 120 chars
+5. Keep lengths: delayed_choice <= 160 chars, timing_boundary <= 180 chars, first_action <= 180 chars, avoid <= 180 chars, confidence_note <= 180 chars, copy_ready_message <= 180 chars, action_conclusion <= 250 chars, evidence_summary <= 320 chars, next_question <= 96 chars, title <= 40 chars, content <= 480 chars, trust_reason <= 120 chars, each trait description <= 120 chars
 6. No vague filler like "maybe", "probably", "soon"
-7. free_focus MUST be present and each field must be a single clear sentence
+7. free_focus MUST include decision_label, delayed_choice, timing_boundary, first_action, avoid, confidence_note, action_conclusion, evidence_summary, and next_question; copy_ready_message is optional.
 ` : `
 # 검증 규칙
 1. 최상위 키는 free_focus, summary, traits 세 가지만 반환
 2. traits는 2-4개, type은 saju|astro|tarot만 사용
 3. trust_score는 1~5의 정수
 4. 모든 문자열은 줄바꿈 없이 한 줄로 유지
-5. 길이: action_conclusion 250자 이하, evidence_summary 320자 이하, next_question 96자 이하, title 40자 이하, content 480자 이하, trust_reason 120자 이하, trait description 120자 이하
+5. 길이: delayed_choice 160자 이하, timing_boundary 180자 이하, first_action 180자 이하, avoid 180자 이하, confidence_note 180자 이하, copy_ready_message 180자 이하, action_conclusion 250자 이하, evidence_summary 320자 이하, next_question 96자 이하, title 40자 이하, content 480자 이하, trust_reason 120자 이하, trait description 120자 이하
 6. "곧", "아마", "~할 수도" 같은 애매한 표현 금지
-7. free_focus는 반드시 포함하고, 각 필드는 한눈에 읽히는 한 문장이어야 함
+7. free_focus는 decision_label, delayed_choice, timing_boundary, first_action, avoid, confidence_note, action_conclusion, evidence_summary, next_question을 반드시 포함하고, copy_ready_message는 선택
 `;
 }
 
@@ -479,7 +521,7 @@ ${options.evidenceRule}
 - <오라클_가이드_프로필>에 적힌 분석 순서, 근거 순서, 답변 골격, 금지 패턴을 실제 답변 구조에 그대로 반영하세요.
 - 고위험 질문에는 직접 지시를 거부하고 안전하게 방향을 돌리세요.
 - 고위험 질문에서는 일반 오라클 해석을 길게 이어가지 말고 안전한 경계에서 멈추세요.
-- 영적 해석을 의료/법률/재무 확정 판단처럼 말하지 마세요.
+- 영적 해석을 의료/법률/재무 결론처럼 말하지 마세요.
 - 데이터에 없는 숫자를 만들어내지 말 것
 ${options.evidenceGuideline}
 - 한자나 전통 명리 용어를 쓰면 반드시 한자(독음, 쉬운 뜻) 형식으로 한 번 풀어 설명하세요.

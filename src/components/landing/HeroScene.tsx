@@ -17,6 +17,7 @@ export function HeroScene({ language, children }: HeroSceneProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const hasTrackedLandingView = useRef(false);
     const [isMobile, setIsMobile] = useState(true);
+    const [canRenderShader, setCanRenderShader] = useState(false);
     const { scrollYProgress } = useScroll({
         target: containerRef,
         offset: ['start start', 'end start'],
@@ -39,19 +40,29 @@ export function HeroScene({ language, children }: HeroSceneProps) {
             });
         }
 
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth < 768);
+        const checkBackgroundMode = () => {
+            const isNarrowViewport = window.innerWidth < 768;
+            setIsMobile(isNarrowViewport);
+
+            if (isNarrowViewport) {
+                setCanRenderShader(false);
+                return;
+            }
+
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('webgl');
+            setCanRenderShader(Boolean(context));
         };
 
-        checkMobile();
-        window.addEventListener('resize', checkMobile);
-        return () => window.removeEventListener('resize', checkMobile);
+        checkBackgroundMode();
+        window.addEventListener('resize', checkBackgroundMode);
+        return () => window.removeEventListener('resize', checkBackgroundMode);
     }, [language]);
 
     return (
         <section ref={containerRef} className="relative h-screen w-full overflow-hidden bg-void">
             <div className="absolute inset-0 z-0 opacity-40">
-                {isMobile ? (
+                {isMobile || !canRenderShader ? (
                     <div className="absolute inset-0 bg-gradient-to-b from-void via-[#1a1230] to-void">
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(74,14,14,0.3)_0%,transparent_70%)]" />
                         <div className="absolute right-0 top-0 h-full w-full bg-[radial-gradient(circle_at_70%_30%,rgba(212,175,55,0.15)_0%,transparent_60%)]" />
