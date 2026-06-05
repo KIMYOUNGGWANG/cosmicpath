@@ -119,7 +119,7 @@ function getFreeFocusVerdictLabel(decisionLabel: FreeFocusDecisionLabel, isEn: b
   if (decisionLabel === 'narrow_first') return isEn ? 'Narrow first' : '선택지 먼저 좁히기';
   if (decisionLabel === 'hold_or_stop') return isEn ? 'Hold or stop' : '보류 또는 중단';
 
-  return isEn ? 'First verdict' : '첫 판정';
+  return isEn ? 'First direction' : '첫 방향';
 }
 
 export function FreeFocusSection({

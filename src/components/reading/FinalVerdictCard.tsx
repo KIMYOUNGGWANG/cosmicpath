@@ -118,10 +118,10 @@ export function FinalVerdictCard({ data }: FinalVerdictProps) {
                         </p>
                         <div className="pt-2 flex flex-col items-center">
                             <div className="font-serif italic text-2xl text-amber-500/80" style={{ fontFamily: 'Times New Roman, serif' }}>
-                                Fate Architect
+                                Decision Note
                             </div>
                             <div className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">
-                                Verified by CosmicPath
+                                Saved for review
                             </div>
                         </div>
                     </div>

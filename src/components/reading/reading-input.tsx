@@ -535,7 +535,7 @@ export function ReadingInput({
                     <div>
                         <div className="flex flex-wrap items-center gap-2">
                             <span className="rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-acc-gold">
-                                {isEn ? 'First Verdict Free' : '첫 판정 무료'}
+                                {isEn ? 'First Note Free' : '첫 정리 무료'}
                             </span>
                             <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
                                 {isEn ? 'Question + Evidence + Action' : '질문 + 근거 + 행동'}
@@ -544,11 +544,11 @@ export function ReadingInput({
                         <p className="mt-2 text-sm leading-6 text-white/62">
                             {isRelationshipContactEntry
                                 ? (isEn
-                                    ? 'Ask the contact-or-wait decision first. Birth details and tarot are optional evidence layers that can sharpen why the verdict was chosen.'
-                                    : '연락할까, 기다릴까 질문을 먼저 적어주세요. 생년월일과 타로는 왜 이 판정인지 선명하게 만드는 선택 근거 레이어입니다.')
+                                    ? 'Ask the contact-or-wait decision first. Birth details and tarot are optional evidence layers that can sharpen why this direction was chosen.'
+                                    : '연락할까, 기다릴까 질문을 먼저 적어주세요. 생년월일과 타로는 왜 이 방향인지 선명하게 만드는 선택 근거 레이어입니다.')
                                 : (isEn
-                                    ? 'Ask one decision you have been putting off. Birth details and tarot sharpen the verdict instead of turning this into a generic reading.'
-                                    : '미루고 있는 선택 하나를 적어주세요. 생년월일과 타로 선택은 막연한 운세가 아니라 판정과 다음 행동의 근거를 더 선명하게 만드는 데 씁니다.')}
+                                    ? 'Ask one decision you have been putting off. Birth details and tarot sharpen the note instead of turning this into a generic reading.'
+                                    : '미루고 있는 선택 하나를 적어주세요. 생년월일과 타로 선택은 막연한 운세가 아니라 정리와 다음 행동의 근거를 더 선명하게 만드는 데 씁니다.')}
                         </p>
                     </div>
                     {isEn ? (
@@ -577,11 +577,11 @@ export function ReadingInput({
                             <p className="mt-2 text-sm leading-6 text-white/58">
                                 {isRelationshipContactEntry
                                     ? (isEn
-                                        ? 'Write the DM or relationship move you are considering. The first result answers contact, wait, narrow, or hold.'
-                                        : '고민 중인 DM이나 관계 행동을 적어주세요. 첫 결과는 연락, 대기, 축소, 보류 중 어디에 가까운지부터 답합니다.')
+                                        ? 'Write the DM or relationship move you are considering. The first note answers contact, wait, narrow, or hold.'
+                                        : '고민 중인 DM이나 관계 행동을 적어주세요. 첫 정리는 연락, 대기, 축소, 보류 중 어디에 가까운지부터 답합니다.')
                                 : (isEn
-                                    ? 'Choose the area, then write the delayed choice. The first result will turn it into move, wait, narrow, or stop.'
-                                    : '영역을 고르고, 미뤄둔 선택을 적어주세요. 첫 결과는 움직일지, 기다릴지, 좁힐지, 멈출지부터 답합니다.')}
+                                    ? 'Choose the area, then write the delayed choice. The first note will turn it into move, wait, narrow, or stop.'
+                                    : '영역을 고르고, 미뤄둔 선택을 적어주세요. 첫 정리는 움직일지, 기다릴지, 좁힐지, 멈출지부터 답합니다.')}
                             </p>
                         </div>
                         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
@@ -652,11 +652,11 @@ export function ReadingInput({
                             <p className="mt-2 text-[11px] leading-5 text-white/38">
                             {isRelationshipContactEntry
                                 ? (isEn
-                                    ? 'Concrete context produces a sharper contact verdict, cleaner evidence, and a safer message boundary.'
-                                    : '상황이 구체적일수록 연락 판정, 근거 요약, 다음 연락 행동이 더 안전하고 선명해집니다.')
+                                    ? 'Concrete context produces a sharper contact direction, cleaner evidence, and a safer message boundary.'
+                                    : '상황이 구체적일수록 연락 방향, 근거 요약, 다음 연락 행동이 더 안전하고 선명해집니다.')
                                 : (isEn
-                                    ? 'Concrete questions produce sharper verdicts, cleaner evidence, and a more useful action window.'
-                                    : '질문이 구체적일수록 판정, 근거, 행동 시점이 훨씬 날카롭게 나옵니다.')}
+                                    ? 'Concrete questions produce sharper notes, cleaner evidence, and a more useful action window.'
+                                    : '질문이 구체적일수록 방향, 근거, 행동 시점이 훨씬 선명해집니다.')}
                         </p>
                     </div>
                 </div>
@@ -665,12 +665,12 @@ export function ReadingInput({
                     <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                         <div>
                             <label className="block text-xs text-acc-gold tracking-widest uppercase">
-                                {isEn ? 'Recommended Guide' : '이번 질문의 추천 가이드'}
+                                {isEn ? 'Recommended Lens' : '이번 질문의 정리 관점'}
                             </label>
                             <p className="mt-1 text-[11px] leading-relaxed text-white/40">
                                 {isEn 
                                     ? "Reads the overall flow and points to the single most important path right now."
-                                    : "질문 전체의 흐름을 읽고, 지금 당신의 궤도를 가장 크게 바꿀 한 수를 짚어주는 메인 오라클 가이드"}
+                                    : "질문 전체의 흐름을 읽고, 지금 가장 먼저 정리해야 할 기준을 잡아줍니다."}
                             </p>
                         </div>
                         <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">

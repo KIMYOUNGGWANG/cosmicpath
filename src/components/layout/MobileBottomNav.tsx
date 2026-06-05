@@ -4,12 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
     Calendar,
-    Sparkles,
+    FileText,
 } from "lucide-react";
 
 const NAV_ITEMS = [
-    { href: "/my", icon: Sparkles, label: "Hub" },
-    { href: "/start?reset=true&entry=decision_timing_rebuild_v1", icon: Calendar, label: "Next" },
+    { href: "/my", icon: FileText, label: "Notes" },
+    { href: "/start?reset=true&entry=decision_timing_rebuild_v1", icon: Calendar, label: "Write" },
 ] as const;
 
 /** Routes where the mobile bottom nav should be visible */
@@ -25,7 +25,7 @@ export default function MobileBottomNav() {
     if (!shouldShow) return null;
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-40 flex lg:hidden items-center justify-around border-t border-white/[0.08] bg-[#050505]/95 px-2 pb-safe pt-3 backdrop-blur-lg">
+        <nav className="fixed bottom-0 left-0 right-0 z-40 flex lg:hidden items-center justify-around border-t border-white/[0.08] bg-[#11100d]/95 px-2 pb-safe pt-3 backdrop-blur-lg">
             {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
                 const isActive =
                     pathname === href || (href.startsWith("/start") && pathname === "/start") || pathname.startsWith(`${href}/`);

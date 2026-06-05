@@ -204,13 +204,13 @@ export default function MatchResultPage({ params }: PageProps) {
             const result = await response.json();
 
             if (!response.ok) {
-                setAiError(result.error || 'AI 분석에 실패했습니다');
+                setAiError(result.error || '분석에 실패했습니다');
                 return;
             }
 
             setAiAnalysis(result.analysis);
         } catch {
-            setAiError('AI 분석 중 오류가 발생했습니다');
+            setAiError('분석 중 오류가 발생했습니다');
         } finally {
             setIsLoadingAI(false);
         }
@@ -476,7 +476,7 @@ export default function MatchResultPage({ params }: PageProps) {
                         {/* Header */}
                         <div className="flex items-center gap-3 text-green-400 mb-2">
                             <Unlock size={20} />
-                            <span className="font-cinzel font-bold text-sm uppercase tracking-widest">Premium AI Analysis</span>
+                            <span className="font-cinzel font-bold text-sm uppercase tracking-widest">Premium Compatibility Analysis</span>
                         </div>
 
                         {/* Score Breakdown */}

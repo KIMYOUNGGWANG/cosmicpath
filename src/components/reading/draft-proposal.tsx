@@ -64,7 +64,7 @@ export function DraftProposal({
             >
                 <div className="text-left">
                     <div className="text-xs text-gold mb-1 flex items-center gap-2">
-                        <span>{isEn ? '✨ AI Proposal' : '✨ AI 제안'}</span>
+                        <span>{isEn ? 'Draft Proposal' : '제안 초안'}</span>
                         <span className="opacity-50">|</span>
                         <div className="flex items-center gap-1">
                             <span>{isEn ? 'Potential Impact' : '예상 파급력'}</span>
@@ -114,13 +114,13 @@ export function DraftProposal({
                                 <p className="text-sm text-gray-400">
                                     {isEn ? (
                                         <>
-                                            Review AI-proposed content and decide.
+                                            Review the proposed content and decide.
                                             <br />
                                             You can edit directly before approving.
                                         </>
                                     ) : (
                                         <>
-                                            AI가 제안한 내용을 검토하고 결정해주세요.
+                                            제안된 내용을 검토하고 결정해주세요.
                                             <br />
                                             직접 수정하여 승인할 수 있습니다.
                                         </>

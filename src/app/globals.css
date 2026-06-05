@@ -2,25 +2,25 @@
 @source not "../../insane-design";
 
 /* ================================
-   CosmicPath - Deep Space Theme
+   CosmicPath - Quiet Decision Theme
    Tailwind v4 @theme + :root tokens
    ================================ */
 
 @theme {
   /* ── Colors ── */
-  --color-void: #06080c;
-  --color-surface: #0f141c;
-  --color-surface-2: #161c25;
-  --color-panel: rgba(17, 23, 31, 0.94);
-  --color-deep-navy: #080c15;
+  --color-void: #11100d;
+  --color-surface: #181612;
+  --color-surface-2: #201d17;
+  --color-panel: rgba(24, 22, 18, 0.94);
+  --color-deep-navy: #12110e;
 
   /* Text palette */
-  --color-starlight: #f5f7fb;
-  --color-moonlight: #c8d0e0;
-  --color-dim: #9aa4b2;
-  --color-fg-primary: #f5f7fb;
-  --color-fg-secondary: #9aa4b2;
-  --color-bg-void: #06080c;
+  --color-starlight: #f7f0e4;
+  --color-moonlight: #d4c8b6;
+  --color-dim: #9f9383;
+  --color-fg-primary: #f7f0e4;
+  --color-fg-secondary: #9f9383;
+  --color-bg-void: #11100d;
 
   /* Gold accents */
   --color-gold: #d7b25d;
@@ -31,18 +31,18 @@
   --color-accent-gold: #d7b25d;
 
   /* Signal colors */
-  --color-acc-blue: #80a0ff;
-  --color-acc-green: #46cb93;
-  --color-acc-red: #ff7c6d;
+  --color-acc-blue: #7b8c9f;
+  --color-acc-green: #6f9f82;
+  --color-acc-red: #b77c6d;
   --color-star-yellow: #fbbf24;
 
   /* Advisor / domain accents */
-  --color-acc-logic: #5b9cf6;
-  --color-acc-nebula: #9b72ef;
-  --color-saju-blue: #4a90d9;
-  --color-tarot-purple: #8b5cf6;
-  --color-aurora-purple: #9b72ef;
-  --color-aurora-cyan: #4dd9ef;
+  --color-acc-logic: #7b8c9f;
+  --color-acc-nebula: #9f8f78;
+  --color-saju-blue: #7b8c9f;
+  --color-tarot-purple: #9f8f78;
+  --color-aurora-purple: #9f8f78;
+  --color-aurora-cyan: #98a6a3;
 
   /* ── Fonts ── */
   --font-cinzel: "Iowan Old Style", "Georgia", "Times New Roman", serif;
@@ -63,26 +63,26 @@
   /* Responsive Web Board Palette */
   --bg: #eceef2;
   --grid: rgba(15, 23, 42, 0.06);
-  --void: #06080c;
-  --surface: #0f141c;
-  --surface-2: #161c25;
-  --panel: rgba(17, 23, 31, 0.94);
+  --void: #11100d;
+  --surface: #181612;
+  --surface-2: #201d17;
+  --panel: rgba(24, 22, 18, 0.94);
   --line: rgba(255, 255, 255, 0.08);
-  --text: #f5f7fb;
-  --muted: #9aa4b2;
+  --text: #f7f0e4;
+  --muted: #9f9383;
   --gold: #d7b25d;
   --gold-2: #f0d594;
   --gold-dim: #c49840;
-  --blue: #80a0ff;
-  --green: #46cb93;
-  --red: #ff7c6d;
+  --blue: #7b8c9f;
+  --green: #6f9f82;
+  --red: #b77c6d;
   --soft: rgba(255, 255, 255, 0.04);
   --shadow: 0 28px 80px rgba(20, 24, 31, 0.14);
 
   /* Previously undefined — now defined */
-  --deep-navy: #080c15;
-  --aurora-purple: #9b72ef;
-  --aurora-cyan: #4dd9ef;
+  --deep-navy: #12110e;
+  --aurora-purple: #9f8f78;
+  --aurora-cyan: #98a6a3;
   --radius: 12px;
   --accent-gold: #d7b25d;
   --confidence-high: #22c55e;
@@ -161,7 +161,7 @@ body {
     radial-gradient(circle, #fff 1px, transparent 1px);
   background-size: 50px 50px, 100px 100px;
   background-position: 0 0, 25px 25px;
-  opacity: 0.3;
+  opacity: 0.06;
   will-change: transform;
 }
 
@@ -185,7 +185,7 @@ h3,
 h4 {
   font-family: var(--font-cinzel), var(--font-gowun-batang), serif;
   font-weight: 400;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
 }
 
 .font-mono {

@@ -47,7 +47,7 @@ export default function BrandAssetsPage() {
             <div id="poster-trust" className="w-[480px] h-[600px] bg-bg-deep border border-white/10 rounded-3xl overflow-hidden relative flex flex-col p-10 shadow-2xl">
                 <div className="flex justify-between items-start mb-12">
                     <div className="font-cinzel text-2xl text-acc-gold font-bold tracking-tight">CosmicPath</div>
-                    <div className="px-3 py-1 border border-acc-gold/30 rounded-full text-[8px] text-acc-gold tracking-widest uppercase mt-1">AI Verified Insight</div>
+                    <div className="px-3 py-1 border border-acc-gold/30 rounded-full text-[8px] text-acc-gold tracking-widest uppercase mt-1">Cross-Checked Note</div>
                 </div>
 
                 <h3 className="text-4xl font-light mb-8 leading-[1.2]">
@@ -80,7 +80,7 @@ export default function BrandAssetsPage() {
                 <div className="mt-12 pt-6 border-t border-white/5 flex items-center justify-between">
                     <div className="text-[9px] text-dim leading-relaxed">
                         The only platform that speaks <br />
-                        <span className="text-starlight font-bold">3 Ancient Languages</span> in 1 AI.
+                        <span className="text-starlight font-bold">3 reference layers</span> in one note.
                     </div>
                     <div className="flex items-center gap-2">
                         <span className="text-[8px] text-acc-gold tracking-widest font-bold">START NOW</span>
@@ -254,7 +254,7 @@ export default function BrandAssetsPage() {
                                     </div>
                                 </div>
                                 <div className="mt-auto pt-4 border-t border-white/5 text-[7px] text-dim">
-                                    AI Verified 3-Way Analysis Result
+                                    Cross-Checked Decision Note
                                 </div>
                             </div>
                         </div>
@@ -282,7 +282,7 @@ export default function BrandAssetsPage() {
                         <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
                             <span className="text-acc-gold">✨</span>
                         </div>
-                        <span className="text-xs text-dim">AI-Sync Life Calendar</span>
+                        <span className="text-xs text-dim">Decision Rhythm Calendar</span>
                     </div>
                 </div>
 

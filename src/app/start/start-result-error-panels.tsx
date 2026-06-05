@@ -43,11 +43,11 @@ export function QuotaExceededPanel(props: Pick<ResultErrorPanelProps, 'language'
         onClick={() => { void props.onUnlock(); }}
         className="w-full rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#f0c35c] to-[#d88b16] py-4 font-bold text-black shadow-lg shadow-[#D4AF37]/20 transition-all hover:shadow-[#D4AF37]/40 hover:-translate-y-0.5 cursor-pointer"
       >
-        {props.language === 'en' ? 'Unlock Full Premium Report' : '프리미엄 리포트 잠금 해제'}
+        {props.language === 'en' ? 'Unlock Detailed Decision Note' : '자세한 결정 노트 열기'}
       </button>
       <p className="mt-3 text-xs text-white/30">
         {props.language === 'en'
-          ? '5 locked sections · Fortune timing · Career · Love · Blind spot · Action plan'
+          ? '5 locked sections · Timing · Career · Love · Blind spot · Action plan'
           : '잠긴 5개 섹션 · 대운 타이밍 · 직업 · 연애 · 사각지대 · 행동 가이드'}
       </p>
       <button
@@ -75,7 +75,7 @@ export function InterruptedResultPanel(props: ResultErrorPanelProps) {
       </h3>
       <p className="mb-6 text-sm font-light leading-relaxed text-gray-400">
         {props.streamContent || (props.language === 'en'
-          ? 'The cosmic alignment was too complex to process at this moment.'
+          ? 'This decision note could not be completed at this moment.'
           : '지금은 결과를 끝까지 불러오지 못했습니다. 잠시 후 다시 시도해주세요.')}
       </p>
       <div className="flex flex-col items-center justify-center gap-3">

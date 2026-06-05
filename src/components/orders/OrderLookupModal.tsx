@@ -297,7 +297,7 @@ export function OrderLookupModal({ isOpen, onClose }: OrderLookupModalProps) {
                                         <div className="flex justify-between items-start">
                                             <div>
                                                 <h4 className="font-medium text-gray-200 text-sm group-hover:text-purple-300 transition-colors">
-                                                    {order.type === 'PROMO' ? '🎁 프로모션 운세' : (order.amount === 4500 ? '☕️ 커피 한 잔의 운세' : '심화 분석 리포트')}
+                                                    {order.type === 'PROMO' ? '🎁 프로모션 노트' : (order.amount === 4500 ? '☕️ 커피 한 잔의 노트' : '자세한 결정 노트')}
                                                 </h4>
                                                 <p className="text-xs text-gray-500 mt-1">
                                                     {new Date(order.createdAt).toLocaleDateString()}

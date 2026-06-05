@@ -33,22 +33,22 @@ export async function generateMetadata(): Promise<Metadata> {
 
     if (isKorean) {
         return {
-            title: 'Next Move Report | 미뤄둔 선택 끝내기',
-            description: '찝찝하게 미뤄둔 선택 하나를 오늘 보낼 말과 다음 행동으로 정리합니다. 첫 판정은 무료, 풀 리포트는 $9입니다.',
+            title: '오늘의 결정 정리',
+            description: '미뤄둔 선택 하나를 질문, 기준, 오늘 할 일로 차분하게 정리합니다. 첫 정리는 무료로 시작할 수 있습니다.',
             openGraph: {
-                title: 'Next Move Report | 미뤄둔 선택 끝내기',
-                description: '찝찝하게 미뤄둔 선택 하나를 오늘 보낼 말과 다음 행동으로 정리합니다. 첫 판정은 무료, 풀 리포트는 $9입니다.',
+                title: '오늘의 결정 정리',
+                description: '미뤄둔 선택 하나를 질문, 기준, 오늘 할 일로 차분하게 정리합니다. 첫 정리는 무료로 시작할 수 있습니다.',
                 images: ['/og-image.png'],
             },
         };
     }
 
     return {
-        title: 'Next Move Report | End One Delayed Choice',
-        description: "Turn one decision you have been putting off into today's next move. First verdict free, full report $9.",
+        title: 'Decision Note',
+        description: 'Turn one delayed decision into a clear question, criteria, and a next action. Start the first note for free.',
         openGraph: {
-            title: 'Next Move Report | End One Delayed Choice',
-            description: "Turn one decision you have been putting off into today's next move. First verdict free, full report $9.",
+            title: 'Decision Note',
+            description: 'Turn one delayed decision into a clear question, criteria, and a next action. Start the first note for free.',
             images: ['/og-image.png'],
         },
     };
@@ -60,7 +60,6 @@ export default async function Home() {
     return (
         <main className="w-full min-h-screen bg-void text-starlight selection:bg-acc-gold selection:text-bg-void">
             <Navigation language={language} />
-            <div className="cosmic-dust" />
 
             <HeroSection language={language} />
             {language === 'en' ? <EnglishGuideSection /> : null}

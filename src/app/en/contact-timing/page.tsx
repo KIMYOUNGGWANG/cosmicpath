@@ -11,9 +11,9 @@ const LANDING_VARIANT = 'en_contact_timing_v1';
 const PRIMARY_CONTACT_QUESTION = 'Should I text them now, or wait a little longer?';
 
 export const metadata: Metadata = {
-  title: 'Next Move Report | Contact or Wait',
+  title: 'Contact Decision Note',
   description:
-    'Get a first contact-or-wait verdict for a relationship or DM decision. First verdict free, full report through Stripe.',
+    'Turn one relationship or DM decision into a clear note: text, wait, narrow, or hold. First note free.',
   robots: {
     index: true,
     follow: true,
@@ -22,17 +22,17 @@ export const metadata: Metadata = {
     canonical: '/en/contact-timing',
   },
   openGraph: {
-    title: 'Next Move Report | Contact or Wait',
+    title: 'Contact Decision Note',
     description:
-      'First verdict free. Unlock why this contact timing verdict was chosen, when to move, and what message can backfire.',
+      'First note free. Unlock why this contact timing direction was chosen, when to move, and what message can backfire.',
     url: '/en/contact-timing',
-    siteName: 'Next Move Report',
+    siteName: 'Decision Note',
     images: ['/og-image.png'],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Next Move Report | Contact or Wait',
+    title: 'Contact Decision Note',
     description: 'Decision support for the moment before you send the message.',
     images: ['/og-image.png'],
   },
@@ -95,7 +95,7 @@ export default function EnglishContactTimingPage() {
       <section className="relative flex min-h-screen flex-col px-4 py-6 md:px-8">
         <Image
           src="/og-image.png"
-          alt="Next Move Report decision timing visual"
+          alt="CosmicPath contact decision note"
           fill
           priority
           sizes="100vw"
@@ -106,9 +106,9 @@ export default function EnglishContactTimingPage() {
         <div className="relative z-10 mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-6xl flex-col">
           <header className="flex items-center justify-between">
             <Link href="/" className="text-sm font-semibold tracking-[0.24em] text-white/72 transition-colors hover:text-white">
-              Next Move Report
+              Decision Note
             </Link>
-            <span className="text-sm text-white/48">First verdict free · Full report via Stripe</span>
+            <span className="text-sm text-white/48">First note free · Detailed note via Stripe</span>
           </header>
 
           <div className="grid flex-1 items-center gap-10 py-16 lg:grid-cols-[minmax(0,1fr)_420px]">
@@ -120,7 +120,7 @@ export default function EnglishContactTimingPage() {
                 Should I text them or wait?
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-8 text-white/70 md:text-lg">
-                Before you send the message, get a contact timing verdict: text now, wait, narrow the move, or hold.
+                Before you send the message, make a contact timing note: text now, wait, narrow the move, or hold.
                 Saju, Astrology, and Tarot are optional evidence layers, not the product name or a guarantee that someone will respond.
               </p>
 
@@ -193,7 +193,7 @@ export default function EnglishContactTimingPage() {
           </div>
 
           <footer className="relative z-10 pb-2 text-sm leading-6 text-white/42">
-            Next Move Report decision support only. No guaranteed relationship outcome, no pressure tactics, no unsafe advice.
+            Decision support only. No guaranteed relationship outcome, no pressure tactics, no unsafe advice.
           </footer>
         </div>
       </section>

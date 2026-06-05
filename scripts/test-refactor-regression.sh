@@ -78,7 +78,7 @@ require_match "docs/revenue/relationship-contact-timing-threads-batch-2026-05-24
 require_match "src/app/start/start-page-helpers.ts" "next_move_report_mvp_v1"
 require_match "src/app/start/start-page-helpers.ts" "relationship_contact_timing_v1"
 require_match "src/app/start/start-page-helpers.ts" "en_relationship_contact_timing_v1"
-require_match "src/lib/payment/payment-config.ts" "Next Move Report Full Report"
+require_match "src/lib/payment/payment-config.ts" "Detailed Decision Note"
 require_match "src/lib/payment/payment-config.ts" "prod_ThdoB65NmPU37y"
 require_match "docs/api-spec.md" 'Next Move Report MVP Contract (2026-06-03)'
 require_match "docs/api-spec.md" '$9.00'

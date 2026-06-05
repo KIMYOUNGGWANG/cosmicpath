@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
 
         // Dynamic Params
         const title = searchParams.get('title') || 'Cosmic Path';
-        const description = searchParams.get('desc') || 'AI Driven Destiny Analysis';
+        const description = searchParams.get('desc') || 'Decision note for a delayed choice';
         const cardName = searchParams.get('card') || 'The Universe';
         const trustScore = searchParams.get('score') || '98';
 

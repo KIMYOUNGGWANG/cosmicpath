@@ -143,7 +143,7 @@ function StartPageResumeLoading(props: Pick<StartPageStagesProps, 'language' | '
       <div className="w-12 h-12 border-4 border-accent-gold border-t-transparent rounded-full animate-spin mb-4" />
       <p className="text-white/60 text-sm animate-pulse tracking-widest font-cinzel">
         {props.searchPaid
-          ? (props.language === 'en' ? 'PAYMENT VERIFIED! PREPARING PREMIUM REPORT...' : '결제 확인 완료! 프리미엄 리포트를 준비 중입니다...')
+          ? (props.language === 'en' ? 'PAYMENT VERIFIED! PREPARING DETAILED NOTE...' : '결제 확인 완료! 자세한 노트를 준비 중입니다...')
           : (props.language === 'en' ? 'PREPARING YOUR READING...' : '리딩을 준비하는 중...')}
       </p>
     </div>

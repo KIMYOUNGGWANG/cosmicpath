@@ -25,7 +25,7 @@ function getDecisionVerdictLabel(
   if (value === 'narrow_first') return isEn ? 'Narrow first' : '선택지 먼저 좁히기';
   if (value === 'hold_or_stop') return isEn ? 'Hold or stop' : '보류 또는 중단';
 
-  return isEn ? 'First verdict' : '첫 판정';
+  return isEn ? 'First direction' : '첫 방향';
 }
 
 type DecisionBriefCardProps = {
@@ -50,7 +50,7 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
   );
   const rawVerdict = compactText(
     freeFocus?.action_conclusion || props.reportData.summary?.title,
-    isEn ? 'The first verdict is ready.' : '첫 판정이 준비되었습니다.',
+    isEn ? 'The first note is ready.' : '첫 정리가 준비되었습니다.',
     260
   );
   const verdict = isRelationshipContactTiming
@@ -59,18 +59,18 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
   const evidence = compactText(
     freeFocus?.evidence_summary || props.reportData.summary?.trust_reason || props.unifiedResult?.detailedContent,
     isEn
-      ? 'CosmicPath cross-checked the question with Saju, Astrology, and Tarot before showing this result.'
+      ? 'The note cross-checked the question with Saju, Astrology, and Tarot before showing this result.'
       : '사주, 점성술, 타로를 교차해서 이 결론으로 수렴하는 근거를 먼저 확인했습니다.',
     260
   );
   const delayedChoice = compactText(
     freeFocus?.delayed_choice || props.readingData?.question,
-    isEn ? 'The delayed choice you brought into this reading.' : '이번 리딩에 가져온 미뤄둔 선택입니다.',
+    isEn ? 'The delayed choice you brought into this note.' : '이번 정리에 가져온 미뤄둔 선택입니다.',
     180
   );
   const timingBoundary = compactText(
     freeFocus?.timing_boundary,
-    isEn ? 'Open the full report to refine the action window.' : '전체 리포트에서 행동 시점을 더 세밀하게 확인하세요.',
+    isEn ? 'Open the detailed note to refine the action window.' : '자세한 기록에서 행동 시점을 더 세밀하게 확인하세요.',
     220
   );
   const firstAction = compactText(
@@ -80,8 +80,8 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
           ? 'Choose one safer relationship move before sending a long message.'
           : '장문을 보내기 전에 더 안전한 첫 행동 하나를 정하세요.')
       : (isEn
-          ? 'Use the full report to turn this verdict into an exact action order.'
-          : '전체 리포트에서 이 판정을 정확한 실행 순서로 이어가세요.'),
+          ? 'Use the detailed note to turn this direction into an exact action order.'
+          : '자세한 기록에서 이 판정을 정확한 실행 순서로 이어가세요.'),
     220
   );
   const avoid = compactText(
@@ -175,11 +175,11 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
           <p className="text-xs leading-5 text-white/45">
             {isEn
               ? (isRelationshipContactTiming
-                  ? 'The free brief gives the verdict. The paid report opens why this verdict was chosen, the contact timing, and the message pattern to avoid.'
-                  : 'The free brief gives the verdict. The paid report opens why this verdict was chosen, when to act, what to avoid, and the action order.')
+                  ? 'The free brief gives the verdict. The detailed note opens why this verdict was chosen, the contact timing, and the message pattern to avoid.'
+                  : 'The free brief gives the verdict. The detailed note opens why this verdict was chosen, when to act, what to avoid, and the action order.')
               : (isRelationshipContactTiming
-                  ? '무료 브리프는 판정을 먼저 줍니다. 유료 리포트는 왜 이 판정인지, 연락 타이밍, 피해야 할 메시지를 엽니다.'
-                  : '무료 브리프는 판정을 먼저 줍니다. 유료 리포트는 왜 이 판정인지, 언제 움직일지, 무엇을 피할지, 어떤 순서로 실행할지를 엽니다.')}
+                  ? '무료 브리프는 판정을 먼저 줍니다. 자세한 노트는 왜 이 판정인지, 연락 타이밍, 피해야 할 메시지를 엽니다.'
+                  : '무료 브리프는 판정을 먼저 줍니다. 자세한 노트는 왜 이 판정인지, 언제 움직일지, 무엇을 피할지, 어떤 순서로 실행할지를 엽니다.')}
           </p>
         </div>
       ) : null}

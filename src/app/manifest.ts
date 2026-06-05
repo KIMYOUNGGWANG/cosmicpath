@@ -2,13 +2,13 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
     return {
-        name: 'Next Move Report',
-        short_name: 'Next Move',
-        description: "A decision report that turns one delayed choice into today's next move.",
+        name: 'Decision Note',
+        short_name: 'Decision Note',
+        description: 'A quiet note for turning one delayed decision into a clear next action.',
         start_url: '/',
         display: 'standalone',
-        background_color: '#0a0a0a',
-        theme_color: '#0a0a0a',
+        background_color: '#11100d',
+        theme_color: '#11100d',
         icons: [
             {
                 src: '/favicon.ico',

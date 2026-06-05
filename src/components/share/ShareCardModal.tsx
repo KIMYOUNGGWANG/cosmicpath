@@ -33,7 +33,7 @@ export function ShareCardModal({
     userName,
 }: ShareCardModalProps) {
     const { cardRef, isCapturing, captureAndDownload } = useShareCard({
-        filename: 'cosmic-reading',
+        filename: 'decision-note',
     });
     const [isDownloaded, setIsDownloaded] = useState(false);
 

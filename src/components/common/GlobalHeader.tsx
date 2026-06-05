@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronLeft, Menu, Search, Sparkles, User } from 'lucide-react';
+import { ChevronLeft, Menu, PenLine, Search, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { OrderLookupModal } from '@/components/orders/OrderLookupModal';
@@ -39,7 +39,7 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
                 className="fixed top-0 left-0 right-0 z-[9000] px-3 sm:px-4 md:px-5 xl:px-6 py-4 pt-[calc(1rem+env(safe-area-inset-top,0px))]"
             >
                 {/* Background Layers */}
-                <div className="absolute inset-0 bg-[#050505]/95 backdrop-blur-md border-b border-white/5" />
+                <div className="absolute inset-0 bg-[#11100d]/95 backdrop-blur-md border-b border-white/8" />
                 <div className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-soft-light"
                     style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}
                 />
@@ -57,10 +57,10 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
                         )}
                         <Link
                             href="/"
-                            className="shrink-0 pt-1 font-cinzel text-base font-bold tracking-[0.24em] text-starlight transition-opacity hover:opacity-80 sm:text-lg xl:text-xl"
+                            className="shrink-0 pt-1 font-cinzel text-base tracking-[0.18em] text-starlight transition-opacity hover:opacity-80 sm:text-lg xl:text-xl"
                         >
-                            <span className="hidden sm:inline">NEXT MOVE REPORT</span>
-                            <span className="sm:hidden">NEXT</span>
+                            <span className="hidden sm:inline">{isEn ? 'DECISION NOTE' : '오늘의 결정 정리'}</span>
+                            <span className="sm:hidden">{isEn ? 'NOTE' : '결정'}</span>
                         </Link>
                     </div>
 
@@ -77,9 +77,9 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
 
                         <a
                             href={decisionStartHref}
-                            className="inline-flex shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 px-4 pb-[6px] pt-[10px] font-bold uppercase leading-none tracking-[0.16em] text-starlight transition-all duration-300 hover:border-acc-gold hover:bg-acc-gold hover:text-deep-navy 2xl:px-5 text-[11px] 2xl:text-xs backdrop-blur-sm"
+                            className="inline-flex shrink-0 items-center justify-center border border-white/18 bg-white/5 px-4 pb-[6px] pt-[10px] font-semibold uppercase leading-none tracking-[0.16em] text-starlight transition-all duration-300 hover:border-acc-gold/50 hover:bg-white/10 2xl:px-5 text-[11px] 2xl:text-xs backdrop-blur-sm"
                         >
-                            {isEn ? 'Next Move' : '첫 판정'}
+                            {isEn ? 'Write' : '선택 정리'}
                         </a>
                     </div>
 
@@ -87,10 +87,10 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
                     <div className="z-20 flex items-center gap-2 xl:hidden">
                         <a
                             href={decisionStartHref}
-                            className="mr-1 inline-flex items-center justify-center rounded-full border border-white/20 bg-white/5 px-3 py-1.5 font-cinzel text-[10px] font-bold uppercase tracking-[0.22em] text-white transition-all duration-300 hover:border-acc-gold hover:text-acc-gold sm:px-4 sm:tracking-[0.26em] backdrop-blur-sm"
+                            className="mr-1 inline-flex items-center justify-center border border-white/18 bg-white/5 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white transition-all duration-300 hover:border-acc-gold/50 hover:text-acc-gold sm:px-4 backdrop-blur-sm"
                         >
-                            <Sparkles size={12} className="text-gold" />
-                            {isEn ? 'Next' : '판정'}
+                            <PenLine size={12} className="text-gold" />
+                            {isEn ? 'Write' : '정리'}
                         </a>
 
                         {/* Hamburger Button */}
@@ -115,23 +115,23 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
                         icon: User,
                         iconColorClass: 'group-hover:bg-white/10 group-hover:text-white',
                         label: isEn ? 'Login / Sign Up' : '로그인 / 회원가입',
-                        subLabel: isEn ? 'Save your destiny' : '기록 저장 및 연동',
+                        subLabel: isEn ? 'Save your notes' : '정리 기록 저장',
                         onClick: openLoginModal,
                     }] : []),
                     {
                         type: 'button',
                         icon: Search,
-                        iconColorClass: 'group-hover:bg-purple-500/20 group-hover:text-purple-300',
+                        iconColorClass: 'group-hover:bg-white/10 group-hover:text-white',
                         label: isEn ? 'Find My Orders' : '비회원 주문 조회',
-                        subLabel: isEn ? 'Lookup past readings' : '지난 점사 기록 조회',
+                        subLabel: isEn ? 'Lookup past notes' : '지난 정리 기록 조회',
                         onClick: () => setIsOrderModalOpen(true),
                     },
                     {
                         type: 'button',
-                        icon: Sparkles,
+                        icon: PenLine,
                         iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
-                        label: isEn ? 'Next Move Report' : '무료 첫 판정',
-                        subLabel: isEn ? 'End one delayed choice' : '미뤄둔 선택 끝내기',
+                        label: isEn ? 'Decision Note' : '오늘의 결정 정리',
+                        subLabel: isEn ? 'Write one delayed choice' : '미뤄둔 선택 정리하기',
                         onClick: () => {
                             window.location.href = decisionStartHref;
                         },

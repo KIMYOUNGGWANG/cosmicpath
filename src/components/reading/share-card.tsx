@@ -16,7 +16,7 @@ export function ShareCard({
     shareUrl,
     readingId,
     trustScore = 4.5,
-    mainCardName = 'Destiny',
+    mainCardName = 'Decision',
     className,
 }: ShareCardProps) {
     const [copied, setCopied] = useState(false);
@@ -24,7 +24,7 @@ export function ShareCard({
     const resolvedReadingId = readingId || shareUrl.split('/').filter(Boolean).at(-1);
     const ogImageUrl = resolvedReadingId
         ? `/api/og/reading/${resolvedReadingId}`
-        : `/api/og?title=Destiny%20Revealed&score=${trustScore}&card=${encodeURIComponent(mainCardName)}`;
+        : `/api/og?title=Decision%20Note%20Ready&score=${trustScore}&card=${encodeURIComponent(mainCardName)}`;
 
     const handleCopy = async () => {
         try {
@@ -36,7 +36,7 @@ export function ShareCard({
         }
     };
 
-    const shareText = `CosmicPath에서 내 운명을 확인했습니다. 신뢰도 ${trustScore}/5.0 ✨`;
+    const shareText = `오늘 미뤄둔 선택을 정리했습니다. 신뢰도 ${trustScore}/5.0`;
     const threadsUrl = `https://www.threads.net/intent/post?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
 
@@ -52,14 +52,14 @@ export function ShareCard({
             <div className="text-center mb-6 space-y-2">
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent-gold/20 border border-accent-gold/50 rounded-full text-accent-gold text-[10px] font-bold tracking-widest uppercase mb-1 shadow-[0_0_10px_rgba(255,215,0,0.2)]">
                     <Gift className="w-3 h-3" />
-                    Premium Reward
+                    Note Reward
                 </div>
                 <h3 className="text-xl font-cinzel text-white tracking-widest uppercase font-bold">
                     Share & Get 1 Credit
                 </h3>
                 <p className="text-xs text-zinc-400 leading-relaxed font-sans px-2 pt-1">
-                    분석이 소름 돋게 정확했다면, 연인이나 친구의 운명도 확인해 보세요.<br />
-                    <strong className="text-accent-gold font-normal">아래 링크로 친구를 초대하면 즉시 Premium 크레딧 1개가 지급됩니다.</strong>
+                    정리가 도움이 됐다면, 같은 선택 앞에 선 친구에게도 보내보세요.<br />
+                    <strong className="text-accent-gold font-normal">아래 링크로 친구를 초대하면 즉시 후속 질문권 1개가 지급됩니다.</strong>
                 </p>
             </div>
 

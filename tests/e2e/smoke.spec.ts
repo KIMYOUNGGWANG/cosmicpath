@@ -4,7 +4,7 @@ test.describe('Landing Smoke', () => {
     test('homepage shows primary navigation paths', async ({ page }) => {
         await page.goto('/');
 
-        await expect(page).toHaveTitle(/Next Move Report/i);
+        await expect(page).toHaveTitle(/오늘의 결정 정리|Decision Note/i);
 
         if (test.info().project.name === 'mobile-chrome') {
             await expect(page.getByRole('button', { name: /메뉴 열기|Open menu/i })).toBeVisible();
@@ -12,6 +12,7 @@ test.describe('Landing Smoke', () => {
         }
 
         await expect(page.locator('a[href="/start?reset=true&entry=decision_timing_rebuild_v1"]').first()).toBeVisible();
+        await expect(page.getByText(/오늘의 결정 정리|Decision Note/i).first()).toBeVisible();
         await expect(page.locator('nav a[href="/daily"]')).toHaveCount(0);
         await expect(page.locator('nav a[href="/career/uncertainty"]')).toHaveCount(0);
         await expect(page.getByRole('button', { name: /^PRO$/i })).toHaveCount(0);

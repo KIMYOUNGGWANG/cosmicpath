@@ -23,11 +23,11 @@ export function SharePanel({
     onPrint,
 }: SharePanelProps) {
     const isEn = language === 'en';
-    const resolvedShareTitle = shareTitle || (isEn ? 'Your CosmicPath Korean Saju Reading' : 'CosmicPath 리딩 결과');
+    const resolvedShareTitle = shareTitle || (isEn ? 'Your Decision Note' : '오늘의 결정 정리');
     const resolvedShareDescription = shareDescription || (
         isEn
-            ? 'See how Korean saju, astrology, and tarot align around your next move.'
-            : '사주 + 점성술 + 타로 3원 통합 분석 결과를 확인해보세요'
+            ? 'See how one delayed decision became a clearer next step.'
+            : '미뤄둔 선택을 오늘 할 일로 정리한 기록입니다.'
     );
     const landingVariant = getLandingVariant(language);
     const [isOpen, setIsOpen] = useState(false);
@@ -82,9 +82,9 @@ export function SharePanel({
 
     const buildTikTokTemplate = (url: string) => {
         if (isEn) {
-            return `CosmicPath gave me a Korean saju reading for my next move and this line was too accurate... 🔮\n\nTry yours: ${url}\n#CosmicPath #KoreanSaju #DecisionTiming #AstrologyTok #fyp`;
+            return `Decision Note helped me turn one delayed decision into a clear next step.\n\nTry yours: ${url}\n#DecisionNote #DecisionTiming #NextStep #fyp`;
         }
-        return `AI가 오늘 내 운세를 읽어줬는데 소름 돋았어요 🔮\n\n너도 해보기: ${url}\n#코스믹패스 #AI운세 #오늘의운세 #사주 #추천`;
+        return `미뤄둔 선택 하나를 오늘 할 일로 정리했어요.\n\n너도 해보기: ${url}\n#오늘의결정정리 #결정정리 #오늘의선택`;
     };
 
     const claimReward = useCallback(async () => {
@@ -247,8 +247,8 @@ export function SharePanel({
 
         const url = resolveShareUrl();
         const text = isEn
-            ? `CosmicPath gave me a Korean saju reading for the decision in front of me. This part was scary accurate.\n\n${url}`
-            : `CosmicPath에서 AI 운세를 봤는데 진짜 소름... 오늘의 결과 공유해요.\n\n${url}`;
+            ? `Decision Note helped me organize the decision in front of me into one clear next step.\n\n${url}`
+            : `오늘의 결정 정리에서 미뤄둔 선택을 오늘 할 일로 정리했어요.\n\n${url}`;
 
         const intentUrl = `https://threads.net/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
         window.open(intentUrl, '_blank', 'noopener,noreferrer');

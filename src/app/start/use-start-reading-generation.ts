@@ -259,8 +259,8 @@ function shouldWarnDeferred(message: string) {
   return (
     message.includes('지금은 리딩을 끝까지 생성하지 못했습니다') ||
     message.includes('We could not complete your reading right now') ||
-    message.includes('지금 오라클 리딩이 혼잡합니다') ||
-    message.includes('The oracle is crowded right now') ||
+    message.includes('지금 결정 정리가 혼잡합니다') ||
+    message.includes('The note engine is busy right now') ||
     message.includes('timed out after')
   );
 }

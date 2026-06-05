@@ -143,7 +143,7 @@ export function ResultStream({
                 {/* Cosmic Radar */}
                 <div className="glass-card p-6 flex flex-col items-center justify-center">
                     <h3 className="text-sm text-gray-400 mb-6 uppercase tracking-widest text-center">
-                        Cosmic Radar
+                        Evidence Balance
                     </h3>
                     <CosmicRadar
                         sajuScore={radarScores?.saju || 0}
@@ -152,7 +152,7 @@ export function ResultStream({
                         isLoading={isLoading}
                     />
                     <div className="mt-6 text-center text-xs text-gray-500">
-                        * 3가지 운명학 시스템의<br />신뢰도 균형을 보여줍니다
+                        * 세 가지 참고 근거가<br />어느 쪽으로 모이는지 보여줍니다
                     </div>
                 </div>
 

@@ -85,7 +85,7 @@ export function PaymentModal({
     const startReadingCheckout = useReadingCheckout();
     const offerName = isRelationshipContactTiming
         ? READING_PRODUCT.name
-        : (isEnglish ? 'Full Decision Timing Report' : '전체 결정 타이밍 리포트');
+        : (isEnglish ? 'Detailed Decision Timing Note' : '자세한 결정 타이밍 노트');
     const isCheckoutPausedForPriceIssue = priceState.hasBlockingPriceIssue && !isFreePromo;
 
     useDocumentScrollLock(isOpen);

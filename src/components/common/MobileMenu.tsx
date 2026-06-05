@@ -43,7 +43,7 @@ export function MobileMenu({ isOpen, onClose, menuItems }: MobileMenuProps) {
                         role="dialog"
                         aria-label="Mobile menu"
                         aria-modal="true"
-                        className="fixed top-0 right-0 z-[9999] flex h-full w-[280px] flex-col border-l border-white/10 bg-[#0f0f15] shadow-2xl xl:hidden sm:w-[320px]"
+                        className="fixed top-0 right-0 z-[9999] flex h-full w-[280px] flex-col border-l border-white/10 bg-[#11100d] shadow-2xl xl:hidden sm:w-[320px]"
                     >
                         {/* Menu Header */}
                         <div className="flex items-center justify-between p-6 border-b border-white/5">
@@ -60,7 +60,7 @@ export function MobileMenu({ isOpen, onClose, menuItems }: MobileMenuProps) {
                         <div className="flex-1 py-8 px-6 flex flex-col gap-6">
                             {menuItems.map((item, index) => {
                                 const IconComponent = item.icon;
-                                const colorClass = item.iconColorClass || 'group-hover:bg-purple-500/20 group-hover:text-purple-300';
+                                const colorClass = item.iconColorClass || 'group-hover:bg-white/10 group-hover:text-white';
 
                                 const content = (
                                     <>
@@ -118,7 +118,7 @@ export function MobileMenu({ isOpen, onClose, menuItems }: MobileMenuProps) {
                         {/* Menu Footer */}
                         <div className="p-6 border-t border-white/5 bg-black/20">
                             <p className="text-[10px] text-gray-600 text-center font-cinzel">
-                                © 2026 NEXT MOVE REPORT
+                                © 2026 COSMICPATH
                             </p>
                         </div>
                     </motion.div>

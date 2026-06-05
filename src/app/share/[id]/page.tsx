@@ -28,8 +28,8 @@ export async function generateMetadata({ params }: SharedPageProps): Promise<Met
 
   if (!reading) {
     return {
-      title: 'CosmicPath',
-      description: 'AI oracle reading platform',
+      title: 'Decision Note',
+      description: 'A quiet decision note for one delayed choice',
     };
   }
 
@@ -39,13 +39,13 @@ export async function generateMetadata({ params }: SharedPageProps): Promise<Met
   const canonicalUrl = `${baseUrl}/share/${id}`;
 
   return {
-    title: `${share.title} | CosmicPath`,
+    title: `${share.title} | Decision Note`,
     description: share.description,
     alternates: {
       canonical: canonicalUrl,
     },
     openGraph: {
-      title: `${share.title} | CosmicPath`,
+      title: `${share.title} | Decision Note`,
       description: share.description,
       url: canonicalUrl,
       images: [
@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: SharedPageProps): Promise<Met
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${share.title} | CosmicPath`,
+      title: `${share.title} | Decision Note`,
       description: share.description,
       images: [ogImageUrl],
     },

@@ -31,7 +31,7 @@ export function EnglishGuideSection() {
                         </h2>
                         <p className="mt-5 max-w-2xl text-base leading-8 text-white/70 md:text-lg">
                             English-speaking users do not need a full metaphysics lesson first. These guides explain the category,
-                            bridge the BaZi overlap, and keep Next Move Report focused on a real delayed choice.
+                            bridge the BaZi overlap, and keep the experience focused on a real delayed choice.
                         </p>
 
                         <div className="mt-8 grid gap-3 md:grid-cols-3">
@@ -75,7 +75,7 @@ export function EnglishGuideSection() {
                                 }}
                                 className="inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F4D88A] to-[#D4AF37] px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition-transform duration-300 hover:scale-[1.02]"
                             >
-                                Open Next Move Report
+                                Open Decision Note
                             </GrowthTrackedLink>
                             <GrowthTrackedLink
                                 href="/guides"

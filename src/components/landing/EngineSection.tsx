@@ -13,12 +13,12 @@ const ORBITAL_BASE = [
 ];
 
 const DATA_NODES = [
-    { id: 0, orbit: 0, icon: '甲', label: '사주 (Logic)', color: '#6366F1' },
-    { id: 1, orbit: 1, icon: '♄', label: '토성 (Karma)', color: '#F59E0B' },
-    { id: 2, orbit: 1, icon: '♃', label: '목성 (Luck)', color: '#EF4444' },
-    { id: 3, orbit: 2, icon: '☉', label: '태양 (Self)', color: '#FBBF24' },
-    { id: 4, orbit: 2, icon: '☽', label: '달 (Inner)', color: '#94A3B8' },
-    { id: 5, orbit: 3, icon: '🔮', label: '타로 (Intuition)', color: '#A855F7' },
+    { id: 0, orbit: 0, icon: '命', label: '사주', color: '#7B8C9F' },
+    { id: 1, orbit: 1, icon: '時', label: '시기', color: '#D7B25D' },
+    { id: 2, orbit: 1, icon: '間', label: '간격', color: '#B77C6D' },
+    { id: 3, orbit: 2, icon: '日', label: '겉의 흐름', color: '#CDBB83' },
+    { id: 4, orbit: 2, icon: '月', label: '속의 흐름', color: '#94A3B8' },
+    { id: 5, orbit: 3, icon: '牌', label: '카드', color: '#9F8F78' },
 ];
 
 export function EngineSection() {
@@ -122,15 +122,15 @@ export function EngineSection() {
                     className="text-center mb-16 md:mb-24"
                 >
                     <span className="text-acc-logic text-xs font-bold tracking-[0.3em] uppercase block mb-4">
-                        Cosmic Intelligence
+                        Quiet Cross-Check
                     </span>
                     <h2 className="font-cinzel text-2xl md:text-4xl text-starlight mb-6 leading-tight">
-                        대충 맞는 말 말고, <br className="md:hidden" />
-                        <span className="text-acc-gold">근거부터 같이 봅니다.</span>
+                        한 줄 조언보다, <br className="md:hidden" />
+                        <span className="text-acc-gold">근거를 나누어 봅니다.</span>
                     </h2>
                     <p className="text-moonlight max-w-xl mx-auto text-base md:text-lg leading-relaxed">
-                        사주, 별자리, 타로를 따로 보지 않고 같이 읽습니다.<br />
-                        그래서 왜 이런 결론이 나왔는지 설명할 수 있어요.
+                        사주, 점성, 타로는 전면 캐릭터가 아니라 판단 보조 자료입니다.<br />
+                        결론보다 먼저 어떤 근거가 같은 방향을 가리키는지 확인합니다.
                     </p>
                 </motion.div>
 
@@ -153,8 +153,8 @@ export function EngineSection() {
                         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-acc-gold via-amber-500 to-acc-gold flex items-center justify-center z-20 shadow-2xl"
                     >
                         <div className="text-center">
-                            <span className="font-cinzel text-xl md:text-3xl text-deep-navy font-bold block">TOTAL</span>
-                            <span className="font-cinzel text-sm md:text-base text-deep-navy font-bold opacity-80">INSIGHT</span>
+                            <span className="font-cinzel text-xl md:text-3xl text-deep-navy font-bold block">결</span>
+                            <span className="font-cinzel text-sm md:text-base text-deep-navy font-bold opacity-80">정리</span>
                         </div>
                     </motion.div>
 
@@ -225,29 +225,29 @@ export function EngineSection() {
                         <div ref={pointsRef} className="text-4xl md:text-5xl font-bold text-acc-gold mb-2 font-cinzel">
                             0
                         </div>
-                        <div className="text-sm font-bold text-white mb-1">판독 포인트</div>
-                        <div className="text-xs text-dim text-center">사주와 별자리를<br />214가지 포인트로 읽어요</div>
+                        <div className="text-sm font-bold text-white mb-1">참고 포인트</div>
+                        <div className="text-xs text-dim text-center">사주와 별자리의<br />주요 기준을 압축해요</div>
                     </div>
 
                     {/* Stat 2 */}
                     <div className="flex flex-col items-center p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-acc-logic/30 transition-colors">
                         <div className="text-4xl md:text-5xl font-bold text-acc-logic mb-2 font-cinzel">3</div>
-                        <div className="text-sm font-bold text-white mb-1">교차 확인</div>
-                        <div className="text-xs text-dim text-center">사주 + 별자리 + 타로<br />세 방향을 같이 봐요</div>
+                        <div className="text-sm font-bold text-white mb-1">근거 묶음</div>
+                        <div className="text-xs text-dim text-center">사주 + 별자리 + 카드<br />세 방향을 같이 봐요</div>
                     </div>
 
                     {/* Stat 3 */}
                     <div className="flex flex-col items-center p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-tarot-purple/30 transition-colors">
                         <div className="text-4xl md:text-5xl font-bold text-tarot-purple mb-2 font-cinzel">78</div>
-                        <div className="text-sm font-bold text-white mb-1">타로 카드 반영</div>
-                        <div className="text-xs text-dim text-center">78장 기준으로 지금 내 상태를<br />직관적으로 읽어요</div>
+                        <div className="text-sm font-bold text-white mb-1">카드 기준</div>
+                        <div className="text-xs text-dim text-center">78장 기준으로 지금의 흔들림을<br />보조 근거로 봐요</div>
                     </div>
 
                     {/* Stat 4 */}
                     <div className="flex flex-col items-center p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-star-yellow/30 transition-colors">
                         <div className="text-4xl md:text-5xl font-bold text-star-yellow mb-2 font-cinzel">1</div>
-                        <div className="text-sm font-bold text-white mb-1">먼저 볼 결론</div>
-                        <div className="text-xs text-dim text-center">첫 결과에서 지금 필요한 포인트를<br />먼저 보여드려요</div>
+                        <div className="text-sm font-bold text-white mb-1">오늘 할 일</div>
+                        <div className="text-xs text-dim text-center">첫 정리에서 가장 작은 행동을<br />먼저 보여드려요</div>
                     </div>
                 </motion.div>
             </div>

@@ -188,24 +188,24 @@ function PaymentSuccessContent() {
                             {isNextMovePayment ? (
                                 isEnglish ? (
                                     <>
-                                        Your Next Move Report full report is opening now.<br />
+                                        Your detailed decision note is opening now.<br />
                                         We will move you back to the result in a moment.
                                     </>
                                 ) : (
                                     <>
-                                        Next Move Report 전체 리포트를 여는 중입니다.<br />
+                                        자세한 결정 정리를 여는 중입니다.<br />
                                         곧 결과로 돌아갑니다.
                                     </>
                                 )
                             ) : isDecisionTimingPayment ? (
                                 isEnglish ? (
                                     <>
-                                        Your decision timing full report is opening now.<br />
+                                        Your detailed decision timing note is opening now.<br />
                                         We will move you back to the result in a moment.
                                     </>
                                 ) : (
                                     <>
-                                        결정 타이밍 전체 리포트를 여는 중입니다.<br />
+                                        자세한 결정 타이밍 노트를 여는 중입니다.<br />
                                         곧 결과로 돌아갑니다.
                                     </>
                                 )
@@ -216,8 +216,8 @@ function PaymentSuccessContent() {
                                 </>
                             ) : (
                                 <>
-                                    운명의 설계자가 당신만을 위한 통합 리포트를<br />
-                                    정교하게 다듬고 있습니다. 곧 결과로 안내합니다.
+                                    당신의 선택 맥락을 바탕으로 자세한 노트를<br />
+                                    차분히 정리하고 있습니다. 곧 결과로 안내합니다.
                                 </>
                             )}
                         </p>

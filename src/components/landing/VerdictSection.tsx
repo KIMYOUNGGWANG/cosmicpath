@@ -17,10 +17,10 @@ export function VerdictSection() {
                     className="mb-12 md:mb-20"
                 >
                     <span className="text-acc-logic/80 text-[10px] md:text-xs font-bold tracking-[0.3em] uppercase block mb-4">
-                        Why It Feels Clear
+                        What You Leave With
                     </span>
                     <h2 className="font-cinzel text-2xl md:text-5xl text-starlight mb-6 leading-tight">
-                        &quot;좋은 말보다, <span className="italic text-acc-logic">지금 필요한 답.</span>&quot;
+                        &quot;긴 설명보다, <span className="text-acc-gold">오늘 남길 세 줄.</span>&quot;
                     </h2>
                 </motion.div>
 
@@ -32,7 +32,7 @@ export function VerdictSection() {
                             3<span className="text-xl md:text-2xl ml-1 text-dim">X</span>
                         </div>
                         <p className="text-moonlight text-xs tracking-widest uppercase leading-relaxed">
-                            Cross-Check<br />Layers
+                            Criteria<br />Lines
                         </p>
                     </div>
 
@@ -40,7 +40,7 @@ export function VerdictSection() {
                     <div className="p-8 border-l border-white/5 bg-gradient-to-r from-white/5 to-transparent backdrop-blur-sm">
                         <div className="font-mono text-4xl md:text-6xl text-starlight mb-4">1</div>
                         <p className="text-moonlight text-xs tracking-widest uppercase leading-relaxed">
-                            First Action<br />To Check
+                            First Action<br />Today
                         </p>
                     </div>
 
@@ -48,14 +48,14 @@ export function VerdictSection() {
                     <div className="p-8 border-l border-white/5 bg-gradient-to-r from-white/5 to-transparent backdrop-blur-sm">
                         <div className="font-mono text-4xl md:text-6xl text-starlight mb-4">4</div>
                         <p className="text-moonlight text-xs tracking-widest uppercase leading-relaxed">
-                            Decision<br />Domains
+                            Hold<br />Signals
                         </p>
                     </div>
 
                 </div>
 
                 <p className="mt-16 text-dim text-xs font-mono">
-                    사주, 별자리, 타로를 함께 읽는 교차 해석 구조예요.
+                    질문, 기준, 행동, 보류선을 먼저 정리합니다.
                 </p>
 
             </div>

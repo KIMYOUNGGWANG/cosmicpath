@@ -62,8 +62,8 @@ export async function resolveReadingError(
     options.setLoadingPhase({
       phase: options.phase,
       label: options.activeLanguage === 'en'
-        ? `The oracle is crowded. Holding your place and retrying... (${nextCount}/2)`
-        : `오라클이 혼잡해 자리를 유지한 채 다시 시도하는 중입니다... (${nextCount}/2)`,
+        ? `The note engine is busy. Holding your place and retrying... (${nextCount}/2)`
+        : `정리 엔진이 혼잡해 자리를 유지한 채 다시 시도하는 중입니다... (${nextCount}/2)`,
     });
     await sleep(4000 * nextCount);
     return {
@@ -75,8 +75,8 @@ export async function resolveReadingError(
   if (isTemporaryOraclePressure(options)) {
     options.setStreamContent(
       options.activeLanguage === 'en'
-        ? 'The oracle is crowded right now. Please wait a moment and try again.'
-        : '지금 오라클 리딩이 혼잡합니다. 잠시 후 다시 시도해주세요.'
+        ? 'The note engine is busy right now. Please wait a moment and try again.'
+        : '지금 결정 정리가 혼잡합니다. 잠시 후 다시 시도해주세요.'
     );
     return { kind: 'stop', retryState: options.retryState };
   }
@@ -85,8 +85,8 @@ export async function resolveReadingError(
     options.setLoadingPhase({
       phase: options.phase,
       label: options.activeLanguage === 'en'
-        ? 'The oracle is reorganizing the reading. Retrying once more...'
-        : '오라클이 리딩 구조를 다시 정리하는 중입니다. 한 번 더 시도할게요...',
+        ? 'The note is being reorganized. Retrying once more...'
+        : '결정 정리 구조를 다시 맞추는 중입니다. 한 번 더 시도할게요...',
     });
     await sleep(2500);
     return {
@@ -113,8 +113,8 @@ export async function resolveReadingError(
     options.setLoadingPhase({
       phase: options.phase,
       label: options.activeLanguage === 'en'
-        ? 'The oracle phase is taking longer than usual. Holding your progress and retrying...'
-        : '오라클 단계가 평소보다 오래 걸리고 있어, 진행 상태를 유지한 채 다시 시도하는 중입니다...',
+        ? 'This note phase is taking longer than usual. Holding your progress and retrying...'
+        : '정리 단계가 평소보다 오래 걸리고 있어, 진행 상태를 유지한 채 다시 시도하는 중입니다...',
     });
     await sleep(3500);
     return {
@@ -129,8 +129,8 @@ export async function resolveReadingError(
   if (isPremiumPhaseTimeout(options)) {
     options.setStreamContent(
       options.activeLanguage === 'en'
-        ? 'This oracle phase is taking longer than usual. Please wait a moment and try again.'
-        : '이 오라클 단계가 평소보다 오래 걸리고 있습니다. 잠시 후 다시 시도해주세요.'
+        ? 'This note phase is taking longer than usual. Please wait a moment and try again.'
+        : '이 정리 단계가 평소보다 오래 걸리고 있습니다. 잠시 후 다시 시도해주세요.'
     );
     return { kind: 'stop', retryState: options.retryState };
   }
@@ -197,8 +197,8 @@ async function resolvePaymentVerification(
   options.setLoadingPhase({
     phase: options.phase,
     label: options.activeLanguage === 'en'
-      ? 'Confirming payment and reopening your premium report...'
-      : '결제를 다시 확인하고 프리미엄 리포트를 이어가는 중...',
+      ? 'Confirming payment and reopening your detailed note...'
+      : '결제를 다시 확인하고 자세한 노트를 이어가는 중...',
   });
 
   await reverifyPremiumCheckout(readingId);
@@ -260,7 +260,7 @@ function handleQuotaExceeded(options: ResolveReadingErrorOptions) {
 
   options.setStreamContent(
     options.activeLanguage === 'en'
-      ? `__QUOTA_EXCEEDED__|You've used your free reading for today. Your next free reading refreshes in about ${hoursUntilReset} hour${hoursUntilReset !== 1 ? 's' : ''}. Unlock your full premium report now to see all 5 locked sections.|${hoursUntilReset}`
-      : `__QUOTA_EXCEEDED__|오늘의 무료 사주를 이미 사용했습니다. 다음 무료 리딩은 약 ${hoursUntilReset}시간 후에 갱신됩니다. 지금 프리미엄 리포트를 잠금 해제하면 5개 섹션을 모두 볼 수 있습니다.|${hoursUntilReset}`
+      ? `__QUOTA_EXCEEDED__|You've used your free note for today. Your next free note refreshes in about ${hoursUntilReset} hour${hoursUntilReset !== 1 ? 's' : ''}. Unlock your detailed decision note now to see all 5 locked sections.|${hoursUntilReset}`
+      : `__QUOTA_EXCEEDED__|오늘의 무료 노트를 이미 사용했습니다. 다음 무료 노트는 약 ${hoursUntilReset}시간 후에 갱신됩니다. 지금 자세한 결정 노트를 열면 5개 섹션을 모두 볼 수 있습니다.|${hoursUntilReset}`
   );
 }

@@ -162,8 +162,8 @@ const CAMPAIGN_FUNNEL_DEFINITIONS = [
     },
     {
         key: 'relationship-contact',
-        label: 'Next Move Report / 관계 연락 타이밍',
-        description: 'Next Move Report의 관계 연락 타이밍 캠페인 히스토리를 보는 narrow wedge funnel',
+        label: 'Decision Note / 관계 연락 타이밍',
+        description: 'Decision Note의 관계 연락 타이밍 캠페인 히스토리를 보는 narrow wedge funnel',
         sources: [
             'next_move_report_mvp_v1',
             'relationship_contact_timing_v1',

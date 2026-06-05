@@ -42,7 +42,7 @@ export const ENGLISH_GUIDES: EnglishGuide[] = [
         description:
             'A fast primer on the Korean Four Pillars lens, what inputs it needs, and why it works better for real decisions than vague fate content.',
         seoDescription:
-            'Understand what Korean saju is, what birth details it uses, and how CosmicPath turns it into a decision timing reading.',
+            'Understand what Korean saju is, what birth details it uses, and how a decision note turns it into timing support.',
         readTime: '4 min read',
         accent: 'gold',
         heroNote: 'Built for first-time readers who want clarity before belief.',
@@ -83,9 +83,9 @@ export const ENGLISH_GUIDES: EnglishGuide[] = [
                 ],
             },
             {
-                title: 'How CosmicPath turns it into a usable reading',
+                title: 'How the note turns it into something usable',
                 body: [
-                    'CosmicPath does not ask you to decode technical jargon first. The flow begins with the domain and the question, then layers Korean saju under the reading and cross-checks it with tarot and astrology.',
+                    'The product does not ask you to decode technical jargon first. The flow begins with the domain and the question, then layers Korean saju under the note and cross-checks it with tarot and astrology.',
                     'That is why the free result is structured around one action conclusion, one evidence summary, and one suggested follow-up question instead of a wall of symbolic language.',
                 ],
                 bullets: [
@@ -118,7 +118,7 @@ export const ENGLISH_GUIDES: EnglishGuide[] = [
             },
             {
                 question: 'Do I need to understand technical terms first?',
-                answer: 'No. CosmicPath translates the reading into action, timing, and pressure before exposing deeper terminology.',
+                answer: 'No. The note translates the reading into action, timing, and pressure before exposing deeper terminology.',
             },
         ],
         ctaTitle: 'Open your first Korean saju decision reading',
@@ -132,7 +132,7 @@ export const ENGLISH_GUIDES: EnglishGuide[] = [
         description:
             'The practical overlap, the cultural difference, and why English-speaking users should search both terms when judging whether this category is for them.',
         seoDescription:
-            'Learn how Korean saju relates to BaZi, where they overlap, and why CosmicPath uses Korean saju framing for decision timing.',
+            'Learn how Korean saju relates to BaZi, where they overlap, and why this product uses Korean saju framing for decision timing.',
         readTime: '5 min read',
         accent: 'indigo',
         heroNote: 'Useful if you already know BaZi and want to understand the Korean layer.',
@@ -145,7 +145,7 @@ export const ENGLISH_GUIDES: EnglishGuide[] = [
         questionExamples: [
             'If I already understand BaZi, what new angle does the Korean saju framing add?',
             'Why do English-speaking users find more information under BaZi than Saju?',
-            'How should I explain CosmicPath without losing either the Korean identity or the familiar Four Pillars category?',
+            'How should I explain Korean saju without losing either the Korean identity or the familiar Four Pillars category?',
         ],
         sections: [
             {
@@ -169,7 +169,7 @@ export const ENGLISH_GUIDES: EnglishGuide[] = [
                 bullets: [
                     'BaZi is the category many English-speaking users already recognize',
                     'Saju carries Korean usage, phrasing, and cultural trust cues',
-                    'CosmicPath intentionally keeps the Korean identity instead of flattening it into generic “Asian astrology” language',
+                    'The note intentionally keeps the Korean identity instead of flattening it into generic “Asian astrology” language',
                 ],
             },
             {
@@ -185,9 +185,9 @@ export const ENGLISH_GUIDES: EnglishGuide[] = [
                 ],
             },
             {
-                title: 'How CosmicPath positions the bridge',
+                title: 'How the note positions the bridge',
                 body: [
-                    'CosmicPath uses Korean saju as the owned lens, then translates it into clear decision timing output. That makes the experience readable even if the user enters through BaZi curiosity.',
+                    'The product uses Korean saju as the owned lens, then translates it into clear decision timing output. That makes the experience readable even if the user enters through BaZi curiosity.',
                     'The product is not trying to replace every charting tool. It is trying to answer a narrower question: what should I do next, and when is the better window?',
                 ],
                 bullets: [
@@ -220,9 +220,9 @@ export const ENGLISH_GUIDES: EnglishGuide[] = [
         eyebrow: 'Entry Route 03',
         title: 'What Is a Decision Timing Reading?',
         description:
-            'A guide to the kind of question CosmicPath is actually built for: move now, wait longer, protect yourself, or commit with better timing.',
+            'A guide to the kind of question this decision note is built for: move now, wait longer, protect yourself, or commit with better timing.',
         seoDescription:
-            'See how CosmicPath turns Korean saju into a decision timing reading for relationships, career moves, money choices, and life transitions.',
+            'See how Korean saju can become a decision timing note for relationships, career moves, money choices, and life transitions.',
         readTime: '4 min read',
         accent: 'rose',
         heroNote: 'The best path if you are less interested in astrology and more interested in what to do next.',
@@ -242,7 +242,7 @@ export const ENGLISH_GUIDES: EnglishGuide[] = [
                 title: 'A decision timing reading is not a yes or no machine',
                 body: [
                     'The point is not to outsource your life to a single answer. The point is to see rhythm more clearly: where the pressure is, what window is opening, and what kind of move your situation can actually support.',
-                    'That is why CosmicPath frames the reading around action, timing, and risk instead of around abstract destiny slogans.',
+                    'That is why the note frames the reading around action, timing, and risk instead of around abstract destiny slogans.',
                 ],
                 bullets: [
                     'Move now',

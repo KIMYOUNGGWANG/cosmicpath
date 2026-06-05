@@ -242,15 +242,15 @@ export function SharedPageClient({
   const ownerLockMessage =
     ownerResolutionState === 'denied'
       ? isEn
-        ? 'This reading is now linked to the owner account. Sign in with that account to open the full report again.'
-        : '이 리딩은 이제 소유자 계정에 연결되어 있어요. 같은 계정으로 로그인해야 전체 리포트를 다시 열 수 있습니다.'
+          ? 'This note is now linked to the owner account. Sign in with that account to open the private note again.'
+        : '이 정리는 이제 소유자 계정에 연결되어 있어요. 같은 계정으로 로그인해야 비공개 기록을 다시 열 수 있습니다.'
       : ownerResolutionState === 'error'
         ? isEn
           ? 'We could not restore the private report right now. Try again from the original device or reopen the email link once more.'
           : '지금은 비공개 리포트를 복구하지 못했어요. 원래 보던 기기에서 다시 열거나 메일 링크를 한 번 더 눌러주세요.'
         : isEn
-          ? 'The full report remains private to the owner. Open it from the original device or sign in with the owner account.'
-          : '전체 리포트는 소유자에게만 공개됩니다. 원래 보던 기기에서 열거나 소유자 계정으로 로그인해 주세요.';
+          ? 'The detailed note remains private to the owner. Open it from the original device or sign in with the owner account.'
+          : '자세한 기록은 소유자에게만 공개됩니다. 원래 보던 기기에서 열거나 소유자 계정으로 로그인해 주세요.';
 
   if (!isClient) {
     return <div className="min-h-screen bg-[#040612]" />;
@@ -266,7 +266,7 @@ export function SharedPageClient({
               {isEn ? 'Restoring private reading' : '비공개 리딩 복구 중'}
             </div>
             <h1 className="mt-4 text-3xl font-black tracking-[-0.04em] text-white">
-              {isEn ? 'Opening your full report...' : '전체 리포트를 불러오는 중이에요'}
+              {isEn ? 'Opening your detailed note...' : '자세한 기록을 불러오는 중이에요'}
             </h1>
             <p className="mt-4 text-sm leading-7 text-white/68">
               {isEn
@@ -312,8 +312,8 @@ export function SharedPageClient({
                 </div>
                 <p className="mt-3">
                   {isEn
-                    ? 'This link opens the full report, but follow-up chat remains available only in the original session or the owner account.'
-                    : '이 링크에서는 전체 리포트까지 볼 수 있지만, 후속 질문은 원래 보던 기기나 소유자 계정에서만 이어집니다.'}
+                    ? 'This link opens the detailed note, but follow-up chat remains available only in the original session or the owner account.'
+                    : '이 링크에서는 자세한 기록까지 볼 수 있지만, 후속 질문은 원래 보던 기기나 소유자 계정에서만 이어집니다.'}
                 </p>
               </div>
             </div>
@@ -335,7 +335,7 @@ export function SharedPageClient({
             className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition-[background-color,transform,border-color] duration-300 hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/70"
           >
             <ChevronLeft className="h-4 w-4" />
-            CosmicPath
+            Decision Note
           </Link>
 
           <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-4 py-2 text-xs uppercase tracking-[0.24em] text-amber-200">
@@ -354,7 +354,7 @@ export function SharedPageClient({
             >
               <div className="inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-400/10 px-4 py-2 text-xs uppercase tracking-[0.24em] text-violet-200">
                 <Orbit className="h-4 w-4" />
-                {isEn ? 'Oracle Snapshot' : '오라클 스냅샷'}
+                {isEn ? 'Decision Snapshot' : '결정 스냅샷'}
               </div>
 
               <h1 className="mt-5 text-4xl font-black leading-tight tracking-[-0.04em] text-white md:text-6xl">
@@ -411,7 +411,7 @@ export function SharedPageClient({
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-300 via-yellow-400 to-amber-500 px-6 py-4 text-base font-bold text-black shadow-[0_18px_40px_rgba(245,158,11,0.18)] transition-[transform,box-shadow,filter] duration-300 hover:-translate-y-1 hover:shadow-[0_28px_48px_rgba(245,158,11,0.28)] hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200/80"
                 >
                   <Sparkles className="h-5 w-5" />
-                  {isEn ? 'Reveal My Destiny' : '내 운명 확인하기'}
+                  {isEn ? 'Start My Note' : '내 선택 정리하기'}
                   <ArrowRight className="h-5 w-5" />
                 </Link>
 
@@ -433,7 +433,7 @@ export function SharedPageClient({
               </div>
               <div className="mt-4 grid gap-4 md:grid-cols-3">
                 <div className="rounded-2xl border border-white/10 bg-black/15 p-4 text-sm leading-7 text-white/74 transition-[transform,border-color] duration-300 hover:-translate-y-1 hover:border-white/15">
-                  <strong className="block text-white mb-1">{isEn ? 'Not generic fortune copy' : '클리셰 운세가 아님'}</strong>
+                  <strong className="block text-white mb-1">{isEn ? 'Not generic advice copy' : '클리셰 조언이 아님'}</strong>
                   {isEn ? 'The reading is built from three symbolic systems, not one shallow summary.' : '하나의 얕은 요약이 아니라 세 가지 상징 체계를 교차 해석합니다.'}
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/15 p-4 text-sm leading-7 text-white/74 transition-[transform,border-color] duration-300 hover:-translate-y-1 hover:border-white/15">
@@ -442,7 +442,7 @@ export function SharedPageClient({
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/15 p-4 text-sm leading-7 text-white/74 transition-[transform,border-color] duration-300 hover:-translate-y-1 hover:border-white/15">
                   <strong className="block text-white mb-1">{isEn ? 'Conversation continues' : '대화가 이어짐'}</strong>
-                  {isEn ? 'After unlocking, the report flows straight into Oracle Chat.' : '결과를 열면 끝이 아니라 Oracle Chat으로 바로 이어집니다.'}
+                  {isEn ? 'After unlocking, the note flows straight into follow-up chat.' : '결과를 열면 끝이 아니라 후속 질문으로 바로 이어집니다.'}
                 </div>
               </div>
             </motion.div>
@@ -469,7 +469,7 @@ export function SharedPageClient({
               <ul className="mt-4 space-y-3 text-sm leading-7 text-white/72">
                 <li>{isEn ? 'Deep energy analysis across love, work, and money' : '연애, 일, 재물 전반의 심층 에너지 분석'}</li>
                 <li>{isEn ? 'Detailed Saju and astrology breakdown' : '사주와 점성술의 상세 해석'}</li>
-                <li>{isEn ? 'Oracle follow-up conversation for edge cases' : '엣지 케이스까지 이어지는 오라클 후속 질문'}</li>
+                <li>{isEn ? 'Follow-up conversation for edge cases' : '엣지 케이스까지 이어지는 후속 질문'}</li>
               </ul>
             </div>
           </motion.div>

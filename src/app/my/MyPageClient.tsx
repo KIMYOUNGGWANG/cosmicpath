@@ -388,25 +388,24 @@ export default function MyPageClient({ initialSmsOracleProfile }: MyPageClientPr
                             </nav>
                         </div>
 
-                        {/* Oracle Guide Card */}
                         <div className="rounded-[22px] border border-white/[0.08] bg-white/[0.03] p-5">
                             <div className="mb-4 flex items-center gap-3 border-b border-white/[0.06] pb-4">
                                 <div className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04]">
                                     <span className="font-cinzel text-[#D4AF37] text-base">결</span>
                                 </div>
                                 <div>
-                                    <p className="text-sm font-semibold text-white">Oracle Guide</p>
-                                    <p className="text-xs text-white/40">Analytic &amp; Neutral</p>
+                                    <p className="text-sm font-semibold text-white">결의 정리</p>
+                                    <p className="text-xs text-white/40">기준과 다음 행동</p>
                                 </div>
                             </div>
                             <p className="mb-5 text-sm italic leading-relaxed text-white/55">
-                                "이곳은 당신의 선택과 타이밍이 기록되는 공간입니다. 주기적인 점검이 가장 확실한 길을 만듭니다."
+                                "이곳은 미뤄둔 선택과 오늘의 기준이 남는 공간입니다. 다시 볼 수 있게 짧게 정리해두세요."
                             </p>
                             <Link
                                 href="/start?reset=true"
                                 className="inline-flex w-full items-center justify-center rounded-full border border-white/10 bg-white/[0.04] py-3 text-sm font-medium text-white transition-colors hover:bg-white/[0.08]"
                             >
-                                새 질문 하기
+                                새 선택 정리하기
                             </Link>
                         </div>
                     </aside>
@@ -415,10 +414,10 @@ export default function MyPageClient({ initialSmsOracleProfile }: MyPageClientPr
                     <div className="min-w-0">
                         <header className="mb-10">
                             <h1 className="mb-2 text-3xl text-starlight md:text-4xl font-cinzel">
-                                My Oracle Hub
+                                My Decision Notes
                             </h1>
                             <p className="font-outfit text-white/55">
-                                Your cosmic history, saved insights, and membership status.
+                                Your saved notes, choices, and membership status.
                             </p>
                         </header>
 
@@ -786,9 +785,9 @@ export default function MyPageClient({ initialSmsOracleProfile }: MyPageClientPr
                         {/* Reading History Section */}
                         <div className="mb-6 flex items-center justify-between">
                             <div>
-                                <h2 className="text-lg font-semibold text-starlight font-cinzel">리딩 기록</h2>
+                                <h2 className="text-lg font-semibold text-starlight font-cinzel">결정 정리 기록</h2>
                                 <p className="mt-1 text-xs text-white/40">
-                                    {readings.length > 0 ? `${readings.length}개의 오라클 기록` : "아직 리딩 기록이 없습니다"}
+                                    {readings.length > 0 ? `${readings.length}개의 정리 기록` : "아직 정리 기록이 없습니다"}
                                 </p>
                             </div>
                             {readings.length > 0 && (
@@ -797,7 +796,7 @@ export default function MyPageClient({ initialSmsOracleProfile }: MyPageClientPr
                                     className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-medium text-white/70 transition-colors hover:bg-white/[0.08] hover:text-white"
                                 >
                                     <Sparkles size={11} />
-                                    새 질문
+                                    새 정리
                                 </Link>
                             )}
                         </div>
@@ -811,15 +810,15 @@ export default function MyPageClient({ initialSmsOracleProfile }: MyPageClientPr
                         <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] shadow-[0_0_40px_rgba(212,175,55,0.12)]">
                             <span className="font-cinzel text-[#D4AF37] text-3xl">결</span>
                         </div>
-                        <h3 className="mb-3 text-xl text-starlight font-cinzel tracking-wide">아직 리딩 기록이 없습니다</h3>
+                        <h3 className="mb-3 text-xl text-starlight font-cinzel tracking-wide">아직 정리 기록이 없습니다</h3>
                         <p className="mb-8 max-w-sm mx-auto text-sm leading-relaxed text-white/50">
-                            오라클 가이드 결이 당신의 첫 질문을 기다리고 있습니다. 막연한 고민보다 구체적인 질문으로 시작해보세요.
+                            결은 캐릭터가 아니라 정리의 표시입니다. 막연한 고민보다 오늘 끝낼 선택 하나로 시작해보세요.
                         </p>
                         <Link
                             href="/start?reset=true"
                             className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-[#D4AF37] px-10 font-bold text-black transition-all hover:bg-[#E7C867] hover:shadow-[0_0_24px_rgba(212,175,55,0.35)]"
                         >
-                            첫 질문 시작하기
+                            첫 선택 정리하기
                         </Link>
                     </motion.div>
                 ) : (

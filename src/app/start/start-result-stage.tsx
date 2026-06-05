@@ -147,7 +147,7 @@ export function StartResultStage(props: StartResultStageProps) {
                     </div>
                     <h3 className="mb-4 text-lg leading-relaxed text-white font-cinzel">
                       {props.language === 'en'
-                        ? 'Ready to open your own oracle path?'
+                        ? 'Ready to open your own decision note?'
                         : `방금 본 결과, 꽤 잘 맞았나요?\n이제 내 질문도 직접 읽어보세요.`}
                     </h3>
                     <button

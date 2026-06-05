@@ -139,8 +139,8 @@ async function resumePremiumIfNeeded(
   if ((input.paid === 'true' || isPaymentCompleted) && !isServerVerifiedPremium) {
     input.options.setStreamContent(
       restoredReadingData?.language === 'en'
-        ? 'Your payment is still syncing. Please wait a moment and reopen the premium report.'
-        : '결제 정보가 아직 동기화되는 중입니다. 잠시 후 프리미엄 리포트를 다시 열어주세요.'
+        ? 'Your payment is still syncing. Please wait a moment and reopen the detailed note.'
+        : '결제 정보가 아직 동기화되는 중입니다. 잠시 후 자세한 노트를 다시 열어주세요.'
     );
   }
 }

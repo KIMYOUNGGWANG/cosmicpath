@@ -85,7 +85,7 @@ export function SajuHero({ onScrollToForm }: SajuHeroProps) {
             >
                 Western astrology describes your personality.{' '}
                 <strong style={{ color: '#E4E4E7' }}>Korean Saju tells you exactly what to do — and when.</strong>
-                {' '}Powered by 5,000 years of East Asian fate science, decoded by AI.
+                {' '}Built from 5,000 years of East Asian fate science, translated into a clear next step.
             </p>
 
             {/* Rotating verdict display */}

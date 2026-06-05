@@ -1,5 +1,5 @@
 /**
- * CosmicPath 결제 상품 설정 (Stripe 최적화)
+ * Decision Note 결제 상품 설정 (Stripe 최적화)
  */
 function hasRealStripeLookupId(value: string | undefined, type: 'prod' | 'price'): boolean {
     if (!value) return false;
@@ -24,8 +24,8 @@ export const READING_PRODUCT = {
     // Live 모드 전환 시 .env 에 NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID 를 설정해주세요.
     // 개발 모드에서는 테스트용 ID를 우선 사용합니다.
     productId: readingProductId,
-    name: 'Next Move Report Full Report',
-    description: 'Next Move Report decision timing premium unlock',
+    name: 'Detailed Decision Note',
+    description: 'Detailed decision timing note unlock',
     currency: 'USD',
     price: 999,
     followUpQuestions: 0,
@@ -39,8 +39,8 @@ const followUpProductId = process.env.NODE_ENV === 'development'
 export const FOLLOW_UP_PRODUCT = {
     id: 'cosmicpath_followup_v1',
     productId: followUpProductId,
-    name: 'Oracle Chat Additional Credit',
-    description: '1 Additional Question for Oracle Chat',
+    name: 'Decision Chat Additional Credit',
+    description: '1 Additional Question for Decision Chat',
     currency: 'USD',
     followUpQuestions: 1,
     stripeConfigured: hasRealStripeLookupId(followUpProductId, 'prod'),
@@ -55,7 +55,7 @@ export const CHAT_CREDIT_SINGLE = {
     id: 'cosmicpath_credit_single',
     productId: chatCreditSingleProductId,
     name: '질문권 1회',
-    description: 'Oracle Chat 1 Question',
+    description: 'Decision Chat 1 Question',
     price: 199, // $1.99 in cents
     credits: 1,
     stripeConfigured: hasRealStripeLookupId(chatCreditSingleProductId, 'prod'),
@@ -69,7 +69,7 @@ export const CHAT_CREDIT_PACK = {
     id: 'cosmicpath_credit_pack',
     productId: chatCreditPackProductId,
     name: '질문권 3회 패키지',
-    description: 'Oracle Chat 3 Questions (33% OFF)',
+    description: 'Decision Chat 3 Questions (33% OFF)',
     price: 399, // $3.99 in cents
     credits: 3,
     stripeConfigured: hasRealStripeLookupId(chatCreditPackProductId, 'prod'),
@@ -82,8 +82,8 @@ const matchProductId = process.env.NODE_ENV === 'development'
 export const MATCH_PRODUCT = {
     id: 'cosmicpath_match_v1',
     productId: matchProductId,
-    name: 'Cosmic Compatibility Full Report',
-    description: '사주 + 점성술 기반 상세 궁합 분석 리포트',
+    name: 'Compatibility Decision Note',
+    description: '사주 + 점성술 기반 상세 궁합 결정 정리',
     currency: 'USD',
     price: 799, // $7.99 in cents
     stripeConfigured: hasRealStripeLookupId(matchProductId, 'prod'),

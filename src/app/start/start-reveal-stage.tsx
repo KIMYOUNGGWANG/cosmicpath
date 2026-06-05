@@ -38,7 +38,7 @@ export function StartRevealStage(props: StartRevealStageProps) {
     >
       <div className="text-center mb-12">
         <h2 className="text-2xl md:text-3xl font-cinzel text-starlight mb-4">
-          {props.language === 'en' ? 'The Oracle Gate Is Open' : '오라클의 문이 열렸습니다'}
+          {props.language === 'en' ? 'Your Note Is Ready' : '정리할 준비가 끝났습니다'}
         </h2>
         <p className="text-acc-gold/80 text-sm tracking-widest uppercase">
           {props.language === 'en' ? 'Tap to unseal your first direction' : '터치해서 첫 방향의 봉인을 풀어보세요'}
@@ -53,7 +53,7 @@ export function StartRevealStage(props: StartRevealStageProps) {
           <OracleCalibrationPanel
             compact
             language={props.language}
-            loadingLabel={props.language === 'en' ? 'Unsealing your oracle path...' : '오라클 경로의 봉인을 푸는 중...'}
+            loadingLabel={props.language === 'en' ? 'Preparing your decision note...' : '결정 정리를 준비하는 중...'}
             loadingPhase={props.loadingPhase.phase}
             characterId={props.characterId}
             precisionMetadata={props.precisionMetadata}

@@ -92,8 +92,8 @@ export function buildFallbackReport(
       content: fallbackMessage,
       trust_score: 3,
       trust_reason: language === 'en'
-        ? 'A simplified fallback summary was prepared because the full AI response was unstable.'
-        : '전체 AI 응답이 불안정해서 요약형 fallback 결과를 먼저 준비했습니다.',
+        ? 'A simplified fallback summary was prepared because the full response was unstable.'
+        : '전체 응답이 불안정해서 요약형 fallback 결과를 먼저 준비했습니다.',
     },
     traits: [],
   };

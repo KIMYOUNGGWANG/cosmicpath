@@ -29,11 +29,11 @@ export function GapSection() {
                         <motion.div style={{ opacity: opacityOld }} className="max-w-xl text-center">
                             <h3 className="text-gray-500 font-cinzel text-xl mb-4 tracking-widest uppercase">What Does Not Help</h3>
                             <h2 className="text-3xl md:text-5xl text-gray-400 font-medium mb-8 leading-tight blur-[2px] hover:blur-none transition-all duration-700">
-                                &quot;좋은 말만 하는 리딩은 <br /> 필요 없어요.&quot;
+                                &quot;좋은 말만으로는 <br /> 결정이 끝나지 않아요.&quot;
                             </h2>
                             <p className="text-gray-600 font-serif italic text-lg">
-                                &apos;다 잘 될 거예요&apos;, &apos;곧 기회가 와요&apos; 같은 말은 <br />
-                                잠깐 위로는 돼도 지금의 선택을 도와주진 못해요.
+                                &apos;다 잘 될 거예요&apos; 같은 말은 <br />
+                                잠깐 편해도 오늘의 선택지를 좁혀주진 못해요.
                             </p>
                         </motion.div>
                     </div>
@@ -43,14 +43,14 @@ export function GapSection() {
                         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] opacity-20" />
 
                         <motion.div style={{ opacity: opacityNew }} className="max-w-xl text-center relative z-10">
-                            <h3 className="text-acc-logic font-cinzel text-xl mb-4 tracking-widest uppercase shadow-[0_0_15px_rgba(99,102,241,0.4)]">What You Need</h3>
+                            <h3 className="text-acc-gold font-cinzel text-xl mb-4 tracking-widest uppercase">What You Need</h3>
                             <h2 className="text-3xl md:text-5xl text-starlight font-bold mb-8 leading-tight drop-shadow-2xl">
-                                &quot;좋은 말 대신, <span className="text-acc-gold">지금 뭘 해야 할지</span> <br /> <span className="text-acc-logic">먼저 보여드려요.</span>&quot;
+                                &quot;먼저, <span className="text-acc-gold">오늘 판단할 기준</span>을 <br /> 짧게 남깁니다.&quot;
                             </h2>
                             <p className="text-moonlight text-lg">
-                                언제 움직일지, <br />
-                                뭘 먼저 준비할지, <br />
-                                지금 피해야 할 선택이 뭔지.
+                                무엇을 할지, <br />
+                                무엇을 보류할지, <br />
+                                어떤 말은 보내지 말아야 할지.
                             </p>
 
                             {/* Visual Graph Element */}

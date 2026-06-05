@@ -96,39 +96,38 @@ export function CrossroadsSection() {
                     transition={{ duration: 1 }}
                 >
                     <h2 className="font-cinzel text-3xl md:text-6xl text-starlight mb-8 leading-tight">
-                        애매하게 미뤄둔 선택, <br /> <span className="text-acc-gold drop-shadow-[0_0_20px_rgba(212,175,55,0.5)]">오늘 끝내세요.</span>
+                        마지막엔 한 줄만 남기세요. <br /> <span className="text-acc-gold">오늘 무엇을 할지.</span>
                     </h2>
                     <p className="text-moonlight text-base md:text-lg mb-10 md:mb-12 max-w-xl mx-auto font-light">
-                        질문 하나만 적으면 첫 결과가 바로 열립니다. <br />
-                        관계, 커리어, 돈 중 어디서든 오늘 보낼 말과 다음 행동부터 정리해보세요.
+                        질문 하나만 적으면 첫 정리가 바로 열립니다. <br />
+                        관계, 커리어, 돈 중 어디서든 기준과 다음 행동부터 차분히 정리해보세요.
                     </p>
 
                     {/* Magnetic Button Area */}
                     <div className="relative group inline-block">
                         <Link
                             href={decisionStartHref}
-                            className="relative z-10 flex flex-col items-center justify-center px-16 py-6 bg-white text-deep-navy rounded-xl hover:scale-105 transition-all duration-300 shadow-[0_0_40px_rgba(255,255,255,0.4)] group-hover:shadow-[0_0_60px_rgba(255,255,255,0.6)]"
+                            className="relative z-10 flex flex-col items-center justify-center border border-[#e7dac4]/80 bg-[#f3ead9] px-12 py-6 text-deep-navy transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#fff6e8] md:px-16"
                         >
                             <div className="flex items-center gap-3">
-                                <span className="font-bold tracking-widest text-lg md:text-2xl">미뤄둔 선택 끝내기</span>
+                                <span className="font-bold tracking-widest text-lg md:text-2xl">선택 정리하기</span>
                             </div>
 
-                            {/* Badger for Discount */}
-                            <div className="absolute -top-4 -right-4 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-bounce">
-                                첫 결과 무료
+                            <div className="absolute -top-4 -right-4 border border-white/20 bg-[#11100d] px-3 py-1 text-xs font-bold text-white shadow-lg">
+                                첫 정리 무료
                             </div>
 
                             <span className="text-sm font-medium mt-1 text-gray-500 group-hover:text-deep-navy/80 transition-colors">
                                 {dynamicPrice ? (
                                     <span className="line-through opacity-50 mr-2">{originalPrice}</span>
                                 ) : null}
-                                전체 리딩 <span className="font-bold text-red-500 text-lg">{displayPrice}</span>
+                                자세한 기록은 <span className="font-bold text-[#7a4f20] text-lg">{displayPrice}</span>
                             </span>
                         </Link>
                     </div>
 
                     <p className="mt-8 text-dim text-xs">
-                        * 결과가 잘 안 맞으면 다시 읽어드려요.
+                        * 결정 보조용 정리입니다. 의료, 법률, 투자 판단은 전문가 기준을 우선하세요.
                     </p>
                 </motion.div>
             </div>

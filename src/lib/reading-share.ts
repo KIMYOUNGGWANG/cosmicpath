@@ -26,13 +26,13 @@ function pickMainCardName(metadata: Record<string, unknown>): string {
     }
   }
 
-  return 'Destiny';
+  return 'Decision';
 }
 
 function buildFallbackDescription(language: 'ko' | 'en'): string {
   return language === 'en'
-    ? 'An AI oracle reading woven from Saju, astrology, and tarot.'
-    : '사주, 점성술, 타로를 엮어 완성한 AI 오라클 리딩입니다.';
+    ? 'A decision note supported by Saju, astrology, and tarot.'
+    : '사주, 점성술, 타로 근거를 참고한 결정 정리입니다.';
 }
 
 function truncate(value: string, maxLength: number): string {
@@ -67,8 +67,8 @@ export function getReadingShareSummary(input: {
   const title = typeof summary?.title === 'string' && summary.title.trim()
     ? summary.title.trim()
     : language === 'en'
-      ? 'Destiny Revealed'
-      : '운명의 리딩이 도착했습니다';
+      ? 'Decision Note Ready'
+      : '결정 정리가 도착했습니다';
 
   const rawDescription = typeof summary?.content === 'string' && summary.content.trim()
     ? summary.content.trim()

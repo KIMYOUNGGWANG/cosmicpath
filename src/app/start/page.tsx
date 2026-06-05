@@ -38,7 +38,7 @@ import { StartPageFallback } from './start-page-fallback';
 import { StartPageModals } from './start-page-modals';
 import { StartPageStages } from './start-page-stages';
 
-function CosmicPathContent() {
+function DecisionNoteContent() {
   const [step, setStep] = useState<ReadingStep>('input');
   const [readingData, setReadingData] = useState<ReadingData | null>(null);
   const [selectedCards, setSelectedCards] = useState<TarotSelection[]>([]);
@@ -262,7 +262,7 @@ function CosmicPathContent() {
 export default function Home() {
   return (
     <Suspense fallback={<StartPageFallback />}>
-      <CosmicPathContent />
+      <DecisionNoteContent />
     </Suspense>
   );
 }

@@ -182,7 +182,7 @@ export default function OrdersPage() {
                                             <div>
                                                 {/* Assuming implementation of metadata parsing if needed, but simplistic for now */}
                                                 <h3 className="font-semibold text-gray-200 group-hover:text-white transition-colors">
-                                                    {order.amount === 4500 ? '☕️ Coffee Price Reading' : '운세 분석 리포트'}
+                                                    {order.amount === 4500 ? '☕️ Coffee Price Note' : '결정 정리 노트'}
                                                 </h3>
                                                 <p className="text-sm text-gray-500 mt-1">
                                                     {new Date(order.createdAt).toLocaleDateString()}

@@ -232,14 +232,14 @@ export function getReadingPhaseLabels(language: 'ko' | 'en', tier: 'free' | 'pre
   ];
   const labelsEn = [
     '',
-    'Aligning your oracle guide... (1/8)',
+    'Aligning the decision lens... (1/8)',
     'Reading your deeper astrology signals... (2/8)',
     'Cross-checking tarot and numerology... (3/8)',
     'Calculating your saju foundation... (4/8)',
     'Mapping the flow and turning points... (5/8)',
     'Weaving signals across life areas... (6/8)',
     'Opening your action window and timing map... (7/8)',
-    'Unsealing the final oracle verdict... (8/8)',
+    'Finishing the final decision note... (8/8)',
   ];
 
   return language === 'en' ? labelsEn : labelsKo;

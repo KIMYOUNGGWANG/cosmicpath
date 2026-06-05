@@ -1,9 +1,8 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ShaderGradientCanvas, ShaderGradient } from 'shadergradient';
 
 import { trackClientGrowthEvent } from '@/lib/client-growth-events';
 import { getLandingVariant } from '@/lib/language-preference';
@@ -16,8 +15,6 @@ interface HeroSceneProps {
 export function HeroScene({ language, children }: HeroSceneProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const hasTrackedLandingView = useRef(false);
-    const [isMobile, setIsMobile] = useState(true);
-    const [canRenderShader, setCanRenderShader] = useState(false);
     const { scrollYProgress } = useScroll({
         target: containerRef,
         offset: ['start start', 'end start'],
@@ -40,52 +37,19 @@ export function HeroScene({ language, children }: HeroSceneProps) {
             });
         }
 
-        const checkBackgroundMode = () => {
-            const isNarrowViewport = window.innerWidth < 768;
-            setIsMobile(isNarrowViewport);
-
-            if (isNarrowViewport) {
-                setCanRenderShader(false);
-                return;
-            }
-
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('webgl');
-            setCanRenderShader(Boolean(context));
-        };
-
-        checkBackgroundMode();
-        window.addEventListener('resize', checkBackgroundMode);
-        return () => window.removeEventListener('resize', checkBackgroundMode);
     }, [language]);
 
     return (
-        <section ref={containerRef} className="relative h-screen w-full overflow-hidden bg-void">
-            <div className="absolute inset-0 z-0 opacity-40">
-                {isMobile || !canRenderShader ? (
-                    <div className="absolute inset-0 bg-gradient-to-b from-void via-[#1a1230] to-void">
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(74,14,14,0.3)_0%,transparent_70%)]" />
-                        <div className="absolute right-0 top-0 h-full w-full bg-[radial-gradient(circle_at_70%_30%,rgba(212,175,55,0.15)_0%,transparent_60%)]" />
-                    </div>
-                ) : (
-                    <ShaderGradientCanvas pixelDensity={0.6} fov={45}>
-                        <ShaderGradient
-                            control="props"
-                            color1="#1a1230"
-                            color2="#4A0E0E"
-                            color3="#D4AF37"
-                            animate="on"
-                            uSpeed={0.3}
-                            uStrength={2}
-                            uDensity={1.5}
-                        />
-                    </ShaderGradientCanvas>
-                )}
+        <section ref={containerRef} className="relative min-h-screen w-full overflow-hidden bg-void">
+            <div className="absolute inset-0 z-0 opacity-70">
+                <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(245,238,226,0.035)_1px,transparent_1px),linear-gradient(180deg,rgba(245,238,226,0.025)_1px,transparent_1px)] bg-[size:72px_72px]" />
+                <div className="absolute inset-0 bg-[linear-gradient(115deg,transparent_0%,transparent_52%,rgba(215,178,93,0.08)_52%,rgba(215,178,93,0.08)_52.35%,transparent_52.35%,transparent_100%)]" />
+                <div className="absolute inset-x-0 bottom-0 h-32 border-t border-white/6 bg-[#11100d]/80" />
             </div>
 
             <motion.div
                 style={{ opacity, scale, y }}
-                className="relative z-10 flex h-full flex-col items-center justify-center px-4 pb-16 pt-28 text-center"
+                className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 pb-16 pt-28 text-center"
             >
                 <motion.div
                     initial={{ opacity: 0, y: 18 }}
@@ -104,7 +68,7 @@ export function HeroScene({ language, children }: HeroSceneProps) {
                 className="absolute bottom-12 left-1/2 flex -translate-x-1/2 flex-col items-center gap-4"
             >
                 <span className="text-[10px] uppercase tracking-[0.3em] text-moonlight">
-                    {language === 'ko' ? '아래로 내려 보기' : 'Scroll to Enter'}
+                    {language === 'ko' ? '더 살펴보기' : 'Keep reading'}
                 </span>
                 <div className="h-12 w-[1px] animate-pulse bg-gradient-to-b from-white/0 via-white/50 to-white/0" />
             </motion.div>

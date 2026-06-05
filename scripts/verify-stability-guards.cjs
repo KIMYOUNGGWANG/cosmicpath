@@ -96,8 +96,8 @@ function run() {
   );
   assertMatch(
     'src/lib/payment/payment-config.ts',
-    /prod_TgwKnGfpJBusty[\s\S]*prod_ThdoB65NmPU37y[\s\S]*Next Move Report Full Report[\s\S]*price:\s*999/s,
-    'Reading product should reuse the existing Stripe reading products with the legacy fallback label'
+    /prod_TgwKnGfpJBusty[\s\S]*prod_ThdoB65NmPU37y[\s\S]*Detailed Decision Note[\s\S]*price:\s*999/s,
+    'Reading product should reuse the existing Stripe reading products with the rebranded fallback label'
   );
   assertNoMatch(
     'src/lib/payment/stripe.ts',
@@ -106,8 +106,8 @@ function run() {
   );
   assertMatch(
     'src/app/relationship/contact-timing/page.tsx',
-    /Next Move Report/,
-    'Relationship MVP route should use the public Next Move Report brand'
+    /연락 결정 정리/,
+    'Relationship MVP route should use the public decision-note brand'
   );
   assertNoMatch(
     'src/app/relationship/contact-timing/page.tsx',
@@ -161,8 +161,8 @@ function run() {
   );
   assertMatch(
     'src/components/ops/GrowthDashboard.tsx',
-    /Next Move Report 14-day decision gate[\s\S]*visits 300 or 14 days[\s\S]*question starts 45[\s\S]*paid conversions 2/,
-    'Ops dashboard should render the Next Move continuation thresholds'
+    /Decision Timing 14-day decision gate[\s\S]*visits 300 or 14 days[\s\S]*question starts 45[\s\S]*paid conversions 2/,
+    'Ops dashboard should render the Decision Timing continuation thresholds'
   );
   assertMatch(
     'src/app/relationship/contact-timing/page.tsx',
@@ -171,33 +171,33 @@ function run() {
   );
   assertMatch(
     'src/app/terms/page.tsx',
-    /decision-support content/,
+    /decision-support notes/,
     'Terms should disclose Next Move decision-support content'
   );
   assertMatch(
     'src/app/terms/page.tsx',
-    /no guaranteed relationship outcome[\s\S]*not therapy, medical, diagnostic, legal, or financial advice/s,
+    /no guaranteed relationship, career, money, health, or life outcome[\s\S]*not therapy, medical, diagnostic, legal, or financial advice/s,
     'Terms should disclose Next Move relationship outcome and professional-advice boundaries'
   );
   assertMatch(
     'src/app/terms/page.tsx',
-    /one-off digital report[\s\S]*Stripe checkout/s,
-    'Terms should disclose the Next Move one-off Stripe checkout boundary'
+    /one-off detailed note[\s\S]*Stripe checkout/s,
+    'Terms should disclose the Decision Note one-off Stripe checkout boundary'
   );
   assertMatch(
     'src/app/terms/page.tsx',
-    /refund request may be limited once the report is generated or opened/,
-    'Terms should disclose the generated/opened digital-report refund boundary'
+    /refund request may be limited once the note is generated or opened/,
+    'Terms should disclose the generated/opened detailed-note refund boundary'
   );
   assertMatch(
     'src/app/privacy/page.tsx',
-    /relationship\/DM context[\s\S]*optional birth data[\s\S]*report restore and storage[\s\S]*analytics[\s\S]*do not paste highly sensitive third-party secrets/s,
+    /decision context[\s\S]*optional birth data[\s\S]*note restore and storage[\s\S]*analytics[\s\S]*do not paste highly sensitive third-party secrets/s,
     'Privacy policy should disclose Next Move relationship input, optional birth data, restore, analytics, and sensitive third-party secret boundaries'
   );
   assertMatch(
     'src/components/seo/json-ld.tsx',
-    /name:\s*'Next Move Report'[\s\S]*legalName:\s*"Tony's Company"/,
-    'Global JSON-LD should expose Next Move Report as the public organization name with the legal operator separated'
+    /name:\s*'Decision Note'[\s\S]*legalName:\s*"Tony's Company"/,
+    'Global JSON-LD should expose Decision Note as the public organization name with the legal operator separated'
   );
   assertNoMatch(
     'src/components/seo/json-ld.tsx',
@@ -206,7 +206,7 @@ function run() {
   );
   assertMatch(
     'src/app/en/contact-timing/page.tsx',
-    /title:\s*'Next Move Report \| Contact or Wait'[\s\S]*siteName:\s*'Next Move Report'[\s\S]*First verdict free · Full report via Stripe[\s\S]*Next Move Report[\s\S]*decision support only/s,
+    /title:\s*'Contact Decision Note'[\s\S]*siteName:\s*'Decision Note'[\s\S]*First note free · Detailed note via Stripe[\s\S]*Decision support only/s,
     'English contact timing route should be fully rebranded while indexed'
   );
   assertNoMatch(
@@ -216,8 +216,8 @@ function run() {
   );
   assertMatch(
     'src/components/landing/EnglishGuideSection.tsx',
-    /href="\/en\/contact-timing"[\s\S]*Next Move Report/s,
-    'English landing guide section should keep the MVP contact timing route as the primary English path'
+    /Open Decision Note/,
+    'English landing guide section should expose the Decision Note entry path'
   );
   assertMatch(
     'src/app/sitemap.ts',
