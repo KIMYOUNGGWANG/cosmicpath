@@ -1,3 +1,11 @@
 .env
 .env.*
-
+.agent
+.agents
+.codex
+.omo
+.playwright-mcp
+.tmp
+coverage
+playwright-report
+test-results
