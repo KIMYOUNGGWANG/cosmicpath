@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { Skeleton } from '@/components/ui/skeleton';
+import { INTAKE_SECTION_COPY } from '@/components/reading/intake/reception-copy';
 import type { TarotSelection } from './start-page-helpers';
 
 const TarotPicker = dynamic(() => import('@/components/reading/tarot-picker').then((mod) => mod.TarotPicker), {
@@ -17,6 +18,8 @@ type StartTarotStageProps = {
 };
 
 export function StartTarotStage(props: StartTarotStageProps) {
+  const copy = INTAKE_SECTION_COPY[props.language];
+
   return (
     <motion.div
       key="tarot"
@@ -27,22 +30,22 @@ export function StartTarotStage(props: StartTarotStageProps) {
       className="w-full max-w-5xl mx-auto px-4 py-16 md:px-6 md:py-20"
     >
       <div className="mb-12 text-center">
-        <div className="mx-auto max-w-3xl rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(139,92,246,0.08),rgba(255,255,255,0.02))] px-6 py-8 backdrop-blur-xl">
-          <h2 className="mb-4 text-3xl font-bold tracking-wide text-glow-purple md:text-4xl font-cinzel">
+        <div className="mx-auto max-w-3xl rounded-[24px] border border-[#d7c59a]/20 bg-[#121416]/92 px-6 py-8 shadow-[0_22px_70px_rgba(0,0,0,0.2)]">
+          <h2 className="mb-4 font-cinzel text-3xl font-bold tracking-wide text-starlight md:text-4xl">
             {props.isNextMoveReportEntry
-              ? (props.language === 'en' ? 'Optional Evidence Layer' : '선택 근거 레이어')
+              ? copy.tarotLabel
               : (props.language === 'en' ? 'Choose The Cards Your Intuition Trusts' : '직관이 가장 먼저 닿는 카드 3장을 고르세요')}
           </h2>
-          <div className="h-0.5 w-24 bg-gradient-to-r from-transparent via-tarot-purple/50 to-transparent mx-auto mb-6" />
+          <div className="mx-auto mb-6 h-px w-24 bg-[#d7c59a]/45" />
           <p className="text-lg font-light italic tracking-wide text-white/70">
             {props.isNextMoveReportEntry
               ? (props.language === 'en'
                   ? props.isRelationshipContactEntry
-                    ? 'Pick one card if you want tarot evidence, or skip and get the contact verdict from the question alone.'
-                    : 'Pick one card if you want tarot evidence, or skip and get the decision brief from the question alone.'
+                    ? 'Pick one card if tarot helps the contact question, or skip and open the verdict from the question alone.'
+                    : 'Pick one card if tarot helps the decision question, or skip and open the verdict from the question alone.'
                   : props.isRelationshipContactEntry
-                    ? '타로 근거를 더하고 싶으면 카드 1장을 고르세요. 질문만으로도 무료 연락 판정을 바로 볼 수 있습니다.'
-                    : '타로 근거를 더하고 싶으면 카드 1장을 고르세요. 질문만으로도 무료 결정 브리프를 바로 볼 수 있습니다.')
+                    ? '타로가 연락 질문을 더 선명하게 만들 것 같다면 카드 1장을 고르세요. 질문만으로도 판정을 열 수 있습니다.'
+                    : '타로가 결정 질문을 더 선명하게 만들 것 같다면 카드 1장을 고르세요. 질문만으로도 판정을 열 수 있습니다.')
               : (props.language === 'en'
                   ? 'Pause for a breath. Pick the card that feels like your current path.'
                   : '숨을 한 번 고르고, 지금 내 흐름과 가장 닿아 있는 카드를 선택해보세요.')}
@@ -51,9 +54,11 @@ export function StartTarotStage(props: StartTarotStageProps) {
             <button
               type="button"
               onClick={() => props.onSelect([])}
-              className="mt-6 inline-flex min-h-[44px] items-center justify-center rounded-full border border-white/15 bg-white/[0.04] px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/72 transition-all hover:border-acc-gold/35 hover:bg-acc-gold/10 hover:text-acc-gold"
+              className="group mt-7 inline-grid min-h-[46px] grid-cols-[44px_minmax(0,1fr)_44px] items-center overflow-hidden border border-[#d7c59a]/32 bg-[#0d0e0f]/72 text-xs font-semibold uppercase tracking-[0.18em] text-[#d7c59a] shadow-[0_14px_40px_rgba(0,0,0,0.22)] transition-all hover:-translate-y-0.5 hover:border-[#d7c59a]/58 hover:bg-[#d7c59a]/[0.08]"
             >
-              {props.language === 'en' ? 'Skip Tarot Evidence' : '타로 없이 무료 판정 보기'}
+              <span className="border-r border-[#d7c59a]/18 text-[10px] text-[#d7c59a]/62">03</span>
+              <span className="px-4">{props.language === 'en' ? 'Skip Tarot' : '타로 없이 판정 보기'}</span>
+              <span className="border-l border-[#d7c59a]/18 transition-transform group-hover:translate-x-0.5">→</span>
             </button>
           ) : null}
         </div>

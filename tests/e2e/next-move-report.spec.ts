@@ -24,11 +24,11 @@ test.describe('Next Move Report MVP', () => {
     test('home and nav contain only MVP acquisition', async ({ page }) => {
         await page.goto('/');
 
-        await expect(page).toHaveTitle(/오늘의 결정 정리|Decision Note/i);
-        const heroCta = page.getByRole('link', { name: /선택 정리하기|Write the decision/i }).first();
+        await expect(page).toHaveTitle(/CosmicPath 3-Layer Reading/i);
+        const heroCta = page.getByRole('link', { name: /Open my 3-layer reading|Start Reading|선택 정리하기/i }).first();
         await expect(heroCta).toBeVisible();
         await expect(heroCta).toHaveAttribute('href', '/start?reset=true&entry=decision_timing_rebuild_v1');
-        await expect(page.getByText(/결의 정리|Gyeol's note/i).first()).toBeVisible();
+        await expect(page.getByText(/CosmicPath reading room|Saju \/ Astrology \/ Tarot/i).first()).toBeVisible();
         await expect(page.locator('a[href="/relationship/contact-timing"]')).toHaveCount(0);
         await expect(page.locator('nav a[href="/daily"]')).toHaveCount(0);
         await expect(page.locator('nav a[href="/career/uncertainty"]')).toHaveCount(0);
@@ -39,9 +39,10 @@ test.describe('Next Move Report MVP', () => {
         await page.goto(startPath);
 
         await expect(page.locator('textarea').first()).toHaveValue(contactQuestion);
-        await expect(page.getByText(/연락 타이밍 질문/).first()).toBeVisible();
-        await expect(page.getByText(/선택 근거 레이어/).first()).toBeVisible();
-        await expect(page.getByText(/첫 정리는 연락, 대기, 축소, 보류/).first()).toBeVisible();
+        await expect(page.getByText(/01 질문 접수/).first()).toBeVisible();
+        await expect(page.getByText(/02 사주·점성 기본정보/).first()).toBeVisible();
+        await expect(page.getByText(/03 타로 준비/).first()).toBeVisible();
+        await expect(page.getByText(/첫 판정은 연락, 대기, 축소, 보류/).first()).toBeVisible();
         await expect(page).toHaveURL(/entry=next_move_report_mvp_v1/);
 
         const relationshipHelpers = readFileSync(path.join(process.cwd(), 'src/app/start/start-result-relationship.ts'), 'utf8');
@@ -57,7 +58,7 @@ test.describe('Next Move Report MVP', () => {
 
         await expect(page.locator('body')).not.toContainText(/Application error|Unhandled Runtime Error|Next\.js/);
         await expect(page.locator('textarea').first()).toBeVisible();
-        await expect(page.getByText(/연락 타이밍 질문/).first()).toBeVisible();
+        await expect(page.getByText(/01 질문 접수/).first()).toBeVisible();
     });
 
     test('legacy routes remain directly reachable', async ({ request }) => {

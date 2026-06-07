@@ -4,6 +4,7 @@ export type CanonicalGrowthEvent =
     | 'install'
     | 'daily_active'
     | 'first_result_view'
+    | 'decision_question_submit'
     | 'followup_start'
     | 'daily_return_after_reading'
     | 'share'
@@ -24,6 +25,7 @@ const EVENT_ALIASES: Record<string, CanonicalGrowthEvent> = {
     session_active: 'daily_active',
     first_result_view: 'first_result_view',
     free_result_shown: 'first_result_view',
+    decision_question_submit: 'decision_question_submit',
     followup_start: 'followup_start',
     daily_return_after_reading: 'daily_return_after_reading',
     share_clicked: 'share',

@@ -43,7 +43,7 @@ export function QuotaExceededPanel(props: Pick<ResultErrorPanelProps, 'language'
         onClick={() => { void props.onUnlock(); }}
         className="w-full rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#f0c35c] to-[#d88b16] py-4 font-bold text-black shadow-lg shadow-[#D4AF37]/20 transition-all hover:shadow-[#D4AF37]/40 hover:-translate-y-0.5 cursor-pointer"
       >
-        {props.language === 'en' ? 'Unlock Detailed Decision Note' : '자세한 결정 노트 열기'}
+        {props.language === 'en' ? 'Unlock Detailed CosmicPath Reading' : '자세한 3단분석 리포트 열기'}
       </button>
       <p className="mt-3 text-xs text-white/30">
         {props.language === 'en'

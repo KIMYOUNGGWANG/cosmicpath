@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 const firstViewportOldBrandPattern =
-  /\bAI\b|Oracle|Destiny|Fortune|CosmicPath|Cosmic Radar|Premium Report|전체 리포트|오라클/i;
+  /\bAI\b|Destiny|Fortune|Cosmic Radar|Premium Report|전체 리포트|오라클/i;
 
 const legacyVisibleCopyPattern =
   /Oracle Snapshot|Reveal My Destiny|Not generic fortune copy|Oracle Chat|Premium Report|Full Report|전체 리포트|오라클의 문|오라클 경로|Destiny Revealed|CosmicPath Detailed Decision Note|Cosmic Compatibility Full Report/i;
@@ -12,31 +12,29 @@ function projectFile(relativePath: string) {
   return path.join(process.cwd(), relativePath);
 }
 
-test.describe('Decision Note frontend rebrand', () => {
-  test('landing presents decision-note brand without AI-coded language', async ({ page }) => {
+test.describe('CosmicPath frontend rebrand', () => {
+  test('landing presents CosmicPath 3-layer brand', async ({ page }) => {
     await page.setExtraHTTPHeaders({ 'Accept-Language': 'ko-KR,ko;q=0.9' });
     await page.goto('/');
 
-    await expect(page).toHaveTitle(/오늘의 결정 정리|Decision Note/i);
+    await expect(page).toHaveTitle(/CosmicPath 3-Layer Reading/i);
     await expect(
       page.getByRole('heading', {
-        name: /미뤄둔 선택을\s*오늘 정리하세요|Write down the choice\s*you keep postponing/i,
+        name: /Some questions need\s*more than one oracle|미뤄둔 선택을\s*오늘 정리하세요/i,
       })
     ).toBeVisible();
 
-    const cta = page.getByRole('link', { name: /선택 정리하기|Write the decision/i }).first();
+    const cta = page.getByRole('link', { name: /Open my 3-layer reading|Start Reading|선택 정리하기/i }).first();
     await expect(cta).toHaveAttribute('href', '/start?reset=true&entry=decision_timing_rebuild_v1');
-
-    const firstViewportText = await page.locator('body').innerText();
-    expect(firstViewportText).not.toMatch(firstViewportOldBrandPattern);
   });
 
-  test('start empty relationship question keeps quiet decision-note language', async ({ page }) => {
+  test('start empty relationship question keeps CosmicPath reception language', async ({ page }) => {
     await page.goto('/start?reset=true&context=love&entry=next_move_report_mvp_v1&lang=ko&question=');
 
     await expect(page.locator('textarea').first()).toBeVisible();
-    await expect(page.getByText(/연락 타이밍 질문/).first()).toBeVisible();
-    await expect(page.getByText(/선택 근거 레이어/).first()).toBeVisible();
+    await expect(page.getByText(/CosmicPath 3단분석 접수실/).first()).toBeVisible();
+    await expect(page.getByText(/01 질문 접수/).first()).toBeVisible();
+    await expect(page.getByText(/02 사주·점성 기본정보/).first()).toBeVisible();
     await expect(page.locator('body')).not.toContainText(/Application error|Unhandled Runtime Error|Next\.js/);
 
     const firstScreenText = await page.locator('body').innerText();

@@ -1,9 +1,5 @@
 'use client';
 
-/**
- * 리딩 입력 컴포넌트 - Ethereal Brutalism Style
- */
-
 import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
@@ -16,10 +12,12 @@ import {
     getRecommendedOracleCharacterId,
     inferQuestionIntent,
     type OracleCharacterId,
-    type OraclePersonaProfile,
     type OracleQuestionIntent,
 } from '@/lib/ai/oracle-personas';
 import { OracleSelectCard } from '@/components/reading/OracleSelectCard';
+import { getGuideAlternativeScore, getGuideFitCopy } from '@/components/reading/intake/guide-fit-copy';
+import { INTAKE_SECTION_COPY } from '@/components/reading/intake/reception-copy';
+import { PRIMARY_ENGLISH_GUIDE_HREF, READING_CONTEXTS } from '@/components/reading/intake/reading-context-options';
 
 interface ReadingInputProps {
     onSubmit: (data: ReadingData) => void;
@@ -51,7 +49,6 @@ export interface ReadingData {
     cityName?: string;
     latitude?: number;
     longitude?: number;
-    // 상대방 정보 (궁합/재회 분석용 - optional)
     partnerName?: string;
     partnerBirthDate?: string;
     partnerBirthTime?: string;
@@ -59,230 +56,8 @@ export interface ReadingData {
     inviteCode?: string;
 }
 
-interface ContextOption {
-    value: ReadingContext;
-    labelKo: string;
-    labelEn: string;
-    eyebrowKo: string;
-    eyebrowEn: string;
-    summaryKo: string;
-    summaryEn: string;
-    questionSuggestionsKo: string[];
-    questionSuggestionsEn: string[];
-}
-
-const contexts: ContextOption[] = [
-    {
-        value: 'love',
-        labelKo: '연애 / 관계',
-        labelEn: 'Love / Relationship',
-        eyebrowKo: '관계의 온도와 다음 움직임',
-        eyebrowEn: 'Relational chemistry and the next move',
-        summaryKo: '먼저 연락할지, 거리를 둘지, 관계를 더 이어갈지처럼 감정과 타이밍이 함께 얽힌 질문에 맞는 경로예요.',
-        summaryEn: 'Best for questions where emotion and timing are tangled together, like whether to reach out, wait, or keep building the relationship.',
-        questionSuggestionsKo: [
-            '지금 먼저 연락하는 게 맞을까, 조금 더 기다리는 게 맞을까?',
-            '이 관계를 더 이어가면 안정될 가능성이 있을까?',
-            '다시 만날 가능성이 있다면 내가 먼저 바꿔야 할 패턴은 뭘까?',
-        ],
-        questionSuggestionsEn: [
-            'Should I reach out now, or would waiting create a better opening?',
-            'If I keep investing in this relationship, does it look stable or draining?',
-            'If reunion is possible, what pattern do I need to change first?',
-        ],
-    },
-    {
-        value: 'career',
-        labelKo: '커리어 / 직업',
-        labelEn: 'Career / Job',
-        eyebrowKo: '역할 적합도와 전환 시기',
-        eyebrowEn: 'Role fit and transition timing',
-        summaryKo: '이직, 승진, 새 역할 제안처럼 방향을 바꿔야 할지 더 다져야 할지를 판단하는 질문에 맞아요.',
-        summaryEn: 'Best for role changes, interviews, promotions, and the question of whether to move now or build deeper first.',
-        questionSuggestionsKo: [
-            '지금 이직을 밀어붙이는 게 맞을까, 조금 더 버티는 게 맞을까?',
-            '새 제안을 받아들이면 성장에 도움이 될까, 아니면 방향이 어긋날까?',
-            '올해 내 강점이 가장 잘 쓰이는 역할은 어떤 쪽일까?',
-        ],
-        questionSuggestionsEn: [
-            'Should I push this job move now, or would staying longer build a stronger position?',
-            'Will accepting this new role grow me, or pull me off-course?',
-            'What kind of role is most aligned with my strengths this year?',
-        ],
-    },
-    {
-        value: 'money',
-        labelKo: '재물 / 금전',
-        labelEn: 'Wealth / Money',
-        eyebrowKo: '돈의 흐름과 손실 리스크',
-        eyebrowEn: 'Cash flow and downside risk',
-        summaryKo: '투자, 지출, 현금 흐름처럼 흥분보다 안정성과 버티는 구조를 먼저 봐야 하는 질문에 맞는 경로입니다.',
-        summaryEn: 'Designed for investment, spending, and cash flow questions where stability and downside matter more than excitement.',
-        questionSuggestionsKo: [
-            '지금 이 결정을 밀어붙이면 돈의 흐름이 좋아질까, 오히려 새는 구간이 커질까?',
-            '이번 달엔 확장보다 방어가 우선일까?',
-            '내 돈 관리에서 가장 먼저 손봐야 할 습관은 무엇일까?',
-        ],
-        questionSuggestionsEn: [
-            'If I move on this now, does it improve my money flow or increase leakage?',
-            'Is this month better for defense than expansion?',
-            'What money habit should I fix first to stabilize my path?',
-        ],
-    },
-    {
-        value: 'health',
-        labelKo: '건강 / 신체',
-        labelEn: 'Health / Body',
-        eyebrowKo: '리듬 회복과 컨디션 관리',
-        eyebrowEn: 'Rhythm recovery and body management',
-        summaryKo: '무리한 일정, 스트레스, 회복 타이밍처럼 몸과 생활 리듬을 다시 정렬해야 할 때 적합한 경로예요.',
-        summaryEn: 'Useful when you need to rebalance stress, recovery, rest, and daily rhythm before pushing harder.',
-        questionSuggestionsKo: [
-            '지금은 더 밀어붙이는 시기일까, 회복에 집중해야 하는 시기일까?',
-            '내 컨디션을 가장 크게 흔드는 생활 패턴은 무엇일까?',
-            '이번 달 건강 흐름에서 특히 조심할 포인트가 있을까?',
-        ],
-        questionSuggestionsEn: [
-            'Is this a season to push harder, or to recover and protect my energy?',
-            'What daily pattern is destabilizing my condition the most right now?',
-            'Is there a health rhythm I should be especially careful with this month?',
-        ],
-    },
-    {
-        value: 'general',
-        labelKo: '운세 / 종합',
-        labelEn: 'Destiny / General',
-        eyebrowKo: '전체 흐름과 우선순위 정렬',
-        eyebrowEn: 'Overall direction and priority sorting',
-        summaryKo: '분야를 아직 못 정했거나, 요즘 내 흐름에서 무엇을 먼저 잡아야 하는지 알고 싶을 때 여는 기본 경로예요.',
-        summaryEn: 'Use this when you are not sure which domain matters most yet and want the oracle to sort the main priority first.',
-        questionSuggestionsKo: [
-            '지금 내 흐름에서 가장 먼저 정리해야 할 선택은 무엇일까?',
-            '이번 달엔 어디에 에너지를 집중하는 게 가장 효율적일까?',
-            '지금 내가 멈춰야 할 것과 밀어야 할 것은 각각 무엇일까?',
-        ],
-        questionSuggestionsEn: [
-            'What decision should I sort out first in my life right now?',
-            'Where should I focus my energy this month for the clearest return?',
-            'What should I stop forcing, and what should I move forward instead?',
-        ],
-    },
-];
-
 const sectionShellClass =
-    'relative overflow-hidden rounded-[24px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.08),transparent_24%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-4 shadow-[0_18px_50px_rgba(2,6,23,0.22)] backdrop-blur-xl md:rounded-[26px] md:p-6';
-
-const PRIMARY_ENGLISH_GUIDE_HREF = '/guides/what-is-korean-saju';
-
-const INTENT_KEYWORDS_KO: Record<string, string[]> = {
-    reunion: ['재회', '다시 만나', '다시만나', '다시 시작', '연락 올', '연락이 올', '돌아올'],
-    business: ['사업', '창업', '부업', '사이드잡', '매출', '고객', '브랜드', '동업'],
-    timing: ['언제', '시기', '타이밍', '몇 월', '몇월', '지금 움직', '언제쯤', '때가'],
-    wealth: ['돈', '재물', '금전', '수입', '지출', '저축', '투자'],
-    career: ['이직', '직장', '커리어', '진로', '면접', '승진', '취업'],
-    compatibility: ['궁합', '잘 맞', '어울리', '관계', '연애', '결혼', '소개팅'],
-};
-
-const INTENT_KEYWORDS_EN: Record<string, string[]> = {
-    reunion: ['ex', 'former', 'get back', 'reconcile', 'reunion', 'come back', 'breakup'],
-    business: ['startup', 'business', 'client', 'customers', 'revenue', 'brand', 'partnership', 'founder'],
-    timing: ['when', 'timing', 'which month', 'what month', 'best time', 'right time', 'window'],
-    wealth: ['money', 'wealth', 'income', 'spending', 'savings', 'investment', 'debt'],
-    career: ['job', 'career', 'work', 'promotion', 'interview', 'role', 'employment'],
-    compatibility: ['compatibility', 'match', 'relationship', 'chemistry', 'dating', 'marriage', 'couple'],
-};
-
-const getMatchedKeyword = (
-    question: string,
-    intent: OracleQuestionIntent,
-    language: 'ko' | 'en'
-): string | null => {
-    const map = language === 'en' ? INTENT_KEYWORDS_EN : INTENT_KEYWORDS_KO;
-    const keywords = map[intent] ?? [];
-    const normalized = question.trim().toLowerCase();
-    return keywords.find((kw) => normalized.includes(kw)) ?? null;
-};
-
-const getGuideFitCopy = (
-    specialty: OracleQuestionIntent,
-    guideName: string,
-    language: 'ko' | 'en',
-    question?: string
-) => {
-    const matchedKw = question ? getMatchedKeyword(question, specialty, language) : null;
-
-    const copy = {
-        general: {
-            ko: `${guideName}는 질문 전체 흐름을 한 번에 정리하고, 지금 먼저 잡아야 할 한 가지를 또렷하게 보여줍니다.`,
-            en: `${guideName} helps sort the whole picture first and shows the one move that matters most right now.`,
-        },
-        compatibility: {
-            ko: matchedKw
-                ? `질문에 "${matchedKw}" 키워드가 있어서 ${guideName}를 연결했습니다. 두 사람의 감정 온도와 리듬을 같이 봐서 관계가 실제로 굴러갈지를 더 자세히 읽어줍니다.`
-                : `${guideName}는 두 사람의 감정 온도와 맞는 리듬을 같이 봐서, 관계가 실제로 잘 굴러갈지를 더 자세히 읽습니다.`,
-            en: matchedKw
-                ? `"${matchedKw}" in your question matched ${guideName}. They look at emotional chemistry and daily rhythm together.`
-                : `${guideName} looks at emotional chemistry and daily rhythm together, so the relationship fit reads more clearly.`,
-        },
-        reunion: {
-            ko: matchedKw
-                ? `질문에 "${matchedKw}" 키워드가 있어서 ${guideName}를 먼저 연결했습니다. 다시 이어질 가능성과 반복될 패턴을 같이 짚어줍니다.`
-                : `${guideName}는 다시 이어질 가능성과, 다시 만나도 반복될 문제를 같이 봐서 재회 질문에 특히 강합니다.`,
-            en: matchedKw
-                ? `"${matchedKw}" in your question matched ${guideName}. They read reconnection odds and repeating patterns together.`
-                : `${guideName} is strong when you need to read reconnection odds and the pattern that could repeat after reunion.`,
-        },
-        wealth: {
-            ko: matchedKw
-                ? `질문에 "${matchedKw}" 키워드가 있어서 ${guideName}를 연결했습니다. 기대감보다 돈의 흐름과 손실 위험을 먼저 봐서 차분하게 정리합니다.`
-                : `${guideName}는 기대감보다 돈의 흐름과 손실 위험을 먼저 봐서, 금전 질문을 더 차분하게 정리합니다.`,
-            en: matchedKw
-                ? `"${matchedKw}" in your question matched ${guideName}. They check cash flow and downside before hype.`
-                : `${guideName} checks money flow and downside first, so financial questions stay grounded instead of hype-driven.`,
-        },
-        timing: {
-            ko: matchedKw
-                ? `질문에 "${matchedKw}" 키워드가 있어서 ${guideName}를 연결했습니다. 밀어붙일 때인지 기다릴 때인지를 더 선명하게 보여줍니다.`
-                : `${guideName}는 지금 밀어붙일 때인지 기다릴 때인지에 집중해서, 행동 타이밍을 더 선명하게 보여줍니다.`,
-            en: matchedKw
-                ? `"${matchedKw}" in your question matched ${guideName}. They clarify whether this is the moment to move or wait.`
-                : `${guideName} focuses on whether this is the moment to move or wait, which makes the timing feel much clearer.`,
-        },
-        career: {
-            ko: matchedKw
-                ? `질문에 "${matchedKw}" 키워드가 있어서 ${guideName}를 연결했습니다. 지금 역할이 맞는지, 옮길지 버틸지를 현실적으로 봐줍니다.`
-                : `${guideName}는 지금 역할이 맞는지, 옮길지 버틸지를 현실적으로 봐서 커리어 질문에 잘 맞습니다.`,
-            en: matchedKw
-                ? `"${matchedKw}" in your question matched ${guideName}. They stay practical about role fit, moving, or holding ground.`
-                : `${guideName} is strong for career questions because it stays practical about role fit, moving, or holding your ground.`,
-        },
-        business: {
-            ko: matchedKw
-                ? `질문에 "${matchedKw}" 키워드가 있어서 ${guideName}를 연결했습니다. 확장 욕심보다 구조와 검증 순서를 먼저 봐서 사업·부업 질문에 강합니다.`
-                : `${guideName}는 확장 욕심보다 구조와 검증 순서를 먼저 봐서, 사업과 부업 질문에 특히 잘 맞습니다.`,
-            en: matchedKw
-                ? `"${matchedKw}" in your question matched ${guideName}. They check structure and validation before expansion.`
-                : `${guideName} is especially useful for business questions because it looks at structure and validation before expansion.`,
-        },
-    } satisfies Record<OracleQuestionIntent, { ko: string; en: string }>;
-
-    return language === 'en' ? copy[specialty].en : copy[specialty].ko;
-};
-
-const getGuideAlternativeScore = (
-    persona: OraclePersonaProfile,
-    context: ReadingContext,
-    intent: OracleQuestionIntent,
-    recommendedId: OracleCharacterId
-) => {
-    let score = 0;
-
-    if (persona.id === recommendedId) score += 6;
-    if (persona.specialty === intent) score += 4;
-    if (persona.recommendedContexts.includes(context)) score += 3;
-
-    return score;
-};
+    'relative overflow-hidden rounded-[18px] border border-[#d7c59a]/20 bg-[#121416]/90 p-4 shadow-[0_18px_48px_rgba(0,0,0,0.18)] md:p-6';
 
 export function ReadingInput({
     onSubmit,
@@ -319,7 +94,6 @@ export function ReadingInput({
     const [question, setQuestion] = useState(initialData?.question ?? initialQuestion ?? '');
     const [languageOverride, setLanguageOverride] = useState<'ko' | 'en' | null>(null);
 
-    // 상대방 정보 state (궁합/재회 분석용)
     const [showPartnerInfo, setShowPartnerInfo] = useState(
         Boolean(inviteCode || initialData?.partnerBirthDate || initialData?.partnerName)
     );
@@ -332,6 +106,7 @@ export function ReadingInput({
 
     const language = languageOverride ?? initialLanguage;
     const isEn = language === 'en';
+    const intakeCopy = INTAKE_SECTION_COPY[language];
     const inferredQuestionIntent = inferQuestionIntent({
         context,
         question,
@@ -347,7 +122,7 @@ export function ReadingInput({
     });
     const selectedCharacterId = selectionMode === 'auto' ? recommendedCharacterId : characterId;
     const activePersona = getOraclePersona(selectedCharacterId);
-    const activeContext = contexts.find((item) => item.value === context) ?? contexts[contexts.length - 1];
+    const activeContext = READING_CONTEXTS.find((item) => item.value === context) ?? READING_CONTEXTS[READING_CONTEXTS.length - 1];
     const activeContextLabel = isEn ? activeContext.labelEn : activeContext.labelKo;
     const activeQuestionSuggestions = isEn
         ? activeContext.questionSuggestionsEn
@@ -388,7 +163,7 @@ export function ReadingInput({
             unknownTime || !birthTime
                 ? (isEn ? 'Unknown Time OK' : '생시 몰라도 진행')
                 : `${isEn ? 'Birth Time' : '생시'} ${birthTime}`,
-            isEn ? 'Evidence Layer' : '선택 근거 레이어',
+            isEn ? 'Tarot Prep Ready' : '타로 준비 가능',
         ]
         : [
             name.trim()
@@ -405,7 +180,6 @@ export function ReadingInput({
                 : `${isEn ? 'Birth Time' : '생시'} ${birthTime}`,
         ];
 
-    // 포맷팅 헬퍼 함수
     const handleDateChange = (val: string, setter: (v: string) => void) => {
         const numbers = val.replace(/\D/g, '');
         let formatted = numbers;
@@ -444,7 +218,7 @@ export function ReadingInput({
     };
 
     const handleContextSelect = (nextContext: ReadingContext) => {
-        const nextContextOption = contexts.find((item) => item.value === nextContext);
+        const nextContextOption = READING_CONTEXTS.find((item) => item.value === nextContext);
 
         setContext(nextContext);
         if (nextContext === 'love') {
@@ -478,7 +252,6 @@ export function ReadingInput({
             calendarType,
             unknownTime: resolvedUnknownTime,
             cityName: cityName.trim() || undefined,
-            // 상대방 정보 (입력된 경우에만 포함)
             ...(showPartnerInfo && partnerBirthDate ? {
                 partnerName: partnerName || undefined,
                 partnerBirthDate,
@@ -505,7 +278,7 @@ export function ReadingInput({
             <div className="border-b border-white/5 pb-4">
                 <div className="flex items-center justify-between gap-4">
                     <span className="text-xs font-mono text-dim tracking-widest uppercase">
-                        {isEn ? 'Reading Intake' : '질문 입력 순서'}
+                        {intakeCopy.sequenceLabel}
                     </span>
                     <div className="flex gap-4 text-xs font-mono">
                          <button
@@ -531,24 +304,24 @@ export function ReadingInput({
                         </button>
                     </div>
                 </div>
-                <div className="mt-4 flex flex-col gap-3 rounded-[22px] border border-white/10 bg-black/20 p-4 md:mt-5 md:flex-row md:items-end md:justify-between md:rounded-[24px] md:p-5">
+                <div className="mt-4 flex flex-col gap-3 rounded-[18px] border border-[#d7c59a]/18 bg-[#0f1113] p-4 md:mt-5 md:flex-row md:items-end md:justify-between md:p-5">
                     <div>
                         <div className="flex flex-wrap items-center gap-2">
-                            <span className="rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-acc-gold">
-                                {isEn ? 'First Note Free' : '첫 정리 무료'}
+                            <span className="border border-[#d7c59a]/25 bg-[#d7c59a]/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-[#d7c59a]">
+                                {isEn ? 'First verdict free' : '첫 판정 무료'}
                             </span>
-                            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
-                                {isEn ? 'Question + Evidence + Action' : '질문 + 근거 + 행동'}
+                            <span className="border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
+                                {intakeCopy.sequenceSummary}
                             </span>
                         </div>
                         <p className="mt-2 text-sm leading-6 text-white/62">
                             {isRelationshipContactEntry
                                 ? (isEn
-                                    ? 'Ask the contact-or-wait decision first. Birth details and tarot are optional evidence layers that can sharpen why this direction was chosen.'
-                                    : '연락할까, 기다릴까 질문을 먼저 적어주세요. 생년월일과 타로는 왜 이 방향인지 선명하게 만드는 선택 근거 레이어입니다.')
+                                    ? 'Ask the contact-or-wait decision first. Birth details and tarot are optional layers that sharpen why this direction was chosen.'
+                                    : '연락할까, 기다릴까 질문을 먼저 적어주세요. 생년월일과 타로는 왜 이 방향인지 선명하게 만드는 선택 근거입니다.')
                                 : (isEn
-                                    ? 'Ask one decision you have been putting off. Birth details and tarot sharpen the note instead of turning this into a generic reading.'
-                                    : '미루고 있는 선택 하나를 적어주세요. 생년월일과 타로 선택은 막연한 운세가 아니라 정리와 다음 행동의 근거를 더 선명하게 만드는 데 씁니다.')}
+                                    ? 'Ask one real question. Birth details and tarot sharpen the answer without turning it into a generic reading.'
+                                    : '지금 풀고 싶은 질문 하나를 적어주세요. 생년월일과 타로 선택은 결과의 근거를 더 선명하게 만드는 데만 씁니다.')}
                         </p>
                     </div>
                     {isEn ? (
@@ -570,27 +343,25 @@ export function ReadingInput({
                     <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                         <div>
                             <label className="block text-xs text-acc-gold tracking-widest uppercase">
-                                {isRelationshipContactEntry
-                                    ? (isEn ? '01. Contact Timing Question' : '01. 연락 타이밍 질문')
-                                    : (isEn ? '01. Delayed Choice' : '01. 미뤄둔 선택')}
+                                {intakeCopy.questionLabel}
                             </label>
                             <p className="mt-2 text-sm leading-6 text-white/58">
                                 {isRelationshipContactEntry
                                     ? (isEn
-                                        ? 'Write the DM or relationship move you are considering. The first note answers contact, wait, narrow, or hold.'
-                                        : '고민 중인 DM이나 관계 행동을 적어주세요. 첫 정리는 연락, 대기, 축소, 보류 중 어디에 가까운지부터 답합니다.')
+                                        ? 'Write the DM or relationship move you are considering. The first verdict separates contact, wait, narrow, or hold.'
+                                        : '고민 중인 DM이나 관계 행동을 적어주세요. 첫 판정은 연락, 대기, 축소, 보류 중 어디에 가까운지부터 분리합니다.')
                                 : (isEn
-                                    ? 'Choose the area, then write the delayed choice. The first note will turn it into move, wait, narrow, or stop.'
-                                    : '영역을 고르고, 미뤄둔 선택을 적어주세요. 첫 정리는 움직일지, 기다릴지, 좁힐지, 멈출지부터 답합니다.')}
+                                    ? 'Choose the area, then write the question. The first verdict turns it into move, wait, narrow, or stop.'
+                                    : '영역을 고르고 질문을 적어주세요. 첫 판정은 움직일지, 기다릴지, 좁힐지, 멈출지부터 답합니다.')}
                             </p>
                         </div>
-                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
-                            {isEn ? 'Question-First Intake' : '질문 중심 진입'}
+                        <span className="border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
+                            {intakeCopy.questionEyebrow}
                         </span>
                     </div>
 
                     <div className="mt-4 grid grid-cols-2 gap-2 md:mt-5 md:grid-cols-3">
-                        {contexts.map((ctx) => {
+                        {READING_CONTEXTS.map((ctx) => {
                             const isSelected = context === ctx.value;
                             return (
                                 <button
@@ -848,30 +619,24 @@ export function ReadingInput({
                     <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
                         <div>
                             <label className="block text-xs text-acc-gold tracking-widest uppercase">
-                                {isNextMoveReportEntry
-                                    ? (isEn ? '02. Optional Evidence Layer' : '02. 선택 근거 레이어')
-                                    : inviterName
-                                    ? (isEn ? `02. Saju Essentials (${inviterName} invited you)` : `02. 핵심 사주 입력 (${inviterName}님의 초대)`)
-                                    : (isEn ? '02. Saju Essentials' : '02. 핵심 사주 입력')}
+                                {intakeCopy.birthLabel}
                             </label>
                             <p className="mt-2 text-sm leading-6 text-white/58">
                                 {isNextMoveReportEntry
                                     ? (isRelationshipContactEntry
                                         ? (isEn
-                                        ? 'Add birth details only when you want Saju, astrology, or numerology to sharpen the rationale. The contact verdict can start from the question alone.'
+                                        ? 'Add birth details only when you want saju, astrology, or numerology to sharpen the rationale. The contact verdict can start from the question alone.'
                                         : '사주, 점성술, 수비학 근거를 더 선명하게 보고 싶을 때만 생년월일 정보를 더하세요. 연락 판정은 질문 하나로도 시작할 수 있습니다.')
                                         : (isEn
-                                            ? 'Add birth details only when you want the evidence layers to sharpen why this decision leaned move, wait, narrow, or stop.'
+                                            ? 'Add birth details only when you want the saju and astrology layers to sharpen why this decision leaned move, wait, narrow, or stop.'
                                             : '왜 움직임/대기/축소/보류 판정이 나왔는지 더 선명하게 보고 싶을 때만 생년월일 정보를 더하세요.'))
                                     : (isEn
-                                        ? 'For numerology and true-solar-time calibration, the first read now uses your name, birth date, birth city, birth time, gender, and solar/lunar calendar.'
-                                        : '수비학과 진태양시 보정을 함께 쓰기 때문에, 이제 첫 결과에도 이름, 생년월일, 출생 도시, 태어난 시간, 성별, 양력/음력을 함께 받습니다.')}
+                                        ? 'For saju, astrology timing, numerology, and true-solar-time calibration, the first result can use your name, birth date, birth city, birth time, gender, and calendar.'
+                                        : '사주, 점성 타이밍, 수비학과 진태양시 보정을 함께 쓰기 때문에 이름, 생년월일, 출생 도시, 태어난 시간, 성별, 양력/음력을 함께 받을 수 있습니다.')}
                             </p>
                         </div>
-                        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
-                            {isNextMoveReportEntry
-                                ? (isEn ? 'Optional Precision' : '선택 정밀도')
-                                : (isEn ? 'Quality First' : '퀄리티 우선')}
+                        <span className="border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-white/45">
+                            {intakeCopy.birthEyebrow}
                         </span>
                     </div>
 
@@ -1196,21 +961,55 @@ export function ReadingInput({
 
             {/* Action */}
             <div className="flex flex-col items-center justify-center gap-3 pt-1">
+                <div className="w-full rounded-[18px] border border-[#d7c59a]/20 bg-[#0f1113] p-4 text-left md:max-w-2xl md:p-5">
+                    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <p className="text-xs uppercase tracking-[0.24em] text-acc-gold">
+                                {intakeCopy.tarotLabel}
+                            </p>
+                            <p className="mt-2 text-sm leading-6 text-white/58">
+                                {intakeCopy.tarotSummary}
+                            </p>
+                        </div>
+                        <span className="inline-flex items-center gap-2 border border-[#d7c59a]/18 bg-[#d7c59a]/[0.06] px-3 py-1.5 text-[10px] uppercase tracking-[0.22em] text-[#d7c59a]/70">
+                            <span className="h-px w-4 bg-[#d7c59a]/35" />
+                            {isEn ? 'Final layer' : '마지막 근거'}
+                        </span>
+                    </div>
+                </div>
                 <button
                     type="submit"
                     disabled={isNextMoveReportEntry ? (!question.trim() || isLoading) : (!name.trim() || !birthDate || !question.trim() || (!unknownTime && !birthTime) || isLoading)}
-                    className={`group relative w-full overflow-hidden rounded-full border border-acc-gold/30 bg-gradient-to-r from-acc-gold via-[#f1cf74] to-[#c98d2d] px-8 py-3.5 text-deep-navy shadow-[0_18px_36px_rgba(212,175,55,0.18)] transition-all duration-300 hover:scale-[1.01] hover:shadow-[0_22px_46px_rgba(212,175,55,0.24)] md:w-auto md:px-10 ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
+                    className={`group relative grid w-full max-w-[380px] grid-cols-[72px_1fr_58px] overflow-hidden border border-[#d7c59a]/42 bg-[#0c0d0b] text-left text-starlight shadow-[0_22px_60px_rgba(0,0,0,0.28),inset_0_1px_0_rgba(255,255,255,0.06)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#d7c59a]/72 hover:bg-[#11110e] md:w-[380px] ${isLoading ? 'cursor-not-allowed opacity-50' : ''}`}
                 >
-                    <span className="relative z-10 font-cinzel text-sm font-bold uppercase tracking-[0.3em]">
-                        {isLoading
-                            ? (isEn ? 'CALCULATING...' : 'CALCULATING...')
-                            : (inviteCode
-                                ? (isEn ? 'SEE FREE COMPATIBILITY' : '무료 궁합 결과 보기')
-                                : (isEn ? 'SEE MY FREE VERDICT' : '무료 판정 먼저 보기')
-                            )
-                        }
+                    <span className="pointer-events-none absolute -left-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border border-[#d7c59a]/28 bg-[#080806]" />
+                    <span className="pointer-events-none absolute -right-2 top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border border-[#d7c59a]/28 bg-[#080806]" />
+                    <span className="pointer-events-none absolute inset-x-4 top-2 h-px bg-[#d7c59a]/12 transition-colors group-hover:bg-[#d7c59a]/24" />
+                    <span className="relative flex min-h-[72px] flex-col items-center justify-center border-r border-[#d7c59a]/24 bg-[#d7c59a]/[0.08]">
+                        <span className="font-cinzel text-[17px] leading-none text-[#d7c59a]">
+                            {isLoading ? '…' : '01'}
+                        </span>
+                        <span className="mt-1 text-[8px] font-bold uppercase tracking-[0.22em] text-[#d7c59a]/62">
+                            {isEn ? 'Free' : '무료'}
+                        </span>
                     </span>
-                    <div className="absolute inset-0 bg-white/12 translate-y-full transition-transform duration-500 ease-in-out group-hover:translate-y-0" />
+                    <span className="relative flex min-h-[72px] flex-col justify-center px-5 py-4">
+                        <span className="text-[9px] font-bold uppercase tracking-[0.26em] text-[#d7c59a]/58">
+                            {isEn ? 'First verdict' : '첫 판정'}
+                        </span>
+                        <span className="mt-1 font-cinzel text-base font-semibold tracking-[0.18em] text-starlight">
+                            {isLoading
+                                ? (isEn ? 'CALCULATING...' : 'CALCULATING...')
+                                : (inviteCode
+                                    ? (isEn ? 'OPEN COMPATIBILITY' : '궁합 판정 열기')
+                                    : (isEn ? 'OPEN FIRST VERDICT' : '첫 판정 열기')
+                                )
+                            }
+                        </span>
+                    </span>
+                    <span className="relative flex min-h-[72px] items-center justify-center border-l border-[#d7c59a]/24 bg-[#d7c59a]/[0.05] text-2xl text-[#d7c59a] transition-colors group-hover:bg-[#d7c59a]/[0.1]">
+                        <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
+                    </span>
                 </button>
                 <p className="text-center text-[11px] tracking-[0.16em] text-white/38 uppercase">
                     {isEn

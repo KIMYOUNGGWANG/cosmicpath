@@ -167,7 +167,6 @@ const CAMPAIGN_FUNNEL_DEFINITIONS = [
         sources: [
             'next_move_report_mvp_v1',
             'relationship_contact_timing_v1',
-            'en_relationship_contact_timing_v1',
         ],
     },
     {
@@ -267,7 +266,12 @@ function getCampaignStageKeys(event: CampaignSessionEvent): Array<keyof Campaign
     ) {
         stageKeys.push('promptClicks');
     }
-    if (event.event === 'decision_question_submit') stageKeys.push('questionSubmits');
+    if (
+        event.event === 'decision_question_submit' ||
+        event.canonicalEvent === 'decision_question_submit'
+    ) {
+        stageKeys.push('questionSubmits');
+    }
     if (event.event === 'analysis_start') stageKeys.push('analysisStarts');
     if (event.canonicalEvent === 'first_result_view') stageKeys.push('firstResultViews');
     if (event.canonicalEvent === 'paywall_view') stageKeys.push('paywallViews');

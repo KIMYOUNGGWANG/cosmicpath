@@ -103,8 +103,8 @@ export async function mockPaywallBasics(page: Page): Promise<string[]> {
 
 export async function openNextMovePaywall(page: Page): Promise<void> {
     await page.goto(startPath);
-    await page.getByRole('button', { name: /무료 판정 먼저 보기/ }).click();
-    await page.getByRole('button', { name: /타로 없이 무료 판정 보기/ }).click();
+    await page.getByRole('button', { name: /첫 판정 열기|무료 판정 먼저 보기/ }).click();
+    await page.getByRole('button', { name: /타로 없이 (?:무료 )?판정 보기/ }).click();
     await expect(page.getByText(/연락 판정/).first()).toBeVisible();
     await page.getByRole('button', { name: /연락 타이밍 열기/ }).click();
     await expect(page.getByText(/Detailed Decision Note/i).first()).toBeVisible();
