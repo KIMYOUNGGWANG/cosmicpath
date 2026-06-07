@@ -140,12 +140,7 @@ export async function redeemPromotionCode(params: {
     });
 
     if (existingRedemption) {
-      return {
-        redemptionId: existingRedemption.id,
-        alreadyRedeemed: true,
-        code: promoCode.code,
-        discount: promoCode.discount,
-      };
+      throw new Error('이미 이 프로모션 코드를 사용하셨습니다.');
     }
 
     if (promoCode.usedCount >= promoCode.maxUses) {
