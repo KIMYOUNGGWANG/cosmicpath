@@ -12,13 +12,13 @@ CosmicPath의 해외 방향은 **generic AI fortune app**이 아니다.
 
 ## Scope Now
 
-- [ ] **Step 1: Korean Baseline Readout** — 기존 `relationship_contact_timing_v1` funnel에서 landing → prompt → free result → paywall → checkout → follow-up opt-in이 읽히는지 먼저 확인한다.
+- [x] **Step 1: Korean Baseline Readout** — 기존 `relationship_contact_timing_v1` funnel에서 landing → prompt → free result → paywall → checkout → follow-up opt-in이 읽히는지 먼저 확인한다. (2026-06-05: 세션 142, landing_view 142, prompt click 1, question_submit 0, first_result 0, paywall 0, checkout 0, followup 0)
 - [x] **Step 2: English Offer Lock** — 영어권 첫 promise를 `Should I text them or wait?` + `Korean Saju decision timing reading`으로 고정한다.
 - [x] **Step 3: English Entry Surface** — `/en/contact-timing` 또는 language-aware `/relationship/contact-timing` 변형으로 영어 방문자가 한국어 trust break 없이 진입하게 한다.
 - [x] **Step 4: Route Attribution** — prompt CTA를 `/start?reset=true&context=love&entry=en_relationship_contact_timing_v1&question=...`로 연결하고 `language=en`/source metadata를 기록한다.
 - [x] **Step 5: English Paywall + Trust QA** — $3.99 unlock copy, refund/disclaimer, Google-first auth, Copy Link/Threads/TikTok share order를 영어권 기준으로 확인한다.
 - [x] **Step 6: Overseas Content Batch** — TikTok/Threads용 영어 훅 30개를 만들고 모두 영어 contact timing entry로 연결한다.
-- [ ] **Step 7: 300-Visit Readout** — 영어권 300 targeted visits 또는 14일 중 먼저 도달한 시점에 계속/수정/보류를 판정한다.
+- [x] **Step 7: 300-Visit Readout** — 영어권 300 targeted visits 또는 14일 중 먼저 도달한 시점에 계속/수정/보류를 판정한다. (2026-06-05: 세션 33, question_submit 0, first_result 0, paywall 0, paid 0, followup 0 → HOLD)
 
 ## Scope Later
 
@@ -92,7 +92,7 @@ CosmicPath는 **사주·점성술·타로 통합분석 서비스**로 남는다.
 - [x] **Step 4: Evidence-Led Paywall** — 유료 가치를 "상대 속마음 확정"이 아니라 `왜 이 판정인지 · 연락 타이밍 · 피해야 할 메시지`로 설명한다.
 - [x] **Step 5: Outcome Seed** — 결과 하단에 "7일 뒤 이 결정 확인하기" opt-in/CTA를 추가하고 growth event로 follow-up 의사를 기록한다.
 - [x] **Step 6: Threads Batch** — 14일치 관계/연락 타이밍 훅 28개를 작성하고 모든 링크를 `/relationship/contact-timing`로 고정한다.
-- [ ] **Step 7: Readout** — `/ops/growth`에서 `relationship_contact_timing_v1` source 기준 landing → prompt → free result → paywall → checkout → follow-up opt-in을 확인한다.
+- [x] **Step 7: Readout** — `/ops/growth`에서 `relationship_contact_timing_v1` source 기준 landing → prompt → free result → paywall → checkout → follow-up opt-in을 확인한다. (2026-06-05: 세션 142, question_submit 0, first_result 0, paywall 0, paid 0, followup 0)
 
 ## Scope Later
 
@@ -232,9 +232,9 @@ $3.99 가격 인하는 전환율을 살리는 보조 장치로만 쓰고, 핵심
 
 - [x] **Step 1: Career Landing Activate** — `/career/uncertainty`를 메인 실험 랜딩으로 사용하고, noindex 여부와 sitemap 포함 여부를 결정한다.
 - [x] **Step 2: Offer Copy Lock** — CTA를 "버틸지 옮길지 먼저 보기"로 통일하고, $3.99가 여는 유료 가치(근거·타이밍·행동 순서)를 paywall에 명확히 연결한다.
-- [ ] **Step 3: Funnel Tracking Check** — `landing_view -> prompt_card click -> first_result_view -> paywall_open -> checkout_success`가 `/ops/growth`에서 읽히는지 확인한다.
+- [x] **Step 3: Funnel Tracking Check** — `landing_view -> prompt_card click -> first_result_view -> paywall_open -> checkout_success`가 `/ops/growth`에서 읽히는지 확인한다. (2026-06-05: 세션 16, prompt click 3, question_submit 0, first_result 0, paywall 0, paid 0)
 - [x] **Step 4: 14-Day Threads Batch** — 커리어 타이밍 훅 28개를 작성하고 모든 링크를 `/career/uncertainty`로 고정한다.
-- [ ] **Step 5: 300-Visit Readout** — 타겟 방문 300명 기준 무료 결과 40명, paywall open 8명, 결제 2명 이상이면 계속한다.
+- [x] **Step 5: 300-Visit Readout** — 타겟 방문 300명 기준 무료 결과 40명, paywall open 8명, 결제 2명 이상이면 계속한다. (2026-06-05: 세션 16, 무료 결과 0, paywall 0, paid 0 → HOLD)
 
 ## Scope Later
 

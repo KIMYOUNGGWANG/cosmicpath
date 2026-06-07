@@ -61,6 +61,7 @@ docs/marketing/*.md
 
 # agent skills and internal tools
 .agent/
+.omo/
 
 # utility scripts
 convert_threads_posts.py
