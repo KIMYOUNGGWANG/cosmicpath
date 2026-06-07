@@ -3013,6 +3013,10 @@ export function calculateSaju(
   longitude: number = 126.9780,  // 서울 기본값
   options: CalculateSajuOptions = {},
 ): SajuResult {
+  if (Number.isNaN(birthDate.getTime())) {
+    throw new Error('Invalid birth date for Saju calculation');
+  }
+
   // 1. 경도 기반 시간 보정 (지역시 → 진태양시)
   // KST는 동경 135도 기준, 출생지 경도와의 차이 × 4분/도
   const timeCorrectionMinutes = options.skipLongitudeCorrection ? 0 : Math.round((135 - longitude) * 4);

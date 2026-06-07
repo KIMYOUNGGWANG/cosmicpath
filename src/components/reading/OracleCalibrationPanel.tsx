@@ -40,6 +40,11 @@ interface OracleCalibrationPanelProps {
     correctedTime: string;
     lon: number;
     hourPillar: string;
+    astrologyInputDate?: string;
+    astrologyInputTime?: string;
+    astrologyTimezoneOffset?: number;
+    astrologyTimePolicy?: 'civil_time';
+    astrologyAscendantConfidence?: 'exact_time' | 'approximate_noon';
   } | null;
   oracleCouncil?: {
     convergenceScore: number;
@@ -99,8 +104,8 @@ const PANEL_COPY = {
       footerText: '출생지와 시간 기준을 다시 확인한 뒤, 사주와 다른 해석 레이어를 함께 정리하고 있습니다.',
     },
     en: {
-      label: 'Decision Note Setup',
-      pendingTitle: 'Preparing the decision note',
+      label: 'CosmicPath Setup',
+      pendingTitle: 'Preparing the CosmicPath reading',
       readyTitle: 'True Solar Time Locked',
       loadingText: 'Checking chart time, question context, and evidence layers.',
       snapshotLabel: 'Setup Snapshot',
@@ -131,8 +136,8 @@ const PANEL_COPY = {
       footerText: '출생지 정보가 없으면 입력한 생년월일시를 기준으로 먼저 리딩을 정리합니다.',
     },
     en: {
-      label: 'Decision Note',
-      pendingTitle: 'Preparing your decision note',
+      label: 'CosmicPath Reading',
+      pendingTitle: 'Preparing your CosmicPath reading',
       readyTitle: 'Core note prepared',
       loadingText: 'Cross-checking saju, astrology, and tarot signals for your note.',
       snapshotLabel: 'Note Snapshot',
@@ -165,6 +170,14 @@ function getStageState(
   return 'idle';
 }
 
+function formatAstrologyTimezone(offset: number | undefined) {
+  if (offset === 9) return 'KST';
+  if (offset === 0) return 'UTC';
+  if (typeof offset !== 'number') return 'KST';
+
+  return `UTC${offset > 0 ? '+' : ''}${offset}`;
+}
+
 export function OracleCalibrationPanel({
   language,
   loadingLabel,
@@ -184,6 +197,11 @@ export function OracleCalibrationPanel({
   const hasPrecision = Boolean(precisionMetadata);
   const timeShiftText = precisionMetadata
     ? `${precisionMetadata.inputDate} ${precisionMetadata.inputTime} → ${precisionMetadata.correctedDate} ${precisionMetadata.correctedTime}`
+    : null;
+  const astrologyTimeText = precisionMetadata?.astrologyInputDate && precisionMetadata.astrologyInputTime
+    ? language === 'en'
+      ? `Astrology basis: ${precisionMetadata.astrologyInputDate} ${precisionMetadata.astrologyInputTime} ${formatAstrologyTimezone(precisionMetadata.astrologyTimezoneOffset)} (${precisionMetadata.astrologyAscendantConfidence === 'approximate_noon' ? 'unknown birth time, ascendant reference value' : 'civil birth time'})`
+      : `점성술 기준: ${precisionMetadata.astrologyInputDate} ${precisionMetadata.astrologyInputTime} ${formatAstrologyTimezone(precisionMetadata.astrologyTimezoneOffset)} (${precisionMetadata.astrologyAscendantConfidence === 'approximate_noon' ? '출생시 미상, 상승궁 참고값' : '민간 출생시 기준'})`
     : null;
   const hasDateShift = Boolean(
     precisionMetadata && precisionMetadata.inputDate !== precisionMetadata.correctedDate
@@ -357,6 +375,9 @@ export function OracleCalibrationPanel({
                       {copy.timingExplainLabel}
                     </div>
                     <div className="mt-1 text-starlight">{timeShiftText}</div>
+                    {astrologyTimeText && (
+                      <div className="mt-1 text-starlight/85">{astrologyTimeText}</div>
+                    )}
                     <div className="mt-1 text-white/50">
                       {hasDateShift
                         ? (language === 'en'

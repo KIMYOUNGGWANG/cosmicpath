@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ZODIAC_SIGNS } from '@/lib/engines/astrology';
+import { isExternalEffectsDisabled } from '@/lib/runtime-environment';
 import {
   buildFreeSummaryExpansionSystemPrompt,
   buildStructuredSystemPrompt,
@@ -227,6 +228,33 @@ export async function runFreeReading(params: FreeReadingParams) {
       isPremium: false,
     }
   );
+
+  if (isExternalEffectsDisabled()) {
+    const fallbackReport = finalizeFreeReport({
+      guide: params.runtime.guide,
+      saju: params.runtime.saju,
+      astrology: params.runtime.astrology,
+      cards: params.runtime.cards,
+      questionIntent: params.runtime.resolvedQuestionIntent,
+      decisionAction: params.runtime.decisionAction,
+      question: params.question,
+      advisorEvidenceSummary: params.runtime.advisorEvidenceSummary,
+      language: params.language,
+      previousReport: params.previousReport,
+    });
+
+    return NextResponse.json(buildEnrichedPayload({
+      success: true,
+      phase: params.currentPhase,
+      report: fallbackReport,
+      runtime: params.runtime,
+      language: params.language,
+      isPremium: false,
+      freeGenerationMode: params.currentPhase > 1
+        ? 'phase_2_fallback'
+        : 'deterministic_fallback_outline',
+    }));
+  }
 
   if (params.currentPhase > 1) {
     try {

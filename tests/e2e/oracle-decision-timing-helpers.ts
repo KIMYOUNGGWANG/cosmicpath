@@ -94,10 +94,27 @@ export async function mockDecisionReadingGeneration(page: Page): Promise<void> {
   });
 }
 
+export async function mockDecisionReadingSave(page: Page): Promise<JsonRecord[]> {
+  const requests: JsonRecord[] = [];
+  await page.route('**/api/reading/save', async (route) => {
+    requests.push(parseJsonRecord(route.request().postData()));
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: 'qa-decision-reading',
+        accessKey: 'qa-access-key',
+      }),
+    });
+  });
+  return requests;
+}
+
 export async function openDecisionStart(page: Page): Promise<void> {
   await mockDecisionGrowthTracking(page);
   await mockDecisionReadingPrice(page);
   await mockDecisionReadingGeneration(page);
+  await mockDecisionReadingSave(page);
   await page.goto(decisionStartPath);
   await expect(page.locator('textarea').first()).toHaveValue(decisionQuestion);
 }

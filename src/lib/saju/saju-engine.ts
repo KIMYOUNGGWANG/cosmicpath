@@ -8,8 +8,13 @@ import {
   calculateSaju,
   formatSaju,
 } from '@/lib/engines/saju';
+import { calculateAstrology, type AstrologyResult } from '@/lib/engines/astrology';
 import { calculateTrueSolarTime, type TrueSolarTimeResult } from './true-solar-time';
-import { calculateNatal } from './natal';
+import {
+  buildCanonicalNatalChart,
+  buildCanonicalNatalSummary,
+  type AstrologyAscendantConfidence,
+} from './canonical-astrology';
 import { createChart, getDaxianList } from './ziwei';
 
 export type Gender = 'male' | 'female' | 'M' | 'F';
@@ -59,6 +64,11 @@ export interface PrecisionMetadata {
   correctedTime: string;
   lon: number;
   hourPillar: string;
+  astrologyInputDate: string;
+  astrologyInputTime: string;
+  astrologyTimezoneOffset: number;
+  astrologyTimePolicy: 'civil_time';
+  astrologyAscendantConfidence: AstrologyAscendantConfidence;
 }
 
 export interface OracleCouncil {
@@ -96,6 +106,7 @@ export interface OracleSajuProfile {
   trueSolarTime: TrueSolarTimeResult;
   ziweiChart: ZiweiChart;
   natalChart: NatalChart;
+  westernAstrology: AstrologyResult;
 }
 
 export interface ZiweiChart {
@@ -609,6 +620,7 @@ export function getTriOracleSummary(input: {
   raw: OracleRawProfile;
   ziweiChart: ZiweiChart;
   natalChart: NatalChart;
+  natalSummaryOverride?: string;
 }): OracleCouncil {
   const sajuThemes = new Set(getSajuThemes(input.raw));
   const natalThemes = getSignThemes(input.natalChart);
@@ -630,7 +642,7 @@ export function getTriOracleSummary(input: {
   return {
     convergenceScore,
     ziweiSummary: buildZiweiSummary(input.ziweiChart),
-    natalSummary: buildNatalSummary(input.natalChart),
+    natalSummary: input.natalSummaryOverride ?? buildNatalSummary(input.natalChart),
   };
 }
 
@@ -668,7 +680,19 @@ export function calculateOracleSajuProfile(options: {
   latitude?: number;
   isLunar?: boolean;
   unknownTime?: boolean;
+  timezoneOffset?: number;
 }): OracleSajuProfile {
+  const astrologyInputTime = options.unknownTime ? '12:00' : options.birthTime ?? '12:00';
+  const astrologyTimeParts = parseTimeParts(astrologyInputTime);
+  const [birthYear, birthMonth, birthDay] = options.birthDate.split('-').map(Number);
+  const astrologyInputDateTime = new Date(
+    birthYear,
+    birthMonth - 1,
+    birthDay,
+    astrologyTimeParts.hour,
+    astrologyTimeParts.minute,
+    0,
+  );
   const trueSolarTime = calculateTrueSolarTime({
     birthDate: options.birthDate,
     birthTime: options.birthTime,
@@ -679,6 +703,10 @@ export function calculateOracleSajuProfile(options: {
   });
   const { hour, minute } = parseTimeParts(trueSolarTime.correctedTime);
   const normalizedGender = normalizeGender(options.gender);
+  const astrologyTimezoneOffset = options.timezoneOffset ?? 9;
+  const astrologyAscendantConfidence: AstrologyAscendantConfidence = options.unknownTime
+    ? 'approximate_noon'
+    : 'exact_time';
   const saju = calculateSaju(
     trueSolarTime.correctedDateTime,
     hour,
@@ -710,15 +738,16 @@ export function calculateOracleSajuProfile(options: {
     minute,
     normalizedGender === 'male'
   );
-  const natalChart = calculateNatal({
-    year: trueSolarTime.correctedDateTime.getFullYear(),
-    month: trueSolarTime.correctedDateTime.getMonth() + 1,
-    day: trueSolarTime.correctedDateTime.getDate(),
-    hour,
-    minute,
-    gender: options.gender,
-    latitude: trueSolarTime.location.latitude,
-    longitude: trueSolarTime.location.longitude,
+  const westernAstrology = calculateAstrology(
+    astrologyInputDateTime,
+    astrologyInputTime,
+    trueSolarTime.location.latitude,
+    trueSolarTime.location.longitude,
+    astrologyTimezoneOffset,
+  );
+  const natalChart = buildCanonicalNatalChart(westernAstrology);
+  const natalSummary = buildCanonicalNatalSummary(westernAstrology, {
+    ascendantConfidence: astrologyAscendantConfidence,
   });
 
   return {
@@ -736,12 +765,18 @@ export function calculateOracleSajuProfile(options: {
       correctedTime: trueSolarTime.correctedTime,
       lon: trueSolarTime.location.longitude,
       hourPillar: `${saju.hourPillar.stem}${saju.hourPillar.branch}`,
+      astrologyInputDate: options.birthDate,
+      astrologyInputTime,
+      astrologyTimezoneOffset,
+      astrologyTimePolicy: 'civil_time',
+      astrologyAscendantConfidence,
     },
-    oracleCouncil: getTriOracleSummary({ raw, ziweiChart, natalChart }),
+    oracleCouncil: getTriOracleSummary({ raw, ziweiChart, natalChart, natalSummaryOverride: natalSummary }),
     location: trueSolarTime.location,
     trueSolarTime,
     ziweiChart,
     natalChart,
+    westernAstrology,
   };
 }
 

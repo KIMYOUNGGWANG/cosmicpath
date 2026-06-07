@@ -60,3 +60,11 @@ export function matchesCurrentRuntimeEnvironment(tag: RuntimeEnvironment | null 
 
     return tag === currentEnvironment;
 }
+
+export function isExternalEffectsDisabled(): boolean {
+    const value = process.env.COSMICPATH_DISABLE_EXTERNAL_EFFECTS;
+    if (!value) return false;
+
+    const normalized = value.trim().toLowerCase();
+    return normalized === '1' || normalized === 'true';
+}

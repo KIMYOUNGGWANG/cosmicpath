@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { devLog } from '@/lib/dev-logger';
+import { isExternalEffectsDisabled } from '@/lib/runtime-environment';
 
 const DEFAULT_FREE_READING_DAILY_LIMIT = Number(process.env.FREE_READING_DAILY_LIMIT ?? '3');
 
@@ -25,6 +26,15 @@ export async function consumeDailyQuota({
   action,
   limit = DEFAULT_FREE_READING_DAILY_LIMIT,
 }: ConsumeQuotaInput): Promise<QuotaResult> {
+  if (isExternalEffectsDisabled()) {
+    return {
+      allowed: true,
+      used: 0,
+      limit,
+      remaining: limit,
+    };
+  }
+
   const day = getUtcDayStart();
 
   try {
@@ -89,6 +99,15 @@ export async function getDailyQuotaStatus(
   action: string,
   limit: number = DEFAULT_FREE_READING_DAILY_LIMIT
 ): Promise<QuotaResult> {
+  if (isExternalEffectsDisabled()) {
+    return {
+      allowed: true,
+      used: 0,
+      limit,
+      remaining: limit,
+    };
+  }
+
   const day = getUtcDayStart();
 
   try {

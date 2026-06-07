@@ -14,6 +14,10 @@ function evidenceScreenshotPath(projectName: string, name: string) {
     return path.join(process.cwd(), '.omo/evidence', `task-9-${projectName}-${name}.png`);
 }
 
+function engineSourceEvidencePath(name: string) {
+    return path.join(process.cwd(), '.omo/ulw-loop/evidence', name);
+}
+
 test.describe('Oracle decision timing harness', () => {
     test('start route accepts canonical decision timing entry', async ({ page }, testInfo) => {
         await page.goto('/');
@@ -25,7 +29,7 @@ test.describe('Oracle decision timing harness', () => {
         await openDecisionStart(page);
 
         await expect(page).toHaveURL(/entry=decision_timing_rebuild_v1/);
-        await expect(page.getByText(/미뤄둔 선택|End One Delayed Choice/).first()).toBeVisible();
+        await expect(page.getByText(/CosmicPath 3단분석 접수실|CosmicPath 3-Layer Reading Intake/).first()).toBeVisible();
         await page.screenshot({
             path: evidenceScreenshotPath(testInfo.project.name, 'start'),
             fullPage: true,
@@ -47,8 +51,8 @@ test.describe('Oracle decision timing harness', () => {
     test('free result renders the structured decision timing brief', async ({ page }, testInfo) => {
         await openDecisionStart(page);
 
-        await page.getByRole('button', { name: /무료 판정 먼저 보기|SEE MY FREE VERDICT/i }).click();
-        await page.getByRole('button', { name: /타로 없이 무료 판정 보기|without tarot/i }).click();
+        await page.getByRole('button', { name: /첫 판정 열기|OPEN FIRST VERDICT|무료 판정 먼저 보기|SEE MY FREE VERDICT/i }).click();
+        await page.getByRole('button', { name: /타로 없이 (?:무료 )?판정 보기|Skip Tarot|without tarot/i }).click();
 
     await expect(page.getByText(/선택지 먼저 좁히기|Narrow first/).first()).toBeVisible({ timeout: 15_000 });
         await expect(page.getByText(/이번 주 안에 조건을 비교하고 다음 2주 안에 첫 지원 여부/).first()).toBeVisible();
@@ -60,10 +64,71 @@ test.describe('Oracle decision timing harness', () => {
         });
 
         await page.getByRole('button', { name: /타이밍 열기|Unlock timing/i }).click();
-        await expect(page.getByText(/전체 결정 타이밍 리포트|Full Decision Timing Report/i).first()).toBeVisible();
-        await expect(page.getByText(/타이밍 구간|Timing Window/i).first()).toBeVisible();
+        await expect(page.getByText(/상세 판정문|Detailed/i).first()).toBeVisible();
+        await expect(page.getByText(/타이밍|Timing/i).first()).toBeVisible();
         await page.screenshot({
             path: evidenceScreenshotPath(testInfo.project.name, 'paywall'),
+            fullPage: true,
+        });
+    });
+
+    test('calibration panel renders astrology provenance copy', async ({ page }) => {
+        await mockDecisionGrowthTracking(page);
+        await mockDecisionReadingPrice(page);
+        const readingData = {
+            name: 'QA',
+            gender: 'female',
+            birthDate: '1994-04-12',
+            birthTime: '12:00',
+            calendarType: 'solar',
+            unknownTime: true,
+            context: 'career',
+            question: decisionQuestion,
+            language: 'ko',
+            cityName: '서울',
+            longitude: 126.978,
+            latitude: 37.5665,
+            characterId: 'mentor',
+            tarotCards: [],
+        };
+        const metadata = {
+            language: 'ko',
+            characterId: 'mentor',
+            readingData,
+            precisionMetadata: {
+                inputDate: '1994-04-12',
+                inputTime: '12:00',
+                tstOffset: -32,
+                correctedDate: '1994-04-12',
+                correctedTime: '11:28',
+                lon: 126.978,
+                hourPillar: '병오시',
+                astrologyInputDate: '1994-04-12',
+                astrologyInputTime: '12:00',
+                astrologyTimezoneOffset: 9,
+                astrologyTimePolicy: 'civil_time',
+                astrologyAscendantConfidence: 'approximate_noon',
+            },
+            oracleCouncil: {
+                convergenceScore: 72,
+                ziweiSummary: '보정된 시각 기준으로 흐름을 확인합니다.',
+                natalSummary: '태양 양자리, 달 황소자리, 상승궁은 정오 기준 참고값입니다.',
+            },
+        };
+
+        await page.addInitScript(({ readingData, metadata }) => {
+            sessionStorage.setItem('pending_reading_data', JSON.stringify(readingData));
+            sessionStorage.setItem('pending_metadata', JSON.stringify(metadata));
+            sessionStorage.setItem('reading_step', 'reveal');
+            sessionStorage.setItem('is_session_active', 'true');
+        }, { readingData, metadata });
+
+        await page.goto('/start?context=career&entry=decision_timing_rebuild_v1&lang=ko');
+        await page.getByText('Tap to Reveal').click();
+        await page.waitForTimeout(950);
+        await expect(page.getByText('점성술 기준: 1994-04-12 12:00 KST (출생시 미상, 상승궁 참고값)')).toBeVisible({ timeout: 15_000 });
+        await page.screenshot({
+            path: engineSourceEvidencePath('engine-source-c003-provenance-ui.png'),
             fullPage: true,
         });
     });
@@ -76,7 +141,7 @@ test.describe('Oracle decision timing harness', () => {
         expect(body.error.message).toMatch(/로그인|관리자/);
     });
 
-    test('real reading API fallback returns decision timing fields', async ({ request }) => {
+    test('free_reading_report_contract: real reading API fallback returns decision timing fields', async ({ request }) => {
         const response = await request.post('/api/reading', {
             data: {
                 name: 'QA',
@@ -115,6 +180,10 @@ test.describe('Oracle decision timing harness', () => {
         expect(freeFocus.confidence_note.length).toBeGreaterThan(10);
         expect(body.metadata.decisionAction.defaultVerdict).toBe(freeFocus.decision_label);
         expect(body.metadata.freeGenerationMode).toMatch(/fallback|outline|ai_outline/);
+        expect(body.metadata.precisionMetadata.astrologyInputTime).toBe('12:00');
+        expect(body.metadata.precisionMetadata.astrologyTimePolicy).toBe('civil_time');
+        expect(body.metadata.precisionMetadata.astrologyAscendantConfidence).toBe('approximate_noon');
+        expect(body.metadata.oracleCouncil.natalSummary).toContain('상승궁은 정오 기준 참고값');
     });
 
     test('harness stays free of future-only assertions', async () => {

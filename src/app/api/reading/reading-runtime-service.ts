@@ -1,4 +1,4 @@
-import { calculateAstrology } from '@/lib/engines/astrology';
+import type { AstrologyResult } from '@/lib/engines/astrology';
 import { drawCards, type TarotCard } from '@/lib/engines/tarot';
 import { extractAllTags } from '@/lib/core/tag-engine';
 import { generateInterpretationGuide } from '@/lib/core/conflict-resolver';
@@ -32,7 +32,7 @@ export type AssembledReadingRuntime = {
   guide: ReadingGuideSnapshot;
   saju: StoredLegacySajuResult;
   partnerSaju: StoredLegacySajuResult | null;
-  astrology: ReturnType<typeof calculateAstrology>;
+  astrology: AstrologyResult;
   resolvedQuestionIntent: OracleQuestionIntent;
   decisionAction: DecisionActionContract;
   resolvedCharacterId: ReturnType<typeof resolveOracleCharacterId>;
@@ -83,9 +83,6 @@ type ReadingRuntimeAssemblyParams = {
 export async function assembleReadingRuntime(
   params: ReadingRuntimeAssemblyParams
 ): Promise<AssembledReadingRuntime> {
-  const [yearPart, monthPart, dayPart] = params.birthDate.split('-').map(Number);
-  const [hours, minutes] = params.birthTime.split(':').map(Number);
-  const exactBirthDateTime = new Date(yearPart, monthPart - 1, dayPart, hours, minutes || 0, 0);
   const storedRuntime = params.useStoredRuntime
     ? extractStoredReadingRuntime(params.storedReadingMetadata)
     : null;
@@ -135,25 +132,24 @@ export async function assembleReadingRuntime(
     latitude: params.latitude,
     isLunar: params.calendarType === 'lunar',
     unknownTime: params.unknownTime || false,
+    timezoneOffset: 9,
   });
 
   const saju = mapToLegacySaju(sajuProfile);
   const precisionMetadata = sajuProfile.precisionMetadata;
   const oracleCouncil = sajuProfile.oracleCouncil;
 
-  const [partnerSajuProfile, astrology] = await Promise.all([
-    params.partnerBirthDate
-      ? calculateOracleSajuProfile({
-          birthDate: params.partnerBirthDate,
-          birthTime: params.partnerBirthTime || '12:00',
-          gender: params.partnerGender || 'male',
-          unknownTime: !params.partnerBirthTime,
-        })
-      : Promise.resolve(null),
-    Promise.resolve(calculateAstrology(exactBirthDateTime, params.birthTime)),
-  ]);
+  const partnerSajuProfile = params.partnerBirthDate
+    ? await calculateOracleSajuProfile({
+        birthDate: params.partnerBirthDate,
+        birthTime: params.partnerBirthTime || '12:00',
+        gender: params.partnerGender || 'male',
+        unknownTime: !params.partnerBirthTime,
+      })
+    : null;
 
   const partnerSaju = partnerSajuProfile ? mapToLegacySaju(partnerSajuProfile) : null;
+  const astrology = sajuProfile.westernAstrology;
   const resolvedQuestionIntent = params.requestedQuestionIntent ?? inferQuestionIntent({
     context: params.context,
     question: params.question,
