@@ -18,29 +18,26 @@ import {
     type UserData,
     type PremiumReportPartial
 } from './phase-prompts';
+import { buildGoogleResponseJsonSchema } from './google-json-schema';
+import { getPremiumPhaseSchema, parsePremiumPhaseResult } from './premium-report-schemas';
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 const PRIMARY_MODEL_NAME = 'gemini-3.5-flash';
-const FALLBACK_MODEL_NAME = 'gemini-2.5-flash';
 const FAST_PHASE_REQUEST_TIMEOUT_MS = 18000;
-const PHASE_ONE_PRIMARY_TIMEOUT_MS = 36000;
-const PHASE_ONE_FALLBACK_TIMEOUT_MS = 30000;
-const DEEP_PHASE_PRIMARY_TIMEOUT_MS = 30000;
-const DEEP_PHASE_FALLBACK_TIMEOUT_MS = 24000;
-const FORTUNE_FLOW_PRIMARY_TIMEOUT_MS = 45000;
-const FORTUNE_FLOW_FALLBACK_TIMEOUT_MS = 42000;
-const PHASE_EIGHT_PRIMARY_TIMEOUT_MS = 45000;   // Past life + glossary + final verdict
-const PHASE_EIGHT_FALLBACK_TIMEOUT_MS = 42000;
-const MAX_ATTEMPTS_PER_MODEL = 2;
-const PHASE_OUTPUT_TOKEN_BUDGETS: Record<number, { initial: number; retry: number }> = {
-    1: { initial: 4096, retry: 5120 },   // Summary + traits + core analysis
-    2: { initial: 3072, retry: 3584 },   // Astro deep
-    3: { initial: 3072, retry: 3584 },   // Tarot details + numerology
-    4: { initial: 5120, retry: 6144 },   // Saju sections
-    5: { initial: 8192, retry: 10240 },  // Fortune flow
-    6: { initial: 6656, retry: 8192 },   // Life areas + soulmate + compatibility
-    7: { initial: 5120, retry: 6144 },   // Special analysis + action plan + date selection
-    8: { initial: 7168, retry: 9216 },   // Past life + glossary + final verdict
+const PHASE_ONE_REQUEST_TIMEOUT_MS = 55000;
+const DEEP_PHASE_REQUEST_TIMEOUT_MS = 55000;
+const FORTUNE_FLOW_REQUEST_TIMEOUT_MS = 55000;
+const PHASE_EIGHT_REQUEST_TIMEOUT_MS = 55000;   // Past life + glossary + final verdict
+const MAX_ATTEMPTS_PER_MODEL = 3;
+const PHASE_OUTPUT_TOKEN_BUDGETS: Record<number, { initial: number; retry: number; final: number }> = {
+    1: { initial: 8192, retry: 12288, final: 16384 },   // Summary + traits + core analysis
+    2: { initial: 6144, retry: 8192, final: 12288 },    // Astro deep
+    3: { initial: 6144, retry: 8192, final: 12288 },    // Tarot details + numerology
+    4: { initial: 12288, retry: 16384, final: 20480 },  // Saju sections
+    5: { initial: 12288, retry: 16384, final: 20480 },  // Fortune flow
+    6: { initial: 12288, retry: 16384, final: 20480 },  // Life areas + soulmate + compatibility
+    7: { initial: 8192, retry: 12288, final: 16384 },   // Special analysis + action plan + date selection
+    8: { initial: 12288, retry: 16384, final: 20480 },  // Past life + glossary + final verdict
 };
 
 function extractGoogleTextParts(parts: unknown): string {
@@ -58,29 +55,21 @@ function extractGoogleTextParts(parts: unknown): string {
         .join('');
 }
 
-function getPhaseRequestTimeoutMs(phaseNumber: number, modelName: string) {
+function getPhaseRequestTimeoutMs(phaseNumber: number) {
     if (phaseNumber === 1) {
-        return modelName === PRIMARY_MODEL_NAME
-            ? PHASE_ONE_PRIMARY_TIMEOUT_MS
-            : PHASE_ONE_FALLBACK_TIMEOUT_MS;
+        return PHASE_ONE_REQUEST_TIMEOUT_MS;
     }
 
     if (phaseNumber === 5) {
-        return modelName === PRIMARY_MODEL_NAME
-            ? FORTUNE_FLOW_PRIMARY_TIMEOUT_MS
-            : FORTUNE_FLOW_FALLBACK_TIMEOUT_MS;
+        return FORTUNE_FLOW_REQUEST_TIMEOUT_MS;
     }
 
     if (phaseNumber === 8) {
-        return modelName === PRIMARY_MODEL_NAME
-            ? PHASE_EIGHT_PRIMARY_TIMEOUT_MS
-            : PHASE_EIGHT_FALLBACK_TIMEOUT_MS;
+        return PHASE_EIGHT_REQUEST_TIMEOUT_MS;
     }
 
     if (phaseNumber >= 2) {
-        return modelName === PRIMARY_MODEL_NAME
-            ? DEEP_PHASE_PRIMARY_TIMEOUT_MS
-            : DEEP_PHASE_FALLBACK_TIMEOUT_MS;
+        return DEEP_PHASE_REQUEST_TIMEOUT_MS;
     }
 
     return FAST_PHASE_REQUEST_TIMEOUT_MS;
@@ -89,10 +78,12 @@ function getPhaseRequestTimeoutMs(phaseNumber: number, modelName: string) {
 function getPhaseMaxOutputTokens(phaseNumber: number, attempt: number) {
     const budget = PHASE_OUTPUT_TOKEN_BUDGETS[phaseNumber];
     if (!budget) {
-        return 6144;
+        return attempt > 1 ? 12288 : 8192;
     }
 
-    return attempt > 0 ? budget.retry : budget.initial;
+    if (attempt === 0) return budget.initial;
+    if (attempt === 1) return budget.retry;
+    return budget.final;
 }
 
 function getPhaseTemperature(phaseNumber: number) {
@@ -107,20 +98,14 @@ function getPhaseTemperature(phaseNumber: number) {
     return 0.72;
 }
 
-function getPhaseThinkingConfig(modelName: string, phaseNumber: number) {
-    if (modelName.startsWith('gemini-3')) {
-        return {
-            thinkingLevel: 'medium',
-        };
-    }
+function getPhaseThinkingConfig() {
+    return {
+        thinkingLevel: 'minimal',
+    };
+}
 
-    if (modelName.startsWith('gemini-2.5')) {
-        return {
-            thinkingBudget: phaseNumber >= 5 ? 0 : 256,
-        };
-    }
-
-    return undefined;
+function isMaxTokensFinish(finishReason: string | null): boolean {
+    return finishReason === 'MAX_TOKENS';
 }
 
 
@@ -259,135 +244,143 @@ export async function generateSinglePhase(
     }
 
     const { system, user } = promptBuilder(userData, previousData);
+    const phaseSchema = getPremiumPhaseSchema(phaseNumber);
+    const responseJsonSchema = buildGoogleResponseJsonSchema(phaseSchema);
 
-    const modelSequence = [PRIMARY_MODEL_NAME, FALLBACK_MODEL_NAME];
     let lastError: Error | null = null;
 
-    for (const modelName of modelSequence) {
-        for (let attempt = 0; attempt < MAX_ATTEMPTS_PER_MODEL; attempt++) {
-            const requestTimeoutMs = getPhaseRequestTimeoutMs(phaseNumber, modelName);
-            const maxOutputTokens = getPhaseMaxOutputTokens(phaseNumber, attempt);
-            const thinkingConfig = getPhaseThinkingConfig(modelName, phaseNumber);
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), requestTimeoutMs);
+    for (let attempt = 0; attempt < MAX_ATTEMPTS_PER_MODEL; attempt++) {
+        const requestTimeoutMs = getPhaseRequestTimeoutMs(phaseNumber);
+        const maxOutputTokens = getPhaseMaxOutputTokens(phaseNumber, attempt);
+        const thinkingConfig = getPhaseThinkingConfig();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), requestTimeoutMs);
 
-            try {
-                const response = await fetch(
-                    `${GEMINI_API_BASE}/${modelName}:generateContent?key=${apiKey}`,
-                    {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        signal: controller.signal,
-                        body: JSON.stringify({
-                            systemInstruction: { parts: [{ text: system }] },
-                            contents: [{
-                                role: 'user',
-                                parts: [{ text: user }],
-                            }],
-                            generationConfig: {
-                                temperature: getPhaseTemperature(phaseNumber),
-                                maxOutputTokens,
-                                responseMimeType: "application/json",
-                                ...(thinkingConfig ? { thinkingConfig } : {}),
-                            },
-                            // 안전 설정 추가: 민감한 주제 차단 방지
-                            safetySettings: [
-                                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
-                            ],
-                        }),
-                    }
-                );
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    const errorMsg = `API Error (${modelName}): ${response.status} - ${errorText}`;
-
-                    if (response.status === 429) {
-                        lastError = new Error(errorMsg);
-                        const waitTime = Math.pow(2, attempt) * 3000;
-                        console.warn(`[Phase ${phaseNumber}] Rate limited on ${modelName}. Waiting ${waitTime / 1000}s... (Attempt ${attempt + 1}/${MAX_ATTEMPTS_PER_MODEL})`);
-                        await new Promise(resolve => setTimeout(resolve, waitTime));
-                        continue;
-                    }
-
-                    if (response.status >= 500) {
-                        lastError = new Error(errorMsg);
-                        const waitTime = 1500 * (attempt + 1);
-                        console.warn(`[Phase ${phaseNumber}] Server Error on ${modelName} (${response.status}). Retrying...`);
-                        await new Promise(resolve => setTimeout(resolve, waitTime));
-                        continue;
-                    }
-
-                    throw new Error(errorMsg);
+        try {
+            const response = await fetch(
+                `${GEMINI_API_BASE}/${PRIMARY_MODEL_NAME}:generateContent?key=${apiKey}`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    signal: controller.signal,
+                    body: JSON.stringify({
+                        systemInstruction: { parts: [{ text: system }] },
+                        contents: [{
+                            role: 'user',
+                            parts: [{ text: user }],
+                        }],
+                        generationConfig: {
+                            temperature: getPhaseTemperature(phaseNumber),
+                            maxOutputTokens,
+                            responseMimeType: "application/json",
+                            thinkingConfig,
+                            ...(responseJsonSchema ? { responseJsonSchema } : {}),
+                        },
+                        // 안전 설정 추가: 민감한 주제 차단 방지
+                        safetySettings: [
+                            { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                            { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+                        ],
+                    }),
                 }
+            );
 
-                const result = await response.json();
+            if (!response.ok) {
+                const errorText = await response.text();
+                const errorMsg = `API Error (${PRIMARY_MODEL_NAME}): ${response.status} - ${errorText}`;
 
-                // Extract text from response
-                const candidate = result.candidates?.[0];
-                const finishReason = typeof candidate?.finishReason === 'string'
-                    ? candidate.finishReason
-                    : null;
-                let text = extractGoogleTextParts(candidate?.content?.parts);
-
-                // Log raw result for debugging (Gemini 3 compatibility check)
-                if (!text) {
-                    const safetyRatings = candidate?.safetyRatings;
-                    console.warn(`[Phase ${phaseNumber}] Empty content from ${modelName}. FinishReason: ${finishReason}`, { safetyRatings, rawResult: JSON.stringify(result) });
-
-                    lastError = new Error(`Empty content. FinishReason: ${finishReason}`);
-                    continue;
-                }
-
-                if (finishReason && finishReason !== 'STOP') {
-                    console.warn(
-                        `[Phase ${phaseNumber}] Non-STOP finish from ${modelName}: ${finishReason} (maxOutputTokens=${maxOutputTokens}, attempt=${attempt + 1}/${MAX_ATTEMPTS_PER_MODEL})`
-                    );
-                }
-
-                // Clean up markdown code blocks if present
-                text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-
-                // Parse JSON
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch (e) {
-                    console.error(`[Phase ${phaseNumber}] JSON Parse Error from ${modelName}. Raw text:`, text.substring(0, 200) + '...');
-                    lastError = new Error(
-                        `Failed to parse JSON${finishReason ? ` (finishReason: ${finishReason})` : ''}: ${e}`
-                    );
-                    continue;
-                }
-
-                console.log(`[Phase ${phaseNumber}] Success with ${modelName}:`, Object.keys(data));
-                return { phase: phaseNumber, success: true, data };
-
-            } catch (error) {
-                if (error instanceof Error && error.name === 'AbortError') {
-                    lastError = new Error(`Phase ${phaseNumber} timed out after ${requestTimeoutMs}ms on ${modelName}`);
-                    console.error(`[Phase ${phaseNumber}] Timeout:`, lastError.message);
-                    continue;
-                }
-
-                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-                console.error(`[Phase ${phaseNumber}] Attempt ${attempt + 1} Error on ${modelName}:`, errorMessage);
-                lastError = error instanceof Error ? error : new Error(String(error));
-
-                if (attempt < MAX_ATTEMPTS_PER_MODEL - 1) {
-                    const waitTime = 1500 * (attempt + 1);
+                if (response.status === 429) {
+                    lastError = new Error(errorMsg);
+                    const waitTime = Math.pow(2, attempt) * 3000;
+                    console.warn(`[Phase ${phaseNumber}] Rate limited on ${PRIMARY_MODEL_NAME}. Waiting ${waitTime / 1000}s... (Attempt ${attempt + 1}/${MAX_ATTEMPTS_PER_MODEL})`);
                     await new Promise(resolve => setTimeout(resolve, waitTime));
+                    continue;
                 }
-            } finally {
-                clearTimeout(timeoutId);
-            }
-        }
 
-        if (modelName !== FALLBACK_MODEL_NAME) {
-            console.warn(`[Phase ${phaseNumber}] Switching to fallback model: ${FALLBACK_MODEL_NAME}`);
+                if (response.status >= 500) {
+                    lastError = new Error(errorMsg);
+                    const waitTime = 1500 * (attempt + 1);
+                    console.warn(`[Phase ${phaseNumber}] Server Error on ${PRIMARY_MODEL_NAME} (${response.status}). Retrying...`);
+                    await new Promise(resolve => setTimeout(resolve, waitTime));
+                    continue;
+                }
+
+                throw new Error(errorMsg);
+            }
+
+            const result = await response.json();
+
+            // Extract text from response
+            const candidate = result.candidates?.[0];
+            const finishReason = typeof candidate?.finishReason === 'string'
+                ? candidate.finishReason
+                : null;
+            let text = extractGoogleTextParts(candidate?.content?.parts);
+
+            // Log raw result for debugging (Gemini 3 compatibility check)
+            if (!text) {
+                const safetyRatings = candidate?.safetyRatings;
+                console.warn(`[Phase ${phaseNumber}] Empty content from ${PRIMARY_MODEL_NAME}. FinishReason: ${finishReason}`, { safetyRatings, rawResult: JSON.stringify(result) });
+
+                lastError = new Error(`Empty content. FinishReason: ${finishReason}`);
+                continue;
+            }
+
+            if (isMaxTokensFinish(finishReason)) {
+                lastError = new Error(
+                    `Phase ${phaseNumber} exceeded maxOutputTokens=${maxOutputTokens} on ${PRIMARY_MODEL_NAME}`
+                );
+                console.warn(
+                    `[Phase ${phaseNumber}] MAX_TOKENS from ${PRIMARY_MODEL_NAME}; retrying with a larger output budget (attempt ${attempt + 1}/${MAX_ATTEMPTS_PER_MODEL}).`
+                );
+                continue;
+            }
+
+            if (finishReason && finishReason !== 'STOP') {
+                console.warn(
+                    `[Phase ${phaseNumber}] Non-STOP finish from ${PRIMARY_MODEL_NAME}: ${finishReason} (maxOutputTokens=${maxOutputTokens}, attempt=${attempt + 1}/${MAX_ATTEMPTS_PER_MODEL})`
+                );
+            }
+
+            // Clean up markdown code blocks if present
+            text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+            // Parse JSON
+            let data: PremiumReportPartial;
+            try {
+                const parsed = JSON.parse(text);
+                data = parsePremiumPhaseResult(phaseNumber, parsed, { currentDate: userData.currentDate });
+            } catch (e) {
+                const validationMessage = e instanceof Error ? e.message : String(e);
+                console.error(`[Phase ${phaseNumber}] JSON Schema Validation Error from ${PRIMARY_MODEL_NAME}. Raw text:`, text.substring(0, 200) + '...');
+                lastError = new Error(
+                    `Phase ${phaseNumber} schema validation failed${finishReason ? ` (finishReason: ${finishReason})` : ''}: ${validationMessage}`
+                );
+                continue;
+            }
+
+            console.log(`[Phase ${phaseNumber}] Success with ${PRIMARY_MODEL_NAME}:`, Object.keys(data));
+            return { phase: phaseNumber, success: true, data };
+
+        } catch (error) {
+            if (error instanceof Error && error.name === 'AbortError') {
+                lastError = new Error(`Phase ${phaseNumber} timed out after ${requestTimeoutMs}ms on ${PRIMARY_MODEL_NAME}`);
+                console.error(`[Phase ${phaseNumber}] Timeout:`, lastError.message);
+                continue;
+            }
+
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            console.error(`[Phase ${phaseNumber}] Attempt ${attempt + 1} Error on ${PRIMARY_MODEL_NAME}:`, errorMessage);
+            lastError = error instanceof Error ? error : new Error(String(error));
+
+            if (attempt < MAX_ATTEMPTS_PER_MODEL - 1) {
+                const waitTime = 1500 * (attempt + 1);
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+            }
+        } finally {
+            clearTimeout(timeoutId);
         }
     }
 
@@ -395,7 +388,7 @@ export async function generateSinglePhase(
         phase: phaseNumber,
         success: false,
         data: null,
-        error: lastError?.message || `Phase ${phaseNumber} failed after trying fallback model`,
+        error: lastError?.message || `Phase ${phaseNumber} failed on ${PRIMARY_MODEL_NAME}`,
     };
 }
 

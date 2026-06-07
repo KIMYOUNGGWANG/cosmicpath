@@ -2,54 +2,27 @@
 
 import { useSession } from 'next-auth/react';
 import { useLoginModal } from '@/components/auth/LoginModal';
-import { motion, Variants } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { CompatibilityHeader } from './CompatibilityHeader';
 import { useRef, useState, useEffect } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { Target, Zap, Lock, CircleHelp, Download, Printer, RefreshCw } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Download } from 'lucide-react';
 import * as analytics from '@/lib/client-analytics';
 import { PrintLayout } from './PrintLayout';
-import { CosmicRadar } from './cosmic-radar';
-import { EvidenceTooltip } from '../ui/confidence-badge';
 import { TarotDetailModal } from './tarot-detail-modal';
 import { ShareCard } from './share-card';
 import { BlindSpotTeaser } from './blind-spot-teaser';
-import { VerdictReport } from './verdict-report';
-import { TeaserCard } from '../sales/TeaserCard';
-import { BlurredPreviewSection } from '../sales/BlurredPreviewSection';
+import { CaseFileReport } from './case-file-report';
 import { StickyCTA } from '../common/sticky-cta';
 
 import type { TimelineScore } from './FortuneTimelineChart';
-import { SoulmateSection, SoulmateData } from './SoulmateSection';
-import { LuckyAssetsGrid, LuckyAssetsData } from './LuckyAssetsGrid';
-import { GlossarySection } from './GlossarySection';
+import type { SoulmateData } from './SoulmateSection';
+import type { LuckyAssetsData } from './LuckyAssetsGrid';
 import { PaymentModal } from '../payment/PaymentModal';
 import { normalizePriceLabel, READING_PRODUCT } from '@/lib/payment/payment-config';
-import { FinalVerdictCard } from './FinalVerdictCard';
-import { InsightCard, InsightHighlight } from './ui/InsightCard';
-import { DestinyDashboardSection } from '../dashboard/DestinyDashboardSection';
 import { GhostDetectorSection } from '../dashboard/GhostDetectorSection';
 import type { SajuResult } from '@/lib/engines/saju';
-import {
-    ActionPlanSection,
-    AccordionSection,
-    AstroDeepSection,
-    CompatibleDeepDiveSection,
-    CompatibilitySection,
-    ContentCard,
-    CoreAnalysisSection,
-    DateSelectionSection,
-    FortuneFlowSection,
-    HeaderSection,
-    LifeAreasSection,
-    NumerologySection,
-    PastLifeSection,
-    PremiumSectionInterruptionCard,
-    SpecialAnalysisSection,
-    TarotSpreadSection,
-    TraitsSection,
-} from './premium-report-sections';
+import { HeaderSection } from './premium-report-sections';
 
 // 새로운 Premium Report 타입 (기존 CosmicReport 대체)
 export interface PremiumReportData {
@@ -61,6 +34,11 @@ export interface PremiumReportData {
         correctedTime: string;
         lon: number;
         hourPillar: string;
+        astrologyInputDate?: string;
+        astrologyInputTime?: string;
+        astrologyTimezoneOffset?: number;
+        astrologyTimePolicy?: 'civil_time';
+        astrologyAscendantConfidence?: 'exact_time' | 'approximate_noon';
     };
     oracleCouncil?: {
         convergenceScore: number;
@@ -286,6 +264,11 @@ interface PremiumReportProps {
             correctedTime: string;
             lon: number;
             hourPillar: string;
+            astrologyInputDate?: string;
+            astrologyInputTime?: string;
+            astrologyTimezoneOffset?: number;
+            astrologyTimePolicy?: 'civil_time';
+            astrologyAscendantConfidence?: 'exact_time' | 'approximate_noon';
         };
         oracleCouncil?: {
             convergenceScore: number;
@@ -323,13 +306,6 @@ interface MetadataWithReadingData extends NonNullable<PremiumReportProps['metada
     tarotCards?: NonNullable<PremiumReportProps['metadata']>['tarotCards'];
 }
 
-type PremiumSectionKey =
-    | 'fortune_flow'
-    | 'life_areas'
-    | 'special_analysis'
-    | 'action_plan'
-    | 'final_verdict';
-
 function isSajuResult(value: unknown): value is SajuResult {
     if (!value || typeof value !== 'object') return false;
     const candidate = value as Record<string, unknown>;
@@ -341,105 +317,6 @@ function isSajuResult(value: unknown): value is SajuResult {
         'hourPillar' in candidate
     );
 }
-
-// ... (existing helper)
-
-function CosmicRadarMemo({ report, metadata, language }: { report: PremiumReportData; metadata?: PremiumReportProps['metadata']; language: 'ko' | 'en' }) {
-    const isEn = language === 'en';
-
-    // Use dynamic scores from metadata if available, otherwise fallback to derived
-    const sajuScore = metadata?.radarScores?.saju || (report.summary.trust_score * 20 - (report.summary.trust_score > 3 ? 5 : 15));
-    const starScore = metadata?.radarScores?.astrology || (report.summary.trust_score * 20 - (report.summary.trust_score > 3 ? 15 : 25));
-    const tarotScore = metadata?.radarScores?.tarot || (report.summary.trust_score * 20 - (report.summary.trust_score > 3 ? 25 : 35));
-
-    // Analyze imbalance
-    const scores = {
-        saju: { score: sajuScore, label: isEn ? 'Logic' : '논리(사주)', icon: '📜' },
-        star: { score: starScore, label: isEn ? 'Flow' : '흐름(별자리)', icon: '🌌' },
-        tarot: { score: tarotScore, label: isEn ? 'Intuition' : '직관(타로)', icon: '🔮' }
-    };
-
-    const maxScore = Math.max(sajuScore, starScore, tarotScore);
-    const minScore = Math.min(sajuScore, starScore, tarotScore);
-    const diff = maxScore - minScore;
-
-    const highest = Object.values(scores).find(s => s.score === maxScore)!;
-    const lowest = Object.values(scores).find(s => s.score === minScore)!;
-
-    let badgeConfig;
-    if (diff < 15) {
-        badgeConfig = {
-            color: 'bg-green-500/10 border-green-500/50 text-green-200 shadow-[0_0_15px_rgba(34,197,94,0.3)]',
-            dot: 'bg-green-500',
-            ping: 'bg-green-400',
-            text: isEn ? "IDEAL BALANCE" : "완벽한 조화"
-        };
-    } else if (diff < 30) {
-        badgeConfig = {
-            color: 'bg-gold/10 border-gold/50 text-gold/90 shadow-[0_0_15px_rgba(255,215,0,0.2)]',
-            dot: 'bg-gold',
-            ping: 'bg-gold/60',
-            text: isEn ? "STABLE HARMONY" : "안정적 균형"
-        };
-    } else {
-        badgeConfig = {
-            color: 'bg-red-500/10 border-red-500/50 text-red-200 shadow-[0_0_15px_rgba(220,38,38,0.3)]',
-            dot: 'bg-red-500',
-            ping: 'bg-red-400',
-            text: isEn ? "DYNAMIC IMBALANCE" : "심각한 불균형"
-        };
-    }
-
-    const tooltipText = isEn
-        ? `Your '${highest.label}' is dominant, while '${lowest.label}' is currently recessed. This indicates a focus on ${maxScore > 80 ? 'strong' : 'developing'} external manifestations over internal ${minScore < 40 ? 'needs' : 'adjustments'}.`
-        : `회원님의 운세는 '${highest.label}'의 기운이 매우 강한 반면, '${lowest.label}'가 상대적으로 낮게 나타납니다. 이는 현재 상황에서 ${maxScore > 80 ? '강력한' : '뚜렷한'} 추진력을 발휘하고 있지만 ${minScore < 40 ? '세밀한' : '유연한'} 조율이 필요함을 암시합니다.`;
-
-    return (
-        <section className="mt-8 px-4 md:px-6 relative">
-            {/* Dynamic Warning/Status Badge */}
-            <div className="absolute -top-4 right-4 z-10 group cursor-help">
-                <div className={cn("backdrop-blur-md text-xs px-3 py-1.5 rounded-full flex items-center gap-2 transition-all duration-500", badgeConfig.color)}>
-                    <span className="relative flex h-2 w-2">
-                        <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", badgeConfig.ping)}></span>
-                        <span className={cn("relative inline-flex rounded-full h-2 w-2", badgeConfig.dot)}></span>
-                    </span>
-                    <span className="font-bold tracking-wide">{badgeConfig.text}</span>
-                    <CircleHelp size={12} className="opacity-70" />
-                </div>
-
-                {/* Tooltip on Hover */}
-                <div className="absolute right-0 top-full mt-2 w-64 bg-black/90 border border-white/10 p-4 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-20 shadow-2xl scale-95 group-hover:scale-100 origin-top-right">
-                    <p className="text-[11px] text-gray-200 leading-relaxed font-light">
-                        {tooltipText}
-                    </p>
-                </div>
-            </div>
-
-            <CosmicRadar
-                sajuScore={sajuScore}
-                starScore={starScore}
-                tarotScore={tarotScore}
-                isLoading={false}
-                language={language}
-                details={{
-                    saju: isEn ? "Logic is at its peak." : "논리적 판단력이 정점에 달해 있습니다.",
-                    tarot: isEn ? "Intuition is dangerously low." : "직관력이 매우 약해져 있어 경고가 필요합니다.",
-                    star: isEn ? "Cosmic flow is stable." : "우주의 흐름은 평이한 상태입니다."
-                }}
-            />
-        </section>
-    );
-}
-
-// Animation Variants
-const fadeInUp: Variants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        transition: { duration: 0.6, ease: "easeOut" }
-    }
-};
 
 export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock, isPremium, price, isLoading, onRetry, userQuestion }: PremiumReportProps) {
     const isEn = language === 'en';
@@ -509,66 +386,14 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
     const readingData = metadata?.readingData;
     const userName = readingData?.name || '';
     const sajuResult = isSajuResult(metadata?.sajuResult) ? metadata.sajuResult : null;
-    const primaryTrait = report.traits?.[0]?.name;
-
-    const dynamicCoreHookKo = primaryTrait && userName 
-        ? `⚠️ ${userName}님의 아우라('${primaryTrait}')를 가로막는 오행 불균형이 감지되었습니다.`
-        : userName 
-        ? `⚠️ ${userName}님의 차트에서 심각한 오행 불균형이 감지되었습니다.`
-        : "⚠️ 사주 오행의 심각한 불균형이 감지되었습니다.";
-    const dynamicCoreHookEn = primaryTrait && userName
-        ? `⚠️ Critical element imbalance suppressing ${userName}'s '${primaryTrait}' nature detected.`
-        : userName
-        ? `⚠️ Critical element imbalance detected in ${userName}'s foundation.`
-        : "⚠️ Critical Element Imbalance Detected in your chart foundation.";
-
-    const dynamicCoreSubtitleKo = primaryTrait && userName
-        ? `⚠️ '${primaryTrait}' 기운과의 오행 충돌 감지`
-        : "⚠️ 사주 오행의 심각한 불균형 감지";
-    const dynamicCoreSubtitleEn = primaryTrait && userName
-        ? `⚠️ Element conflict with '${primaryTrait}'`
-        : "⚠️ Critical Element Imbalance Detected";
-
-    // Dynamic Blind Spot Hook
-    const dynamicBlindSpotPreviewKo = userName
-        ? `이 결정을 실행할 때 ${userName}님이 절대 놓치면 안 될 치명적 리스크가 하나 발견되었습니다. 교차 검증 중 포착된 이 충돌 신호를 무시하면...`
-        : `이 결정을 실행할 때 절대 놓치면 안 될 치명적 리스크가 하나 발견되었습니다. 교차 검증 중 포착된 이 충돌 신호를 무시하면...`;
-    
-    const dynamicBlindSpotPreviewEn = userName
-        ? `A critical blind spot has been detected for ${userName}. Ignoring this conflict signal discovered during cross-validation could lead to...`
-        : `A critical blind spot has been detected. Ignoring this conflict signal discovered during cross-validation could lead to...`;
-
-    const firstMissingPremiumSection: PremiumSectionKey | null = (() => {
-        if (!isPremium || isLoading || !onRetry) return null;
-        if (!report.fortune_flow) return 'fortune_flow';
-        if (!report.life_areas) return 'life_areas';
-        if (!report.special_analysis) return 'special_analysis';
-        if (!report.action_plan) return 'action_plan';
-        if (!report.past_life || !report.glossary || !report.final_verdict) return 'final_verdict';
-        return null;
-    })();
-
-    // Dynamic Teaser Text Generator
-    const getTeaserText = (section: string) => {
-        const month = new Date().getMonth() + 2; // Next month
-        if (isEn) {
-            return section === 'flow'
-                ? `In ${month > 12 ? 1 : month}th month, a significant turning point approaches...`
-                : `A hidden obstacle in your ${section} sector requires immediate attention...`;
-        }
-        return section === 'flow'
-            ? `${month > 12 ? 1 : month}월, 당신의 운명에 결정적인 전환점이 찾아옵니다...`
-            : `당신의 ${section} 영역에 숨겨진 치명적인 장애물이 있습니다...`;
-    };
 
     const tarotCards = metadata?.tarot || [];
     // Auth & Save Logic
-    const { data: session, status } = useSession();
+    const { status } = useSession();
     const { openLoginModal } = useLoginModal();
 
     return (
         <div className={`w-full mx-auto pb-24 md:pb-32 ${isPremium ? 'max-w-screen-2xl px-4 lg:px-8' : 'max-w-2xl'}`}>
-            {/* Header — 프리미엄 + final_verdict 있는 경우 VerdictReport의 HeroVerdictCard가 최상단을 담당 */}
             {!(isPremium && report.final_verdict) && (
                 readingData?.partnerName ? (
                     <CompatibilityHeader
@@ -587,8 +412,6 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 )
             )}
 
-            
-
             {/* Hidden Print Layout */}
             <div className="hidden">
                 <PrintLayout
@@ -599,112 +422,24 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 />
             </div>
 
-            {/* Categorized Analysis — Premium: Verdict-First Layout */}
-            <VerdictReport
+            <CaseFileReport
                 report={report}
-                metadata={metadata as Record<string, unknown>}
                 language={language}
+                isFreeView={!isPremium}
                 isLoading={isLoading}
                 onRetry={onRetry}
                 tarotCards={tarotCards}
-                onCardClick={setSelectedCardIdx}
-                isFreeView={!isPremium}
-                scoreGridNode={
-                    <>
-                        <CosmicRadarMemo report={report} metadata={metadata} language={language} />
-                        {metadata?.sajuResult && (
-                            <DestinyDashboardSection
-                                details={{
-                                    hostSaju: metadata.sajuResult,
-                                    hostAstrology: metadata.astrologyResult
-                                }}
-                                hasGuest={false}
-                                hostName={readingData?.name || 'You'}
-                                guestName={undefined}
-                            />
-                        )}
-                        {tarotCards.length > 0 && (
-                            <TarotSpreadSection cards={tarotCards} onCardClick={setSelectedCardIdx} language={language} />
-                        )}
-                        {report.traits && (
-                            <TraitsSection traits={report.traits} language={language} />
-                        )}
-                    </>
-                }
+                onOpenTarotCard={setSelectedCardIdx}
+                onUnlock={handleUnlock}
+                displayPrice={displayPrice}
+                personName={userName}
+                question={userQuestion}
             />
-
-            {!isPremium && (
-                <div className="mt-8 px-4 md:px-6 mb-8">
-                    {/* Locked Premium Section List */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 12 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.15 }}
-                        className="rounded-2xl border border-[#D4AF37]/15 bg-gradient-to-b from-[#D4AF37]/5 to-transparent p-5 md:p-6"
-                    >
-                        <div className="flex items-center gap-2 mb-4">
-                            <Lock size={14} className="text-[#D4AF37]" />
-                            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
-                                {language === 'en' ? '5 Locked Sections' : '잠긴 프리미엄 섹션 5개'}
-                            </p>
-                        </div>
-                        <div className="space-y-2.5">
-                            {[
-                                {
-                                    icon: '01',
-                                    ko: '판정 근거 — 왜 움직임/대기 판정이 나왔는지',
-                                    en: 'Verdict Evidence — why this answer was chosen',
-                                },
-                                {
-                                    icon: '02',
-                                    ko: '타이밍 구간 — 움직일 때와 기다릴 때',
-                                    en: 'Timing Window — when to move and when to wait',
-                                },
-                                {
-                                    icon: '03',
-                                    ko: '실행 순서 — 먼저 할 일과 보류할 일',
-                                    en: 'Action Order — first, second, and hold',
-                                },
-                                {
-                                    icon: '04',
-                                    ko: '리스크 경고 — 역효과 나는 움직임',
-                                    en: 'Risk Warning — the move that can backfire',
-                                },
-                                {
-                                    icon: '05',
-                                    ko: '신뢰도 확인 — 원천이 겹치는 지점',
-                                    en: 'Confidence Check — where the sources agree',
-                                },
-                            ].map((item) => (
-                                <button
-                                    key={item.en}
-                                    onClick={() => handleUnlock('locked_section_list')}
-                                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-white/8 bg-white/[0.02] text-left transition-all hover:bg-white/[0.06] hover:border-white/15 group cursor-pointer"
-                                >
-                                    <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[10px] font-semibold text-[#D4AF37]">{item.icon}</span>
-                                    <span className="text-sm text-white/70 group-hover:text-white/90 transition-colors">
-                                        {language === 'en' ? item.en : item.ko}
-                                    </span>
-                                    <Lock size={12} className="ml-auto text-white/20 group-hover:text-[#D4AF37]/60 transition-colors flex-shrink-0" />
-                                </button>
-                            ))}
-                        </div>
-                        <motion.button
-                            onClick={() => handleUnlock('locked_section_cta')}
-                            whileHover={{ y: -1 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="mt-5 w-full py-3 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#B4941F] text-black font-bold text-sm shadow-lg shadow-[#D4AF37]/15 transition-all hover:shadow-[#D4AF37]/30 cursor-pointer"
-                        >
-                            {language === 'en' ? 'Unlock Evidence, Timing, Action' : '근거·타이밍·행동 순서 열기'}
-                        </motion.button>
-                    </motion.div>
-                </div>
-            )}
 
             {!isPremium && (
                 <div className="mt-0 px-4 md:px-6 mb-16">
                     <BlindSpotTeaser
-                        title={language === 'en' ? "⚠️ Critical Blind Spot Warning" : "⚠️ 치명적 사각지대 (Blind Spot) 경고"}
+                        title={language === 'en' ? "Critical Blind Spot Note" : "치명적 사각지대 메모"}
                         previewText={language === 'en' ? "Conflicting planetary alignments suggest a high probability of severe misjudgment if you proceed without addressing the underlying root cause." : "별자리와 타로카드 배열에서 심각한 오판의 징후가 발견되었습니다."}
                         hiddenText={language === 'en' ? "Unlock to see the full detailed reading and the missing pieces of your destiny." : "자세한 전체 결론과 해결책을 보려면 잠금을 해제하세요."}
                         language={language || 'ko'}

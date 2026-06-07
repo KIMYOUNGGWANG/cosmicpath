@@ -11,7 +11,13 @@
   },
   "include": [
     "scripts/verify-oracle-prompt-refactor.ts",
+    "scripts/verify-premium-report-schemas.ts",
     "scripts/run-oracle-live-check.ts",
+    "src/lib/ai/google-json-schema.ts",
+    "src/lib/ai/premium-prompt-rules.ts",
+    "src/lib/ai/premium-report-schemas.ts",
+    "src/lib/ai/premium-reading-service.ts",
+    "src/lib/ai/phase-prompts.ts",
     "src/lib/ai/prompt-builder.ts",
     "src/lib/ai/prompts/system-core.ts",
     "src/lib/ai/prompts/saju-rules.ts",

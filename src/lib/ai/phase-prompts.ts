@@ -13,6 +13,7 @@ import {
   type OracleSelectionMode,
   getOraclePersona,
 } from './oracle-personas';
+import { buildPremiumDateRules, buildPremiumSafetyRules } from './premium-prompt-rules';
 import { buildPromptSharedPrelude } from './prompt-shared-rules';
 
 function buildPersonaSystemLine(characterId: OracleCharacterId | undefined, lang: string): string {
@@ -87,6 +88,8 @@ function buildUserContext(userData: UserData): string {
     depthMode: 'premium',
     format: 'inline',
   });
+  const currentDate = userData.currentDate || new Date().toISOString().split('T')[0];
+  const premiumRules = `${buildPremiumSafetyRules(lang, currentDate)}\n\n${buildPremiumDateRules(lang, currentDate)}`;
 
   const nameStr = userData.name ? (isEn ? `${userData.name}` : `${userData.name}님`) : (isEn ? 'User' : '사용자님');
   const genderStr = userData.gender === 'male' ? (isEn ? 'Male' : '남성(乾命)') : (isEn ? 'Female' : '여성(坤命)');
@@ -128,10 +131,12 @@ Birth Date: ${userData.birthDate}
 Birth Time: ${userData.birthTime}
 Context: ${userData.context}
 Question: ${userData.question || 'General Reading'}
-Today's Date: ${userData.currentDate || new Date().toISOString().split('T')[0]}
+Today's Date: ${currentDate}
 </USER_INFO>
 
 ${sharedPrelude}
+
+${premiumRules}
 
 ${userData.sajuData ? `<SAJU_DATA>\n${JSON.stringify(userData.sajuData, null, 2)}\n</SAJU_DATA>${userData.sajuData.oraclePromptBlock ? `\n\n<SAJU_PRECISION_DATA>\n${userData.sajuData.oraclePromptBlock}\n</SAJU_PRECISION_DATA>` : ''}` : ''}
 ${userData.astroData ? `<ASTRO_DATA>\n${JSON.stringify(userData.astroData, null, 2)}\n</ASTRO_DATA>` : ''}
@@ -147,10 +152,12 @@ ${tarotContext ? tarotContext : (userData.tarotCards ? `<TAROT_CARDS>\n${JSON.st
 생시: ${userData.birthTime}
 관심 영역(Context): ${userData.context}
 질문(Query): ${userData.question || '종합 운세'}
-오늘의 날짜: ${userData.currentDate || new Date().toISOString().split('T')[0]} (현재 시점 기준의 운세를 정확히 판단할 것)
+오늘의 날짜: ${currentDate} (현재 시점 기준의 운세를 정확히 판단할 것)
 </사용자_정보>
 
 ${sharedPrelude}
+
+${premiumRules}
 
 ${userData.sajuData ? `<사주_핵심_좌표>
 - 일간(Day Master): ${userData.sajuData.dayPillar?.stem ?? '?'}${userData.sajuData.dayPillar?.branch ?? '?'}
@@ -745,7 +752,7 @@ Do not recite dictionary definitions like "This is Pyeon-jae". Show **how it man
 2. **Find Twist Charm**: Discover twist points like "You look cold but actually..."
 3. **Language**: Write ALL content in English.
 4. **Minimum Length**: Each content field must be at minimum: day_master (150+ words), strength (100+ words), ten_gods (150+ words), special_stars (100+ words). Thin or skeletal responses are treated as analysis failures.
-5. **Definitive Tone**: No hedging phrases like "might be" or "could suggest". State conclusions as the oracle's verdict.`;
+5. **Evidence-Bounded Tone**: State chart-supported conclusions clearly, and include uncertainty level or review boundaries when evidence is partial.`;
   } else {
     // Phase 2 프롬프트 (v2.0) - 심층 분석 버전
     system = `${buildPersonaSystemLine(userData.characterId, lang)}
@@ -825,10 +832,10 @@ export function buildPhase3Prompt(userData: UserData, previousData?: PremiumRepo
 
   if (lang === 'en') {
     system = `## Persona
-You are a 'Fortune Forecaster' who reads the flow of time. Forecast exactly when the spring, summer, autumn, and winter of life will come.
+You are a 'Fortune Forecaster' who reads the flow of time. Forecast the supported timing windows and review boundaries for life's seasonal shifts.
 
 ## Phase 3 Mission: Great Luck (10-year) and Yearly Luck (1-year) Flow
-Users are most curious about "When will it get better?". Do not be vague saying "It will get better"; pinpoint the **Exact Timing**.
+Users are most curious about "When will it get better?". Do not be vague saying "It will get better"; provide **supported timing windows** and avoid inventing exact dates.
 
 ## Output Requirements (JSON)
 {
@@ -839,12 +846,12 @@ Users are most curious about "When will it get better?". Do not be vague saying 
       "content": "Define this 10-year chapter (e.g., 'Sowing Season', 'Harvest Season'). Must include: (1) Specific Major Luck pillar interactions with natal chart, (2) Core theme definition, (3) Whether current pain is growth or wrong path (with evidence)."
     },
     "yearly_luck": {
-      "title": "📅 2026 Fortune Forecast (Yearly Analysis)",
-      "content": "Forecast the upcoming year by quarters (Q1-Q4). Must include: (1) Key yearly pillar interactions with natal chart, (2) Per-quarter opportunity/risk points with action guidance, (3) The single most decisive month and why."
+      "title": "📅 Future Fortune Forecast (Yearly Analysis)",
+      "content": "Forecast only future quarters or month windows from the supplied current date. Must include: (1) Key yearly pillar interactions with natal chart, (2) future opportunity/risk points with action guidance, (3) the most decisive supported future month/window and why."
     },
     "monthly_luck": [
       {
-        "month": "January",
+        "month": "Future YYYY-MM or month window after current date",
         "theme": "Keyword (e.g., Fresh Start)",
         "element": "Dominant element (e.g., Wood)",
         "opportunity": "Opportunity point",
@@ -852,17 +859,24 @@ Users are most curious about "When will it get better?". Do not be vague saying 
         "advice": "Specific action guide with Saju basis",
         "score": 1-100
       },
-      { "month": "February", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
-      { "month": "March", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
-      { "month": "April", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
-      { "month": "May", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
-      { "month": "June", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
-      { "month": "July", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
-      { "month": "August", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
-      { "month": "September", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
-      { "month": "October", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
-      { "month": "November", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 },
-      { "month": "December", "theme": "Keyword", "element": "Element", "opportunity": "Opportunity", "warning": "Warning", "advice": "Advice", "score": 1-100 }
+      {
+        "month": "Next supported future YYYY-MM",
+        "theme": "Keyword",
+        "element": "Element",
+        "opportunity": "Opportunity",
+        "warning": "Warning",
+        "advice": "Advice",
+        "score": 1-100
+      },
+      {
+        "month": "Future review-boundary month window",
+        "theme": "Keyword",
+        "element": "Element",
+        "opportunity": "Opportunity",
+        "warning": "Warning",
+        "advice": "Advice",
+        "score": 1-100
+      }
     ],
     "timeline_scores": [
       { "year": 2026, "score": 85, "type": "opportunity", "summary": "Great start" },
@@ -881,10 +895,10 @@ Users are most curious about "When will it get better?". Do not be vague saying 
   } else {
     // Phase 3 프롬프트 (v2.0) - 심층 분석 버전
     system = `${buildPersonaSystemLine(userData.characterId, lang)}
-인생의 봄, 여름, 가을, 겨울이 언제 오는지 정확히 예보합니다.
+인생의 봄, 여름, 가을, 겨울이 언제 오는지 근거가 받쳐주는 시기 범위와 재검토 경계로 예보합니다.
 
 ## Phase 3 임무: 대운(10년)과 세운(1년)의 흐름 (심층 버전)
-사용자는 "언제 좋아지나요?"가 가장 궁금합니다. 모호하게 "앞으로 좋아질 겁니다" 하지 말고, **정확한 시점(Timing)**을 찍어주십시오.
+사용자는 "언제 좋아지나요?"가 가장 궁금합니다. 모호하게 "앞으로 좋아질 겁니다" 하지 말고, **근거 있는 시기 범위와 재검토 경계**를 제시하십시오.
 
 <핵심_분석_원칙>
 1. **대운-원국 상호작용**: 현재 대운 천간/지지가 원국의 어느 글자와 **충/합/형**을 이루는지 분석하십시오.
@@ -900,7 +914,7 @@ Users are most curious about "When will it get better?". Do not be vague saying 
 
 **좋은 예 (O):**
 - "현재 대운의 [글자]가 일간 [글자]를 [관계]하고 있습니다. 이는 외부에서 오는 압박을 의미하지만, 동시에 성장의 기회가 됩니다. (근거: 대운 [글자]와 일간 [글자]의 상호작용)"
-- "2026년 [N]월 [간지]월에 원국의 [글자]와 [관계]가 정점에 달합니다. 이 시기에는 중요한 결정을 신중히 하십시오. (근거: 월운 [글자]와 원국 [글자]의 충/합)"
+- "기준일 이후 [월 범위]에 원국의 [글자]와 [관계]가 강해집니다. 이 시기에는 중요한 결정을 신중히 하십시오. (근거: 월운 [글자]와 원국 [글자]의 충/합)"
 </style_guide>
 
 ## 출력 요구사항 (JSON)
@@ -912,12 +926,12 @@ Users are most curious about "When will it get better?". Do not be vague saying 
       "content": "대운의 천간/지지가 원국의 **어느 글자와 충/합/형을 이루는지** 명시하고, 지금 10년이 인생에서 어떤 챕터(Chapter)에 해당하는지 정의하십시오. 반드시 포함: (1) 대운 간지와 원국 글자의 구체적 상호작용 명시, (2) 이 10년의 핵심 테마(성장/수확/정리 등) 정의, (3) 지금 겪는 고통이 성장통인지 경로이탈인지 판단과 근거."
     },
     "yearly_luck": {
-      "title": "📅 2026년 운세 예보 (세운 분석)",
+      "title": "📅 기준일 이후 운세 예보 (세운 분석)",
       "content": "올해 세운(병오년 등)이 원국의 어느 글자와 충/합하는지 분석하십시오. 반드시 포함: (1) 세운 간지와 원국 글자의 핵심 상호작용, (2) 분기별(Q1~Q4) 운세 예보 — 각 분기마다 기회/위험 포인트와 행동 지침, (3) 올해 가장 결정적인 1개월과 그 이유."
     },
     "monthly_luck": [
       {
-        "month": "1월",
+        "month": "기준일 이후 YYYY-MM 또는 월 범위",
         "theme": "키워드 (예: 새로운 시작)",
         "element": "이 달의 지배 오행 (예: 목(木))",
         "opportunity": "기회 포인트 (어떤 일에 유리한지)",
@@ -925,17 +939,24 @@ Users are most curious about "When will it get better?". Do not be vague saying 
         "advice": "사주 근거와 함께 구체적 행동 지침",
         "score": 1-100
       },
-      { "month": "2월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
-      { "month": "3월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
-      { "month": "4월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
-      { "month": "5월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
-      { "month": "6월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
-      { "month": "7월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
-      { "month": "8월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
-      { "month": "9월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
-      { "month": "10월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
-      { "month": "11월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 },
-      { "month": "12월", "theme": "키워드", "element": "오행", "opportunity": "기회", "warning": "주의", "advice": "조언", "score": 1-100 }
+      {
+        "month": "기준일 이후 다음 YYYY-MM",
+        "theme": "키워드",
+        "element": "오행",
+        "opportunity": "기회",
+        "warning": "주의",
+        "advice": "조언",
+        "score": 1-100
+      },
+      {
+        "month": "기준일 이후 재검토 월 범위",
+        "theme": "키워드",
+        "element": "오행",
+        "opportunity": "기회",
+        "warning": "주의",
+        "advice": "조언",
+        "score": 1-100
+      }
     ],
     "timeline_scores": [
       { "year": 2026, "score": 1-100, "type": "opportunity|neutral|warning", "summary": "원국과의 충/합 관계에 기반한 요약" },
@@ -954,11 +975,11 @@ Users are most curious about "When will it get better?". Do not be vague saying 
 
 ## 작성 규칙
 1. **근거 표기 필수**: 모든 예보에 (근거: [대운/세운 글자]와 [원국 글자]의 상호작용) 형식으로 사주 근거를 명시. **반드시 아래 제공된 원국의 실제 글자만 사용하고, 지어내지 마십시오.**
-2. **구체적 시점**: "상반기"보다 "4월~5월", "하순"보다 "20일경" 처럼 구체적으로.
+2. **시점 표현**: 근거가 충분하면 기준일 이후의 월 범위로, 근거가 약하면 정확한 날짜 대신 재검토 경계로 표현하십시오.
 3. **timeline_scores의 score**: 원국과 해당 연도 세운의 관계(충/합/형)를 분석하여 점수화.
 4. **데이터 준수**: 반드시 제공된 사주 원국의 월주 정보를 바탕으로 분석하십시오. 월주가 틀리면 전체 운세 흐름이 왜곡됩니다. 명문화된 데이터를 절대적으로 고수하십시오.
 5. **분량 준수**: major_luck.content는 최소 500자 이상, yearly_luck.content는 최소 600자 이상 서술하십시오. monthly_luck의 advice 필드는 각각 최소 80자 이상 작성하십시오. 분량 미달은 분석 실패로 간주합니다.
-6. **확신 어투**: "~가능성이 있습니다", "~수도 있습니다" 같은 불확실한 표현 금지. 오라클처럼 단정적으로 서술하십시오.`;
+6. **확신 수준 표기**: 근거가 강한 결론은 선명하게 쓰되, 근거가 부분적이면 확신 수준과 확인 조건을 함께 표기하십시오.`;
   }
 
   const user = buildUserContext(userData) + buildPreviousPhaseContext(previousData, lang);
@@ -983,7 +1004,7 @@ Blend **Western Astrology (Primary)** with **Tarot Insights** and a hint of **Ea
 </ASTRO_FIRST_STRATEGY>
 
 ## Phase 4 Mission: Precision Diagnosis of 4 Life Areas
-No abstract well-wishing. Give **Hyper-Specific Advice** (e.g., "Index funds over crypto during Mercury retrograde" instead of "Be careful with money").
+No abstract well-wishing. Give **decision-support guidance** with risk awareness, buffers, and professional-consultation boundaries.
 
 ## Output Requirements (JSON)
 {
@@ -997,8 +1018,8 @@ No abstract well-wishing. Give **Hyper-Specific Advice** (e.g., "Index funds ove
     "wealth": {
       "title": "💰 Algorithm of Wealth (Money)",
       "tag": "Money Flow",
-      "subsections": ["How to accumulate wealth", "Loss Risks", "Recommended Investment"],
-      "content": "Analyze wealth potential. Must include: (1) 2nd/8th House rulers and Tarot Pentacles cross-reference, (2) Risk factors and defense strategies, (3) Specific investment direction recommendation."
+      "subsections": ["How to accumulate wealth", "Loss Risks", "Risk-aware Money Habits"],
+      "content": "Analyze wealth potential. Must include: (1) 2nd/8th House rulers and Tarot Pentacles cross-reference, (2) Risk factors and defense strategies, (3) Decision-support money habits without specific investment instructions."
     },
     "love": {
       "title": "💕 Magnetic Attraction (Love)",
@@ -1008,8 +1029,8 @@ No abstract well-wishing. Give **Hyper-Specific Advice** (e.g., "Index funds ove
     },
     "health": {
       "title": "🌿 Balance of Body and Mind (Health)",
-      "subsections": ["Vulnerable Parts", "Recommended Exercise/Diet", "Mental Care"],
-      "content": "Warn of health vulnerabilities from chart patterns. Must include: (1) Vulnerable body area with chart evidence (e.g., stressed Mars = inflammation), (2) Specific exercise/diet recommendation, (3) Mental health care advice."
+      "subsections": ["Vulnerable Patterns", "Gentle Daily Rhythm", "Mental Care"],
+      "content": "Describe wellness vulnerabilities from chart patterns. Must include: (1) Stress or rhythm pattern with chart evidence, (2) gentle habit suggestions and professional-consultation boundary, (3) mental health care direction without diagnosis or treatment instructions."
     },
     "soulmate": {
       "ideal_traits": ["Trait 1", "Trait 2", "Trait 3"],
@@ -1044,7 +1065,7 @@ No abstract well-wishing. Give **Hyper-Specific Advice** (e.g., "Index funds ove
 3. **Language**: Write ALL content in English.
 4. **Astro-First**: Present Astrology insights BEFORE Soul Element insights.
 5. **Minimum Length**: career/wealth/love/health content fields must be 100+ words each. soulmate.description must be 60+ words. compatibility strategy/advice fields must be 40+ words each. Responses below these thresholds are treated as incomplete.
-6. **Definitive Tone**: Replace "might", "could", "may" with definitive phrasing backed by chart evidence.`;
+6. **Evidence-Bounded Tone**: Use clear phrasing backed by chart evidence, and include consultation boundaries for health/finance or uncertainty levels when evidence is partial.`;
   } else {
     // Phase 4 프롬프트 (v2.0) - 심층 분석 버전
     system = `${buildPersonaSystemLine(userData.characterId, lang)}
@@ -1070,8 +1091,8 @@ No abstract well-wishing. Give **Hyper-Specific Advice** (e.g., "Index funds ove
 - "건강 조심하세요."
 
 **좋은 예 (O):**
-- "편재(偏財)가 시주에 숨어 있어, 젊어서는 재물운이 약하지만 40대 이후(시주 발현기) 사업이나 투자에서 갑작스러운 수익이 예상됩니다. 다만, 편재는 겁재(劫財)에 약하므로, 동업보다는 단독 투자가 유리합니다. 타로에서 Pentacles 카드가 2장 나와 재물 기운이 보완되고 있습니다. (근거: 시주 편재, 월주 겁재 미존재)"
-- "오행상 토(土)가 과다해 비장/위장 계통이 취약합니다. 특히 술토(戌土)와 축토(丑土)가 동시에 있어 소화기 스트레스가 누적되기 쉽습니다. 가벼운 단식이나 해독 식단을 추천합니다. (근거: 원국 戌土, 丑土 동반 - 토 과다)"
+- "편재(偏財)가 시주에 숨어 있어, 갑작스러운 기회보다 현금흐름과 손실 한도를 먼저 점검해야 합니다. 타로에서 Pentacles 카드가 2장 나와 재물 기운이 보완되지만, 구체 상품 지시보다 리스크 완충 규칙이 우선입니다. (근거: 시주 편재, 월주 겁재 미존재)"
+- "오행상 토(土)가 과다해 생활 리듬과 소화 스트레스가 누적되기 쉽습니다. 진단이나 처방 대신 수면, 식사 시간, 스트레스 기록처럼 전문가 상담 전에도 안전한 관찰 루틴을 제안하십시오. (근거: 원국 戌土, 丑土 동반 - 토 과다)"
 </style_guide>
 
 ## 출력 요구사항 (JSON)
@@ -1086,8 +1107,8 @@ No abstract well-wishing. Give **Hyper-Specific Advice** (e.g., "Index funds ove
     "wealth": {
       "title": "💰 부의 알고리즘 (재물운)",
       "tag": "Money Flow",
-      "subsections": ["재물을 모으는 방식", "주의해야 할 손재수", "재테크 추천 분야"],
-      "content": "**정재/편재**의 위치(어느 기둥)와 겁재/비겁과의 관계를 분석하십시오. 타로의 Pentacles 계열 카드와 교차 검증. 반드시 포함: (1) 재물 유입/유출 패턴 분석, (2) 손재수 위험 요소와 방어법, (3) 구체적 재테크 방향 제안(예: '단독 투자 vs 동업')."
+      "subsections": ["재물을 모으는 방식", "주의해야 할 손재수", "리스크 관리 습관"],
+      "content": "**정재/편재**의 위치(어느 기둥)와 겁재/비겁과의 관계를 분석하십시오. 타로의 Pentacles 계열 카드와 교차 검증. 반드시 포함: (1) 재물 유입/유출 패턴 분석, (2) 손재수 위험 요소와 방어법, (3) 특정 투자 지시가 아닌 현금흐름·손실한도·전문가 상담 기준."
     },
     "love": {
       "title": "💕 운명적 이끌림 (애정운)",
@@ -1097,12 +1118,12 @@ No abstract well-wishing. Give **Hyper-Specific Advice** (e.g., "Index funds ove
     },
     "health": {
       "title": "🌿 몸과 마음의 균형 (건강운)",
-      "subsections": ["취약한 신체 부위", "추천 운동/식습관", "멘탈 관리법"],
-      "content": "**오행-장부 연결**(목=간담, 화=심장, 토=비위, 금=폐, 수=신장)에 기반하여 과다/부족 오행의 건강 영향을 분석하십시오. 반드시 포함: (1) 취약 장부와 사주 근거, (2) 구체적 운동/식습관 처방, (3) 멘탈 건강 관리법."
+      "subsections": ["취약한 생활 리듬", "안전한 일상 습관", "멘탈 관리법"],
+      "content": "**오행-생활 리듬 연결**에 기반하여 과다/부족 오행이 스트레스, 회복, 수면, 식사 리듬에 미치는 영향을 분석하십시오. 반드시 포함: (1) 취약 패턴과 사주 근거, (2) 진단·치료·처방이 아닌 안전한 관찰/생활 습관, (3) 필요 시 전문가 상담 경계."
     },
     "soulmate": {
       "ideal_traits": ["일간 OO인 사람", "띠 OO인 사람", "성격/직업 특징"],
-      "meeting_period": "구체적 시기 (예: 2026년 9월~11월)",
+      "meeting_period": "기준일 이후 근거 있는 분기/월 범위 또는 재검토 경계",
       "compatibility_score": 1-100,
       "description": "**궁합 원리**(삼합, 육합 등)에 기반한 추천 파트너 유형.",
       "warnings": "**상충/형 관계**에 기반한 주의 파트너 유형."
@@ -1132,7 +1153,7 @@ No abstract well-wishing. Give **Hyper-Specific Advice** (e.g., "Index funds ove
 2. **근거 표기 필수**: 모든 조언에 (근거: 월주 정관 + 시주 편재) 형식으로 사주 근거를 명시.
 3. 팩트 폭행과 희망 고문 사이의 균형 유지.
 4. **분량 준수**: career/wealth/love/health 각 content 필드는 최소 500자 이상 서술하십시오. soulmate.description은 최소 200자, compatibility 각 항목의 strategy/advice는 최소 150자 이상 작성하십시오.
-5. **확신 어투**: "~가능성이 있습니다", "~수도 있습니다" 같은 불확실한 표현 금지. 전문 컨설턴트처럼 단정적으로 서술하십시오.
+5. **확신 수준 표기**: 근거가 강한 영역은 선명하게 쓰고, 의료/재무처럼 전문 판단이 필요한 영역은 확신 수준과 상담 경계를 함께 표기하십시오.
 6. **subsections 반드시 반영**: 각 영역의 subsections 항목을 content 안에 모두 다루십시오.`;
   }
 
@@ -1150,7 +1171,7 @@ export function buildPhase5APrompt(userData: UserData, previousData?: PremiumRep
 You are the 'Fate Architect' designing a **Concrete Action Plan** the user can start tomorrow.
 
 ## Phase 5A Mission: Reveal Hidden Cards and Action Roadmap
-Reveal special singularities as 'Hidden Cards', and pinpoint important dates.
+Reveal special singularities as 'Hidden Cards', and provide supported future-only timing windows.
 
 ## Output Requirements (JSON)
 {
@@ -1189,7 +1210,7 @@ Reveal special singularities as 'Hidden Cards', and pinpoint important dates.
     {
       "date": "YYYY-MM-DD",
       "title": "💰 Financial Harvest Day",
-      "description": "Day to reap rewards. Recover investments or ask for incentives.",
+      "description": "Day to review rewards, cash flow, and incentive questions without investment instructions.",
       "type": "opportunity"
     }
   ],
@@ -1199,7 +1220,7 @@ Reveal special singularities as 'Hidden Cards', and pinpoint important dates.
       { "date": "YYYY-MM-DD", "purpose": "Interview/Meeting", "reason": "Noble person energy active." },
       { "date": "YYYY-MM-DD", "purpose": "Moving/New Home", "reason": "Stable home energy." },
       { "date": "YYYY-MM-DD", "purpose": "Date/Romance", "reason": "Peach Blossom energy shines." },
-      { "date": "YYYY-MM-DD", "purpose": "Investment", "reason": "Wealth energy flows in." }
+      { "date": "YYYY-MM-DD", "purpose": "Financial Review", "reason": "Useful for reviewing risk, cash flow, and professional advice questions." }
     ],
     "inauspicious": [
       { "date": "YYYY-MM-DD", "purpose": "Major Decisions", "reason": "Judgment may be clouded." },
@@ -1210,11 +1231,11 @@ Reveal special singularities as 'Hidden Cards', and pinpoint important dates.
 }
 
 ## Writing Rules
-1. Pick specific dates in 2026 based on Saju analysis.
+1. Select only future dates supported by the supplied current date and Saju analysis; if evidence is weak, provide a review window instead.
 2. Describe noble people like movie characters.
 3. **Language**: Write ALL content in English.
 4. **Minimum Length**: Each special_analysis content (noble_person, charm, conflicts) must be 80+ words. Each action_plan description must be 40+ words with a Saju/Astro basis. Thin responses are analysis failures.
-5. **Definitive Tone**: No hedging. State dates and actions as firm oracle verdicts.`;
+5. **Evidence-Bounded Tone**: Give clear action windows with an uncertainty level and review boundary; do not present dates or actions as absolute guarantees.`;
   } else {
     system = `${buildPersonaSystemLine(userData.characterId, lang)}
 사용자가 당장 내일부터 실천할 수 있는 **구체적인 행동 지침(Action Plan)**을 설계합니다.
@@ -1275,7 +1296,7 @@ Reveal special singularities as 'Hidden Cards', and pinpoint important dates.
       { "date": "YYYY-MM-DD", "purpose": "면접/미팅", "reason": "천을귀인 발동." },
       { "date": "YYYY-MM-DD", "purpose": "이사/입주", "reason": "가정궁 안정." },
       { "date": "YYYY-MM-DD", "purpose": "데이트/소개팅", "reason": "도화살 발현." },
-      { "date": "YYYY-MM-DD", "purpose": "투자/재테크", "reason": "재성 생조." }
+      { "date": "YYYY-MM-DD", "purpose": "재무 점검", "reason": "현금흐름, 손실한도, 전문가 상담 여부를 검토하기 좋은 날." }
     ],
     "inauspicious": [
       { "date": "YYYY-MM-DD", "purpose": "중요 결정", "reason": "판단력 흐려짐." },
@@ -1286,10 +1307,10 @@ Reveal special singularities as 'Hidden Cards', and pinpoint important dates.
 }
 
 ## 작성 규칙
-1. 2026년 실제 절기/합충일 기반 날짜 선택.
+1. 제공된 기준일 이후의 날짜만 선택하고, 근거가 약하면 정확한 날짜 대신 재검토 경계를 제시.
 2. "~하십시오"라고 강하게 이끄십시오.
 3. **분량 준수**: special_analysis의 각 content 필드(noble_person, charm, conflicts)는 최소 300자 이상 서술하십시오. action_plan의 각 description은 최소 120자 이상 상세히 작성하십시오.
-4. **확신 어투**: "~가능성이 있습니다" 같은 불확실한 표현 금지. 구체적 날짜와 행동을 명확히 제시하십시오.`;
+4. **확신 수준 표기**: 근거가 충분한 행동은 명확히 제시하되, 날짜 근거가 약하면 재검토 경계와 확인 조건을 함께 제시하십시오.`;
   }
 
   const user = buildUserContext(userData) + buildPreviousPhaseContext(previousData, lang);
@@ -1361,7 +1382,7 @@ You are the 'Fate Architect' delivering the final synthesis and spiritual insigh
 2. **Final Verdict**: Compress entire report into Saju/Astrology core. core_message must be 80+ words. closing_words must be 60+ words — strong, memorable, leading.
 3. **Language**: Write ALL in English.
 4. **Minimum Length**: Each past_life content field must be 70+ words. Responses below these thresholds are treated as incomplete.
-5. **Definitive Tone**: Deliver the final verdict as a firm oracle judgment, not as possibilities.`;
+5. **Evidence-bounded Tone**: Deliver a clear verdict with an uncertainty level instead of absolute guarantees.`;
   } else {
     system = `${buildPersonaSystemLine(userData.characterId, lang)}
 최종 종합과 영적 통찰을 전달합니다.
@@ -1408,13 +1429,13 @@ You are the 'Fate Architect' delivering the final synthesis and spiritual insigh
   ],
   "final_verdict": {
     "title": "📌 [페르소나 이름]이 내린 최종 결론",
-    "core_message": "반드시 4문장 구조를 지킬 것. 1번째 문장: '사주가 말한다: [일간/현재 대운/세운 글자 직접 인용]으로...' 2번째 문장: '별이 보여준다: [행성명/트랜짓 직접 인용]이...' 3번째 문장: '타로가 확인한다: [카드명+정/역방향] —...' 4번째 문장: '그러므로 지금 당장: [동사형 행동 + YYYY-MM 날짜].' 추상 명사구(현재 에너지, 흐름, 균형, 조화) 사용 절대 금지. 최소 300자.",
+    "core_message": "반드시 4문장 구조를 지킬 것. 1번째 문장: '사주가 말한다: [일간/현재 대운/세운 글자 직접 인용]으로...' 2번째 문장: '별이 보여준다: [행성명/트랜짓 직접 인용]이...' 3번째 문장: '타로가 확인한다: [카드명+정/역방향] —...' 4번째 문장: '그러므로 기준일 이후 해야 할 첫 행동은: [동사형 행동 + 근거 있는 시기 범위 또는 재검토 경계].' 추상 명사구(현재 에너지, 흐름, 균형, 조화) 사용 절대 금지. 최소 300자.",
     "saju_foundation": "사주적 근거: 일간, 현재 대운 천간지지, 올해 세운, 활성 충/형/합을 반드시 인용.",
     "astro_support": "점성술 관점 보완: 태양/달/상승궁 + 현재 트랜짓 1개 이상 인용.",
     "tarot_insight": "타로 보강 (보조): 카드명과 방향 명시. '현재 에너지' 표현 금지.",
     "convergence_diagnosis": {"level": "all_aligned | two_aligned | divergent", "verdict_modifier": "수렴 수준에 따른 결론 확신도 설명. all_aligned → '세 원천 모두 같은 방향' / divergent → '조건부 결론'"},
-    "action_priorities": ["지금 당장 할 행동 (YYYY-MM 날짜 포함)", "이번 달 할 행동", "올해 결정할 것"],
-    "closing_words": "격려와 방향 제시. 강한 어조. 최소 200자. (예: '2026년 [월]은 [X]의 결정적 시기입니다.')",
+    "action_priorities": ["기준일 이후 첫 행동 (근거 있는 시기 범위 또는 재검토 경계)", "기준일 이후 이번 달/다음 달 점검 행동", "올해 결정할 것과 보류할 것"],
+    "closing_words": "격려와 방향 제시. 강한 어조. 최소 200자. 기준일 이후의 시기 범위와 확신 수준을 함께 제시.",
     "behavioral_verdict": "이 사람이 인생에서 가장 먼저 고쳐야 하는 행동 패턴을 한 문단(200-300자)으로 정리. 형식: '[패턴 진단] + [이것이 돈/관계/건강에 미치는 구체적 영향] + [대안 행동 1가지]'. 예: '머릿속으로 완벽한 결과물이 그려질 때까지 실행을 미루는 습관이 가장 큰 적이다. 이 패턴은 사업에서는 출시 지연으로, 인간관계에서는 연락 두절로, 건강에서는 운동 시작 실패로 반복된다. 오늘 당장 70% 완성도에서 출발하는 연습을 시작해라.' (근거: 사주 원국의 실제 글자 관계 인용 필수)"
   }
 }
@@ -1424,7 +1445,7 @@ You are the 'Fate Architect' delivering the final synthesis and spiritual insigh
 2. **최종결론**: 전체 리포트 핵심을 사주/점성술 기반 압축. core_message는 최소 300자 이상, closing_words는 최소 200자 이상 강하고 기억에 남는 문장으로 작성하십시오.
 3. 타로는 "현재 흐름 참고"로만 언급.
 4. **분량 준수**: past_life 각 content 필드는 최소 250자 이상 서술하십시오.
-5. **확신 어투**: "~가능성이 있습니다" 같은 불확실한 표현 금지. 오라클의 최종 선고처럼 단정적으로 서술하십시오.`;
+5. **확신 수준 표기**: 결론은 선명하게 쓰되, 근거가 부분적이면 확신 수준과 재검토 경계를 함께 제시하십시오.`;
   }
 
   const user = buildUserContext(userData) + buildPreviousPhaseContext(previousData, lang);

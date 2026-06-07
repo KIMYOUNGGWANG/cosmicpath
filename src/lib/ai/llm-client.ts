@@ -6,6 +6,7 @@
 import { z } from 'zod';
 import devLog from '@/lib/dev-logger';
 import { safeIncrementUsageCounter } from '@/lib/usage-metrics';
+import { buildGoogleResponseJsonSchema } from './google-json-schema';
 
 // 지원 모델 타입
 export type ModelProvider = 'openai' | 'anthropic' | 'google';
@@ -15,7 +16,6 @@ export type ModelTier = 'free' | 'basic' | 'premium';
 export const MODEL_CONFIG: Record<ModelTier, {
     provider: ModelProvider;
     model: string;
-    fallback?: { provider: ModelProvider; model: string };
 }> = {
     free: {
         provider: 'google',
@@ -24,12 +24,10 @@ export const MODEL_CONFIG: Record<ModelTier, {
     basic: {
         provider: 'google',
         model: 'gemini-3.5-flash',
-        fallback: { provider: 'google', model: 'gemini-2.5-flash' },
     },
     premium: {
         provider: 'google',
         model: 'gemini-3.5-flash',
-        fallback: { provider: 'google', model: 'gemini-2.5-flash' },
     },
 };
 
@@ -59,32 +57,6 @@ export class StructuredParseError extends Error {
     }
 }
 
-type GoogleSchemaObject = Record<string, unknown>;
-
-const SUPPORTED_GOOGLE_JSON_SCHEMA_KEYS = new Set([
-    '$id',
-    '$defs',
-    '$ref',
-    '$anchor',
-    'type',
-    'format',
-    'title',
-    'description',
-    'enum',
-    'items',
-    'prefixItems',
-    'minItems',
-    'maxItems',
-    'minimum',
-    'maximum',
-    'anyOf',
-    'oneOf',
-    'properties',
-    'additionalProperties',
-    'required',
-    'propertyOrdering',
-]);
-
 function extractGoogleTextParts(parts: unknown): string {
     if (!Array.isArray(parts)) return '';
 
@@ -105,82 +77,6 @@ function extractGoogleCandidateText(candidate: unknown): string {
 
     const content = (candidate as { content?: { parts?: unknown } }).content;
     return extractGoogleTextParts(content?.parts);
-}
-
-function sanitizeGoogleJsonSchema(value: unknown): unknown {
-    if (Array.isArray(value)) {
-        return value
-            .map((item) => sanitizeGoogleJsonSchema(item))
-            .filter((item) => item !== undefined);
-    }
-
-    if (!value || typeof value !== 'object') {
-        return value;
-    }
-
-    const source = value as GoogleSchemaObject;
-    const sanitized: GoogleSchemaObject = {};
-
-    for (const [key, childValue] of Object.entries(source)) {
-        if (!SUPPORTED_GOOGLE_JSON_SCHEMA_KEYS.has(key)) {
-            continue;
-        }
-
-        if (key === 'properties' && childValue && typeof childValue === 'object' && !Array.isArray(childValue)) {
-            const nextProperties: GoogleSchemaObject = {};
-
-            for (const [propertyKey, propertyValue] of Object.entries(childValue as GoogleSchemaObject)) {
-                const sanitizedProperty = sanitizeGoogleJsonSchema(propertyValue);
-                if (sanitizedProperty !== undefined) {
-                    nextProperties[propertyKey] = sanitizedProperty;
-                }
-            }
-
-            sanitized.properties = nextProperties;
-            continue;
-        }
-
-        const sanitizedChild = sanitizeGoogleJsonSchema(childValue);
-        if (sanitizedChild !== undefined) {
-            sanitized[key] = sanitizedChild;
-        }
-    }
-
-    if (
-        sanitized.type === 'object' &&
-        sanitized.properties &&
-        typeof sanitized.properties === 'object' &&
-        !Array.isArray(sanitized.properties)
-    ) {
-        sanitized.propertyOrdering = Object.keys(sanitized.properties as GoogleSchemaObject);
-    }
-
-    return sanitized;
-}
-
-function buildGoogleResponseJsonSchema<T>(schema?: z.ZodSchema<T>): GoogleSchemaObject | undefined {
-    if (!schema) return undefined;
-
-    const schemaWithJsonExport = schema as z.ZodSchema<T> & {
-        toJSONSchema?: () => unknown;
-    };
-
-    if (typeof schemaWithJsonExport.toJSONSchema !== 'function') {
-        return undefined;
-    }
-
-    try {
-        const rawSchema = schemaWithJsonExport.toJSONSchema();
-        const sanitizedSchema = sanitizeGoogleJsonSchema(rawSchema);
-
-        if (sanitizedSchema && typeof sanitizedSchema === 'object' && !Array.isArray(sanitizedSchema)) {
-            return sanitizedSchema as GoogleSchemaObject;
-        }
-    } catch (error) {
-        console.warn('[AI Client] Failed to build response JSON schema for Gemini:', error);
-    }
-
-    return undefined;
 }
 
 function logStructuredParseFailure(error: StructuredParseError) {
@@ -399,31 +295,15 @@ export async function generateCompletion(
     tier: ModelTier = 'free'
 ): Promise<LLMResponse> {
     const config = MODEL_CONFIG[tier];
+    const response = await callProvider(
+        config.provider,
+        systemPrompt,
+        userPrompt,
+        config.model,
+        false
+    );
 
-    try {
-        const response = await callProvider(
-            config.provider,
-            systemPrompt,
-            userPrompt,
-            config.model,
-            false
-        );
-
-        return await parseResponse(response, config.provider, config.model);
-    } catch (error) {
-        if (config.fallback) {
-            console.warn(`[AI Client] Primary model failed, trying fallback: ${config.fallback.model}`);
-            const fallbackResponse = await callProvider(
-                config.fallback.provider,
-                systemPrompt,
-                userPrompt,
-                config.fallback.model,
-                false
-            );
-            return await parseResponse(fallbackResponse, config.fallback.provider, config.fallback.model);
-        }
-        throw error;
-    }
+    return await parseResponse(response, config.provider, config.model);
 }
 
 /**
@@ -435,34 +315,19 @@ export async function generateStreamingCompletion(
     tier: ModelTier = 'free'
 ): Promise<Response> {
     const config = MODEL_CONFIG[tier];
+    const response = await callProvider(
+        config.provider,
+        systemPrompt,
+        userPrompt,
+        config.model,
+        true
+    );
 
-    try {
-        const response = await callProvider(
-            config.provider,
-            systemPrompt,
-            userPrompt,
-            config.model,
-            true
-        );
-
-        if (!response.ok) {
-            throw new Error(`Streaming API call failed: ${response.statusText}`);
-        }
-
-        return response;
-    } catch (error) {
-        if (config.fallback) {
-            console.warn(`[AI Client] Primary streaming failed, trying fallback: ${config.fallback.model}`);
-            return await callProvider(
-                config.fallback.provider,
-                systemPrompt,
-                userPrompt,
-                config.fallback.model,
-                true
-            );
-        }
-        throw error;
+    if (!response.ok) {
+        throw new Error(`Streaming API call failed: ${response.statusText}`);
     }
+
+    return response;
 }
 
 /**
@@ -637,13 +502,11 @@ export async function generateStructuredReport<T>(
         };
     };
 
-    const getStructuredRequestConfig = (model: string, attempt: number) => {
-        const isFallbackModel = config.fallback?.provider === 'google' && config.fallback.model === model;
-
+    const getStructuredRequestConfig = (attempt: number) => {
         if (tier === 'basic') {
             return {
-                timeoutMs: isFallbackModel ? 20000 : 26000,
-                maxRetries: isFallbackModel ? 0 : 1,
+                timeoutMs: 26000,
+                maxRetries: 1,
                 maxOutputTokens: attempt > 0 ? 2304 : 1536,
                 initialDelayMs: 1500,
                 temperature: 0.3,
@@ -652,8 +515,8 @@ export async function generateStructuredReport<T>(
 
         if (tier === 'free') {
             return {
-                timeoutMs: isFallbackModel ? 26000 : (attempt > 0 ? 60000 : 48000),
-                maxRetries: isFallbackModel ? 0 : 2,
+                timeoutMs: attempt > 0 ? 60000 : 48000,
+                maxRetries: 2,
                 maxOutputTokens: attempt > 0 ? 8192 : 6144,
                 initialDelayMs: 3000,
                 temperature: 0.2,
@@ -661,8 +524,8 @@ export async function generateStructuredReport<T>(
         }
 
         return {
-            timeoutMs: isFallbackModel ? 18000 : (attempt > 0 ? 28000 : 24000),
-            maxRetries: isFallbackModel ? 0 : 1,
+            timeoutMs: attempt > 0 ? 28000 : 24000,
+            maxRetries: 1,
             maxOutputTokens: attempt > 0 ? 5120 : 4096,
             initialDelayMs: 1500,
             temperature: 0.4,
@@ -674,7 +537,7 @@ export async function generateStructuredReport<T>(
         let lastError: Error | null = null;
 
         for (let attempt = 0; attempt < maxStructuredAttempts; attempt++) {
-            const requestConfig = getStructuredRequestConfig(model, attempt);
+            const requestConfig = getStructuredRequestConfig(attempt);
             const thinkingConfig = getGeminiThinkingConfig(model);
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
             const options = {
@@ -782,23 +645,10 @@ export async function generateStructuredReport<T>(
     };
 
     const primaryModel = config.provider === 'google' ? config.model : 'gemini-3.5-flash';
-    const allowStructuredFallback = config.fallback?.provider === 'google';
 
     try {
         return await requestStructuredReport(primaryModel);
     } catch (error) {
-        if (allowStructuredFallback && config.fallback?.provider === 'google') {
-            console.warn(`[AI Client] Structured report primary model failed, trying fallback: ${config.fallback.model}`);
-            try {
-                return await requestStructuredReport(config.fallback.model);
-            } catch (fallbackError) {
-                if (fallbackError instanceof StructuredParseError) {
-                    logStructuredParseFailure(fallbackError);
-                }
-                throw fallbackError;
-            }
-        }
-
         if (error instanceof StructuredParseError) {
             logStructuredParseFailure(error);
         }

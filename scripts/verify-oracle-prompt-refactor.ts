@@ -89,7 +89,13 @@ function runGoldenSamples() {
       buildChatUserPrompt,
       buildStructuredSystemPrompt,
     } = require('../src/lib/ai/prompt-builder.ts');
-    const { buildPhase1Prompt } = require('../src/lib/ai/phase-prompts.ts');
+    const {
+      buildPhase1Prompt,
+      buildPhase3Prompt,
+      buildPhase4Prompt,
+      buildPhase5APrompt,
+      buildPhase5BPrompt,
+    } = require('../src/lib/ai/phase-prompts.ts');
     const goldenSamples = require('./oracle-prompt-golden-samples.json');
 
     for (const sample of goldenSamples.samples) {
@@ -113,6 +119,26 @@ function runGoldenSamples() {
         case 'phase1':
           prompt = buildPhase1Prompt(sample.userData).system;
           break;
+        case 'phase3': {
+          const built = buildPhase3Prompt(sample.userData);
+          prompt = `${built.system}\n${built.user}`;
+          break;
+        }
+        case 'phase4': {
+          const built = buildPhase4Prompt(sample.userData);
+          prompt = `${built.system}\n${built.user}`;
+          break;
+        }
+        case 'phase5a': {
+          const built = buildPhase5APrompt(sample.userData);
+          prompt = `${built.system}\n${built.user}`;
+          break;
+        }
+        case 'phase5b': {
+          const built = buildPhase5BPrompt(sample.userData);
+          prompt = `${built.system}\n${built.user}`;
+          break;
+        }
         default:
           throw new Error(`Unknown golden sample type: ${String(sample.type)}`);
       }

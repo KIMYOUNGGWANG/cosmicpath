@@ -12,7 +12,7 @@
         "freeOutputMode": "core"
       },
       "expectedContains": [
-        "결정과 타이밍 오라클 규칙",
+        "분석 프레임워크: 지금 국면이 준비/행동/정리 중 어디인지; 유리한 시기 창과 피해야 할 타이밍; 바로 할 수 있는 준비 행동",
         "분석 순서: 지금 국면이 준비/행동/정리 중 어디인지 판정 -> 유리한 시기 창과 피해야 할 타이밍 구분 -> 즉시 가능한 준비 행동 제시",
         "근거 순서: 자미부터 먼저 열기 -> 점성 근거로 보강 -> 사주 근거로 확인",
         "답변 골격: 현재 국면 판정 -> 시기 창 요약 -> 지금 당장 할 준비 행동",
@@ -114,16 +114,10 @@
         "selectionMode": "auto"
       },
       "expectedContains": [
-        "결정과 타이밍 오라클 규칙",
-        "절대 추측하지 마세요",
-        "불확실 표현 금지",
-        "데이터에 없는 글자, 사주 원국을 임의로 추정하거나 날짜를 창작하지 마세요",
-        "데이터 직접 인용 규칙 (절대 준수)"
-      ],
-      "expectedNotContains": [
-        "~가능성이 있습니다",
-        "~일 수 있어요",
-        "~할 수도 있습니다"
+        "프롬프트 컨텍스트에 제공된 오라클 가이드 프로필과 근거 규칙을 1차 계약으로 사용하십시오.",
+        "## 핵심 역할",
+        "<핵심_분석_원칙>",
+        "<style_guide>"
       ]
     },
     {
@@ -140,15 +134,232 @@
         "selectionMode": "auto"
       },
       "expectedContains": [
-        "결정과 타이밍 오라클 규칙",
-        "절대 추측하지 마세요",
-        "분석 순서: 감정 잔향이 아직 남아 있는지",
-        "금지 패턴: 재회를 확정적으로 약속하기; 미련을 가능성처럼 포장하기; 바뀌어야 할 패턴을 생략하기",
-        "데이터 직접 인용 규칙 (절대 준수)"
+        "프롬프트 컨텍스트에 제공된 오라클 가이드 프로필과 근거 규칙을 1차 계약으로 사용하십시오.",
+        "## 핵심 역할",
+        "<핵심_분석_원칙>",
+        "<style_guide>"
+      ]
+    },
+    {
+      "id": "phase3_ko_fortune",
+      "type": "phase3",
+      "userData": {
+        "birthDate": "1994-08-17",
+        "birthTime": "09:30",
+        "context": "career",
+        "question": "올해 대운이 바뀌면 커리어 방향도 달라질까요?",
+        "language": "ko",
+        "characterId": "career_lyra",
+        "questionIntent": "career",
+        "selectionMode": "auto",
+        "currentDate": "2026-06-06"
+      },
+      "expectedContains": [
+        "## Phase 3 임무: 대운(10년)과 세운(1년)의 흐름 (심층 버전)",
+        "<핵심_분석_원칙>",
+        "## 출력 요구사항 (JSON)",
+        "## 작성 규칙",
+        "모든 날짜는 기준일 2026-06-06 이후만 사용하세요",
+        "재검토 경계"
       ],
       "expectedNotContains": [
-        "재회할 가능성이 있어요",
-        "재회할 수 있을지도 모릅니다"
+        "📅 2026년 운세 예보 (세운 분석)",
+        "2026년 [N]월",
+        "\"month\": \"1월\"",
+        "구체적 시점",
+        "20일경",
+        "오라클처럼 단정적으로 서술하십시오"
+      ]
+    },
+    {
+      "id": "phase3_en_fortune_future_months",
+      "type": "phase3",
+      "userData": {
+        "birthDate": "1994-08-17",
+        "birthTime": "09:30",
+        "context": "career",
+        "question": "Will my career timing improve later this year?",
+        "language": "en",
+        "characterId": "career_lyra",
+        "questionIntent": "career",
+        "selectionMode": "auto",
+        "currentDate": "2026-06-06"
+      },
+      "expectedContains": [
+        "## Phase 3 Mission: Great Luck (10-year) and Yearly Luck (1-year) Flow",
+        "Use only dates on or after 2026-06-06",
+        "review boundary",
+        "Future YYYY-MM or month window after current date"
+      ],
+      "expectedNotContains": [
+        "\"month\": \"January\"",
+        "\"month\": \"February\"",
+        "\"month\": \"March\"",
+        "Q1-Q4"
+      ]
+    },
+    {
+      "id": "phase4_ko_life_areas",
+      "type": "phase4",
+      "userData": {
+        "birthDate": "1988-11-11",
+        "birthTime": "14:40",
+        "context": "money",
+        "question": "돈이 계속 묶이는 것 같은데 내년도 전략이 필요해요.",
+        "language": "ko",
+        "characterId": "wealth_midas",
+        "questionIntent": "wealth",
+        "selectionMode": "manual",
+        "currentDate": "2026-06-06"
+      },
+      "expectedContains": [
+        "## Phase 4 임무: 4대 인생 영역 정밀 진단 (심층 버전)",
+        "<핵심_분석_원칙>",
+        "## 출력 요구사항 (JSON)",
+        "## 작성 규칙",
+        "의료 진단, 치료, 투약 변경, 수술, 치료 중단 지시를 제공하지 마세요",
+        "특정 주식, 코인, 레버리지"
+      ],
+      "expectedNotContains": [
+        "구체적 재테크 방향 제안",
+        "재테크 추천 분야",
+        "구체적 운동/식습관 처방",
+        "추천 운동/식습관"
+      ]
+    },
+    {
+      "id": "phase4_en_life_area_safety",
+      "type": "phase4",
+      "userData": {
+        "birthDate": "1988-11-11",
+        "birthTime": "14:40",
+        "context": "money",
+        "question": "I need a strategy for money and health next year.",
+        "language": "en",
+        "characterId": "wealth_midas",
+        "questionIntent": "wealth",
+        "selectionMode": "manual",
+        "currentDate": "2026-06-06"
+      },
+      "expectedContains": [
+        "## Phase 4 Mission: Precision Diagnosis of 4 Life Areas",
+        "Do not provide medical diagnosis, treatment, medication, surgery, or stopping-treatment instructions.",
+        "specific stock, crypto, leverage",
+        "Evidence-Bounded Tone"
+      ],
+      "expectedNotContains": [
+        "Replace \"might\", \"could\", \"may\" with definitive phrasing"
+      ]
+    },
+    {
+      "id": "phase5a_ko_action_plan",
+      "type": "phase5a",
+      "userData": {
+        "birthDate": "1991-02-20",
+        "birthTime": "07:15",
+        "context": "love",
+        "question": "앞으로 6개월 동안 실제로 뭘 실천하면 될까요?",
+        "language": "ko",
+        "characterId": "reunion_nova",
+        "questionIntent": "reunion",
+        "selectionMode": "auto",
+        "currentDate": "2026-06-06"
+      },
+      "expectedContains": [
+        "## Phase 5A 임무: 특별 분석 + 행동 계획 + 택일",
+        "## 출력 요구사항 (JSON)",
+        "## 작성 규칙",
+        "모든 날짜는 기준일 2026-06-06 이후만 사용하세요",
+        "재검토 경계"
+      ],
+      "expectedNotContains": [
+        "Pick specific dates in 2026",
+        "2026년 실제 절기/합충일 기반 날짜 선택",
+        "투자/재테크",
+        "재성 생조",
+        "구체적 날짜와 행동을 명확히 제시하십시오"
+      ]
+    },
+    {
+      "id": "phase5a_en_action_plan_safety",
+      "type": "phase5a",
+      "userData": {
+        "birthDate": "1991-02-20",
+        "birthTime": "07:15",
+        "context": "love",
+        "question": "What should I actually do over the next six months?",
+        "language": "en",
+        "characterId": "reunion_nova",
+        "questionIntent": "reunion",
+        "selectionMode": "auto",
+        "currentDate": "2026-06-06"
+      },
+      "expectedContains": [
+        "## Phase 5A Mission: Reveal Hidden Cards and Action Roadmap",
+        "Use only dates on or after 2026-06-06",
+        "review boundary",
+        "without investment instructions",
+        "Evidence-Bounded Tone"
+      ],
+      "expectedNotContains": [
+        "Recover investments",
+        "No hedging",
+        "firm oracle verdicts"
+      ]
+    },
+    {
+      "id": "phase5b_ko_final_verdict_safety",
+      "type": "phase5b",
+      "userData": {
+        "birthDate": "1990-06-01",
+        "birthTime": "20:45",
+        "context": "career",
+        "question": "올해 마지막 결정을 지금 내릴 수 있을까?",
+        "language": "ko",
+        "characterId": "career_lyra",
+        "questionIntent": "career",
+        "selectionMode": "auto",
+        "currentDate": "2026-06-06"
+      },
+      "expectedContains": [
+        "## Phase 5B 임무: 전생 분석 + 용어집 + 최종 결론",
+        "## 출력 요구사항 (JSON)",
+        "## 작성 규칙",
+        "모든 날짜는 기준일 2026-06-06 이후만 사용하세요",
+        "의료 진단, 치료, 투약 변경, 수술, 치료 중단 지시를 제공하지 마세요",
+        "기준일 이후 첫 행동 (근거 있는 시기 범위 또는 재검토 경계)"
+      ],
+      "expectedNotContains": [
+        "그러므로 지금 당장: [동사형 행동 + YYYY-MM 날짜]",
+        "지금 당장 할 행동 (YYYY-MM 날짜 포함)",
+        "오라클의 최종 선고처럼 단정적으로 서술하십시오",
+        "2026년 [월]은 [X]의 결정적 시기입니다"
+      ]
+    },
+    {
+      "id": "phase5b_en_final_verdict_safety",
+      "type": "phase5b",
+      "userData": {
+        "birthDate": "1990-06-01",
+        "birthTime": "20:45",
+        "context": "career",
+        "question": "Can I make the final decision later this year?",
+        "language": "en",
+        "characterId": "career_lyra",
+        "questionIntent": "career",
+        "selectionMode": "auto",
+        "currentDate": "2026-06-06"
+      },
+      "expectedContains": [
+        "## Phase 5B Mission: Past Life + Glossary + Final Verdict",
+        "Use only dates on or after 2026-06-06",
+        "Do not provide medical diagnosis, treatment, medication, surgery, or stopping-treatment instructions.",
+        "Evidence-bounded Tone"
+      ],
+      "expectedNotContains": [
+        "firm oracle verdicts",
+        "Recover investments",
+        "No hedging"
       ]
     }
   ]

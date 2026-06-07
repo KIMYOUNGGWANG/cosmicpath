@@ -23,7 +23,7 @@ import {
 } from './reading-request-service';
 import { assembleReadingRuntime } from './reading-runtime-service';
 
-export const maxDuration = 60; // Vercel Function Timeout (Increased for multi-turn)
+export const maxDuration = 120;
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
