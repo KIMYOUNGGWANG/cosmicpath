@@ -26,7 +26,7 @@ export default async function TermsPage() {
                             <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
                                 <h2 className="mb-4 text-xl font-cinzel text-white">English Summary</h2>
                                 <p>
-                                    These terms explain how Decision Note delivers decision-support notes as digital content.
+                                    These terms explain how CosmicPath delivers decision-support readings as digital content.
                                     Saju, astrology, and tarot may appear only as optional evidence layers.
                                     This English summary is provided for clarity during the current validation cycle. The Korean governing version remains below.
                                 </p>

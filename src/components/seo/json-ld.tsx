@@ -1,20 +1,64 @@
 export default function JsonLd() {
+    const siteUrl = 'https://www.cosmicpath.app';
     const jsonLd = {
         '@context': 'https://schema.org',
-        '@type': 'Organization',
-        name: 'Decision Note',
-        legalName: "Tony's Company",
-        url: process.env.NEXT_PUBLIC_APP_URL || 'https://cosmicpath.app',
-        logo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://cosmicpath.app'}/favicon.ico`, // Ideally use a high-res logo
-        sameAs: [
-            // 'https://twitter.com/cosmicpath', // Add social profiles here
-            // 'https://instagram.com/cosmicpath',
+        '@graph': [
+            {
+                '@type': 'Organization',
+                '@id': `${siteUrl}/#organization`,
+                name: 'CosmicPath',
+                legalName: "Tony's Company",
+                url: siteUrl,
+                logo: `${siteUrl}/og-image.png`,
+                contactPoint: {
+                    '@type': 'ContactPoint',
+                    contactType: 'customer support',
+                    email: 'support@cosmicpath.app',
+                    availableLanguage: ['ko', 'en'],
+                },
+            },
+            {
+                '@type': 'WebSite',
+                '@id': `${siteUrl}/#website`,
+                name: 'CosmicPath',
+                url: siteUrl,
+                inLanguage: ['ko-KR', 'en'],
+                publisher: { '@id': `${siteUrl}/#organization` },
+                description: '사주, 점성술, 타로를 교차해 막힌 질문의 첫 판정과 다음 행동을 정리하는 3단분석 서비스.',
+            },
+            {
+                '@type': 'Service',
+                '@id': `${siteUrl}/#three-layer-reading`,
+                name: 'CosmicPath 3단분석',
+                alternateName: 'CosmicPath 3-Layer Reading',
+                serviceType: 'Saju, astrology, and tarot decision reading',
+                provider: { '@id': `${siteUrl}/#organization` },
+                areaServed: ['KR', 'US'],
+                audience: {
+                    '@type': 'Audience',
+                    audienceType: 'People with relationship, career, money, or life-direction questions',
+                },
+                description: '질문 하나를 사주, 점성술, 타로 세 근거로 대조해 첫 판정, 근거, 다음 행동을 제시합니다.',
+                offers: [
+                    {
+                        '@type': 'Offer',
+                        name: '첫 판정',
+                        price: '0',
+                        priceCurrency: 'USD',
+                        availability: 'https://schema.org/InStock',
+                        url: `${siteUrl}/start?reset=true&entry=decision_timing_rebuild_v1`,
+                    },
+                    {
+                        '@type': 'Offer',
+                        name: '상세 3단분석 리포트',
+                        price: '9.99',
+                        priceCurrency: 'USD',
+                        availability: 'https://schema.org/InStock',
+                        url: `${siteUrl}/start?reset=true&entry=decision_timing_rebuild_v1`,
+                    },
+                ],
+            },
         ],
-        contactPoint: {
-            '@type': 'ContactPoint',
-            contactType: 'customer support',
-            email: 'support@cosmicpath.app',
-        },
     }
 
     return (

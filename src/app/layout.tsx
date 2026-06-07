@@ -8,15 +8,23 @@ import SessionProvider from "@/components/providers/SessionProvider";
 import LenisProvider from "@/components/providers/LenisProvider";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 
+const SITE_URL = "https://www.cosmicpath.app";
+const OG_IMAGE_URL = `${SITE_URL}/og-image.png`;
+const KOREAN_TITLE = "CosmicPath | 사주·점성술·타로 3단분석";
+const KOREAN_DESCRIPTION = "막힌 관계·일·돈 질문을 사주, 점성술, 타로로 대조해 첫 판정과 다음 행동을 정리합니다.";
+const ENGLISH_TITLE = "CosmicPath | Saju, Astrology, Tarot 3-Layer Reading";
+const ENGLISH_DESCRIPTION = "A 3-layer reading that cross-checks saju, astrology, and tarot to clarify one stuck question and the next action.";
+
 export async function generateMetadata(): Promise<Metadata> {
   const headersList = await headers();
   const isKorean = (headersList.get('accept-language') || '').includes('ko');
 
   const base: Metadata = {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://cosmicpath.app"),
+    metadataBase: new URL(SITE_URL),
+    applicationName: "CosmicPath",
     alternates: { canonical: './' },
     authors: [{ name: "Tony's Company" }],
-    creator: "Decision Note",
+    creator: "CosmicPath",
     publisher: "Tony's Company",
     robots: {
       index: true,
@@ -34,48 +42,46 @@ export async function generateMetadata(): Promise<Metadata> {
   if (isKorean) {
     return {
       ...base,
-      title: { default: "오늘의 결정 정리", template: "%s | Decision Note" },
-      description: "미뤄둔 선택 하나를 질문, 기준, 오늘 할 일로 차분하게 정리합니다.",
-      keywords: ["사주", "점성술", "타로", "결정 정리", "결정 타이밍", "관계 고민", "커리어 고민", "오늘 할 일"],
+      title: { default: KOREAN_TITLE, template: "%s | CosmicPath" },
+      description: KOREAN_DESCRIPTION,
+      keywords: ["사주", "점성술", "타로", "3단분석", "운세 리포트", "관계 고민", "커리어 고민", "돈 흐름", "다음 행동"],
       openGraph: {
         type: "website",
         locale: "ko_KR",
-        url: process.env.NEXT_PUBLIC_APP_URL || "https://cosmicpath.app",
-        title: "오늘의 결정 정리",
-        description: "미뤄둔 선택 하나를 질문, 기준, 오늘 할 일로 차분하게 정리합니다.",
-        siteName: "오늘의 결정 정리",
-        images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Decision note" }],
+        url: SITE_URL,
+        title: KOREAN_TITLE,
+        description: KOREAN_DESCRIPTION,
+        siteName: "CosmicPath",
+        images: [{ url: OG_IMAGE_URL, width: 1200, height: 630, alt: "CosmicPath 사주·점성술·타로 3단분석 미리보기" }],
       },
       twitter: {
         card: "summary_large_image",
-        title: "오늘의 결정 정리",
-        description: "미뤄둔 선택 하나를 질문, 기준, 오늘 할 일로 차분하게 정리합니다.",
-        images: ["/og-image.png"],
-        creator: "@decisionnote",
+        title: KOREAN_TITLE,
+        description: KOREAN_DESCRIPTION,
+        images: [OG_IMAGE_URL],
       },
     };
   }
 
   return {
     ...base,
-    title: { default: "Decision Note", template: "%s | Decision Note" },
-    description: "Turn one delayed decision into a clear question, criteria, and one careful action for today.",
-    keywords: ["saju", "astrology", "tarot", "decision note", "decision timing", "relationship decision", "career decision"],
+    title: { default: ENGLISH_TITLE, template: "%s | CosmicPath" },
+    description: ENGLISH_DESCRIPTION,
+    keywords: ["saju", "astrology", "tarot", "3-layer reading", "decision timing", "relationship reading", "career reading"],
     openGraph: {
       type: "website",
       locale: "en_US",
-      url: process.env.NEXT_PUBLIC_APP_URL || "https://cosmicpath.app",
-      title: "Decision Note",
-      description: "Turn one delayed decision into a clear question, criteria, and one careful action for today.",
-      siteName: "Decision Note",
-      images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Decision note" }],
+      url: SITE_URL,
+      title: ENGLISH_TITLE,
+      description: ENGLISH_DESCRIPTION,
+      siteName: "CosmicPath",
+      images: [{ url: OG_IMAGE_URL, width: 1200, height: 630, alt: "CosmicPath saju, astrology, and tarot 3-layer reading preview" }],
     },
     twitter: {
       card: "summary_large_image",
-      title: "Decision Note",
-      description: "Turn one delayed decision into a clear question, criteria, and one careful action for today.",
-      images: ["/og-image.png"],
-      creator: "@decisionnote",
+      title: ENGLISH_TITLE,
+      description: ENGLISH_DESCRIPTION,
+      images: [OG_IMAGE_URL],
     },
   };
 }

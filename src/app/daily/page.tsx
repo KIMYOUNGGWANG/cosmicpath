@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: '오늘의 운세 & 타로 | CosmicPath',
         description: '생년월일 기반 오늘의 운세와 데일리 타로를 확인하고 오늘의 흐름과 행동 가이드를 받아보세요.',
-        url: 'https://cosmicpath.app/daily',
+        url: 'https://www.cosmicpath.app/daily',
         type: 'website',
         images: ['/og-image.png'],
     },
@@ -91,7 +91,7 @@ export default async function DailyPage() {
             '@context': 'https://schema.org',
             '@type': 'WebPage',
             name: '오늘의 운세 & 타로',
-            url: 'https://cosmicpath.app/daily',
+            url: 'https://www.cosmicpath.app/daily',
             description: '생년월일 기반 오늘의 운세와 데일리 타로를 확인하는 페이지.',
             inLanguage: 'ko-KR',
             about: ['오늘의 운세', '데일리 타로', '사주 운세'],

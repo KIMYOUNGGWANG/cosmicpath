@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: '오늘의 타로 | CosmicPath',
         description: '생년월일 기반으로 오늘의 타로 카드를 확인하고 오늘의 메시지를 읽어보세요.',
-        url: 'https://cosmicpath.app/daily/tarot',
+        url: 'https://www.cosmicpath.app/daily/tarot',
         type: 'website',
         images: ['/og-image.png'],
     },
@@ -63,7 +63,7 @@ export default async function DailyTarotPage() {
             '@context': 'https://schema.org',
             '@type': 'WebPage',
             name: '오늘의 타로',
-            url: 'https://cosmicpath.app/daily/tarot',
+            url: 'https://www.cosmicpath.app/daily/tarot',
             description: '생년월일 기반으로 오늘의 타로 카드를 확인하는 페이지.',
             inLanguage: 'ko-KR',
             about: ['오늘의 타로', '데일리 타로', '무료 타로'],

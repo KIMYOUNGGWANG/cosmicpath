@@ -1,6 +1,7 @@
 import { GrowthTrackedLink } from '@/components/common/GrowthTracking';
 import { HeroScene } from '@/components/landing/HeroScene';
 import { getLandingVariant } from '@/lib/language-preference';
+import { ArrowRight, CornerDownRight } from 'lucide-react';
 
 interface HeroSectionProps {
     language: 'ko' | 'en';
@@ -11,181 +12,194 @@ export function HeroSection({ language }: HeroSectionProps) {
     const landingVariant = getLandingVariant(language);
     const decisionEntry = 'decision_timing_rebuild_v1';
     const startHref = `/start?reset=true&entry=${decisionEntry}`;
-    const decisionSignals = isKo
-        ? ['질문 정리', '판단 기준', '오늘 할 일', '보류선']
-        : ['Question', 'Criteria', 'Next action', 'Hold line'];
-    const quickQuestions = isKo
+    const layerRows = isKo
+        ? [
+            { code: '命式', title: '사주', detail: '타고난 구조와 올해 압력을 먼저 봅니다.' },
+            { code: '星盤', title: '점성술', detail: '지금 외부 흐름과 타이밍을 겹쳐 봅니다.' },
+            { code: '牌', title: '타로', detail: '현재 선택을 흔드는 심리 신호를 확인합니다.' },
+        ]
+        : [
+            { code: '命式', title: 'Saju', detail: 'Your birth structure and yearly pressure.' },
+            { code: '星盤', title: 'Astrology', detail: 'The current timing and outer weather.' },
+            { code: '牌', title: 'Tarot', detail: 'The psychology moving inside this choice.' },
+        ];
+    const sampleCases = isKo
         ? [
             {
-                label: '팔로업',
+                label: '관계',
                 context: 'love',
-                question: '답장을 더 기다릴지, 오늘 한 번 더 보내고 정리할지 정하고 싶어.',
+                question: '답장을 기다릴지, 한 번 더 보낼지, 이제 정리할지 보고 싶다.',
             },
             {
                 label: '커리어',
                 context: 'career',
-                question: '미루고 있는 이직 결정을 오늘 어디까지 움직이면 좋을까?',
+                question: '하반기에 이직, 사업, 지금 일 중 어디에 힘을 실어야 할까.',
             },
             {
-                label: '경계',
+                label: '돈',
                 context: 'general',
-                question: '계속 미루고 있는 불편한 말을 오늘 어떻게 꺼내야 할까?',
+                question: '막힌 돈 흐름에서 먼저 줄일 것과 밀어야 할 것을 알고 싶다.',
             },
         ]
         : [
             {
-                label: 'Follow-up',
+                label: 'Love',
                 context: 'love',
-                question: 'Should I wait for a reply, send one clean follow-up, or close the loop today?',
+                question: 'Should I wait, follow up once, or close this relationship loop?',
             },
             {
                 label: 'Career',
                 context: 'career',
-                question: 'What is the smallest next move I should take on the job decision I keep delaying?',
+                question: 'Where should I place my energy for the rest of this year?',
             },
             {
-                label: 'Boundary',
+                label: 'Money',
                 context: 'general',
-                question: 'How should I say the uncomfortable thing I have been avoiding?',
+                question: 'What should I cut or push first to loosen a blocked money flow?',
             },
         ];
 
     return (
         <HeroScene language={language}>
-            <div className="mx-auto flex w-full max-w-7xl flex-col lg:flex-row items-center justify-between gap-12 lg:gap-24 px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
-                {/* Left Column: Hero Message */}
-                <div className="flex-1 flex flex-col items-start text-left z-10 w-full">
-                    <div className="mb-6 inline-flex flex-wrap items-center gap-2 border border-white/10 bg-[#15130f]/75 px-4 py-2 backdrop-blur-xl">
-                        <span className="text-[11px] text-white/62">
-                            {isKo
-                                ? '오늘의 결정 정리 · 첫 정리 무료'
-                                : 'Decision Note · First note free'}
-                        </span>
-                    </div>
-
-                    <h1 className="mb-6 max-w-3xl break-keep font-cinzel text-4xl leading-tight text-starlight sm:text-5xl md:text-6xl lg:text-[64px]">
-                        {isKo ? (
-                            <>
-                                미뤄둔 선택을 <br className="hidden md:block" />
-                                <span className="text-acc-gold">오늘 정리하세요</span>
-                            </>
-                        ) : (
-                            <>
-                                Write down the choice <br className="hidden md:block" />
-                                <span className="text-acc-gold">you keep postponing</span>
-                            </>
-                        )}
-                    </h1>
-
-                    <p className="mb-10 max-w-2xl break-keep text-base font-light leading-relaxed text-moonlight sm:text-lg md:text-xl">
-                        {isKo ? (
-                            <>
-                                고민을 한 문장으로 적으면, 선택지와 기준, 오늘 할 일을 짧게 정리합니다. 사주, 점성술, 타로는 배경 근거로만 조용히 반영합니다.
-                            </>
-                        ) : (
-                            <>
-                                Bring one decision you keep postponing. We turn it into a plain question, a few criteria, and one careful next action for today.
-                            </>
-                        )}
-                    </p>
-
-                    <div className="mb-6 flex flex-wrap gap-2">
-                        {decisionSignals.map((signal) => (
-                            <span
-                                key={signal}
-                                className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-white/52"
+            <div className="mx-auto w-full max-w-7xl px-4 py-8 text-left sm:px-6 lg:px-8">
+                <div className="grid overflow-hidden border-x border-white/10 lg:grid-cols-[86px_minmax(0,1fr)]">
+                    <aside className="hidden border-r border-white/10 lg:grid">
+                        {layerRows.map((layer, index) => (
+                            <div
+                                key={layer.code}
+                                className="flex min-h-40 flex-col justify-between border-b border-white/10 p-5 last:border-b-0"
                             >
-                                {signal}
-                            </span>
+                                <span className="font-cinzel text-2xl text-acc-gold/82">{layer.code}</span>
+                                <span className="text-[10px] uppercase tracking-[0.22em] text-white/30">0{index + 1}</span>
+                            </div>
                         ))}
-                    </div>
+                    </aside>
 
-                    <div className="flex flex-col sm:flex-row items-start gap-4 w-full sm:w-auto">
-                        <GrowthTrackedLink
-                            href={startHref}
-                            trackingEvent={{
-                                event: 'decision_timing_home_cta_clicked',
-                                source: decisionEntry,
-                                step: 'hero',
-                                language,
-                                metadata: {
-                                    landingVariant,
-                                },
-                            }}
-                            className="group relative inline-flex w-full min-h-[56px] items-center justify-center border border-[#e7dac4]/80 bg-[#f3ead9] px-8 py-4 text-base font-semibold tracking-tight text-[#15130f] shadow-[0_18px_50px_rgba(0,0,0,0.28)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#fff6e8] sm:w-auto"
-                        >
-                            <span className="relative z-10 flex items-center gap-2">
-                                {isKo ? '선택 정리하기' : 'Write the decision'}
-                                <svg className="h-5 w-5 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                </svg>
-                            </span>
-                        </GrowthTrackedLink>
-                    </div>
-
-                    <div className="mt-5 flex w-full max-w-2xl flex-wrap gap-2">
-                        {quickQuestions.map((item) => {
-                            const href = `/start?reset=true&entry=${decisionEntry}&context=${item.context}&question=${encodeURIComponent(item.question)}`;
-                            return (
-                                <GrowthTrackedLink
-                                    key={item.label}
-                                    href={href}
-                                    trackingEvent={{
-                                        event: 'decision_timing_prompt_clicked',
-                                        source: decisionEntry,
-                                        step: 'hero_prompt',
-                                        language,
-                                        context: item.context,
-                                        metadata: {
-                                            landingVariant,
-                                            question: item.question,
-                                        },
-                                    }}
-                                    className="min-h-[38px] rounded-full border border-white/12 bg-white/[0.04] px-4 py-2 text-xs text-white/68 transition-all hover:border-acc-gold/35 hover:bg-acc-gold/10 hover:text-acc-gold"
-                                >
-                                    {item.label}: {isKo ? '예시로 정리' : 'Use this note'}
-                                </GrowthTrackedLink>
-                            );
-                        })}
-                    </div>
-                </div>
-
-                {/* Right Column: Live Preview & Guide (Hidden on Mobile/Tablet) */}
-                <div className="hidden lg:flex flex-1 relative z-10 w-full items-center justify-center">
-                    <div className="relative w-full max-w-md border border-white/10 bg-[#171510]/88 p-8 shadow-[0_28px_90px_rgba(0,0,0,0.34)] backdrop-blur-xl">
-                        <div className="relative z-10 flex flex-col gap-6">
-                            <div className="flex items-center gap-4 border-b border-white/10 pb-4">
-                                <div className="flex h-12 w-12 items-center justify-center border border-white/10 bg-white/5">
-                                    <span className="font-cinzel text-acc-gold text-lg">결</span>
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-starlight">{isKo ? '결의 정리' : "Gyeol's note"}</h3>
-                                    <p className="text-xs text-moonlight">{isKo ? '기준을 나누고 행동을 좁힙니다' : 'Criteria first, action second'}</p>
-                                </div>
+                    <div className="grid lg:grid-cols-[minmax(0,1.08fr)_minmax(330px,0.92fr)]">
+                        <section className="border-b border-white/10 p-6 sm:p-8 lg:border-b-0 lg:border-r lg:p-12">
+                            <div className="mb-10 flex flex-wrap items-center justify-between gap-3 border-y border-white/10 py-3">
+                                <span className="text-[11px] uppercase tracking-[0.28em] text-white/48">
+                                    {isKo ? 'CosmicPath 삼중 판독실' : 'CosmicPath reading room'}
+                                </span>
+                                <span className="text-[11px] uppercase tracking-[0.24em] text-acc-gold/72">
+                                    {isKo ? '사주 / 점성술 / 타로' : 'Saju / Astrology / Tarot'}
+                                </span>
                             </div>
-                            
-                            <div className="space-y-4">
-                                <p className="text-sm leading-7 text-moonlight">
+
+                            <h1 className="max-w-3xl break-keep font-cinzel text-[36px] leading-[1.08] text-starlight sm:text-6xl lg:text-[72px]">
+                                {isKo ? (
+                                    <>
+                                        한 가지 운세로는 <br />
+                                        안 풀리는 문제를 <br />
+                                        <span className="text-acc-gold">세 겹으로 대조합니다</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        Some questions need <br />
+                                        more than one oracle. <br />
+                                        <span className="text-acc-gold">We cross-check three.</span>
+                                    </>
+                                )}
+                            </h1>
+
+                            <p className="mt-8 max-w-2xl break-keep text-base font-light leading-8 text-moonlight">
+                                {isKo
+                                    ? '사주는 구조를, 점성술은 타이밍을, 타로는 지금 마음의 방향을 봅니다. 결론은 하나로 모으되 근거는 숨기지 않습니다.'
+                                    : 'Saju reads structure, astrology reads timing, and tarot reads the current pull. The answer is condensed, but the evidence stays visible.'}
+                            </p>
+
+                            <GrowthTrackedLink
+                                href={startHref}
+                                trackingEvent={{
+                                    event: 'decision_timing_home_cta_clicked',
+                                    source: decisionEntry,
+                                    step: 'hero',
+                                    language,
+                                    metadata: {
+                                        landingVariant,
+                                    },
+                                }}
+                                className="group mt-10 grid min-h-[76px] w-full max-w-xl grid-cols-[58px_minmax(0,1fr)_64px] overflow-hidden border border-[#d7c59a]/55 bg-[#11100d]/42 text-starlight shadow-[0_24px_70px_rgba(0,0,0,0.22),inset_0_0_0_1px_rgba(255,255,255,0.025)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#d7c59a] hover:bg-[#d7c59a]/[0.065]"
+                            >
+                                <span className="flex items-center justify-center border-r border-[#d7c59a]/18 font-cinzel text-sm text-[#d7c59a]/72">
+                                    01
+                                </span>
+                                <span className="flex flex-col justify-center px-5 text-left sm:px-6">
+                                    <span className="text-sm font-semibold tracking-[0.08em]">
+                                        {isKo ? '내 문제를 3단분석으로 열기' : 'Open my 3-layer reading'}
+                                    </span>
+                                    <span className="mt-1 text-[11px] uppercase tracking-[0.18em] text-white/38">
+                                        {isKo ? '질문 접수 / 사주·점성 / 타로' : 'question / saju & astrology / tarot'}
+                                    </span>
+                                </span>
+                                <span className="flex items-center justify-center border-l border-[#d7c59a]/28 text-[#d7c59a]">
+                                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                                </span>
+                            </GrowthTrackedLink>
+                        </section>
+
+                        <section className="p-6 sm:p-8 lg:p-10">
+                            <div className="border-b border-white/10 pb-6">
+                                <div className="text-[11px] uppercase tracking-[0.28em] text-white/38">
+                                    {isKo ? '접수 가능한 질문' : 'case intake'}
+                                </div>
+                                <p className="mt-4 break-keep text-2xl font-light leading-snug text-starlight">
                                     {isKo
-                                        ? '이번 선택은 크게 결론내기보다, 이번 주 안에 확인 가능한 작은 행동으로 좁히는 편이 안전합니다.'
-                                        : 'This choice is safer when narrowed into one small action you can check this week.'}
+                                        ? '이름, 생년월일, 장소, 그리고 지금 가장 걸리는 질문 하나.'
+                                        : 'Name, birth data, place, and the one question that will not leave.'}
                                 </p>
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-3 border border-white/8 bg-black/20 p-3">
-                                        <div className="h-2 w-2 rounded-full bg-acc-gold"></div>
-                                        <span className="text-xs font-medium text-starlight">
-                                            {isKo ? '방향: 작게 움직이기' : 'Direction: move small'}
-                                        </span>
+                            </div>
+
+                            <div className="mt-6 divide-y divide-white/8 border-y border-white/8">
+                                {layerRows.map((layer) => (
+                                    <div key={layer.code} className="grid grid-cols-[58px_minmax(0,1fr)] gap-4 py-4">
+                                        <span className="font-cinzel text-base text-acc-gold/78">{layer.code}</span>
+                                        <div>
+                                            <div className="font-cinzel text-lg text-starlight">{layer.title}</div>
+                                            <p className="mt-1 break-keep text-xs leading-5 text-white/48">{layer.detail}</p>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center gap-3 border border-white/8 bg-black/20 p-3">
-                                        <div className="h-2 w-2 rounded-full bg-saju-blue"></div>
-                                        <span className="text-xs font-medium text-starlight">
-                                            {isKo ? '오늘 할 일: 보낼 말 한 문장 쓰기' : 'Today: draft one sentence'}
-                                        </span>
-                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="mt-7">
+                                <div className="mb-3 text-[11px] uppercase tracking-[0.24em] text-white/34">
+                                    {isKo ? '빠른 질문 예시' : 'sample questions'}
+                                </div>
+                                <div className="grid gap-2">
+                                    {sampleCases.map((item) => {
+                                        const href = `/start?reset=true&entry=${decisionEntry}&context=${item.context}&question=${encodeURIComponent(item.question)}`;
+
+                                        return (
+                                            <GrowthTrackedLink
+                                                key={item.label}
+                                                href={href}
+                                                trackingEvent={{
+                                                    event: 'decision_timing_prompt_clicked',
+                                                    source: decisionEntry,
+                                                    step: 'hero_prompt',
+                                                    language,
+                                                    context: item.context,
+                                                    metadata: {
+                                                        landingVariant,
+                                                        question: item.question,
+                                                    },
+                                                }}
+                                                className="group grid min-h-[58px] grid-cols-[72px_minmax(0,1fr)_34px] items-center border border-white/8 bg-white/[0.018] transition-colors duration-300 hover:border-acc-gold/32 hover:bg-white/[0.04]"
+                                            >
+                                                <span className="flex h-full items-center justify-center border-r border-white/8 text-xs text-acc-gold">
+                                                    {item.label}
+                                                </span>
+                                                <span className="px-4 text-xs leading-5 text-white/54 group-hover:text-moonlight">
+                                                    {item.question}
+                                                </span>
+                                                <CornerDownRight className="h-4 w-4 text-white/24 group-hover:text-acc-gold" />
+                                            </GrowthTrackedLink>
+                                        );
+                                    })}
                                 </div>
                             </div>
-                        </div>
+                        </section>
                     </div>
                 </div>
             </div>

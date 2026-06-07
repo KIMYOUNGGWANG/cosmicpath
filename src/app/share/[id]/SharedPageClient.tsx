@@ -114,7 +114,7 @@ export function SharedPageClient({
 
   const shareUrl = useMemo(() => {
     if (typeof window === 'undefined') {
-      return `${process.env.NEXT_PUBLIC_APP_URL || 'https://cosmicpath.app'}/share/${id}`;
+      return `https://www.cosmicpath.app/share/${id}`;
     }
     return `${window.location.origin}/share/${id}`;
   }, [id]);
@@ -335,7 +335,7 @@ export function SharedPageClient({
             className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 transition-[background-color,transform,border-color] duration-300 hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/70"
           >
             <ChevronLeft className="h-4 w-4" />
-            Decision Note
+            CosmicPath
           </Link>
 
           <div className="inline-flex items-center gap-2 rounded-full border border-amber-400/20 bg-amber-400/10 px-4 py-2 text-xs uppercase tracking-[0.24em] text-amber-200">

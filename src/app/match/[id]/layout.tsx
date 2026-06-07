@@ -12,7 +12,7 @@ export async function generateMetadata({
     params,
 }: MatchLayoutProps): Promise<Metadata> {
     const { id } = await params;
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cosmicpath.app';
+    const baseUrl = 'https://www.cosmicpath.app';
 
     const session = await prisma.matchSession.findUnique({
         where: { id },

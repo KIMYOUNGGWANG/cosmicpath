@@ -11,9 +11,9 @@ const LANDING_VARIANT = 'en_contact_timing_v1';
 const PRIMARY_CONTACT_QUESTION = 'Should I text them now, or wait a little longer?';
 
 export const metadata: Metadata = {
-  title: 'Contact Decision Note',
+  title: 'Contact Timing Reading | CosmicPath',
   description:
-    'Turn one relationship or DM decision into a clear note: text, wait, narrow, or hold. First note free.',
+    'Use CosmicPath to cross-check one relationship or DM timing question with saju, astrology, and tarot. First reading free.',
   robots: {
     index: true,
     follow: true,
@@ -22,18 +22,18 @@ export const metadata: Metadata = {
     canonical: '/en/contact-timing',
   },
   openGraph: {
-    title: 'Contact Decision Note',
+    title: 'Contact Timing Reading | CosmicPath',
     description:
-      'First note free. Unlock why this contact timing direction was chosen, when to move, and what message can backfire.',
+      'First reading free. Unlock why this contact timing direction was chosen, when to move, and what message can backfire.',
     url: '/en/contact-timing',
-    siteName: 'Decision Note',
+    siteName: 'CosmicPath',
     images: ['/og-image.png'],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Contact Decision Note',
-    description: 'Decision support for the moment before you send the message.',
+    title: 'Contact Timing Reading | CosmicPath',
+    description: 'Saju, astrology, and tarot decision support for the moment before you send the message.',
     images: ['/og-image.png'],
   },
 };
@@ -106,9 +106,9 @@ export default function EnglishContactTimingPage() {
         <div className="relative z-10 mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-6xl flex-col">
           <header className="flex items-center justify-between">
             <Link href="/" className="text-sm font-semibold tracking-[0.24em] text-white/72 transition-colors hover:text-white">
-              Decision Note
+              CosmicPath
             </Link>
-            <span className="text-sm text-white/48">First note free · Detailed note via Stripe</span>
+            <span className="text-sm text-white/48">First reading free · Detailed report via Stripe</span>
           </header>
 
           <div className="grid flex-1 items-center gap-10 py-16 lg:grid-cols-[minmax(0,1fr)_420px]">

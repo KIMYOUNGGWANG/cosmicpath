@@ -26,7 +26,7 @@ export default async function PrivacyPage() {
                             <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
                                 <h2 className="mb-4 text-xl font-cinzel text-white">English Summary</h2>
                                 <p>
-                                    This English summary explains what personal information Decision Note collects during the current validation cycle.
+                                    This English summary explains what personal information CosmicPath collects during the current validation cycle.
                                     The product may process decision context that you type, optional birth data, and technical data for note restore and storage.
                                     The Korean governing version remains below for legal reference.
                                 </p>

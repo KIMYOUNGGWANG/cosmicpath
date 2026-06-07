@@ -117,7 +117,7 @@ export const CosmicShareCard = forwardRef<HTMLDivElement, CosmicShareCardProps>(
                     <div className="flex items-center justify-center gap-2 mb-3">
                         <Star className="w-4 h-4 text-[#D4AF37]" />
                         <span className="text-white/60 text-xs tracking-widest uppercase">
-                            Decision Note
+                            CosmicPath
                         </span>
                         <Star className="w-4 h-4 text-[#D4AF37]" />
                     </div>

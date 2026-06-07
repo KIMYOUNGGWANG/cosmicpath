@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'https://cosmicpath.app';
+        const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'https://www.cosmicpath.app';
         const inviteUrl = `${origin}/match/${session.id}/join`;
 
         return NextResponse.json({
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
             inviteUrl,
             expiresAt: session.expiresAt,
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('[Match Create] Error:', error);
         return NextResponse.json(
             { error: 'Failed to create match session' },

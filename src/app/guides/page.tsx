@@ -28,7 +28,7 @@ export const metadata: Metadata = {
         title: 'English Starter Guides | CosmicPath',
         description:
             'Learn what Korean saju is, how it relates to BaZi, and how CosmicPath turns it into a decision timing reading.',
-        url: 'https://cosmicpath.app/guides',
+        url: 'https://www.cosmicpath.app/guides',
         type: 'website',
         images: ['/og-image.png'],
     },
@@ -81,14 +81,14 @@ export default function EnglishGuidesPage() {
         '@context': 'https://schema.org',
         '@type': 'CollectionPage',
         name: 'CosmicPath English Starter Guides',
-        url: 'https://cosmicpath.app/guides',
+        url: 'https://www.cosmicpath.app/guides',
         inLanguage: 'en-US',
         description:
             'English starter guides that explain Korean saju, the BaZi bridge, and decision timing readings.',
         hasPart: ENGLISH_GUIDES.map((guide) => ({
             '@type': 'Article',
             headline: guide.title,
-            url: `https://cosmicpath.app/guides/${guide.slug}`,
+            url: `https://www.cosmicpath.app/guides/${guide.slug}`,
             description: guide.seoDescription,
         })),
     };

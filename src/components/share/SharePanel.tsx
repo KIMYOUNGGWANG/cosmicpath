@@ -23,7 +23,7 @@ export function SharePanel({
     onPrint,
 }: SharePanelProps) {
     const isEn = language === 'en';
-    const resolvedShareTitle = shareTitle || (isEn ? 'Your Decision Note' : '오늘의 결정 정리');
+    const resolvedShareTitle = shareTitle || (isEn ? 'Your CosmicPath Reading' : '오늘의 CosmicPath 3단분석');
     const resolvedShareDescription = shareDescription || (
         isEn
             ? 'See how one delayed decision became a clearer next step.'
@@ -48,7 +48,7 @@ export function SharePanel({
         if (!resolvedUrl) return null;
 
         try {
-            const parsed = new URL(resolvedUrl, typeof window !== 'undefined' ? window.location.origin : 'https://cosmicpath.app');
+            const parsed = new URL(resolvedUrl, typeof window !== 'undefined' ? window.location.origin : 'https://www.cosmicpath.app');
             const segments = parsed.pathname.split('/').filter(Boolean);
             return segments.at(-1) ?? null;
         } catch {
@@ -82,9 +82,9 @@ export function SharePanel({
 
     const buildTikTokTemplate = (url: string) => {
         if (isEn) {
-            return `Decision Note helped me turn one delayed decision into a clear next step.\n\nTry yours: ${url}\n#DecisionNote #DecisionTiming #NextStep #fyp`;
+            return `CosmicPath cross-checked one stuck question with saju, astrology, and tarot.\n\nTry yours: ${url}\n#CosmicPath #Saju #Astrology #Tarot #fyp`;
         }
-        return `미뤄둔 선택 하나를 오늘 할 일로 정리했어요.\n\n너도 해보기: ${url}\n#오늘의결정정리 #결정정리 #오늘의선택`;
+        return `막혀 있던 질문 하나를 사주, 점성술, 타로 3단분석으로 정리했어요.\n\n너도 해보기: ${url}\n#CosmicPath #사주 #점성술 #타로 #3단분석`;
     };
 
     const claimReward = useCallback(async () => {
@@ -165,7 +165,7 @@ export function SharePanel({
 
         const ogImageUrl = readingId
             ? `${appUrl}/api/og/reading/${readingId}`
-            : 'https://cosmicpath.app/og-image.png';
+            : 'https://www.cosmicpath.app/og-image.png';
 
         // 설명 글자수 제한
         const trimmedDescription = resolvedShareDescription.length > 120
@@ -247,8 +247,8 @@ export function SharePanel({
 
         const url = resolveShareUrl();
         const text = isEn
-            ? `Decision Note helped me organize the decision in front of me into one clear next step.\n\n${url}`
-            : `오늘의 결정 정리에서 미뤄둔 선택을 오늘 할 일로 정리했어요.\n\n${url}`;
+            ? `CosmicPath turned one stuck question into a saju, astrology, and tarot 3-layer reading.\n\n${url}`
+            : `CosmicPath에서 막혀 있던 질문 하나를 사주, 점성술, 타로 3단분석으로 정리했어요.\n\n${url}`;
 
         const intentUrl = `https://threads.net/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
         window.open(intentUrl, '_blank', 'noopener,noreferrer');

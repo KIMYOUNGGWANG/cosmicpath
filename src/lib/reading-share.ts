@@ -29,10 +29,10 @@ function pickMainCardName(metadata: Record<string, unknown>): string {
   return 'Decision';
 }
 
-function buildFallbackDescription(language: 'ko' | 'en'): string {
+function buildDefaultDescription(language: 'ko' | 'en'): string {
   return language === 'en'
-    ? 'A decision note supported by Saju, astrology, and tarot.'
-    : '사주, 점성술, 타로 근거를 참고한 결정 정리입니다.';
+    ? 'A CosmicPath reading cross-checked by saju, astrology, and tarot.'
+    : '사주, 점성술, 타로 근거를 대조한 CosmicPath 3단분석입니다.';
 }
 
 function truncate(value: string, maxLength: number): string {
@@ -67,12 +67,12 @@ export function getReadingShareSummary(input: {
   const title = typeof summary?.title === 'string' && summary.title.trim()
     ? summary.title.trim()
     : language === 'en'
-      ? 'Decision Note Ready'
-      : '결정 정리가 도착했습니다';
+      ? 'CosmicPath Reading Ready'
+      : 'CosmicPath 3단분석이 도착했습니다';
 
   const rawDescription = typeof summary?.content === 'string' && summary.content.trim()
     ? summary.content.trim()
-    : buildFallbackDescription(language);
+    : buildDefaultDescription(language);
 
   return {
     title: truncate(title, 70),

@@ -40,16 +40,19 @@ export function HeroScene({ language, children }: HeroSceneProps) {
     }, [language]);
 
     return (
-        <section ref={containerRef} className="relative min-h-screen w-full overflow-hidden bg-void">
-            <div className="absolute inset-0 z-0 opacity-70">
-                <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(245,238,226,0.035)_1px,transparent_1px),linear-gradient(180deg,rgba(245,238,226,0.025)_1px,transparent_1px)] bg-[size:72px_72px]" />
-                <div className="absolute inset-0 bg-[linear-gradient(115deg,transparent_0%,transparent_52%,rgba(215,178,93,0.08)_52%,rgba(215,178,93,0.08)_52.35%,transparent_52.35%,transparent_100%)]" />
-                <div className="absolute inset-x-0 bottom-0 h-32 border-t border-white/6 bg-[#11100d]/80" />
+        <section ref={containerRef} className="relative min-h-[94svh] w-full overflow-hidden bg-void">
+            <div className="absolute inset-0 z-0 opacity-85">
+                <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(247,240,228,0.035)_1px,transparent_1px),linear-gradient(180deg,rgba(247,240,228,0.026)_1px,transparent_1px)] bg-[size:86px_86px]" />
+                <div className="absolute inset-0 bg-[linear-gradient(108deg,transparent_0%,transparent_45%,rgba(215,178,93,0.11)_45%,rgba(215,178,93,0.11)_45.14%,transparent_45.14%,transparent_100%)]" />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(17,16,13,0)_0%,rgba(17,16,13,0.9)_78%,#11100d_100%)]" />
+                <div className="absolute left-[6%] top-0 h-full w-px bg-white/[0.035]" />
+                <div className="absolute right-[12%] top-0 h-full w-px bg-white/[0.035]" />
+                <div className="absolute inset-x-0 bottom-0 h-24 border-t border-white/6 bg-[#11100d]/90" />
             </div>
 
             <motion.div
                 style={{ opacity, scale, y }}
-                className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 pb-16 pt-28 text-center"
+                className="relative z-10 flex min-h-[94svh] flex-col items-center justify-center px-4 pb-14 pt-24 text-center"
             >
                 <motion.div
                     initial={{ opacity: 0, y: 18 }}
@@ -65,12 +68,12 @@ export function HeroScene({ language, children }: HeroSceneProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.2, duration: 1 }}
-                className="absolute bottom-12 left-1/2 flex -translate-x-1/2 flex-col items-center gap-4"
+                className="absolute bottom-8 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-3 md:flex"
             >
-                <span className="text-[10px] uppercase tracking-[0.3em] text-moonlight">
-                    {language === 'ko' ? '더 살펴보기' : 'Keep reading'}
+                <span className="text-[10px] uppercase tracking-[0.3em] text-white/38">
+                    {language === 'ko' ? '3단 근거 보기' : 'Read the layers'}
                 </span>
-                <div className="h-12 w-[1px] animate-pulse bg-gradient-to-b from-white/0 via-white/50 to-white/0" />
+                <div className="h-10 w-[1px] animate-pulse bg-gradient-to-b from-white/0 via-acc-gold/60 to-white/0" />
             </motion.div>
         </section>
     );

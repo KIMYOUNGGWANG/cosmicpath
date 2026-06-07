@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     openGraph: {
         title: 'Cosmic Compatibility Readings | CosmicPath',
         description: 'Explore relationship chemistry through Saju, astrology, and tarot on CosmicPath.',
-        url: 'https://cosmicpath.app/match/new',
+        url: 'https://www.cosmicpath.app/match/new',
         type: 'website',
         images: [compatibilityOgImage],
     },

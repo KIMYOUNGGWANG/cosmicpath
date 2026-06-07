@@ -6,6 +6,11 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ['127.0.0.1', 'localhost'],
 
   images: {
+    localPatterns: [
+      {
+        pathname: '/api/og/**',
+      },
+    ],
     remotePatterns: [
       {
         protocol: 'https',

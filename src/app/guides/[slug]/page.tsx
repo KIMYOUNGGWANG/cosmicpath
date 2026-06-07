@@ -54,7 +54,7 @@ export async function generateMetadata({ params }: EnglishGuidePageProps): Promi
         openGraph: {
             title: guide.title,
             description: guide.seoDescription,
-            url: `https://cosmicpath.app/guides/${guide.slug}`,
+            url: `https://www.cosmicpath.app/guides/${guide.slug}`,
             type: 'article',
             images: ['/og-image.png'],
         },
@@ -83,7 +83,7 @@ export default async function EnglishGuidePage({ params }: EnglishGuidePageProps
         headline: guide.title,
         description: guide.seoDescription,
         inLanguage: 'en-US',
-        url: `https://cosmicpath.app/guides/${guide.slug}`,
+        url: `https://www.cosmicpath.app/guides/${guide.slug}`,
         author: {
             '@type': 'Organization',
             name: 'CosmicPath',
@@ -93,7 +93,7 @@ export default async function EnglishGuidePage({ params }: EnglishGuidePageProps
             name: 'CosmicPath',
             logo: {
                 '@type': 'ImageObject',
-                url: 'https://cosmicpath.app/og-image.png',
+                url: 'https://www.cosmicpath.app/og-image.png',
             },
         },
         keywords: guide.keywords.join(', '),

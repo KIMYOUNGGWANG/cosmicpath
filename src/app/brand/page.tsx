@@ -2,7 +2,6 @@
 
 import { CosmicRadar } from '@/components/reading/cosmic-radar';
 import { ConfidenceBadge, EvidenceTooltip } from '@/components/ui/confidence-badge';
-import { motion } from 'framer-motion';
 
 export default function BrandAssetsPage() {
     return (
@@ -214,7 +213,7 @@ export default function BrandAssetsPage() {
                         <div className="text-2xl font-cinzel">94%</div>
                         <p className="text-[10px] text-dim leading-relaxed">
                             이 요소들은 현재 당신의 <br />
-                            <span className="text-starlight">'도약'</span> 에너지를 극대화합니다.
+                            <span className="text-starlight">&lsquo;도약&rsquo;</span> 에너지를 극대화합니다.
                         </p>
                     </div>
                 </div>
@@ -254,7 +253,7 @@ export default function BrandAssetsPage() {
                                     </div>
                                 </div>
                                 <div className="mt-auto pt-4 border-t border-white/5 text-[7px] text-dim">
-                                    Cross-Checked Decision Note
+                                    Cross-Checked CosmicPath Reading
                                 </div>
                             </div>
                         </div>

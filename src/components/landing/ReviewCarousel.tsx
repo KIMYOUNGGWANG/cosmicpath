@@ -60,7 +60,7 @@ export function ReviewCarousel({ language = 'ko' }: { language?: string }) {
 
     if (isLoading) {
         return (
-            <section className="py-20 relative overflow-hidden bg-gradient-to-b from-[#030308] to-[#050510] min-h-[500px]">
+            <section className="py-20 relative overflow-hidden bg-[#11100d] min-h-[500px]">
                 <div className="absolute inset-0 opacity-[0.15] mix-blend-soft-light" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
             </section>
         );
@@ -69,11 +69,11 @@ export function ReviewCarousel({ language = 'ko' }: { language?: string }) {
     if (reviews.length === 0) return null;
 
     return (
-        <section ref={sectionRef} className="py-20 relative overflow-hidden bg-gradient-to-b from-[#030308] to-[#050510] min-h-[500px]">
+        <section ref={sectionRef} className="py-20 relative overflow-hidden bg-[#11100d] min-h-[500px]">
             {/* Background Elements */}
             <div className="absolute inset-0 opacity-[0.15] mix-blend-soft-light pointer-events-none" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
-            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-900/30 to-transparent" />
-            <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-purple-900/30 to-transparent" />
+            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-acc-gold/24 to-transparent" />
+            <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
             <div className="container px-4 mx-auto mb-10 text-center relative z-10">
                 <motion.div
@@ -82,21 +82,21 @@ export function ReviewCarousel({ language = 'ko' }: { language?: string }) {
                     viewport={{ once: true }}
                     transition={{ duration: 0.8 }}
                 >
-                    <span className="text-purple-400 text-xs tracking-[0.2em] font-medium uppercase mb-2 block">
-                        Real Reviews
+                    <span className="text-acc-gold/70 text-xs tracking-[0.24em] font-medium uppercase mb-2 block">
+                        Real Readings
                     </span>
-                    <h2 className="text-2xl md:text-4xl font-cinzel font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-indigo-200">
+                    <h2 className="text-2xl md:text-4xl font-cinzel font-normal mb-4 text-starlight">
                         {language === 'en' ? 'What People Said After Reading' : '읽어본 사람들이 남긴 후기'}
                     </h2>
-                    <div className="h-1 w-20 bg-gradient-to-r from-transparent via-purple-500 to-transparent mx-auto opacity-50" />
+                    <div className="h-px w-28 bg-gradient-to-r from-transparent via-acc-gold to-transparent mx-auto opacity-50" />
                 </motion.div>
             </div>
 
             {/* Marquee Container */}
             <div className="relative w-full overflow-hidden group">
                 {/* Edge fade gradients */}
-                <div className="absolute left-0 top-0 bottom-0 w-20 md:w-40 bg-gradient-to-r from-[#030308] to-transparent z-20 pointer-events-none" />
-                <div className="absolute right-0 top-0 bottom-0 w-20 md:w-40 bg-gradient-to-l from-[#030308] to-transparent z-20 pointer-events-none" />
+                <div className="absolute left-0 top-0 bottom-0 w-20 md:w-40 bg-gradient-to-r from-[#11100d] to-transparent z-20 pointer-events-none" />
+                <div className="absolute right-0 top-0 bottom-0 w-20 md:w-40 bg-gradient-to-l from-[#11100d] to-transparent z-20 pointer-events-none" />
 
                 {/* Marquee Track — GPU-accelerated, pauses when off-screen */}
                 <div className="flex">
@@ -118,7 +118,7 @@ export function ReviewCarousel({ language = 'ko' }: { language?: string }) {
                                 key={`${review.id}-${index}`}
                                 className="flex-shrink-0 w-[300px] md:w-[350px]"
                             >
-                                <div className="h-full bg-white/[0.03] backdrop-blur-sm border border-white/5 rounded-xl p-6 hover:bg-white/[0.06] hover:border-purple-500/30 transition-all duration-300 relative group/card">
+                                <div className="h-full bg-white/[0.025] backdrop-blur-sm border border-white/8 p-6 hover:bg-white/[0.045] hover:border-acc-gold/28 transition-all duration-300 relative group/card">
                                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover/card:opacity-20 transition-opacity">
                                         <Quote className="w-8 h-8 text-white" />
                                     </div>
@@ -132,12 +132,12 @@ export function ReviewCarousel({ language = 'ko' }: { language?: string }) {
                                         ))}
                                     </div>
 
-                                    <p className="text-gray-300 font-light leading-relaxed mb-5 font-outfit text-sm line-clamp-3 min-h-[4rem]">
+                                    <p className="text-moonlight font-light leading-relaxed mb-5 font-outfit text-sm line-clamp-3 min-h-[4rem]">
                                         &ldquo;{review.content}&rdquo;
                                     </p>
 
                                     <div className="flex items-center gap-3 border-t border-white/5 pt-4 mt-auto">
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center border border-white/10 text-xs font-medium text-purple-300">
+                                        <div className="w-8 h-8 bg-white/[0.03] flex items-center justify-center border border-white/10 text-xs font-medium text-acc-gold">
                                             {review.nickname[0]}
                                         </div>
                                         <div className="flex flex-col">
@@ -146,7 +146,7 @@ export function ReviewCarousel({ language = 'ko' }: { language?: string }) {
                                                     {review.nickname}
                                                 </span>
                                                 {review.rating >= 4 && (
-                                                    <span className="text-[10px] text-green-400/80 bg-green-500/5 px-1.5 rounded-full border border-green-500/10">
+                                                    <span className="text-[10px] text-acc-gold/80 bg-acc-gold/5 px-1.5 border border-acc-gold/14">
                                                         Verified
                                                     </span>
                                                 )}

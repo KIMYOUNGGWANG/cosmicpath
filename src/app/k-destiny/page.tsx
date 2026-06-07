@@ -18,7 +18,7 @@ export const metadata: Metadata = {
         title: 'K-Destiny 소셜 아우라 카드 | CosmicPath',
         description:
             '사주와 점성술 기반의 K-Destiny 아우라 카드를 만들고 공유용 OG 이미지로 바로 내보내세요.',
-        url: 'https://cosmicpath.app/k-destiny',
+        url: 'https://www.cosmicpath.app/k-destiny',
         type: 'website',
         images: ['/api/og/aura?name=K-Destiny%20Aura&colors=%230F8A5F%2C%232D7FF9&keywords=magnetic%2Clucid%2Ciconic&catchphrase=Share%20your%20K-Astrology%20identity%20with%20a%20card%20built%20to%20travel.'],
     },
@@ -35,7 +35,7 @@ export default function KDestinyPage() {
         '@context': 'https://schema.org',
         '@type': 'WebPage',
         name: 'K-Destiny 소셜 아우라 카드',
-        url: 'https://cosmicpath.app/k-destiny',
+        url: 'https://www.cosmicpath.app/k-destiny',
         description: '사주, 점성술, 수비학 기반으로 공유용 아우라 카드를 생성하는 페이지.',
         inLanguage: 'ko-KR',
         about: ['사주', '아우라 카드', '소셜 공유', '운세 이미지'],

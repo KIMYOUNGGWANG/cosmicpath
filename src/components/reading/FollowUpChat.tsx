@@ -1,17 +1,15 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Script from 'next/script';
+import { motion } from 'framer-motion';
 import {
     ReadingSession,
-    Message,
-    useFollowUp,
+    useFollowUp as addFollowUpQuestion,
     addAssistantMessage,
     getRemainingQuestions,
     addCredits
 } from '@/lib/session/reading-session';
-import { MessageCircle, Send, Loader2, Lock, Sparkles, Share2 } from 'lucide-react';
+import { Send, Loader2, Lock, Sparkles, Share2 } from 'lucide-react';
 
 interface FollowUpChatProps {
     session: ReadingSession;
@@ -23,7 +21,6 @@ interface FollowUpChatProps {
 export function FollowUpChat({
     session,
     onSessionUpdate,
-    onPurchaseMore,
     shareUrl
 }: FollowUpChatProps) {
     const [input, setInput] = useState('');
@@ -46,7 +43,15 @@ export function FollowUpChat({
     const handleKakaoShare = () => {
         if (typeof window === 'undefined') return;
 
-        const kakao = (window as any).Kakao;
+        const kakao = (
+            window as {
+                Kakao?: {
+                    isInitialized: () => boolean;
+                    init: (key: string) => void;
+                    Share: { sendDefault: (payload: unknown) => void };
+                };
+            }
+        ).Kakao;
 
         if (!kakao) {
             alert('카카오톡 SDK가 아직 로드되지 않았습니다. 잠시 후 다시 시도해주세요.');
@@ -85,7 +90,7 @@ export function FollowUpChat({
                 content: {
                     title: '✨ 나의 CosmicPath 운세 리딩 결과',
                     description: '사주 + 점성술 + 타로 3원 통합 분석! 나의 운명을 확인해보세요 🌟',
-                    imageUrl: 'https://cosmicpath.app/og-image.png',
+                    imageUrl: 'https://www.cosmicpath.app/og-image.png',
                     imageWidth: 1200,
                     imageHeight: 630,
                     link: {
@@ -131,7 +136,7 @@ export function FollowUpChat({
         setIsLoading(true);
 
         // 질문 카운트 업데이트
-        const updatedSession = useFollowUp(session, userMessage);
+        const updatedSession = addFollowUpQuestion(session, userMessage);
         if (!updatedSession) {
             setIsLoading(false);
             return;

@@ -62,10 +62,12 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                 <div className="relative mx-auto flex max-w-7xl items-center justify-between">
                     <Link
                         href="/"
-                        className="z-20 shrink-0 truncate font-cinzel text-lg tracking-[0.18em] text-starlight transition-opacity hover:opacity-80 md:text-xl"
+                        className="z-20 flex shrink-0 flex-col leading-none text-starlight transition-opacity hover:opacity-80"
                     >
-                        <span className="hidden sm:inline">{isEnglish ? 'DECISION NOTE' : '오늘의 결정 정리'}</span>
-                        <span className="sm:hidden">{isEnglish ? 'NOTE' : '결정'}</span>
+                        <span className="font-cinzel text-lg tracking-[0.18em] md:text-xl">CosmicPath</span>
+                        <span className="mt-1 hidden text-[9px] uppercase tracking-[0.24em] text-white/42 sm:block">
+                            {isEnglish ? 'Saju · Astrology · Tarot' : '사주 · 점성술 · 타로'}
+                        </span>
                     </Link>
 
                     <div className="hidden items-center gap-4 md:flex xl:gap-6">
@@ -89,23 +91,24 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                         <UserMenu />
                         <Link
                             href={decisionStartHref}
-                            className="inline-flex shrink-0 items-center justify-center border border-white/18 bg-white/5 px-5 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition-all duration-300 hover:border-acc-gold/50 hover:bg-white/10"
+                            className="group relative inline-flex shrink-0 items-center justify-center overflow-hidden border border-[#d7c59a]/24 bg-[#11100d]/60 px-5 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white shadow-[inset_3px_0_0_rgba(215,197,154,0.55)] transition-all duration-300 hover:border-[#d7c59a]/55 hover:bg-[#d7c59a]/[0.08] hover:text-[#d7c59a]"
                         >
-                            {isEnglish ? 'Write' : '선택 정리'}
+                            <span className="absolute inset-x-3 top-1 h-px bg-[#d7c59a]/0 transition-colors group-hover:bg-[#d7c59a]/24" />
+                            {isEnglish ? 'Start Reading' : '3단분석 시작'}
                         </Link>
                     </div>
 
                     <div className="z-20 flex items-center gap-2 md:hidden">
                         <Link
                             href={decisionStartHref}
-                            className="inline-flex items-center justify-center gap-1 border border-white/18 bg-white/5 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white transition-all duration-300 hover:border-acc-gold/50 hover:text-acc-gold"
+                            className="inline-flex min-h-[32px] items-center justify-center gap-1 border border-[#d7c59a]/24 bg-[#11100d]/62 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-[inset_2px_0_0_rgba(215,197,154,0.55)] transition-all duration-300 hover:border-[#d7c59a]/55 hover:bg-[#d7c59a]/[0.08] hover:text-[#d7c59a]"
                         >
-                            {isEnglish ? 'Write' : '정리'}
+                            {isEnglish ? 'Read' : '분석'}
                         </Link>
 
                         <button
                             onClick={() => setIsMobileMenuOpen(true)}
-                            className="rounded-full p-2 text-white transition-colors hover:bg-white/10"
+                            className="border border-transparent p-2 text-white transition-colors hover:border-white/14 hover:bg-white/5"
                             aria-label={isEnglish ? 'Open menu' : '메뉴 열기'}
                         >
                             <Menu size={24} />
@@ -154,8 +157,8 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                         type: 'link',
                         icon: PenLine,
                         iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
-                        label: isEnglish ? 'DECISION NOTE' : '오늘의 결정 정리',
-                        subLabel: isEnglish ? 'Write one delayed choice' : '미뤄둔 선택 정리하기',
+                        label: isEnglish ? '3-LAYER READING' : '3단분석 시작',
+                        subLabel: isEnglish ? 'Saju, astrology, tarot' : '사주, 점성술, 타로로 보기',
                         href: decisionStartHref,
                     },
                 ]}

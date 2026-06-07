@@ -399,7 +399,7 @@ export default function MyPageClient({ initialSmsOracleProfile }: MyPageClientPr
                                 </div>
                             </div>
                             <p className="mb-5 text-sm italic leading-relaxed text-white/55">
-                                "이곳은 미뤄둔 선택과 오늘의 기준이 남는 공간입니다. 다시 볼 수 있게 짧게 정리해두세요."
+                                &ldquo;이곳은 미뤄둔 선택과 오늘의 기준이 남는 공간입니다. 다시 볼 수 있게 짧게 정리해두세요.&rdquo;
                             </p>
                             <Link
                                 href="/start?reset=true"
@@ -414,7 +414,7 @@ export default function MyPageClient({ initialSmsOracleProfile }: MyPageClientPr
                     <div className="min-w-0">
                         <header className="mb-10">
                             <h1 className="mb-2 text-3xl text-starlight md:text-4xl font-cinzel">
-                                My Decision Notes
+                                My CosmicPath Readings
                             </h1>
                             <p className="font-outfit text-white/55">
                                 Your saved notes, choices, and membership status.

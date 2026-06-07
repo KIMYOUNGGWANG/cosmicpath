@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Check, Star, Scale, Sparkles, ScrollText, AlertCircle, Quote } from 'lucide-react';
+import { Check, Scale, Sparkles, ScrollText, Quote } from 'lucide-react';
 
 interface FinalVerdictProps {
     data: {
@@ -60,7 +60,7 @@ export function FinalVerdictCard({ data }: FinalVerdictProps) {
                     <div className="relative p-8 bg-blue-950/20 rounded-lg border border-white/5">
                         <Quote className="absolute top-4 left-4 w-8 h-8 text-white/5 rotate-180" />
                         <p className="text-lg md:text-xl text-center leading-relaxed font-serif text-white/90 italic">
-                            "{data.core_message}"
+                            &ldquo;{data.core_message}&rdquo;
                         </p>
                         <Quote className="absolute bottom-4 right-4 w-8 h-8 text-white/5" />
                     </div>
@@ -118,7 +118,7 @@ export function FinalVerdictCard({ data }: FinalVerdictProps) {
                         </p>
                         <div className="pt-2 flex flex-col items-center">
                             <div className="font-serif italic text-2xl text-amber-500/80" style={{ fontFamily: 'Times New Roman, serif' }}>
-                                Decision Note
+                                CosmicPath
                             </div>
                             <div className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">
                                 Saved for review

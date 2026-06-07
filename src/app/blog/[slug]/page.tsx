@@ -88,12 +88,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             name: 'CosmicPath',
             logo: {
                 '@type': 'ImageObject',
-                url: 'https://cosmicpath.app/og-image.png',
+                url: 'https://www.cosmicpath.app/og-image.png',
             },
         },
         mainEntityOfPage: {
             '@type': 'WebPage',
-            '@id': `https://cosmicpath.app/blog/${post.slug}`,
+            '@id': `https://www.cosmicpath.app/blog/${post.slug}`,
         },
     };
 

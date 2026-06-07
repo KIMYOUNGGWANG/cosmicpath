@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import { READING_PRODUCT } from '@/lib/payment/payment-config';
 
 // Pre-generate star data once at module load time
@@ -96,32 +97,32 @@ export function CrossroadsSection() {
                     transition={{ duration: 1 }}
                 >
                     <h2 className="font-cinzel text-3xl md:text-6xl text-starlight mb-8 leading-tight">
-                        마지막엔 한 줄만 남기세요. <br /> <span className="text-acc-gold">오늘 무엇을 할지.</span>
+                        흐름을 읽었다면, <br /> <span className="text-acc-gold">하나만 실행하세요.</span>
                     </h2>
                     <p className="text-moonlight text-base md:text-lg mb-10 md:mb-12 max-w-xl mx-auto font-light">
-                        질문 하나만 적으면 첫 정리가 바로 열립니다. <br />
-                        관계, 커리어, 돈 중 어디서든 기준과 다음 행동부터 차분히 정리해보세요.
+                        사주, 점성술, 타로가 같은 방향을 가리키는 지점을 먼저 확인합니다. <br />
+                        그다음 오늘 밀어야 할 것과 멈춰야 할 것을 남깁니다.
                     </p>
 
-                    {/* Magnetic Button Area */}
                     <div className="relative group inline-block">
                         <Link
                             href={decisionStartHref}
-                            className="relative z-10 flex flex-col items-center justify-center border border-[#e7dac4]/80 bg-[#f3ead9] px-12 py-6 text-deep-navy transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#fff6e8] md:px-16"
+                            className="relative z-10 grid min-w-[300px] grid-cols-[minmax(0,1fr)_62px] overflow-hidden border border-[#d7c59a]/58 bg-[#11100d]/48 text-starlight shadow-[0_28px_90px_rgba(0,0,0,0.24),inset_0_0_0_1px_rgba(255,255,255,0.025)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#d7c59a] hover:bg-[#d7c59a]/[0.07] md:min-w-[390px]"
                         >
-                            <div className="flex items-center gap-3">
-                                <span className="font-bold tracking-widest text-lg md:text-2xl">선택 정리하기</span>
+                            <div className="px-7 py-6 text-left">
+                                <div className="mb-4 inline-flex border border-[#d7c59a]/20 bg-[#d7c59a]/[0.07] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-[#d7c59a]/75">
+                                    첫 판정 무료
+                                </div>
+                                <div className="font-cinzel text-xl tracking-[0.16em] md:text-2xl">3단분석 시작</div>
+                                <span className="mt-3 block text-sm font-medium text-white/45 transition-colors group-hover:text-moonlight">
+                                    {dynamicPrice ? (
+                                        <span className="line-through opacity-50 mr-2">{originalPrice}</span>
+                                    ) : null}
+                                    자세한 기록은 <span className="font-bold text-acc-gold text-lg">{displayPrice}</span>
+                                </span>
                             </div>
-
-                            <div className="absolute -top-4 -right-4 border border-white/20 bg-[#11100d] px-3 py-1 text-xs font-bold text-white shadow-lg">
-                                첫 정리 무료
-                            </div>
-
-                            <span className="text-sm font-medium mt-1 text-gray-500 group-hover:text-deep-navy/80 transition-colors">
-                                {dynamicPrice ? (
-                                    <span className="line-through opacity-50 mr-2">{originalPrice}</span>
-                                ) : null}
-                                자세한 기록은 <span className="font-bold text-[#7a4f20] text-lg">{displayPrice}</span>
+                            <span className="flex items-center justify-center border-l border-[#d7c59a]/28 text-[#d7c59a]">
+                                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                             </span>
                         </Link>
                     </div>

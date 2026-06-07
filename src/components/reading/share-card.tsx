@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Check, Copy, Gift, Twitter } from 'lucide-react';
 
@@ -16,7 +17,7 @@ export function ShareCard({
     shareUrl,
     readingId,
     trustScore = 4.5,
-    mainCardName = 'Decision',
+    mainCardName = '3-Layer Reading',
     className,
 }: ShareCardProps) {
     const [copied, setCopied] = useState(false);
@@ -24,7 +25,7 @@ export function ShareCard({
     const resolvedReadingId = readingId || shareUrl.split('/').filter(Boolean).at(-1);
     const ogImageUrl = resolvedReadingId
         ? `/api/og/reading/${resolvedReadingId}`
-        : `/api/og?title=Decision%20Note%20Ready&score=${trustScore}&card=${encodeURIComponent(mainCardName)}`;
+        : `/api/og?title=CosmicPath%203%EB%8B%A8%EB%B6%84%EC%84%9D&score=${trustScore}&card=${encodeURIComponent(mainCardName)}`;
 
     const handleCopy = async () => {
         try {
@@ -36,7 +37,7 @@ export function ShareCard({
         }
     };
 
-    const shareText = `오늘 미뤄둔 선택을 정리했습니다. 신뢰도 ${trustScore}/5.0`;
+    const shareText = `CosmicPath 3단분석으로 막혀 있던 질문을 정리했습니다. 신뢰도 ${trustScore}/5.0`;
     const threadsUrl = `https://www.threads.net/intent/post?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
 
@@ -65,9 +66,11 @@ export function ShareCard({
 
             {/* Preview Image */}
             <div className="group relative mb-6 aspect-[1.91/1] w-full overflow-hidden rounded-xl border border-white/10 bg-black/40 shadow-2xl">
-                <img
+                <Image
                     src={ogImageUrl}
-                    alt="Share Preview"
+                    alt="CosmicPath share preview"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 480px"
                     className="h-full w-full object-cover opacity-90 transition-[transform,opacity] duration-500 group-hover:scale-[1.02] group-hover:opacity-100"
                 />
                 <div className="absolute inset-0 ring-1 ring-inset ring-white/10 rounded-xl" />

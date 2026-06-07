@@ -59,8 +59,8 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
                             href="/"
                             className="shrink-0 pt-1 font-cinzel text-base tracking-[0.18em] text-starlight transition-opacity hover:opacity-80 sm:text-lg xl:text-xl"
                         >
-                            <span className="hidden sm:inline">{isEn ? 'DECISION NOTE' : '오늘의 결정 정리'}</span>
-                            <span className="sm:hidden">{isEn ? 'NOTE' : '결정'}</span>
+                            <span className="hidden sm:inline">CosmicPath</span>
+                            <span className="sm:hidden">CP</span>
                         </Link>
                     </div>
 
@@ -77,9 +77,10 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
 
                         <a
                             href={decisionStartHref}
-                            className="inline-flex shrink-0 items-center justify-center border border-white/18 bg-white/5 px-4 pb-[6px] pt-[10px] font-semibold uppercase leading-none tracking-[0.16em] text-starlight transition-all duration-300 hover:border-acc-gold/50 hover:bg-white/10 2xl:px-5 text-[11px] 2xl:text-xs backdrop-blur-sm"
+                            className="group relative inline-flex shrink-0 items-center justify-center overflow-hidden border border-[#d7c59a]/24 bg-[#11100d]/70 px-5 pb-[7px] pt-[10px] font-semibold uppercase leading-none tracking-[0.18em] text-starlight shadow-[inset_3px_0_0_rgba(215,197,154,0.55)] transition-all duration-300 hover:border-[#d7c59a]/52 hover:bg-[#d7c59a]/[0.08] hover:text-[#d7c59a] 2xl:px-6 text-[11px] 2xl:text-xs backdrop-blur-sm"
                         >
-                            {isEn ? 'Write' : '선택 정리'}
+                            <span className="absolute inset-x-3 top-1 h-px bg-[#d7c59a]/0 transition-colors group-hover:bg-[#d7c59a]/24" />
+                            {isEn ? 'Start' : '접수 시작'}
                         </a>
                     </div>
 
@@ -87,10 +88,10 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
                     <div className="z-20 flex items-center gap-2 xl:hidden">
                         <a
                             href={decisionStartHref}
-                            className="mr-1 inline-flex items-center justify-center border border-white/18 bg-white/5 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white transition-all duration-300 hover:border-acc-gold/50 hover:text-acc-gold sm:px-4 backdrop-blur-sm"
+                            className="group mr-1 inline-flex min-h-[32px] items-center justify-center gap-2 border border-[#d7c59a]/24 bg-[#11100d]/72 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-[inset_2px_0_0_rgba(215,197,154,0.55)] transition-all duration-300 hover:border-[#d7c59a]/55 hover:bg-[#d7c59a]/[0.08] hover:text-[#d7c59a] sm:px-4 backdrop-blur-sm"
                         >
-                            <PenLine size={12} className="text-gold" />
-                            {isEn ? 'Write' : '정리'}
+                            <PenLine size={12} className="text-[#d7c59a]" />
+                            {isEn ? 'Start' : '접수'}
                         </a>
 
                         {/* Hamburger Button */}
@@ -130,8 +131,8 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
                         type: 'button',
                         icon: PenLine,
                         iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
-                        label: isEn ? 'Decision Note' : '오늘의 결정 정리',
-                        subLabel: isEn ? 'Write one delayed choice' : '미뤄둔 선택 정리하기',
+                        label: isEn ? 'CosmicPath intake' : 'CosmicPath 3단분석',
+                        subLabel: isEn ? 'Start one 3-layer reading' : '질문 하나 접수하기',
                         onClick: () => {
                             window.location.href = decisionStartHref;
                         },

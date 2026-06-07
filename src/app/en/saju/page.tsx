@@ -24,7 +24,7 @@ export const metadata: Metadata = {
         title: 'Korean Saju Reading — What Should You Do Next?',
         description:
             'Your birth date holds a cosmic blueprint. Korean Saju reveals decisive timings for career, love, and life — not vague affirmations, but clear verdicts.',
-        url: 'https://cosmicpath.app/en/saju',
+        url: 'https://www.cosmicpath.app/en/saju',
         type: 'website',
         locale: 'en_US',
         images: [

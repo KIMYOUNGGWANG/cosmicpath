@@ -1,4 +1,4 @@
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { auth } from '@/lib/auth';
@@ -7,6 +7,8 @@ import { getReadingShareSummary } from '@/lib/reading-share';
 import { stripPrivateReadingMetadata } from '@/lib/reading-access';
 
 import { SharedPageClient } from './SharedPageClient';
+
+const SITE_URL = 'https://www.cosmicpath.app';
 
 interface SharedPageProps {
   params: Promise<{
@@ -28,24 +30,23 @@ export async function generateMetadata({ params }: SharedPageProps): Promise<Met
 
   if (!reading) {
     return {
-      title: 'Decision Note',
-      description: 'A quiet decision note for one delayed choice',
+      title: 'CosmicPath 3단분석',
+      description: '사주, 점성술, 타로를 교차해 막힌 질문의 첫 판정과 다음 행동을 정리합니다.',
     };
   }
 
   const share = getReadingShareSummary(reading);
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://cosmicpath.app';
-  const ogImageUrl = `${baseUrl}/api/og/reading/${id}`;
-  const canonicalUrl = `${baseUrl}/share/${id}`;
+  const ogImageUrl = `${SITE_URL}/api/og/reading/${id}`;
+  const canonicalUrl = `${SITE_URL}/share/${id}`;
 
   return {
-    title: `${share.title} | Decision Note`,
+    title: `${share.title} | CosmicPath`,
     description: share.description,
     alternates: {
       canonical: canonicalUrl,
     },
     openGraph: {
-      title: `${share.title} | Decision Note`,
+      title: `${share.title} | CosmicPath`,
       description: share.description,
       url: canonicalUrl,
       images: [
@@ -59,7 +60,7 @@ export async function generateMetadata({ params }: SharedPageProps): Promise<Met
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${share.title} | Decision Note`,
+      title: `${share.title} | CosmicPath`,
       description: share.description,
       images: [ogImageUrl],
     },

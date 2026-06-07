@@ -4,7 +4,7 @@ import { getLandingVariant } from '@/lib/language-preference';
 
 const accentMap = {
     gold: 'from-[#D4AF37]/28 via-[#D4AF37]/10 to-transparent border-[#D4AF37]/24 shadow-[0_24px_80px_rgba(212,175,55,0.12)]',
-    indigo: 'from-[#6366F1]/24 via-[#6366F1]/10 to-transparent border-[#6366F1]/24 shadow-[0_24px_80px_rgba(99,102,241,0.12)]',
+    indigo: 'from-[#7B8C9F]/24 via-[#7B8C9F]/10 to-transparent border-[#7B8C9F]/24 shadow-[0_24px_80px_rgba(123,140,159,0.12)]',
     rose: 'from-[#FB7185]/22 via-[#FB7185]/10 to-transparent border-[#FB7185]/24 shadow-[0_24px_80px_rgba(251,113,133,0.12)]',
 } as const;
 
@@ -17,8 +17,8 @@ export function EnglishGuideSection() {
                 <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/12 to-transparent" />
 
                 <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-                    <div className="relative overflow-hidden rounded-[34px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.16),transparent_34%),linear-gradient(160deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-7 shadow-[0_36px_120px_rgba(0,0,0,0.28)] md:p-9">
-                        <div className="absolute right-6 top-6 hidden rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-white/45 md:block">
+                    <div className="relative overflow-hidden border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.16),transparent_34%),linear-gradient(160deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-7 shadow-[0_36px_120px_rgba(0,0,0,0.28)] md:p-9">
+                        <div className="absolute right-6 top-6 hidden border border-white/10 bg-black/25 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-white/45 md:block">
                             English Entry Layer
                         </div>
                         <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-[#F4D88A]">
@@ -35,21 +35,21 @@ export function EnglishGuideSection() {
                         </p>
 
                         <div className="mt-8 grid gap-3 md:grid-cols-3">
-                            <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
+                            <div className="border border-white/10 bg-black/20 p-4">
                                 <p className="text-[10px] uppercase tracking-[0.28em] text-white/42">01</p>
                                 <p className="mt-3 text-sm font-semibold text-white">Understand the lens</p>
                                 <p className="mt-2 text-sm leading-6 text-white/58">
                                     Learn what Korean saju actually reads and why it works best around a live decision.
                                 </p>
                             </div>
-                            <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
+                            <div className="border border-white/10 bg-black/20 p-4">
                                 <p className="text-[10px] uppercase tracking-[0.28em] text-white/42">02</p>
                                 <p className="mt-3 text-sm font-semibold text-white">Bridge the category</p>
                                 <p className="mt-2 text-sm leading-6 text-white/58">
                                     Connect Korean saju with BaZi and Four Pillars without losing the Korean identity.
                                 </p>
                             </div>
-                            <div className="rounded-[24px] border border-white/10 bg-black/20 p-4">
+                            <div className="border border-white/10 bg-black/20 p-4">
                                 <p className="text-[10px] uppercase tracking-[0.28em] text-white/42">03</p>
                                 <p className="mt-3 text-sm font-semibold text-white">Ask a real question</p>
                                 <p className="mt-2 text-sm leading-6 text-white/58">
@@ -73,9 +73,9 @@ export function EnglishGuideSection() {
                                         ctaTarget: 'decision_timing_rebuild_v1',
                                     },
                                 }}
-                                className="inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F4D88A] to-[#D4AF37] px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-black transition-transform duration-300 hover:scale-[1.02]"
+                                className="inline-flex min-h-11 items-center justify-center border border-acc-gold/58 bg-transparent px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white transition-colors duration-300 hover:bg-acc-gold/10 hover:text-acc-gold"
                             >
-                                Open Decision Note
+                                Open CosmicPath
                             </GrowthTrackedLink>
                             <GrowthTrackedLink
                                 href="/guides"
@@ -91,7 +91,7 @@ export function EnglishGuideSection() {
                                         ctaTarget: 'guides_hub',
                                     },
                                 }}
-                                className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white/78 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
+                                className="inline-flex min-h-11 items-center justify-center border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white/78 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
                             >
                                 Browse English Guides
                             </GrowthTrackedLink>
@@ -116,7 +116,7 @@ export function EnglishGuideSection() {
                                         guideTitle: guide.title,
                                     },
                                 }}
-                                className={`group relative block overflow-hidden rounded-[30px] border bg-gradient-to-br p-6 transition-transform duration-300 hover:-translate-y-1 ${accentMap[guide.accent]}`}
+                                className={`group relative block overflow-hidden border bg-gradient-to-br p-6 transition-transform duration-300 hover:-translate-y-1 ${accentMap[guide.accent]}`}
                             >
                                 <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.06),transparent_45%)] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                                 <div className="relative">

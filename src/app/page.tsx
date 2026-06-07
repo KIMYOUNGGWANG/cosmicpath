@@ -14,17 +14,20 @@ import { ReviewCarousel } from '@/components/landing/ReviewCarousel';
 import { CrossroadsSection } from '@/components/landing/CrossroadsSection';
 import { Footer } from '@/components/landing/Footer';
 
+const SITE_URL = 'https://www.cosmicpath.app';
+const OG_IMAGE_URL = `${SITE_URL}/og-image.png`;
+const KOREAN_TITLE = 'CosmicPath | 사주·점성술·타로 3단분석';
+const KOREAN_DESCRIPTION = '막힌 관계·일·돈 질문을 사주, 점성술, 타로로 대조해 첫 판정과 다음 행동을 정리합니다.';
+const ENGLISH_TITLE = 'CosmicPath | Saju, Astrology, Tarot 3-Layer Reading';
+const ENGLISH_DESCRIPTION = 'A 3-layer reading that cross-checks saju, astrology, and tarot to clarify one stuck question and the next action.';
+
 async function getLandingLanguage(): Promise<'ko' | 'en'> {
-    try {
-        const headersList = await headers();
-        const acceptLang = headersList.get('accept-language') || '';
-        if (acceptLang.includes('en') && !acceptLang.includes('ko')) {
-            return 'en';
-        }
-        return 'ko';
-    } catch {
-        return 'ko';
+    const headersList = await headers();
+    const acceptLang = headersList.get('accept-language') || '';
+    if (acceptLang.includes('en') && !acceptLang.includes('ko')) {
+        return 'en';
     }
+    return 'ko';
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -33,23 +36,35 @@ export async function generateMetadata(): Promise<Metadata> {
 
     if (isKorean) {
         return {
-            title: '오늘의 결정 정리',
-            description: '미뤄둔 선택 하나를 질문, 기준, 오늘 할 일로 차분하게 정리합니다. 첫 정리는 무료로 시작할 수 있습니다.',
+            title: KOREAN_TITLE,
+            description: KOREAN_DESCRIPTION,
             openGraph: {
-                title: '오늘의 결정 정리',
-                description: '미뤄둔 선택 하나를 질문, 기준, 오늘 할 일로 차분하게 정리합니다. 첫 정리는 무료로 시작할 수 있습니다.',
-                images: ['/og-image.png'],
+                title: KOREAN_TITLE,
+                description: KOREAN_DESCRIPTION,
+                images: [{ url: OG_IMAGE_URL, width: 1200, height: 630, alt: 'CosmicPath 사주·점성술·타로 3단분석 미리보기' }],
+            },
+            twitter: {
+                card: 'summary_large_image',
+                title: KOREAN_TITLE,
+                description: KOREAN_DESCRIPTION,
+                images: [OG_IMAGE_URL],
             },
         };
     }
 
     return {
-        title: 'Decision Note',
-        description: 'Turn one delayed decision into a clear question, criteria, and a next action. Start the first note for free.',
+        title: ENGLISH_TITLE,
+        description: ENGLISH_DESCRIPTION,
         openGraph: {
-            title: 'Decision Note',
-            description: 'Turn one delayed decision into a clear question, criteria, and a next action. Start the first note for free.',
-            images: ['/og-image.png'],
+            title: ENGLISH_TITLE,
+            description: ENGLISH_DESCRIPTION,
+            images: [{ url: OG_IMAGE_URL, width: 1200, height: 630, alt: 'CosmicPath saju, astrology, and tarot 3-layer reading preview' }],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: ENGLISH_TITLE,
+            description: ENGLISH_DESCRIPTION,
+            images: [OG_IMAGE_URL],
         },
     };
 }
