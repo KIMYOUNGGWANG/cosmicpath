@@ -31,9 +31,9 @@ async function mockFallbackReadingPrice(page: Page): Promise<void> {
             body: JSON.stringify({
                 productId: 'prod_ThdoB65NmPU37y',
                 priceId: '',
-                amount: 9.99,
+                amount: 3.99,
                 currency: 'USD',
-                formattedPrice: '$9.99',
+                formattedPrice: '$3.99',
                 metadata: { fallback: 'true' },
             }),
         });
@@ -56,7 +56,8 @@ test.describe('Next Move Report paywall price lookup', () => {
 
         await openNextMovePaywall(page);
 
-        await expect(page.getByText('$9.99').first()).toBeVisible();
+        await expect(page.getByText('$3.99').first()).toBeVisible();
+        await expect(page.getByText('$9.99')).toHaveCount(0);
         await expect(page.getByText(/왜 이 판정인지/).first()).toBeVisible();
         await expect(page.getByText(/연락 타이밍/).first()).toBeVisible();
         await expect(page.getByText(/피해야 할 메시지/).first()).toBeVisible();
@@ -72,6 +73,7 @@ test.describe('Next Move Report paywall price lookup', () => {
         await expect(page.getByText(/Stripe 가격 확인 보류/).first()).toBeVisible();
         await expect(page.getByText(/라이브 Stripe 가격을 확인하지 못해/).first()).toBeVisible();
         await expect(page.getByRole('button', { name: /결제 일시 중지/ })).toBeDisabled();
+        await expect(page.getByText('$3.99')).toHaveCount(0);
         await expect(page.getByText('$9.99')).toHaveCount(0);
     });
 
@@ -84,6 +86,7 @@ test.describe('Next Move Report paywall price lookup', () => {
         await expect(page.getByText(/Stripe 가격 확인 보류/).first()).toBeVisible();
         await expect(page.getByText(/라이브 Stripe 가격을 확인하지 못해/).first()).toBeVisible();
         await expect(page.getByRole('button', { name: /결제 일시 중지/ })).toBeDisabled();
+        await expect(page.getByText('$3.99')).toHaveCount(0);
         await expect(page.getByText('$9.99')).toHaveCount(0);
     });
 });

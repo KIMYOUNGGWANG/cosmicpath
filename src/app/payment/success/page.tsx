@@ -188,7 +188,7 @@ function PaymentSuccessContent() {
                             {isNextMovePayment ? (
                                 isEnglish ? (
                                     <>
-                                        Your detailed decision note is opening now.<br />
+                                        Your Detailed Decision Note is opening now.<br />
                                         We will move you back to the result in a moment.
                                     </>
                                 ) : (

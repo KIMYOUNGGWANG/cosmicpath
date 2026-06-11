@@ -25,6 +25,8 @@ test.describe('Next Move Report checkout behavior', () => {
         });
 
         await openNextMovePaywall(page);
+        await expect(page.getByText('$3.99').first()).toBeVisible();
+        await expect(page.getByText('$9.99')).toHaveCount(0);
         await page.getByRole('button', { name: /근거·타이밍·행동 순서 열기/ }).last().click();
 
         await expect(page).toHaveURL(/checkout_session_mock=paid/);

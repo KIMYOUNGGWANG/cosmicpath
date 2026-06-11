@@ -26,7 +26,7 @@ export default async function TermsPage() {
                             <section className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
                                 <h2 className="mb-4 text-xl font-cinzel text-white">English Summary</h2>
                                 <p>
-                                    These terms explain how CosmicPath delivers decision-support readings as digital content.
+                                    These terms explain how CosmicPath delivers decision-support notes as digital content.
                                     Saju, astrology, and tarot may appear only as optional evidence layers.
                                     This English summary is provided for clarity during the current validation cycle. The Korean governing version remains below.
                                 </p>
@@ -36,7 +36,7 @@ export default async function TermsPage() {
                                 <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
                                     <h2 className="mb-3 text-lg font-cinzel text-white">What You Buy</h2>
                                     <p>
-                                        The paid unlock is a one-off detailed note purchased through Stripe checkout at the price shown there.
+                                        The paid unlock is a one-off Detailed Decision Note for $3.99 USD, purchased through Stripe checkout.
                                         It gives you access to deeper evidence, timing, next-action order, and risk framing.
                                     </p>
                                 </div>
@@ -128,7 +128,7 @@ export default async function TermsPage() {
                         <h2 className="mb-4 text-xl font-cinzel text-white">제7조 (유료 콘텐츠의 구매 및 결제)</h2>
                         <ol className="list-decimal space-y-2 pl-5">
                             <li>이용자는 회사가 제공하는 결제 방식(신용카드, 간편결제 등)을 통해 유료 콘텐츠를 구매할 수 있습니다.</li>
-                            <li>자세한 기록은 Stripe checkout에 표시되는 가격의 단건 디지털 노트로 제공됩니다.</li>
+                            <li>자세한 기록은 Stripe checkout을 통해 $3.99 USD의 단건 디지털 노트로 제공됩니다.</li>
                             <li>결제와 관련된 보안 책임은 이용자에게 있으며, 이용자의 부주의로 인한 결제 정보 노출에 대해 회사는 책임을 지지 않습니다.</li>
                             <li>회사는 정책 및 결제 업체의 기준에 따라 결제 수단별 결제 한도를 부여할 수 있습니다.</li>
                         </ol>

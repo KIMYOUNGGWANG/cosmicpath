@@ -27,7 +27,7 @@ export const READING_PRODUCT = {
     name: 'Detailed Decision Note',
     description: 'Detailed decision timing note unlock',
     currency: 'USD',
-    price: 999,
+    price: 399,
     followUpQuestions: 0,
     stripeConfigured: hasRealStripeLookupId(readingProductId, 'prod'),
 } as const;

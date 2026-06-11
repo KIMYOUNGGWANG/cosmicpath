@@ -51,7 +51,7 @@ export default function JsonLd() {
                     {
                         '@type': 'Offer',
                         name: 'Detailed Decision Note',
-                        price: '9.99',
+                        price: '3.99',
                         priceCurrency: 'USD',
                         availability: 'https://schema.org/InStock',
                         url: `${siteUrl}/start?reset=true&entry=decision_timing_rebuild_v1`,
