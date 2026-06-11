@@ -8,6 +8,7 @@
     "start": "bash scripts/run-next-with-native-fallbacks.sh start",
     "test": "bash scripts/test-refactor-regression.sh",
     "test:engine": "node scripts/verify-engine-accuracy.ts",
+    "test:premium-report-quality": "node scripts/verify-premium-report-quality.ts",
     "verify:stability": "node scripts/verify-stability-guards.cjs",
     "grant:admin": "node scripts/grant-admin.js",
     "lint": "npm run lint:target",
