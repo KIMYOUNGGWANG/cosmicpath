@@ -1,7 +1,10 @@
 import { strict as assert } from 'node:assert';
 import { readFileSync } from 'node:fs';
 
-import { getCanonicalGrowthEvent } from '../src/lib/growth-analytics.ts';
+const growthAnalyticsPath = '../src/lib/growth-analytics.ts';
+const { getCanonicalGrowthEvent } = await import(growthAnalyticsPath) as {
+  getCanonicalGrowthEvent: (event: string) => string;
+};
 
 const SUPPORTED_SCENARIOS = ['canonical', 'source', 'followup', 'all'] as const;
 type Scenario = (typeof SUPPORTED_SCENARIOS)[number];
