@@ -7,6 +7,7 @@
     "build": "prisma generate && bash scripts/run-next-with-native-fallbacks.sh build",
     "start": "bash scripts/run-next-with-native-fallbacks.sh start",
     "test": "bash scripts/test-refactor-regression.sh",
+    "test:engine": "node scripts/verify-engine-accuracy.ts",
     "verify:stability": "node scripts/verify-stability-guards.cjs",
     "grant:admin": "node scripts/grant-admin.js",
     "lint": "npm run lint:target",
