@@ -61,6 +61,9 @@ export function RelationshipOutcomeSeed(props: RelationshipOutcomeSeedProps) {
         landingVariant: getRelationshipLandingVariant(props.landingSource, isEn),
         intendedAction,
         followUpDueAt,
+        followUpDelayDays: 7,
+        followUpChannel: 'email_and_local_seed',
+        decisionNoteProduct: 'Detailed Decision Note',
         questionLength: readingData.question.length,
       },
     });
@@ -81,8 +84,8 @@ export function RelationshipOutcomeSeed(props: RelationshipOutcomeSeedProps) {
           </h3>
           <p className="mt-2 break-keep text-sm leading-6 text-white/58">
             {isEn
-              ? 'This only stores the follow-up cue on this device for now. No SMS or email automation is enabled.'
-              : '지금은 이 기기에 확인 씨앗만 저장합니다. 문자나 이메일 자동 발송은 아직 켜지지 않습니다.'}
+              ? 'After a Detailed Decision Note is unlocked by email, CosmicPath schedules a 7-day check-in. This button also saves a local cue on this device so you can compare what happened.'
+              : '이메일로 Detailed Decision Note를 열면 CosmicPath가 7일 뒤 체크인 메일을 예약합니다. 이 버튼은 이 기기에도 결정 씨앗을 저장해 실제 결과와 비교할 수 있게 해요.'}
           </p>
         </div>
         {isSaved ? (

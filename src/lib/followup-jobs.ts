@@ -5,10 +5,12 @@ import { trackGrowthEvent } from '@/lib/growth-events';
 import { createSingleUsePromotionCode } from '@/lib/promo-codes';
 import { stampRuntimeMetadata } from '@/lib/runtime-environment';
 import { extractReadingAccessKey } from '@/lib/reading-access';
+import {
+  buildDefaultFollowUpJobs,
+  type FollowUpStage,
+} from '@/lib/followup-schedule';
 
-export type FollowUpStage = 'D2_DISCOUNT' | 'D5_COSMIC_WINDOW' | 'H48' | 'D7';
-
-export const DEFAULT_FOLLOW_UP_STAGES: FollowUpStage[] = ['D2_DISCOUNT', 'D5_COSMIC_WINDOW', 'D7'];
+export { DEFAULT_FOLLOW_UP_STAGES, type FollowUpStage } from '@/lib/followup-schedule';
 
 const DISCOUNT_STAGE_DISCOUNT = 20;
 const DISCOUNT_STAGE_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
@@ -28,6 +30,14 @@ interface FollowUpJobMetadata {
   cosmicWindowLabel?: string;
   phase4Url?: string;
   runtimeEnvironment?: string;
+  stage?: string;
+  source?: string;
+  delayDays?: number;
+  idempotencyKey?: string;
+  emailHash?: string;
+  contactChannel?: string;
+  feedbackEvent?: string;
+  feedbackPrompt?: string;
 }
 
 function appendAccessKeyFragment(url: string, accessKey?: string | null): string {
@@ -265,6 +275,7 @@ interface ScheduleFollowUpsInput {
   readingId: string;
   email: string;
   fromDate?: Date;
+  source?: string;
 }
 
 export interface FollowUpRunSummary {
@@ -279,34 +290,30 @@ export async function scheduleDefaultFollowUps({
   readingId,
   email,
   fromDate = new Date(),
+  source,
 }: ScheduleFollowUpsInput): Promise<void> {
-  const stages: Array<{ stage: FollowUpStage; offsetMs: number }> = [
-    { stage: 'D2_DISCOUNT', offsetMs: 48 * 60 * 60 * 1000 },
-    { stage: 'D5_COSMIC_WINDOW', offsetMs: 5 * 24 * 60 * 60 * 1000 },
-    { stage: 'D7', offsetMs: 7 * 24 * 60 * 60 * 1000 },
-  ];
+  const jobs = buildDefaultFollowUpJobs({ readingId, email, fromDate, source });
 
   const existingJobs = await prisma.followUpJob.findMany({
     where: {
       readingId,
-      stage: { in: stages.map((item) => item.stage) },
+      stage: { in: jobs.map((job) => job.stage) },
     },
   });
   const existingJobMap = new Map(existingJobs.map((job) => [job.stage, job]));
 
-  for (const item of stages) {
-    const scheduledFor = new Date(fromDate.getTime() + item.offsetMs);
-    const existingJob = existingJobMap.get(item.stage);
+  for (const job of jobs) {
+    const existingJob = existingJobMap.get(job.stage);
 
     if (!existingJob) {
       await prisma.followUpJob.create({
         data: {
-          readingId,
-          email,
-          stage: item.stage,
-          scheduledFor,
-          status: 'PENDING',
-          metadata: JSON.stringify(stampRuntimeMetadata({})),
+          readingId: job.readingId,
+          email: job.email,
+          stage: job.stage,
+          scheduledFor: job.scheduledFor,
+          status: job.status,
+          metadata: JSON.stringify(stampRuntimeMetadata(job.metadata)),
         },
       });
       continue;
@@ -318,7 +325,10 @@ export async function scheduleDefaultFollowUps({
           where: { id: existingJob.id },
           data: {
             email,
-            metadata: JSON.stringify(stampRuntimeMetadata(parseJobMetadata(existingJob.metadata))),
+            metadata: JSON.stringify(stampRuntimeMetadata({
+              ...parseJobMetadata(existingJob.metadata),
+              ...job.metadata,
+            })),
           },
         });
       }
@@ -329,10 +339,13 @@ export async function scheduleDefaultFollowUps({
       where: { id: existingJob.id },
       data: {
         email,
-        scheduledFor,
+        scheduledFor: job.scheduledFor,
         status: existingJob.status === 'FAILED' ? 'PENDING' : existingJob.status,
         lastError: null,
-        metadata: JSON.stringify(stampRuntimeMetadata(parseJobMetadata(existingJob.metadata))),
+        metadata: JSON.stringify(stampRuntimeMetadata({
+          ...parseJobMetadata(existingJob.metadata),
+          ...job.metadata,
+        })),
       },
     });
   }

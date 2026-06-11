@@ -556,6 +556,7 @@ export async function POST(req: NextRequest) {
                         await scheduleDefaultFollowUps({
                             readingId,
                             email: customerEmail,
+                            source: session.metadata?.source || 'stripe_webhook',
                         });
                         await mergePaymentMetadata(session.id, {
                             followUpsScheduledAt: new Date().toISOString(),

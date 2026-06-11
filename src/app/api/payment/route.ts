@@ -6,6 +6,7 @@ import { stampRuntimeMetadata } from '@/lib/runtime-environment';
 import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { extractReadingAccessKey, hasReadingAccess } from '@/lib/reading-access';
+import { scheduleDefaultFollowUps } from '@/lib/followup-jobs';
 
 /**
  * POST /api/payment - 결제 세션 생성 (Stripe)
@@ -196,6 +197,15 @@ export async function GET(request: NextRequest) {
             }
         }
 
+        const checkoutSource =
+            typeof result.session?.metadata?.source === 'string' && result.session.metadata.source.trim()
+                ? result.session.metadata.source.trim()
+                : null;
+        const checkoutLanguage =
+            result.session?.metadata?.language === 'en' || result.session?.metadata?.language === 'ko'
+                ? result.session.metadata.language
+                : null;
+
         // [Sync] Premium reading purchase: update ReadingResult immediately to avoid webhook race condition
         if (result.success && result.readingId && (!result.type || result.type === 'premium_reading')) {
             try {
@@ -224,16 +234,25 @@ export async function GET(request: NextRequest) {
             } catch (syncErr) {
                 console.error('[Sync] Failed to sync payment status to DB:', syncErr);
             }
-        }
 
-        const checkoutSource =
-            typeof result.session?.metadata?.source === 'string' && result.session.metadata.source.trim()
-                ? result.session.metadata.source.trim()
-                : null;
-        const checkoutLanguage =
-            result.session?.metadata?.language === 'en' || result.session?.metadata?.language === 'ko'
-                ? result.session.metadata.language
-                : null;
+            const customerEmailForFollowUps =
+                result.customerEmail ||
+                result.session?.customer_details?.email ||
+                result.session?.customer_email ||
+                '';
+
+            if (customerEmailForFollowUps) {
+                try {
+                    await scheduleDefaultFollowUps({
+                        readingId: result.readingId,
+                        email: customerEmailForFollowUps,
+                        source: checkoutSource || 'payment_sync',
+                    });
+                } catch (followUpSyncError) {
+                    console.warn('[Sync] Failed to schedule follow-up jobs during payment verification:', followUpSyncError);
+                }
+            }
+        }
 
         return NextResponse.json({
             status: result.success ? 'paid' : 'unpaid',

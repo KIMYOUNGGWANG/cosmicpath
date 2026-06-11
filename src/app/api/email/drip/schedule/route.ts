@@ -13,6 +13,7 @@ const ScheduleDripSchema = z.object({
   readingId: z.string().min(1, 'readingId is required'),
   email: z.string().email('email is required'),
   fromDate: z.string().datetime().optional(),
+  source: z.string().trim().min(1).max(64).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -31,6 +32,7 @@ export async function POST(request: NextRequest) {
       readingId: parsed.readingId,
       email: parsed.email,
       fromDate: parsed.fromDate ? new Date(parsed.fromDate) : undefined,
+      source: parsed.source || 'manual_drip',
     });
 
     return NextResponse.json({
