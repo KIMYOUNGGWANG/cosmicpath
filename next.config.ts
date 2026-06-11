@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
       {
         pathname: '/api/og/**',
       },
+      {
+        pathname: '/og-image.png',
+      },
     ],
     remotePatterns: [
       {

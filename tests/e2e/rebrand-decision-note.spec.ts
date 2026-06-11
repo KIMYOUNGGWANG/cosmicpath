@@ -12,12 +12,45 @@ function projectFile(relativePath: string) {
   return path.join(process.cwd(), relativePath);
 }
 
+type JsonRecord = Record<string, unknown>;
+
+function isJsonRecord(value: unknown): value is JsonRecord {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function stringField(record: JsonRecord | undefined, key: string): string | null {
+  const value = record?.[key];
+  return typeof value === 'string' ? value : null;
+}
+
+function arrayField(record: JsonRecord | undefined, key: string): readonly unknown[] {
+  const value = record?.[key];
+  return Array.isArray(value) ? value : [];
+}
+
+function jsonLdTypeIncludes(record: JsonRecord, type: string): boolean {
+  const value = record['@type'];
+  if (typeof value === 'string') return value === type;
+  return Array.isArray(value) && value.some((item) => item === type);
+}
+
+function jsonLdGraphNodes(payload: unknown): readonly JsonRecord[] {
+  if (!isJsonRecord(payload)) return [];
+
+  const graph = payload['@graph'];
+  if (Array.isArray(graph)) {
+    return graph.filter(isJsonRecord);
+  }
+
+  return [payload];
+}
+
 test.describe('CosmicPath frontend rebrand', () => {
   test('landing presents CosmicPath 3-layer brand', async ({ page }) => {
     await page.setExtraHTTPHeaders({ 'Accept-Language': 'ko-KR,ko;q=0.9' });
     await page.goto('/');
 
-    await expect(page).toHaveTitle(/CosmicPath 3-Layer Reading/i);
+    await expect(page).toHaveTitle(/CosmicPath.*3-Layer Reading/i);
     await expect(
       page.getByRole('heading', {
         name: /Some questions need\s*more than one oracle|미뤄둔 선택을\s*오늘 정리하세요/i,
@@ -69,5 +102,51 @@ test.describe('CosmicPath frontend rebrand', () => {
     const paymentConfig = readFileSync(projectFile('src/lib/payment/payment-config.ts'), 'utf8');
     expect(paymentConfig).toContain("name: 'Detailed Decision Note'");
     expect(paymentConfig).toContain("description: 'Detailed decision timing note unlock'");
+  });
+
+  test('brand-product keeps CosmicPath as brand and Decision Note as product', async ({ page }) => {
+    await page.goto('/brand');
+    const brandFirstViewport = await page.locator('body').innerText();
+    expect(brandFirstViewport).toContain('CosmicPath');
+    expect(brandFirstViewport).not.toContain('Decision Note');
+
+    const englishContactTiming = readFileSync(projectFile('src/app/en/contact-timing/page.tsx'), 'utf8');
+    expect(englishContactTiming).toMatch(/title:\s*'Contact Decision Note'/);
+    expect(englishContactTiming).toMatch(/>\s*CosmicPath\s*<\/Link>/);
+    expect(englishContactTiming).toMatch(/First Decision Note free · Detailed Decision Note via Stripe/);
+    expect(englishContactTiming).toMatch(/Decision support only/);
+
+    await page.goto('/en/contact-timing');
+    await expect(page.getByText('First Decision Note free · Detailed Decision Note via Stripe')).toBeVisible();
+    await expect(page.locator('body')).not.toContainText(/Application error|Unhandled Runtime Error|Next\.js/);
+  });
+
+  test('structured-metadata keeps CosmicPath organization and Decision Note product', async ({ page }) => {
+    await page.goto('/');
+
+    const scripts = await page.locator('script[type="application/ld+json"]').evaluateAll((elements) =>
+      elements.map((element) => element.textContent ?? '')
+    );
+    const nodes = scripts.flatMap((script) => {
+      const parsed: unknown = JSON.parse(script);
+      return jsonLdGraphNodes(parsed);
+    });
+    const organization = nodes.find((node) => jsonLdTypeIncludes(node, 'Organization'));
+    const website = nodes.find((node) => jsonLdTypeIncludes(node, 'WebSite'));
+    const service = nodes.find((node) => jsonLdTypeIncludes(node, 'Service'));
+    const offerNames = arrayField(service, 'offers')
+      .filter(isJsonRecord)
+      .map((offer) => stringField(offer, 'name'));
+
+    expect(stringField(organization, 'name')).toBe('CosmicPath');
+    expect(stringField(website, 'name')).toBe('CosmicPath');
+    expect(stringField(service, 'name')).toBe('Decision Note');
+    expect(stringField(service, 'alternateName')).toBe('Detailed Decision Note');
+    expect(offerNames).toContain('First Decision Note');
+    expect(offerNames).toContain('Detailed Decision Note');
+
+    const englishContactTiming = readFileSync(projectFile('src/app/en/contact-timing/page.tsx'), 'utf8');
+    expect(englishContactTiming).toMatch(/title:\s*'Contact Decision Note'/);
+    expect(englishContactTiming).toMatch(/siteName:\s*'CosmicPath'/);
   });
 });

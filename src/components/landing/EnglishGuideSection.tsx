@@ -75,7 +75,7 @@ export function EnglishGuideSection() {
                                 }}
                                 className="inline-flex min-h-11 items-center justify-center border border-acc-gold/58 bg-transparent px-6 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-white transition-colors duration-300 hover:bg-acc-gold/10 hover:text-acc-gold"
                             >
-                                Open CosmicPath
+                                Open Decision Note
                             </GrowthTrackedLink>
                             <GrowthTrackedLink
                                 href="/guides"

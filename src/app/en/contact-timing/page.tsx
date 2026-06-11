@@ -11,7 +11,7 @@ const LANDING_VARIANT = 'en_contact_timing_v1';
 const PRIMARY_CONTACT_QUESTION = 'Should I text them now, or wait a little longer?';
 
 export const metadata: Metadata = {
-  title: 'Contact Timing Reading | CosmicPath',
+  title: 'Contact Decision Note',
   description:
     'Use CosmicPath to cross-check one relationship or DM timing question with saju, astrology, and tarot. First reading free.',
   robots: {
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     canonical: '/en/contact-timing',
   },
   openGraph: {
-    title: 'Contact Timing Reading | CosmicPath',
+    title: 'Contact Decision Note',
     description:
       'First reading free. Unlock why this contact timing direction was chosen, when to move, and what message can backfire.',
     url: '/en/contact-timing',
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Contact Timing Reading | CosmicPath',
+    title: 'Contact Decision Note',
     description: 'Saju, astrology, and tarot decision support for the moment before you send the message.',
     images: ['/og-image.png'],
   },
@@ -108,7 +108,7 @@ export default function EnglishContactTimingPage() {
             <Link href="/" className="text-sm font-semibold tracking-[0.24em] text-white/72 transition-colors hover:text-white">
               CosmicPath
             </Link>
-            <span className="text-sm text-white/48">First reading free · Detailed report via Stripe</span>
+            <span className="text-sm text-white/48">First Decision Note free · Detailed Decision Note via Stripe</span>
           </header>
 
           <div className="grid flex-1 items-center gap-10 py-16 lg:grid-cols-[minmax(0,1fr)_420px]">

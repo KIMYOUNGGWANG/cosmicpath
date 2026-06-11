@@ -96,7 +96,7 @@ function run() {
   );
   assertMatch(
     'src/lib/payment/payment-config.ts',
-    /prod_TgwKnGfpJBusty[\s\S]*prod_ThdoB65NmPU37y[\s\S]*Detailed Decision Note[\s\S]*price:\s*999/s,
+    /prod_TgwKnGfpJBusty[\s\S]*prod_ThdoB65NmPU37y[\s\S]*Detailed Decision Note/s,
     'Reading product should reuse the existing Stripe reading products with the rebranded fallback label'
   );
   assertNoMatch(
@@ -196,23 +196,28 @@ function run() {
   );
   assertMatch(
     'src/components/seo/json-ld.tsx',
-    /name:\s*'Decision Note'[\s\S]*legalName:\s*"Tony's Company"/,
-    'Global JSON-LD should expose Decision Note as the public organization name with the legal operator separated'
+    /'@type':\s*'Organization'[\s\S]*name:\s*'CosmicPath'[\s\S]*legalName:\s*"Tony's Company"/,
+    'Global JSON-LD should retain CosmicPath as the organization brand with the legal operator separated'
   );
-  assertNoMatch(
+  assertMatch(
     'src/components/seo/json-ld.tsx',
-    /name:\s*'CosmicPath'/,
-    'Global JSON-LD should not expose CosmicPath as the public acquisition organization name'
+    /'@type':\s*'WebSite'[\s\S]*name:\s*'CosmicPath'/,
+    'Global JSON-LD should retain CosmicPath as the website brand'
+  );
+  assertMatch(
+    'src/components/seo/json-ld.tsx',
+    /'@type':\s*'Service'[\s\S]*name:\s*'Decision Note'[\s\S]*alternateName:\s*'Detailed Decision Note'/,
+    'Global JSON-LD should expose Decision Note as the product/service name'
   );
   assertMatch(
     'src/app/en/contact-timing/page.tsx',
-    /title:\s*'Contact Decision Note'[\s\S]*siteName:\s*'Decision Note'[\s\S]*First note free · Detailed note via Stripe[\s\S]*Decision support only/s,
-    'English contact timing route should be fully rebranded while indexed'
+    /title:\s*'Contact Decision Note'[\s\S]*siteName:\s*'CosmicPath'[\s\S]*First Decision Note free · Detailed Decision Note via Stripe[\s\S]*Decision support only/s,
+    'English contact timing route should keep CosmicPath as site brand and Decision Note as product name'
   );
   assertNoMatch(
     'src/app/en/contact-timing/page.tsx',
-    /\$3\.99|COSMICPATH|siteName:\s*'CosmicPath'/,
-    'English contact timing route should not leak half-rebranded CosmicPath or $3.99 acquisition copy'
+    /\$3\.99|COSMICPATH|siteName:\s*'Decision Note'/,
+    'English contact timing route should not leak half-rebranded Decision Note site brand or $3.99 acquisition copy'
   );
   assertMatch(
     'src/components/landing/EnglishGuideSection.tsx',

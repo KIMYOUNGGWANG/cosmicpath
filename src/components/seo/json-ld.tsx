@@ -29,8 +29,8 @@ export default function JsonLd() {
             {
                 '@type': 'Service',
                 '@id': `${siteUrl}/#three-layer-reading`,
-                name: 'CosmicPath 3단분석',
-                alternateName: 'CosmicPath 3-Layer Reading',
+                name: 'Decision Note',
+                alternateName: 'Detailed Decision Note',
                 serviceType: 'Saju, astrology, and tarot decision reading',
                 provider: { '@id': `${siteUrl}/#organization` },
                 areaServed: ['KR', 'US'],
@@ -42,7 +42,7 @@ export default function JsonLd() {
                 offers: [
                     {
                         '@type': 'Offer',
-                        name: '첫 판정',
+                        name: 'First Decision Note',
                         price: '0',
                         priceCurrency: 'USD',
                         availability: 'https://schema.org/InStock',
@@ -50,7 +50,7 @@ export default function JsonLd() {
                     },
                     {
                         '@type': 'Offer',
-                        name: '상세 3단분석 리포트',
+                        name: 'Detailed Decision Note',
                         price: '9.99',
                         priceCurrency: 'USD',
                         availability: 'https://schema.org/InStock',
