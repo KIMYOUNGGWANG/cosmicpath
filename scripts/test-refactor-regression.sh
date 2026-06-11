@@ -124,7 +124,7 @@ require_match "src/lib/ai/prompt-shared-rules.ts" '"decision_label"'
 require_match "src/lib/ai/prompt-shared-rules.ts" '"timing_boundary"'
 require_match "src/lib/ai/prompt-shared-rules.ts" '"copy_ready_message"'
 require_match "src/app/payment/success/page.tsx" "isDecisionTimingPayment"
-require_match "src/app/payment/success/page.tsx" "resolvedSource === 'decision_timing_rebuild_v1'"
+require_match "src/app/payment/success/payment-success-routing.ts" "decision_timing_rebuild_v1"
 require_match "src/lib/growth-metrics.ts" "decision-timing-home"
 require_match "src/lib/growth-metrics.ts" "decisionTimingFunnel"
 require_match "src/lib/growth-metrics.ts" "Decision Timing 14-day decision gate"

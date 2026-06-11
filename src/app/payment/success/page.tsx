@@ -6,6 +6,8 @@ import { motion } from 'framer-motion';
 import { CheckCircle2, ArrowRight, XCircle, Home, RefreshCw } from 'lucide-react';
 import { trackClientGrowthEvent } from '@/lib/client-growth-events';
 import { getLandingVariant, readPreferredClientLanguage, type SupportedLanguage } from '@/lib/language-preference';
+import { PaymentSuccessFallback } from './payment-success-fallback';
+import { buildPaidReturnPath, isStartReturnSource } from './payment-success-routing';
 
 const subscribeToLanguagePreference = () => () => {};
 
@@ -31,19 +33,6 @@ function PaymentSuccessContent() {
     const isNextMovePayment =
         checkoutContext.source === 'next_move_report_mvp_v1';
     const isDecisionTimingPayment = checkoutContext.source === 'decision_timing_rebuild_v1';
-    const buildPaidReturnPath = (targetReadingId?: string | null) => {
-        const params = new URLSearchParams({ paid: 'true' });
-        const source = checkoutContext.source;
-        const resolvedLanguage = checkoutContext.language || language;
-
-        if (targetReadingId) params.set('reading_id', targetReadingId);
-        if (source === 'next_move_report_mvp_v1' || source === 'decision_timing_rebuild_v1') {
-            params.set('entry', source);
-        }
-        if (resolvedLanguage) params.set('lang', resolvedLanguage);
-
-        return `/start?${params.toString()}`;
-    };
 
     useEffect(() => {
         const verifyPayment = async () => {
@@ -117,13 +106,11 @@ function PaymentSuccessContent() {
                     }
 
                     setTimeout(() => {
-                        const params = new URLSearchParams({ paid: 'true' });
-                        if (resolvedReadingId) params.set('reading_id', resolvedReadingId);
-                        if (resolvedSource === 'next_move_report_mvp_v1' || resolvedSource === 'decision_timing_rebuild_v1') {
-                            params.set('entry', resolvedSource);
-                        }
-                        params.set('lang', resolvedLanguage);
-                        router.replace(`/start?${params.toString()}`);
+                        router.replace(buildPaidReturnPath({
+                            readingId: resolvedReadingId,
+                            source: isStartReturnSource(resolvedSource) ? resolvedSource : undefined,
+                            language: resolvedLanguage,
+                        }));
                     }, 1000);
                 } else {
                     setStatus('error');
@@ -225,7 +212,11 @@ function PaymentSuccessContent() {
                     <button
                         onClick={() => {
                             const resolvedReadingId = sessionStorage.getItem('payment_reading_id') || readingId;
-                            router.replace(buildPaidReturnPath(resolvedReadingId));
+                            router.replace(buildPaidReturnPath({
+                                readingId: resolvedReadingId,
+                                source: checkoutContext.source,
+                                language: checkoutContext.language || language,
+                            }));
                         }}
                         className="w-full py-4 bg-[#A184FF] text-white font-bold rounded-2xl flex items-center justify-center gap-2"
                     >
@@ -268,14 +259,7 @@ function PaymentSuccessContent() {
 export default function PaymentSuccessPage() {
     return (
         <div className="min-h-screen bg-black flex items-center justify-center p-6">
-            <Suspense fallback={
-                <div className="w-full max-w-md bg-white/5 border border-white/10 p-8 rounded-3xl text-center">
-                    <div className="space-y-4">
-                        <div className="w-12 h-12 border-4 border-[#A184FF] border-t-transparent rounded-full animate-spin mx-auto" />
-                        <h1 className="text-xl font-bold text-white">결제 정보 로드 중... / Loading payment details...</h1>
-                    </div>
-                </div>
-            }>
+            <Suspense fallback={<PaymentSuccessFallback />}>
                 <PaymentSuccessContent />
             </Suspense>
         </div>

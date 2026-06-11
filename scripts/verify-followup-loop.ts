@@ -95,6 +95,8 @@ function assertApiContract(): void {
   const paymentRoute = readProjectFile('src/app/api/payment/route.ts');
   const scheduleRoute = readProjectFile('src/app/api/email/drip/schedule/route.ts');
   const followupJobs = readProjectFile('src/lib/followup-jobs.ts');
+  const followupScheduling = readProjectFile('src/lib/followup-scheduling.ts');
+  const followupSchedule = readProjectFile('src/lib/followup-schedule.ts');
 
   const authorizeIndex = followupRoute.indexOf('const { reading, isUnlimited } = await authorizeOracleAccess');
   const trackIndex = followupRoute.indexOf('await trackGrowthEvent({');
@@ -111,8 +113,9 @@ function assertApiContract(): void {
 
   assert.ok(paymentRoute.includes("source: checkoutSource || 'payment_sync'"));
   assert.match(paymentRoute, /scheduleDefaultFollowUps\(\{[\s\S]*readingId: result\.readingId[\s\S]*email: customerEmailForFollowUps[\s\S]*source: checkoutSource \|\| 'payment_sync'/);
-  assert.ok(followupJobs.includes('buildDefaultFollowUpJobs'));
-  assert.ok(followupJobs.includes('idempotencyKey'));
+  assert.ok(followupJobs.includes('@/lib/followup-scheduling'));
+  assert.ok(followupScheduling.includes('buildDefaultFollowUpJobs'));
+  assert.ok(followupSchedule.includes('idempotencyKey'));
   console.log('scenario=api');
   console.log('followup_api_access_and_metric_contract');
 }
