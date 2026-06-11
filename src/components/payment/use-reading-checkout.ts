@@ -193,6 +193,8 @@ async function trackCheckoutStart(
         plan: isFreePromo ? 'promo_free_unlock' : READING_PRODUCT.id,
         metadata: {
             landingVariant: input.landingVariant,
+            checkoutIntentId: `${input.trackingSource}:${readingId || 'pending'}`,
+            conversionSource: input.trackingSource,
             emailProvided: Boolean(input.email),
             discount: input.discount,
             promoCodeId: input.promoCodeId,
@@ -214,6 +216,8 @@ async function trackFreePromoSuccess(input: StartReadingCheckoutInput, readingId
         plan: 'promo_free_unlock',
         metadata: {
             landingVariant: input.landingVariant,
+            checkoutIntentId: `${input.trackingSource}:${readingId || 'pending'}`,
+            conversionSource: input.trackingSource,
         },
     });
 }

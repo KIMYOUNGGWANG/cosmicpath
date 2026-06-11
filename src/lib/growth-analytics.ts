@@ -44,6 +44,7 @@ const EVENT_ALIASES: Record<string, CanonicalGrowthEvent> = {
     checkout_success: 'paid_conversion',
     paid_conversion: 'paid_conversion',
     checkout_start: 'checkout_start',
+    paywall_view: 'paywall_view',
     paywall_open: 'paywall_view',
     soft_paywall_shown: 'paywall_view',
     landing_view: 'landing_view',
@@ -208,11 +209,20 @@ export async function mirrorGrowthEvent(input: {
         referralCode: input.referralCode,
         ...input.metadata,
     };
-    const distinctId = getGrowthDistinctId({
-        readingId: input.readingId,
-        referralCode: input.referralCode,
-        metadata: properties,
-    });
+    const distinctIdInput: {
+        metadata: GrowthMetadata;
+        readingId?: string;
+        referralCode?: string;
+    } = { metadata: properties };
+
+    if (input.readingId) {
+        distinctIdInput.readingId = input.readingId;
+    }
+    if (input.referralCode) {
+        distinctIdInput.referralCode = input.referralCode;
+    }
+
+    const distinctId = getGrowthDistinctId(distinctIdInput);
 
     const tasks: Promise<void>[] = [];
 

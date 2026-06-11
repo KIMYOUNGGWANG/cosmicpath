@@ -71,20 +71,41 @@ export function useStartGrowthTracking(options: UseStartGrowthTrackingOptions) {
     if (hasTrackedFreeResult.current) return;
 
     hasTrackedFreeResult.current = true;
-    void trackClientGrowthEvent({
-      event: 'first_result_view',
-      source: landingSource,
-      step,
-      language,
-      context: readingData?.context,
-      invitationMode: isInvitationMode,
-      price: dynamicPrice || undefined,
-      readingId: sessionStorage.getItem('pending_reading_id') || undefined,
-      metadata: {
-        landingVariant: activeLandingVariant,
-        entry: entry || undefined,
-      },
-    });
+    const readingId = sessionStorage.getItem('pending_reading_id') || undefined;
+
+    void (async () => {
+      await trackClientGrowthEvent({
+        event: 'first_result_view',
+        source: landingSource,
+        step,
+        language,
+        context: readingData?.context,
+        invitationMode: isInvitationMode,
+        price: dynamicPrice || undefined,
+        readingId,
+        metadata: {
+          landingVariant: activeLandingVariant,
+          entry: entry || undefined,
+        },
+      });
+      await trackClientGrowthEvent({
+        event: 'paywall_view',
+        source: landingSource,
+        step,
+        language,
+        context: readingData?.context,
+        invitationMode: isInvitationMode,
+        price: dynamicPrice || undefined,
+        readingId,
+        plan: 'premium_reading',
+        metadata: {
+          conversionSource: 'free_result',
+          funnelStep: 'free_result_pay_cta_exposed',
+          landingVariant: activeLandingVariant,
+          entry: entry || undefined,
+        },
+      });
+    })();
   }, [activeLandingVariant, dynamicPrice, entry, isInvitationMode, isPremium, landingSource, language, readingData, reportData, step]);
 
   useEffect(() => {

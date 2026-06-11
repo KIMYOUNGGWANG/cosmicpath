@@ -38,7 +38,16 @@ test.describe('Next Move Report checkout behavior', () => {
             source: 'next_move_report_mvp_v1',
         });
         expect(growthEvents).toEqual(
-            expect.arrayContaining([expect.objectContaining({ event: 'checkout_start' })])
+            expect.arrayContaining([
+                expect.objectContaining({
+                    event: 'checkout_start',
+                    source: 'next_move_report_mvp_v1',
+                    metadata: expect.objectContaining({
+                        checkoutIntentId: 'next_move_report_mvp_v1:qa-next-move-reading',
+                        conversionSource: 'next_move_report_mvp_v1',
+                    }),
+                }),
+            ])
         );
     });
 

@@ -49,6 +49,12 @@ function hasEventWithSource(events: JsonRecord[], eventName: string, source: str
     );
 }
 
+function findEventWithSource(events: JsonRecord[], eventName: string, source: string): JsonRecord | undefined {
+    return events.find(
+        (event) => event.event === eventName && event.source === source,
+    );
+}
+
 function indexOfEventSequence(events: JsonRecord[], eventName: string, source: string): number {
     return events.findIndex((event) => event.event === eventName && event.source === source);
 }
@@ -104,18 +110,30 @@ test.describe('Decision timing funnel growth event sequence', () => {
             expect(hasEventWithSource(growthEvents, 'analysis_start', flow.source)).toBeTruthy();
             expect(hasEventWithSource(growthEvents, 'decision_question_submit', flow.source)).toBeTruthy();
             expect(hasEventWithSource(growthEvents, 'first_result_view', flow.source)).toBeTruthy();
+            await expect
+                .poll(() => hasEventWithSource(growthEvents, 'paywall_view', flow.source))
+                .toBeTruthy();
 
             const landingIndex = indexOfEventSequence(growthEvents, 'landing_view', flow.source);
             const promptIndex = indexOfEventSequence(growthEvents, flow.promptEvent, flow.source);
             const analysisIndex = indexOfEventSequence(growthEvents, 'analysis_start', flow.source);
             const decisionIndex = indexOfEventSequence(growthEvents, 'decision_question_submit', flow.source);
             const firstResultIndex = indexOfEventSequence(growthEvents, 'first_result_view', flow.source);
+            const paywallViewIndex = indexOfEventSequence(growthEvents, 'paywall_view', flow.source);
+            const paywallViewEvent = findEventWithSource(growthEvents, 'paywall_view', flow.source);
 
             expect(landingIndex).toBeGreaterThanOrEqual(0);
             expect(promptIndex).toBeGreaterThan(landingIndex);
             expect(analysisIndex).toBeGreaterThan(promptIndex);
             expect(decisionIndex).toBeGreaterThan(analysisIndex);
             expect(firstResultIndex).toBeGreaterThan(decisionIndex);
+            expect(paywallViewIndex).toBeGreaterThan(firstResultIndex);
+            expect(paywallViewEvent).toMatchObject({
+                metadata: expect.objectContaining({
+                    conversionSource: 'free_result',
+                    funnelStep: 'free_result_pay_cta_exposed',
+                }),
+            });
         });
     }
 });
