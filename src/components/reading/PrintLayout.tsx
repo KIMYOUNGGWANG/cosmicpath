@@ -3,7 +3,7 @@
 import React, { forwardRef } from 'react';
 import { PremiumReportData } from './premium-report';
 import { cn } from '@/lib/utils';
-import { Star, Zap, Target, TrendingUp, Sparkles, Shield, Calendar } from 'lucide-react';
+import { Star, Zap, Target, TrendingUp, Sparkles, Shield, Calendar, BookOpen, FileText } from 'lucide-react';
 import { FortuneTimelineChart } from './FortuneTimelineChart';
 import { LuckyAssetsGrid } from './LuckyAssetsGrid';
 import { GlossarySection } from './GlossarySection';
@@ -25,6 +25,8 @@ export const PrintLayout = forwardRef<HTMLDivElement, PrintLayoutProps>(({ data,
         month: 'long',
         day: 'numeric'
     });
+    const reportBookPages = buildReportBookPages(data, isEn);
+    const tableOfContents = buildTableOfContents(data, isEn);
 
     return (
         <div ref={ref} className="print-layout bg-slate-950 text-white font-sans">
@@ -84,6 +86,38 @@ export const PrintLayout = forwardRef<HTMLDivElement, PrintLayoutProps>(({ data,
                             {date}
                         </p>
                     </div>
+                </div>
+            </div>
+
+            <div className="page-break py-10">
+                <SectionHeader icon={<BookOpen className="text-gold" />} title={isEn ? 'Report Book Guide' : '리포트북 가이드'} />
+
+                <div className="mb-8 border border-white/10 bg-white/5 p-6">
+                    <p className="text-sm uppercase tracking-[0.24em] text-gold">
+                        {isEn ? 'Premium PDF Edition' : '프리미엄 PDF 에디션'}
+                    </p>
+                    <h3 className="mt-3 text-3xl font-bold text-white">
+                        {isEn ? 'A structured book, not a short result page' : '짧은 결과지가 아니라 구조화된 리포트북'}
+                    </h3>
+                    <p className="mt-4 text-sm leading-7 text-gray-300">
+                        {isEn
+                            ? 'This print edition turns the reading into a deeper reference report: source evidence, timing map, area-by-area diagnosis, and practical review sheets.'
+                            : '이 인쇄본은 근거, 타이밍 지도, 영역별 진단, 실전 점검 시트를 한 번에 다시 볼 수 있게 구성한 심화 리포트입니다.'}
+                    </p>
+                </div>
+
+                <div className="grid gap-3">
+                    {tableOfContents.map((item, index) => (
+                        <div key={item.title} className="flex items-center justify-between border-b border-white/10 py-3">
+                            <div>
+                                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-gray-500">
+                                    {String(index + 1).padStart(2, '0')}
+                                </p>
+                                <h4 className="text-lg font-bold text-white">{item.title}</h4>
+                            </div>
+                            <p className="max-w-52 text-right text-sm leading-6 text-gold">{item.detail}</p>
+                        </div>
+                    ))}
                 </div>
             </div>
 
@@ -284,6 +318,30 @@ export const PrintLayout = forwardRef<HTMLDivElement, PrintLayoutProps>(({ data,
                     <GlossarySection data={data.glossary} language={language} />
                 </div>
             )}
+
+            {reportBookPages.length > 0 && (
+                <>
+                    <div className="page-break flex min-h-[1050px] flex-col justify-center py-10">
+                        <div className="border-y border-white/10 py-12 text-center">
+                            <p className="text-sm uppercase tracking-[0.35em] text-gold">
+                                {isEn ? 'Expanded Report Book' : '확장 리포트북'}
+                            </p>
+                            <h2 className="mt-5 text-4xl font-black text-white">
+                                {isEn ? 'Detailed Reading Archive' : '상세 해석 아카이브'}
+                            </h2>
+                            <p className="mx-auto mt-6 max-w-xl text-sm leading-7 text-gray-400">
+                                {isEn
+                                    ? 'The following pages reorganize the same reading into focused reference pages and worksheets for later review.'
+                                    : '다음 장부터는 같은 해석을 나중에 다시 펼쳐보기 쉽도록 주제별 참조 페이지와 워크북으로 재구성했습니다.'}
+                            </p>
+                        </div>
+                    </div>
+
+                    {reportBookPages.map((page, index) => (
+                        <ReportBookPage key={page.id} page={page} pageNumber={index + 1} />
+                    ))}
+                </>
+            )}
         </div>
     );
 });
@@ -299,4 +357,353 @@ function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }
             <h2 className="text-3xl font-bold text-white">{title}</h2>
         </div>
     )
+}
+
+type TableOfContentsItem = {
+    title: string;
+    detail: string;
+};
+
+type ReportBookPageData = {
+    id: string;
+    label: string;
+    title: string;
+    subtitle?: string;
+    body?: string;
+    bullets?: string[];
+    metadata?: { label: string; value: string }[];
+    prompts?: string[];
+};
+
+function buildTableOfContents(data: PremiumReportData, isEn: boolean): TableOfContentsItem[] {
+    const items: TableOfContentsItem[] = [
+        { title: isEn ? 'Cover and Reading Summary' : '표지와 핵심 요약', detail: isEn ? 'Main verdict and trust basis' : '핵심 판정과 신뢰 근거' },
+        { title: isEn ? 'Saju Core Analysis' : '사주 핵심 분석', detail: data.saju_sections?.length ? `${data.saju_sections.length} source sections` : (isEn ? 'Core source reading' : '핵심 근거 해석') },
+        { title: isEn ? 'Fortune Flow and Timing' : '운의 흐름과 타이밍', detail: data.fortune_flow?.monthly_luck?.length ? `${data.fortune_flow.monthly_luck.length} monthly checkpoints` : (isEn ? 'Major and yearly flow' : '대운과 세운 흐름') },
+        { title: isEn ? 'Life Areas and Special Signals' : '인생 영역과 특수 신호', detail: data.life_areas ? (isEn ? 'Career, money, love, health' : '커리어, 재물, 관계, 건강') : (isEn ? 'Focused diagnosis' : '핵심 진단') },
+        { title: isEn ? 'Action Plan Workbook' : '실전 행동 워크북', detail: data.action_plan?.length ? `${data.action_plan.length} action priorities` : (isEn ? 'Practical next steps' : '실행 우선순위') },
+    ];
+
+    if (data.glossary?.length) {
+        items.push({ title: isEn ? 'Glossary and Reference Notes' : '용어 해설과 참조 노트', detail: `${data.glossary.length} reference terms` });
+    }
+
+    items.push({
+        title: isEn ? 'Expanded Report Book Appendix' : '확장 리포트북 부록',
+        detail: isEn ? 'Deep-dive archive and review sheets' : '심화 해석과 점검 시트',
+    });
+
+    return items;
+}
+
+function buildReportBookPages(data: PremiumReportData, isEn: boolean): ReportBookPageData[] {
+    const pages: ReportBookPageData[] = [];
+
+    pushTextPage(pages, {
+        id: 'summary-archive',
+        label: isEn ? 'Archive / Summary' : '아카이브 / 요약',
+        title: data.summary.title,
+        subtitle: isEn ? 'Core message with trust note' : '핵심 메시지와 신뢰 근거',
+        body: data.summary.content,
+        bullets: [data.summary.trust_reason].filter(Boolean),
+    });
+
+    data.saju_sections?.forEach((section, index) => {
+        pushTextPage(pages, {
+            id: `saju-${section.id || index}`,
+            label: isEn ? `Saju Detail ${index + 1}` : `사주 상세 ${index + 1}`,
+            title: section.title,
+            body: section.content,
+            prompts: buildReflectionPrompts(isEn),
+        });
+    });
+
+    Object.entries(data.astro_deep || {}).forEach(([key, section], index) => {
+        if (!section?.content) return;
+        pushTextPage(pages, {
+            id: `astro-${key}`,
+            label: isEn ? `Astrology Detail ${index + 1}` : `점성술 상세 ${index + 1}`,
+            title: section.title,
+            body: section.content,
+            prompts: buildReflectionPrompts(isEn),
+        });
+    });
+
+    data.tarot_details?.forEach((card, index) => {
+        pushTextPage(pages, {
+            id: `tarot-${index}`,
+            label: isEn ? `Tarot Card ${index + 1}` : `타로 카드 ${index + 1}`,
+            title: `${card.position}: ${card.card_name}${card.is_reversed ? (isEn ? ' Reversed' : ' 역방향') : ''}`,
+            body: [card.interpretation, card.saju_connection, card.advice].filter(Boolean).join('\n\n'),
+            bullets: card.keywords,
+            prompts: buildReflectionPrompts(isEn),
+        });
+    });
+
+    data.fortune_flow?.monthly_luck?.forEach((month, index) => {
+        pushTextPage(pages, {
+            id: `monthly-${month.month}-${index}`,
+            label: isEn ? 'Monthly Timing Map' : '월별 타이밍 지도',
+            title: `${month.month} · ${month.theme}`,
+            subtitle: month.element,
+            body: [month.opportunity, month.warning, month.advice].filter(Boolean).join('\n\n'),
+            metadata: [
+                { label: isEn ? 'Score' : '점수', value: month.score ? `${month.score}/100` : '-' },
+                { label: isEn ? 'Element' : '오행', value: month.element || '-' },
+            ],
+            prompts: [
+                isEn ? 'What should I start this month?' : '이번 달에 시작할 일',
+                isEn ? 'What should I delay or reduce?' : '이번 달에 늦추거나 줄일 일',
+                isEn ? 'One measurable action' : '측정 가능한 행동 하나',
+            ],
+        });
+
+        pushTextPage(pages, {
+            id: `monthly-workbook-${month.month}-${index}`,
+            label: isEn ? 'Monthly Workbook' : '월별 워크북',
+            title: isEn ? `${month.month} Action Sheet` : `${month.month} 실행 시트`,
+            body: month.advice,
+            prompts: [
+                isEn ? 'Signal I will watch' : '이번 달 관찰할 신호',
+                isEn ? 'Boundary I will keep' : '이번 달 지킬 경계선',
+                isEn ? 'Result I will review' : '월말에 점검할 결과',
+            ],
+        });
+    });
+
+    buildLifeAreaPages(data, isEn).forEach((page) => pushTextPage(pages, page));
+    buildSpecialPages(data, isEn).forEach((page) => pushTextPage(pages, page));
+    buildActionPages(data, isEn).forEach((page) => pushTextPage(pages, page));
+    buildDateSelectionPages(data, isEn).forEach((page) => pushTextPage(pages, page));
+    buildNumerologyPages(data, isEn).forEach((page) => pushTextPage(pages, page));
+    buildPastLifePages(data, isEn).forEach((page) => pushTextPage(pages, page));
+
+    data.glossary?.forEach((item, index) => {
+        pushTextPage(pages, {
+            id: `glossary-${index}`,
+            label: isEn ? 'Glossary Note' : '용어 해설',
+            title: `${item.term}${item.hanja ? ` (${item.hanja})` : ''}`,
+            body: [item.definition, item.context].filter(Boolean).join('\n\n'),
+            prompts: [
+                isEn ? 'Where this appears in my reading' : '내 리포트에서 연결되는 부분',
+                isEn ? 'How I will remember this concept' : '이 개념을 기억할 방식',
+            ],
+        });
+    });
+
+    if (data.final_verdict) {
+        pushTextPage(pages, {
+            id: 'final-verdict-core',
+            label: isEn ? 'Final Verdict' : '최종 판정',
+            title: data.final_verdict.title,
+            body: [
+                data.final_verdict.core_message,
+                data.final_verdict.saju_foundation,
+                data.final_verdict.astro_support,
+                data.final_verdict.tarot_insight,
+                data.final_verdict.closing_words,
+            ].filter(Boolean).join('\n\n'),
+            bullets: data.final_verdict.action_priorities,
+        });
+    }
+
+    return pages;
+}
+
+function buildLifeAreaPages(data: PremiumReportData, isEn: boolean): ReportBookPageData[] {
+    const areas = [
+        { id: 'career', section: data.life_areas?.career, label: isEn ? 'Career' : '커리어' },
+        { id: 'wealth', section: data.life_areas?.wealth, label: isEn ? 'Wealth' : '재물' },
+        { id: 'love', section: data.life_areas?.love, label: isEn ? 'Love' : '연애/관계' },
+        { id: 'health', section: data.life_areas?.health, label: isEn ? 'Health' : '건강' },
+    ];
+
+    return areas.flatMap((area) => {
+        if (!area.section?.content) return [];
+
+        return [{
+            id: `life-${area.id}`,
+            label: isEn ? `Life Area / ${area.label}` : `인생 영역 / ${area.label}`,
+            title: area.section.title,
+            subtitle: 'tag' in area.section && typeof area.section.tag === 'string' ? area.section.tag : undefined,
+            body: area.section.content,
+            bullets: area.section.subsections,
+            prompts: buildReflectionPrompts(isEn),
+        }];
+    });
+}
+
+function buildSpecialPages(data: PremiumReportData, isEn: boolean): ReportBookPageData[] {
+    const specials = [
+        data.special_analysis?.noble_person,
+        data.special_analysis?.charm,
+        data.special_analysis?.conflicts,
+    ];
+
+    return specials.flatMap((section, index) => {
+        if (!section?.content) return [];
+
+        return [{
+            id: `special-${index}`,
+            label: isEn ? 'Special Signal' : '특수 신호',
+            title: section.title,
+            body: section.content,
+            prompts: buildReflectionPrompts(isEn),
+        }];
+    });
+}
+
+function buildActionPages(data: PremiumReportData, isEn: boolean): ReportBookPageData[] {
+    return (data.action_plan || []).flatMap((plan, index) => [
+        {
+            id: `action-${index}`,
+            label: isEn ? 'Action Plan' : '실전 행동 지침',
+            title: plan.title,
+            subtitle: plan.date,
+            body: plan.description,
+            metadata: [{ label: isEn ? 'Type' : '유형', value: plan.type }],
+            prompts: [
+                isEn ? 'First action within 24 hours' : '24시간 안에 할 첫 행동',
+                isEn ? 'Risk to avoid' : '피해야 할 리스크',
+            ],
+        },
+        {
+            id: `action-workbook-${index}`,
+            label: isEn ? 'Action Workbook' : '행동 워크북',
+            title: isEn ? `${plan.title} Checklist` : `${plan.title} 체크리스트`,
+            body: plan.description,
+            prompts: [
+                isEn ? 'Preparation' : '준비할 것',
+                isEn ? 'Execution' : '실행할 것',
+                isEn ? 'Review' : '점검할 것',
+            ],
+        },
+    ]);
+}
+
+function buildDateSelectionPages(data: PremiumReportData, isEn: boolean): ReportBookPageData[] {
+    const auspicious = data.date_selection?.auspicious || [];
+    const inauspicious = data.date_selection?.inauspicious || [];
+
+    return [
+        ...auspicious.map((item, index) => ({
+            id: `auspicious-${index}`,
+            label: isEn ? 'Auspicious Date' : '길일 메모',
+            title: `${item.date} · ${item.purpose}`,
+            body: item.reason,
+            prompts: [isEn ? 'How I will use this date' : '이 날짜를 활용할 방식'],
+        })),
+        ...inauspicious.map((item, index) => ({
+            id: `inauspicious-${index}`,
+            label: isEn ? 'Caution Date' : '주의일 메모',
+            title: `${item.date} · ${item.purpose}`,
+            body: item.reason,
+            prompts: [isEn ? 'What I should avoid on this date' : '이 날짜에 피할 행동'],
+        })),
+    ];
+}
+
+function buildNumerologyPages(data: PremiumReportData, isEn: boolean): ReportBookPageData[] {
+    if (!data.numerology) return [];
+
+    return [{
+        id: 'numerology-life-path',
+        label: isEn ? 'Numerology' : '수비학',
+        title: `${data.numerology.life_path.number} · ${data.numerology.life_path.title}`,
+        body: [
+            data.numerology.life_path.meaning,
+            data.numerology.life_path.saju_connection,
+            data.numerology.lucky_day_advice,
+        ].filter(Boolean).join('\n\n'),
+        bullets: data.numerology.lucky_numbers.map((number) => `${number}`),
+        prompts: buildReflectionPrompts(isEn),
+    }];
+}
+
+function buildPastLifePages(data: PremiumReportData, isEn: boolean): ReportBookPageData[] {
+    const sections = [
+        { id: 'theme', section: data.past_life?.theme },
+        { id: 'karma', section: data.past_life?.karma },
+        { id: 'mission', section: data.past_life?.soul_mission },
+    ];
+
+    return sections.flatMap((item) => {
+        if (!item.section?.content) return [];
+
+        return [{
+            id: `past-life-${item.id}`,
+            label: isEn ? 'Past Life Pattern' : '전생 패턴',
+            title: item.section.title,
+            body: item.section.content,
+            prompts: buildReflectionPrompts(isEn),
+        }];
+    });
+}
+
+function buildReflectionPrompts(isEn: boolean): string[] {
+    return isEn
+        ? ['What this explains', 'Where this shows up now', 'One adjustment I will test']
+        : ['이 해석이 설명하는 것', '지금 현실에서 드러나는 장면', '내가 시험해볼 조정 하나'];
+}
+
+function pushTextPage(pages: ReportBookPageData[], page: ReportBookPageData) {
+    if (!page.body?.trim() && !page.bullets?.length && !page.prompts?.length) return;
+    pages.push(page);
+}
+
+function ReportBookPage({ page, pageNumber }: { page: ReportBookPageData; pageNumber: number }) {
+    return (
+        <div className="page-break min-h-[1050px] py-10">
+            <div className="mb-8 flex items-start justify-between border-b border-white/10 pb-5">
+                <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-gold">
+                        {page.label}
+                    </p>
+                    <h2 className="mt-3 text-3xl font-black leading-tight text-white">{page.title}</h2>
+                    {page.subtitle && <p className="mt-2 text-sm text-gray-400">{page.subtitle}</p>}
+                </div>
+                <div className="flex h-14 w-14 items-center justify-center border border-white/10 bg-white/5 text-sm font-bold text-gold">
+                    {String(pageNumber).padStart(2, '0')}
+                </div>
+            </div>
+
+            {page.metadata?.length ? (
+                <div className="mb-6 grid grid-cols-2 gap-3">
+                    {page.metadata.map((item) => (
+                        <div key={`${item.label}-${item.value}`} className="border border-white/10 bg-white/[0.03] p-4">
+                            <p className="text-[10px] uppercase tracking-[0.22em] text-gray-500">{item.label}</p>
+                            <p className="mt-2 text-sm font-bold text-white">{item.value}</p>
+                        </div>
+                    ))}
+                </div>
+            ) : null}
+
+            {page.body && (
+                <div className="border border-white/10 bg-white/5 p-6">
+                    <p className="whitespace-pre-line text-base leading-8 text-gray-200">{page.body}</p>
+                </div>
+            )}
+
+            {page.bullets?.length ? (
+                <div className="mt-6 grid gap-3">
+                    {page.bullets.map((bullet) => (
+                        <div key={bullet} className="flex gap-3 border border-white/10 bg-black/20 p-4">
+                            <FileText className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
+                            <p className="text-sm leading-6 text-gray-300">{bullet}</p>
+                        </div>
+                    ))}
+                </div>
+            ) : null}
+
+            {page.prompts?.length ? (
+                <div className="mt-8 grid gap-4">
+                    {page.prompts.map((prompt) => (
+                        <div key={prompt} className="min-h-24 border border-dashed border-white/15 p-4">
+                            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-gray-500">{prompt}</p>
+                        </div>
+                    ))}
+                </div>
+            ) : null}
+        </div>
+    );
 }

@@ -14,7 +14,7 @@ import {
   type ModelTier,
 } from '@/lib/ai/llm-client';
 import { generatePremiumReport, generateSinglePhase } from '@/lib/ai/premium-reading-service';
-import type { PremiumReportPartial } from '@/lib/ai/phase-prompts';
+import type { PremiumReportPartial, UserData } from '@/lib/ai/phase-prompts';
 import {
   buildFreeSummaryPhaseTwoUserPrompt,
   buildOracleReportEnrichment,
@@ -54,6 +54,7 @@ type PremiumReadingParams = {
   gender: 'male' | 'female';
   birthDate: string;
   birthTime: string;
+  unknownTime?: boolean;
   context: ReadingContext;
   question: string;
   language: ReadingLanguage;
@@ -62,6 +63,11 @@ type PremiumReadingParams = {
   partnerName?: string;
   partnerBirthDate?: string;
   partnerBirthTime?: string;
+};
+
+type PremiumFallbackMetadata = {
+  readonly reason?: string;
+  readonly currentDate: string;
 };
 
 type FreeReadingParams = {
@@ -82,6 +88,407 @@ function getCurrentKoreanDate() {
     month: '2-digit',
     day: '2-digit',
   }).replace(/\. /g, '-').replace(/\./g, '');
+}
+
+function isPremiumQualityGateFailure(error: string | undefined): boolean {
+  return typeof error === 'string' && error.includes('PREMIUM_QUALITY_GATE_FAILED');
+}
+
+function premiumQualityGateResponse(phase: number | undefined, error: string | undefined) {
+  return NextResponse.json(
+    {
+      success: false,
+      code: 'PREMIUM_QUALITY_GATE_FAILED',
+      retryable: true,
+      phase,
+      error: error ?? 'Premium report failed grounded quality validation.',
+    },
+    { status: 502 }
+  );
+}
+
+function addDaysIso(date: string, days: number): string {
+  const parsed = new Date(`${date}T00:00:00.000Z`);
+  parsed.setUTCDate(parsed.getUTCDate() + days);
+  return parsed.toISOString().slice(0, 10);
+}
+
+function addMonthsLabel(date: string, months: number, language: ReadingLanguage): string {
+  const parsed = new Date(`${date}T00:00:00.000Z`);
+  parsed.setUTCMonth(parsed.getUTCMonth() + months);
+  const year = parsed.getUTCFullYear();
+  const month = String(parsed.getUTCMonth() + 1).padStart(2, '0');
+  return language === 'en' ? `${year}-${month}` : `${year}년 ${month}월`;
+}
+
+function textFor(language: ReadingLanguage, ko: string, en: string): string {
+  return language === 'en' ? en : ko;
+}
+
+function getDayMaster(userData: UserData): string {
+  const dayPillar = userData.sajuData?.dayPillar;
+  if (!dayPillar) return 'unconfirmed day master';
+  return `${dayPillar.stem}${dayPillar.branch}`;
+}
+
+function getCurrentFlow(userData: UserData): string {
+  const currentDaeun = userData.sajuData?.daeun?.currentDaeun;
+  const sewoon = userData.sajuData?.sewoon;
+  const daeunLabel = currentDaeun ? `${currentDaeun.stem}${currentDaeun.branch}` : 'current cycle pending';
+  const yearLabel = sewoon ? `${sewoon.year} ${sewoon.stem}${sewoon.branch}` : 'year flow pending';
+  return `${daeunLabel} / ${yearLabel}`;
+}
+
+function getTarotFallbackName(userData: UserData): string {
+  const firstCard = userData.tarotCards?.[0];
+  return firstCard?.nameEn || firstCard?.name || 'The Chariot';
+}
+
+function getLifePathNumber(birthDate: string): number {
+  const total = birthDate
+    .replace(/\D/g, '')
+    .split('')
+    .reduce((sum, digit) => sum + Number(digit), 0);
+  let value = total;
+  while (value > 9) {
+    value = String(value)
+      .split('')
+      .reduce((sum, digit) => sum + Number(digit), 0);
+  }
+  return Math.max(value, 1);
+}
+
+function buildPremiumPhaseFallback(
+  phaseNumber: number,
+  userData: UserData,
+  metadata: PremiumFallbackMetadata
+): PremiumReportPartial {
+  const language = userData.language || 'ko';
+  const dayMaster = getDayMaster(userData);
+  const currentFlow = getCurrentFlow(userData);
+  const question = sanitizeText(userData.question) || textFor(language, '현재 선택', 'the current choice');
+  const context = sanitizeText(userData.context) || textFor(language, '종합', 'general');
+  const firstActionDate = addDaysIso(metadata.currentDate, 2);
+  const reviewDate = addDaysIso(metadata.currentDate, 7);
+  const decisionDate = addDaysIso(metadata.currentDate, 14);
+
+  switch (phaseNumber) {
+    case 1:
+      return {
+        summary: {
+          title: textFor(language, '핵심 리딩 요약', 'Core reading summary'),
+          content: textFor(
+            language,
+            `${question}에 대해서는 지금 결론을 서두르기보다 기준을 좁히고 첫 행동을 작게 고정하는 쪽이 안전합니다. ${dayMaster}와 ${currentFlow} 흐름은 감정 확신보다 검증 가능한 반응을 먼저 보라고 말합니다.`,
+            `For ${question}, the safer move is to narrow the criteria and lock one small action before forcing a final answer. ${dayMaster} and ${currentFlow} point to observable response over emotional certainty.`
+          ),
+          trust_score: 3,
+          trust_reason: textFor(
+            language,
+            `${context} 맥락, 사주 좌표, 카드 입력이 같은 방향으로 모이는 지점을 기준으로 정리했습니다.`,
+            `This was organized from the overlap between the ${context} context, saju anchors, and card inputs.`
+          ),
+        },
+        traits: [
+          {
+            type: 'recovery',
+            name: textFor(language, '기준을 좁히는 사람', 'Criteria-first mover'),
+            description: textFor(
+              language,
+              '답을 크게 믿기보다 반응을 작게 검증할 때 판단력이 살아납니다.',
+              'Your judgment improves when you test a small response instead of believing a large conclusion too early.'
+            ),
+            grade: 'B+',
+          },
+        ],
+        core_analysis: {
+          lacking_elements: {
+            elements: textFor(language, '실행 검증', 'execution evidence'),
+            remedy: textFor(language, '48시간 안에 작은 확인 행동 하나', 'one small confirmation action within 48 hours'),
+            description: textFor(
+              language,
+              '지금 부족한 것은 더 많은 해석이 아니라, 상대나 시장이 실제로 반응하는지 확인하는 증거입니다.',
+              'What is missing now is not more interpretation, but evidence that the other side or the market actually responds.'
+            ),
+          },
+          abundant_elements: {
+            elements: textFor(language, '생각의 밀도', 'analysis density'),
+            usage: textFor(language, '판단 기준으로 압축', 'compress into decision criteria'),
+            description: textFor(
+              language,
+              '생각은 충분히 쌓였으니 이번 단계에서는 기준 세 개로 줄여야 흔들림이 줄어듭니다.',
+              'You already have enough thinking; reducing it to three criteria will lower the noise.'
+            ),
+          },
+        },
+      };
+    case 2:
+      return {
+        astro_deep: {
+          sun_moon_dynamic: {
+            title: textFor(language, '감정과 현실의 간격', 'Gap between feeling and reality'),
+            content: textFor(
+              language,
+              `태양/달 흐름은 ${question}을 단번에 결론내리기보다, 지금 느끼는 확신과 실제 반응 사이의 간격을 보라고 합니다.`,
+              `The Sun/Moon layer asks you to watch the gap between your current certainty about ${question} and the real response you receive.`
+            ),
+          },
+          ascendant_influence: {
+            title: textFor(language, '첫인상보다 반복 반응', 'Repeated response over first impression'),
+            content: textFor(
+              language,
+              '겉으로 보이는 신호 하나보다 같은 메시지를 두 번 보냈을 때의 일관성이 더 중요합니다.',
+              'One visible signal matters less than whether the response stays consistent after a second touch.'
+            ),
+          },
+        },
+      };
+    case 3: {
+      const lifePath = getLifePathNumber(userData.birthDate);
+      return {
+        tarot_details: [
+          {
+            position: textFor(language, '현재', 'Current'),
+            card_name: getTarotFallbackName(userData),
+            keywords: [textFor(language, '방향', 'direction'), textFor(language, '검증', 'evidence')],
+            interpretation: textFor(
+              language,
+              '카드는 지금의 선택을 크게 밀어붙이기보다, 움직일 방향을 정하고 짧은 거리만 먼저 가보라고 말합니다.',
+              'The card points to choosing a direction, then moving only a short distance before committing further.'
+            ),
+            saju_connection: `${dayMaster} / ${currentFlow}`,
+            advice: textFor(language, '첫 행동은 작게, 기록은 정확히 남기세요.', 'Keep the first action small and record the response precisely.'),
+          },
+        ],
+        numerology: {
+          life_path: {
+            number: lifePath,
+            title: textFor(language, `생명수 ${lifePath}`, `Life path ${lifePath}`),
+            meaning: textFor(
+              language,
+              '이번 판단은 속도보다 반복 가능한 기준을 세울 때 안정됩니다.',
+              'This decision stabilizes when you use repeatable criteria rather than speed.'
+            ),
+            saju_connection: `${dayMaster} signal cross-checked with ${currentFlow}`,
+          },
+          lucky_numbers: [lifePath, 7],
+          lucky_day_advice: textFor(language, `${reviewDate}에 첫 반응을 다시 점검하세요.`, `Review the first response again on ${reviewDate}.`),
+        },
+      };
+    }
+    case 4:
+      return {
+        saju_sections: [
+          {
+            id: 'day_master',
+            title: textFor(language, '일간 기준점', 'Day master anchor'),
+            content: textFor(
+              language,
+              `${dayMaster} 기준으로 보면 지금은 감정의 크기보다 실행 후 남는 증거를 봐야 하는 구간입니다.`,
+              `From the ${dayMaster} anchor, this period favors evidence left after action over the size of the feeling.`
+            ),
+          },
+          {
+            id: 'current_flow',
+            title: textFor(language, '현재 흐름', 'Current flow'),
+            content: textFor(
+              language,
+              `${currentFlow} 흐름은 선택지를 넓히는 단계가 아니라 한 가지 실험으로 압축하는 단계에 가깝습니다.`,
+              `${currentFlow} is closer to compressing options into one experiment than expanding the field.`
+            ),
+          },
+        ],
+      };
+    case 5:
+      return {
+        fortune_flow: {
+          major_luck: {
+            title: textFor(language, '큰 흐름', 'Long cycle'),
+            period: `${metadata.currentDate} onward`,
+            content: textFor(
+              language,
+              '큰 흐름은 완전한 확신을 기다리기보다 작게 열고 빠르게 확인하는 방식에 유리합니다.',
+              'The larger cycle favors opening a small test and checking quickly rather than waiting for perfect certainty.'
+            ),
+          },
+          yearly_luck: {
+            title: textFor(language, '올해의 운영 포인트', 'This year’s operating point'),
+            content: textFor(
+              language,
+              `${question}은 ${reviewDate}까지 첫 반응을 보고, ${decisionDate} 전에는 기준을 다시 바꾸지 않는 편이 안정적입니다.`,
+              `For ${question}, check the first response by ${reviewDate} and avoid changing the criteria before ${decisionDate}.`
+            ),
+          },
+          monthly_luck: [
+            {
+              month: addMonthsLabel(metadata.currentDate, 0, language),
+              theme: textFor(language, '작은 검증', 'Small validation'),
+              advice: textFor(language, '한 가지 메시지, 한 가지 지표, 한 번의 후속 확인으로 줄이세요.', 'Use one message, one metric, and one follow-up check.'),
+              score: 72,
+            },
+          ],
+        },
+      };
+    case 6:
+      return {
+        life_areas: {
+          career: {
+            title: textFor(language, '일과 방향', 'Work and direction'),
+            tag: textFor(language, '검증 우선', 'evidence first'),
+            content: textFor(
+              language,
+              '일에서는 큰 전환보다 작은 제안의 반응률을 먼저 보는 편이 낫습니다.',
+              'In work, read the response rate to a small offer before making a large pivot.'
+            ),
+          },
+          wealth: {
+            title: textFor(language, '돈과 리스크', 'Money and risk'),
+            content: textFor(
+              language,
+              '비용은 늘리기보다 실험 단위를 줄이고 손실 상한을 먼저 정해야 합니다.',
+              'Reduce the experiment size and define the loss limit before increasing spend.'
+            ),
+          },
+          love: {
+            title: textFor(language, '관계 흐름', 'Relationship flow'),
+            content: textFor(
+              language,
+              '관계에서는 긴 설명보다 짧고 확인 가능한 요청이 더 좋은 신호를 줍니다.',
+              'In relationships, a short and verifiable ask gives a cleaner signal than a long explanation.'
+            ),
+          },
+          health: {
+            title: textFor(language, '컨디션', 'Condition'),
+            content: textFor(
+              language,
+              '결정 전날에는 수면과 일정 여백을 확보해 과잉 해석을 줄이세요.',
+              'Before deciding, protect sleep and schedule margin to reduce over-reading.'
+            ),
+          },
+        },
+      };
+    case 7:
+      return {
+        special_analysis: {
+          noble_person: {
+            title: textFor(language, '도움을 주는 사람', 'Helpful person'),
+            content: textFor(
+              language,
+              '이번에는 위로해주는 사람보다 숫자와 기준을 같이 봐주는 사람이 귀인입니다.',
+              'The helpful person is not the one who only comforts you, but the one who checks numbers and criteria with you.'
+            ),
+          },
+          conflicts: {
+            title: textFor(language, '충돌 지점', 'Conflict point'),
+            content: textFor(
+              language,
+              '가장 큰 충돌은 더 해석하고 싶은 마음과 이미 실행해야 하는 타이밍 사이에서 납니다.',
+              'The main conflict is between wanting more interpretation and already needing a test.'
+            ),
+          },
+        },
+        lucky_assets: {
+          colors: [{ name: textFor(language, 'Slate Blue', 'Slate Blue'), hex: '#4F6F8F', reason: textFor(language, '판단을 차분하게 고정합니다.', 'It keeps judgment steady.') }],
+          foods: [{ name: textFor(language, '따뜻한 차', 'warm tea'), benefit: textFor(language, '반응 전 속도를 낮춥니다.', 'It slows the pace before reacting.') }],
+          places: [{ name: textFor(language, '조용한 작업 공간', 'quiet workspace'), description: textFor(language, '기준을 글로 정리하기 좋습니다.', 'Good for writing the criteria down.') }],
+        },
+        action_plan: [
+          {
+            date: firstActionDate,
+            title: textFor(language, '첫 확인 행동', 'First confirmation action'),
+            description: textFor(language, '한 문장으로 요청하거나 제안하고 반응을 기록하세요.', 'Send one concise ask or offer and record the response.'),
+            type: 'test',
+          },
+          {
+            date: reviewDate,
+            title: textFor(language, '반응 점검', 'Response review'),
+            description: textFor(language, '답변의 속도, 명확성, 후속 행동 여부를 비교하세요.', 'Compare response speed, clarity, and whether follow-through happened.'),
+            type: 'review',
+          },
+          {
+            date: decisionDate,
+            title: textFor(language, '계속/중단 결정', 'Continue or stop decision'),
+            description: textFor(language, '기준을 바꾸지 말고 증거로 계속 여부를 정하세요.', 'Do not move the criteria; decide from the evidence.'),
+            type: 'decision',
+          },
+        ],
+        date_selection: {
+          auspicious: [{ date: firstActionDate, purpose: textFor(language, '작은 실행', 'small action'), reason: textFor(language, '부담 없이 신호를 확인하기 좋은 날입니다.', 'A clean day for checking a signal without overcommitting.') }],
+          inauspicious: [{ date: addDaysIso(metadata.currentDate, 1), purpose: textFor(language, '최종 확정', 'final commitment'), reason: textFor(language, '아직 반응 데이터가 부족합니다.', 'Response data is still too thin.') }],
+        },
+      };
+    case 8:
+      return {
+        past_life: {
+          theme: {
+            title: textFor(language, '반복되는 선택의 테마', 'Repeated choice theme'),
+            content: textFor(
+              language,
+              '이번 테마는 더 믿을 만한 예언을 찾는 것이 아니라, 내 선택을 검증 가능한 구조로 바꾸는 것입니다.',
+              'The theme is not finding a more believable prediction, but turning your choice into a verifiable structure.'
+            ),
+          },
+          karma: {
+            title: textFor(language, '미루는 습관', 'Delay pattern'),
+            content: textFor(language, '해석이 늘어날수록 실행이 늦어지는 패턴을 끊어야 합니다.', 'Break the pattern where more interpretation delays action.'),
+          },
+          soul_mission: {
+            title: textFor(language, '이번 선택의 임무', 'Task of this choice'),
+            content: textFor(language, '작게 움직이고, 반응을 보고, 기준대로 결정하는 것입니다.', 'Move small, read the response, and decide by the criteria.'),
+          },
+        },
+        glossary: [
+          {
+            term: textFor(language, '검증 기준', 'Validation criteria'),
+            hanja: '檢證基準',
+            definition: textFor(language, '감정이 아니라 행동 결과를 읽기 위한 기준입니다.', 'A standard for reading action results instead of emotion.'),
+            context: textFor(language, `${question}의 계속 여부를 판단하는 중심 도구입니다.`, `The central tool for deciding whether to continue ${question}.`),
+          },
+        ],
+        final_verdict: {
+          title: textFor(language, '작게 열고 증거로 결정하세요', 'Open small, decide from evidence'),
+          core_message: textFor(
+            language,
+            `${question}은 지금 전부 걸 문제가 아니라 ${firstActionDate}의 작은 실행과 ${reviewDate}의 반응 점검으로 판단할 문제입니다.`,
+            `${question} should not be an all-in decision now; judge it through a small action on ${firstActionDate} and a response review on ${reviewDate}.`
+          ),
+          saju_foundation: `${dayMaster} / ${currentFlow}`,
+          astro_support: textFor(language, '감정 확신보다 반복 반응이 더 신뢰할 만한 신호입니다.', 'Repeated response is more reliable than emotional certainty.'),
+          tarot_insight: textFor(language, `${getTarotFallbackName(userData)} 흐름은 방향 설정 후 짧은 실행을 권합니다.`, `${getTarotFallbackName(userData)} favors direction first, then a short test.`),
+          action_priorities: [
+            textFor(language, `${firstActionDate}에 첫 행동 하나만 실행`, `Take one first action on ${firstActionDate}`),
+            textFor(language, `${reviewDate}까지 반응을 기록`, `Record responses through ${reviewDate}`),
+            textFor(language, `${decisionDate}에 계속/중단 결정`, `Decide continue or stop on ${decisionDate}`),
+          ],
+          closing_words: textFor(
+            language,
+            '이번 리딩의 핵심은 더 오래 고민하는 것이 아니라, 안전하게 작게 움직여 실제 신호를 확보하는 것입니다.',
+            'The point of this reading is not to think longer, but to move safely and collect a real signal.'
+          ),
+          convergence_diagnosis: {
+            level: 'two_aligned',
+            verdict_modifier: textFor(language, '사주와 행동 기준은 정렬되고, 감정 신호는 추가 확인이 필요합니다.', 'Saju and action criteria align; emotional signals need one more check.'),
+          },
+        },
+      };
+    default:
+      return {};
+  }
+}
+
+function mergePremiumFallbackPhases(
+  report: PremiumReportPartial,
+  userData: UserData,
+  metadata: PremiumFallbackMetadata
+): PremiumReportPartial {
+  const completedReport: PremiumReportPartial = { ...report };
+  for (let phaseNumber = 1; phaseNumber <= 8; phaseNumber += 1) {
+    Object.assign(completedReport, {
+      ...buildPremiumPhaseFallback(phaseNumber, userData, metadata),
+      ...completedReport,
+    });
+  }
+  return completedReport;
 }
 
 function buildEnrichedPayload(params: BuildPayloadParams): EnrichedPayload {
@@ -136,6 +543,7 @@ export async function runPremiumReading(params: PremiumReadingParams) {
     gender: params.gender,
     birthDate: params.birthDate,
     birthTime: params.birthTime,
+    unknownTime: params.unknownTime,
     characterId: params.runtime.resolvedCharacterId,
     selectionMode: params.runtime.effectiveSelectionMode,
     questionIntent: params.runtime.resolvedQuestionIntent,
@@ -146,8 +554,24 @@ export async function runPremiumReading(params: PremiumReadingParams) {
     sajuData: params.runtime.saju,
     astroData: {
       sunSign: ZODIAC_SIGNS[params.runtime.astrology.sunSign].name,
+      sunSignIndex: params.runtime.astrology.sunSign,
+      sunSignElement: ZODIAC_SIGNS[params.runtime.astrology.sunSign].element,
       moonSign: ZODIAC_SIGNS[params.runtime.astrology.moonSign].name,
+      moonSignIndex: params.runtime.astrology.moonSign,
+      moonSignElement: ZODIAC_SIGNS[params.runtime.astrology.moonSign].element,
       ascendant: ZODIAC_SIGNS[params.runtime.astrology.ascendant].name,
+      ascendantIndex: params.runtime.astrology.ascendant,
+      ascendantElement: ZODIAC_SIGNS[params.runtime.astrology.ascendant].element,
+      planets: params.runtime.astrology.planets.map((planet) => ({
+        ...planet,
+        signName: ZODIAC_SIGNS[planet.sign]?.name ?? 'unknown',
+        signElement: ZODIAC_SIGNS[planet.sign]?.element ?? 'unknown',
+      })),
+      aspects: params.runtime.astrology.aspects,
+      enhancedAspects: params.runtime.astrology.enhancedAspects,
+      dignities: params.runtime.astrology.dignities,
+      patterns: params.runtime.astrology.patterns,
+      calculationSource: 'server_calculateAstrology',
     },
     tarotCards: params.runtime.cards,
     language: params.language,
@@ -169,10 +593,29 @@ export async function runPremiumReading(params: PremiumReadingParams) {
       );
 
       if (!phaseResult.success) {
-        return NextResponse.json(
-          { error: phaseResult.error || 'Phase execution failed' },
-          { status: 500 }
+        if (isPremiumQualityGateFailure(phaseResult.error)) {
+          return premiumQualityGateResponse(params.phase, phaseResult.error);
+        }
+
+        console.warn(
+          `[Reading API] Premium phase ${params.phase} failed. Returning recovered phase payload.`,
+          phaseResult.error
         );
+        const fallbackReport = buildPremiumPhaseFallback(params.phase, userData, {
+          reason: phaseResult.error,
+          currentDate,
+        });
+
+        return NextResponse.json(buildEnrichedPayload({
+          success: true,
+          phase: params.phase,
+          report: fallbackReport,
+          runtime: params.runtime,
+          language: params.language,
+          isPremium: true,
+          error: phaseResult.error,
+          freeGenerationMode: 'premium_phase_recovery',
+        }));
       }
 
       return NextResponse.json(buildEnrichedPayload({
@@ -186,14 +629,25 @@ export async function runPremiumReading(params: PremiumReadingParams) {
     }
 
     const premiumResult = await generatePremiumReport(userData, apiKey);
+    if (!premiumResult.success && isPremiumQualityGateFailure(premiumResult.error)) {
+      return premiumQualityGateResponse(undefined, premiumResult.error);
+    }
+
+    const report = premiumResult.success
+      ? premiumResult.report
+      : mergePremiumFallbackPhases(premiumResult.report, userData, {
+          reason: premiumResult.error,
+          currentDate,
+        });
 
     return NextResponse.json(buildEnrichedPayload({
-      success: premiumResult.success,
-      report: premiumResult.report,
+      success: true,
+      report,
       runtime: params.runtime,
       language: params.language,
       isPremium: true,
       error: premiumResult.error,
+      freeGenerationMode: premiumResult.success ? undefined : 'premium_full_recovery',
     }));
   } catch (premiumError) {
     console.error('Premium generation failed:', premiumError);

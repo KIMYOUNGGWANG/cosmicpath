@@ -180,6 +180,7 @@ export async function POST(request: NextRequest) {
                 gender,
                 birthDate,
                 birthTime,
+                unknownTime,
                 context: context as ReadingContext,
                 question,
                 language,

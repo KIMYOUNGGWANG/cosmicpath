@@ -5,6 +5,7 @@
 
 import type { SajuResult } from '../engines/saju';
 import type { TarotCard } from '../engines/tarot';
+import type { AstrologyResult } from '../engines/astrology';
 import { calculateLifePathNumber, getLifePathKeyword } from '../engines/numerology';
 import {
   type OracleAdvisorProfile,
@@ -14,6 +15,7 @@ import {
   getOraclePersona,
 } from './oracle-personas';
 import { buildPremiumDateRules, buildPremiumSafetyRules } from './premium-prompt-rules';
+import { buildPremiumGroundingAnchors } from './premium-grounding';
 import { buildPromptSharedPrelude } from './prompt-shared-rules';
 
 function buildPersonaSystemLine(characterId: OracleCharacterId | undefined, lang: string): string {
@@ -35,7 +37,13 @@ export interface AstroData {
   sunSign?: string;
   moonSign?: string;
   ascendant?: string;
-  planets?: Record<string, string>;
+  planets?: AstrologyResult['planets'];
+  aspects?: AstrologyResult['aspects'];
+  enhancedAspects?: AstrologyResult['enhancedAspects'];
+  dignities?: AstrologyResult['dignities'];
+  patterns?: AstrologyResult['patterns'];
+  calculationSource?: string;
+  [key: string]: unknown;
 }
 
 // 사용자 입력 데이터 타입
@@ -44,6 +52,7 @@ export interface UserData {
   gender?: string;
   birthDate: string;
   birthTime: string;
+  unknownTime?: boolean;
   characterId?: OracleCharacterId;
   selectionMode?: OracleSelectionMode;
   questionIntent?: OracleQuestionIntent;
@@ -74,6 +83,46 @@ export interface PremiumReportPartial {
   [key: string]: unknown;
 }
 
+function buildCalculationSourceContract(lang: 'ko' | 'en') {
+  if (lang === 'en') {
+    return `<CALCULATION_SOURCE_CONTRACT>
+The Saju and astrology values below are precomputed by deterministic server engines. Do not recalculate pillars, signs, houses, aspects, dignities, luck cycles, or monthly/yearly luck inside the model.
+Use only the supplied <SAJU_DATA>, <SAJU_PRECISION_DATA>, and <ASTRO_DATA> as source of truth. If a needed value is missing, say the evidence is missing or conditional; never invent a stem, branch, sign, house, aspect, degree, date, luck cycle, or chart pattern.
+When citing evidence, quote the supplied value directly enough that it can be audited against the data block.
+</CALCULATION_SOURCE_CONTRACT>`;
+  }
+
+  return `<계산_원천_계약>
+아래 사주와 점성술 값은 서버의 결정론적 계산 엔진이 미리 산출한 값입니다. 모델 내부에서 사주 기둥, 별자리, 하우스, 각도, 품위, 대운, 세운, 월운을 다시 계산하지 마십시오.
+반드시 제공된 <사주_원국>, <사주_정밀_데이터>, <점성술_데이터>만 사실 원천으로 사용하십시오. 필요한 값이 없으면 근거 부족 또는 조건부로 표시하고, 천간/지지/별자리/하우스/각도/도수/날짜/운 주기/차트 패턴을 창작하지 마십시오.
+근거를 인용할 때는 데이터 블록과 대조할 수 있도록 제공된 값을 직접 인용하십시오.
+</계산_원천_계약>`;
+}
+
+function buildGroundedEvidenceContract(userData: UserData, lang: 'ko' | 'en') {
+  const anchors = buildPremiumGroundingAnchors(userData)
+    .map((anchor) => `- ${anchor.family}/${anchor.label}: ${anchor.text}`)
+    .join('\n');
+
+  if (lang === 'en') {
+    return `<GROUNDED_EVIDENCE_CONTRACT>
+Every premium phase must cite concrete supplied anchors before interpreting them.
+Required anchor ledger:
+${anchors || '- no supplied anchors; mark evidence as missing instead of inventing it'}
+Source roles: KASI/JPL validate calculations only; Waite/Tetrabiblos/classical candidates inform doctrine only after review; tarot image rights never prove text meaning.
+Do not copy raw source text into the report. Use product-authored synthesis and name the source role, claim family, and boundary.
+</GROUNDED_EVIDENCE_CONTRACT>`;
+  }
+
+  return `<근거_계약>
+모든 프리미엄 phase는 해석 전에 아래의 입력 앵커를 글자 그대로 인용해야 합니다.
+필수 앵커 목록:
+${anchors || '- 제공 앵커 없음: 창작하지 말고 근거 부족으로 표시'}
+원천 역할: KASI/JPL은 계산 검증 전용이고, Waite/Tetrabiblos/고전 후보는 검토된 교리 맥락 전용이며, 타로 이미지 권리는 카드 의미의 근거가 아닙니다.
+원문을 리포트에 복사하지 말고, 제품이 작성한 요약으로 source role, claim family, boundary를 밝혀 쓰십시오.
+</근거_계약>`;
+}
+
 // 공통 컨텍스트 빌더
 function buildUserContext(userData: UserData): string {
   const lang = userData.language || 'ko';
@@ -90,6 +139,8 @@ function buildUserContext(userData: UserData): string {
   });
   const currentDate = userData.currentDate || new Date().toISOString().split('T')[0];
   const premiumRules = `${buildPremiumSafetyRules(lang, currentDate)}\n\n${buildPremiumDateRules(lang, currentDate)}`;
+  const calculationSourceContract = buildCalculationSourceContract(lang);
+  const groundedEvidenceContract = buildGroundedEvidenceContract(userData, lang);
 
   const nameStr = userData.name ? (isEn ? `${userData.name}` : `${userData.name}님`) : (isEn ? 'User' : '사용자님');
   const genderStr = userData.gender === 'male' ? (isEn ? 'Male' : '남성(乾命)') : (isEn ? 'Female' : '여성(坤命)');
@@ -128,13 +179,17 @@ Card 3 (${userData.tarotCards[2].nameEn}): [Solution/Advice/Future Outcome] - Wh
 Name: ${userData.name || 'Anonymous'} (Address as "${nameStr}" in the report)
 Gender: ${genderStr}
 Birth Date: ${userData.birthDate}
-Birth Time: ${userData.birthTime}
+Birth Time: ${userData.unknownTime ? `${userData.birthTime} (unknown time fallback)` : userData.birthTime}
 Context: ${userData.context}
 Question: ${userData.question || 'General Reading'}
 Today's Date: ${currentDate}
 </USER_INFO>
 
 ${sharedPrelude}
+
+${calculationSourceContract}
+
+${groundedEvidenceContract}
 
 ${premiumRules}
 
@@ -149,13 +204,17 @@ ${tarotContext ? tarotContext : (userData.tarotCards ? `<TAROT_CARDS>\n${JSON.st
 이름/호칭: ${userData.name || '익명'} (리포트 작성 시 "${nameStr}"이라고 다정하게 부를 것)
 성별: ${genderStr} (대운의 순행/역행 및 남녀의 사회적 역할론을 현대적으로 재해석할 것)
 생년월일: ${userData.birthDate}
-생시: ${userData.birthTime}
+생시: ${userData.unknownTime ? `${userData.birthTime} (시간 미상 기준값)` : userData.birthTime}
 관심 영역(Context): ${userData.context}
 질문(Query): ${userData.question || '종합 운세'}
 오늘의 날짜: ${currentDate} (현재 시점 기준의 운세를 정확히 판단할 것)
 </사용자_정보>
 
 ${sharedPrelude}
+
+${calculationSourceContract}
+
+${groundedEvidenceContract}
 
 ${premiumRules}
 
@@ -264,12 +323,6 @@ function buildPreviousPhaseContext(
 export function buildPhase1Prompt(userData: UserData): { system: string; user: string } {
   const lang = userData.language || 'ko';
 
-  // Calculate Numerology Data (Fix: Parse date string directly to avoid timezone issues)
-  const [year, month, day] = userData.birthDate.split('-').map(Number);
-  const birthDateObj = new Date(year, month - 1, day); // Local timezone
-  const lifePathNumber = calculateLifePathNumber(birthDateObj);
-  const lifePathKeyword = getLifePathKeyword(lifePathNumber, lang);
-
   let system = '';
 
 
@@ -351,7 +404,7 @@ Create a strong first impression so that the user feels "This resonates deeply w
 2. **Metaphors**: Use evocative metaphors (e.g., "Like a river finding its path to the sea...") to create emotional resonance.
 3. **Language**: Write ALL content in English.
 4. **Astro-First Structure**: Always present Astrology insights BEFORE Saju/Elemental Blueprint.
-5. **Depth over Length**: Each field must fulfill all required analytical points. Avoid filler sentences.`;
+5. **Depth Contract**: Each field must follow Claim -> Evidence -> User-specific implication -> Action/Risk/Timing. Avoid filler sentences and repeated themes.`;
   } else {
     // ===============================================================
     // [NEW] 개선된 Phase 1 프롬프트 (v2.0) - 심층 분석 버전
@@ -404,7 +457,7 @@ Create a strong first impression so that the user feels "This resonates deeply w
 {
   "summary": {
     "title": "시적이고 강렬한 헤드라인 (15-30자. 예: '긴 어둠 끝에 새벽이 밝아온다')",
-    "content": "7-9문장의 압도적인 종합 요약 (500~900자). 명리 용어 해설 비중 30% 이하. 나머지 70%는 이 사람의 행동 패턴, 반복되는 실패 구조, 심리적 약점, 돈과 인간관계에서의 습관을 냉정하게 묘사. '이 사람은 ~하는 타입이다' 형태의 확정 판정 최소 3개 포함. 반드시 (1) <사주_원국>의 실제 글자 간 충/합 관계를 (근거: [글자A]-[글자B]의 [관계]) 형식으로 인용, (2) 점성술의 태양/달 관계, (3) 타로 3장의 흐름을 서술하십시오. '~할 수 있다', '~가능성이 있습니다' 절대 금지. (Cold Reading 화법 필수: '쉬는 날에도 머리가 안 쉬지 않으셨나요?' 등)",
+    "content": "압도적인 종합 요약. 명리 용어 해설 비중 30% 이하. 나머지 70%는 이 사람의 행동 패턴, 반복되는 실패 구조, 심리적 약점, 돈과 인간관계에서의 습관을 냉정하게 묘사. '이 사람은 ~하는 타입이다' 형태의 확정 판정을 여러 개 포함. 반드시 (1) <사주_원국>의 실제 글자 간 충/합 관계를 (근거: [글자A]-[글자B]의 [관계]) 형식으로 인용, (2) 점성술의 태양/달 관계, (3) 타로 3장의 흐름, (4) 사용자 질문에 대한 첫 행동/리스크/타이밍 경계를 서술하십시오. '~할 수 있다', '~가능성이 있습니다' 절대 금지.",
     "trust_score": 3-5,
     "trust_reason": "구체적 근거 기반 확정 진단. 예: '원국의 자오충(子午冲)과 타로 Tower 카드가 동시에 나타나, 2026년 급격한 변화를 확신합니다.' (근거 없는 막연한 신뢰 표현 금지)"
   },
@@ -412,19 +465,19 @@ Create a strong first impression so that the user feels "This resonates deeply w
     {
       "type": "saju",
       "name": "사주 뱃지 (간결 제목, 15자 이하. 예: 화염 속의 불사조)",
-      "description": "일주와 월지의 **실제 상호작용**을 (근거: [글자A]-[글자B] [관계]) 형식으로 분석 (100-150자). 예: '일간 甲木이 월지 子水에서 생조를 받아 카리스마를 발휘하지만, 연지 午火와의 자오충(子午冲)으로 내면 갈등이 큽니다.' 데이터에 없는 글자를 절대 지어내지 마십시오.",
+      "description": "일주와 월지의 **실제 상호작용**을 (근거: [글자A]-[글자B] [관계]) 형식으로 분석하고, 이 상호작용이 사용자 질문의 판단 습관·리스크·첫 행동에 어떻게 연결되는지 쓰십시오. 데이터에 없는 글자를 절대 지어내지 마십시오.",
       "grade": "S"
     },
     {
       "type": "astro",
       "name": "점성술 뱃지 (간결 제목, 15자 이하. 예: 고독한 왕좌)",
-      "description": "태양(Ego)과 달(Emotion)의 별자리 관계와 **어느 하우스에 위치하는지**까지 언급하여 삶의 영역(직업, 관계 등)을 특정 (100-150자). 별자리 데이터에 없는 내용을 추측하지 마십시오.",
+      "description": "태양(Ego)과 달(Emotion)의 별자리 관계와 **어느 하우스에 위치하는지**까지 언급하여 삶의 영역(직업, 관계 등)을 특정하고, 사용자 질문에 대한 타이밍/리스크 함의를 쓰십시오. 별자리 데이터에 없는 내용을 추측하지 마십시오.",
       "grade": "A"
     },
     {
       "type": "tarot",
       "name": "타로 뱃지 (간결 제목, 15자 이하. 예: 파도를 타는 모험가)",
-      "description": "3장 카드의 흐름에서 읽히는 현재 심리 상태 (100-150자). **사주에서 부족한 오행을 타로가 보완하는지, 아니면 더 악화시키는지** 교차 검증 결과를 포함. 카드 데이터에 있는 정보만 사용하십시오.",
+      "description": "3장 카드의 흐름에서 읽히는 현재 심리 상태를 분석하고, **사주에서 부족한 오행을 타로가 보완하는지, 아니면 더 악화시키는지** 교차 검증한 뒤 행동 지침까지 연결하십시오. 카드 데이터에 있는 정보만 사용하십시오.",
       "grade": "B"
     }
   ],
@@ -432,12 +485,12 @@ Create a strong first impression so that the user feels "This resonates deeply w
     "lacking_elements": {
       "elements": "부족한 오행 (실제 원국 기반. 예: 水, 金)",
       "remedy": "구체적 개운법 (행운의 색, 숫자, 방향, 음식. 예: '파란 계열, 숫자 1·6, 북쪽, 해산물')",
-      "description": "이 기운의 부재가 **어떤 사주 글자 관계에서 기인하는지** (근거: [글자A]와 [글자B]의 관계) 형식으로 분석 (150-250자). 삶에 미치는 구체적 영향(끈기 부족, 대인관계 등)을 진단하고 처방전 제시. '~할 수 있다' 표현 금지."
+      "description": "이 기운의 부재가 **어떤 사주 글자 관계에서 기인하는지** (근거: [글자A]와 [글자B]의 관계) 형식으로 분석하십시오. 삶에 미치는 구체적 영향(끈기 부족, 대인관계 등)을 진단하고, 사용자 질문에 바로 연결되는 처방전과 재검토 경계를 제시하십시오. '~할 수 있다' 표현 금지."
     },
     "abundant_elements": {
       "elements": "과다한 오행 (실제 원국 기반. 예: 火, 木)",
       "usage": "에너지 승화법 (구체적. 예: '운동, 예술 활동으로 과잉 火 기운 해소')",
-      "description": "**어떤 글자의 조합** 때문에 과잉인지 (근거: [글자1]+[글자2] 등) 형식으로 분석 (150-250자). 위험 경고 및 긍정적 활용법 제시. 데이터에 없는 글자를 지어내지 마십시오."
+      "description": "**어떤 글자의 조합** 때문에 과잉인지 (근거: [글자1]+[글자2] 등) 형식으로 분석하십시오. 위험 경고, 긍정적 활용법, 사용자 질문에서 피해야 할 행동을 함께 제시하십시오. 데이터에 없는 글자를 지어내지 마십시오."
     },
     "element_scores": {
       "wood": 0-100 (사주 원국에서 木 기운의 비율, 없으면 0),
@@ -541,19 +594,19 @@ Phase 1A에서 도출한 핵심 요약과 오행 균형을 바탕으로, 점성�
   "astro_deep": {
     "sun_moon_dynamic": {
       "title": "☀️🌙 태양-달 역학 (Sun-Moon Dynamic)",
-      "content": "반드시 3단락 구조로 작성 (200~400자): (1) <점성술_데이터>의 두 별자리 원소 관계와 핵심 긴장/조화를 (근거: [태양별자리]-[달별자리] 관계) 형식으로 서술, (2) 일상 행동 패턴으로의 구체적 발현 예시, (3) <사주_원국>의 일간과의 교차 비교 및 조언. 근거가 약한 대목은 조건과 재검토 경계로 표현."
+      "content": "반드시 3단락 구조로 작성: (1) <점성술_데이터>의 두 별자리 원소 관계와 핵심 긴장/조화를 (근거: [태양별자리]-[달별자리] 관계) 형식으로 서술, (2) 일상 행동 패턴으로의 구체적 발현 예시, (3) <사주_원국>의 일간과의 교차 비교, 사용자 질문에 대한 행동/리스크/재검토 경계. 근거가 약한 대목은 조건과 재검토 경계로 표현."
     },
     "ascendant_influence": {
       "title": "⬆️ 상승궁의 영향력 (Rising Sign Power)",
-      "content": "반드시 포함하여 150~300자로 작성: (1) 태양별자리와 상승궁의 '겉과 속의 갭' — 남들에게 보이는 모습 vs. 실제 내면의 차이를 (근거: [상승궁] 특성) 형식으로 확정 서술, (2) 직장/연애 등 특정 상황에서의 발현 예시. 데이터에 없는 내용을 추측하지 마십시오."
+      "content": "반드시 포함: (1) 태양별자리와 상승궁의 '겉과 속의 갭' — 남들에게 보이는 모습 vs. 실제 내면의 차이를 (근거: [상승궁] 특성) 형식으로 확정 서술, (2) 직장/연애 등 특정 상황에서의 발현 예시, (3) 사용자 질문에서 이 갭이 만드는 리스크와 대응. 데이터에 없는 내용을 추측하지 마십시오."
     },
     "dominant_element": {
       "title": "🔥💧 지배 원소 분석 (Dominant Element)",
-      "content": "반드시 포함하여 150~300자로 작성: (1) <사주_원국> 기반 핵심 성격 특성을 (근거: [지배 오행] 비율) 형식으로 인용, (2) 과잉 시 나타나는 구체적 부작용 진단, (3) 부족 원소로 균형 잡는 전략 제시. '~할 수도 있습니다' 표현 금지."
+      "content": "반드시 포함: (1) <사주_원국> 기반 핵심 성격 특성을 (근거: [지배 오행] 비율) 형식으로 인용, (2) 과잉 시 나타나는 구체적 부작용 진단, (3) 부족 원소로 균형 잡는 전략, (4) 사용자 질문에서 당장 바꿀 행동. '~할 수도 있습니다' 표현 금지."
     },
     "planetary_warning": {
       "title": "⚠️ 행성 경고 (Planetary Alert)",
-      "content": "반드시 포함하여 150~300자로 작성: (1) 현재 행성 위치 기준 영향 영역(커리어/연애/건강) 확정 진단, (2) 구체적 시기(YYYY-MM 범위)와 대처법 제시. 근거 없는 날짜를 창작하지 마십시오."
+      "content": "반드시 포함: (1) 현재 행성 위치 기준 영향 영역(커리어/연애/건강) 확정 진단, (2) 구체적 시기(YYYY-MM 범위)와 대처법, (3) 근거가 약할 때의 재검토 조건. 근거 없는 날짜를 창작하지 마십시오."
     }
   }
 }
@@ -751,7 +804,7 @@ Do not recite dictionary definitions like "This is Pyeon-jae". Show **how it man
 1. **Explain Terminology**: Explain in simple terms so anyone can understand.
 2. **Find Twist Charm**: Discover twist points like "You look cold but actually..."
 3. **Language**: Write ALL content in English.
-4. **Minimum Length**: Each content field must be at minimum: day_master (150+ words), strength (100+ words), ten_gods (150+ words), special_stars (100+ words). Thin or skeletal responses are treated as analysis failures.
+4. **Density Contract**: Each content field must include a concrete claim, cited chart evidence, user-specific behavior pattern, and action/risk/timing implication. Thin, skeletal, or repetitive responses are analysis failures.
 5. **Evidence-Bounded Tone**: State chart-supported conclusions clearly, and include uncertainty level or review boundaries when evidence is partial.`;
   } else {
     // Phase 2 프롬프트 (v2.0) - 심층 분석 버전
@@ -794,22 +847,22 @@ Do not recite dictionary definitions like "This is Pyeon-jae". Show **how it man
     {
       "id": "day_master",
       "title": "📜 타고난 그릇 (일간 분석)",
-      "content": "[최소 600자 이상 서술 필수] 일간(Day Master)은 '나의 본질'입니다. 자연물에 비유하되, **다른 글자들이 일간을 어떻게 돕거나(생) 억제(극)하는지** 구조적으로 분석하십시오. 반드시 포함: (1) 일간의 본질적 성격과 자연물 비유 — 최소 200자 이상, (2) 월지/연지/시지와의 생극 관계 진단 — 각 기둥별로 구체적 글자 관계 명시 (근거: [실제 글자 관계]), (3) 이 에너지 구조가 삶에서 어떻게 발현되는지 구체적 상황 예시 2가지 이상. 모호하거나 일반적인 표현은 절대 금지. 확신에 찬 단정적 어투로 서술하십시오."
+      "content": "[밀도 계약] 일간(Day Master)은 '나의 본질'입니다. 자연물에 비유하되, **다른 글자들이 일간을 어떻게 돕거나(생) 억제(극)하는지** 구조적으로 분석하십시오. 반드시 포함: (1) 일간의 본질적 성격과 자연물 비유, (2) 월지/연지/시지와의 생극 관계 진단 — 각 기둥별로 구체적 글자 관계 명시 (근거: [실제 글자 관계]), (3) 이 에너지 구조가 삶에서 어떻게 발현되는지 구체적 상황 예시, (4) 사용자 질문에서의 행동/리스크/타이밍 함의. 모호하거나 일반적인 표현은 절대 금지."
     },
     {
       "id": "strength",
       "title": "⚖️ 내면의 에너지 (신강/신약)",
-      "content": "[최소 500자 이상 서술 필수] 신강/신약 판단의 **근거(득령/득지/득세 등)**를 명확히 밝히고, 현재 대운에서 이 에너지가 어떻게 조절되거나 강화되는지 분석하십시오. 반드시 포함: (1) 득령/득지/득세 각각의 판정과 근거 — 원국 글자를 직접 인용하여 설명 (근거: [글자]의 [특성]), (2) 종합 판단(신강/중화/신약) — 확정적으로 진단, (3) 현재 대운이 이 균형에 미치는 영향 — 구체적 기회/위험 포인트 명시."
+      "content": "[밀도 계약] 신강/신약 판단의 **근거(득령/득지/득세 등)**를 명확히 밝히고, 현재 대운에서 이 에너지가 어떻게 조절되거나 강화되는지 분석하십시오. 반드시 포함: (1) 득령/득지/득세 각각의 판정과 근거 — 원국 글자를 직접 인용하여 설명 (근거: [글자]의 [특성]), (2) 종합 판단(신강/중화/신약), (3) 현재 대운이 이 균형에 미치는 영향, (4) 사용자에게 필요한 기회/위험 포인트와 재검토 경계."
     },
     {
       "id": "ten_gods",
       "title": "🔮 사회적 무기 (십성 분석)",
-      "content": "[최소 700자 이상 서술 필수] 십성을 **기둥별(연/월/일/시)**로 위치와 함께 분석하십시오. 연주·월주·일주·시주 4개 기둥 모두 서술하되, 각 기둥별로 반드시 포함: (1) 해당 십성의 의미와 이 사람 삶에서의 발현 방식, (2) 해당 기둥 위치에 따른 발현 시기와 영역(어린 시절/청년기/중년/노년), (3) 다른 기둥 십성과의 상호작용(합/충) 및 그 결과. 십성 이름 옆에 반드시 한자와 독음을 병기하십시오."
+      "content": "[밀도 계약] 십성을 **기둥별(연/월/일/시)**로 위치와 함께 분석하십시오. 연주·월주·일주·시주 4개 기둥 모두 서술하되, 각 기둥별로 반드시 포함: (1) 해당 십성의 의미와 이 사람 삶에서의 발현 방식, (2) 해당 기둥 위치에 따른 발현 시기와 영역(어린 시절/청년기/중년/노년), (3) 다른 기둥 십성과의 상호작용(합/충) 및 그 결과, (4) 사용자 질문에서 어떤 선택 기준으로 써야 하는지. 십성 이름 옆에 반드시 한자와 독음을 병기하십시오."
     },
     {
       "id": "special_stars",
       "title": "✨ 신의 선물과 형벌 (신살 분석)",
-      "content": "[최소 500자 이상 서술 필수] 도화살, 역마살, 천을귀인 등을 **어느 십성과 함께 있는지** 반드시 분석하십시오. 해당 원국에 존재하는 신살만 언급하고, 각 신살별로 반드시 포함: (1) 어떤 십성과 동행하는지와 그 복합적 의미 (예: 역마 + 편재 = 해외 사업운), (2) 길신/흉신 판정의 구체적 조건 (근거: [글자 관계]), (3) 사용자가 취할 수 있는 구체적 행동 지침. 결과는 사용자의 선택에 달렸음을 강조하십시오."
+      "content": "[밀도 계약] 도화살, 역마살, 천을귀인 등을 **어느 십성과 함께 있는지** 반드시 분석하십시오. 해당 원국에 존재하는 신살만 언급하고, 각 신살별로 반드시 포함: (1) 어떤 십성과 동행하는지와 그 복합적 의미 (예: 역마 + 편재 = 해외 사업운), (2) 길신/흉신 판정의 구체적 조건 (근거: [글자 관계]), (3) 사용자가 취할 수 있는 구체적 행동 지침, (4) 과신하면 생기는 리스크. 결과는 사용자의 선택에 달렸음을 강조하십시오."
     }
   ]
 }
@@ -818,7 +871,7 @@ Do not recite dictionary definitions like "This is Pyeon-jae". Show **how it man
 1. **전문 용어 해설 필수**: 한자(독음, 쉬운 뜻) 형식으로 풀어서 설명. 예: 비견(比肩, 나와 같은 오행)
 2. **반전 매력 찾기**: "차가워 보이지만 사실은..." 식의 반전 포인트 발굴.
 3. **근거 표기 필수**: 모든 주요 주장에 (근거: [실제 원국의 글자 간 관계]) 형식으로 명시. **반드시 아래 제공된 원국의 실제 글자만 사용하고, 지어내지 마십시오.**
-4. **분량 준수**: 각 content 필드의 최소 글자 수를 반드시 충족하십시오. 분량 미달은 분석 실패로 간주합니다.`;
+4. **밀도 계약**: 각 content 필드는 반드시 판정, 실제 원국 근거, 사용자 삶에서의 발현, 행동/리스크/타이밍 함의를 모두 포함하십시오. 길지만 반복적인 문장, 사전식 해설, 근거 없는 단정은 분석 실패로 간주합니다.`;
   }
 
   const user = buildUserContext(userData) + `\n<이전_요약_참고>\n${JSON.stringify(previousData?.summary || {}, null, 2)}\n</이전_요약_참고>`;
@@ -978,7 +1031,7 @@ Users are most curious about "When will it get better?". Do not be vague saying 
 2. **시점 표현**: 근거가 충분하면 기준일 이후의 월 범위로, 근거가 약하면 정확한 날짜 대신 재검토 경계로 표현하십시오.
 3. **timeline_scores의 score**: 원국과 해당 연도 세운의 관계(충/합/형)를 분석하여 점수화.
 4. **데이터 준수**: 반드시 제공된 사주 원국의 월주 정보를 바탕으로 분석하십시오. 월주가 틀리면 전체 운세 흐름이 왜곡됩니다. 명문화된 데이터를 절대적으로 고수하십시오.
-5. **분량 준수**: major_luck.content는 최소 500자 이상, yearly_luck.content는 최소 600자 이상 서술하십시오. monthly_luck의 advice 필드는 각각 최소 80자 이상 작성하십시오. 분량 미달은 분석 실패로 간주합니다.
+5. **밀도 계약**: major_luck.content, yearly_luck.content, monthly_luck.advice는 각각 판정, 대운/세운/월운 근거, 사용자 질문과의 연결, 행동/리스크/재검토 경계를 포함해야 합니다. 길지만 시점·근거·행동이 비어 있으면 분석 실패로 간주합니다.
 6. **확신 수준 표기**: 근거가 강한 결론은 선명하게 쓰되, 근거가 부분적이면 확신 수준과 확인 조건을 함께 표기하십시오.`;
   }
 
@@ -1064,7 +1117,7 @@ No abstract well-wishing. Give **decision-support guidance** with risk awareness
 2. Maintain balance between **honest assessment and empowering optimism** (NOT "hopeful torture").
 3. **Language**: Write ALL content in English.
 4. **Astro-First**: Present Astrology insights BEFORE Soul Element insights.
-5. **Minimum Length**: career/wealth/love/health content fields must be 100+ words each. soulmate.description must be 60+ words. compatibility strategy/advice fields must be 40+ words each. Responses below these thresholds are treated as incomplete.
+5. **Density Contract**: career/wealth/love/health, soulmate, and compatibility fields must each include a diagnosis, cited evidence, user-specific implication, and practical boundary or next action. Generic or padded responses are incomplete.
 6. **Evidence-Bounded Tone**: Use clear phrasing backed by chart evidence, and include consultation boundaries for health/finance or uncertainty levels when evidence is partial.`;
   } else {
     // Phase 4 프롬프트 (v2.0) - 심층 분석 버전
@@ -1149,10 +1202,10 @@ No abstract well-wishing. Give **decision-support guidance** with risk awareness
 }
 
 ## 작성 규칙
-1. 사용자 질문('${userData.context}')에 해당하는 영역은 **2배 더 상세하게** 분석하고, 해당 영역의 content는 최소 700자 이상 서술하십시오.
+1. 사용자 질문('${userData.context}')에 해당하는 영역은 **2배 더 깊게** 분석하고, 판정·근거·현실 발현·행동/리스크/타이밍을 모두 포함하십시오.
 2. **근거 표기 필수**: 모든 조언에 (근거: 월주 정관 + 시주 편재) 형식으로 사주 근거를 명시.
 3. 팩트 폭행과 희망 고문 사이의 균형 유지.
-4. **분량 준수**: career/wealth/love/health 각 content 필드는 최소 500자 이상 서술하십시오. soulmate.description은 최소 200자, compatibility 각 항목의 strategy/advice는 최소 150자 이상 작성하십시오.
+4. **밀도 계약**: career/wealth/love/health, soulmate.description, compatibility의 strategy/advice는 각각 구체 진단, 사주/타로 근거, 사용자에게 생기는 실제 영향, 안전한 실행 경계나 다음 행동을 포함해야 합니다. 반복과 덕담으로 길이를 채우지 마십시오.
 5. **확신 수준 표기**: 근거가 강한 영역은 선명하게 쓰고, 의료/재무처럼 전문 판단이 필요한 영역은 확신 수준과 상담 경계를 함께 표기하십시오.
 6. **subsections 반드시 반영**: 각 영역의 subsections 항목을 content 안에 모두 다루십시오.`;
   }
@@ -1234,7 +1287,7 @@ Reveal special singularities as 'Hidden Cards', and provide supported future-onl
 1. Select only future dates supported by the supplied current date and Saju analysis; if evidence is weak, provide a review window instead.
 2. Describe noble people like movie characters.
 3. **Language**: Write ALL content in English.
-4. **Minimum Length**: Each special_analysis content (noble_person, charm, conflicts) must be 80+ words. Each action_plan description must be 40+ words with a Saju/Astro basis. Thin responses are analysis failures.
+4. **Density Contract**: Each special_analysis content and action_plan description must include source evidence, user-specific implication, and a concrete next action, risk, or review boundary. Thin or padded responses are analysis failures.
 5. **Evidence-Bounded Tone**: Give clear action windows with an uncertainty level and review boundary; do not present dates or actions as absolute guarantees.`;
   } else {
     system = `${buildPersonaSystemLine(userData.characterId, lang)}
@@ -1309,7 +1362,7 @@ Reveal special singularities as 'Hidden Cards', and provide supported future-onl
 ## 작성 규칙
 1. 제공된 기준일 이후의 날짜만 선택하고, 근거가 약하면 정확한 날짜 대신 재검토 경계를 제시.
 2. "~하십시오"라고 강하게 이끄십시오.
-3. **분량 준수**: special_analysis의 각 content 필드(noble_person, charm, conflicts)는 최소 300자 이상 서술하십시오. action_plan의 각 description은 최소 120자 이상 상세히 작성하십시오.
+3. **밀도 계약**: special_analysis의 각 content와 action_plan.description은 반드시 근거, 사용자에게 생기는 영향, 실행 행동, 피할 리스크 또는 재검토 경계를 포함해야 합니다. 같은 말을 늘리거나 추상적 행운 표현으로 채우면 분석 실패입니다.
 4. **확신 수준 표기**: 근거가 충분한 행동은 명확히 제시하되, 날짜 근거가 약하면 재검토 경계와 확인 조건을 함께 제시하십시오.`;
   }
 
@@ -1378,10 +1431,10 @@ You are the 'Fate Architect' delivering the final synthesis and spiritual insigh
 }
 
 ## Writing Rules
-1. **Glossary**: Extract 10 key Saju terms, explain tailored to user. Each context field must be 30+ words connecting the term to the user's actual life.
-2. **Final Verdict**: Compress entire report into Saju/Astrology core. core_message must be 80+ words. closing_words must be 60+ words — strong, memorable, leading.
+1. **Glossary**: Extract 10 key Saju terms and explain each through the user's actual behavior, question, or timing context.
+2. **Final Verdict**: Compress the entire report into a Saju/Astrology-led decision argument. core_message and closing_words must contain source evidence, user-specific implication, action priority, and uncertainty/review boundary.
 3. **Language**: Write ALL in English.
-4. **Minimum Length**: Each past_life content field must be 70+ words. Responses below these thresholds are treated as incomplete.
+4. **Density Contract**: Each past_life content field must connect archetype, evidence, current-life pattern, and practical cycle-breaking action. Thin or padded responses are incomplete.
 5. **Evidence-bounded Tone**: Deliver a clear verdict with an uncertainty level instead of absolute guarantees.`;
   } else {
     system = `${buildPersonaSystemLine(userData.characterId, lang)}
@@ -1429,22 +1482,22 @@ You are the 'Fate Architect' delivering the final synthesis and spiritual insigh
   ],
   "final_verdict": {
     "title": "📌 [페르소나 이름]이 내린 최종 결론",
-    "core_message": "반드시 4문장 구조를 지킬 것. 1번째 문장: '사주가 말한다: [일간/현재 대운/세운 글자 직접 인용]으로...' 2번째 문장: '별이 보여준다: [행성명/트랜짓 직접 인용]이...' 3번째 문장: '타로가 확인한다: [카드명+정/역방향] —...' 4번째 문장: '그러므로 기준일 이후 해야 할 첫 행동은: [동사형 행동 + 근거 있는 시기 범위 또는 재검토 경계].' 추상 명사구(현재 에너지, 흐름, 균형, 조화) 사용 절대 금지. 최소 300자.",
+    "core_message": "반드시 4문장 구조를 지킬 것. 1번째 문장: '사주가 말한다: [일간/현재 대운/세운 글자 직접 인용]으로...' 2번째 문장: '별이 보여준다: [행성명/트랜짓 직접 인용]이...' 3번째 문장: '타로가 확인한다: [카드명+정/역방향] —...' 4번째 문장: '그러므로 기준일 이후 해야 할 첫 행동은: [동사형 행동 + 근거 있는 시기 범위 또는 재검토 경계].' 추상 명사구(현재 에너지, 흐름, 균형, 조화) 사용 절대 금지.",
     "saju_foundation": "사주적 근거: 일간, 현재 대운 천간지지, 올해 세운, 활성 충/형/합을 반드시 인용.",
     "astro_support": "점성술 관점 보완: 태양/달/상승궁 + 현재 트랜짓 1개 이상 인용.",
     "tarot_insight": "타로 보강 (보조): 카드명과 방향 명시. '현재 에너지' 표현 금지.",
     "convergence_diagnosis": {"level": "all_aligned | two_aligned | divergent", "verdict_modifier": "수렴 수준에 따른 결론 확신도 설명. all_aligned → '세 원천 모두 같은 방향' / divergent → '조건부 결론'"},
     "action_priorities": ["기준일 이후 첫 행동 (근거 있는 시기 범위 또는 재검토 경계)", "기준일 이후 이번 달/다음 달 점검 행동", "올해 결정할 것과 보류할 것"],
-    "closing_words": "격려와 방향 제시. 강한 어조. 최소 200자. 기준일 이후의 시기 범위와 확신 수준을 함께 제시.",
-    "behavioral_verdict": "이 사람이 인생에서 가장 먼저 고쳐야 하는 행동 패턴을 한 문단(200-300자)으로 정리. 형식: '[패턴 진단] + [이것이 돈/관계/건강에 미치는 구체적 영향] + [대안 행동 1가지]'. 예: '머릿속으로 완벽한 결과물이 그려질 때까지 실행을 미루는 습관이 가장 큰 적이다. 이 패턴은 사업에서는 출시 지연으로, 인간관계에서는 연락 두절로, 건강에서는 운동 시작 실패로 반복된다. 오늘 당장 70% 완성도에서 출발하는 연습을 시작해라.' (근거: 사주 원국의 실제 글자 관계 인용 필수)"
+    "closing_words": "격려와 방향 제시. 강한 어조. 기준일 이후의 시기 범위, 확신 수준, 재검토 경계, 첫 행동을 함께 제시.",
+    "behavioral_verdict": "이 사람이 인생에서 가장 먼저 고쳐야 하는 행동 패턴을 한 문단으로 정리. 형식: '[패턴 진단] + [이것이 돈/관계/건강에 미치는 구체적 영향] + [대안 행동 1가지]'. 예: '머릿속으로 완벽한 결과물이 그려질 때까지 실행을 미루는 습관이 가장 큰 적이다. 이 패턴은 사업에서는 출시 지연으로, 인간관계에서는 연락 두절로, 건강에서는 운동 시작 실패로 반복된다. 오늘 당장 70% 완성도에서 출발하는 연습을 시작해라.' (근거: 사주 원국의 실제 글자 관계 인용 필수)"
   }
 }
 
 ## 작성 규칙
-1. **용어집**: 핵심 용어 10개, 사용자 맞춤 설명. 각 context 필드는 최소 100자 이상 사용자 삶과 연결한 구체적 서술.
-2. **최종결론**: 전체 리포트 핵심을 사주/점성술 기반 압축. core_message는 최소 300자 이상, closing_words는 최소 200자 이상 강하고 기억에 남는 문장으로 작성하십시오.
+1. **용어집**: 핵심 용어 10개를 뽑되, 각 context는 사용자의 실제 행동, 질문, 타이밍 문맥과 연결하십시오.
+2. **최종결론**: 전체 리포트 핵심을 사주/점성술 기반 의사결정 논증으로 압축하십시오. core_message와 closing_words는 근거, 사용자 함의, 행동 우선순위, 불확실성/재검토 경계를 모두 포함해야 합니다.
 3. 타로는 "현재 흐름 참고"로만 언급.
-4. **분량 준수**: past_life 각 content 필드는 최소 250자 이상 서술하십시오.
+4. **밀도 계약**: past_life 각 content는 원형, 근거, 현생 반복 패턴, 끊어낼 행동을 모두 연결해야 합니다. 길지만 개인화와 행동이 없으면 분석 실패입니다.
 5. **확신 수준 표기**: 결론은 선명하게 쓰되, 근거가 부분적이면 확신 수준과 재검토 경계를 함께 제시하십시오.`;
   }
 

@@ -1,0 +1,65 @@
+import { join } from 'node:path';
+
+import type { TestCase } from './types.ts';
+
+export const OUTPUT_PATH = join(process.cwd(), '.tmp', 'report-quality-test-data.json');
+
+export const TEST_CASES: TestCase[] = [
+  {
+    id: 'kim-seoul-career-premium',
+    label: 'Known engine fixture / career depth',
+    name: '김영광',
+    gender: 'male',
+    birthDate: '1993-08-02',
+    birthTime: '15:10',
+    calendarType: 'solar',
+    unknownTime: false,
+    cityName: 'Seoul',
+    latitude: 37.5665,
+    longitude: 126.978,
+    context: 'career',
+    question: '올해 커리어 방향을 어떻게 잡아야 할까?',
+    language: 'ko',
+    cards: [{ id: 1, reversed: false }, { id: 11, reversed: false }, { id: 17, reversed: true }],
+  },
+  {
+    id: 'unknown-time-love-boundary',
+    label: 'Unknown birth time / love caveat',
+    name: '시간미상 샘플',
+    gender: 'female',
+    birthDate: '1994-04-12',
+    birthTime: '12:00',
+    calendarType: 'solar',
+    unknownTime: true,
+    cityName: 'Seoul',
+    latitude: 37.5665,
+    longitude: 126.978,
+    context: 'love',
+    question: '이 관계를 계속 이어가도 괜찮을까?',
+    language: 'ko',
+    cards: [{ id: 6, reversed: true }, { id: 2, reversed: false }, { id: 14, reversed: false }],
+    partner: {
+      name: '상대방',
+      gender: 'male',
+      birthDate: '1992-11-18',
+      birthTime: '09:30',
+    },
+  },
+  {
+    id: 'hour-boundary-business',
+    label: 'Late-hour boundary / business timing',
+    name: '시각경계 샘플',
+    gender: 'male',
+    birthDate: '2026-06-06',
+    birthTime: '23:30',
+    calendarType: 'solar',
+    unknownTime: false,
+    cityName: 'Seoul',
+    latitude: 37.5665,
+    longitude: 126.978,
+    context: 'money',
+    question: '새 사업 투자를 지금 시작해도 될까?',
+    language: 'ko',
+    cards: [{ id: 10, reversed: false }, { id: 15, reversed: true }, { id: 4, reversed: false }],
+  },
+];

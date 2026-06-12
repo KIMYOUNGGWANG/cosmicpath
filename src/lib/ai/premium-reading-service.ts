@@ -19,6 +19,7 @@ import {
     type PremiumReportPartial
 } from './phase-prompts';
 import { buildGoogleResponseJsonSchema } from './google-json-schema';
+import { assertPremiumGrounding } from './premium-grounding';
 import { getPremiumPhaseSchema, parsePremiumPhaseResult } from './premium-report-schemas';
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
@@ -106,6 +107,100 @@ function getPhaseThinkingConfig() {
 
 function isMaxTokensFinish(finishReason: string | null): boolean {
     return finishReason === 'MAX_TOKENS';
+}
+
+function collectReportStrings(value: unknown): string[] {
+    if (typeof value === 'string') return [value.trim()].filter(Boolean);
+    if (Array.isArray(value)) return value.flatMap((item) => collectReportStrings(item));
+    if (!value || typeof value !== 'object') return [];
+    return Object.values(value).flatMap((item) => collectReportStrings(item));
+}
+
+const GENERIC_REPORT_PATTERNS = [
+    /trust your intuition/i,
+    /everything happens for a reason/i,
+    /stay positive/i,
+    /focus on yourself/i,
+    /the universe (?:will|is going to) guide/i,
+    /자신(?:을|의 직감)을 믿으세요/,
+    /우주의 흐름/,
+    /긍정적인 마음/,
+    /조화와 균형/,
+    /새로운 시작/,
+    /좋은 흐름/,
+] as const;
+
+const PHASE_MINIMUM_TEXT_LENGTH: Record<number, number> = {
+    1: 900,
+    2: 750,
+    3: 750,
+    4: 2200,
+    5: 1400,
+    6: 2600,
+    7: 1300,
+    8: 2200,
+};
+
+const EVIDENCE_MARKER_PATTERN =
+    /근거|사주|일간|월지|대운|세운|오행|태양|달|상승궁|타로|카드|Saju|Four Pillars|Day Master|Soul Element|Elemental Blueprint|Sun|Moon|Rising|Ascendant|Tarot|Card|transit/i;
+
+const DENSITY_MARKER_PATTERN =
+    /판정|근거|함의|행동|지침|타이밍|경계|재검토|리스크|위험|기준|비교|측정|점검|결정|실행|보류|회신률|Claim|Evidence|implication|action|risk|timing|boundary|review|measure|compare|decision|specific|next move/i;
+
+function assertPremiumPhaseQuality(phaseNumber: number, data: PremiumReportPartial) {
+    const strings = collectReportStrings(data);
+    const joined = strings.join('\n');
+    const totalTextLength = strings.reduce((sum, value) => sum + value.length, 0);
+    const minimumLength = getPhaseMinimumTextLength(phaseNumber);
+
+    if (totalTextLength < minimumLength) {
+        throw new Error(
+            `Phase ${phaseNumber} quality check failed: response is too thin (${totalTextLength}/${minimumLength} chars)`
+        );
+    }
+
+    const genericPattern = GENERIC_REPORT_PATTERNS.find((pattern) => pattern.test(joined));
+    if (genericPattern) {
+        throw new Error(
+            `Phase ${phaseNumber} quality check failed: generic wording detected (${genericPattern.source})`
+        );
+    }
+
+    if (!EVIDENCE_MARKER_PATTERN.test(joined)) {
+        throw new Error(
+            `Phase ${phaseNumber} quality check failed: no source evidence marker found`
+        );
+    }
+
+    const evidenceMarkerCount = countPatternMatches(joined, EVIDENCE_MARKER_PATTERN);
+    const densityMarkerCount = countPatternMatches(joined, DENSITY_MARKER_PATTERN);
+    if (evidenceMarkerCount < 2 || densityMarkerCount < 4) {
+        throw new Error(
+            `Phase ${phaseNumber} quality check failed: insufficient evidence-action density (${evidenceMarkerCount} evidence markers, ${densityMarkerCount} density markers)`
+        );
+    }
+}
+
+function getPhaseMinimumTextLength(phaseNumber: number): number {
+    return PHASE_MINIMUM_TEXT_LENGTH[phaseNumber] ?? 750;
+}
+
+function countPatternMatches(value: string, pattern: RegExp): number {
+    const flags = pattern.flags.includes('g') ? pattern.flags : `${pattern.flags}g`;
+    const globalPattern = new RegExp(pattern.source, flags);
+    return [...value.matchAll(globalPattern)].length;
+}
+
+function buildQualityRetryUserPrompt(userPrompt: string, lastError: Error | null): string {
+    if (!lastError) return userPrompt;
+
+    return `${userPrompt}
+
+<QUALITY_RETRY>
+Previous attempt failed validation: ${lastError.message}
+Rewrite the phase as premium-grade analysis, not filler. Each important paragraph must include: (1) the source signal being used, (2) what that signal means for this user/question, and (3) a concrete implication, timing boundary, risk, or next action. The combined user-visible text must satisfy the depth and density implied by the validation error, without padding, repeated phrasing, or generic reassurance. Use supplied Saju, astrology, tarot, timing, and user-question evidence wherever relevant.
+If the error mentions PREMIUM_QUALITY_GATE_FAILED, quote the missing supplied anchors exactly and name the source-role boundary before interpreting them.
+</QUALITY_RETRY>`;
 }
 
 
@@ -253,11 +348,14 @@ export async function generateSinglePhase(
         const requestTimeoutMs = getPhaseRequestTimeoutMs(phaseNumber);
         const maxOutputTokens = getPhaseMaxOutputTokens(phaseNumber, attempt);
         const thinkingConfig = getPhaseThinkingConfig();
+        const userPromptForAttempt: string = attempt === 0
+            ? user
+            : buildQualityRetryUserPrompt(user, lastError);
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), requestTimeoutMs);
 
         try {
-            const response = await fetch(
+            const response: Response = await fetch(
                 `${GEMINI_API_BASE}/${PRIMARY_MODEL_NAME}:generateContent?key=${apiKey}`,
                 {
                     method: 'POST',
@@ -267,7 +365,7 @@ export async function generateSinglePhase(
                         systemInstruction: { parts: [{ text: system }] },
                         contents: [{
                             role: 'user',
-                            parts: [{ text: user }],
+                            parts: [{ text: userPromptForAttempt }],
                         }],
                         generationConfig: {
                             temperature: getPhaseTemperature(phaseNumber),
@@ -289,7 +387,7 @@ export async function generateSinglePhase(
 
             if (!response.ok) {
                 const errorText = await response.text();
-                const errorMsg = `API Error (${PRIMARY_MODEL_NAME}): ${response.status} - ${errorText}`;
+                const errorMsg: string = `API Error (${PRIMARY_MODEL_NAME}): ${response.status} - ${errorText}`;
 
                 if (response.status === 429) {
                     lastError = new Error(errorMsg);
@@ -352,9 +450,11 @@ export async function generateSinglePhase(
             try {
                 const parsed = JSON.parse(text);
                 data = parsePremiumPhaseResult(phaseNumber, parsed, { currentDate: userData.currentDate });
+                assertPremiumPhaseQuality(phaseNumber, data);
+                assertPremiumGrounding(phaseNumber, data, userData);
             } catch (e) {
                 const validationMessage = e instanceof Error ? e.message : String(e);
-                console.error(`[Phase ${phaseNumber}] JSON Schema Validation Error from ${PRIMARY_MODEL_NAME}. Raw text:`, text.substring(0, 200) + '...');
+                console.error(`[Phase ${phaseNumber}] Schema or quality validation error from ${PRIMARY_MODEL_NAME}. Raw text:`, text.substring(0, 200) + '...');
                 lastError = new Error(
                     `Phase ${phaseNumber} schema validation failed${finishReason ? ` (finishReason: ${finishReason})` : ''}: ${validationMessage}`
                 );

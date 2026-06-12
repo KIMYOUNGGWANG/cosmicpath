@@ -1,16 +1,16 @@
 import { strict as assert } from 'node:assert';
 import { createRequire } from 'node:module';
 
-const require = createRequire(`${process.cwd()}/scripts/verify-premium-report-schemas.ts`);
-const Module = require('node:module');
-const ts = require('typescript');
-const fs = require('node:fs');
-const path = require('node:path');
+const localRequire = createRequire(`${process.cwd()}/scripts/verify-premium-report-schemas.ts`);
+const Module = localRequire('node:module');
+const ts = localRequire('typescript');
+const fs = localRequire('node:fs');
+const path = localRequire('node:path');
 
 function registerTypeScriptLoader() {
   const originalResolveFilename = Module._resolveFilename;
-  const originalTsLoader = require.extensions['.ts'];
-  const originalTsxLoader = require.extensions['.tsx'];
+  const originalTsLoader = localRequire.extensions['.ts'];
+  const originalTsxLoader = localRequire.extensions['.tsx'];
 
   Module._resolveFilename = function patchedResolveFilename(
     request: string,
@@ -71,26 +71,26 @@ function registerTypeScriptLoader() {
     module._compile(output.outputText, filename);
   }
 
-  require.extensions['.ts'] = function loadTs(module: NodeJS.Module, filename: string) {
+  localRequire.extensions['.ts'] = function loadTs(module: NodeJS.Module, filename: string) {
     compileTypeScript(module, filename);
   };
 
-  require.extensions['.tsx'] = function loadTsx(module: NodeJS.Module, filename: string) {
+  localRequire.extensions['.tsx'] = function loadTsx(module: NodeJS.Module, filename: string) {
     compileTypeScript(module, filename);
   };
 
   return () => {
     Module._resolveFilename = originalResolveFilename;
     if (originalTsLoader) {
-      require.extensions['.ts'] = originalTsLoader;
+      localRequire.extensions['.ts'] = originalTsLoader;
     } else {
-      delete require.extensions['.ts'];
+      delete localRequire.extensions['.ts'];
     }
 
     if (originalTsxLoader) {
-      require.extensions['.tsx'] = originalTsxLoader;
+      localRequire.extensions['.tsx'] = originalTsxLoader;
     } else {
-      delete require.extensions['.tsx'];
+      delete localRequire.extensions['.tsx'];
     }
   };
 }
@@ -121,8 +121,13 @@ type PremiumServiceApi = {
   ) => Promise<{ readonly success: boolean; readonly error?: string }>;
 };
 
+type PhasePromptApi = {
+  readonly buildPhase1Prompt: (userData: Record<string, unknown>) => { readonly system: string; readonly user: string };
+};
+
 let phaseSchemaApi: PhaseSchemaApi | null = null;
 let premiumServiceApi: PremiumServiceApi | null = null;
+let phasePromptApi: PhasePromptApi | null = null;
 
 function schemas(): PhaseSchemaApi {
   if (!phaseSchemaApi) {
@@ -136,6 +141,13 @@ function premiumService(): PremiumServiceApi {
     throw new Error('Premium service API was not loaded.');
   }
   return premiumServiceApi;
+}
+
+function phasePrompts(): PhasePromptApi {
+  if (!phasePromptApi) {
+    throw new Error('Phase prompt API was not loaded.');
+  }
+  return phasePromptApi;
 }
 
 function errorMessage(error: unknown): string {
@@ -606,35 +618,184 @@ function sampleUserData() {
     birthTime: '12:00',
     context: 'career',
     question: '이직을 지금 해야 할까요?',
+    sajuData: {
+      dayMaster: '甲',
+      yeonPillar: { stem: '壬', branch: '申' },
+      monthPillar: { stem: '丙', branch: '寅' },
+      dayPillar: { stem: '甲', branch: '子' },
+      hourPillar: { stem: '庚', branch: '午' },
+    },
+    astroData: sampleAstroData(),
+    tarotCards: [
+      { id: 1, name: '마법사', nameEn: 'The Magician', isReversed: false, keywords: [], interpretation: '', image: '' },
+      { id: 11, name: '정의', nameEn: 'Justice', isReversed: false, keywords: [], interpretation: '', image: '' },
+      { id: 17, name: '별', nameEn: 'The Star', isReversed: true, keywords: [], interpretation: '', image: '' },
+    ],
     language: 'ko',
     currentDate: '2026-06-06',
   };
+}
+
+function sampleAstroData() {
+  return {
+    sunSign: '양자리',
+    sunSignIndex: 0,
+    sunSignElement: 'fire',
+    moonSign: '황소자리',
+    moonSignIndex: 1,
+    moonSignElement: 'earth',
+    ascendant: '쌍둥이자리',
+    ascendantIndex: 2,
+    ascendantElement: 'air',
+    planets: [
+      { planet: 'sun', sign: 0, signName: '양자리', signElement: 'fire', degree: 12.3, house: 10 },
+      { planet: 'moon', sign: 1, signName: '황소자리', signElement: 'earth', degree: 5.2, house: 11 },
+    ],
+    aspects: [{ planet1: 'sun', planet2: 'moon', aspect: 'sextile', orb: 2.1 }],
+    enhancedAspects: [{ planet1: 'sun', planet2: 'moon', aspect: 'sextile', orb: 2.1, applying: true }],
+    dignities: { sun: { dignity: 'exaltation', score: 4 } },
+    patterns: [{ name: 'bucket', planets: ['sun', 'moon'] }],
+    calculationSource: 'server_calculateAstrology',
+  };
+}
+
+function premium_prompt_uses_computed_source_contract_and_full_astro_data() {
+  const prompt = phasePrompts().buildPhase1Prompt({
+    ...sampleUserData(),
+    sajuData: {
+      dayPillar: { stem: '甲', branch: '子' },
+      monthPillar: { stem: '丙', branch: '寅' },
+      daeun: { currentDaeun: { stem: '戊', branch: '辰' } },
+      sewoon: { year: 2026, stem: '丙', branch: '午' },
+    },
+    astroData: sampleAstroData(),
+  });
+  const combined = `${prompt.system}\n${prompt.user}`;
+
+  assert.match(combined, /계산_원천_계약/);
+  assert.match(combined, /모델 내부에서 사주 기둥, 별자리, 하우스, 각도, 품위, 대운, 세운, 월운을 다시 계산하지 마십시오/);
+  assert.match(combined, /server_calculateAstrology/);
+  assert.match(combined, /enhancedAspects/);
+  assert.match(combined, /dignities/);
+  assert.match(combined, /patterns/);
+  assert.match(combined, /signName/);
 }
 
 function validPhaseOnePayload() {
   return {
     summary: {
       title: '전환 전 점검',
-      content: '지금은 기준을 정리해 움직임을 작게 시작할 시점입니다.',
+      content: '이직을 지금 바로 크게 확정하기보다, 2026-06 안에 지원 직무 2개와 보류 조건 2개를 먼저 좁혀야 합니다. 사주 앵커는 일간 甲, 월주 丙寅, 일주 甲子이고 점성술 앵커는 태양 양자리, 달 황소자리, 상승궁 쌍둥이자리입니다. 타로 앵커는 마법사 정방향, 정의 정방향, 별 역방향이며, 이 신호는 작은 실행 뒤 반응을 비교하라고 말합니다. 지금 필요한 것은 감정 확신이 아니라 실제 회신률과 면접 가능성이라는 증거입니다. KASI와 JPL은 계산 원천 검증 전용이고 계산 원천은 해석 권위가 아님을 밝힙니다. Waite와 Tetrabiblos는 검토된 해석 맥락 후보이며 원문을 복사하지 않습니다. 타로 이미지 권리와 의미 근거는 분리해 다룹니다. 그래서 이번 리포트의 핵심은 퇴사 결심을 크게 부풀리는 것이 아니라, 현재 회사에 남을 조건과 나갈 조건을 문장으로 분리한 뒤 실제 시장 반응을 확인하는 것입니다.',
       trust_score: 4,
-      trust_reason: '사주와 카드 신호가 같은 방향을 가리킵니다.',
+      trust_reason: '일간 甲, 태양 양자리, 마법사 정방향 근거가 모두 큰 사직보다 작은 검증을 먼저 요구합니다. 특히 기준일 이후 7일 안에 회신률을 비교해야 감정이 아니라 증거로 판단할 수 있습니다.',
     },
     traits: [{
       type: 'saju',
       name: '정리형',
-      description: '결정을 내리기 전에 기준을 좁히는 힘이 강합니다.',
+      description: '일간 甲과 월주 丙寅 구조상 결정을 내리기 전에 기준을 좁히는 힘이 강하지만, 기준이 많아지면 실행이 늦어지는 패턴도 함께 커집니다. 좋은 선택지를 고르는 능력은 있지만, 선택지를 비교하는 시간이 길어지면 결국 가장 중요한 타이밍을 놓치기 쉽습니다.',
       grade: 'A',
     }],
     core_analysis: {
       lacking_elements: {
         elements: '목',
         remedy: '작은 실행',
-        description: '시작 에너지를 의식적으로 보강해야 합니다.',
+        description: '목 기운은 새 출발과 확장성을 뜻하므로, 부족할 때는 이력서 수정 같은 준비만 반복하고 실제 지원을 미루기 쉽습니다. 이번에는 48시간 안에 한 곳에 먼저 보내는 행동으로 보강해야 합니다. 지원 후에는 답장이 왔는지, 면접 가능성이 열렸는지, 조건이 현재 회사보다 나은지 세 가지 지표만 기록하십시오. 이 세 지표가 없으면 이직 운을 더 해석해도 판단은 선명해지지 않습니다.',
       },
       abundant_elements: {
         elements: '토',
         usage: '현실 점검',
-        description: '안정성을 만드는 힘이 강합니다.',
+        description: '토 기운은 현실 점검과 안정성을 만들지만 과하면 손실 계산만 반복합니다. 장점은 체크리스트로 쓰고, 단점은 2026-06-13 review date를 정해 멈추는 방식으로 제어해야 합니다. 이 날짜까지 새 정보가 없으면 더 고민하지 말고 현재 직장의 협상 카드, 이직 지원, 보류 중 하나로 분류해야 합니다. 계속 생각만 늘리는 것은 안정이 아니라 판단 회피입니다.',
+      },
+    },
+  };
+}
+
+function compactButEvidencePhaseOnePayload() {
+  return {
+    summary: {
+      title: '근거는 있으나 짧은 리포트',
+      content: '사주 일간과 타로 카드가 모두 작은 실행을 먼저 보라고 합니다. 2026-06 안에 회신률을 비교하세요.',
+      trust_score: 4,
+      trust_reason: '사주 일간과 타로 카드 근거가 있습니다.',
+    },
+    traits: [{
+      type: 'saju',
+      name: '검증형',
+      description: '사주 기준으로 실행 전 확인이 필요합니다.',
+      grade: 'A',
+    }],
+    core_analysis: {
+      lacking_elements: {
+        elements: '목',
+        remedy: '작은 실행',
+        description: '사주 목 기운 보완을 위해 작은 실행이 필요합니다.',
+      },
+      abundant_elements: {
+        elements: '토',
+        usage: '현실 점검',
+        description: '사주 토 기운이 강해 현실 점검이 중요합니다.',
+      },
+    },
+  };
+}
+
+function longButLowDensityPhaseOnePayload() {
+  const paddedContent = Array.from({ length: 14 }, () => (
+    '사주 일간은 현재 구조를 설명합니다. 사주 월지는 생활 리듬을 설명합니다. 타로 카드는 현재 심리를 설명합니다.'
+  )).join(' ');
+
+  return {
+    summary: {
+      title: '길지만 밀도가 낮은 리포트',
+      content: paddedContent,
+      trust_score: 4,
+      trust_reason: '사주 일간과 사주 월지와 타로 카드가 함께 언급됩니다.',
+    },
+    traits: [{
+      type: 'saju',
+      name: '구조형',
+      description: '사주 일간과 월지가 반복적으로 언급됩니다.',
+      grade: 'A',
+    }],
+    core_analysis: {
+      lacking_elements: {
+        elements: '목',
+        remedy: '관찰',
+        description: '사주 일간과 월지가 현재 구조를 설명합니다. 타로 카드는 현재 심리를 설명합니다.',
+      },
+      abundant_elements: {
+        elements: '토',
+        usage: '정리',
+        description: '사주 일간과 월지가 현재 구조를 설명합니다. 타로 카드는 현재 심리를 설명합니다.',
+      },
+    },
+  };
+}
+
+function thinPhaseOnePayload() {
+  return {
+    summary: {
+      title: '좋은 흐름',
+      content: '긍정적인 마음으로 자신을 믿으세요.',
+      trust_score: 4,
+      trust_reason: '좋은 흐름입니다.',
+    },
+    traits: [{
+      type: 'saju',
+      name: '좋은 사람',
+      description: '좋은 선택을 할 수 있습니다.',
+      grade: 'A',
+    }],
+    core_analysis: {
+      lacking_elements: {
+        elements: '목',
+        remedy: '휴식',
+        description: '균형이 필요합니다.',
+      },
+      abundant_elements: {
+        elements: '토',
+        usage: '안정',
+        description: '조화와 균형이 중요합니다.',
       },
     },
   };
@@ -659,6 +820,51 @@ async function premium_generation_sends_response_schema_and_retries_invalid_payl
     globalThis.fetch = originalFetch;
   }
 
+  const compactRetryBodies: string[] = [];
+  globalThis.fetch = async (_input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    compactRetryBodies.push(typeof init?.body === 'string' ? init.body : '');
+    return buildGoogleResponse(compactButEvidencePhaseOnePayload());
+  };
+
+  try {
+    const result = await premiumService().generateSinglePhase(1, sampleUserData(), null, 'test-key');
+    assert.equal(result.success, false);
+    assert.match(result.error ?? '', /too thin|900 chars/i);
+    assert.match(compactRetryBodies[1] ?? '', /QUALITY_RETRY/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  const lowDensityRetryBodies: string[] = [];
+  globalThis.fetch = async (_input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    lowDensityRetryBodies.push(typeof init?.body === 'string' ? init.body : '');
+    return buildGoogleResponse(longButLowDensityPhaseOnePayload());
+  };
+
+  try {
+    const result = await premiumService().generateSinglePhase(1, sampleUserData(), null, 'test-key');
+    assert.equal(result.success, false);
+    assert.match(result.error ?? '', /insufficient evidence-action density/i);
+    assert.match(lowDensityRetryBodies[1] ?? '', /QUALITY_RETRY/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  const thinRetryBodies: string[] = [];
+  globalThis.fetch = async (_input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    thinRetryBodies.push(typeof init?.body === 'string' ? init.body : '');
+    return buildGoogleResponse(thinPhaseOnePayload());
+  };
+
+  try {
+    const result = await premiumService().generateSinglePhase(1, sampleUserData(), null, 'test-key');
+    assert.equal(result.success, false);
+    assert.match(result.error ?? '', /quality check|generic wording|too thin/i);
+    assert.match(thinRetryBodies[1] ?? '', /QUALITY_RETRY/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
   globalThis.fetch = async (): Promise<Response> => buildGoogleResponse({ summary: {} });
 
   try {
@@ -672,6 +878,7 @@ async function premium_generation_sends_response_schema_and_retries_invalid_payl
 
 const assertions: Array<{ name: string; run: SchemaAssertion }> = [
   { name: 'schema_accepts_valid_minimal_phase_payloads', run: schema_accepts_valid_minimal_phase_payloads },
+  { name: 'premium_prompt_uses_computed_source_contract_and_full_astro_data', run: premium_prompt_uses_computed_source_contract_and_full_astro_data },
   { name: 'schema_rejects_invalid_phase_number', run: schema_rejects_invalid_phase_number },
   { name: 'schema_rejects_past_phase5_dates_for_current_date_2026_06_06', run: schema_rejects_past_phase5_dates_for_current_date_2026_06_06 },
   { name: 'schema_rejects_localized_past_phase5_month_for_current_date_2026_06_06', run: schema_rejects_localized_past_phase5_month_for_current_date_2026_06_06 },
@@ -688,8 +895,9 @@ const assertions: Array<{ name: string; run: SchemaAssertion }> = [
 async function run() {
   const restoreLoader = registerTypeScriptLoader();
   try {
-    phaseSchemaApi = require('../src/lib/ai/premium-report-schemas.ts');
-    premiumServiceApi = require('../src/lib/ai/premium-reading-service.ts');
+    phaseSchemaApi = localRequire('../src/lib/ai/premium-report-schemas.ts');
+    premiumServiceApi = localRequire('../src/lib/ai/premium-reading-service.ts');
+    phasePromptApi = localRequire('../src/lib/ai/phase-prompts.ts');
 
     const results: AssertionResult[] = [];
     for (const assertion of assertions) {

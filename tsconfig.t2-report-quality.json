@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": [
+    "scripts/extract-report-baseline.ts",
+    "scripts/report-baseline/**/*.ts",
+    "scripts/report-test-data/**/*.ts",
+    "scripts/t2-report-quality-payloads.ts",
+    "scripts/verify-t2-report-quality-system.ts",
+    "src/lib/ai/premium-grounding.ts",
+    "src/lib/ai/premium-reading-service.ts",
+    "src/lib/ai/phase-prompts.ts",
+    "src/lib/domain/**/*.ts"
+  ]
+}

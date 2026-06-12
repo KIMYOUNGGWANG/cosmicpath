@@ -95,13 +95,13 @@ export function buildPromptDepthRule(
   if (mode === 'premium') {
     if (format === 'inline') {
       return language === 'en'
-        ? 'Premium depth rule: each section may go deep, but every paragraph must remain evidence-led and decision-useful.'
-        : '프리미엄 깊이 규칙: 각 섹션은 깊게 들어가되, 모든 단락은 근거 중심이고 실제 의사결정에 도움이 되어야 합니다.';
+        ? 'Premium depth rule: depth means evidence density, personal relevance, and decision usefulness, not page padding. Every important paragraph must follow Claim -> Evidence -> User-specific implication -> Action/Risk/Timing. Do not repeat the same reassurance, label, or abstract theme to increase length.'
+        : '프리미엄 깊이 규칙: 깊이는 페이지 부풀리기가 아니라 근거 밀도, 개인화, 의사결정 도움입니다. 중요한 단락은 반드시 판정 -> 근거 -> 사용자/질문에 대한 함의 -> 행동/리스크/타이밍 순서로 작성하세요. 분량을 늘리기 위해 같은 위로, 라벨, 추상 주제를 반복하지 마세요.';
     }
 
     return language === 'en'
-      ? '# Premium Depth Rule\n- Premium outputs may go deeper section by section, but every section must still cite evidence and stay decision-useful.'
-      : '# 프리미엄 깊이 규칙\n- 프리미엄 출력은 더 깊게 들어갈 수 있지만, 모든 섹션은 근거 인용과 실제 의사결정 도움을 유지해야 합니다.';
+      ? '# Premium Depth Rule\n- Premium depth is evidence density, personal relevance, and decision usefulness, not page padding.\n- Every paragraph must connect one source signal to the user/question and one concrete implication, timing boundary, risk, or next action.\n- Do not repeat the same reassurance, label, or abstract theme to increase length.'
+      : '# 프리미엄 깊이 규칙\n- 프리미엄의 깊이는 페이지 부풀리기가 아니라 근거 밀도, 개인화, 의사결정 도움입니다.\n- 모든 단락은 근거 신호 1개를 사용자/질문과 연결하고, 구체적 함의·타이밍 경계·리스크·다음 행동 중 하나를 남겨야 합니다.\n- 분량을 늘리기 위해 같은 위로, 같은 라벨, 추상 주제를 반복하지 마세요.';
   }
 
   if (mode === 'free-core') {
