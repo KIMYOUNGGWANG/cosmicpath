@@ -27,7 +27,7 @@ export function QuotaExceededPanel(props: Pick<ResultErrorPanelProps, 'language'
         <span className="text-3xl">🔒</span>
       </div>
       <h3 className="mb-3 text-xl font-bold text-white font-cinzel">
-        {props.language === 'en' ? "Today's Free Reading Used" : '오늘의 무료 사주를 이미 사용했습니다'}
+        {props.language === 'en' ? "Today's Free Decision Note Used" : '오늘의 무료 Decision Note를 이미 사용했습니다'}
       </h3>
       <p className="mb-6 text-sm font-light leading-relaxed text-white/60">{message}</p>
       {hoursLeft > 0 && (
@@ -36,14 +36,14 @@ export function QuotaExceededPanel(props: Pick<ResultErrorPanelProps, 'language'
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D4AF37]/60 opacity-75" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[#D4AF37]" />
           </span>
-          {props.language === 'en' ? `Next free reading in ~${hoursLeft}h` : `다음 무료 리딩까지 약 ${hoursLeft}시간`}
+          {props.language === 'en' ? `Next free note in ~${hoursLeft}h` : `다음 무료 노트까지 약 ${hoursLeft}시간`}
         </div>
       )}
       <button
         onClick={() => { void props.onUnlock(); }}
         className="w-full rounded-2xl bg-gradient-to-r from-[#D4AF37] via-[#f0c35c] to-[#d88b16] py-4 font-bold text-black shadow-lg shadow-[#D4AF37]/20 transition-all hover:shadow-[#D4AF37]/40 hover:-translate-y-0.5 cursor-pointer"
       >
-        {props.language === 'en' ? 'Unlock Detailed CosmicPath Reading' : '자세한 3단분석 리포트 열기'}
+        {props.language === 'en' ? 'Unlock Detailed 3-Layer Decision Report' : '상세 3단 판정 리포트 열기'}
       </button>
       <p className="mt-3 text-xs text-white/30">
         {props.language === 'en'
@@ -94,7 +94,7 @@ export function InterruptedResultPanel(props: ResultErrorPanelProps) {
               className="btn-primary flex items-center justify-center gap-2 px-8 py-3 text-sm font-medium uppercase tracking-widest transition-all hover:brightness-110"
             >
               <RefreshCw size={16} />
-              {props.language === 'en' ? 'Retry Reading' : '리딩 다시 시도하기'}
+              {props.language === 'en' ? 'Retry Note' : '노트 다시 시도하기'}
             </button>
             <button
               onClick={props.onReturnToInput}

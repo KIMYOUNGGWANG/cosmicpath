@@ -16,13 +16,13 @@ export function HeroSection({ onStart, language }: HeroSectionProps) {
     const content = {
         ko: {
             headline: "내 2025년, 어떤 흐름일까?",
-            subheadline: "사주와 별자리가 짚어주는 가장 정확한 타이밍",
+            subheadline: "사주와 별자리가 짚어주는 중요한 선택 타이밍",
             label: "생년월일 입력",
             cta: "무료로 확인하기"
         },
         en: {
-            headline: "Your 2025 is already written",
-            subheadline: "The movement of the stars tells your destiny",
+            headline: "Your 2025 timing, clarified",
+            subheadline: "Saju and astrology signals for clearer next decisions",
             label: "Enter Birthdate",
             cta: "Check for Free"
         }

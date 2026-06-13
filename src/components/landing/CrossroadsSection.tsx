@@ -34,7 +34,7 @@ const STAR_DATA = [
 export function CrossroadsSection() {
     // Dynamic prices fetched from Stripe
     const [dynamicPrice, setDynamicPrice] = useState<string>('');
-    const [originalPrice, setOriginalPrice] = useState<string>('$29.99');
+    const [originalPrice, setOriginalPrice] = useState<string>('');
 
     useEffect(() => {
         const fetchPrice = async () => {
@@ -100,7 +100,7 @@ export function CrossroadsSection() {
                         흐름을 읽었다면, <br /> <span className="text-acc-gold">하나만 실행하세요.</span>
                     </h2>
                     <p className="text-moonlight text-base md:text-lg mb-10 md:mb-12 max-w-xl mx-auto font-light">
-                        사주, 점성술, 타로가 같은 방향을 가리키는 지점을 먼저 확인합니다. <br />
+                        첫 판정으로 방향을 좁히고, 사주·점성술·타로는 필요한 근거로만 확인합니다. <br />
                         그다음 오늘 밀어야 할 것과 멈춰야 할 것을 남깁니다.
                     </p>
 
@@ -113,7 +113,7 @@ export function CrossroadsSection() {
                                 <div className="mb-4 inline-flex border border-[#d7c59a]/20 bg-[#d7c59a]/[0.07] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-[#d7c59a]/75">
                                     첫 판정 무료
                                 </div>
-                                <div className="font-cinzel text-xl tracking-[0.16em] md:text-2xl">3단분석 시작</div>
+                                <div className="font-cinzel text-xl tracking-[0.16em] md:text-2xl">Decision Note 시작</div>
                                 <span className="mt-3 block text-sm font-medium text-white/45 transition-colors group-hover:text-moonlight">
                                     {dynamicPrice ? (
                                         <span className="line-through opacity-50 mr-2">{originalPrice}</span>

@@ -11,6 +11,7 @@ import type { PremiumReportData } from './premium-report';
 import { ElementHarmony } from './ElementHarmony';
 import { cn } from '@/lib/utils';
 import { FortuneTimelineChart } from './FortuneTimelineChart';
+import type { SajuResult } from '@/lib/engines/saju';
 
 export function PremiumSectionInterruptionCard({
   language,
@@ -179,8 +180,8 @@ export function FreeFocusSection({
           <p className="max-w-md text-sm leading-relaxed text-white/60">
             {isPremium
               ? isEn
-                ? 'This is the current high-signal reading distilled into a verdict, timing boundary, first action, and risk.'
-                : '지금 흐름에서 가장 신호가 강한 결론을 판정, 타이밍 경계, 첫 행동, 리스크로 압축한 블록입니다.'
+                ? 'This is the current high-signal reading distilled into a decision note, timing boundary, first action, and risk.'
+                : '지금 흐름에서 가장 신호가 강한 내용을 결정 노트, 타이밍 경계, 첫 행동, 리스크로 압축한 블록입니다.'
               : isEn
                 ? 'Free users see the delayed choice, the timing boundary, and the first useful action immediately.'
                 : '무료 결과에서도 미룬 선택, 타이밍 경계, 첫 행동을 바로 볼 수 있게 만들었습니다.'}
@@ -203,10 +204,10 @@ export function FreeFocusSection({
         </div>
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <InsightCard title={isEn ? 'Verdict' : '판정'} icon={Shield} delay={0.28}>
+          <InsightCard title={isEn ? 'Decision Note' : '결정 노트'} icon={Shield} delay={0.28}>
             <p>{freeFocus.action_conclusion}</p>
           </InsightCard>
-          <InsightCard title={isEn ? 'Confidence' : '근거와 확신'} icon={Shield} delay={0.32}>
+          <InsightCard title={isEn ? 'Evidence' : '근거'} icon={Shield} delay={0.32}>
             <p>{confidenceNote}</p>
             <p className="mt-3 text-white/58">{freeFocus.evidence_summary}</p>
           </InsightCard>
@@ -236,7 +237,7 @@ export function CoreAnalysisSection({
   language,
 }: {
   data: NonNullable<PremiumReportData['core_analysis']>;
-  sajuData?: any;
+  sajuData?: SajuResult;
   language: 'ko' | 'en';
 }) {
   const isEn = language === 'en';
@@ -484,7 +485,7 @@ export function PastLifeSection({
     <div className="mt-8 px-4 md:px-0">
       <h3 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-purple-300">
         <span className="text-lg">🌀</span>
-        {isEn ? 'Past Life & Karma' : '전생과 카르마'}
+        {isEn ? 'Symbolic Pattern & Cycle' : '반복 패턴과 과제'}
       </h3>
 
       <div className="space-y-4">

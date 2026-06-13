@@ -56,8 +56,9 @@ test.describe('Next Move Report paywall price lookup', () => {
 
         await openNextMovePaywall(page);
 
-        await expect(page.getByText('$3.99').first()).toBeVisible();
-        await expect(page.getByText('$9.99')).toHaveCount(0);
+        const paymentDialog = page.getByRole('dialog', { name: /Decision Note payment/i });
+        await expect(paymentDialog.getByText('$3.99').first()).toBeVisible();
+        await expect(paymentDialog.getByText('$9.99')).toHaveCount(0);
         await expect(page.getByText(/왜 이 판정인지/).first()).toBeVisible();
         await expect(page.getByText(/연락 타이밍/).first()).toBeVisible();
         await expect(page.getByText(/피해야 할 메시지/).first()).toBeVisible();
@@ -70,11 +71,12 @@ test.describe('Next Move Report paywall price lookup', () => {
 
         await openNextMovePaywall(page);
 
-        await expect(page.getByText(/Stripe 가격 확인 보류/).first()).toBeVisible();
-        await expect(page.getByText(/라이브 Stripe 가격을 확인하지 못해/).first()).toBeVisible();
-        await expect(page.getByRole('button', { name: /결제 일시 중지/ })).toBeDisabled();
-        await expect(page.getByText('$3.99')).toHaveCount(0);
-        await expect(page.getByText('$9.99')).toHaveCount(0);
+        const paymentDialog = page.getByRole('dialog', { name: /Decision Note payment/i });
+        await expect(paymentDialog.getByText(/Stripe 가격 확인 보류/).first()).toBeVisible();
+        await expect(paymentDialog.getByText(/라이브 Stripe 가격을 확인하지 못해/).first()).toBeVisible();
+        await expect(paymentDialog.getByRole('button', { name: /결제 일시 중지/ })).toBeDisabled();
+        await expect(paymentDialog.getByText('$3.99')).toHaveCount(0);
+        await expect(paymentDialog.getByText('$9.99')).toHaveCount(0);
     });
 
     test('paywall pauses checkout when live Stripe price falls back', async ({ page }) => {
@@ -83,10 +85,11 @@ test.describe('Next Move Report paywall price lookup', () => {
 
         await openNextMovePaywall(page);
 
-        await expect(page.getByText(/Stripe 가격 확인 보류/).first()).toBeVisible();
-        await expect(page.getByText(/라이브 Stripe 가격을 확인하지 못해/).first()).toBeVisible();
-        await expect(page.getByRole('button', { name: /결제 일시 중지/ })).toBeDisabled();
-        await expect(page.getByText('$3.99')).toHaveCount(0);
-        await expect(page.getByText('$9.99')).toHaveCount(0);
+        const paymentDialog = page.getByRole('dialog', { name: /Decision Note payment/i });
+        await expect(paymentDialog.getByText(/Stripe 가격 확인 보류/).first()).toBeVisible();
+        await expect(paymentDialog.getByText(/라이브 Stripe 가격을 확인하지 못해/).first()).toBeVisible();
+        await expect(paymentDialog.getByRole('button', { name: /결제 일시 중지/ })).toBeDisabled();
+        await expect(paymentDialog.getByText('$3.99')).toHaveCount(0);
+        await expect(paymentDialog.getByText('$9.99')).toHaveCount(0);
     });
 });

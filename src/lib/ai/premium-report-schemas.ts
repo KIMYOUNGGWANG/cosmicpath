@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import type { PremiumReportPartial } from './phase-prompts';
+import { premiumDateSafetyReasons } from './premium-date-safety';
+import { CONVERGENCE_DIAGNOSIS_LEVELS } from './three-layer-synthesis';
 
 export type PremiumPhaseParseOptions = {
   readonly currentDate?: string;
@@ -19,6 +21,13 @@ const scoreSchema = z.number().min(0).max(100);
 const nonEmptyString = z.string().trim().min(1);
 const isoDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date must be in YYYY-MM-DD format');
 const titledContentSchema = z.object({ title: nonEmptyString, content: nonEmptyString }).strict();
+const convergenceDiagnosisSchema = z.object({
+  level: z.enum(CONVERGENCE_DIAGNOSIS_LEVELS),
+  shared_signal: nonEmptyString,
+  conflict_note: nonEmptyString,
+  decision_rule: nonEmptyString,
+  verdict_modifier: nonEmptyString,
+}).strict();
 
 const areaSchema = z.object({
   title: nonEmptyString,
@@ -182,10 +191,7 @@ export const PremiumPhase8Schema = z.object({
     tarot_insight: nonEmptyString,
     action_priorities: z.array(nonEmptyString).min(1),
     closing_words: nonEmptyString,
-    convergence_diagnosis: z.object({
-      level: z.enum(['all_aligned', 'two_aligned', 'divergent']),
-      verdict_modifier: nonEmptyString,
-    }).strict().optional(),
+    convergence_diagnosis: convergenceDiagnosisSchema,
     behavioral_verdict: nonEmptyString.optional(),
   }).strict(),
 }).strict();
@@ -201,13 +207,12 @@ const PremiumPhaseSchemas: Readonly<Record<number, z.ZodType<PremiumReportPartia
   8: PremiumPhase8Schema,
 };
 
-const isoDateLikePattern = /\b(\d{4}-\d{2}(?:-\d{2})?)\b/g;
-const koreanYearMonthPattern = /(\d{4})년\s*(0?[1-9]|1[0-2])월/g;
-const koreanMonthOnlyPattern = /(?:^|[^\d])((?:0?[1-9])|(?:1[0-2]))월/g;
-const englishMonthYearPattern = /\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})\b/g;
-const englishYearMonthPattern = /\b(\d{4})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\b/g;
-const englishMonthOnlyPattern = /\b(January|February|March|April|May|June|July|August|September|October|November|December)\b/g;
-const unsafeAdvicePattern = /(의료\s*진단|투약|약물|처방|수술|치료\s*중단|치료\s*중지|특정\s*주식|주식\s*(?:매수|매도|추천)|코인\s*(?:매수|매도|추천)|암호화폐|레버리지|풀매수|몰빵|medical\s+diagnosis|stop\s+(?:your\s+)?(?:medication|medicine|treatment)|quit\s+(?:your\s+)?(?:medication|medicine|treatment)|schedule\s+surgery|surgery|medication|specific\s+stock|buy\s+(?:bitcoin|ethereum|crypto|cryptocurrency|stock|stocks?|coin|coins?)|sell\s+(?:bitcoin|ethereum|crypto|cryptocurrency|stock|stocks?|coin|coins?)|bitcoin|ethereum|crypto(?:currency)?|leverage|go\s+all\s+in|all-?in|portfolio\s+allocation|position\s+size|recover\s+investments?)/i;
+const unsafeAdvicePatterns = [
+  /(의료\s*진단|투약|약물|처방|수술|치료\s*중단|치료\s*중지|medical\s+diagnosis|stop\s+(?:your\s+)?(?:medication|medicine|treatment)|quit\s+(?:your\s+)?(?:medication|medicine|treatment)|schedule\s+surgery|surgery|medication)/i,
+  /(특정\s*주식|주식\s*(?:매수|매도|추천)|코인\s*(?:매수|매도|추천)|암호화폐|레버리지|풀매수|몰빵|specific\s+stock|buy\s+(?:bitcoin|ethereum|crypto|cryptocurrency|stock|stocks?|coin|coins?)|sell\s+(?:bitcoin|ethereum|crypto|cryptocurrency|stock|stocks?|coin|coins?)|bitcoin|ethereum|crypto(?:currency)?|leverage|go\s+all\s+in|all-?in|portfolio\s+allocation|position\s+size|recover\s+investments?)/i,
+  /(비자(?:를|을)?\s*(?:신청|연장|갱신|변경|전환|취득|포기)(?:\s*신청)?(?:을|를)?\s*(?:바로\s*|지금\s*)?(?:하세요|하십시오|해라|해야(?:\s*합니다)?)|(?:체류|귀국|출국|입국)(?:을|를)?\s*(?:바로\s*|지금\s*)?(?:하세요|하십시오|해라|해야(?:\s*합니다)?|결정하세요)|(?:서명|소송|고소|서류\s*제출)(?:을|를)?\s*(?:바로\s*|지금\s*)?(?:하세요|하십시오|해라|해야(?:\s*합니다)?)|(?:투자|매수|매도)(?:를|을)?\s*(?:바로\s*|지금\s*)?(?:하세요|하십시오|해라|해야(?:\s*합니다)?)|전문가\s*(?:상담|검토|조언)\s*(?:없이|생략)|변호사\s*(?:없이|생략))/i,
+  /((?:apply\s+for|extend|renew|change)\s+(?:your\s+|a\s+)?(?:visa|status|work\s+permit|study\s+permit|permit|permanent\s+residence|PR)\b|(?:stay|remain)\s+in\s+(?:Canada|Korea|the\s+US|the\s+UK|the\s+United\s+States|the\s+United\s+Kingdom)\b|return\s+to\s+(?:Canada|Korea|the\s+US|the\s+UK|the\s+United\s+States|the\s+United\s+Kingdom|your\s+country|home)\b|invest\s+in\s+(?!yourself|skills|training|education|relationships|health|rest|routine)(?:[A-Z][A-Za-z0-9&.-]+|[A-Z]{2,5}\b|bitcoin|ethereum|crypto|stocks?)|(?:sign|sue|file)\s+(?:the\s+)?(?:contract|lawsuit|claim|papers?|application)|without\s+(?:a\s+)?(?:lawyer|qualified\s+professional|immigration\s+consultant|legal\s+advice|professional\s+advice)|skip\s+qualified\s+advice)/i,
+] as const;
 
 export function getPremiumPhaseSchema(phaseNumber: number): z.ZodType<PremiumReportPartial> {
   const schema = PremiumPhaseSchemas[phaseNumber];
@@ -239,82 +244,15 @@ function enforcePhaseSafety(
     assertNoPastDates(phaseNumber, serialized, options.currentDate);
   }
 
-  if (unsafeAdvicePattern.test(serialized)) {
-    throw new PremiumPhaseValidationError(phaseNumber, 'Forbidden medical or financial instruction marker found.');
+  if (unsafeAdvicePatterns.some((pattern) => pattern.test(serialized))) {
+    throw new PremiumPhaseValidationError(
+      phaseNumber,
+      'Forbidden medical, legal, immigration, or financial instruction marker found.'
+    );
   }
 }
 
 function assertNoPastDates(phaseNumber: number, serialized: string, currentDate: string): void {
-  const currentMonth = currentDate.slice(0, 7);
-  for (const match of serialized.matchAll(isoDateLikePattern)) {
-    const candidate = match[1];
-    const isFullDate = candidate.length === 10;
-    const boundary = isFullDate ? currentDate : currentMonth;
-    if (candidate < boundary) {
-      const label = isFullDate ? 'past date' : 'past month';
-      throw new PremiumPhaseValidationError(phaseNumber, `${label} is before currentDate.`);
-    }
-  }
-
-  for (const match of serialized.matchAll(koreanYearMonthPattern)) {
-    const candidate = `${match[1]}-${match[2].padStart(2, '0')}`;
-    if (candidate < currentMonth) {
-      throw new PremiumPhaseValidationError(phaseNumber, 'past month is before currentDate.');
-    }
-  }
-
-  const withoutKoreanYearMonths = serialized.replace(koreanYearMonthPattern, '');
-  for (const match of withoutKoreanYearMonths.matchAll(koreanMonthOnlyPattern)) {
-    const candidate = `${currentDate.slice(0, 4)}-${match[1].padStart(2, '0')}`;
-    if (candidate < currentMonth) {
-      throw new PremiumPhaseValidationError(phaseNumber, 'past month is before currentDate.');
-    }
-  }
-
-  let withoutEnglishYearMonths = serialized;
-  for (const match of serialized.matchAll(englishMonthYearPattern)) {
-    const candidate = `${match[2]}-${englishMonthToNumber(match[1])}`;
-    if (candidate < currentMonth) {
-      throw new PremiumPhaseValidationError(phaseNumber, 'past month is before currentDate.');
-    }
-  }
-  withoutEnglishYearMonths = withoutEnglishYearMonths.replace(englishMonthYearPattern, '');
-
-  for (const match of serialized.matchAll(englishYearMonthPattern)) {
-    const candidate = `${match[1]}-${englishMonthToNumber(match[2])}`;
-    if (candidate < currentMonth) {
-      throw new PremiumPhaseValidationError(phaseNumber, 'past month is before currentDate.');
-    }
-  }
-  withoutEnglishYearMonths = withoutEnglishYearMonths.replace(englishYearMonthPattern, '');
-
-  for (const match of withoutEnglishYearMonths.matchAll(englishMonthOnlyPattern)) {
-    const candidate = `${currentDate.slice(0, 4)}-${englishMonthToNumber(match[1])}`;
-    if (candidate < currentMonth) {
-      throw new PremiumPhaseValidationError(phaseNumber, 'past month is before currentDate.');
-    }
-  }
-}
-
-function englishMonthToNumber(month: string): string {
-  const monthNumbers: Record<string, string> = {
-    January: '01',
-    February: '02',
-    March: '03',
-    April: '04',
-    May: '05',
-    June: '06',
-    July: '07',
-    August: '08',
-    September: '09',
-    October: '10',
-    November: '11',
-    December: '12',
-  };
-
-  const result = monthNumbers[month];
-  if (!result) {
-    throw new Error(`Unsupported English month name: ${month}`);
-  }
-  return result;
+  const reason = premiumDateSafetyReasons(serialized, currentDate)[0];
+  if (reason) throw new PremiumPhaseValidationError(phaseNumber, reason);
 }

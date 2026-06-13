@@ -4,6 +4,8 @@ import { AlertTriangle, ListChecks, Search, ShieldCheck, TrendingUp } from 'luci
 export interface PaywallCopyInput {
     readonly isEnglish: boolean;
     readonly isRelationshipContactTiming: boolean;
+    readonly isPriceBlocked?: boolean;
+    readonly priceLabel?: string | null;
 }
 
 export interface PaywallIntroCopy {
@@ -26,21 +28,39 @@ export interface PaywallLockedSection {
 export function getPaywallIntroCopy({
     isEnglish,
     isRelationshipContactTiming,
+    isPriceBlocked = false,
+    priceLabel,
 }: PaywallCopyInput): PaywallIntroCopy {
+    const pricePrefix = priceLabel ? ` ${priceLabel}` : '';
+    const relationshipUnlockLine = isPriceBlocked
+        ? (isEnglish
+            ? 'Stripe confirmation is paused, so checkout will show the exact one-time price after the product is available.'
+            : 'Stripe 가격 확인이 보류되어, 상품 확인 후 정확한 one-time 금액을 다시 표시합니다.')
+        : (isEnglish
+            ? `One-time${pricePrefix} opens why it leaned that way, when to move, and which message can backfire.`
+            : `one-time${pricePrefix}로 왜 그런지, 언제 움직일지, 어떤 말은 피해야 하는지 확인하세요.`);
+    const decisionUnlockLine = isPriceBlocked
+        ? (isEnglish
+            ? 'Stripe confirmation is paused, so checkout will show the exact one-time price after the product is available.'
+            : 'Stripe 가격 확인이 보류되어, 상품 확인 후 정확한 one-time 금액을 다시 표시합니다.')
+        : (isEnglish
+            ? `One-time${pricePrefix} opens why it was chosen, when to act, what to avoid, and the safest next line or step.`
+            : `one-time${pricePrefix}로 왜 그런지, 언제 움직일지, 무엇을 피할지, 어떤 말이나 행동부터 할지 확인하세요.`);
+
     if (isRelationshipContactTiming) {
         return isEnglish
             ? {
                 title: 'Open why, contact timing, and what to avoid',
                 bodyLines: [
                     'The free brief showed the first contact verdict.',
-                    'Unlock why it leaned that way, when to move, and which message can backfire.',
+                    relationshipUnlockLine,
                 ],
             }
             : {
                 title: '왜 이 판정인지, 연락 타이밍, 피해야 할 메시지를 여세요',
                 bodyLines: [
                     '무료 브리프에서 연락 판정은 확인했습니다.',
-                    '이제 왜 그런지, 언제 움직일지, 어떤 말은 피해야 하는지 확인하세요.',
+                    relationshipUnlockLine,
                 ],
             };
     }
@@ -50,14 +70,14 @@ export function getPaywallIntroCopy({
             title: 'Open the evidence, timing, and safest next action',
             bodyLines: [
                 'The free brief showed the verdict.',
-                'Unlock why it was chosen, when to act, what to avoid, and the safest next line or step.',
+                decisionUnlockLine,
             ],
         }
         : {
             title: '근거·타이밍·안전한 다음 행동을 여세요',
             bodyLines: [
                 '무료 브리프에서 판정은 확인했습니다.',
-                '이제 왜 그런지, 언제 움직일지, 무엇을 피할지, 어떤 말이나 행동부터 할지 확인하세요.',
+                decisionUnlockLine,
             ],
         };
 }

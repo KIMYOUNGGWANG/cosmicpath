@@ -157,16 +157,16 @@ type NextMoveReportSource = "next_move_report_mvp_v1";
 
 - Entry flow: `/start?entry=next_move_report_mvp_v1`
 - Free result contract: unchanged existing `/api/reading` free decision brief
-- Premium unlock label: `Next Move Report Full Report`
-- Fallback price label: `$9.00`
-- Fallback Stripe amount: `900` cents USD
-- Stripe product env: `NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID` and `NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID_TEST` must point to a one-time USD 9 reading product. If a configured live Stripe product returns any other amount, `/api/payment/price` must block the response instead of silently showing `$9.00`.
-- Saju, tarot, astrology, and birth-data inputs are optional evidence and precision layers; they are not the public product title.
+- Premium unlock label: `Detailed 3-Layer Decision Report`
+- Fallback price label: `$3.99`
+- Fallback Stripe amount: `399` cents USD
+- Stripe product env: `NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID` and `NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID_TEST` must point to a one-time USD 3.99 reading product. If a configured live Stripe product returns any other amount, `/api/payment/price` must block the response instead of silently showing `$3.99`.
+- Saju = structure, astrology = timing, tarot = immediate signal; birth-data inputs improve precision and calibration but are not the public product title.
 
 **Compatibility note**
 
 - The prior `career_timing_wedge_399` experiment and its `$3.99` fallback remain historical experiment references only.
-- The active MVP fallback offer for `next_move_report_mvp_v1` is `$9.00`, even while older docs, screenshots, or analytics notes may still mention CosmicPath decision timing wording or the earlier $3.99 wedge.
+- The active MVP fallback offer for `next_move_report_mvp_v1` is `$3.99`; older docs, screenshots, or analytics notes may still mention CosmicPath decision timing wording or the prior $9 experiment only as historical context.
 - This change is business-copy and fallback-config only; `/api/payment`, `/api/payment/price`, and `/api/reading` response shapes remain unchanged.
 
 ---

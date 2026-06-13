@@ -21,11 +21,11 @@ export function StickyCTA({ price, originalPrice, onUnlock, language, isSuppress
         hasConcretePrice &&
         Boolean(originalPrice?.trim()) &&
         originalPrice.trim() !== price.trim();
-    const headline = isEn ? 'See the full reading' : '전체 해석 보기';
+    const headline = isEn ? 'Open the detailed report' : '상세 리포트 열기';
     const supportingCopy = isEn
         ? 'See the reasons, timing, and next steps behind your free result.'
         : '무료 결과 뒤에 있는 이유, 타이밍, 다음 행동까지 이어서 봅니다.';
-    const buttonLabel = isEn ? 'See Full Reading' : '전체 해석 보기';
+    const buttonLabel = isEn ? 'Open Detailed Report' : '상세 리포트 열기';
 
     useEffect(() => {
         const handleScroll = () => {
@@ -58,7 +58,7 @@ export function StickyCTA({ price, originalPrice, onUnlock, language, isSuppress
                                         <div className="min-w-0">
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <span className="text-[10px] uppercase tracking-[0.24em] text-acc-gold/80">
-                                                    {isEn ? 'Full Reading' : '전체 해석'}
+                                                    {isEn ? 'Detailed Report' : '상세 리포트'}
                                                 </span>
                                                 <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-white/45">
                                                     {isEn ? 'Premium Path' : '프리미엄 경로'}
@@ -90,7 +90,7 @@ export function StickyCTA({ price, originalPrice, onUnlock, language, isSuppress
                                     <div className="mt-3 flex items-center justify-between gap-3">
                                         <ScarcityTimer language={language} compact />
                                         <div className="text-xs text-white/42 md:hidden">
-                                            {isEn ? 'Full Reading' : '전체 해석'}
+                                            {isEn ? 'Detailed Report' : '상세 리포트'}
                                         </div>
                                     </div>
 

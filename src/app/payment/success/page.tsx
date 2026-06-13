@@ -175,30 +175,30 @@ function PaymentSuccessContent() {
                             {isNextMovePayment ? (
                                 isEnglish ? (
                                     <>
-                                        Your Detailed Decision Note is opening now.<br />
+                                        Your one-time $3.99 Detailed 3-Layer Decision Report is opening now.<br />
                                         We will move you back to the result in a moment.
                                     </>
                                 ) : (
                                     <>
-                                        자세한 결정 정리를 여는 중입니다.<br />
+                                        상세 3단 판정 리포트를 여는 중입니다.<br />
                                         곧 결과로 돌아갑니다.
                                     </>
                                 )
                             ) : isDecisionTimingPayment ? (
                                 isEnglish ? (
                                     <>
-                                        Your detailed decision timing note is opening now.<br />
+                                        Your one-time $3.99 Detailed 3-Layer Decision Report is opening now.<br />
                                         We will move you back to the result in a moment.
                                     </>
                                 ) : (
                                     <>
-                                        자세한 결정 타이밍 노트를 여는 중입니다.<br />
+                                        상세 3단 판정 리포트를 여는 중입니다.<br />
                                         곧 결과로 돌아갑니다.
                                     </>
                                 )
                             ) : isEnglish ? (
                                 <>
-                                    Your Korean saju decision reading is being prepared now.<br />
+                                    Your CosmicPath Decision Note is being prepared now.<br />
                                     We will move you back to the result in a moment.
                                 </>
                             ) : (

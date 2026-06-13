@@ -1,4 +1,5 @@
 import type { PremiumReportPartial, UserData } from './phase-prompts';
+import { commercialToneReasons } from './premium-commercial-tone';
 import { buildSourceBoundaryAnchors, sourceBoundaryReasons } from './premium-source-boundaries';
 
 export type GroundingFamily = 'saju' | 'astrology' | 'tarot' | 'sourceBoundary' | 'unknownTimeCaveat';
@@ -72,6 +73,7 @@ export function scorePremiumGrounding(
   const anchors = buildPremiumGroundingAnchors(userData);
   const matchedAnchors = anchors.filter((anchor) => containsAnchor(joined, anchor));
   const reasons = [
+    ...commercialToneReasons(joined),
     ...genericReasons(joined),
     ...sourceBoundaryReasons(joined),
     ...minimumReasons(anchors, matchedAnchors, phaseNumber),

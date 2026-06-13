@@ -131,8 +131,8 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
                         type: 'button',
                         icon: PenLine,
                         iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
-                        label: isEn ? 'CosmicPath intake' : 'CosmicPath 3단분석',
-                        subLabel: isEn ? 'Start one 3-layer reading' : '질문 하나 접수하기',
+                        label: isEn ? 'CosmicPath Decision Note' : 'CosmicPath Decision Note',
+                        subLabel: isEn ? 'Start one first verdict' : '질문 하나, 첫 판정부터',
                         onClick: () => {
                             window.location.href = decisionStartHref;
                         },

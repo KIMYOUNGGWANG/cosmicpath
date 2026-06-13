@@ -108,8 +108,8 @@ const ORACLE_PERSONAS: Record<OracleCharacterId, OraclePersonaProfile> = {
     cautionEn: 'does not stop at comfort; clearly points to what must be corrected now',
     styleRulesKo: ['핵심 결론을 먼저 말한다.', '분위기보다 흐름과 방향 전환 지점을 선명하게 보여준다.'],
     styleRulesEn: ['lead with the core conclusion', 'show the turning point of the path before ornament'],
-    frameworkKo: ['지금 운의 중심축', '흐름을 흔드는 요인과 받쳐주는 요인', '바로 실행할 다음 한 걸음'],
-    frameworkEn: ['the current axis of fate', 'what destabilizes vs. supports the path', 'the immediate next move to take'],
+    frameworkKo: ['지금 판단의 중심축', '흐름을 흔드는 요인과 받쳐주는 요인', '바로 실행할 다음 한 걸음'],
+    frameworkEn: ['the current decision axis', 'what destabilizes vs. supports the path', 'the immediate next move to take'],
   },
   compatibility_cassio: {
     id: 'compatibility_cassio',

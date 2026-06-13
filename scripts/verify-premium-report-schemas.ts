@@ -123,11 +123,15 @@ type PremiumServiceApi = {
 
 type PhasePromptApi = {
   readonly buildPhase1Prompt: (userData: Record<string, unknown>) => { readonly system: string; readonly user: string };
+  readonly buildPhase4Prompt: (userData: Record<string, unknown>) => { readonly system: string; readonly user: string };
+  readonly buildPhase5BPrompt: (userData: Record<string, unknown>) => { readonly system: string; readonly user: string };
 };
 
 let phaseSchemaApi: PhaseSchemaApi | null = null;
 let premiumServiceApi: PremiumServiceApi | null = null;
 let phasePromptApi: PhasePromptApi | null = null;
+
+const phaseSixBlockedInstructionMarker = /처방|투약|약물|수술|치료\s*중단|특정\s*주식|코인|암호화폐|레버리지|몰빵|medication|surgery|specific\s+stock|crypto(?:currency)?|leverage|all-?in|portfolio\s+allocation|position\s+size/i;
 
 function schemas(): PhaseSchemaApi {
   if (!phaseSchemaApi) {
@@ -164,6 +168,16 @@ async function runAssertion(name: string, assertion: SchemaAssertion): Promise<A
     console.error(`[FAIL] ${name}: ${message}`);
     return { name, passed: false, message };
   }
+}
+
+function validConvergenceDiagnosis() {
+  return {
+    level: 'two_aligned',
+    shared_signal: '사주 구조와 점성 타이밍은 작은 검증을 지지하고, 타로도 즉각 행동보다 짧은 확인을 요구합니다.',
+    conflict_note: '타로 신호는 감정 과열 가능성을 남기므로 행동 크기를 줄여야 합니다.',
+    decision_rule: '사주는 구조, 점성은 시점, 타로는 즉각 신호로 읽고 세 원천이 허용하는 범위에서만 움직입니다.',
+    verdict_modifier: '두 원천은 정렬되고 한 원천은 조건부라서 작은 실행과 재검토 경계가 필요합니다.',
+  };
 }
 
 function schema_accepts_valid_minimal_phase_payloads() {
@@ -316,6 +330,7 @@ function schema_accepts_valid_minimal_phase_payloads() {
         saju_foundation: '일간-일지 정합성으로 요약됩니다.',
         astro_support: '점성의 시점은 방어를 강화합니다.',
         tarot_insight: '카드 흐름은 현재 선택을 조용히 지지합니다.',
+        convergence_diagnosis: validConvergenceDiagnosis(),
         action_priorities: ['우선순위 조정', '리스크 축소'],
         closing_words: '당장의 정리에서 안정이 옵니다.',
       },
@@ -539,10 +554,54 @@ function validPhaseEightPayload() {
       saju_foundation: '일간-일지 정합성으로 요약됩니다.',
       astro_support: '점성의 시점은 방어를 강화합니다.',
       tarot_insight: '카드 흐름은 현재 선택을 조용히 지지합니다.',
+      convergence_diagnosis: validConvergenceDiagnosis(),
       action_priorities: ['우선순위 조정', '리스크 축소'],
       closing_words: '당장의 정리에서 안정이 옵니다.',
     },
   };
+}
+
+function premium_prompts_use_three_layer_synthesis_contract() {
+  const phaseOnePrompt = phasePrompts().buildPhase1Prompt(sampleUserData()).system;
+  const phaseEightPrompt = phasePrompts().buildPhase5BPrompt(sampleUserData()).system;
+  const combined = `${phaseOnePrompt}\n${phaseEightPrompt}`;
+  const sourcePriorityPattern = new RegExp([
+    String.raw`(?:사주|Saju)\s*\(\d+\s*%\)`,
+    String.raw`(?:점성술|Astrology)\s*\(\d+\s*%\)`,
+    String.raw`(?:타로|Tarot)\s*\(\d+\s*%\)`,
+    ['ASTRO', 'FIRST'].join('[-_ ]?'),
+  ].join('|'), 'i');
+
+  assert.match(combined, /3단 합성 규칙|Three-Layer Synthesis Rule/);
+  assert.match(phaseEightPrompt, /shared_signal/);
+  assert.match(phaseEightPrompt, /conflict_note/);
+  assert.match(phaseEightPrompt, /decision_rule/);
+  assert.doesNotMatch(combined, sourcePriorityPattern);
+}
+
+function phase6_prompt_avoids_output_blocked_instruction_markers() {
+  const prompt = phasePrompts().buildPhase4Prompt({
+    ...sampleUserData(),
+    context: 'kim-vancouver-visa-premium',
+    question: '밴쿠버 비자 만료 전 커리어 판단 창을 어떻게 잡아야 할까요?',
+  });
+
+  assert.doesNotMatch(prompt.system, phaseSixBlockedInstructionMarker);
+  assert.match(prompt.system, /안전 어휘 계약|Safety Language Contract/);
+}
+
+function schema_rejects_phase8_without_convergence_diagnosis() {
+  const phaseEight = validPhaseEightPayload();
+  const finalVerdictWithoutConvergence: Record<string, unknown> = { ...phaseEight.final_verdict };
+  delete finalVerdictWithoutConvergence.convergence_diagnosis;
+
+  assert.throws(
+    () => schemas().parsePremiumPhaseResult(8, {
+      ...phaseEight,
+      final_verdict: finalVerdictWithoutConvergence,
+    }, { currentDate: '2026-06-06' }),
+    /convergence_diagnosis/i
+  );
 }
 
 function schema_rejects_unsafe_phase7_and_phase8_guidance() {
@@ -563,6 +622,73 @@ function schema_rejects_unsafe_phase7_and_phase8_guidance() {
   );
 }
 
+function schema_rejects_direct_legal_and_immigration_instruction_markers() {
+  const unsafePhaseSeven = validPhaseSevenPayload();
+  unsafePhaseSeven.action_plan[0].description = '비자 연장 신청을 바로 하세요. 전문가 상담 없이 체류하세요.';
+
+  assert.throws(
+    () => schemas().parsePremiumPhaseResult(7, unsafePhaseSeven, { currentDate: '2026-06-06' }),
+    /forbidden.*(medical|legal|immigration|financial)/i
+  );
+
+  const unsafePhaseEight = validPhaseEightPayload();
+  unsafePhaseEight.final_verdict.action_priorities = ['Sign the contract and apply for a visa without a lawyer.'];
+
+  assert.throws(
+    () => schemas().parsePremiumPhaseResult(8, unsafePhaseEight, { currentDate: '2026-06-06' }),
+    /forbidden.*(medical|legal|immigration|financial)/i
+  );
+}
+
+function schema_rejects_direct_command_variants_from_reviewer_blocker() {
+  const phaseSevenCommands = [
+    '비자를 연장하세요.',
+    '투자하세요.',
+  ];
+
+  for (const command of phaseSevenCommands) {
+    const unsafePhaseSeven = validPhaseSevenPayload();
+    unsafePhaseSeven.action_plan[0].description = command;
+
+    assert.throws(
+      () => schemas().parsePremiumPhaseResult(7, unsafePhaseSeven, { currentDate: '2026-06-06' }),
+      /forbidden.*(medical|legal|immigration|financial)/i
+    );
+  }
+
+  const phaseEightCommands = [
+    'Stay in Canada.',
+    'Return to Korea.',
+    'Apply for permanent residence.',
+    'Renew your work permit.',
+    'Invest in Tesla.',
+  ];
+
+  for (const command of phaseEightCommands) {
+    const unsafePhaseEight = validPhaseEightPayload();
+    unsafePhaseEight.final_verdict.action_priorities = [command];
+
+    assert.throws(
+      () => schemas().parsePremiumPhaseResult(8, unsafePhaseEight, { currentDate: '2026-06-06' }),
+      /forbidden.*(medical|legal|immigration|financial)/i
+    );
+  }
+}
+
+function schema_allows_immigration_decision_support_boundaries() {
+  const safePhaseSeven = validPhaseSevenPayload();
+  safePhaseSeven.action_plan[0].description = '비자 만료 전 문서와 마감, 전문가 상담 질문을 점검하세요.';
+
+  schemas().parsePremiumPhaseResult(7, safePhaseSeven, { currentDate: '2026-06-06' });
+
+  const safePhaseEight = validPhaseEightPayload();
+  safePhaseEight.final_verdict.action_priorities = [
+    '2026-06-20에 비자 마감 문서, 상담 질문, 리스크 버퍼를 점검하세요.',
+  ];
+
+  schemas().parsePremiumPhaseResult(8, safePhaseEight, { currentDate: '2026-06-06' });
+}
+
 function schema_rejects_english_crypto_and_all_in_phase7_guidance() {
   const unsafePhaseSeven = validPhaseSevenPayload();
   unsafePhaseSeven.action_plan[0].description = 'Buy Bitcoin and go all in today.';
@@ -581,6 +707,13 @@ function schema_rejects_past_phase8_action_priority_dates() {
     () => schemas().parsePremiumPhaseResult(8, unsafePhaseEight, { currentDate: '2026-06-06' }),
     /past date/i
   );
+}
+
+function schema_allows_past_birth_date_when_marked_as_intake_fact() {
+  const payload = validPhaseOnePayload();
+  payload.summary.content = `김영광님(1993-08-02)의 생년월일 입력값은 분석 기준입니다. ${payload.summary.content}`;
+
+  schemas().parsePremiumPhaseResult(1, payload, { currentDate: '2026-06-06' });
 }
 
 function schema_rejects_malformed_phase7_dates() {
@@ -876,9 +1009,67 @@ async function premium_generation_sends_response_schema_and_retries_invalid_payl
   }
 }
 
+async function premium_generation_sanitizes_phase6_safety_retry_prompts() {
+  const originalFetch = globalThis.fetch;
+  const unsafeRetryBodies: string[] = [];
+
+  globalThis.fetch = async (_input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    unsafeRetryBodies.push(typeof init?.body === 'string' ? init.body : '');
+    return buildGoogleResponse({
+      life_areas: {
+        health: {
+          title: '건강',
+          content: '약물 조정과 수술 일정을 바로 결정하라는 조언입니다.',
+        },
+      },
+    });
+  };
+
+  try {
+    const result = await premiumService().generateSinglePhase(6, sampleUserData(), null, 'test-key');
+    assert.equal(result.success, false);
+    assert.match(result.error ?? '', /forbidden.*(medical|financial)/i);
+    assert.match(unsafeRetryBodies[1] ?? '', /QUALITY_RETRY/);
+    assert.match(unsafeRetryBodies[1] ?? '', /SAFETY_RETRY/);
+    assert.match(unsafeRetryBodies[1] ?? '', /visa|immigration|legal/i);
+    assert.match(unsafeRetryBodies[1] ?? '', /document checks|deadline mapping|qualified professionals/i);
+    assert.doesNotMatch(unsafeRetryBodies[1] ?? '', /Forbidden medical.*financial instruction marker found/i);
+    assert.doesNotMatch(unsafeRetryBodies[1] ?? '', phaseSixBlockedInstructionMarker);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+
+  const dateRetryBodies: string[] = [];
+  globalThis.fetch = async (_input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    dateRetryBodies.push(typeof init?.body === 'string' ? init.body : '');
+    return buildGoogleResponse({
+      life_areas: {
+        soulmate: {
+          meeting_period: '2026-05',
+          description: '기준일 전 월을 미래 만남 시점처럼 제시합니다.',
+        },
+      },
+    });
+  };
+
+  try {
+    const result = await premiumService().generateSinglePhase(6, sampleUserData(), null, 'test-key');
+    assert.equal(result.success, false);
+    assert.match(result.error ?? '', /past month|before currentDate/i);
+    assert.match(dateRetryBodies[1] ?? '', /DATE_RETRY/);
+    assert.doesNotMatch(dateRetryBodies[1] ?? '', /past month .*before currentDate/i);
+    assert.doesNotMatch(dateRetryBodies[1] ?? '', phaseSixBlockedInstructionMarker);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
 const assertions: Array<{ name: string; run: SchemaAssertion }> = [
   { name: 'schema_accepts_valid_minimal_phase_payloads', run: schema_accepts_valid_minimal_phase_payloads },
   { name: 'premium_prompt_uses_computed_source_contract_and_full_astro_data', run: premium_prompt_uses_computed_source_contract_and_full_astro_data },
+  { name: 'premium_prompts_use_three_layer_synthesis_contract', run: premium_prompts_use_three_layer_synthesis_contract },
+  { name: 'phase6_prompt_avoids_output_blocked_instruction_markers', run: phase6_prompt_avoids_output_blocked_instruction_markers },
+  { name: 'schema_rejects_phase8_without_convergence_diagnosis', run: schema_rejects_phase8_without_convergence_diagnosis },
   { name: 'schema_rejects_invalid_phase_number', run: schema_rejects_invalid_phase_number },
   { name: 'schema_rejects_past_phase5_dates_for_current_date_2026_06_06', run: schema_rejects_past_phase5_dates_for_current_date_2026_06_06 },
   { name: 'schema_rejects_localized_past_phase5_month_for_current_date_2026_06_06', run: schema_rejects_localized_past_phase5_month_for_current_date_2026_06_06 },
@@ -886,10 +1077,15 @@ const assertions: Array<{ name: string; run: SchemaAssertion }> = [
   { name: 'schema_rejects_direct_medical_and_financial_instruction_markers', run: schema_rejects_direct_medical_and_financial_instruction_markers },
   { name: 'schema_rejects_english_medical_instruction_markers', run: schema_rejects_english_medical_instruction_markers },
   { name: 'schema_rejects_unsafe_phase7_and_phase8_guidance', run: schema_rejects_unsafe_phase7_and_phase8_guidance },
+  { name: 'schema_rejects_direct_legal_and_immigration_instruction_markers', run: schema_rejects_direct_legal_and_immigration_instruction_markers },
+  { name: 'schema_rejects_direct_command_variants_from_reviewer_blocker', run: schema_rejects_direct_command_variants_from_reviewer_blocker },
+  { name: 'schema_allows_immigration_decision_support_boundaries', run: schema_allows_immigration_decision_support_boundaries },
   { name: 'schema_rejects_english_crypto_and_all_in_phase7_guidance', run: schema_rejects_english_crypto_and_all_in_phase7_guidance },
   { name: 'schema_rejects_past_phase8_action_priority_dates', run: schema_rejects_past_phase8_action_priority_dates },
+  { name: 'schema_allows_past_birth_date_when_marked_as_intake_fact', run: schema_allows_past_birth_date_when_marked_as_intake_fact },
   { name: 'schema_rejects_malformed_phase7_dates', run: schema_rejects_malformed_phase7_dates },
   { name: 'premium_generation_sends_response_schema_and_retries_invalid_payload', run: premium_generation_sends_response_schema_and_retries_invalid_payload },
+  { name: 'premium_generation_sanitizes_phase6_safety_retry_prompts', run: premium_generation_sanitizes_phase6_safety_retry_prompts },
 ];
 
 async function run() {

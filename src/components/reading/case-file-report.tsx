@@ -121,6 +121,18 @@ function buildActions(report: PremiumReportData, isEn: boolean): readonly string
     ];
 }
 
+type ConvergenceLevel = NonNullable<NonNullable<PremiumReportData['final_verdict']>['convergence_diagnosis']>['level'];
+
+function getConvergenceLevelLabel(level: ConvergenceLevel, isEn: boolean): string {
+    const labels = {
+        all_aligned: isEn ? 'All aligned' : '세 원천 일치',
+        two_aligned: isEn ? 'Two aligned' : '두 원천 정렬',
+        divergent: isEn ? 'Divergent' : '조건부 판정',
+    } as const;
+
+    return labels[level];
+}
+
 export function CaseFileReport({
     report,
     language = 'ko',
@@ -144,6 +156,7 @@ export function CaseFileReport({
     const verdictBody = report.final_verdict?.core_message || report.summary.content;
     const closingWords = report.final_verdict?.closing_words || report.summary.trust_reason;
     const displayQuestion = question || report.free_focus?.delayed_choice;
+    const convergence = report.final_verdict?.convergence_diagnosis;
 
     return (
         <section className="mx-auto mt-4 max-w-7xl border border-white/12 bg-[#0c0b09] text-stone-100 shadow-[0_32px_90px_rgba(0,0,0,0.34)]">
@@ -190,6 +203,28 @@ export function CaseFileReport({
                             <div className="mt-8 grid gap-px bg-white/10 text-sm md:grid-cols-2">
                                 <div className="bg-[#0c0b09] px-4 py-3 text-stone-400">{isEn ? 'Subject' : '대상'} · {personName || (isEn ? 'Private reading' : '개인 리딩')}</div>
                                 <div className="bg-[#0c0b09] px-4 py-3 text-stone-400">{isEn ? 'Question' : '질문'} · {displayQuestion || (isEn ? 'Current season' : '현재 흐름')}</div>
+                            </div>
+                        )}
+                        <p className="mt-5 border-l border-[#c8a84d]/40 pl-3 text-xs leading-5 text-stone-500">
+                            {isEn
+                                ? 'Professional-boundary areas are framed as documents, deadlines, questions, risk buffers, and qualified consultation checkpoints.'
+                                : '전문 자격이 필요한 비자·법률·세금·재무 영역은 문서·마감·질문·리스크 버퍼·전문가 상담 체크포인트로만 정리합니다.'}
+                        </p>
+                        {convergence && (
+                            <div className="mt-8 grid gap-px bg-[#c8a84d]/20 md:grid-cols-[180px_1fr_1fr]">
+                                <div className="bg-[#11100d] px-4 py-4">
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#c8a84d]">{isEn ? 'Convergence' : '3단 수렴도'}</p>
+                                    <p className="mt-2 font-cinzel text-xl text-stone-100">{getConvergenceLevelLabel(convergence.level, isEn)}</p>
+                                    <p className="mt-2 text-xs leading-5 text-stone-500">{convergence.conflict_note}</p>
+                                </div>
+                                <div className="bg-[#0c0b09] px-4 py-4">
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-stone-500">{isEn ? 'Shared Signal' : '공통 신호'}</p>
+                                    <p className="mt-2 text-sm leading-6 text-stone-300">{convergence.shared_signal}</p>
+                                </div>
+                                <div className="bg-[#0c0b09] px-4 py-4">
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-stone-500">{isEn ? 'Decision Rule' : '판정 규칙'}</p>
+                                    <p className="mt-2 text-sm leading-6 text-stone-300">{convergence.decision_rule}</p>
+                                </div>
                             </div>
                         )}
                     </header>

@@ -5,6 +5,10 @@ const growthAnalyticsPath = '../src/lib/growth-analytics.ts';
 const { getCanonicalGrowthEvent } = await import(growthAnalyticsPath) as {
   getCanonicalGrowthEvent: (event: string) => string;
 };
+const growthMetadataPath = '../src/lib/growth-metadata.ts';
+const { sanitizeGrowthMetadata } = await import(growthMetadataPath) as {
+  sanitizeGrowthMetadata: (metadata: Record<string, unknown> | undefined) => Record<string, unknown>;
+};
 
 const SUPPORTED_SCENARIOS = ['canonical', 'source', 'followup', 'all'] as const;
 type Scenario = (typeof SUPPORTED_SCENARIOS)[number];
@@ -59,10 +63,60 @@ function assertFollowupFeedbackStageContract(): void {
   console.log('followup_feedback_stage_contract');
 }
 
+function assertGrowthMetadataPrivacyContract(): void {
+  const growthMetadata = readProjectFile('src/lib/growth-metadata.ts');
+  const heroSection = readProjectFile('src/components/landing/HeroSection.tsx');
+  const rawQuestionMetadataPattern = 'question: ' + 'item.question';
+  assert.ok(growthMetadata.includes('sanitizeGrowthMetadata'));
+  assert.ok(growthMetadata.includes('SENSITIVE_METADATA_KEY_PARTS'));
+  assert.ok(growthMetadata.includes('ALLOWED_QUESTION_METADATA_KEYS'));
+  assert.ok(!heroSection.includes(rawQuestionMetadataPattern));
+  assert.deepEqual(
+    sanitizeGrowthMetadata({
+      birthDate: '1999-01-01',
+      contactName: 'Alex',
+      email: 'alex@example.com',
+      handle: '@alex',
+      hasPrefilledQuestion: true,
+      landingVariant: 'home',
+      nested: {
+        partnerBirthTime: '03:00',
+        promptId: 'primary',
+        question: 'raw private question',
+        safeBucket: 'decision-home',
+      },
+      promptId: 'sample-love',
+      questionLength: 42,
+      rawQuestionText: 'private text',
+      readingData: { name: 'Reader' },
+      safeArray: [
+        { phone: '555-0100', promptId: 'array-prompt' },
+        { questionLength: 9, userName: 'reader' },
+      ],
+    }),
+    {
+      hasPrefilledQuestion: true,
+      landingVariant: 'home',
+      nested: {
+        promptId: 'primary',
+        safeBucket: 'decision-home',
+      },
+      promptId: 'sample-love',
+      questionLength: 42,
+      safeArray: [
+        { promptId: 'array-prompt' },
+        { questionLength: 9 },
+      ],
+    }
+  );
+  console.log('growth_metadata_privacy_contract');
+}
+
 function runScenario(scenario: Scenario): void {
   if (scenario === 'canonical' || scenario === 'all') assertPaywallCanonicalContract();
   if (scenario === 'source' || scenario === 'all') assertCheckoutIntentSourceContract();
   if (scenario === 'followup' || scenario === 'all') assertFollowupFeedbackStageContract();
+  if (scenario === 'all') assertGrowthMetadataPrivacyContract();
 }
 
 try {

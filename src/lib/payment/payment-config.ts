@@ -1,6 +1,8 @@
 /**
  * Decision Note 결제 상품 설정 (Stripe 최적화)
  */
+import { PAID_DECISION_REPORT_NAME_EN, READING_PRODUCT_PRICE_CENTS } from '@/lib/product-positioning';
+
 function hasRealStripeLookupId(value: string | undefined, type: 'prod' | 'price'): boolean {
     if (!value) return false;
 
@@ -24,10 +26,10 @@ export const READING_PRODUCT = {
     // Live 모드 전환 시 .env 에 NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID 를 설정해주세요.
     // 개발 모드에서는 테스트용 ID를 우선 사용합니다.
     productId: readingProductId,
-    name: 'Detailed Decision Note',
-    description: 'Detailed decision timing note unlock',
+    name: PAID_DECISION_REPORT_NAME_EN,
+    description: 'Detailed 3-layer decision report unlock',
     currency: 'USD',
-    price: 399,
+    price: READING_PRODUCT_PRICE_CENTS,
     followUpQuestions: 0,
     stripeConfigured: hasRealStripeLookupId(readingProductId, 'prod'),
 } as const;

@@ -35,8 +35,16 @@ require_match "src/app/api/reading/route.ts" "from './reading-request-service'"
 require_absence "src/app/api/reading/route.ts" "calculateOracleSajuProfile"
 
 require_match "src/lib/ai/prompt-builder.ts" "from './prompt-shared-rules'"
-require_match "src/lib/ai/phase-prompts.ts" "buildPromptSharedPrelude"
-require_match "src/lib/ai/prompt-shared-rules.ts" "free_focus"
+require_match "src/lib/ai/phase-prompts.ts" "from './phase-prompts/types'"
+require_match "src/lib/ai/phase-prompts.ts" "from './phase-prompts/context'"
+require_match "src/lib/ai/phase-prompts.ts" "from './phase-prompts/persona'"
+require_match "src/lib/ai/phase-prompts.ts" "from './phase-prompts/previous-context'"
+require_match "src/lib/ai/phase-prompts.ts" "from './phase-prompts/phase1'"
+require_match "src/lib/ai/phase-prompts.ts" "from './phase-prompts/phase5b'"
+require_match "src/lib/ai/prompt-shared-rules.ts" "from './prompt-shared-prelude'"
+require_match "src/lib/ai/prompt-structured-schema.ts" "from './prompt-free-schema'"
+require_match "src/lib/ai/prompt-structured-schema.ts" "from './prompt-premium-schema'"
+require_match "src/lib/ai/prompt-core-rules.ts" "free_focus"
 
 require_match "src/components/reading/premium-report.tsx" "from './premium-report-sections'"
 require_absence "src/components/reading/premium-report.tsx" "function FortuneFlowSection"
@@ -78,10 +86,11 @@ require_match "docs/revenue/relationship-contact-timing-threads-batch-2026-05-24
 require_match "src/app/start/start-page-helpers.ts" "next_move_report_mvp_v1"
 require_match "src/app/start/start-page-helpers.ts" "relationship_contact_timing_v1"
 require_match "src/app/start/start-page-helpers.ts" "en_relationship_contact_timing_v1"
-require_match "src/lib/payment/payment-config.ts" "Detailed Decision Note"
+require_match "src/lib/payment/payment-config.ts" "PAID_DECISION_REPORT_NAME_EN"
+require_match "src/lib/product-positioning.ts" "Detailed 3-Layer Decision Report"
 require_match "src/lib/payment/payment-config.ts" "prod_ThdoB65NmPU37y"
 require_match "docs/api-spec.md" 'Next Move Report MVP Contract (2026-06-03)'
-require_match "docs/api-spec.md" '$9.00'
+require_match "docs/api-spec.md" '$3.99'
 
 require_match "docs/revenue/next-move-report-mvp-operating-loop.md" "300 targeted visits"
 require_match "docs/revenue/next-move-report-mvp-operating-loop.md" "45 question starts"
@@ -120,9 +129,9 @@ require_match "src/app/api/reading/route-helpers.ts" "copy_ready_message"
 require_match "src/app/api/reading/route-helpers.ts" "FreeReadingCoreSchema"
 require_match "src/app/api/reading/reading-generation-service.ts" "decisionAction: params.runtime.decisionAction"
 require_match "src/app/api/reading/reading-generation-service.ts" "partial_json_recovery_outline"
-require_match "src/lib/ai/prompt-shared-rules.ts" '"decision_label"'
-require_match "src/lib/ai/prompt-shared-rules.ts" '"timing_boundary"'
-require_match "src/lib/ai/prompt-shared-rules.ts" '"copy_ready_message"'
+require_match "src/lib/ai/prompt-free-schema.ts" '"decision_label"'
+require_match "src/lib/ai/prompt-free-schema.ts" '"timing_boundary"'
+require_match "src/lib/ai/prompt-free-schema.ts" '"copy_ready_message"'
 require_match "src/app/payment/success/page.tsx" "isDecisionTimingPayment"
 require_match "src/app/payment/success/payment-success-routing.ts" "decision_timing_rebuild_v1"
 require_match "src/lib/growth-metrics.ts" "decision-timing-home"
@@ -137,7 +146,7 @@ require_match "src/lib/ai/prompts/system-core.ts" "Decision Timing Oracle"
 require_match "src/lib/ai/prompts/system-core.ts" "prediction-style"
 require_match "src/lib/ai/prompts/system-core.ts" "move_now"
 require_match "src/lib/ai/prompts/system-core.ts" "wait_with_deadline"
-require_match "src/lib/ai/prompt-shared-rules.ts" "결정 타이밍 오라클"
+require_match "src/lib/ai/prompt-core-rules.ts" "결정 타이밍 오라클"
 
 require_match "src/lib/ai/premium-reading-service.ts" "const MAX_ATTEMPTS_PER_MODEL = 3"
 require_match "src/lib/ai/premium-reading-service.ts" "isMaxTokensFinish"

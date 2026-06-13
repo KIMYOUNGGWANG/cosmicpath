@@ -1,0 +1,24 @@
+{
+  "fixtureKind": "rejected-hallucination-cases",
+  "fixtureId": "reject_unsupported_source_role",
+  "expectedIssue": "unsupported_source_role",
+  "records": [
+    {
+      "id": "fixture_reject_unsupported_source_role",
+      "sourceId": "kasi_open_api",
+      "sourceRole": "classical_myeongli_doctrine",
+      "sourceClaimId": "claim_fixture_reject_source_role",
+      "evidenceId": "evidence_fixture_reject_source_role",
+      "evidenceFamily": "calculation_fact",
+      "claimFamily": "solar_term_fixture",
+      "approvedUse": ["fixture_verifier"],
+      "citation": {
+        "sourceId": "kasi_open_api",
+        "locator": "KASI Open API calculation fixture",
+        "citationLabel": "KASI calculation source",
+        "quotePolicy": "computed_value_only"
+      },
+      "summaryKo": "계산 출처를 명리 해석 권위로 둔갑시키면 통과하면 안 된다."
+    }
+  ]
+}

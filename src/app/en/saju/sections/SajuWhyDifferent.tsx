@@ -3,17 +3,17 @@
 const COMPARISON_ITEMS = [
     {
         western: 'You are a passionate Scorpio.',
-        saju: '"Move by November 3rd. Your Fire Pillar opens a 90-day career window."',
+        saju: '"Consider a move around early November. Your Fire Pillar points to a 90-day career window."',
         icon: '🌑',
     },
     {
         western: 'Venus rules your love life this month.',
-        saju: '"This relationship drains your Metal element. Leave before Spring."',
+        saju: '"This relationship may drain your Metal element. Review your boundary before Spring."',
         icon: '🌕',
     },
     {
         western: 'Mercury retrograde may cause delays.',
-        saju: '"Your Water Year is a wealth year. Start the business before your 32nd birthday."',
+        saju: '"Your Water Year supports wealth planning. Validate the business before your 32nd birthday."',
         icon: '⚡',
     },
 ];
@@ -22,7 +22,7 @@ const SYSTEM_PILLARS = [
     {
         symbol: '年',
         romanized: 'Year Pillar',
-        description: 'The cosmic energy of your birth year — your macro destiny arc.',
+        description: 'The broad energy of your birth year — your long-range life structure.',
     },
     {
         symbol: '月',
@@ -32,7 +32,7 @@ const SYSTEM_PILLARS = [
     {
         symbol: '日',
         romanized: 'Day Pillar',
-        description: 'Your truest inner self — the identity the oracle reads directly.',
+        description: 'Your inner self — the identity pattern the reading centers on.',
     },
     {
         symbol: '時',
@@ -53,11 +53,11 @@ export function SajuWhyDifferent() {
                     </p>
                     <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl" style={{ color: '#E4E4E7', letterSpacing: '-0.03em' }}>
                         Astrology describes.<br />
-                        <span style={{ color: '#D4AF37' }}>Saju decides.</span>
+                        <span style={{ color: '#D4AF37' }}>Saju maps structure.</span>
                     </h2>
                     <p className="mt-4 max-w-xl mx-auto text-base" style={{ color: '#A1A1AA' }}>
-                        The Four Pillars of Destiny — born in Korea 5,000 years ago — calculate
-                        the exact elemental forces acting on your life. No vague archetypes. Just verdicts.
+                        The Four Pillars of Destiny — born in Korea 5,000 years ago — map
+                        elemental patterns that may shape your timing and choices. Less generic archetyping. More practical decision structure.
                     </p>
                 </div>
 
@@ -88,7 +88,7 @@ export function SajuWhyDifferent() {
                                 }}
                             >
                                 <p className="text-xs uppercase tracking-widest mb-3" style={{ color: '#D4AF37' }}>
-                                    {icon} Saju Verdict
+                                    {icon} Saju Signal
                                 </p>
                                 <p className="text-sm sm:text-base font-semibold" style={{ color: '#E4E4E7' }}>
                                     {saju}

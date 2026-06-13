@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "allowImportingTsExtensions": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": [
+    "scripts/verify-premium-report-eval.ts",
+    "scripts/generate-premium-report-eval-outputs.ts",
+    "scripts/score-premium-report-eval.ts",
+    "scripts/premium-report-eval/**/*.ts",
+    "scripts/report-test-data/ts-loader.ts"
+  ]
+}

@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import { rateLimit } from '@/lib/rate-limiter';
 import { trackGrowthEvent } from '@/lib/growth-events';
+import { sanitizeGrowthMetadata } from '@/lib/growth-metadata';
 
 const growthEventSchema = z.object({
     event: z.string().min(1).max(64),
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
             path,
             metadata,
         } = parsed.data;
+        const safeMetadata = sanitizeGrowthMetadata(metadata);
 
         await trackGrowthEvent({
             event,
@@ -65,7 +67,7 @@ export async function POST(request: NextRequest) {
                 price,
                 plan,
                 path,
-                ...metadata,
+                ...safeMetadata,
             },
         });
 

@@ -23,6 +23,7 @@ import { normalizePriceLabel, READING_PRODUCT } from '@/lib/payment/payment-conf
 import { GhostDetectorSection } from '../dashboard/GhostDetectorSection';
 import type { SajuResult } from '@/lib/engines/saju';
 import { HeaderSection } from './premium-report-sections';
+import type { ThreeLayerConvergenceDiagnosis } from '@/lib/ai/three-layer-synthesis';
 
 // 새로운 Premium Report 타입 (기존 CosmicReport 대체)
 export interface PremiumReportData {
@@ -200,10 +201,7 @@ export interface PremiumReportData {
         tarot_insight: string;
         action_priorities: string[];
         closing_words: string;
-        convergence_diagnosis?: {
-            level: 'all_aligned' | 'two_aligned' | 'divergent';
-            verdict_modifier: string;
-        };
+        convergence_diagnosis: ThreeLayerConvergenceDiagnosis;
     };
     date_selection?: {
         auspicious?: {
@@ -439,9 +437,9 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
             {!isPremium && (
                 <div className="mt-0 px-4 md:px-6 mb-16">
                     <BlindSpotTeaser
-                        title={language === 'en' ? "Critical Blind Spot Note" : "치명적 사각지대 메모"}
-                        previewText={language === 'en' ? "Conflicting planetary alignments suggest a high probability of severe misjudgment if you proceed without addressing the underlying root cause." : "별자리와 타로카드 배열에서 심각한 오판의 징후가 발견되었습니다."}
-                        hiddenText={language === 'en' ? "Unlock to see the full detailed reading and the missing pieces of your destiny." : "자세한 전체 결론과 해결책을 보려면 잠금을 해제하세요."}
+                        title={language === 'en' ? "Important Blind Spot Note" : "중요한 사각지대 메모"}
+                        previewText={language === 'en' ? "Conflicting planetary alignments suggest a meaningful risk of misreading the situation unless you review the underlying pattern." : "별자리와 타로카드 배열에서 다시 확인할 만한 오판 리스크가 보입니다."}
+                        hiddenText={language === 'en' ? "Unlock to see the full detailed reading and the decision context not shown in the preview." : "자세한 전체 결론과 점검 포인트를 보려면 잠금을 해제하세요."}
                         language={language || 'ko'}
                         isLocked={true}
                         onUnlock={handleUnlock}

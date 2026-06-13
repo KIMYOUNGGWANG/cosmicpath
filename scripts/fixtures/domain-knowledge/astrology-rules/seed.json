@@ -1,0 +1,23 @@
+{
+  "fixtureKind": "astrology-rules",
+  "fixtureId": "astrology_rules_seed",
+  "records": [
+    {
+      "id": "fixture_astrology_classical_sign_context",
+      "sourceId": "ptolemy_tetrabiblos_public_text",
+      "sourceRole": "classical_astrology_doctrine",
+      "sourceClaimId": "claim_fixture_astrology_classical_sign",
+      "evidenceId": "evidence_fixture_astrology_classical_sign",
+      "evidenceFamily": "astrology_doctrine",
+      "claimFamily": "classical_planet_sign_doctrine",
+      "approvedUse": ["internal_research"],
+      "citation": {
+        "sourceId": "ptolemy_tetrabiblos_public_text",
+        "locator": "Tetrabiblos public text candidate locator",
+        "citationLabel": "Ptolemy classical astrology candidate",
+        "quotePolicy": "paraphrase_only"
+      },
+      "summaryKo": "고전 점성술 후보는 고전 행성/사인 맥락으로만 쓰며 현대 심리 해석으로 확장하지 않는다."
+    }
+  ]
+}

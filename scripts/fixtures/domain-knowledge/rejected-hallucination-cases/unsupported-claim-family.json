@@ -1,0 +1,24 @@
+{
+  "fixtureKind": "rejected-hallucination-cases",
+  "fixtureId": "reject_unsupported_claim_family",
+  "expectedIssue": "unsupported_claim_family",
+  "records": [
+    {
+      "id": "fixture_reject_unsupported_claim_family",
+      "sourceId": "kasi_open_api",
+      "sourceRole": "calendar_calculation",
+      "sourceClaimId": "claim_fixture_reject_claim_family",
+      "evidenceId": "evidence_fixture_reject_claim_family",
+      "evidenceFamily": "calculation_fact",
+      "claimFamily": "ten_gods",
+      "approvedUse": ["fixture_verifier"],
+      "citation": {
+        "sourceId": "kasi_open_api",
+        "locator": "KASI Open API claim-family rejection fixture",
+        "citationLabel": "KASI calculation source",
+        "quotePolicy": "computed_value_only"
+      },
+      "summaryKo": "계산 검증 출처를 십성 해석 근거로 쓰면 통과하면 안 된다."
+    }
+  ]
+}

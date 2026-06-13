@@ -67,7 +67,7 @@ export const PrintLayout = forwardRef<HTMLDivElement, PrintLayoutProps>(({ data,
                             COSMIC PATH
                         </div>
                         <div className="text-xs text-slate-400 uppercase tracking-widest">
-                            Premium Destiny Report
+                            Detailed 3-Layer Decision Report
                         </div>
                     </div>
 
@@ -80,7 +80,7 @@ export const PrintLayout = forwardRef<HTMLDivElement, PrintLayoutProps>(({ data,
                     <div className="space-y-2">
                         <p className="text-2xl font-light text-white">
                             <span className="font-bold text-gold">{userData?.name || (isEn ? 'User' : '사용자')}</span>
-                            {isEn ? "'s Destiny Reading" : "님을 위한 프리미엄 리딩"}
+                            {isEn ? "'s Decision Report" : "님을 위한 프리미엄 결정 리포트"}
                         </p>
                         <p className="text-sm text-slate-500 font-mono">
                             {date}
@@ -103,6 +103,11 @@ export const PrintLayout = forwardRef<HTMLDivElement, PrintLayoutProps>(({ data,
                         {isEn
                             ? 'This print edition turns the reading into a deeper reference report: source evidence, timing map, area-by-area diagnosis, and practical review sheets.'
                             : '이 인쇄본은 근거, 타이밍 지도, 영역별 진단, 실전 점검 시트를 한 번에 다시 볼 수 있게 구성한 심화 리포트입니다.'}
+                    </p>
+                    <p className="mt-3 text-xs leading-6 text-gray-400">
+                        {isEn
+                            ? 'For visa, legal, tax, or financial-risk decisions, this report stays within documents, deadlines, questions, risk buffers, and qualified consultation checkpoints.'
+                            : '비자, 법률, 세금, 재무 리스크 결정은 문서, 마감, 질문, 리스크 버퍼, 전문가 상담 체크포인트 안에서만 다룹니다.'}
                     </p>
                 </div>
 
@@ -229,9 +234,9 @@ export const PrintLayout = forwardRef<HTMLDivElement, PrintLayoutProps>(({ data,
                 </div>
             )}
 
-            {/* --- Chapter 4: Life Areas & Soulmate --- */}
+            {/* --- Chapter 4: Life Areas & Relationship Signals --- */}
             <div className="page-break py-10">
-                <SectionHeader icon={<Target className="text-gold" />} title={isEn ? "Life Areas & Soulmate" : "인생 영역 & 소울메이트"} />
+                <SectionHeader icon={<Target className="text-gold" />} title={isEn ? "Life Areas & Relationship Signals" : "인생 영역 & 관계 신호"} />
 
                 <div className="grid gap-6">
                     {data.life_areas && [
@@ -377,7 +382,7 @@ type ReportBookPageData = {
 
 function buildTableOfContents(data: PremiumReportData, isEn: boolean): TableOfContentsItem[] {
     const items: TableOfContentsItem[] = [
-        { title: isEn ? 'Cover and Reading Summary' : '표지와 핵심 요약', detail: isEn ? 'Main verdict and trust basis' : '핵심 판정과 신뢰 근거' },
+        { title: isEn ? 'Cover and Reading Summary' : '표지와 핵심 요약', detail: isEn ? 'Main guidance and trust basis' : '핵심 안내와 신뢰 근거' },
         { title: isEn ? 'Saju Core Analysis' : '사주 핵심 분석', detail: data.saju_sections?.length ? `${data.saju_sections.length} source sections` : (isEn ? 'Core source reading' : '핵심 근거 해석') },
         { title: isEn ? 'Fortune Flow and Timing' : '운의 흐름과 타이밍', detail: data.fortune_flow?.monthly_luck?.length ? `${data.fortune_flow.monthly_luck.length} monthly checkpoints` : (isEn ? 'Major and yearly flow' : '대운과 세운 흐름') },
         { title: isEn ? 'Life Areas and Special Signals' : '인생 영역과 특수 신호', detail: data.life_areas ? (isEn ? 'Career, money, love, health' : '커리어, 재물, 관계, 건강') : (isEn ? 'Focused diagnosis' : '핵심 진단') },
@@ -494,7 +499,7 @@ function buildReportBookPages(data: PremiumReportData, isEn: boolean): ReportBoo
     if (data.final_verdict) {
         pushTextPage(pages, {
             id: 'final-verdict-core',
-            label: isEn ? 'Final Verdict' : '최종 판정',
+            label: isEn ? 'Final Decision Note' : '최종 결정 노트',
             title: data.final_verdict.title,
             body: [
                 data.final_verdict.core_message,
@@ -632,7 +637,7 @@ function buildPastLifePages(data: PremiumReportData, isEn: boolean): ReportBookP
 
         return [{
             id: `past-life-${item.id}`,
-            label: isEn ? 'Past Life Pattern' : '전생 패턴',
+            label: isEn ? 'Repeating Pattern' : '반복 패턴',
             title: item.section.title,
             body: item.section.content,
             prompts: buildReflectionPrompts(isEn),

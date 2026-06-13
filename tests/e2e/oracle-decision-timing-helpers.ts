@@ -3,6 +3,7 @@ import { expect, type Page } from '@playwright/test';
 export type JsonRecord = Record<string, unknown>;
 
 export const decisionQuestion = '지금 이직을 밀어붙이는 게 맞을까, 조금 더 버티는 게 맞을까?';
+export const decisionBirthDate = '1994-04-12';
 export const decisionStartPath = `/start?reset=true&context=career&entry=decision_timing_rebuild_v1&lang=ko&question=${encodeURIComponent(decisionQuestion)}`;
 
 function isJsonRecord(value: unknown): value is JsonRecord {
@@ -39,9 +40,9 @@ export async function mockDecisionReadingPrice(page: Page): Promise<string[]> {
       body: JSON.stringify({
         productId,
         priceId: 'price_oracle_decision_test',
-        amount: 9,
+        amount: 3.99,
         currency: 'USD',
-        formattedPrice: '$9.00',
+        formattedPrice: '$3.99',
         metadata: {},
       }),
     });
@@ -117,4 +118,15 @@ export async function openDecisionStart(page: Page): Promise<void> {
   await mockDecisionReadingSave(page);
   await page.goto(decisionStartPath);
   await expect(page.locator('textarea').first()).toHaveValue(decisionQuestion);
+  const submitButton = page.getByRole('button', { name: /첫 판정 열기|OPEN FIRST VERDICT|무료 판정 먼저 보기|SEE MY FREE VERDICT/i });
+  const birthDateInput = page.locator('input[placeholder="YYYY-MM-DD"]').first();
+  await expect(submitButton).toBeDisabled();
+
+  for (const partialBirthDate of ['1992', '1992-03', '1992-3-4']) {
+    await birthDateInput.fill(partialBirthDate);
+    await expect(submitButton).toBeDisabled();
+  }
+
+  await birthDateInput.fill(decisionBirthDate);
+  await expect(submitButton).toBeEnabled();
 }

@@ -19,9 +19,12 @@ type StartInputStageProps = {
 };
 
 export function StartInputStage(props: StartInputStageProps) {
-  const isNextMoveReportEntry = props.landingSource === 'next_move_report_mvp_v1';
+  const isRelationshipContactEntry =
+    props.landingSource === 'next_move_report_mvp_v1' ||
+    props.landingSource === 'relationship_contact_timing_v1' ||
+    props.landingSource === 'en_relationship_contact_timing_v1';
   const isDecisionTimingEntry = props.landingSource === 'decision_timing_rebuild_v1';
-  const isQuestionFirstEntry = isNextMoveReportEntry || isDecisionTimingEntry;
+  const isQuestionFirstEntry = isRelationshipContactEntry || isDecisionTimingEntry;
   const copy = START_RECEPTION_COPY[props.language];
 
   return (
@@ -68,7 +71,7 @@ export function StartInputStage(props: StartInputStageProps) {
             initialContext={props.initialContext}
             initialQuestion={props.initialQuestion}
             isNextMoveReportEntry={isQuestionFirstEntry}
-            isRelationshipContactEntry={isNextMoveReportEntry}
+            isRelationshipContactEntry={isRelationshipContactEntry}
           />
         </div>
 
@@ -76,7 +79,7 @@ export function StartInputStage(props: StartInputStageProps) {
           <div className="border border-[#d7c59a]/18 bg-[#111315]/90 p-6 shadow-[0_18px_60px_rgba(0,0,0,0.18)]">
             <div className="flex items-center gap-4 border-b border-[#d7c59a]/12 pb-4 mb-4">
               <div className="flex h-12 w-12 items-center justify-center border border-[#d7c59a]/25 bg-[#d7c59a]/10">
-                <span className="font-cinzel text-[#d7c59a] text-lg">3</span>
+                <span className="font-cinzel text-[#d7c59a] text-lg">01</span>
               </div>
               <div>
                 <h3 className="font-semibold text-starlight">{copy.sideTitle}</h3>

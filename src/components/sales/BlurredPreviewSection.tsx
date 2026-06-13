@@ -83,7 +83,7 @@ export function BlurredPreviewSection({
                         className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-[#D4AF37] to-[#B4941F] text-black font-bold rounded-full shadow-lg shadow-[#D4AF37]/20 transition-all hover:shadow-[#D4AF37]/40 z-10"
                     >
                         <Lock size={16} />
-                        <span>{isEn ? 'See Full Reading' : '전체 해석 보기'}</span>
+                        <span>{isEn ? 'Open Detailed Report' : '상세 리포트 열기'}</span>
                     </motion.button>
                     <p className="text-xs text-white/40 mt-3 text-center max-w-[200px]">
                         {isEn

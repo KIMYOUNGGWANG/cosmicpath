@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import {
+    decisionBirthDate,
     decisionQuestion,
     decisionStartPath,
     mockDecisionGrowthTracking,
@@ -29,7 +30,7 @@ test.describe('Oracle decision timing harness', () => {
         await openDecisionStart(page);
 
         await expect(page).toHaveURL(/entry=decision_timing_rebuild_v1/);
-        await expect(page.getByText(/CosmicPath 3단분석 접수실|CosmicPath 3-Layer Reading Intake/).first()).toBeVisible();
+        await expect(page.getByText(/CosmicPath Decision Note 접수실|CosmicPath Decision Note Intake/).first()).toBeVisible();
         await page.screenshot({
             path: evidenceScreenshotPath(testInfo.project.name, 'start'),
             fullPage: true,
@@ -46,6 +47,10 @@ test.describe('Oracle decision timing harness', () => {
     expect(events).toEqual([]);
     expect(productIds).toEqual([]);
     await expect(page.locator('textarea').first()).toBeVisible();
+    const submitButton = page.getByRole('button', { name: /첫 판정 열기|OPEN FIRST VERDICT|무료 판정 먼저 보기|SEE MY FREE VERDICT/i });
+    await expect(submitButton).toBeDisabled();
+    await page.locator('input[placeholder="YYYY-MM-DD"]').first().fill(decisionBirthDate);
+    await expect(submitButton).toBeEnabled();
   });
 
     test('free result renders the structured decision timing brief', async ({ page }, testInfo) => {
@@ -55,9 +60,10 @@ test.describe('Oracle decision timing harness', () => {
         await page.getByRole('button', { name: /타로 없이 (?:무료 )?판정 보기|Skip Tarot|without tarot/i }).click();
 
         await expect(page.getByText(/선택지 먼저 좁히기|Narrow first/).first()).toBeVisible({ timeout: 15_000 });
-        await expect(page.getByText(/결제 후 정밀 타이밍 구간 확인 가능/).first()).toBeVisible();
-        await expect(page.getByText(/결제 후 첫 번째 추천 행동 단계 확인 가능/).first()).toBeVisible();
-        await expect(page.getByText(/결제 후 반드시 피해야 할 리스크 확인 가능/).first()).toBeVisible();
+        await expect(page.getByText(/이번 주 안에 조건을 비교하고 다음 2주 안에 첫 지원 여부를 결정하세요/).first()).toBeVisible();
+        await expect(page.getByText(/지원할 회사 3곳과 남을 조건 2개를 적어 비교하세요/).first()).toBeVisible();
+        await expect(page.getByText(/감정적으로 바로 퇴사 통보하지 마세요/).first()).toBeVisible();
+        await expect(page.getByText(/one-time \$3\.99 (Detailed 3-Layer Decision Report|상세 3단 판정 리포트)/).first()).toBeVisible();
         await page.screenshot({
             path: evidenceScreenshotPath(testInfo.project.name, 'free-result'),
             fullPage: true,

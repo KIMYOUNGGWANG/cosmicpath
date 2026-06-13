@@ -12,7 +12,7 @@ function runStartSafetyGuards() {
     'Primary landing navigation should not expose legacy Daily/Career/PRO acquisition'
   );
   assertMatch(
-    'src/lib/ai/prompt-shared-rules.ts',
+    'src/lib/ai/prompt-core-rules.ts',
     /buildRelationshipDecisionSafetyRule[\s\S]*guaranteed reply[\s\S]*무조건 답장[\s\S]*stalking[\s\S]*스토킹/i,
     'Shared prompt rules should include explicit relationship reply-guarantee and stalking boundaries'
   );

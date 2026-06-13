@@ -19,7 +19,7 @@ const decisionTimingFlows: readonly FlowScenario[] = [
         startPath: '/relationship/contact-timing',
         ctaLabel: /이 질문으로 먼저 보기|See whether to text or wait/i,
         promptEvent: 'relationship_contact_prompt_clicked',
-        source: 'next_move_report_mvp_v1',
+        source: 'relationship_contact_timing_v1',
     },
     {
         name: 'english contact timing',
@@ -68,7 +68,7 @@ test.describe('Decision timing funnel growth event sequence', () => {
             await expect(page.getByRole('link', { name: flow.ctaLabel })).toBeVisible();
             await page.getByRole('link', { name: flow.ctaLabel }).click();
             await expect(page).toHaveURL(/\/start/);
-            await expect(page.getByText(/02 사주·점성 기본정보|02 Saju & Astrology Basics/).first()).toBeVisible();
+            await expect(page.getByText(/02 생년월일 기준|02 Birth Date Baseline/).first()).toBeVisible();
 
             const textInputs = page.locator('input[type="text"]');
 
@@ -76,9 +76,7 @@ test.describe('Decision timing funnel growth event sequence', () => {
                 await textInputs.nth(0).fill('QA');
             }
 
-            if (await textInputs.count() > 1) {
-                await textInputs.nth(1).fill('1990-01-01');
-            }
+            await page.locator('input[placeholder="YYYY-MM-DD"]').first().fill('1990-01-01');
 
             const questionInput = page.locator('textarea').first();
             if (await questionInput.count() > 0) {

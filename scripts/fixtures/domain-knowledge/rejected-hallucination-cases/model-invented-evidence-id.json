@@ -1,0 +1,24 @@
+{
+  "fixtureKind": "rejected-hallucination-cases",
+  "fixtureId": "reject_model_invented_evidence_id",
+  "expectedIssue": "model_invented_evidence_id",
+  "records": [
+    {
+      "id": "fixture_reject_model_invented_evidence_id",
+      "sourceId": "cosmicpath_report_grounding_contract",
+      "sourceRole": "report_grounding_contract",
+      "sourceClaimId": "claim_fixture_model_id",
+      "evidenceId": "model_generated_evidence_id",
+      "evidenceFamily": "product_synthesis",
+      "claimFamily": "report_grounding_contract",
+      "approvedUse": ["prompt_grounding"],
+      "citation": {
+        "sourceId": "cosmicpath_report_grounding_contract",
+        "locator": ".omo/drafts/report-grounding-contract-blueprint.md model-id rejection",
+        "citationLabel": "Grounding contract",
+        "quotePolicy": "no_raw_source_text"
+      },
+      "summaryKo": "모델이 즉석에서 만든 evidence ID는 제품 소유 근거로 인정하면 안 된다."
+    }
+  ]
+}

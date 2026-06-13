@@ -1,0 +1,25 @@
+{
+  "fixtureKind": "rejected-hallucination-cases",
+  "fixtureId": "reject_raw_copyrighted_text",
+  "expectedIssue": "raw_copyrighted_text",
+  "records": [
+    {
+      "id": "fixture_reject_raw_copyrighted_text",
+      "sourceId": "waite_pictorial_key_public_text",
+      "sourceRole": "rws_tarot_doctrine",
+      "sourceClaimId": "claim_fixture_reject_raw_text",
+      "evidenceId": "evidence_fixture_reject_raw_text",
+      "evidenceFamily": "tarot_rws_text",
+      "claimFamily": "rws_major_arcana_meaning",
+      "approvedUse": ["internal_research"],
+      "citation": {
+        "sourceId": "waite_pictorial_key_public_text",
+        "locator": "Project Gutenberg 43548 raw text rejection fixture",
+        "citationLabel": "Waite raw text rejection",
+        "quotePolicy": "paraphrase_only"
+      },
+      "summaryKo": "원문을 그대로 넣는 fixture는 이후 corpus build 전에 차단되어야 한다.",
+      "rawSourceText": "forbidden raw source passage"
+    }
+  ]
+}

@@ -31,8 +31,8 @@ function pickMainCardName(metadata: Record<string, unknown>): string {
 
 function buildDefaultDescription(language: 'ko' | 'en'): string {
   return language === 'en'
-    ? 'A CosmicPath reading cross-checked by saju, astrology, and tarot.'
-    : '사주, 점성술, 타로 근거를 대조한 CosmicPath 3단분석입니다.';
+    ? "CosmicPath Decision Note cross-checks Saju structure, astrology timing, and tarot's immediate signal."
+    : '사주로 구조를 보고, 점성으로 타이밍을 보고, 타로로 지금 질문의 즉각 신호를 확인합니다.';
 }
 
 function truncate(value: string, maxLength: number): string {
@@ -67,8 +67,8 @@ export function getReadingShareSummary(input: {
   const title = typeof summary?.title === 'string' && summary.title.trim()
     ? summary.title.trim()
     : language === 'en'
-      ? 'CosmicPath Reading Ready'
-      : 'CosmicPath 3단분석이 도착했습니다';
+      ? 'CosmicPath Decision Note ready'
+      : 'CosmicPath Decision Note가 도착했습니다';
 
   const rawDescription = typeof summary?.content === 'string' && summary.content.trim()
     ? summary.content.trim()

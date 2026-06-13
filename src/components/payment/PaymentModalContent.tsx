@@ -47,7 +47,11 @@ export function PaymentModalContent(props: PaymentModalContentProps) {
         isEnglish: props.isEnglish,
         isRelationshipContactTiming: props.isRelationshipContactTiming,
     };
-    const introCopy = getPaywallIntroCopy(copyInput);
+    const introCopy = getPaywallIntroCopy({
+        ...copyInput,
+        isPriceBlocked: props.showPriceConfirmationBlocked,
+        priceLabel: props.showPriceConfirmationBlocked ? null : props.dynamicPrice,
+    });
     const lockedSections = getLockedSections(copyInput);
     const unlockBenefits = getUnlockBenefits(copyInput);
 

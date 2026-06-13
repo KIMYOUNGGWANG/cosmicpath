@@ -1,12 +1,15 @@
 import type { BaselineReportArtifact, ReportQualityFixture } from './types.ts';
 
-function familyText(fixture: ReportQualityFixture, family: 'saju' | 'astrology' | 'tarot') {
+type BaselineFamily = 'saju' | 'astrology' | 'tarot';
+
+function familyText(fixture: ReportQualityFixture, family: BaselineFamily) {
   const anchors = anchorsFor(fixture, family);
   return [
+    roleIntro(family),
     `근거: ${anchors.join(', ')}.`,
     `판정: 질문 "${questionText(fixture)}"에 대해 이 신호들은 같은 결론이 아니라 서로 다른 검증축입니다.`,
     '함의: 각 근거를 분리해 비교해야 하며, 누락된 값은 조건부로 적어야 합니다.',
-    '행동: 다음 결정은 감정 확신보다 실제 반응, 일정, 위험 신호를 함께 기록한 뒤 판단합니다.',
+    '행동: 다음 결정은 7일 검증 창 안에서 실제 반응, 일정, 위험 신호를 함께 기록한 뒤 판단합니다.',
   ].join(' ');
 }
 
@@ -55,7 +58,20 @@ function buildPhaseOnePayload(content: string): Record<string, unknown> {
   };
 }
 
-function anchorsFor(fixture: ReportQualityFixture, family: 'saju' | 'astrology' | 'tarot'): readonly string[] {
+function roleIntro(family: BaselineFamily): string {
+  switch (family) {
+    case 'saju':
+      return '원천 역할: 사주 구조 레이어는 반복 패턴과 장기 선택 습관을 먼저 잡습니다.';
+    case 'astrology':
+      return '원천 역할: 점성 타이밍 레이어는 지금의 시기, 압력, 검증 창을 보조로 조정합니다.';
+    case 'tarot':
+      return '원천 역할: 타로 즉각 신호 레이어는 현재 바로 드러난 감정과 장애물을 행동 크기로 바꿉니다.';
+    default:
+      return assertNever(family);
+  }
+}
+
+function anchorsFor(fixture: ReportQualityFixture, family: BaselineFamily): readonly string[] {
   const predicates = {
     saju: /^(일간|연주|월주|일주|시주)\s/u,
     astrology: /^(태양|달|상승궁)\s/u,
@@ -80,4 +96,8 @@ function sourceBoundaryText(fixture: ReportQualityFixture) {
 function questionText(fixture: ReportQualityFixture) {
   const question = fixture.premiumUserData.question;
   return typeof question === 'string' ? question : '종합 질문';
+}
+
+function assertNever(value: never): never {
+  throw new TypeError(`Unexpected baseline family: ${String(value)}`);
 }

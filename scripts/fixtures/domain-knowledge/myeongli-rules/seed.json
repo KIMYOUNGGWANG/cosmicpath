@@ -1,0 +1,23 @@
+{
+  "fixtureKind": "myeongli-rules",
+  "fixtureId": "myeongli_rules_seed",
+  "records": [
+    {
+      "id": "fixture_myeongli_lineage_context",
+      "sourceId": "yuanhai_ziping_wikisource_candidate",
+      "sourceRole": "classical_myeongli_doctrine",
+      "sourceClaimId": "claim_fixture_myeongli_lineage_context",
+      "evidenceId": "evidence_fixture_myeongli_lineage_context",
+      "evidenceFamily": "classical_doctrine",
+      "claimFamily": "source_lineage_context",
+      "approvedUse": ["internal_research"],
+      "citation": {
+        "sourceId": "yuanhai_ziping_wikisource_candidate",
+        "locator": "Wikisource candidate locator, edition review pending",
+        "citationLabel": "Yuanhai Ziping candidate lineage",
+        "quotePolicy": "paraphrase_only"
+      },
+      "summaryKo": "명리 고전 후보는 계통 맥락으로만 쓰며 고객 리포트 주장의 직접 근거가 아니다."
+    }
+  ]
+}

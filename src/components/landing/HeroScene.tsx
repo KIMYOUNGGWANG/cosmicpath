@@ -71,7 +71,7 @@ export function HeroScene({ language, children }: HeroSceneProps) {
                 className="absolute bottom-8 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-3 md:flex"
             >
                 <span className="text-[10px] uppercase tracking-[0.3em] text-white/38">
-                    {language === 'ko' ? '3단 근거 보기' : 'Read the layers'}
+                    {language === 'ko' ? '세 신호 보기' : 'Read the three signals'}
                 </span>
                 <div className="h-10 w-[1px] animate-pulse bg-gradient-to-b from-white/0 via-acc-gold/60 to-white/0" />
             </motion.div>

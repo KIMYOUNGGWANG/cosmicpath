@@ -24,21 +24,21 @@ export default function JsonLd() {
                 url: siteUrl,
                 inLanguage: ['ko-KR', 'en'],
                 publisher: { '@id': `${siteUrl}/#organization` },
-                description: '사주, 점성술, 타로를 교차해 막힌 질문의 첫 판정과 다음 행동을 정리하는 3단분석 서비스.',
+                description: 'CosmicPath Decision Note는 질문 하나를 먼저 판정합니다. Saju = structure, astrology = timing, tarot = immediate signal.',
             },
             {
                 '@type': 'Service',
-                '@id': `${siteUrl}/#three-layer-reading`,
-                name: 'Decision Note',
-                alternateName: 'Detailed Decision Note',
-                serviceType: 'Saju, astrology, and tarot decision reading',
+                '@id': `${siteUrl}/#decision-note`,
+                name: 'CosmicPath Decision Note',
+                alternateName: 'Detailed 3-Layer Decision Report',
+                serviceType: 'Decision Note with Saju structure, astrology timing, and tarot immediate signal',
                 provider: { '@id': `${siteUrl}/#organization` },
                 areaServed: ['KR', 'US'],
                 audience: {
                     '@type': 'Audience',
                     audienceType: 'People with relationship, career, money, or life-direction questions',
                 },
-                description: '질문 하나를 사주, 점성술, 타로 세 근거로 대조해 첫 판정, 근거, 다음 행동을 제시합니다.',
+                description: 'Detailed 3-Layer Decision Report explains why this verdict was chosen, using Saju as structure, astrology as timing, and tarot as immediate signal.',
                 offers: [
                     {
                         '@type': 'Offer',
@@ -50,7 +50,7 @@ export default function JsonLd() {
                     },
                     {
                         '@type': 'Offer',
-                        name: 'Detailed Decision Note',
+                        name: 'Detailed 3-Layer Decision Report',
                         price: '3.99',
                         priceCurrency: 'USD',
                         availability: 'https://schema.org/InStock',

@@ -322,14 +322,20 @@
         "currentDate": "2026-06-06"
       },
       "expectedContains": [
-        "## Phase 5B 임무: 전생 분석 + 용어집 + 최종 결론",
+        "## Phase 5B 임무: 반복 패턴 분석 + 용어집 + 최종 결론",
         "## 출력 요구사항 (JSON)",
         "## 작성 규칙",
+        "전생을 사실처럼 단정하지 말고",
         "모든 날짜는 기준일 2026-06-06 이후만 사용하세요",
         "의료 진단, 치료, 투약 변경, 수술, 치료 중단 지시를 제공하지 마세요",
         "기준일 이후 첫 행동 (근거 있는 시기 범위 또는 재검토 경계)"
       ],
       "expectedNotContains": [
+        "전생 분석 + 용어집 + 최종 결론",
+        "전생의 테마",
+        "해소해야 할 카르마",
+        "영혼 미션",
+        "강한 어조",
         "그러므로 지금 당장: [동사형 행동 + YYYY-MM 날짜]",
         "지금 당장 할 행동 (YYYY-MM 날짜 포함)",
         "오라클의 최종 선고처럼 단정적으로 서술하십시오",
@@ -351,12 +357,17 @@
         "currentDate": "2026-06-06"
       },
       "expectedContains": [
-        "## Phase 5B Mission: Past Life + Glossary + Final Verdict",
+        "## Phase 5B Mission: Symbolic Pattern + Glossary + Final Verdict",
+        "Do not state literal past lives as fact.",
         "Use only dates on or after 2026-06-06",
         "Do not provide medical diagnosis, treatment, medication, surgery, or stopping-treatment instructions.",
         "Evidence-bounded Tone"
       ],
       "expectedNotContains": [
+        "Past Life + Glossary + Final Verdict",
+        "Past Life Theme",
+        "Karma to Resolve",
+        "Soul Mission",
         "firm oracle verdicts",
         "Recover investments",
         "No hedging"

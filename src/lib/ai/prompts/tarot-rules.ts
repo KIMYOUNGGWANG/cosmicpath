@@ -1,14 +1,14 @@
 /**
  * 타로 카드 해석 규칙 (Tarot Interpretation Rules)
- * 
- * 가중치: 20% (현재 에너지, 심리)
+ *
+ * 역할: 질문 주변의 즉각 감정/상황 신호
  * 사용: AI 프롬프트에 컨텍스트로 주입
  */
 
 export const TAROT_RULES = {
     version: '1.0.0',
-    weight: 0.20,
-    role: '현재 에너지, 심리 상태, 단기 흐름',
+    sourceRole: 'immediate_question_signal',
+    role: '질문 주변의 즉각 감정/상황 신호',
 
     // ============ 메이저 아르카나 (22장) ============
     majorArcana: {

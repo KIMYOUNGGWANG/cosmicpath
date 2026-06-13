@@ -4,15 +4,15 @@ import { ArrowRight, Clock3, MessageCircle, ShieldAlert } from 'lucide-react';
 
 import { GrowthEventTracker, GrowthTrackedLink } from '@/components/common/GrowthTracking';
 
-const RELATIONSHIP_CONTACT_SOURCE = 'next_move_report_mvp_v1';
-const RELATIONSHIP_CONTACT_ENTRY = 'next_move_report_mvp_v1';
+const RELATIONSHIP_CONTACT_SOURCE = 'relationship_contact_timing_v1';
+const RELATIONSHIP_CONTACT_ENTRY = 'relationship_contact_timing_v1';
 const PRIMARY_CONTACT_QUESTION = '지금 먼저 연락하는 게 맞을까, 조금 더 기다리는 게 맞을까?';
 
 type RelationshipContactSearchParams = Record<string, string | string[] | undefined>;
 
 export const metadata: Metadata = {
   title: '연락 결정 정리',
-  description: '상대에게 지금 연락할지 기다릴지 먼저 판정하고, 사주·점성술·타로는 선택적 근거 레이어로만 참고합니다.',
+  description: '상대에게 지금 연락할지 기다릴지, 사주 구조와 점성 타이밍, 타로 즉각 신호를 대조해 먼저 판정합니다.',
   robots: {
     index: true,
     follow: true,
@@ -131,7 +131,7 @@ export default async function RelationshipContactTimingPage({
             </h1>
             <p className="mt-6 max-w-xl break-keep text-base leading-8 text-white/68 md:text-lg">
               지금은 연락, 대기, 축소, 보류 중 어디에 가까운지 먼저 정리합니다.
-              사주·점성술·타로는 선택적 근거 레이어로만 쓰고, 상대 마음이나 답장을 보장하지 않습니다.
+              사주로 구조를 보고, 점성으로 타이밍을 보고, 타로로 지금 질문의 즉각 신호를 확인하되 상대 마음이나 답장을 보장하지 않습니다.
             </p>
 
             <div className="mt-8">

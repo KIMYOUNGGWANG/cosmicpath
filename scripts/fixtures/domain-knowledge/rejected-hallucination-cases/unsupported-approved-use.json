@@ -1,0 +1,24 @@
+{
+  "fixtureKind": "rejected-hallucination-cases",
+  "fixtureId": "reject_unsupported_approved_use",
+  "expectedIssue": "unsupported_approved_use",
+  "records": [
+    {
+      "id": "fixture_reject_unsupported_approved_use",
+      "sourceId": "kasi_open_api",
+      "sourceRole": "calendar_calculation",
+      "sourceClaimId": "claim_fixture_reject_approved_use",
+      "evidenceId": "evidence_fixture_reject_approved_use",
+      "evidenceFamily": "calculation_fact",
+      "claimFamily": "solar_term_fixture",
+      "approvedUse": ["prompt_grounding"],
+      "citation": {
+        "sourceId": "kasi_open_api",
+        "locator": "KASI Open API approved-use rejection fixture",
+        "citationLabel": "KASI calculation source",
+        "quotePolicy": "computed_value_only"
+      },
+      "summaryKo": "검증 전용 계산 출처를 프롬프트 해석 근거로 승격하면 통과하면 안 된다."
+    }
+  ]
+}

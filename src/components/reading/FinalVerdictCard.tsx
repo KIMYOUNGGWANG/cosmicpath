@@ -45,14 +45,14 @@ export function FinalVerdictCard({ data }: FinalVerdictProps) {
                             <Scale className="w-6 h-6" />
                         </div>
                         <h2 className="text-2xl md:text-3xl font-serif text-amber-100/90 font-bold tracking-wide">
-                            {data.title || "운명의 최종 판결"}
+                            {data.title || "최종 3단 판정"}
                         </h2>
                         <div className="flex justify-center items-center gap-2 text-xs font-medium text-amber-200/60 uppercase tracking-widest">
-                            <span>Saju 50%</span>
+                            <span>Saju structure</span>
                             <span className="w-1 h-1 rounded-full bg-amber-500/50" />
-                            <span>Astro 30%</span>
+                            <span>Astro timing</span>
                             <span className="w-1 h-1 rounded-full bg-amber-500/50" />
-                            <span>Tarot 20%</span>
+                            <span>Tarot signal</span>
                         </div>
                     </div>
 

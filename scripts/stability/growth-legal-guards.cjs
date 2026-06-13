@@ -18,8 +18,8 @@ function runGrowthLegalGuards() {
   );
   assertMatch(
     'src/app/terms/page.tsx',
-    /decision-support notes/,
-    'Terms should disclose Next Move decision-support content'
+    /CosmicPath Decision Note[\s\S]*Detailed 3-Layer Decision Report/,
+    'Terms should disclose the Decision Note umbrella and paid report content'
   );
   assertMatch(
     'src/app/terms/page.tsx',

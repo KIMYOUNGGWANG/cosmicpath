@@ -94,7 +94,10 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
     evidence,
     260
   );
-  const priceLabel = props.dynamicPrice || (isEn ? 'checkout price' : '결제 단계 가격');
+  const priceLabel = props.dynamicPrice;
+  const unlockTrustCopy = isEn
+    ? `This is a one-time${priceLabel ? ` ${priceLabel}` : ''} Detailed 3-Layer Decision Report. Locked sections include why this verdict was chosen, timing, and message/action variants.`
+    : `one-time${priceLabel ? ` ${priceLabel}` : ''} 상세 3단 판정 리포트로 잠긴 섹션을 엽니다. 왜 이 판정인지, 타이밍, message/action variants를 확인합니다.`;
   const blocks = [
     {
       label: isRelationshipContactTiming ? (isEn ? 'Contact Verdict' : '연락 판정') : (isEn ? 'Decision' : '판정'),
@@ -144,8 +147,8 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
             >
               <Lock size={14} />
               {isRelationshipContactTiming
-                ? (isEn ? `Open contact timing ${priceLabel}` : `연락 타이밍 열기 ${priceLabel}`)
-                : (isEn ? `Unlock timing ${priceLabel}` : `타이밍 열기 ${priceLabel}`)}
+                ? (isEn ? `Open contact timing${priceLabel ? ` ${priceLabel}` : ''}` : `연락 타이밍 열기${priceLabel ? ` ${priceLabel}` : ''}`)
+                : (isEn ? `Unlock timing${priceLabel ? ` ${priceLabel}` : ''}` : `타이밍 열기${priceLabel ? ` ${priceLabel}` : ''}`)}
             </button>
           ) : null}
         </div>
@@ -180,6 +183,9 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
               : (isRelationshipContactTiming
                   ? '무료 브리프는 판정을 먼저 줍니다. 자세한 노트는 왜 이 판정인지, 연락 타이밍, 피해야 할 메시지를 엽니다.'
                   : '무료 브리프는 판정을 먼저 줍니다. 자세한 노트는 왜 이 판정인지, 언제 움직일지, 무엇을 피할지, 어떤 순서로 실행할지를 엽니다.')}
+          </p>
+          <p className="mt-2 text-xs leading-5 text-white/45">
+            {unlockTrustCopy}
           </p>
         </div>
       ) : null}

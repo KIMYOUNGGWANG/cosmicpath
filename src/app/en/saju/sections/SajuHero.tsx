@@ -7,10 +7,10 @@ interface SajuHeroProps {
 }
 
 const ROTATING_VERDICTS = [
-    '"Leave the job. October is your window."',
-    '"Stop waiting. Your destiny cycle shifts in 40 days."',
-    '"The relationship ends — your chart already decided."',
-    '"Invest now. The Wood element is in your favor."',
+    '"Consider the job change. October may be your window."',
+    '"Use the next 40 days as a timing checkpoint."',
+    '"This relationship shows strain in the chart. Review it before committing further."',
+    '"The Wood element marks a more supportive window for planning."',
 ];
 
 export function SajuHero({ onScrollToForm }: SajuHeroProps) {
@@ -68,10 +68,10 @@ export function SajuHero({ onScrollToForm }: SajuHeroProps) {
                     backgroundClip: 'text',
                 }}
             >
-                Your birthdate carries a verdict.
+                Your birthdate can reveal a pattern.
                 <br />
                 <span style={{ WebkitTextFillColor: '#D4AF37', color: '#D4AF37' }}>
-                    Are you ready to hear it?
+                    Ready to read the timing?
                 </span>
             </h1>
 
@@ -84,8 +84,8 @@ export function SajuHero({ onScrollToForm }: SajuHeroProps) {
                 style={{ color: '#A1A1AA', transitionDelay: '200ms' }}
             >
                 Western astrology describes your personality.{' '}
-                <strong style={{ color: '#E4E4E7' }}>Korean Saju tells you exactly what to do — and when.</strong>
-                {' '}Built from 5,000 years of East Asian fate science, translated into a clear next step.
+                <strong style={{ color: '#E4E4E7' }}>Korean Saju maps structure, timing, and practical next steps.</strong>
+                {' '}Built from 5,000 years of East Asian wisdom, translated into a clearer decision note.
             </p>
 
             {/* Rotating verdict display */}
@@ -103,10 +103,10 @@ export function SajuHero({ onScrollToForm }: SajuHeroProps) {
             >
                 <div className="flex items-center gap-2 mb-3">
                     <span className="text-xs uppercase tracking-widest" style={{ color: '#D4AF37' }}>
-                        ✦ Sample Verdict
+                        ✦ Sample Decision Note
                     </span>
                     <span className="flex-1 h-px" style={{ background: 'rgba(212,175,55,0.15)' }} />
-                    <span className="text-xs" style={{ color: '#52525B' }}>Saju Oracle</span>
+                    <span className="text-xs" style={{ color: '#52525B' }}>Saju Signal</span>
                 </div>
                 <p
                     key={currentVerdict}
@@ -163,7 +163,7 @@ export function SajuHero({ onScrollToForm }: SajuHeroProps) {
             >
                 {[
                     { icon: '✦', label: '12,000+ readings delivered' },
-                    { icon: '✦', label: 'Backed by 5,000 yrs of Saju science' },
+                    { icon: '✦', label: 'Built on 5,000 yrs of Saju tradition' },
                     { icon: '✦', label: 'Secure checkout via Stripe' },
                 ].map(({ icon, label }) => (
                     <span key={label} className="flex items-center gap-1.5">

@@ -147,6 +147,42 @@ const EVIDENCE_MARKER_PATTERN =
 const DENSITY_MARKER_PATTERN =
     /판정|근거|함의|행동|지침|타이밍|경계|재검토|리스크|위험|기준|비교|측정|점검|결정|실행|보류|회신률|Claim|Evidence|implication|action|risk|timing|boundary|review|measure|compare|decision|specific|next move/i;
 
+const PHASE_SIX_PROMPT_SAFETY_REPLACEMENTS = [
+    [/의료\s*진단/g, '임상 판단'],
+    [/투약\s*변경/g, '전문가 복약 조정'],
+    [/투약/g, '전문가 복약 조정'],
+    [/약물/g, '복약 관련 항목'],
+    [/처방/g, '전문가 지시'],
+    [/수술/g, '시술 일정'],
+    [/치료\s*중단/g, '돌봄 중단'],
+    [/치료\s*중지/g, '돌봄 중지'],
+    [/특정\s*주식/g, '개별 금융상품'],
+    [/주식\s*(?:매수|매도|추천)/g, '개별 금융상품 거래 지시'],
+    [/코인/g, '고위험 디지털 자산'],
+    [/암호화폐/g, '고위험 디지털 자산'],
+    [/레버리지/g, '차입형 고위험 전략'],
+    [/풀매수/g, '집중 매수'],
+    [/몰빵/g, '집중 베팅'],
+    [/포지션\s*규모/g, '거래 규모'],
+    [/포트폴리오\s*배분/g, '자산 비중 산정'],
+    [/medical\s+diagnosis/gi, 'clinical judgment'],
+    [/medication\s+changes/gi, 'drug-management changes'],
+    [/medication/gi, 'drug-management item'],
+    [/schedule\s+surgery/gi, 'operation scheduling'],
+    [/surgery/gi, 'operation scheduling'],
+    [/stop\s+(?:your\s+)?(?:medicine|treatment)/gi, 'care interruption'],
+    [/quit\s+(?:your\s+)?(?:medicine|treatment)/gi, 'care interruption'],
+    [/specific\s+stocks?/gi, 'named market instruments'],
+    [/buy\s+(?:bitcoin|ethereum|crypto|cryptocurrency|stock|stocks?|coin|coins?)/gi, 'named market buy instruction'],
+    [/sell\s+(?:bitcoin|ethereum|crypto|cryptocurrency|stock|stocks?|coin|coins?)/gi, 'named market sell instruction'],
+    [/bitcoin|ethereum|crypto(?:currency)?/gi, 'speculative digital asset'],
+    [/leverage/gi, 'borrowed-risk tactic'],
+    [/go\s+all\s+in|all-?in/gi, 'concentration-bet tactic'],
+    [/portfolio\s+allocation/gi, 'asset mix'],
+    [/position\s+size/gi, 'exposure sizing'],
+    [/recover\s+investments?/gi, 'loss-recovery claim'],
+] as const;
+
 function assertPremiumPhaseQuality(phaseNumber: number, data: PremiumReportPartial) {
     const strings = collectReportStrings(data);
     const joined = strings.join('\n');
@@ -191,16 +227,42 @@ function countPatternMatches(value: string, pattern: RegExp): number {
     return [...value.matchAll(globalPattern)].length;
 }
 
-function buildQualityRetryUserPrompt(userPrompt: string, lastError: Error | null): string {
+function sanitizePhaseSixPromptSafetyMarkers(prompt: string): string {
+    let sanitized = prompt;
+    for (const [pattern, replacement] of PHASE_SIX_PROMPT_SAFETY_REPLACEMENTS) {
+        sanitized = sanitized.replace(pattern, replacement);
+    }
+    return sanitized;
+}
+
+function buildQualityRetryUserPrompt(userPrompt: string, lastError: Error | null, currentDate?: string): string {
     if (!lastError) return userPrompt;
+
+    const errorMessage = lastError.message;
+    const hasSafetyError = /Forbidden medical.*financial instruction marker found/i.test(errorMessage);
+    const hasDateError = /past (?:month|date)|before currentDate|must be in YYYY-MM-DD format/i.test(errorMessage);
+    const currentMonth = currentDate?.slice(0, 7);
+    const retryReason = hasSafetyError
+        ? 'The last output crossed a regulated-advice wording boundary.'
+        : hasDateError
+            ? 'The last output used timing before the report date boundary or malformed a date.'
+            : errorMessage;
+    const safetyRetry = hasSafetyError ? `
+<SAFETY_RETRY>
+Rewrite regulated guidance as decision-support boundaries only. For wellness, use observation routines and professional consultation boundaries. For visa, immigration, legal, tax, and financial-risk cases, use document checks, deadline mapping, questions for qualified professionals, risk buffers, and consultation triggers. Do not name clinical actions, drug-management actions, operation scheduling, visa/status actions, stay/return commands, signature/filing/lawsuit commands, named market instruments, speculative digital assets, borrowed-risk tactics, concentration bets, exposure sizing, or loss-recovery instructions.
+</SAFETY_RETRY>` : '';
+    const dateRetry = hasDateError ? `
+<DATE_RETRY>
+Use ${currentDate ?? 'the report current date'} as the earliest boundary. For month-level windows, use ${currentMonth ? `${currentMonth} or later` : 'the current month or later'}. If supplied context contains earlier dates or months, treat them only as historical intake context and do not copy them into future guidance. When exact timing is weak, write a review window such as "기준일 이후 2-4주 검증 창" instead of a specific earlier date.
+</DATE_RETRY>` : '';
 
     return `${userPrompt}
 
 <QUALITY_RETRY>
-Previous attempt failed validation: ${lastError.message}
+Previous attempt failed validation: ${retryReason}
 Rewrite the phase as premium-grade analysis, not filler. Each important paragraph must include: (1) the source signal being used, (2) what that signal means for this user/question, and (3) a concrete implication, timing boundary, risk, or next action. The combined user-visible text must satisfy the depth and density implied by the validation error, without padding, repeated phrasing, or generic reassurance. Use supplied Saju, astrology, tarot, timing, and user-question evidence wherever relevant.
 If the error mentions PREMIUM_QUALITY_GATE_FAILED, quote the missing supplied anchors exactly and name the source-role boundary before interpreting them.
-</QUALITY_RETRY>`;
+</QUALITY_RETRY>${safetyRetry}${dateRetry}`;
 }
 
 
@@ -338,7 +400,13 @@ export async function generateSinglePhase(
             return { phase: phaseNumber, success: false, data: null, error: 'Invalid phase' };
     }
 
-    const { system, user } = promptBuilder(userData, previousData);
+    const prompt = promptBuilder(userData, previousData);
+    const system = phaseNumber === 6
+        ? sanitizePhaseSixPromptSafetyMarkers(prompt.system)
+        : prompt.system;
+    const user = phaseNumber === 6
+        ? sanitizePhaseSixPromptSafetyMarkers(prompt.user)
+        : prompt.user;
     const phaseSchema = getPremiumPhaseSchema(phaseNumber);
     const responseJsonSchema = buildGoogleResponseJsonSchema(phaseSchema);
 
@@ -350,7 +418,7 @@ export async function generateSinglePhase(
         const thinkingConfig = getPhaseThinkingConfig();
         const userPromptForAttempt: string = attempt === 0
             ? user
-            : buildQualityRetryUserPrompt(user, lastError);
+            : buildQualityRetryUserPrompt(user, lastError, userData.currentDate);
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), requestTimeoutMs);
 

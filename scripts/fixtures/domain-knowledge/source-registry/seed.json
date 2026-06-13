@@ -1,0 +1,23 @@
+{
+  "fixtureKind": "source-registry",
+  "fixtureId": "source_registry_seed",
+  "records": [
+    {
+      "id": "fixture_source_registry_grounding_contract",
+      "sourceId": "cosmicpath_report_grounding_contract",
+      "sourceRole": "report_grounding_contract",
+      "sourceClaimId": "claim_fixture_grounding_contract",
+      "evidenceId": "evidence_fixture_grounding_contract",
+      "evidenceFamily": "product_synthesis",
+      "claimFamily": "report_grounding_contract",
+      "approvedUse": ["source_provenance_appendix"],
+      "citation": {
+        "sourceId": "cosmicpath_report_grounding_contract",
+        "locator": ".omo/drafts/report-grounding-contract-blueprint.md",
+        "citationLabel": "CosmicPath grounding contract",
+        "quotePolicy": "no_raw_source_text"
+      },
+      "summaryKo": "프롬프트와 리포트는 제품 소유 근거 ID를 통해서만 주장을 확장한다."
+    }
+  ]
+}

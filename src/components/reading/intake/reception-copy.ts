@@ -2,35 +2,35 @@ export type ReceptionLanguage = 'ko' | 'en';
 
 export const START_RECEPTION_COPY = {
   ko: {
-    badge: 'CosmicPath 접수실',
-    title: 'CosmicPath 3단분석 접수실',
+    badge: 'CosmicPath Decision Note',
+    title: 'CosmicPath Decision Note 접수실',
     subtitle:
-      '질문 하나를 접수하면 사주, 점성술, 타로를 각각 다른 근거층으로 분리해 지금 필요한 판단과 다음 행동을 정리합니다.',
-    sideTitle: '3단 분석 접수 기준',
-    sideSubtitle: '질문을 먼저 받고, 생년 정보는 근거 보정으로만 씁니다.',
+      '사주 구조, 점성 타이밍, 타로 즉시 신호로 미뤄둔 선택을 정리합니다. 첫 판정은 무료이고 생년월일은 필수입니다.',
+    sideTitle: 'Decision Note 접수 기준',
+    sideSubtitle: '선택 질문과 생년월일을 먼저 받고, 나머지는 정밀도 보정 입력으로만 씁니다.',
     sideNote:
-      '결과는 미래를 단정하지 않고 사주 흐름, 점성 타이밍, 타로 상징을 나란히 놓아 지금 선택할 수 있는 범위를 좁힙니다.',
+      '이름, 생시, 출생지, 성별, 상대 정보, 타로는 상품명이 아니라 판정의 정밀도를 맞추는 입력입니다.',
     writingTitle: '접수 메모',
     writingItems: [
-      '지금 가장 풀고 싶은 질문을 한 문장으로 적습니다.',
-      '생년월일과 출생지는 사주·점성 보정이 필요할 때 더합니다.',
-      '타로는 마지막에 뽑거나 건너뛰어도 흐름이 끊기지 않습니다.',
+      '지금 미루고 있는 선택 질문을 한 문장으로 적습니다.',
+      '생년월일은 필수 기준으로 적고, 이름·생시·출생지·성별은 정밀도가 필요할 때 더합니다.',
+      '상대 정보와 타로는 관계 보정과 즉시 신호가 필요할 때만 더합니다.',
     ],
   },
   en: {
-    badge: 'CosmicPath intake',
-    title: 'CosmicPath 3-Layer Reading Intake',
+    badge: 'CosmicPath Decision Note',
+    title: 'CosmicPath Decision Note Intake',
     subtitle:
-      'Submit one real question first. Saju, astrology, and tarot stay as separate evidence layers so the result can narrow the next useful move.',
-    sideTitle: '3-layer intake standard',
-    sideSubtitle: 'Question first; birth data only calibrates the evidence.',
+      'Use Saju structure, astrology timing, and a tarot immediate signal to settle one delayed decision. The first verdict is free, and birth date is required.',
+    sideTitle: 'Decision Note intake standard',
+    sideSubtitle: 'Decision question and birth date first; other details calibrate precision.',
     sideNote:
-      'The report does not promise an outcome. It compares saju rhythm, astrological timing, and tarot symbols to narrow what you can choose now.',
+      'Name, birth time, city, gender, partner details, and tarot are precision inputs, not the product identity.',
     writingTitle: 'Intake memo',
     writingItems: [
-      'Write the one question you most need to settle.',
-      'Add birth date and city when you want sharper saju and astrology calibration.',
-      'Pick tarot at the final step, or skip it without breaking the flow.',
+      'Write the one delayed choice you most need to settle.',
+      'Add birth date as the required baseline; add name, time, city, and gender when you want sharper calibration.',
+      'Add partner details and tarot only when relationship calibration or an immediate signal helps.',
     ],
   },
 } as const satisfies Record<ReceptionLanguage, {
@@ -46,24 +46,24 @@ export const START_RECEPTION_COPY = {
 
 export const INTAKE_SECTION_COPY = {
   ko: {
-    sequenceLabel: '3단 접수 순서',
-    sequenceSummary: '질문 / 사주·점성 / 타로',
-    questionLabel: '01 질문 접수',
-    questionEyebrow: '질문 중심 진입',
-    birthLabel: '02 사주·점성 기본정보',
-    birthEyebrow: '선택 보정 정보',
-    tarotLabel: '03 타로 준비',
-    tarotSummary: '입력 후 타로를 뽑거나 건너뛰어 첫 판정을 열 수 있습니다.',
+    sequenceLabel: 'Decision Note 접수 순서',
+    sequenceSummary: '선택 질문 / 생년월일 필수 / 타로 신호',
+    questionLabel: '01 선택 질문',
+    questionEyebrow: '선택 중심 진입',
+    birthLabel: '02 생년월일 기준',
+    birthEyebrow: '필수 판정 기준',
+    tarotLabel: '03 타로 즉시 신호',
+    tarotSummary: '입력 후 타로 신호를 뽑거나 건너뛰어 첫 판정을 열 수 있습니다.',
   },
   en: {
-    sequenceLabel: '3-layer intake order',
-    sequenceSummary: 'Question / Saju & astrology / Tarot',
-    questionLabel: '01 Question Intake',
-    questionEyebrow: 'Question-first entry',
-    birthLabel: '02 Saju & Astrology Basics',
-    birthEyebrow: 'Optional calibration',
-    tarotLabel: '03 Tarot Prep',
-    tarotSummary: 'After intake, choose tarot or skip it to open the first verdict.',
+    sequenceLabel: 'Decision Note intake order',
+    sequenceSummary: 'Decision Question / Required Birth Date / Tarot Signal',
+    questionLabel: '01 Decision Question',
+    questionEyebrow: 'Decision-first entry',
+    birthLabel: '02 Birth Date Baseline',
+    birthEyebrow: 'Required baseline',
+    tarotLabel: '03 Tarot Signal',
+    tarotSummary: 'After intake, choose a tarot signal or skip it to open the first verdict.',
   },
 } as const satisfies Record<ReceptionLanguage, {
   readonly sequenceLabel: string;

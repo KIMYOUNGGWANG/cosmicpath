@@ -1,0 +1,23 @@
+{
+  "fixtureKind": "tarot-corpus",
+  "fixtureId": "tarot_corpus_seed",
+  "records": [
+    {
+      "id": "fixture_tarot_rws_major_context",
+      "sourceId": "waite_pictorial_key_public_text",
+      "sourceRole": "rws_tarot_doctrine",
+      "sourceClaimId": "claim_fixture_tarot_rws_major",
+      "evidenceId": "evidence_fixture_tarot_rws_major",
+      "evidenceFamily": "tarot_rws_text",
+      "claimFamily": "rws_major_arcana_meaning",
+      "approvedUse": ["internal_research"],
+      "citation": {
+        "sourceId": "waite_pictorial_key_public_text",
+        "locator": "Project Gutenberg 43548 candidate locator",
+        "citationLabel": "Waite Pictorial Key candidate text",
+        "quotePolicy": "paraphrase_only"
+      },
+      "summaryKo": "RWS 텍스트 후보는 카드 의미 요약의 검토 대상으로만 쓰며 이미지 권리를 승인하지 않는다."
+    }
+  ]
+}

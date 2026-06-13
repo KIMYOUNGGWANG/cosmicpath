@@ -13,7 +13,7 @@ const PRIMARY_CONTACT_QUESTION = 'Should I text them now, or wait a little longe
 export const metadata: Metadata = {
   title: 'Contact Decision Note',
   description:
-    'Use CosmicPath to cross-check one relationship or DM timing question with saju, astrology, and tarot. First reading free.',
+    'Use CosmicPath Decision Note to cross-check one relationship or DM timing question. Saju = structure, astrology = timing, tarot = immediate signal.',
   robots: {
     index: true,
     follow: true,
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Contact Decision Note',
     description:
-      'First reading free. Unlock why this contact timing direction was chosen, when to move, and what message can backfire.',
+      'First Decision Note free. Unlock the Detailed 3-Layer Decision Report for why this direction was chosen, when to move, and what message can backfire.',
     url: '/en/contact-timing',
     siteName: 'CosmicPath',
     images: ['/og-image.png'],
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Contact Decision Note',
-    description: 'Saju, astrology, and tarot decision support for the moment before you send the message.',
+    description: 'Saju = structure, astrology = timing, tarot = immediate signal for the moment before you send the message.',
     images: ['/og-image.png'],
   },
 };
@@ -108,7 +108,7 @@ export default function EnglishContactTimingPage() {
             <Link href="/" className="text-sm font-semibold tracking-[0.24em] text-white/72 transition-colors hover:text-white">
               CosmicPath
             </Link>
-            <span className="text-sm text-white/48">First Decision Note free · Detailed Decision Note via Stripe</span>
+            <span className="text-sm text-white/48">First Decision Note free · Detailed 3-Layer Decision Report via Stripe</span>
           </header>
 
           <div className="grid flex-1 items-center gap-10 py-16 lg:grid-cols-[minmax(0,1fr)_420px]">
@@ -121,7 +121,7 @@ export default function EnglishContactTimingPage() {
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-8 text-white/70 md:text-lg">
                 Before you send the message, make a contact timing note: text now, wait, narrow the move, or hold.
-                Saju, Astrology, and Tarot are optional evidence layers, not the product name or a guarantee that someone will respond.
+                Saju = structure, astrology = timing, tarot = immediate signal. CosmicPath Decision Note names the next move without guaranteeing that someone will respond.
               </p>
 
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">

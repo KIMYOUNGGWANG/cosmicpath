@@ -41,11 +41,11 @@ export function StartTarotStage(props: StartTarotStageProps) {
             {props.isNextMoveReportEntry
               ? (props.language === 'en'
                   ? props.isRelationshipContactEntry
-                    ? 'Pick one card if tarot helps the contact question, or skip and open the verdict from the question alone.'
-                    : 'Pick one card if tarot helps the decision question, or skip and open the verdict from the question alone.'
+                    ? 'Pick one card if you want a tarot immediate signal for the contact question, or skip and open the verdict from the question and birth date.'
+                    : 'Pick one card if you want a tarot immediate signal for the decision question, or skip and open the verdict from the question and birth date.'
                   : props.isRelationshipContactEntry
-                    ? '타로가 연락 질문을 더 선명하게 만들 것 같다면 카드 1장을 고르세요. 질문만으로도 판정을 열 수 있습니다.'
-                    : '타로가 결정 질문을 더 선명하게 만들 것 같다면 카드 1장을 고르세요. 질문만으로도 판정을 열 수 있습니다.')
+                    ? '연락 질문에 타로 즉시 신호가 필요하면 카드 1장을 고르세요. 질문과 생년월일 기준으로 판정을 열 수 있습니다.'
+                    : '결정 질문에 타로 즉시 신호가 필요하면 카드 1장을 고르세요. 질문과 생년월일 기준으로 판정을 열 수 있습니다.')
               : (props.language === 'en'
                   ? 'Pause for a breath. Pick the card that feels like your current path.'
                   : '숨을 한 번 고르고, 지금 내 흐름과 가장 닿아 있는 카드를 선택해보세요.')}

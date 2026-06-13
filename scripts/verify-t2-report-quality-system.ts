@@ -117,8 +117,8 @@ function assertPrompt(api: PromptApi): void {
   const prompt = api.buildPhase1Prompt(firstArtifact().premiumUserData);
   const combined = `${prompt.system}\n${prompt.user}`;
   assert.match(combined, /근거_계약|GROUNDED_EVIDENCE_CONTRACT/);
-  assert.match(combined, /KASI\/JPL|KASI.*JPL/su);
-  assert.match(combined, /Waite.*Tetrabiblos/su);
+  assert.match(combined, /KASI\/JPL|KASI[\s\S]*JPL/u);
+  assert.match(combined, /Waite[\s\S]*Tetrabiblos/u);
   assert.match(combined, /타로 이미지 권리|tarot image rights/iu);
   assert.doesNotMatch(combined, /Pictorial Key to the Tarot[\s\S]{0,80}The Veil and its Symbols/u);
   console.log('premium_prompt_includes_grounded_evidence_contract_for_all_phases');

@@ -66,7 +66,7 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                     >
                         <span className="font-cinzel text-lg tracking-[0.18em] md:text-xl">CosmicPath</span>
                         <span className="mt-1 hidden text-[9px] uppercase tracking-[0.24em] text-white/42 sm:block">
-                            {isEnglish ? 'Saju · Astrology · Tarot' : '사주 · 점성술 · 타로'}
+                            {isEnglish ? 'Decision Note' : 'Decision Note'}
                         </span>
                     </Link>
 
@@ -94,7 +94,7 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                             className="group relative inline-flex shrink-0 items-center justify-center overflow-hidden border border-[#d7c59a]/24 bg-[#11100d]/60 px-5 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white shadow-[inset_3px_0_0_rgba(215,197,154,0.55)] transition-all duration-300 hover:border-[#d7c59a]/55 hover:bg-[#d7c59a]/[0.08] hover:text-[#d7c59a]"
                         >
                             <span className="absolute inset-x-3 top-1 h-px bg-[#d7c59a]/0 transition-colors group-hover:bg-[#d7c59a]/24" />
-                            {isEnglish ? 'Start Reading' : '3단분석 시작'}
+                            {isEnglish ? 'Open Decision Note' : 'Decision Note 시작'}
                         </Link>
                     </div>
 
@@ -103,7 +103,7 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                             href={decisionStartHref}
                             className="inline-flex min-h-[32px] items-center justify-center gap-1 border border-[#d7c59a]/24 bg-[#11100d]/62 px-4 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-[inset_2px_0_0_rgba(215,197,154,0.55)] transition-all duration-300 hover:border-[#d7c59a]/55 hover:bg-[#d7c59a]/[0.08] hover:text-[#d7c59a]"
                         >
-                            {isEnglish ? 'Read' : '분석'}
+                            {isEnglish ? 'Note' : '노트'}
                         </Link>
 
                         <button
@@ -148,7 +148,7 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                                 icon: PenLine,
                                 iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
                                 label: 'STARTER GUIDES',
-                                subLabel: 'Learn Korean Saju first',
+                                subLabel: 'Learn the Saju source role',
                                 href: '/guides',
                             },
                         ]
@@ -157,8 +157,8 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                         type: 'link',
                         icon: PenLine,
                         iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
-                        label: isEnglish ? '3-LAYER READING' : '3단분석 시작',
-                        subLabel: isEnglish ? 'Saju, astrology, tarot' : '사주, 점성술, 타로로 보기',
+                        label: isEnglish ? 'DECISION NOTE' : 'DECISION NOTE 시작',
+                        subLabel: isEnglish ? 'Saju, timing, tarot signal' : '사주 구조, 타이밍, 타로 신호',
                         href: decisionStartHref,
                     },
                 ]}

@@ -63,7 +63,7 @@ export function RelationshipOutcomeSeed(props: RelationshipOutcomeSeedProps) {
         followUpDueAt,
         followUpDelayDays: 7,
         followUpChannel: 'email_and_local_seed',
-        decisionNoteProduct: 'Detailed Decision Note',
+        decisionNoteProduct: 'Detailed 3-Layer Decision Report',
         questionLength: readingData.question.length,
       },
     });
@@ -84,8 +84,8 @@ export function RelationshipOutcomeSeed(props: RelationshipOutcomeSeedProps) {
           </h3>
           <p className="mt-2 break-keep text-sm leading-6 text-white/58">
             {isEn
-              ? 'After a Detailed Decision Note is unlocked by email, CosmicPath schedules a 7-day check-in. This button also saves a local cue on this device so you can compare what happened.'
-              : '이메일로 Detailed Decision Note를 열면 CosmicPath가 7일 뒤 체크인 메일을 예약합니다. 이 버튼은 이 기기에도 결정 씨앗을 저장해 실제 결과와 비교할 수 있게 해요.'}
+              ? 'After a Detailed 3-Layer Decision Report is unlocked by email, CosmicPath schedules a 7-day check-in. This button also saves a local cue on this device so you can compare what happened.'
+              : '이메일로 상세 3단 판정 리포트를 열면 CosmicPath가 7일 뒤 체크인 메일을 예약합니다. 이 버튼은 이 기기에도 결정 씨앗을 저장해 실제 결과와 비교할 수 있게 해요.'}
           </p>
         </div>
         {isSaved ? (

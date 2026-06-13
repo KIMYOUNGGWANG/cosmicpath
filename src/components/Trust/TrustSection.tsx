@@ -9,12 +9,12 @@ interface TrustSectionProps {
 export function TrustSection({ language }: TrustSectionProps) {
     const content = {
         ko: {
-            title: "근거 있는 이유, 믿을 수 있는 결과",
-            subtitle: "32만 건 데이터 기반 — 그냥 느낌이 아니에요",
+            title: "근거 있는 이유, 참고할 수 있는 리포트",
+            subtitle: "32만 건 데이터를 참고한 흐름 분석",
             cards: [
                 {
                     title: "근거 있는 분석",
-                    desc: "오래된 지식 + 현대 데이터. 정밀하게 읽어요",
+                    desc: "오래된 지식 + 현대 데이터. 차분하게 정리해요",
                     icon: "📊"
                 },
                 {
@@ -30,17 +30,17 @@ export function TrustSection({ language }: TrustSectionProps) {
             ]
         },
         en: {
-            title: "Where Science Meets Mystery",
-            subtitle: "Your destiny analyzed based on 320,000 real-world data points",
+            title: "Where Structure Meets Signal",
+            subtitle: "Decision signals reviewed against 320,000 real-world data points",
             cards: [
                 {
-                    title: "Data-Driven",
-                    desc: "Precision algorithms combining ancient texts and modern stats",
+                    title: "Data-Informed",
+                    desc: "Saju structure, timing patterns, and modern signals in one reading",
                     icon: "📊"
                 },
                 {
-                    title: "Proven Trust",
-                    desc: "Over 50,000 users have already verified their paths",
+                    title: "Used by 50,000+",
+                    desc: "Thousands of users have checked their timing and next move",
                     icon: "⭐"
                 },
                 {

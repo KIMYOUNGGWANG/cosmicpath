@@ -1,0 +1,24 @@
+{
+  "fixtureKind": "rejected-hallucination-cases",
+  "fixtureId": "reject_missing_citation",
+  "expectedIssue": "missing_citation",
+  "records": [
+    {
+      "id": "fixture_reject_missing_citation",
+      "sourceId": "cosmicpath_report_grounding_contract",
+      "sourceRole": "report_grounding_contract",
+      "sourceClaimId": "claim_fixture_reject_missing_citation",
+      "evidenceId": "evidence_fixture_reject_missing_citation",
+      "evidenceFamily": "product_synthesis",
+      "claimFamily": "report_grounding_contract",
+      "approvedUse": ["prompt_grounding"],
+      "citation": {
+        "sourceId": "cosmicpath_divination_safety_policy",
+        "locator": "mismatched citation source",
+        "citationLabel": "Wrong source citation",
+        "quotePolicy": "no_raw_source_text"
+      },
+      "summaryKo": "출처 ID와 citation source가 다르면 citation 누락으로 취급한다."
+    }
+  ]
+}

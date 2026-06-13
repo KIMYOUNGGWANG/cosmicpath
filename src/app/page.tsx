@@ -16,10 +16,10 @@ import { Footer } from '@/components/landing/Footer';
 
 const SITE_URL = 'https://www.cosmicpath.app';
 const OG_IMAGE_URL = `${SITE_URL}/og-image.png`;
-const KOREAN_TITLE = 'CosmicPath | 사주·점성술·타로 3단분석';
-const KOREAN_DESCRIPTION = '막힌 관계·일·돈 질문을 사주, 점성술, 타로로 대조해 첫 판정과 다음 행동을 정리합니다.';
-const ENGLISH_TITLE = 'CosmicPath | Saju, Astrology, Tarot 3-Layer Reading';
-const ENGLISH_DESCRIPTION = 'A 3-layer reading that cross-checks saju, astrology, and tarot to clarify one stuck question and the next action.';
+const KOREAN_TITLE = 'CosmicPath Decision Note | 미뤄둔 선택 하나를 판정';
+const KOREAN_DESCRIPTION = '사주로 구조를 보고, 점성으로 타이밍을 보고, 타로로 지금 질문의 즉각 신호를 확인해 하나의 질문을 판정합니다.';
+const ENGLISH_TITLE = 'CosmicPath Decision Note | One delayed choice, one verdict';
+const ENGLISH_DESCRIPTION = "CosmicPath Decision Note cross-checks Saju structure, astrology timing, and tarot's immediate signal before naming the next move.";
 
 async function getLandingLanguage(): Promise<'ko' | 'en'> {
     const headersList = await headers();
@@ -41,7 +41,7 @@ export async function generateMetadata(): Promise<Metadata> {
             openGraph: {
                 title: KOREAN_TITLE,
                 description: KOREAN_DESCRIPTION,
-                images: [{ url: OG_IMAGE_URL, width: 1200, height: 630, alt: 'CosmicPath 사주·점성술·타로 3단분석 미리보기' }],
+                images: [{ url: OG_IMAGE_URL, width: 1200, height: 630, alt: 'CosmicPath Decision Note 미리보기' }],
             },
             twitter: {
                 card: 'summary_large_image',
@@ -58,7 +58,7 @@ export async function generateMetadata(): Promise<Metadata> {
         openGraph: {
             title: ENGLISH_TITLE,
             description: ENGLISH_DESCRIPTION,
-            images: [{ url: OG_IMAGE_URL, width: 1200, height: 630, alt: 'CosmicPath saju, astrology, and tarot 3-layer reading preview' }],
+            images: [{ url: OG_IMAGE_URL, width: 1200, height: 630, alt: 'CosmicPath Decision Note preview' }],
         },
         twitter: {
             card: 'summary_large_image',

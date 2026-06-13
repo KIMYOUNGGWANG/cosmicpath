@@ -1,8 +1,8 @@
 /**
  * 서양 점성술 해석 규칙 + 엔진 통합
  * Phase 4: AI 프롬프트 통합
- * 
- * 가중치: 30% (성향, 관계성)
+ *
+ * 역할: 타이밍 압력, 풀리는 창, 상황 리듬
  */
 
 import {
@@ -15,8 +15,8 @@ import {
 
 export const ASTRO_RULES = {
     version: '2.0.0',
-    weight: 0.30,
-    role: '성향, 관계, 타고난 기질 (천체 계산 기반)',
+    sourceRole: 'timing_pressure_release_window',
+    role: '타이밍 압력, 풀리는 창, 상황 리듬 (천체 계산 기반)',
 
     // ============ 행성 (Planets) ============
     planets: {
@@ -61,7 +61,7 @@ export const ASTRO_RULES = {
         9: { area: '확장', keyword: '철학, 여행, 고등교육', question: '무엇을 믿는가?' },
         10: { area: '사회', keyword: '직업, 명예, 공적 이미지', question: '무엇을 이루는가?' },
         11: { area: '공동체', keyword: '친구, 희망, 단체', question: '어떤 미래를 원하는가?' },
-        12: { area: '무의식', keyword: '카르마, 비밀, 영성', question: '무엇을 놓아야 하는가?' }
+        12: { area: '무의식', keyword: '반복 패턴, 숨은 동기, 회복', question: '무엇을 놓아야 하는가?' }
     },
 
     // ============ 각도 (Aspects) ============
@@ -182,7 +182,7 @@ ${astroContext}
 3. 행성 품위(Dignities)가 높은(+4~5) 행성은 강점, 낮은(-4~5) 행성은 보완점으로 언급하세요.
 4. 강력한 Aspects는 성격과 관계에 큰 영향을 미칩니다.
 5. 차트 패턴(Grand Trine, T-Square 등)은 전체적인 삶의 구조를 나타냅니다.
-6. 점성술은 성향/관계(30% 가중치)이므로, 사주/타로와 교차 검증하세요.
+6. 점성술은 타이밍 압력과 풀리는 창을 읽는 레이어이므로, 사주 구조와 타로 즉각 신호와 교차 검증하세요.
 </ASTROLOGY_INTERPRETATION_RULES>
 
 <SUN_MOON_DYNAMIC_GUIDE>
@@ -263,7 +263,7 @@ ${astroContext}
 3. High Dignities (+4~5) = strengths; Low Dignities (-4~5) = areas to improve.
 4. Strong Aspects significantly influence personality and relationships.
 5. Chart Patterns represent overall life structure.
-6. Astrology is 30% weight - cross-validate with Saju/Tarot.
+6. Astrology reads timing pressure and release windows; cross-validate it with Saju structure and Tarot's immediate signal.
 </ASTROLOGY_INTERPRETATION_RULES>
 `;
     }

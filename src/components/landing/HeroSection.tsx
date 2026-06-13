@@ -14,14 +14,14 @@ export function HeroSection({ language }: HeroSectionProps) {
     const startHref = `/start?reset=true&entry=${decisionEntry}`;
     const layerRows = isKo
         ? [
-            { code: '命式', title: '사주', detail: '타고난 구조와 올해 압력을 먼저 봅니다.' },
-            { code: '星盤', title: '점성술', detail: '지금 외부 흐름과 타이밍을 겹쳐 봅니다.' },
-            { code: '牌', title: '타로', detail: '현재 선택을 흔드는 심리 신호를 확인합니다.' },
+            { code: '命式', title: '사주 구조', detail: '타고난 구조와 반복되는 압력을 봅니다.' },
+            { code: '星盤', title: '점성 타이밍', detail: '지금 움직여도 되는 시간 흐름을 봅니다.' },
+            { code: '牌', title: '타로 즉각 신호', detail: '지금 질문에서 바로 올라온 신호를 확인합니다.' },
         ]
         : [
-            { code: '命式', title: 'Saju', detail: 'Your birth structure and yearly pressure.' },
-            { code: '星盤', title: 'Astrology', detail: 'The current timing and outer weather.' },
-            { code: '牌', title: 'Tarot', detail: 'The psychology moving inside this choice.' },
+            { code: '命式', title: 'Saju structure', detail: 'The underlying pattern and recurring pressure.' },
+            { code: '星盤', title: 'Astrology timing', detail: 'The timing window around the next move.' },
+            { code: '牌', title: "Tarot's immediate signal", detail: 'The signal rising from this question right now.' },
         ];
     const sampleCases = isKo
         ? [
@@ -79,33 +79,33 @@ export function HeroSection({ language }: HeroSectionProps) {
                         <section className="border-b border-white/10 p-6 sm:p-8 lg:border-b-0 lg:border-r lg:p-12">
                             <div className="mb-10 flex flex-wrap items-center justify-between gap-3 border-y border-white/10 py-3">
                                 <span className="text-[11px] uppercase tracking-[0.28em] text-white/48">
-                                    {isKo ? 'CosmicPath 삼중 판독실' : 'CosmicPath reading room'}
+                                    {isKo ? 'CosmicPath Decision Note room' : 'CosmicPath Decision Note room'}
                                 </span>
                                 <span className="text-[11px] uppercase tracking-[0.24em] text-acc-gold/72">
-                                    {isKo ? '사주 / 점성술 / 타로' : 'Saju / Astrology / Tarot'}
+                                    {isKo ? '첫 판정은 무료' : 'First verdict free'}
                                 </span>
                             </div>
 
                             <h1 className="max-w-3xl break-keep font-cinzel text-[36px] leading-[1.08] text-starlight sm:text-6xl lg:text-[72px]">
                                 {isKo ? (
                                     <>
-                                        한 가지 운세로는 <br />
-                                        안 풀리는 문제를 <br />
-                                        <span className="text-acc-gold">세 겹으로 대조합니다</span>
+                                        미뤄둔 선택 하나를 <br />
+                                        먼저 판정하고 <br />
+                                        <span className="text-acc-gold">세 신호로 대조합니다</span>
                                     </>
                                 ) : (
                                     <>
-                                        Some questions need <br />
-                                        more than one oracle. <br />
-                                        <span className="text-acc-gold">We cross-check three.</span>
+                                        One delayed choice. <br />
+                                        Three cross-checks. <br />
+                                        <span className="text-acc-gold">One next move.</span>
                                     </>
                                 )}
                             </h1>
 
                             <p className="mt-8 max-w-2xl break-keep text-base font-light leading-8 text-moonlight">
                                 {isKo
-                                    ? '사주는 구조를, 점성술은 타이밍을, 타로는 지금 마음의 방향을 봅니다. 결론은 하나로 모으되 근거는 숨기지 않습니다.'
-                                    : 'Saju reads structure, astrology reads timing, and tarot reads the current pull. The answer is condensed, but the evidence stays visible.'}
+                                    ? '사주로 구조를 보고, 점성으로 타이밍을 보고, 타로로 지금 질문의 즉각 신호를 확인해 하나의 질문을 판정합니다.'
+                                    : "CosmicPath Decision Note cross-checks Saju structure, astrology timing, and tarot's immediate signal before naming the next move."}
                             </p>
 
                             <GrowthTrackedLink
@@ -126,10 +126,10 @@ export function HeroSection({ language }: HeroSectionProps) {
                                 </span>
                                 <span className="flex flex-col justify-center px-5 text-left sm:px-6">
                                     <span className="text-sm font-semibold tracking-[0.08em]">
-                                        {isKo ? '내 문제를 3단분석으로 열기' : 'Open my 3-layer reading'}
+                                        {isKo ? 'Decision Note 시작' : 'Open Decision Note'}
                                     </span>
                                     <span className="mt-1 text-[11px] uppercase tracking-[0.18em] text-white/38">
-                                        {isKo ? '질문 접수 / 사주·점성 / 타로' : 'question / saju & astrology / tarot'}
+                                        {isKo ? '선택 질문 / 생년월일 / 선택 타로' : 'decision question / birth date / tarot'}
                                     </span>
                                 </span>
                                 <span className="flex items-center justify-center border-l border-[#d7c59a]/28 text-[#d7c59a]">
@@ -141,12 +141,12 @@ export function HeroSection({ language }: HeroSectionProps) {
                         <section className="p-6 sm:p-8 lg:p-10">
                             <div className="border-b border-white/10 pb-6">
                                 <div className="text-[11px] uppercase tracking-[0.28em] text-white/38">
-                                    {isKo ? '접수 가능한 질문' : 'case intake'}
+                                    {isKo ? 'Decision Note 접수 예시' : 'Decision Note intake'}
                                 </div>
                                 <p className="mt-4 break-keep text-2xl font-light leading-snug text-starlight">
                                     {isKo
-                                        ? '이름, 생년월일, 장소, 그리고 지금 가장 걸리는 질문 하나.'
-                                        : 'Name, birth data, place, and the one question that will not leave.'}
+                                        ? '지금 늦추고 있는 질문 하나와 생년월일을 바탕으로 세 신호를 대조합니다.'
+                                        : 'Bring one postponed question and your birth date; the note cross-checks the three source signals.'}
                                 </p>
                             </div>
 
@@ -182,7 +182,8 @@ export function HeroSection({ language }: HeroSectionProps) {
                                                     context: item.context,
                                                     metadata: {
                                                         landingVariant,
-                                                        question: item.question,
+                                                        promptId: item.label,
+                                                        hasPrefilledQuestion: true,
                                                     },
                                                 }}
                                                 className="group grid min-h-[58px] grid-cols-[72px_minmax(0,1fr)_34px] items-center border border-white/8 bg-white/[0.018] transition-colors duration-300 hover:border-acc-gold/32 hover:bg-white/[0.04]"

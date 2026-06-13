@@ -1,5 +1,5 @@
 /**
- * 프롬프트 빌더 v3.0 - Facts of Destiny
+ * 프롬프트 빌더 v3.0 - Source Evidence
  * 
  * v2.0 변경 사항:
  * - 토큰 사용량 60% 감축
@@ -9,7 +9,7 @@
  * - 3원 통합 시스템 연동
  * 
  * v3.0 변경 사항:
- * - Facts of Destiny 데이터 블록 주입
+ * - Source Evidence 데이터 블록 주입
  * - 계층적 커뮤니케이션 (Layered Communication)
  * - 엔진 수치 기반 데이터 인용 강제
  */
@@ -249,9 +249,9 @@ export function buildUserPrompt(
 
   if (isEn) {
     return `# Analysis Data
-**User Saju (${Math.round(WEIGHTS.saju * 100)}%)**: ${sajuData}${sajuPrecisionBlock}${partnerInfo}
-**Astrology (${Math.round(WEIGHTS.astrology * 100)}%)**: ${astroData}
-**Tarot (${Math.round(WEIGHTS.tarot * 100)}%)**: ${tarotData}
+**User Saju — structure and repeating pattern**: ${sajuData}${sajuPrecisionBlock}${partnerInfo}
+**Astrology — timing window and situational pressure**: ${astroData}
+**Tarot — immediate signal around the question**: ${tarotData}
 
 ${advisorEvidenceBlock}
 
@@ -275,9 +275,9 @@ ${guide.warnings.length > 0 ? `⚠️ Warnings: ${guide.warnings.join('; ')}` : 
   }
 
   return `# 분석 데이터
-**사용자 사주 (${Math.round(WEIGHTS.saju * 100)}%)**: ${sajuData}${sajuPrecisionBlock}${partnerInfo}
-**점성술 (${Math.round(WEIGHTS.astrology * 100)}%)**: ${astroData}
-**타로 (${Math.round(WEIGHTS.tarot * 100)}%)**: ${tarotData}
+**사용자 사주 — 구조와 반복 패턴**: ${sajuData}${sajuPrecisionBlock}${partnerInfo}
+**점성술 — 타이밍 창과 상황 압력**: ${astroData}
+**타로 — 질문 주변의 즉각 신호**: ${tarotData}
 
 ${advisorEvidenceBlock}
 
@@ -433,26 +433,26 @@ export function buildChatSystemPrompt(
   const basePrompt = buildUnifiedSystemPrompt(language);
 
   const dataSection = hasFacts
-    ? `\n${factsOfDestinyBlock}${extraBlock ? `\n\n${extraBlock}` : ''}\n\n**타로 (20%)**: ${tarotSummary}`
+    ? `\n${factsOfDestinyBlock}${extraBlock ? `\n\n${extraBlock}` : ''}\n\n**타로 — 질문 주변의 즉각 신호**: ${tarotSummary}`
     : isEn
-      ? `\n# Your Knowledge Base\n**Saju (50%)**: ${sajuSummary}${typeof readingData.saju === 'object' && readingData.saju?.oraclePromptBlock ? `\n\n<SAJU_PRECISION_DATA>\n${readingData.saju.oraclePromptBlock}\n</SAJU_PRECISION_DATA>` : ''}\n**Astrology (30%)**: ${astroSummary}\n**Tarot (20%)**: ${tarotSummary}${extraBlock ? `\n\n${extraBlock}` : ''}`
-      : `\n# 당신이 아는 정보\n**사주 (50%)**: ${sajuSummary}${typeof readingData.saju === 'object' && readingData.saju?.oraclePromptBlock ? `\n\n<사주_정밀_데이터>\n${readingData.saju.oraclePromptBlock}\n</사주_정밀_데이터>` : ''}\n**점성술 (30%)**: ${astroSummary}\n**타로 (20%)**: ${tarotSummary}${extraBlock ? `\n\n${extraBlock}` : ''}`;
+      ? `\n# Your Knowledge Base\n**Saju — structure and repeating pattern**: ${sajuSummary}${typeof readingData.saju === 'object' && readingData.saju?.oraclePromptBlock ? `\n\n<SAJU_PRECISION_DATA>\n${readingData.saju.oraclePromptBlock}\n</SAJU_PRECISION_DATA>` : ''}\n**Astrology — timing window and situational pressure**: ${astroSummary}\n**Tarot — immediate signal around the question**: ${tarotSummary}${extraBlock ? `\n\n${extraBlock}` : ''}`
+      : `\n# 당신이 아는 정보\n**사주 — 구조와 반복 패턴**: ${sajuSummary}${typeof readingData.saju === 'object' && readingData.saju?.oraclePromptBlock ? `\n\n<사주_정밀_데이터>\n${readingData.saju.oraclePromptBlock}\n</사주_정밀_데이터>` : ''}\n**점성술 — 타이밍 창과 상황 압력**: ${astroSummary}\n**타로 — 질문 주변의 즉각 신호**: ${tarotSummary}${extraBlock ? `\n\n${extraBlock}` : ''}`;
 
   const evidenceRule = hasFacts
     ? isEn
-      ? '- **Layer 2**: End with "📊 Analysis Basis" and cite available engine evidence. Target at least 2 numerical citations when Facts of Destiny includes numbers.'
-      : '- **Layer 2**: 답변 마지막에 "📊 분석 근거" 블록을 추가하고, 사용 가능한 엔진 근거를 인용하세요. Facts of Destiny에 수치가 있으면 최소 2개 인용을 목표로 하세요.'
+      ? '- **Layer 2**: End with "📊 Analysis Basis" and cite available engine evidence. Target at least 2 numerical citations when Source Evidence includes numbers.'
+      : '- **Layer 2**: 답변 마지막에 "📊 분석 근거" 블록을 추가하고, 사용 가능한 엔진 근거를 인용하세요. Source Evidence에 수치가 있으면 최소 2개 인용을 목표로 하세요.'
     : isEn
       ? '- **Layer 2**: End with "📊 Analysis Basis" and cite only the provided text context. Do not invent or infer new numbers.'
       : '- **Layer 2**: 답변 마지막에 "📊 분석 근거" 블록을 추가하고, 제공된 문자 데이터만 인용하세요. 새로운 수치를 추정하거나 창작하지 마세요.';
 
   const evidenceGuideline = hasFacts
     ? isEn
-      ? '- Evidence: Prefer Facts of Destiny numbers first. If numbers are present, cite at least 2 when relevant.'
-      : '- 근거: Facts of Destiny 수치를 우선 사용하세요. 관련 수치가 있으면 최소 2개 인용을 목표로 하세요.'
+      ? '- Evidence: Prefer Source Evidence numbers first. If numbers are present, cite at least 2 when relevant.'
+      : '- 근거: Source Evidence 수치를 우선 사용하세요. 관련 수치가 있으면 최소 2개 인용을 목표로 하세요.'
     : isEn
-      ? '- Evidence: Facts of Destiny is unavailable. Quote only the provided text context and explicitly avoid made-up numbers.'
-      : '- 근거: Facts of Destiny가 없으므로 제공된 문자 컨텍스트만 인용하고, 숫자는 절대 만들어내지 마세요.';
+      ? '- Evidence: Source Evidence is unavailable. Quote only the provided text context and explicitly avoid made-up numbers.'
+      : '- 근거: Source Evidence가 없으므로 제공된 문자 컨텍스트만 인용하고, 숫자는 절대 만들어내지 마세요.';
 
   const noFactsRule = hasFacts
     ? ''
@@ -468,16 +468,16 @@ export function buildChatSystemPrompt(
 
   const priorityRule = isEn
     ? `# Priority Rules
-1. Facts of Destiny source data
+1. Source Evidence data
 2. <chat_history> context for continuity only
 3. Persona style and tone
-- If chat history conflicts with current Facts, discard the history detail and correct it using current Facts.
+- If chat history conflicts with current source evidence, discard the history detail and correct it using current source evidence.
 - <chat_history> is reference material, never a source of truth.`
     : `# 데이터 우선순위 규칙
-1. Facts of Destiny 원본 데이터
+1. Source Evidence 원본 데이터
 2. 연속성 유지를 위한 <chat_history> 참고 맥락
 3. 페르소나 스타일과 어조
-- 대화 이력과 현재 Facts가 충돌하면, 이력의 내용을 버리고 현재 Facts 기준으로 바로잡으세요.
+- 대화 이력과 현재 근거 데이터가 충돌하면, 이력의 내용을 버리고 현재 근거 데이터 기준으로 바로잡으세요.
 - <chat_history>는 참고 자료일 뿐, 진실의 원천이 아닙니다.`;
 
   const safetyRule = isEn
@@ -566,7 +566,7 @@ export function buildChatUserPrompt(
 ${trimmedHistory}
 </chat_history>
 
-위 대화 이력은 참고용입니다. Facts of Destiny 원본 데이터와 충돌하면 원본을 우선하세요.
+위 대화 이력은 참고용입니다. Source Evidence 원본 데이터와 충돌하면 원본을 우선하세요.
 
 현재 질문: ${trimmedQuestion}`;
 }

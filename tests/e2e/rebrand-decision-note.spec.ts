@@ -6,7 +6,7 @@ const firstViewportOldBrandPattern =
   /\bAI\b|Destiny|Fortune|Cosmic Radar|Premium Report|전체 리포트|오라클/i;
 
 const legacyVisibleCopyPattern =
-  /Oracle Snapshot|Reveal My Destiny|Not generic fortune copy|Oracle Chat|Premium Report|Full Report|전체 리포트|오라클의 문|오라클 경로|Destiny Revealed|CosmicPath Detailed Decision Note|Cosmic Compatibility Full Report/i;
+  /Oracle Snapshot|Reveal My Destiny|Not generic fortune copy|Oracle Chat|Premium Report|Full Report|Full Reading|전체 해석|전체 리포트|오라클의 문|오라클 경로|Destiny Revealed|Detailed Decision Note|Cosmic Compatibility Full Report|optional evidence layers|선택적 근거 레이어로만|CosmicPath 3단분석/i;
 
 function projectFile(relativePath: string) {
   return path.join(process.cwd(), relativePath);
@@ -46,37 +46,42 @@ function jsonLdGraphNodes(payload: unknown): readonly JsonRecord[] {
 }
 
 test.describe('CosmicPath frontend rebrand', () => {
-  test('landing presents CosmicPath 3-layer brand', async ({ page }) => {
+  test('landing presents CosmicPath Decision Note brand', async ({ page }) => {
     await page.setExtraHTTPHeaders({ 'Accept-Language': 'ko-KR,ko;q=0.9' });
     await page.goto('/');
 
-    await expect(page).toHaveTitle(/CosmicPath.*3-Layer Reading/i);
+    await expect(page).toHaveTitle(/CosmicPath.*Decision Note/i);
     await expect(
       page.getByRole('heading', {
-        name: /Some questions need\s*more than one oracle|미뤄둔 선택을\s*오늘 정리하세요/i,
+        name: /One delayed choice.*Three cross-checks.*One next move|미뤄둔 선택 하나/i,
       })
     ).toBeVisible();
 
-    const cta = page.getByRole('link', { name: /Open my 3-layer reading|Start Reading|선택 정리하기/i }).first();
+    await expect(page.getByText(/First verdict free|첫 판정은 무료/i).first()).toBeVisible();
+    await expect(page.getByText(/Saju structure.*astrology timing.*tarot's immediate signal|사주.*구조.*점성.*타이밍.*타로.*즉각/i).first()).toBeVisible();
+    await expect(page.locator('body')).not.toContainText(/3단분석으로 열기|Open my 3-layer reading|3단 근거 보기|3단분석 시작|CosmicPath 3단분석|optional evidence layers|선택적 근거 레이어로만/i);
+
+    const cta = page.getByRole('link', { name: /Decision Note 시작|Open Decision Note/i }).first();
     await expect(cta).toHaveAttribute('href', '/start?reset=true&entry=decision_timing_rebuild_v1');
   });
 
-  test('start empty relationship question keeps CosmicPath reception language', async ({ page }) => {
+  test('start empty relationship question keeps Decision Note reception language', async ({ page }) => {
     await page.goto('/start?reset=true&context=love&entry=next_move_report_mvp_v1&lang=ko&question=');
 
     await expect(page.locator('textarea').first()).toBeVisible();
-    await expect(page.getByText(/CosmicPath 3단분석 접수실/).first()).toBeVisible();
-    await expect(page.getByText(/01 질문 접수/).first()).toBeVisible();
-    await expect(page.getByText(/02 사주·점성 기본정보/).first()).toBeVisible();
+    await expect(page.getByText(/Decision Note 접수실/).first()).toBeVisible();
+    await expect(page.getByText(/01 선택 질문/).first()).toBeVisible();
+    await expect(page.getByText(/02 생년월일 기준/).first()).toBeVisible();
     await expect(page.locator('body')).not.toContainText(/Application error|Unhandled Runtime Error|Next\.js/);
 
     const firstScreenText = await page.locator('body').innerText();
     expect(firstScreenText).not.toMatch(firstViewportOldBrandPattern);
+    expect(firstScreenText).not.toMatch(/3단분석 접수실|3-Layer Reading Intake/);
   });
 
   test('share legal and payment surfaces keep decision-note regression language', async ({ page }) => {
     await page.goto('/terms');
-    await expect(page.getByText(/decision-support notes/i).first()).toBeVisible();
+    await expect(page.getByText(/CosmicPath Decision Note as digital content/i).first()).toBeVisible();
     await expect(page.locator('body')).not.toContainText(/AI-generated|Oracle|Fortune|Destiny|Premium Report/i);
 
     await page.goto('/privacy');
@@ -85,11 +90,17 @@ test.describe('CosmicPath frontend rebrand', () => {
 
     const publicCopyFiles = [
       'src/app/share/[id]/SharedPageClient.tsx',
+      'src/app/share/[id]/page.tsx',
       'src/app/start/start-reveal-stage.tsx',
       'src/app/start/start-tarot-stage.tsx',
       'src/app/start/start-result-decision-brief.tsx',
+      'src/components/share/SharePanel.tsx',
+      'src/components/reading/share-card.tsx',
+      'src/app/api/og/route.tsx',
+      'src/app/api/og/reading/[id]/route.tsx',
       'src/lib/reading-share.ts',
       'src/lib/payment/payment-config.ts',
+      'src/components/payment/PaymentModalPricePanel.tsx',
     ] as const;
 
     for (const relativePath of publicCopyFiles) {
@@ -100,8 +111,16 @@ test.describe('CosmicPath frontend rebrand', () => {
     }
 
     const paymentConfig = readFileSync(projectFile('src/lib/payment/payment-config.ts'), 'utf8');
-    expect(paymentConfig).toContain("name: 'Detailed Decision Note'");
-    expect(paymentConfig).toContain("description: 'Detailed decision timing note unlock'");
+    expect(paymentConfig).toContain('name: PAID_DECISION_REPORT_NAME_EN');
+    expect(paymentConfig).toContain("description: 'Detailed 3-layer decision report unlock'");
+
+    const decisionBrief = readFileSync(projectFile('src/app/start/start-result-decision-brief.tsx'), 'utf8');
+    expect(decisionBrief).toContain('one-time');
+    expect(decisionBrief).toContain('Detailed 3-Layer Decision Report');
+    expect(decisionBrief).toContain('상세 3단 판정 리포트');
+    expect(decisionBrief).toContain('why this verdict');
+    expect(decisionBrief).toContain('message/action variants');
+    expect(decisionBrief).not.toMatch(/subscription|membership|auto-renew/i);
   });
 
   test('brand-product keeps CosmicPath as brand and Decision Note as product', async ({ page }) => {
@@ -113,11 +132,12 @@ test.describe('CosmicPath frontend rebrand', () => {
     const englishContactTiming = readFileSync(projectFile('src/app/en/contact-timing/page.tsx'), 'utf8');
     expect(englishContactTiming).toMatch(/title:\s*'Contact Decision Note'/);
     expect(englishContactTiming).toMatch(/>\s*CosmicPath\s*<\/Link>/);
-    expect(englishContactTiming).toMatch(/First Decision Note free · Detailed Decision Note via Stripe/);
+    expect(englishContactTiming).toMatch(/First Decision Note free · Detailed 3-Layer Decision Report via Stripe/);
     expect(englishContactTiming).toMatch(/Decision support only/);
 
     await page.goto('/en/contact-timing');
-    await expect(page.getByText('First Decision Note free · Detailed Decision Note via Stripe')).toBeVisible();
+    await expect(page.getByText('First Decision Note free · Detailed 3-Layer Decision Report via Stripe')).toBeVisible();
+    await expect(page.getByText(/Saju = structure.*astrology = timing.*tarot = immediate signal/i).first()).toBeVisible();
     await expect(page.locator('body')).not.toContainText(/Application error|Unhandled Runtime Error|Next\.js/);
   });
 
@@ -140,13 +160,21 @@ test.describe('CosmicPath frontend rebrand', () => {
 
     expect(stringField(organization, 'name')).toBe('CosmicPath');
     expect(stringField(website, 'name')).toBe('CosmicPath');
-    expect(stringField(service, 'name')).toBe('Decision Note');
-    expect(stringField(service, 'alternateName')).toBe('Detailed Decision Note');
+    expect(stringField(service, 'name')).toBe('CosmicPath Decision Note');
+    expect(stringField(service, 'alternateName')).toBe('Detailed 3-Layer Decision Report');
     expect(offerNames).toContain('First Decision Note');
-    expect(offerNames).toContain('Detailed Decision Note');
+    expect(offerNames).toContain('Detailed 3-Layer Decision Report');
 
     const englishContactTiming = readFileSync(projectFile('src/app/en/contact-timing/page.tsx'), 'utf8');
     expect(englishContactTiming).toMatch(/title:\s*'Contact Decision Note'/);
     expect(englishContactTiming).toMatch(/siteName:\s*'CosmicPath'/);
+
+    const heroScene = readFileSync(projectFile('src/components/landing/HeroScene.tsx'), 'utf8');
+    const crossroadsSection = readFileSync(projectFile('src/components/landing/CrossroadsSection.tsx'), 'utf8');
+    const globalHeader = readFileSync(projectFile('src/components/common/GlobalHeader.tsx'), 'utf8');
+    const oldPrimaryCopy = /3단 근거 보기|3단분석 시작|CosmicPath 3단분석|Start one 3-layer reading|optional evidence layers|선택적 근거 레이어로만/;
+    expect(heroScene).not.toMatch(oldPrimaryCopy);
+    expect(crossroadsSection).not.toMatch(oldPrimaryCopy);
+    expect(globalHeader).not.toMatch(oldPrimaryCopy);
   });
 });

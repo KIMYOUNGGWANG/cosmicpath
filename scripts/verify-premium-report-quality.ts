@@ -165,8 +165,8 @@ const REQUIRED_SECTIONS = [
   {
     label: 'final_verdict',
     minimumTextLength: 240,
-    minimumEvidenceBlocks: 3,
-    evidenceFamilies: ['calculation', 'myeongli_doctrine', 'safety_boundary'],
+    minimumEvidenceBlocks: 4,
+    evidenceFamilies: ['calculation', 'myeongli_doctrine', 'safety_boundary', 'product_synthesis'],
     has: hasFinalVerdict,
   },
 ] as const satisfies readonly SectionRule[];
@@ -188,6 +188,13 @@ const PREMIUM_REPORT_FIXTURE: PremiumQualityFixture = {
     saju_foundation: 'Four Pillars emphasis shows a resource-heavy day master that improves when the boundary is written before outreach.',
     astro_support: 'Moon and ascendant timing favor a short scheduled message rather than a long proposal.',
     tarot_insight: 'The card spread supports one visible decision and one deliberate constraint.',
+    convergence_diagnosis: {
+      level: 'all_aligned',
+      shared_signal: 'Saju structure, astrology timing, and Tarot advice all point to a bounded outreach test.',
+      conflict_note: 'No source supports changing the offer mid-test; uncertainty remains only around reply quality.',
+      decision_rule: 'Send one note, keep the criteria stable, and review only after the measured window closes.',
+      verdict_modifier: 'Because the sources align, the verdict can be direct while the action stays bounded.',
+    },
     action_priorities: 'Schedule 30 minutes, send the first note, track reply quality, and avoid changing the offer mid-test.',
   },
   action_plan: [
@@ -221,7 +228,7 @@ const PREMIUM_REPORT_FIXTURE: PremiumQualityFixture = {
     buildSection('tarot_spread', 'Tarot spread', 'The RWS card record cites major-chariot with upright orientation and a card-level claim ID. The spread position is advice, so it can shape the action boundary but cannot invent a new card meaning. Image provenance is not assumed from a Commons category; text-only fallback remains acceptable for paid PDF until file audits pass.', ['tarot.rws.major-chariot.upright', 'safety.tarot-boundary', 'tarot.image-fallback']),
     buildSection('action_plan', 'Action plan', 'First, write the decision boundary on 2026-06-20. Second, send one note with one ask. Third, compare replies after 7 days and stop if the metric is weak. This turns the reading into a controlled test and reduces the risk of acting from a single emotional spike.', ['calc.review-date', 'safety.action-boundary']),
     buildSection('provenance_appendix', 'Provenance appendix', 'The appendix lists calculation, doctrine, Tarot, synthesis, safety, and provider state separately. It states that the primary provider completed the report and that no hidden fallback was used. If recovery were used, the customer-visible report mode would become degraded_premium.', ['provider.primary-completed', 'synthesis.boundary']),
-    buildSection('final_verdict', 'Final verdict', 'The conclusion repeats only claims already supported by evidence blocks: test one outreach, measure the reply quality, and avoid changing the offer mid-test. The Saju foundation supplies the decision pattern, astrology supplies timing caution, Tarot supplies the advice posture, and the safety boundary prevents a guaranteed outcome claim.', ['calc.final', 'myeongli.final', 'safety.final']),
+    buildSection('final_verdict', 'Final verdict', 'The conclusion repeats only claims already supported by evidence blocks: test one outreach, measure the reply quality, and avoid changing the offer mid-test. The Saju foundation supplies the decision pattern, astrology supplies timing caution, Tarot supplies the advice posture, and the convergence diagnosis states why aligned sources still require a bounded action. The safety boundary prevents a guaranteed outcome claim.', ['calc.final', 'myeongli.final', 'safety.final', 'synthesis.final']),
   ],
   evidenceBlocks: [
     block('calc.birth-context', 'summary', 'calculation'),
@@ -246,6 +253,7 @@ const PREMIUM_REPORT_FIXTURE: PremiumQualityFixture = {
     block('calc.final', 'final_verdict', 'calculation'),
     block('myeongli.final', 'final_verdict', 'myeongli_doctrine'),
     block('safety.final', 'final_verdict', 'safety_boundary'),
+    block('synthesis.final', 'final_verdict', 'product_synthesis'),
   ],
 } as const;
 
@@ -313,6 +321,7 @@ export function scorePremiumReportQuality(report: unknown): QualityScore {
   const missingEvidenceFamilies = getMissingEvidenceFamilies(evidenceBlocks);
   const sectionEvidenceFailures = getSectionEvidenceFailures(report, evidenceBlocks);
   const modeFailures = getModeFailures(report);
+  const contractFailures = getContractFailures(report);
   const sectionHits = REQUIRED_SECTIONS.length - missingSections.length;
   const specificityHits = SPECIFICITY_PATTERNS.filter((pattern) => pattern.test(text)).length;
   const genericHits = GENERIC_PATTERNS.filter((item) => item.pattern.test(text)).map((item) => item.label);
@@ -321,6 +330,7 @@ export function scorePremiumReportQuality(report: unknown): QualityScore {
     ...missingEvidenceFamilies.map((family) => `missing_evidence_family:${family}`),
     ...sectionEvidenceFailures,
     ...modeFailures,
+    ...contractFailures,
     ...genericHits.map((hit) => `generic:${hit}`),
     ...(totalTextLength < 2400 ? [`too_short:${totalTextLength}/2400`] : []),
     ...(evidenceBlockCount < 18 ? [`too_few_evidence_blocks:${evidenceBlockCount}/18`] : []),
@@ -393,7 +403,8 @@ function hasFinalVerdict(report: unknown): boolean {
   if (!isRecord(report)) return false;
   const verdict = report.final_verdict;
   if (!isRecord(verdict)) return false;
-  return ['core_message', 'saju_foundation', 'astro_support', 'tarot_insight', 'action_priorities'].every((key) => hasUsefulText(verdict, key));
+  return ['core_message', 'saju_foundation', 'astro_support', 'tarot_insight', 'action_priorities'].every((key) => hasUsefulText(verdict, key)) &&
+    hasConvergenceDiagnosis(verdict.convergence_diagnosis);
 }
 
 function hasActionPlan(report: unknown): boolean {
@@ -469,6 +480,13 @@ function isSpecificAction(item: unknown): boolean {
 function hasUsefulText(record: Record<string, unknown>, key: string): boolean {
   const value = record[key];
   return typeof value === 'string' && value.trim().length >= 5;
+}
+
+function hasConvergenceDiagnosis(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  const level = value.level;
+  return (level === 'all_aligned' || level === 'two_aligned' || level === 'divergent') &&
+    ['shared_signal', 'conflict_note', 'decision_rule', 'verdict_modifier'].every((key) => hasUsefulText(value, key));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -570,6 +588,15 @@ function getModeFailures(report: unknown): readonly string[] {
   }
 
   return failures;
+}
+
+function getContractFailures(report: unknown): readonly string[] {
+  if (!isRecord(report)) return ['final_verdict_convergence_diagnosis_missing'];
+  const verdict = report.final_verdict;
+  if (!isRecord(verdict) || !hasConvergenceDiagnosis(verdict.convergence_diagnosis)) {
+    return ['final_verdict_convergence_diagnosis_missing'];
+  }
+  return [];
 }
 
 function parseScenario(argv: readonly string[]): Scenario {

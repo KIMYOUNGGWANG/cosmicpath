@@ -104,7 +104,7 @@ export default function MatchNewClient() {
                             Cosmic Affinity
                         </h1>
                         <p className="text-[var(--fg-moonlight)] font-outfit text-sm tracking-wide">
-                            당신과 상대방의 운명적 조화를 확인해보세요
+                            당신과 상대방의 관계 흐름을 확인해보세요
                         </p>
                     </div>
 

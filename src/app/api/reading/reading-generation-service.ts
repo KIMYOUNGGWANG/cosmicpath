@@ -15,6 +15,7 @@ import {
 } from '@/lib/ai/llm-client';
 import { generatePremiumReport, generateSinglePhase } from '@/lib/ai/premium-reading-service';
 import type { PremiumReportPartial, UserData } from '@/lib/ai/phase-prompts';
+import { buildFallbackConvergenceDiagnosis } from '@/lib/ai/three-layer-synthesis';
 import {
   buildFreeSummaryPhaseTwoUserPrompt,
   buildOracleReportEnrichment,
@@ -68,6 +69,10 @@ type PremiumReadingParams = {
 type PremiumFallbackMetadata = {
   readonly reason?: string;
   readonly currentDate: string;
+  readonly advisorEvidenceSummary?: string;
+  readonly oracleCouncil?: {
+    readonly convergenceScore?: number;
+  } | null;
 };
 
 type FreeReadingParams = {
@@ -466,8 +471,12 @@ function buildPremiumPhaseFallback(
             'The point of this reading is not to think longer, but to move safely and collect a real signal.'
           ),
           convergence_diagnosis: {
+            ...buildFallbackConvergenceDiagnosis({
+              language,
+              advisorEvidenceSummary: metadata.advisorEvidenceSummary,
+              convergenceScore: metadata.oracleCouncil?.convergenceScore,
+            }),
             level: 'two_aligned',
-            verdict_modifier: textFor(language, '사주와 행동 기준은 정렬되고, 감정 신호는 추가 확인이 필요합니다.', 'Saju and action criteria align; emotional signals need one more check.'),
           },
         },
       };

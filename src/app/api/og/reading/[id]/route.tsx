@@ -171,11 +171,11 @@ export async function GET(
                     color: 'rgba(226, 232, 240, 0.7)',
                   }}
                 >
-                  Saju
+                  Saju structure
                   <span style={{ color: '#8B5CF6' }}>•</span>
-                  Astrology
+                  Astrology timing
                   <span style={{ color: '#8B5CF6' }}>•</span>
-                  Tarot
+                  Tarot signal
                 </div>
               </div>
             </div>
@@ -296,8 +296,8 @@ export async function GET(
                   }}
                 >
                   {share.language === 'en'
-                    ? 'Unlock your own oracle reading'
-                    : '당신의 오라클 리딩도 확인해보세요'}
+                    ? 'Open your own Decision Note'
+                    : '내 Decision Note도 확인해보세요'}
                 </div>
               </div>
             </div>

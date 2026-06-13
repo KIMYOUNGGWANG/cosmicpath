@@ -2,7 +2,7 @@
  * 사주 명리학 해석 규칙 + 엔진 통합 (Saju Interpretation Rules)
  * Phase 8: 프롬프트 통합
  *
- * 가중치: 50% (본질, 장기 운세)
+ * 역할: 오래 반복되는 구조, 기질, 장기 압력
  * 사용: AI 프롬프트에 컨텍스트로 주입
  *
  * 사주명리학 시스템 지침 v1.0.3 기준
@@ -20,8 +20,8 @@ import { analyzePatterns, PatternAnalysisResult } from '../../engines/saju-patte
 
 export const SAJU_RULES = {
     version: '2.0.0',
-    weight: 0.50,
-    role: '본질, 장기 운세, 타고난 성향 (결정론적 계산 기반)',
+    sourceRole: 'durable_structure_repeating_pattern',
+    role: '오래 반복되는 구조, 기질, 장기 압력 (결정론적 계산 기반)',
 
     // ============ 십신 그룹 해석 가이드 ============
     tenGodGroups: {
@@ -317,7 +317,7 @@ ${sajuContext}
 1. 위 사주 분석은 결정론적 엔진에서 계산된 정확한 데이터입니다.
 2. 격국(${saju.gyeokguk?.type || '보통격'})과 용신(${saju.enhancedYongsin?.primary ? FIVE_ELEMENTS[saju.enhancedYongsin.primary] : '미정'})을 중심으로 해석하세요.
 3. 신강/신약(${saju.enhancedYongsin?.bodyStrength || '중화'})에 따른 조언을 제공하세요.
-4. 사주는 타고난 성향(50% 가중치)이므로, 점성술/타로와 교차 검증하세요.
+4. 사주는 오래 반복되는 구조와 선택 습관을 읽는 레이어이므로, 점성 타이밍과 타로 즉각 신호와 교차 검증하세요.
 ${currentDaeun ? `5. 현재 대운: ${currentDaeun.stem}${currentDaeun.branch} (${currentDaeun.startAge}~${currentDaeun.endAge}세, ${currentDaeun.tenGod}) — 답변에 자연스럽게 반영하세요.` : ''}
 ${nextDaeunInfo ? `6. 다음 대운 전환: ${nextDaeunInfo.startAge}세부터 ${nextDaeunInfo.stem}${nextDaeunInfo.branch} (${nextDaeunInfo.tenGod})` : ''}
 </SAJU_INTERPRETATION_RULES>
@@ -337,7 +337,7 @@ ${sajuContext}
 1. The above Saju analysis is accurate data calculated by a deterministic engine.
 2. Focus on Structure (${saju.gyeokguk?.type || '보통격'}) and Yongsin (${saju.enhancedYongsin?.primary || 'undetermined'}).
 3. Provide advice based on body strength (${saju.enhancedYongsin?.bodyStrength || '중화'}).
-4. Saju represents innate tendencies (50% weight) — cross-validate with Astrology/Tarot.
+4. Saju represents durable structure and repeating decision habits; cross-validate it with Astrology timing and Tarot's immediate signal.
 ${currentDaeun ? `5. Current Daewoon: ${currentDaeun.stem}${currentDaeun.branch} (Age ${currentDaeun.startAge}~${currentDaeun.endAge}, ${currentDaeun.tenGod}).` : ''}
 ${nextDaeunInfo ? `6. Next Daewoon transition: Age ${nextDaeunInfo.startAge} → ${nextDaeunInfo.stem}${nextDaeunInfo.branch} (${nextDaeunInfo.tenGod})` : ''}
 </SAJU_INTERPRETATION_RULES>
@@ -385,7 +385,7 @@ ${sajuContext}
 3. 신강/신약(${saju.enhancedYongsin?.bodyStrength || '중화'})에 따른 조언을 제공하세요.
 4. 발견된 패턴(길격/흉격)을 자연스럽게 통합하세요.
 5. 신살(길신/흉살)을 참조하되, 과장 없이 균형 있게 언급하세요.
-6. 사주는 타고난 성향(50% 가중치)이므로, 점성술/타로와 교차 검증하세요.
+6. 사주는 오래 반복되는 구조와 선택 습관을 읽는 레이어이므로, 점성 타이밍과 타로 즉각 신호와 교차 검증하세요.
 </SAJU_INTERPRETATION_RULES>
 
 <DAEWOON_INTERPRETATION_GUIDE>
@@ -474,7 +474,7 @@ ${sajuContext}
 3. Provide advice based on body strength (${saju.enhancedYongsin?.bodyStrength || '중화'}).
 4. Naturally integrate detected patterns (positive/negative).
 5. Reference divine stars (positive/negative) with balance, without exaggeration.
-6. Saju represents innate tendencies (50% weight), so cross-validate with Astrology/Tarot.
+6. Saju represents durable structure and repeating decision habits, so cross-validate it with Astrology timing and Tarot's immediate signal.
 </SAJU_INTERPRETATION_RULES>
 
 <DAEWOON_INTERPRETATION_GUIDE>

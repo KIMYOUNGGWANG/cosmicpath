@@ -2,14 +2,19 @@ const { assertMatch, assertNoMatch } = require('./guard-assertions.cjs');
 
 function runBrandPriceGuards() {
   assertMatch(
-    'src/lib/payment/payment-config.ts',
-    /prod_TgwKnGfpJBusty[\s\S]*prod_ThdoB65NmPU37y[\s\S]*Detailed Decision Note/s,
-    'Reading product should reuse the existing Stripe reading products with the rebranded fallback label'
+    'src/lib/product-positioning.ts',
+    /PUBLIC_DECISION_NOTE_NAME = 'CosmicPath Decision Note'[\s\S]*PAID_DECISION_REPORT_NAME_EN = 'Detailed 3-Layer Decision Report'[\s\S]*PAID_DECISION_REPORT_NAME_KO = '상세 3단 판정 리포트'[\s\S]*READING_PRODUCT_PRICE_CENTS = 399/s,
+    'Product positioning should declare the public umbrella, paid report names, and 399-cent contract'
   );
   assertMatch(
     'src/lib/payment/payment-config.ts',
-    /name:\s*'Detailed Decision Note'[\s\S]*price:\s*399/s,
-    'Reading product should keep the Detailed Decision Note fallback amount at $3.99'
+    /prod_TgwKnGfpJBusty[\s\S]*prod_ThdoB65NmPU37y[\s\S]*PAID_DECISION_REPORT_NAME_EN/s,
+    'Reading product should reuse the existing Stripe reading products with the paid report fallback label'
+  );
+  assertMatch(
+    'src/lib/payment/payment-config.ts',
+    /name:\s*PAID_DECISION_REPORT_NAME_EN[\s\S]*price:\s*READING_PRODUCT_PRICE_CENTS/s,
+    'Reading product should keep the paid report fallback amount at $3.99'
   );
   assertNoMatch(
     'src/lib/payment/stripe.ts',
@@ -28,13 +33,13 @@ function runBrandPriceGuards() {
   );
   assertMatch(
     'src/app/terms/page.tsx',
-    /one-off Detailed Decision Note[\s\S]*\$3\.99 USD[\s\S]*Stripe checkout/s,
-    'Terms should disclose the Detailed Decision Note one-off $3.99 Stripe checkout boundary'
+    /one-time Detailed 3-Layer Decision Report[\s\S]*상세 3단 판정 리포트[\s\S]*\$3\.99 USD[\s\S]*Stripe checkout/s,
+    'Terms should disclose the one-time $3.99 Stripe checkout boundary for the paid report'
   );
   assertMatch(
     'src/app/terms/page.tsx',
-    /자세한 기록[\s\S]*\$3\.99 USD[\s\S]*단건 디지털 노트/s,
-    'Korean terms should disclose the Detailed Decision Note $3.99 one-off digital note boundary'
+    /상세 3단 판정 리포트[\s\S]*\$3\.99 USD[\s\S]*단건 디지털 리포트/s,
+    'Korean terms should disclose the paid report $3.99 one-time digital report boundary'
   );
   assertMatch(
     'src/app/terms/page.tsx',
@@ -53,33 +58,33 @@ function runBrandPriceGuards() {
   );
   assertMatch(
     'src/components/seo/json-ld.tsx',
-    /'@type':\s*'Service'[\s\S]*name:\s*'Decision Note'[\s\S]*alternateName:\s*'Detailed Decision Note'/,
-    'Global JSON-LD should expose Decision Note as the product/service name'
+    /'@type':\s*'Service'[\s\S]*name:\s*'CosmicPath Decision Note'[\s\S]*alternateName:\s*'Detailed 3-Layer Decision Report'/,
+    'Global JSON-LD should expose the public umbrella and paid report names'
   );
   assertMatch(
     'src/components/seo/json-ld.tsx',
-    /name:\s*'Detailed Decision Note',\s*price:\s*'3\.99'/,
-    'Global JSON-LD should expose the Detailed Decision Note paid offer at $3.99'
+    /name:\s*'Detailed 3-Layer Decision Report',\s*price:\s*'3\.99'/,
+    'Global JSON-LD should expose the paid report offer at $3.99'
   );
   assertNoMatch(
     'src/components/seo/json-ld.tsx',
-    /name:\s*'Detailed Decision Note'[\s\S]{0,140}9\.99/,
-    'Global JSON-LD should not retain the stale $9.99 Detailed Decision Note offer'
+    /name:\s*'Detailed\s+Decision\s+Note'[\s\S]{0,140}9\.99/,
+    'Global JSON-LD should not retain the stale $9.99 legacy paid offer'
   );
   assertMatch(
     'src/app/payment/success/page.tsx',
-    /Your Detailed Decision Note is opening now\./,
-    'Payment success should use the Detailed Decision Note product name for Next Move checkout'
+    /Your one-time \$3\.99 Detailed 3-Layer Decision Report is opening now\./,
+    'Payment success should use the paid report product name and one-time $3.99 price'
   );
   assertNoMatch(
     'src/app/payment/success/page.tsx',
-    /Detailed Decision Note[\s\S]{0,180}(?:\$9\.99|9\.99)|(?:\$9\.99|9\.99)[\s\S]{0,180}Detailed Decision Note/,
-    'Payment success should not retain stale $9.99 Detailed Decision Note copy'
+    /Detailed\s+Decision\s+Note[\s\S]{0,180}(?:\$9\.99|9\.99)|(?:\$9\.99|9\.99)[\s\S]{0,180}Detailed\s+Decision\s+Note/,
+    'Payment success should not retain stale $9.99 legacy paid copy'
   );
   assertNoMatch(
     'src/app/billing/success/page.tsx',
-    /Detailed Decision Note[\s\S]{0,180}(?:\$9\.99|9\.99)|(?:\$9\.99|9\.99)[\s\S]{0,180}Detailed Decision Note/,
-    'Billing success should not introduce stale Detailed Decision Note pricing copy'
+    /Detailed\s+Decision\s+Note[\s\S]{0,180}(?:\$9\.99|9\.99)|(?:\$9\.99|9\.99)[\s\S]{0,180}Detailed\s+Decision\s+Note/,
+    'Billing success should not introduce stale legacy paid pricing copy'
   );
 }
 

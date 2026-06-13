@@ -1,0 +1,23 @@
+{
+  "fixtureKind": "grounding-payloads",
+  "fixtureId": "grounding_payloads_seed",
+  "records": [
+    {
+      "id": "fixture_grounding_payload_safety",
+      "sourceId": "cosmicpath_divination_safety_policy",
+      "sourceRole": "product_safety_policy",
+      "sourceClaimId": "claim_fixture_grounding_payload_safety",
+      "evidenceId": "evidence_fixture_grounding_payload_safety",
+      "evidenceFamily": "safety_boundary",
+      "claimFamily": "health_safety_boundary",
+      "approvedUse": ["customer_report_text"],
+      "citation": {
+        "sourceId": "cosmicpath_divination_safety_policy",
+        "locator": ".omo/drafts/divination-safety-claim-boundaries.md health boundary",
+        "citationLabel": "Divination safety boundary",
+        "quotePolicy": "no_raw_source_text"
+      },
+      "summaryKo": "건강·위험 관련 표현은 단정 대신 안전 경계와 전문기관 안내를 우선한다."
+    }
+  ]
+}

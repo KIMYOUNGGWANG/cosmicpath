@@ -3,7 +3,9 @@ export function buildPremiumSafetyRules(language: 'ko' | 'en', currentDate: stri
     return `<PREMIUM_SAFETY_RULES>
 - Current date: ${currentDate}. Treat the reading as decision support, not professional advice.
 - Do not provide medical diagnosis, treatment, medication, surgery, or stopping-treatment instructions.
-- Do not provide legal, immigration, tax, investment, specific stock, crypto, leverage, position-size, all-in, or portfolio allocation instructions.
+- Visa, immigration, legal, tax, and financial items are allowed only as decision-support checklists: documents, deadlines, questions to ask qualified professionals, risk buffers, and consultation triggers.
+- Do not tell the user to apply, extend, renew, or change a visa; stay or return as legal instruction; sign, sue, or file; invest, buy, sell; or skip qualified advice.
+- Do not provide specific stock, crypto, leverage, position-size, all-in, or portfolio allocation instructions.
 - Do not guarantee replies, reunion, career, money, legal, immigration, or medical outcomes.
 - Keep the oracle voice clear, but include an uncertainty level when evidence is partial.
 </PREMIUM_SAFETY_RULES>`;
@@ -12,7 +14,9 @@ export function buildPremiumSafetyRules(language: 'ko' | 'en', currentDate: stri
   return `<프리미엄_안전_규칙>
 - 기준일: ${currentDate}. 리포트는 의사결정 보조이며 의료/법률/재무 전문 조언이 아닙니다.
 - 의료 진단, 치료, 투약 변경, 수술, 치료 중단 지시를 제공하지 마세요.
-- 특정 주식, 코인, 레버리지, 포지션 규모, 몰빵, 포트폴리오 배분, 세금/법률/이민 지시를 제공하지 마세요.
+- 비자/이민/법률/세금/재무 항목은 문서, 마감, 전문가에게 물어볼 질문, 리스크 버퍼, 상담 필요성 체크리스트로만 다루세요.
+- 비자 신청/연장/갱신/변경, 법적 지시로서의 체류/귀국, 서명/소송/서류 제출, 투자/매수/매도, 전문가 조언 생략을 직접 지시하지 마세요.
+- 특정 주식, 코인, 레버리지, 포지션 규모, 몰빵, 포트폴리오 배분 지시를 제공하지 마세요.
 - 답장, 재회, 커리어, 돈, 법률, 이민, 의료 결과를 보장하지 마세요.
 - 오라클의 목소리는 선명하게 유지하되, 근거가 부분적이면 확신 수준을 함께 밝혀주세요.
 </프리미엄_안전_규칙>`;

@@ -4,6 +4,13 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { CTAButton } from '../ui/CTAButton';
 import { READING_PRODUCT } from '@/lib/payment/payment-config';
+import {
+    PAID_DECISION_REPORT_NAME_EN,
+    PAID_DECISION_REPORT_NAME_KO,
+    READING_PRODUCT_PRICE_LABEL,
+    THREE_LAYER_ROLE_EXPLANATION_EN,
+    THREE_LAYER_ROLE_EXPLANATION_KO,
+} from '@/lib/product-positioning';
 
 interface PricingSectionProps {
     language: 'ko' | 'en';
@@ -45,29 +52,29 @@ export function PricingSection({ language, onSelect }: PricingSectionProps) {
 
     const content = {
         ko: {
-            title: "하나의 리포트, 모든 해답",
-            price: priceLabel || "결제 단계에서 확인",
+            title: PAID_DECISION_REPORT_NAME_KO,
+            price: priceLabel || READING_PRODUCT_PRICE_LABEL,
             period: "일회성 결제",
-            cta: "지금 운명 확인하기",
+            cta: "상세 3단 판정 리포트 열기",
             features: [
-                "50페이지 분량의 초정밀 분석",
-                "사주 + 점성술 + 타로 3원 통합",
-                "2025년 월별 상세 가이드",
-                "평생 소장용 PDF 제공",
-                "개인별 맞춤 액션 플랜"
+                THREE_LAYER_ROLE_EXPLANATION_KO,
+                "질문과 생년월일 기반 판정 정밀도",
+                "결정 요약, 타이밍, 다음 행동",
+                "결제 후 계속 열람 가능한 디지털 리포트",
+                "상황별 맞춤 액션 플랜"
             ],
             guarantee: "7일 이내 만족하지 못할 시 100% 환불"
         },
         en: {
-            title: "One Report, All Answers",
-            price: priceLabel || "Shown at checkout",
+            title: PAID_DECISION_REPORT_NAME_EN,
+            price: priceLabel || READING_PRODUCT_PRICE_LABEL,
             period: "One-Time Payment",
-            cta: "Unlock Your Destiny Now",
+            cta: "Unlock Detailed Report",
             features: [
-                "Comprehensive 50-page analysis",
-                "Saju + Astrology + Tarot integration",
-                "Detailed 2025 monthly guide",
-                "Lifetime access to PDF report",
+                THREE_LAYER_ROLE_EXPLANATION_EN,
+                "Question and birth-date calibrated precision",
+                "Decision summary, timing, and next action",
+                "Digital report access after checkout",
                 "Personalized action plan"
             ],
             guarantee: "100% Money-back within 7 days"

@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Flower, Eye, Navigation, Zap, Moon, Shield, PenTool, Crown, BookOpen, Flame, Gavel, Heart, Sword, GraduationCap, Sun, Sparkles, AlertTriangle, ShieldAlert, Star } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { ShinSalType } from '@/lib/engines/saju';
 
 export type GhostType = ShinSalType;
@@ -14,7 +15,7 @@ interface GhostCardProps {
 
 const GHOST_CONFIG: Record<ShinSalType, {
     label: string;
-    icon: any;
+    icon: LucideIcon;
     color: string;
     desc: string;
     oneLiner: string;
@@ -23,8 +24,8 @@ const GHOST_CONFIG: Record<ShinSalType, {
         label: "도화살 (Peach Blossom)",
         icon: Flower,
         color: "from-pink-500 to-rose-500",
-        desc: "사람을 홀리는 치명적인 매력. 연예인, 인플루언서의 기운.",
-        oneLiner: "Fatal Attraction"
+        desc: "눈길을 끄는 강한 매력. 연예인, 인플루언서처럼 주목받는 기운.",
+        oneLiner: "Magnetic Appeal"
     },
     [ShinSalType.HWAGAE]: {
         label: "화개살 (Covered Splendor)",
@@ -237,7 +238,7 @@ export function GhostCard({ type, level, isLocked = false }: GhostCardProps) {
                         {config.label.split('(')[0]}
                     </h3>
                     <p className="text-xs text-white/60 font-serif italic">
-                        "{config.oneLiner}"
+                        &ldquo;{config.oneLiner}&rdquo;
                     </p>
                 </div>
 

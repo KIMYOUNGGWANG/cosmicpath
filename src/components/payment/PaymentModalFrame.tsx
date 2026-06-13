@@ -36,6 +36,9 @@ export function PaymentModalFrame({ isOpen, children, onClose }: PaymentModalFra
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
                             transition={modalSpring}
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label="Decision Note payment"
                             data-lenis-prevent
                             className="relative flex max-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom)-2rem)] w-full max-w-xl min-h-0 flex-col overflow-hidden rounded-[28px] border border-[#f0d487]/12 bg-[#0b0d18] shadow-[0_28px_80px_rgba(0,0,0,0.58)] md:max-h-[calc(100dvh-4rem)]"
                             onClick={(event) => event.stopPropagation()}

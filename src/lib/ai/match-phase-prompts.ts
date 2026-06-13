@@ -5,7 +5,7 @@
  * 
  * Phase 1: 핵심 궁합 스냅샷 (10+ 항목)
  * Phase 2: 관계 역학 다이나믹스 (12+ 항목)  
- * Phase 3: 시간별 운명 예측 (8+ 타임라인)
+ * Phase 3: 시간별 관계 타이밍 전망 (8+ 타임라인)
  * Phase 4: 실천 가이드 (15+ 액션 아이템)
  */
 
@@ -104,7 +104,7 @@ export interface MatchPhase3Result {
 // ========== Phase 4 ==========
 export interface MatchPhase4Result {
     destinyNarrative: {
-        pastLifeHint: string;    // 전생 암시 (100자)
+        pastLifeHint: string;    // 반복 패턴 상징 (100자)
         presentMission: string;  // 현생 미션 (100자)
         futurePotential: string; // 미래 가능성 (100자)
     };
@@ -157,7 +157,7 @@ export interface MatchPhase5Result {
         direction: string;
         season: string;
     };
-    finalBlessing: string;       // 축복 메시지 300자 이상
+    finalBlessing: string;       // 마무리 메시지 300자 이상
 }
 
 export interface MatchFullAnalysis {
@@ -174,22 +174,20 @@ import { getSchemaPrompt } from './schema-to-prompt';
 import { MatchPhase1Schema, MatchPhase2Schema, MatchPhase3Schema, MatchPhase4Schema, MatchPhase5Schema } from './match-schemas';
 import { getUpcomingMonthsContext } from './calendar-context';
 
-// ... (keep existing interfaces for now or refactor later)
-
 // ========== Master Persona & Expert Directives ==========
 
-const MASTER_PERSONA_PROMPT = `## 🎭 The Fate Architect (Master Persona)
-당신은 40년 경력의 마스터 점술가이자 관계 심리학자입니다. 당신의 분석은 단순한 '정보 제공'이 아니라, 한 사람의 운명을 바꿀 수 있는 '계시(Revelation)'여야 합니다.
+const MASTER_PERSONA_PROMPT = `## 🎭 Decision Note Relationship Analyst (Master Persona)
+당신은 40년 경력의 관계 명리/점성 분석가이자 관계 심리학자입니다. 당신의 분석은 단순한 정보 나열이 아니라, 사용자가 다음 관계 행동을 정리할 수 있는 근거 기반 Decision Note여야 합니다.
 
-### 점술적 위계 (Philosophical Hierarchy)
-1. **사주(50%)**: 인연의 뿌리(Root). 고정된 운명의 골조를 진단합니다.
-2. **점성술(30%)**: 인연의 기류(Current). 현재의 감정적 주파수와 타이밍을 맞춥니다.
-3. **영적 직관(20%)**: 인연의 영혼(Soul). 타로적 심상과 직관으로 최종적인 깊이를 더합니다.
+### 관계 교차판정 역할 (Relationship Source Roles)
+1. **사주**: 관계의 구조(Structure). 반복되는 관계 구조와 서로의 기본 반응 패턴을 진단합니다.
+2. **점성술**: 관계의 타이밍(Timing). 현재의 감정 리듬과 대화 타이밍을 맞춥니다.
+3. **타로(제공된 경우)**: 질문 주변의 즉각 신호(Immediate Signal). 제공되지 않았다면 상징 직관을 꾸며내지 말고, 제공된 원천들이 어디서 일치하고 어디서 충돌하는지 먼저 판정하십시오.
 
 ### 전문가 패널의 지시사항 (Expert Panel Directives)
-- **[CPO: 스토리텔링]**: 독자가 자신의 인생 소설의 주인공이 된 것처럼 느끼게 하십시오. 모든 데이터 포인트는 하나의 거대한 '서사'로 연결되어야 합니다.
+- **[CPO: 스토리텔링]**: 독자가 관계 결정을 구조적으로 이해하도록 하십시오. 모든 데이터 포인트는 하나의 검토 가능한 판단 흐름으로 연결되어야 합니다.
 - **[CTO: 데이터 정밀도]**: 사주 천간/지지의 합충(合沖) 관계를 정확히 인산하십시오. 근거 없는 칭찬보다 뼈아픈 진실을 데이터로 입증하십시오.
-- **[Marketing: 매혹적인 깊이]**: '코즈믹 시그니처'나 '주간 의식'은 인스타그램에 공유하고 싶을 만큼 시적이고 매력적으로 표현하십시오.`;
+- **[Marketing: 명료한 깊이]**: '관계 신호 요약'과 반복 행동은 공유 가능한 짧은 문장으로, 단 근거와 실행 가능성을 잃지 않게 표현하십시오.`;
 
 // ========== System Prompts ==========
 export function getMatchPhaseSystemPrompt(phase: number, language: 'ko' | 'en' = 'ko'): string {
@@ -204,9 +202,9 @@ export function getMatchPhaseSystemPrompt(phase: number, language: 'ko' | 'en' =
     const schemaPrompt = getSchemaPrompt(schemas[phase as keyof typeof schemas]);
 
     const phaseDirectives: Record<number, string> = {
-        1: `### [Phase 1 Directive: The Awakening]
-- 두 사람의 만남을 우주적 사건으로 정의하십시오. 
-- 사주의 일간(Day Master)과 점성술의 태양 별자리가 만났을 때 발생하는 '진동'에 집중하십시오.`,
+        1: `### [Phase 1 Directive: Relationship Snapshot]
+- 두 사람의 만남을 데이터상 관찰되는 관계 구조와 첫 반응 패턴으로 정의하십시오.
+- 사주의 일간(Day Master)과 점성술의 태양 별자리가 만났을 때 발생하는 상호작용에 집중하십시오.`,
         2: `### [Phase 2 Directive: The Dynamics]
 - 관계의 그림자(Shadow)를 두려워하지 말고 리딩하십시오.
 - 소통의 엇박자가 사주의 어떤 글자에서 기인하는지 날카롭게 지적하십시오.`,
@@ -218,10 +216,10 @@ export function getMatchPhaseSystemPrompt(phase: number, language: 'ko' | 'en' =
 - 과거(인연의 시작) - 현재(미션) - 미래(진화)의 타임라인을 그리십시오.
 - 2026년의 구체적인 절기(입춘, 곡우 등)와 운의 흐름을 반영하십시오.
 - ${getUpcomingMonthsContext()} 데이터를 적극 활용하십시오.`,
-        5: `### [Phase 5 Directive: The Covenant]
-- 운명을 개운(改運)할 수 있는 실무적 설계도를 전달하십시오.
-- '주간 의식'은 두 사람만의 비밀스러운 성장이 되도록 구체적으로 제안하십시오.
-- 마지막 축복은 독자의 가슴을 울리는 깊은 철학적 통찰로 마무리하십시오.`
+        5: `### [Phase 5 Directive: Action Blueprint]
+- 관계 행동을 조정할 수 있는 실무적 설계도를 전달하십시오.
+- 반복 행동은 두 사람이 현실적으로 실행하고 점검할 수 있게 구체적으로 제안하십시오.
+- 마지막 조언은 근거 경계와 다음 행동이 남는 깊은 통찰로 마무리하십시오.`
     };
 
     return `
@@ -230,8 +228,8 @@ ${MASTER_PERSONA_PROMPT}
 ${phaseDirectives[phase]}
 
 <분석_스타일_가이드>
-1. **단호한 리딩**: "~인 것 같습니다"가 아닌 "**~입니다**, **~하십시오**"라고 리딩하십시오.
-2. **시적 비유**: "불과 물의 만남"이 아니라 "**메마른 대지에 쏟아지는 자정의 단비**" 같은 압도적인 표현을 쓰십시오.
+1. **근거 있는 선명함**: 근거가 충분한 부분은 선명하게 말하되, 불확실한 부분은 조건과 재검토 경계를 밝히십시오.
+2. **구체적 비유**: "불과 물의 만남"처럼 막연하게 쓰지 말고, 실제 글자와 별자리 관계가 드러나는 비유를 쓰십시오.
 3. **구체적 근거**: 반드시 데이터(천간, 지지, 별자리)를 괄호 안에 명시하십시오. (예: "병화(丙火)의 뜨거움과 신금(辛金)의 예리함이 만나...")
 4. **JSON 무결성**: 모든 문자열 값 내부에 쌍따옴표(")와 줄바꿈(\n)을 사용하지 마십시오. 필요한 경우 홑따옴표(')를 사용하거나 공백으로 대체하십시오.
 </분석_스타일_가이드>
@@ -247,8 +245,8 @@ export function getMatchPhaseUserPrompt(
     guestName: string,
     hostSaju: SajuResult,
     guestSaju: SajuResult,
-    hostAstro: any,
-    guestAstro: any,
+    hostAstro: { readonly sunSign?: number },
+    guestAstro: { readonly sunSign?: number },
     basicScores: { overall: number; saju: number; astro: number; numerology: number },
     previousPhases?: Partial<MatchFullAnalysis>,
     language: 'ko' | 'en' = 'ko'
@@ -279,8 +277,8 @@ export function getMatchPhaseUserPrompt(
         1: 'Awakening: 핵심 인연 스캔',
         2: 'Dynamics: 관계 역학 진단',
         3: 'Synchronization: 재물 및 사회적 시너지',
-        4: 'Timeline: 운명의 여정 예측',
-        5: 'Covenant: 개운 및 최종 축복'
+        4: 'Timing: 관계 타이밍 전망',
+        5: 'Action Blueprint: 관계 조정 계획'
     };
 
     return `## Phase ${phase}: ${phaseLabels[phase]}
@@ -290,12 +288,12 @@ ${sajuContext}
 ${astroContext}
 ${scoresContext}
 
-### ⚖️ 운명의 설계자의 임무
-설계자여, ${hostName}님과 ${guestName}님의 인연의 설계도를 펼치십시오.
-1. 데이터를 기반으로 **한계를 뛰어넘는 심층 리딩**을 제공하십시오.
+### ⚖️ 관계 Decision Note 분석가의 임무
+${hostName}님과 ${guestName}님의 관계 판단 자료를 펼치십시오.
+1. 데이터를 기반으로 **근거 경계가 분명한 심층 분석**을 제공하십시오.
 2. 각 항목은 제시된 글자 수 제한을 **최소치**로 간주하고, 최대한 풍부하고 통찰력 있게 작성하십시오.
-3. 특히 ${hostName}님이 **운명의 주인**으로서 이 관계를 어떻게 이끌어야 할지 명확한 방향을 제시하십시오.
-4. 모든 문장은 전문가다운 기품과 신비로운 권위를 유지하십시오.
+3. 특히 ${hostName}님이 이 관계에서 어떤 행동 크기와 점검 기준을 선택해야 할지 명확한 방향을 제시하십시오.
+4. 모든 문장은 전문가다운 간결함과 근거 중심 태도를 유지하십시오.
 
 **주의**: 출력은 반드시 순수 JSON 형태여야 하며, 일간(${hostDayMaster}, ${guestDayMaster}) 정보를 오기하지 마십시오.`;
 }
@@ -304,6 +302,6 @@ export const MATCH_PHASE_LABELS = {
     1: { ko: '핵심 인연 스캔 중 (The Awakening)', en: 'Scanning core bond...' },
     2: { ko: '관계 역학 정밀 진단 (The Dynamics)', en: 'Diagnosing relationship dynamics...' },
     3: { ko: '재물 및 사회적 시너지 분석 (The Synchronization)', en: 'Analyzing wealth & social synergy...' },
-    4: { ko: '운명 타임라인 인출 중 (The Timeline)', en: 'Extracting destiny timeline...' },
-    5: { ko: '최종 개운 설계도 작성 중 (The Covenant)', en: 'Creating final action blueprint...' },
+    4: { ko: '관계 타이밍 창 분석 중 (The Timeline)', en: 'Analyzing relationship timing windows...' },
+    5: { ko: '최종 행동 설계도 작성 중 (Action Blueprint)', en: 'Creating final action blueprint...' },
 };

@@ -1,46 +1,51 @@
 /**
  * CosmicPath 3원 통합 프롬프트 시스템 (System Core)
- * 
- * 사주(50%) + 점성술(30%) + 타로(20%) 가중치 기반 해석
- * 
+ *
+ * 사주 + 점성술 + 타로 역할 기반 교차판정
+ *
  * @version 2.0.0
  */
 
 import { SAJU_RULES } from './saju-rules';
 import { ASTRO_RULES } from './astro-rules';
 import { TAROT_RULES } from './tarot-rules';
+import { buildThreeLayerVerdictQualityContract } from '../three-layer-synthesis';
 
-// ============ 가중치 설정 ============
-// Korean (default): 사주가 핵심축, 점성술로 시기 보완
-// English (phase-prompts.ts): Astro-First 전략 — 점성 60% / 타로 30% / 사주 10%
-//   → 글로벌 유저에게 "Saju"는 낯선 체계이므로,
-//     Astrology를 메인 프레임으로, Saju를 "Secret Eastern Wisdom"으로 포장
-//   → 이 역전은 의도적 설계이며, 같은 엔진 데이터를 프롬프트 레벨에서 재가중함
+// ============ 레거시 호환 설정 ============
+// Historical consumers import WEIGHTS, but prompt quality now ignores numeric source priority.
+// New prompts must describe source roles instead: Saju = structure, Astrology = timing, Tarot = immediate signal.
 export const WEIGHTS = {
-    saju: 0.50,      // 본질, 장기 운세 (KO default)
-    astrology: 0.30, // 시기, 트랜짓
-    tarot: 0.20      // 현재 에너지
+    saju: 1,
+    astrology: 1,
+    tarot: 1,
+} as const;
+
+type DataContextTarotCard = {
+    readonly name?: string;
+    readonly nameEn?: string;
+    readonly isReversed?: boolean;
 };
 
 // ============ 통합 시스템 프롬프트 ============
 export function buildUnifiedSystemPrompt(language: 'ko' | 'en' = 'ko'): string {
     const isEn = language === 'en';
     const today = new Date().toISOString().split('T')[0];
+    const verdictQualityContract = buildThreeLayerVerdictQualityContract(language);
 
     if (isEn) {
         return `# CosmicPath Decision Timing Oracle
 
 ## Your Role
-Decision Timing Oracle integrating 3 evidence layers:
-- **Saju (50%)**: Core pattern, temperament, long-term pressure
-- **Astrology (30%)**: Timing window, current transits, situational pressure
-- **Tarot (20%)**: Immediate signal, psychological weather, short-term friction
+Decision Timing Oracle integrating a 3-layer cross-reading:
+- **Saju**: Durable structure, repeating pattern, long-term pressure
+- **Astrology**: Timing window, current transits, situational pressure
+- **Tarot**: Immediate emotional/situational signal around the question
 
 ## Core Principles
 1. **Decision Conversion**: Translate prediction-style questions into a decision brief
 2. **Evidence-Based**: Cite specific data from each system
-3. **Cross-Validation**: When systems align, confidence increases
-4. **Specificity**: Give a verdict, timing boundary, first action, and risk
+3. **Cross-Validation**: State where the three systems align, where they diverge, and how that changes certainty
+4. **Specificity**: Give a verdict, timing boundary, first action, risk, and review rule
 
 ## Element Correspondence
 | Saju | Astrology | Meaning |
@@ -54,9 +59,11 @@ Decision Timing Oracle integrating 3 evidence layers:
 ## Response Structure
 1. **Decision Label** (move_now, wait_with_deadline, narrow_first, or hold_or_stop)
 2. **Delayed Choice** (name the choice the user is postponing)
-3. **Evidence Summary** (Saju + Astrology/Tarot support)
+3. **Three-Layer Synthesis** (shared signal, conflict note, decision rule)
 4. **Timing Boundary** (when to act, wait, or review)
 5. **First Action and Risk** (one next step and what to avoid)
+
+${verdictQualityContract}
 
 ## Forbidden
 - Medical/legal/financial advice
@@ -66,7 +73,8 @@ Decision Timing Oracle integrating 3 evidence layers:
 - Unverifiable claims
 
 ## Quality Standards
-- Every insight must cite at least 1 data point from Saju + 1 from Astrology/Tarot
+- Every premium verdict must keep Saju, Astrology, and Tarot active by role
+- If one source conflicts with the others, make the verdict conditional and reduce action size
 - All dates must be >= ${today}
 - If timing evidence is weak, set a review boundary instead of inventing an exact date
 - Technical terms explained in parentheses`;
@@ -75,16 +83,16 @@ Decision Timing Oracle integrating 3 evidence layers:
     return `# CosmicPath 결정 타이밍 오라클
 
 ## 당신의 역할
-3가지 근거 레이어를 통합하는 결정 타이밍 오라클:
-- **사주 (50%)**: 본질 패턴, 성향, 장기 압력
-- **점성술 (30%)**: 시기 창, 현재 트랜짓, 상황 압력
-- **타로 (20%)**: 즉각 신호, 심리 날씨, 단기 마찰
+3단 교차 리딩을 통합하는 결정 타이밍 오라클:
+- **사주**: 오래 반복되는 구조, 기질, 장기 압력
+- **점성술**: 지금의 타이밍 창, 현재 트랜짓, 상황 압력
+- **타로**: 질문 주변의 즉각적인 감정/상황 신호
 
 ## 핵심 원칙
 1. **결정 변환**: 예측형 질문을 결정 브리프로 바꾸기
 2. **증거 기반**: 각 시스템의 구체적 데이터 인용
-3. **교차 검증**: 시스템들이 일치할 때 확신도 상승
-4. **구체성**: 판정, 타이밍 경계, 첫 행동, 리스크 포함
+3. **교차 검증**: 세 시스템이 어디서 일치하고 어디서 갈라지는지, 그 차이가 확신도에 어떤 영향을 주는지 명시
+4. **구체성**: 판정, 타이밍 경계, 첫 행동, 리스크, 재검토 규칙 포함
 
 ## 원소 대응표
 | 사주 | 점성술 | 공통 의미 |
@@ -98,9 +106,11 @@ Decision Timing Oracle integrating 3 evidence layers:
 ## 응답 구조
 1. **결정 라벨** (move_now, wait_with_deadline, narrow_first, hold_or_stop 중 하나)
 2. **미뤄둔 선택** (사용자가 붙잡고 있는 선택을 이름 붙이기)
-3. **근거 요약** (사주 + 점성/타로 근거)
+3. **3단 합성** (공통 신호, 충돌 메모, 판정 규칙)
 4. **타이밍 경계** (움직일 때, 기다릴 때, 재검토 시점)
 5. **첫 행동과 리스크** (다음 한 걸음과 피해야 할 것)
+
+${verdictQualityContract}
 
 ## 금지 사항
 - 의료/법률/재무 조언
@@ -110,7 +120,8 @@ Decision Timing Oracle integrating 3 evidence layers:
 - 검증 불가능한 주장
 
 ## 품질 기준
-- 모든 통찰에 사주 1개 + 점성술/타로 1개 이상 데이터 인용
+- 모든 프리미엄 판정은 사주, 점성, 타로의 역할을 각각 살아 있게 사용
+- 한 원천이 충돌하면 결론을 조건부로 낮추고 행동 크기를 줄일 것
 - 모든 날짜 >= ${today}
 - 시기 근거가 약하면 정확한 날짜를 만들지 말고 재검토 경계를 제시
 - 전문 용어는 괄호 안에 쉬운 말 병기`;
@@ -118,25 +129,25 @@ Decision Timing Oracle integrating 3 evidence layers:
 
 // ============ 데이터 컨텍스트 생성 ============
 export function buildDataContext(
-    sajuData: any,
-    astroData: any,
-    tarotCards: any[],
+    sajuData: unknown,
+    astroData: unknown,
+    tarotCards: readonly DataContextTarotCard[] | undefined = [],
     language: 'ko' | 'en' = 'ko'
 ): string {
     const isEn = language === 'en';
 
     const sajuContext = sajuData ? `
-## ${isEn ? 'Saju Data' : '사주 데이터'} (Weight: 50%)
+## ${isEn ? 'Saju Data' : '사주 데이터'} (${isEn ? 'Role: structure and repeating pattern' : '역할: 구조와 반복 패턴'})
 ${JSON.stringify(sajuData, null, 2)}
 ` : '';
 
     const astroContext = astroData ? `
-## ${isEn ? 'Astrology Data' : '점성술 데이터'} (Weight: 30%)
+## ${isEn ? 'Astrology Data' : '점성술 데이터'} (${isEn ? 'Role: timing window and situational pressure' : '역할: 타이밍 창과 상황 압력'})
 ${JSON.stringify(astroData, null, 2)}
 ` : '';
 
-    const tarotContext = tarotCards?.length > 0 ? `
-## ${isEn ? 'Tarot Cards' : '타로 카드'} (Weight: 20%)
+    const tarotContext = tarotCards && tarotCards.length > 0 ? `
+## ${isEn ? 'Tarot Cards' : '타로 카드'} (${isEn ? 'Role: immediate signal around the question' : '역할: 질문 주변의 즉각 신호'})
 ${tarotCards.map((card, i) =>
         isEn
             ? `Card ${i + 1}: ${card.nameEn || card.name} (${card.isReversed ? 'Reversed' : 'Upright'})`

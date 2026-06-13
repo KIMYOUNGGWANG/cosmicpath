@@ -136,9 +136,9 @@ function assertHappyBoundaries(): void {
 
 function assertDocsContract(): void {
   const docText = readFileSync('docs/domain/source-registry.md', 'utf8');
-  assert.match(docText, /KASI.*calculation/su);
+  assert.match(docText, /KASI[\s\S]*calculation/u);
   assert.match(docText, /Raw copyrighted source text must not enter prompt grounding/u);
-  assert.match(docText, /customer prose.*paid-PDF visuals/su);
+  assert.match(docText, /customer prose[\s\S]*paid-PDF visuals/u);
 }
 
 function assertKasiDoctrineRejected(): void {

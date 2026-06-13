@@ -23,8 +23,11 @@ export function useStartPageQuery(
   const initialContext = getPrefilledReadingContext(searchParams.get('context'));
   const initialQuestion = getPrefilledQuestion(searchParams.get('question'));
   const landingSource = getStartPageSource(Boolean(searchParams.get('invite')), entry);
-  const isNextMoveReportEntry = landingSource === 'next_move_report_mvp_v1';
-  const effectiveInitialContext = isNextMoveReportEntry ? (initialContext ?? 'love') : initialContext;
+  const isRelationshipContactEntry =
+    landingSource === 'next_move_report_mvp_v1' ||
+    landingSource === 'relationship_contact_timing_v1' ||
+    landingSource === 'en_relationship_contact_timing_v1';
+  const effectiveInitialContext = isRelationshipContactEntry ? (initialContext ?? 'love') : initialContext;
   const activeLandingVariant =
     landingSource === 'en_relationship_contact_timing_v1'
       ? 'en_contact_timing_v1'
@@ -38,7 +41,7 @@ export function useStartPageQuery(
     initialContext,
     initialQuestion,
     isDecisionTimingEntry: isDecisionTimingSource(landingSource),
-    isNextMoveReportEntry,
+    isNextMoveReportEntry: isRelationshipContactEntry,
     landingSource,
     paidFromSearchParams: searchParams.get('paid') === 'true',
     queryLanguage,

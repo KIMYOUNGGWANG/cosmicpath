@@ -1,0 +1,23 @@
+{
+  "fixtureKind": "retrieval-inputs",
+  "fixtureId": "retrieval_inputs_seed",
+  "records": [
+    {
+      "id": "fixture_retrieval_input_policy",
+      "sourceId": "cosmicpath_report_grounding_contract",
+      "sourceRole": "report_grounding_contract",
+      "sourceClaimId": "claim_fixture_retrieval_input_policy",
+      "evidenceId": "evidence_fixture_retrieval_input_policy",
+      "evidenceFamily": "product_synthesis",
+      "claimFamily": "report_grounding_contract",
+      "approvedUse": ["prompt_grounding"],
+      "citation": {
+        "sourceId": "cosmicpath_report_grounding_contract",
+        "locator": ".omo/drafts/report-grounding-contract-blueprint.md retrieval input policy",
+        "citationLabel": "Retrieval input policy",
+        "quotePolicy": "no_raw_source_text"
+      },
+      "summaryKo": "검색 입력 fixture는 Gemini가 임의로 출처를 고르는 대신 계산값과 제품 근거 ID만 넘기는 경계를 검증한다."
+    }
+  ]
+}

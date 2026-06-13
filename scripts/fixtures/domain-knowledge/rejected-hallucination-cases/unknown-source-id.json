@@ -1,0 +1,24 @@
+{
+  "fixtureKind": "rejected-hallucination-cases",
+  "fixtureId": "reject_unknown_source_id",
+  "expectedIssue": "unknown_source_id",
+  "records": [
+    {
+      "id": "fixture_reject_unknown_source_id",
+      "sourceId": "invented_secret_myeongli_book",
+      "sourceRole": "classical_myeongli_doctrine",
+      "sourceClaimId": "claim_fixture_reject_unknown_source",
+      "evidenceId": "evidence_fixture_reject_unknown_source",
+      "evidenceFamily": "classical_doctrine",
+      "claimFamily": "ten_gods",
+      "approvedUse": ["internal_research"],
+      "citation": {
+        "sourceId": "invented_secret_myeongli_book",
+        "locator": "invented locator",
+        "citationLabel": "Invented source",
+        "quotePolicy": "paraphrase_only"
+      },
+      "summaryKo": "존재하지 않는 출처 ID는 통과하면 안 된다."
+    }
+  ]
+}

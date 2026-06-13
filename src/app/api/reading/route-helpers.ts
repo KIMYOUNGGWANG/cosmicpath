@@ -20,6 +20,7 @@ import {
   buildOracleSajuPromptBlock,
   type OracleSajuProfile,
 } from '@/lib/saju/saju-engine';
+import { normalizeConvergenceDiagnosis } from '@/lib/ai/three-layer-synthesis';
 
 export const ReadingRequestSchema = z.object({
   name: z.string().optional().default(''),
@@ -748,9 +749,23 @@ export function buildOracleReportEnrichment(
     report && typeof report === 'object' && !Array.isArray(report)
       ? report as Record<string, unknown>
       : {};
+  const finalVerdict = isRecord(baseReport.final_verdict)
+    ? {
+        ...baseReport.final_verdict,
+        convergence_diagnosis: normalizeConvergenceDiagnosis(
+          baseReport.final_verdict.convergence_diagnosis,
+          {
+            language: params.language,
+            advisorEvidenceSummary: params.advisorEvidenceSummary,
+            convergenceScore: params.oracleCouncil?.convergenceScore,
+          }
+        ),
+      }
+    : baseReport.final_verdict;
 
   return {
     ...baseReport,
+    ...(finalVerdict ? { final_verdict: finalVerdict } : {}),
     free_focus: normalizeFreeFocus(baseReport, {
       questionIntent: params.questionIntent,
       decisionAction: params.decisionAction,
@@ -885,9 +900,14 @@ function buildDeterministicFreeReport(params: {
     params.language === 'en' ? ['Tarot'] : ['타로']
   );
   const tarotCard = params.cards[0];
+  const tarotDescription = tarotLine || (
+    params.language === 'en'
+      ? `${tarotCard?.nameEn || 'Tarot'}${tarotCard?.isReversed ? ' reversed' : ''} reflects the immediate emotional weather around this question.`
+      : `${tarotCard?.name || '타로'}${tarotCard?.isReversed ? ' 역방향' : ''} 카드가 지금 질문의 즉각적인 심리 신호를 비춥니다. ${takeLeadSentences(tarotCard?.interpretation || '', 90)}`
+  );
   const evidenceSummary = takeLeadSentences(
-    [sajuLine, astroLine].filter(Boolean).join(' '),
-    140
+    [sajuLine, astroLine, tarotDescription].filter(Boolean).join(' '),
+    180
   ) || freeFocus.evidence_summary;
   const safetyFreeFocus = shouldApplyRelationshipSafetyHold(params)
     ? buildRelationshipSafetyFreeFocus(params.language)
@@ -896,11 +916,6 @@ function buildDeterministicFreeReport(params: {
     ...freeFocus,
     evidence_summary: evidenceSummary,
   };
-  const tarotDescription = tarotLine || (
-    params.language === 'en'
-      ? `${tarotCard?.nameEn || 'Tarot'}${tarotCard?.isReversed ? ' reversed' : ''} reflects the immediate emotional weather around this question.`
-      : `${tarotCard?.name || '타로'}${tarotCard?.isReversed ? ' 역방향' : ''} 카드가 지금 질문의 즉각적인 심리 신호를 비춥니다. ${takeLeadSentences(tarotCard?.interpretation || '', 90)}`
-  );
 
   return {
     free_focus: resolvedFreeFocus,
