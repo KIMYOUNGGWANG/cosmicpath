@@ -85,7 +85,8 @@ No abstract well-wishing. Give **decision-support guidance** with risk awareness
 5. **Density Contract**: career/wealth/love/health, soulmate, and compatibility fields must each include a diagnosis, cited evidence, user-specific implication, and practical boundary or next action. Generic or padded responses are incomplete.
 6. **Evidence-Bounded Tone**: Use clear phrasing backed by chart evidence, and include consultation boundaries for health/finance or uncertainty levels when evidence is partial.
 7. **Date Safety**: The report currentDate is ${currentDate}. Do not write any month or date before ${currentMonth} as guidance or timing. If earlier timing appears in supplied context, treat it as historical only and do not copy it into future guidance. Use ${currentMonth} or later review windows.
-8. **Safety Language Contract**: Do not place clinical or high-risk money instructions, named products/tactics, dosage/care changes, operation scheduling, or exposure sizing in user-visible JSON. Use safe boundaries such as professional consultation, lifestyle observation, cash-flow review, and loss-limit review.`;
+8. **Visible Source Boundaries**: The visible JSON fields must include at least four source-boundary clauses using these exact meanings: "KASI/JPL 계산 검증 전용 (calculation-only)", "계산 원천은 해석 권위가 아님 (not doctrine/personality authority)", "Waite/Tetrabiblos 검토된 텍스트 후보 (reviewed text candidates)", "원문 복사 금지 (no raw source text copying)", "타로 이미지 권리와 의미 근거 분리 (tarot image rights separate from meaning)".
+9. **Safety Language Contract**: Do not place clinical or high-risk money instructions, named products/tactics, dosage/care changes, operation scheduling, exposure sizing, or direct visa/legal/immigration instructions in user-visible JSON. For visa, immigration, legal, tax, and financial-risk topics, use only documents, deadlines, professional questions, cost/risk comparison, buffers, and qualified-review thresholds.`;
   } else {
     // Phase 4 프롬프트 (v2.0) - 심층 분석 버전
     system = `${buildPersonaSystemLine(userData.characterId, lang)}
@@ -176,7 +177,8 @@ No abstract well-wishing. Give **decision-support guidance** with risk awareness
 5. **확신 수준 표기**: 근거가 강한 영역은 선명하게 쓰고, 건강/돈처럼 전문 판단이 필요한 영역은 확신 수준과 상담 경계를 함께 표기하십시오.
 6. **subsections 반드시 반영**: 각 영역의 subsections 항목을 content 안에 모두 다루십시오.
 7. **날짜 안전성**: 기준일은 ${currentDate}입니다. ${currentMonth} 이전의 YYYY-MM, 'YYYY년 M월', 과거 분기/월을 미래 조언이나 타이밍으로 쓰지 마십시오. 이전 phase에 기준일 전 월/날짜가 있어도 과거 맥락으로만 보고 사용자 조언에는 복사하지 마십시오. 비자/커리어 판단은 ${currentMonth} 이후부터 2026년 11월 비자 만료 전까지의 검증 창으로만 제시하십시오.
-8. **안전 어휘 계약**: 사용자 노출 JSON에는 전문가 자격이 필요한 건강·자산 행동을 직접 지시하거나 위험 상품/전술 이름을 쓰지 마십시오. 안전 경계는 '전문가 상담', '생활 루틴 관찰', '현금흐름 점검', '손실한도 점검'으로 표현하십시오.`;
+8. **보이는 원천 경계**: 사용자에게 보이는 JSON 필드 안에 다음 원천 경계 문구 중 최소 4개를 그대로 포함하십시오: "KASI/JPL 계산 검증 전용 (calculation-only)", "계산 원천은 해석 권위가 아님 (not doctrine/personality authority)", "Waite/Tetrabiblos 검토된 텍스트 후보 (reviewed text candidates)", "원문 복사 금지 (no raw source text copying)", "타로 이미지 권리와 의미 근거 분리 (tarot image rights separate from meaning)".
+9. **안전 어휘 계약**: 사용자 노출 JSON에는 전문가 자격이 필요한 건강·자산 행동, 위험 상품/전술 이름, 비자/법률/이민 직접 지시를 쓰지 마십시오. 비자/이민/법률/세금/재무 리스크에서는 문서, 마감, 전문가에게 물어볼 질문, 비용/리스크 비교, 버퍼, 전문가 검토 기준으로만 표현하십시오.`;
   }
 
   const user = buildUserContext(userData) + buildPreviousPhaseContext(previousData, lang);

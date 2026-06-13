@@ -29,8 +29,9 @@ const SOURCE_BOUNDARY_RULES = [
 ] as const;
 
 const FORBIDDEN_SOURCE_PATTERNS = [
-  /KASI[^.\n]*(?:십신|격국|용신|성격|연애|직업)/iu,
-  /JPL[^.\n]*(?:성격|연애|직업|타로|사주\s*해석)/iu,
+  /KASI[^.\n]*(?:십신|격국|용신|성격|연애|직업)[^.\n]*(?:권위|근거|출처|기준|해석하는|판단하는|입증)/iu,
+  /JPL[^.\n]*(?:성격|연애|직업|타로|사주\s*해석)[^.\n]*(?:권위|근거|출처|기준|해석하는|판단하는|입증)/iu,
+  /(?:십신|격국|용신|성격|연애|직업|타로|사주\s*해석)[^.\n]*(?:KASI|JPL)[^.\n]*(?:권위|근거|출처|기준|해석하는|판단하는|입증)/iu,
   /(?:KASI|JPL)[^.\n]*(?:are|is|as)[^.\n]*(?:authority|authoritative|basis|source)[^.\n]*(?:personality|career|relationship|tarot|saju|doctrine|interpretation)/iu,
   /(?:이미지\s*권리|image rights|visual rights)[^.\n]*(?:카드\s*의미의?\s*근거|해석\s*근거|prove|ground|authorize|determine)/iu,
 ] as const;

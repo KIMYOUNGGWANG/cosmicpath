@@ -33,7 +33,7 @@ Lead with the strongest shared signal across Saju, Astrology, and Tarot, with al
 {
   "summary": {
     "title": "Poetic and inspiring headline (e.g., In 2026, the storm clears and a new path emerges)",
-    "content": "Comprehensive summary of 7-9 sentences. The first sentence must literally follow this label structure: \"Saju structure layer first, for ${userData.name} (${userData.birthDate}) and the exact question '${question}', from today ${currentDate} through the 7-day review window, first action is [schedule/measure/decide/send verb phrase], and decision boundary is [proceed/hold condition].\" Keep the phrases \"first action is\" and \"decision boundary is\" intact. Then show how Saju structure, Astrology timing, and Tarot immediate signal align or diverge. (Use empowering language: 'Your chart suggests...' NOT 'You are destined to...')",
+    "content": "Comprehensive summary of 7-9 sentences. The first sentence must literally follow this label structure: \"Saju structure layer first, for ${userData.name} (${userData.birthDate}) and the exact question '${question}', from today ${currentDate} through the 7-day review window, first action is [prepare/compare/estimate/document/ask verb phrase], and decision boundary is [qualified-review threshold or hold condition].\" For regulated topics, the first action must be a question/document/cost comparison task and the decision boundary must be a review threshold; do not name stay/return/apply/extend/file/submit/book/stop/switch as the action or boundary. Keep the phrases \"first action is\" and \"decision boundary is\" intact. Then show how Saju structure, Astrology timing, and Tarot immediate signal align or diverge. (Use empowering language: 'Your chart suggests...' NOT 'You are destined to...')",
     "trust_score": 3-5,
     "trust_reason": "Clear reasoning naming the shared signal or conflict across Saju structure, Astrology timing, and Tarot immediate signal."
   },
@@ -83,9 +83,10 @@ Lead with the strongest shared signal across Saju, Astrology, and Tarot, with al
 3. **Language**: Write ALL content in English.
 4. **Three-Layer Structure**: Always identify shared signal, conflict note, and decision implication across Saju/Astrology/Tarot.
 5. **Intake Fidelity**: In summary.content, quote the user's name, birthDate, exact question, currentDate in YYYY-MM-DD format, and a 7-day review window.
-6. **Saju-first action wording**: The first sentence of summary.content must name "Saju structure layer" before Astrology or Tarot, then include the literal labels "first action is" and "decision boundary is". The action must include one concrete verb such as schedule, measure, decide, or send.
-7. **No absolute or regulated advice wording**: Do not use "guaranteed", "must succeed", unconditional commands, crypto, leverage, stock buy/sell, medication, diagnosis, or treatment instructions. Use conditional decision language.
-8. **Depth Contract**: Each field must follow Claim -> Evidence -> User-specific implication -> Action/Risk/Timing. Avoid filler sentences and repeated themes.`;
+6. **Saju-first action wording**: The first sentence of summary.content must name "Saju structure layer" before Astrology or Tarot, then include the literal labels "first action is" and "decision boundary is". The action must include one concrete neutral-preparation verb such as prepare, compare, estimate, document, or ask.
+7. **No absolute or regulated advice wording**: Do not use "guaranteed", "must succeed", unconditional commands, crypto, leverage, stock buy/sell, medication, diagnosis, treatment instructions, or direct visa/legal/immigration/tax/financial instructions. Use conditional decision-support language.
+8. **Regulated Decision Boundary**: For visa, immigration, legal, tax, or financial-risk decisions, keep guidance to documents, deadlines, questions for qualified professionals, cost/risk comparison, buffers, and qualified-review thresholds. Do not instruct the user to apply, extend, renew, change status, stay, return, file, submit, book travel, start return logistics, stop/switch an immigration path, choose between stay/return outcomes, or skip professional advice.
+9. **Depth Contract**: Each field must follow Claim -> Evidence -> User-specific implication -> Action/Risk/Timing. Avoid filler sentences and repeated themes.`;
   } else {
     // ===============================================================
     // [NEW] 개선된 Phase 1 프롬프트 (v2.0) - 심층 분석 버전
@@ -140,7 +141,7 @@ ${buildThreeLayerSynthesisPromptRule('ko')}
 {
   "summary": {
     "title": "시적이고 강렬한 헤드라인 (15-30자. 예: '긴 어둠 끝에 새벽이 밝아온다')",
-    "content": "선명하고 밀도 높은 종합 요약. 첫 문장은 반드시 다음 리터럴 라벨 구조를 따르십시오: \"사주 구조 레이어 기준으로, ${userData.name}님(${userData.birthDate})의 원 질문 '${question}'에 대해 오늘 ${currentDate}부터 7일 검증 창에서 첫 행동은 [동사형 행동]이고, 결정 경계는 [진행/보류/중단 조건]입니다.\" '첫 행동은'과 '결정 경계는'이라는 문구를 절대 바꾸지 마십시오. 명리 용어 해설로 분량을 채우지 말고, 이 사람의 행동 패턴, 반복되는 실패 구조, 심리적 약점, 돈과 인간관계에서의 습관을 냉정하게 묘사. 근거가 충분한 대목은 '이 사람은 ~하는 타입이다'처럼 판정형으로 쓰되, 근거가 약하면 조건과 재검토 경계를 함께 표기. 반드시 (1) <사주_원국>의 실제 글자 간 충/합 관계를 (근거: [글자A]-[글자B]의 [관계]) 형식으로 인용, (2) 점성술의 태양/달 관계, (3) 타로 3장의 흐름, (4) 사용자 질문에 대한 첫 행동/리스크/타이밍 경계를 서술하십시오. '~할 수 있다', '~가능성이 있습니다'만으로 주장을 흐리지 말고 근거와 행동 크기 조정을 연결하십시오.",
+    "content": "선명하고 밀도 높은 종합 요약. 첫 문장은 반드시 다음 리터럴 라벨 구조를 따르십시오: \"사주 구조 레이어 기준으로, ${userData.name}님(${userData.birthDate})의 원 질문 '${question}'에 대해 오늘 ${currentDate}부터 7일 검증 창에서 첫 행동은 [문서 작성/비교/비용 산정/전문가 질문 작성]이고, 결정 경계는 [전문가 검토 전 재검토 조건 또는 보류 조건]입니다.\" 고위험 사안에서는 첫 행동을 질문/문서/비용 비교 작업으로만 쓰고, 결정 경계도 재검토 기준으로만 쓰십시오. 첫 문장 안에서 체류/귀국/신청/연장/접수/제출/예매/중단/전환을 행동이나 경계로 쓰면 실패입니다. '첫 행동은'과 '결정 경계는'이라는 문구를 절대 바꾸지 마십시오. 명리 용어 해설로 분량을 채우지 말고, 이 사람의 행동 패턴, 반복되는 실패 구조, 심리적 약점, 돈과 인간관계에서의 습관을 냉정하게 묘사. 근거가 충분한 대목은 '이 사람은 ~하는 타입이다'처럼 판정형으로 쓰되, 근거가 약하면 조건과 재검토 경계를 함께 표기. 반드시 (1) <사주_원국>의 실제 글자 간 충/합 관계를 (근거: [글자A]-[글자B]의 [관계]) 형식으로 인용, (2) 점성술의 태양/달 관계, (3) 타로 3장의 흐름, (4) 사용자 질문에 대한 첫 행동/리스크/타이밍 경계를 서술하십시오. '~할 수 있다', '~가능성이 있습니다'만으로 주장을 흐리지 말고 근거와 행동 크기 조정을 연결하십시오.",
     "trust_score": 3-5,
     "trust_reason": "구체적 근거 기반 진단. 예: '원국의 자오충(子午冲)과 타로 Tower 카드가 동시에 나타나, 2026년 변화 압력이 커지므로 계약/관계 결정은 행동 크기를 줄여 검증합니다.' (근거 없는 막연한 신뢰 표현 금지)"
   },
@@ -193,8 +194,9 @@ ${buildThreeLayerSynthesisPromptRule('ko')}
 5. **숨은 욕망 묘사 필수**: 돈, 권력, 관계에서 드러나는 숨은 욕망과 반복되는 실패 구조를 최소 1가지 구체적으로 묘사하십시오.
 6. 모든 필드는 위에 명시된 논점 구조를 반드시 충족하십시오. 빈 말이나 같은 내용의 반복 대신, 각 논점마다 새로운 정보를 추가하십시오.
 7. **데이터 준수**: 반드시 제공된 <사주_원국>의 천간/지지 정보를 바탕으로 해석하십시오. 월주가 명시되어 있다면 그 월주를 절대적 기준으로 삼으십시오.
-8. **입력 사실 보존**: summary.content 첫 문장 안에 이름, 생년월일, 원 질문, 오늘 날짜 YYYY-MM-DD, 7일 검증 창, 리터럴 문구 '첫 행동은', 리터럴 문구 '결정 경계는'을 반드시 포함하십시오. 결정 경계에는 진행/보류/중단 중 하나 이상의 조건 단어를 쓰십시오.
-9. **절대·규제 조언 표현 금지**: '무조건', '반드시 성공', '운명이 정해졌다' 같은 단정형 표현과 주식 매수/매도, 코인, 암호화폐, 레버리지, 투약, 진단, 치료 지시 표현을 쓰지 말고 조건부 판단 언어를 사용하십시오.`;
+8. **입력 사실 보존**: summary.content 첫 문장 안에 이름, 생년월일, 원 질문, 오늘 날짜 YYYY-MM-DD, 7일 검증 창, 리터럴 문구 '첫 행동은', 리터럴 문구 '결정 경계는'을 반드시 포함하십시오. 일반 사안의 결정 경계에는 진행/보류/중단 중 하나 이상의 조건 단어를 쓸 수 있지만, 고위험 사안에서는 실제 행동 중단/전환 명령이 아니라 전문가 검토 전 재검토 조건으로만 표현하십시오.
+9. **절대·규제 조언 표현 금지**: '무조건', '반드시 성공', '운명이 정해졌다' 같은 단정형 표현과 주식 매수/매도, 코인, 암호화폐, 레버리지, 투약, 진단, 치료 지시, 비자/법률/이민/세금/재무 직접 지시 표현을 쓰지 말고 조건부 판단 지원 언어를 사용하십시오.
+10. **고위험/전문 판단 경계**: 비자/이민/법률/세금/재무 리스크에서는 문서, 마감, 전문가에게 물어볼 질문, 비용/리스크 비교, 버퍼, 전문가 검토 기준으로만 안내하십시오. 비자 신청/연장/갱신/변경, 체류/귀국 결정, 서류 접수/제출, 항공권/비행기 표 예매, 귀국 준비 개시, 체류 경로 중단/전환, 잔류/귀국 선택 확정, 전문가 조언 생략을 직접 지시하지 마십시오.`;
   }
 
   const user = buildUserContext(userData);

@@ -212,8 +212,13 @@ const unsafeAdvicePatterns = [
   /(특정\s*주식|주식\s*(?:매수|매도|추천)|코인\s*(?:매수|매도|추천)|암호화폐|레버리지|풀매수|몰빵|specific\s+stock|buy\s+(?:bitcoin|ethereum|crypto|cryptocurrency|stock|stocks?|coin|coins?)|sell\s+(?:bitcoin|ethereum|crypto|cryptocurrency|stock|stocks?|coin|coins?)|bitcoin|ethereum|crypto(?:currency)?|leverage|go\s+all\s+in|all-?in|portfolio\s+allocation|position\s+size|recover\s+investments?)/i,
   /(비자(?:를|을)?\s*(?:신청|연장|갱신|변경|전환|취득|포기)(?:\s*신청)?(?:을|를)?\s*(?:바로\s*|지금\s*)?(?:하세요|하십시오|해라|해야(?:\s*합니다)?)|(?:체류|귀국|출국|입국)(?:을|를)?\s*(?:바로\s*|지금\s*)?(?:하세요|하십시오|해라|해야(?:\s*합니다)?|결정하세요)|(?:서명|소송|고소|서류\s*제출)(?:을|를)?\s*(?:바로\s*|지금\s*)?(?:하세요|하십시오|해라|해야(?:\s*합니다)?)|(?:투자|매수|매도)(?:를|을)?\s*(?:바로\s*|지금\s*)?(?:하세요|하십시오|해라|해야(?:\s*합니다)?)|전문가\s*(?:상담|검토|조언)\s*(?:없이|생략)|변호사\s*(?:없이|생략))/i,
   /((?:비자|체류|영주권|워크\s*퍼밋|스폰서십|LMIA|PNP|AOR|서류|신청서)[^.\n]{0,60}(?:접수|제출|신청|연장|갱신|변경|전환|취득)[^.\n]{0,30}(?:해야|해야만|하십시오|하세요|하라|진행|완료|개시|접수해야))/i,
-  /((?:귀국|한국\s*복귀|출국|입국|체류)[^.\n]{0,60}(?:준비|전환|확정|결정|실행|개시|예매|예약)[^.\n]{0,30}(?:하세요|하십시오|하라|해야|해야만|할\s*것|하는\s*것|전환|확정|개시))/i,
+  /((?:귀국|한국\s*복귀|출국|입국|체류)[^.\n]{0,60}(?:준비|전환|확정|결정|실행|개시|예매|예약)[^.\n]{0,30}(?:하세요|하십시오|하라|해야|해야만|할\s*것|하는\s*것))/i,
   /((?:비행기\s*표|항공권|티켓)[^.\n]{0,30}(?:예매|구매|예약|발권)[^.\n]{0,30}(?:하세요|하십시오|하라|해야|할\s*것|개시))/i,
+  /((?:잔류|복귀|귀국|체류)[^.\n]{0,80}(?:선택|확정|결정)[^.\n]{0,30}(?:해야|해야만|하십시오|하세요|하라|할\s*것|기계적으로))/i,
+  /((?:비자|체류|영주권|워크\s*퍼밋|스폰서십|LMIA|PNP|AOR|서류)[^.\n]{0,80}(?:집중|확보)[^.\n]{0,80}(?:미확보|없으면|못하면)[^.\n]{0,80}(?:전환|귀국|복귀|중단|포기)[^.\n]{0,30}(?:하십시오|하세요|하라|해야|해야만|할\s*것|즉각|바로))/i,
+  /((?:비자|체류|영주권|워크\s*퍼밋)[^.\n]{0,60}(?:중단|포기)[^.\n]{0,80}(?:귀국|복귀|출국)[^.\n]{0,60}(?:전환|준비|확정|결정|재검토)[^.\n]{0,30}(?:하십시오|하세요|하라|해야|해야만|할\s*것|즉각|바로))/i,
+  /((?:귀국|한국\s*복귀|출국|입국)[^.\n]{0,80}(?:절차|서류\s*작업|리포지셔닝)[^.\n]{0,40}(?:시작|개시|밟)[^.\n]{0,30}(?:하십시오|하세요|하라|해야|해야만|할\s*것|하는\s*것))/i,
+  /((?:귀국|한국\s*복귀|출국|입국)[^.\n]{0,80}(?:전환|복귀|귀국)[^.\n]{0,30}(?:절차|준비|서류\s*작업)[^.\n]{0,40}(?:시작|개시|밟)[^.\n]{0,30}(?:조건|하십시오|하세요|하라|해야|해야만|할\s*것|하는\s*것))/i,
   /((?:apply\s+for|extend|renew|change)\s+(?:your\s+|a\s+)?(?:visa|status|work\s+permit|study\s+permit|permit|permanent\s+residence|PR)\b|(?:stay|remain)\s+in\s+(?:Canada|Korea|the\s+US|the\s+UK|the\s+United\s+States|the\s+United\s+Kingdom)\b|return\s+to\s+(?:Canada|Korea|the\s+US|the\s+UK|the\s+United\s+States|the\s+United\s+Kingdom|your\s+country|home)\b|invest\s+in\s+(?!yourself|skills|training|education|relationships|health|rest|routine)(?:[A-Z][A-Za-z0-9&.-]+|[A-Z]{2,5}\b|bitcoin|ethereum|crypto|stocks?)|(?:sign|sue|file)\s+(?:the\s+)?(?:contract|lawsuit|claim|papers?|application)|without\s+(?:a\s+)?(?:lawyer|qualified\s+professional|immigration\s+consultant|legal\s+advice|professional\s+advice)|skip\s+qualified\s+advice)/i,
 ] as const;
 

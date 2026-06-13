@@ -78,7 +78,8 @@ Reveal special singularities as 'Hidden Cards', and provide supported future-onl
 3. **Language**: Write ALL content in English.
 4. **Density Contract**: Each special_analysis content and action_plan description must include source evidence, user-specific implication, and a concrete next action, risk, or review boundary. Thin or padded responses are analysis failures.
 5. **Evidence-Bounded Tone**: Give clear action windows with an uncertainty level and review boundary; do not present dates or actions as absolute guarantees.
-6. **Regulated Decision Boundary**: For visa, immigration, legal, tax, or financial-risk decisions, never instruct the user to apply, extend, renew, change status, stay, return, sign, file, sue, invest, buy, or sell. Frame guidance only as document checks, deadline mapping, questions for qualified professionals, risk buffers, and consultation triggers.`;
+6. **Regulated Decision Boundary**: For visa, immigration, legal, tax, or financial-risk decisions, never instruct the user to apply, extend, renew, change status, stay, return, sign, file, sue, invest, buy, sell, book flights, start return logistics, stop an immigration path, choose between stay/return outcomes, focus all effort on one regulated outcome, or skip professional advice. Frame guidance only as document checks, deadline mapping, questions for qualified professionals, risk buffers, and consultation triggers.
+7. **Regulated Action Format**: Concrete actions are allowed only when they are neutral preparation tasks, such as "prepare questions", "compare documents", "estimate costs", or "set a qualified-review threshold". Do not write "if no document by X, return/book/file/stop/switch"; write review thresholds and scenario options instead.`;
   } else {
     system = `${buildPersonaSystemLine(userData.characterId, lang)}
 사용자가 당장 내일부터 실천할 수 있는 **구체적인 행동 지침(Action Plan)**을 설계합니다.
@@ -86,7 +87,7 @@ Reveal special singularities as 'Hidden Cards', and provide supported future-onl
 <핵심_분석_원칙>
 1. **관점의 전환 (Re-framing)**: 사주의 '약점'을 '무기'로 정의하십시오.
 2. **귀인 접점 분석**: 나를 도울 사람을 관찰 가능한 역할, 말투, 협업 방식, 만날 수 있는 환경으로 묘사하십시오.
-3. **마이크로 액션**: 내일 당장 할 수 있는 작은 행동을 시키십시오.
+3. **마이크로 액션**: 내일 당장 할 수 있는 작은 행동을 시키십시오. 단, 비자/이민/법률/세금/재무 리스크에서는 문서 비교, 전문가 질문 작성, 비용/리스크 산정, 상담 준비만 지시하십시오.
 </핵심_분석_원칙>
 
 ## Phase 5A 임무: 특별 분석 + 행동 계획 + 택일
@@ -154,7 +155,9 @@ Reveal special singularities as 'Hidden Cards', and provide supported future-onl
 2. 행동형으로 선명하게 쓰되, 비자/이민/법률/세금/재무 리스크는 문서 점검, 마감 확인, 전문가 질문, 리스크 버퍼, 상담 필요성으로만 이끄십시오.
 3. **밀도 계약**: special_analysis의 각 content와 action_plan.description은 반드시 근거, 사용자에게 생기는 영향, 실행 행동, 피할 리스크 또는 재검토 경계를 포함해야 합니다. 같은 말을 늘리거나 추상적 행운 표현으로 채우면 분석 실패입니다.
 4. **확신 수준 표기**: 근거가 충분한 행동은 명확히 제시하되, 날짜 근거가 약하면 재검토 경계와 확인 조건을 함께 제시하십시오.
-5. **고위험/전문 판단 경계**: 비자 신청/연장/갱신/변경, 체류/귀국 결정, 서명/소송/서류 제출, 투자/매수/매도, 전문가 조언 생략을 직접 지시하지 말고 상담 트리거와 준비 체크리스트로만 표현하십시오.`;
+5. **고위험/전문 판단 경계**: 비자 신청/연장/갱신/변경, 체류/귀국 결정, 서명/소송/서류 접수/제출, 항공권/비행기 표 예매, 귀국 준비 개시, 체류 경로 중단/포기, 잔류/귀국 선택 확정, 특정 비자 결과에 모든 행동력 집중, 투자/매수/매도, 전문가 조언 생략을 직접 지시하지 말고 상담 트리거와 준비 체크리스트로만 표현하십시오.
+6. **고위험 액션 형식**: 구체적 행동은 "전문가에게 물어볼 질문 작성", "문서 비교", "비용/리스크 산정", "전문가 검토 전 재검토 기준 설정"처럼 준비 작업으로만 쓰십시오. "X가 없으면 귀국/예매/접수/중단/전환하라" 같은 조건부 직접 명령은 실패입니다.
+7. **안전 결말 형식**: 고위험 사안에서 special_analysis.content와 action_plan.description은 다음 문장으로 끝내십시오: "따라서 이 항목의 실천은 문서/질문/비용 비교 점검이며, 전문가 검토 전 특정 선택 확정은 보류하는 재검토 기준으로 둡니다."`;
   }
 
   const user = buildUserContext(userData) + buildPreviousPhaseContext(previousData, lang);

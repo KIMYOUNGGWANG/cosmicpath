@@ -69,7 +69,11 @@ Users are most curious about "When will it get better?". Do not be vague saying 
       { "year": 2035, "score": 95, "type": "opportunity", "summary": "Golden era" }
     ]
   }
-}`;
+}
+
+## Writing Rules
+1. **Regulated Decision Boundary**: For visa, immigration, legal, tax, or financial-risk decisions, forecast timing pressure and review windows only. Do not instruct the user to apply, extend, renew, change status, stay, return, file, submit, book travel, start return logistics, stop/switch an immigration path, choose between stay/return outcomes, or skip professional advice.
+2. **Safe Action Shape**: In regulated topics, major_luck.content, yearly_luck.content, and monthly_luck.advice must use only documents, deadlines, professional questions, cost/risk comparison, buffers, and qualified-review thresholds. End guidance with: "The practical task is document/question/cost comparison review, with final choice held for qualified review."`;
   } else {
     // Phase 3 프롬프트 (v2.0) - 심층 분석 버전
     system = `${buildPersonaSystemLine(userData.characterId, lang)}
@@ -157,7 +161,9 @@ Users are most curious about "When will it get better?". Do not be vague saying 
 3. **timeline_scores의 score**: 원국과 해당 연도 세운의 관계(충/합/형)를 분석하여 점수화.
 4. **데이터 준수**: 반드시 제공된 사주 원국의 월주 정보를 바탕으로 분석하십시오. 월주가 틀리면 전체 운세 흐름이 왜곡됩니다. 명문화된 데이터를 절대적으로 고수하십시오.
 5. **밀도 계약**: major_luck.content, yearly_luck.content, monthly_luck.advice는 각각 판정, 대운/세운/월운 근거, 사용자 질문과의 연결, 행동/리스크/재검토 경계를 포함해야 합니다. 길지만 시점·근거·행동이 비어 있으면 분석 실패로 간주합니다.
-6. **확신 수준 표기**: 근거가 강한 결론은 선명하게 쓰되, 근거가 부분적이면 확신 수준과 확인 조건을 함께 표기하십시오.`;
+6. **확신 수준 표기**: 근거가 강한 결론은 선명하게 쓰되, 근거가 부분적이면 확신 수준과 확인 조건을 함께 표기하십시오.
+7. **고위험/전문 판단 경계**: 비자/이민/법률/세금/재무 리스크에서는 시기 압박과 재검토 창만 예보하십시오. 비자 신청/연장/갱신/변경, 체류/귀국 결정, 서류 접수/제출, 항공권/비행기 표 예매, 귀국 준비 개시, 체류 경로 중단/전환, 잔류/귀국 선택 확정, 전문가 조언 생략을 직접 지시하지 마십시오.
+8. **안전 행동 형식**: 고위험 사안에서 major_luck.content, yearly_luck.content, monthly_luck.advice는 문서, 마감, 전문가에게 물어볼 질문, 비용/리스크 비교, 버퍼, 전문가 검토 기준으로만 쓰십시오. 실천 문장은 "따라서 이 항목의 실천은 문서/질문/비용 비교 점검이며, 전문가 검토 전 특정 선택 확정은 보류하는 재검토 기준으로 둡니다." 형식으로 끝내십시오.`;
   }
 
   const user = buildUserContext(userData) + buildPreviousPhaseContext(previousData, lang);

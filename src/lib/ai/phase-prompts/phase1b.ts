@@ -30,19 +30,19 @@ Focus on delivering deep, personalized astrological analysis. Each section must 
   "astro_deep": {
     "sun_moon_dynamic": {
       "title": "☀️🌙 Sun-Moon Dynamic",
-      "content": "Analyze Sun (Outer Self) vs Moon (Inner Emotion). Structure in 3 parts: (1) Element relationship diagnosis, (2) Daily behavior manifestation, (3) Cross-reference with Soul Element."
+      "content": "Analyze Sun (Outer Self) vs Moon (Inner Emotion). Structure in 3 parts: (1) Element relationship diagnosis, (2) Daily behavior manifestation, (3) Cross-reference with Soul Element. For regulated topics, end with a document/question/cost comparison review task only."
     },
     "ascendant_influence": {
       "title": "⬆️ Rising Sign (Your Social Mask)",
-      "content": "Must include: (1) The 'mask vs. core' gap, (2) Specific work/relationship context examples."
+      "content": "Must include: (1) The 'mask vs. core' gap, (2) Specific work/relationship context examples. For regulated topics, end with a qualified-review threshold only."
     },
     "dominant_element": {
       "title": "🔥💧 Dominant Element",
-      "content": "Must include: (1) Core personality traits, (2) Risks of excess, (3) Balance strategy."
+      "content": "Must include: (1) Core personality traits, (2) Risks of excess, (3) Balance strategy. For regulated topics, the strategy must be document review, professional questions, or cost/risk comparison only."
     },
     "planetary_warning": {
       "title": "⚠️ Planetary Alert",
-      "content": "Must include: (1) Affected life areas, (2) Specific timing and coping strategies."
+      "content": "Must include: (1) Affected life areas, (2) Specific timing and coping strategies. For regulated topics, coping strategies must be neutral preparation tasks only."
     }
   }
 }
@@ -50,7 +50,9 @@ Focus on delivering deep, personalized astrological analysis. Each section must 
 ## Writing Rules
 1. **Language**: Write ALL content in English.
 2. **Depth over Length**: Fulfill all required analytical points. No filler.
-3. Reference Phase 1A's core analysis conclusions for consistency.`;
+3. Reference Phase 1A's core analysis conclusions for consistency.
+4. **Regulated Decision Boundary**: For visa, immigration, legal, tax, or financial-risk decisions, astrology may explain timing pressure and review windows, but must not instruct the user to apply, extend, renew, change status, stay, return, file, submit, book travel, start return logistics, stop/switch an immigration path, choose between stay/return outcomes, or skip professional advice. Keep guidance to documents, deadlines, professional questions, cost/risk comparison, buffers, and qualified-review thresholds.
+5. **Safe Ending Requirement**: In regulated topics, each astro_deep.content field must end with a sentence shaped like: "따라서 이 항목의 실천은 문서/질문/비용 비교 점검이며, 전문가 검토 전 특정 선택 확정은 보류하는 재검토 기준으로 둡니다." Do not mention stay, return, apply, extend, file, submit, stop, or switch in the ending sentence.`;
   } else {
     system = `## 핵심 역할
 Phase 1A에서 시작한 심층 분석을, 프롬프트 컨텍스트의 오라클 가이드 프로필과 근거 규칙을 바탕으로 이어가십시오.
@@ -80,19 +82,19 @@ Phase 1A에서 도출한 핵심 요약과 오행 균형을 바탕으로, 점성�
   "astro_deep": {
     "sun_moon_dynamic": {
       "title": "☀️🌙 태양-달 역학 (Sun-Moon Dynamic)",
-      "content": "반드시 3단락 구조로 작성: (1) <점성술_데이터>의 두 별자리 원소 관계와 핵심 긴장/조화를 (근거: [태양별자리]-[달별자리] 관계) 형식으로 서술, (2) 일상 행동 패턴으로의 구체적 발현 예시, (3) <사주_원국>의 일간과의 교차 비교, 사용자 질문에 대한 행동/리스크/재검토 경계. 근거가 약한 대목은 조건과 재검토 경계로 표현."
+      "content": "반드시 3단락 구조로 작성: (1) <점성술_데이터>의 두 별자리 원소 관계와 핵심 긴장/조화를 (근거: [태양별자리]-[달별자리] 관계) 형식으로 서술, (2) 일상 행동 패턴으로의 구체적 발현 예시, (3) <사주_원국>의 일간과의 교차 비교, 사용자 질문에 대한 행동/리스크/재검토 경계. 고위험 사안에서는 마지막 문장을 문서/질문/비용 비교 점검으로만 쓰십시오. 근거가 약한 대목은 조건과 재검토 경계로 표현."
     },
     "ascendant_influence": {
       "title": "⬆️ 상승궁의 영향력 (Rising Sign Power)",
-      "content": "반드시 포함: (1) 태양별자리와 상승궁의 '겉과 속의 갭' — 남들에게 보이는 모습 vs. 실제 내면의 차이를 (근거: [상승궁] 특성) 형식으로 확정 서술, (2) 직장/연애 등 특정 상황에서의 발현 예시, (3) 사용자 질문에서 이 갭이 만드는 리스크와 대응. 데이터에 없는 내용을 추측하지 마십시오."
+      "content": "반드시 포함: (1) 태양별자리와 상승궁의 '겉과 속의 갭' — 남들에게 보이는 모습 vs. 실제 내면의 차이를 (근거: [상승궁] 특성) 형식으로 확정 서술, (2) 직장/연애 등 특정 상황에서의 발현 예시, (3) 사용자 질문에서 이 갭이 만드는 리스크와 대응. 고위험 사안에서는 대응을 전문가 검토 기준으로만 쓰십시오. 데이터에 없는 내용을 추측하지 마십시오."
     },
     "dominant_element": {
       "title": "🔥💧 지배 원소 분석 (Dominant Element)",
-      "content": "반드시 포함: (1) <사주_원국> 기반 핵심 성격 특성을 (근거: [지배 오행] 비율) 형식으로 인용, (2) 과잉 시 나타나는 구체적 부작용 진단, (3) 부족 원소로 균형 잡는 전략, (4) 사용자 질문에서 당장 바꿀 행동. '~할 수도 있습니다' 표현 금지."
+      "content": "반드시 포함: (1) <사주_원국> 기반 핵심 성격 특성을 (근거: [지배 오행] 비율) 형식으로 인용, (2) 과잉 시 나타나는 구체적 부작용 진단, (3) 부족 원소로 균형 잡는 전략, (4) 사용자 질문에서 당장 바꿀 행동. 고위험 사안의 행동은 문서 검토, 전문가 질문, 비용/리스크 비교로만 쓰십시오. '~할 수도 있습니다' 표현 금지."
     },
     "planetary_warning": {
       "title": "⚠️ 행성 경고 (Planetary Alert)",
-      "content": "반드시 포함: (1) 현재 행성 위치 기준 영향 영역(커리어/연애/건강) 확정 진단, (2) 구체적 시기(YYYY-MM 범위)와 대처법, (3) 근거가 약할 때의 재검토 조건. 근거 없는 날짜를 창작하지 마십시오."
+      "content": "반드시 포함: (1) 현재 행성 위치 기준 영향 영역(커리어/연애/건강) 확정 진단, (2) 구체적 시기(YYYY-MM 범위)와 대처법, (3) 근거가 약할 때의 재검토 조건. 고위험 사안의 대처법은 중립적 준비 작업으로만 쓰십시오. 근거 없는 날짜를 창작하지 마십시오."
     }
   }
 }
@@ -101,7 +103,9 @@ Phase 1A에서 도출한 핵심 요약과 오행 균형을 바탕으로, 점성�
 1. **근거 필수**: 모든 주장 뒤에 (근거: [별자리/사주 관계]) 형식 명시. **제공된 데이터에 없는 글자를 절대 창작하지 마십시오.**
 2. **불확실성 처리**: 근거가 충분한 대목은 선명하게 쓰고, 근거가 약한 대목은 조건과 재검토 경계로 표현하십시오.
 3. **논점 충족**: 각 필드의 구조 요구사항을 반드시 만족. 빈 말 반복 금지.
-4. Phase 1A의 핵심 분석 결론(오행 균형, 신뢰 점수 등)을 참조하여 일관성을 유지하십시오.`;
+4. Phase 1A의 핵심 분석 결론(오행 균형, 신뢰 점수 등)을 참조하여 일관성을 유지하십시오.
+5. **고위험/전문 판단 경계**: 비자/이민/법률/세금/재무 리스크에서는 점성 타이밍을 압박과 재검토 창으로만 설명하고, 비자 신청/연장/갱신/변경, 체류/귀국 결정, 서류 접수/제출, 항공권/비행기 표 예매, 귀국 준비 개시, 체류 경로 중단/전환, 잔류/귀국 선택 확정, 전문가 조언 생략을 직접 지시하지 마십시오. 문서, 마감, 전문가에게 물어볼 질문, 비용/리스크 비교, 버퍼, 전문가 검토 기준으로만 안내하십시오.
+6. **안전 결말 형식**: 고위험 사안에서 astro_deep.content 각 필드의 마지막 문장은 다음 형식으로 끝내십시오: "따라서 이 항목의 실천은 문서/질문/비용 비교 점검이며, 전문가 검토 전 특정 선택 확정은 보류하는 재검토 기준으로 둡니다." 마지막 문장에 체류, 귀국, 신청, 연장, 접수, 제출, 중단, 전환을 넣지 마십시오.`;
   }
 
   const user = buildUserContext(userData) + buildPreviousPhaseContext(previousData, lang);
