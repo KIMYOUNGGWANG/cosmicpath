@@ -45,7 +45,7 @@ const GENERIC_PATTERNS = [
 ] as const;
 
 const FORBIDDEN_PATTERNS = [
-  /무조건/u,
+  /무조건\s*(?:성공|됩니다|된다|해야|하세요|하십시오|하라|맞다|좋다|나쁘다|가능)/u,
   /반드시\s*성공/u,
   /운명이\s*정해/u,
   /치료\s*중단/u,

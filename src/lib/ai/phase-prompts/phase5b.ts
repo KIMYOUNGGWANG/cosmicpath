@@ -76,7 +76,9 @@ You are the 3-Layer Decision Report analyst delivering the final synthesis and s
 3. **Language**: Write ALL in English.
 4. **Density Contract**: Each symbolic pattern content field must connect archetype, evidence, current-life pattern, and practical cycle-breaking action. Thin or padded responses are incomplete.
 5. **Evidence-bounded Tone**: Deliver a clear verdict with an uncertainty level instead of absolute guarantees.
-6. **Regulated Decision Boundary**: For visa, immigration, legal, tax, or financial-risk decisions, keep the final verdict to documents, deadlines, professional questions, risk buffers, and qualified consultation checkpoints. Do not instruct the user to apply, extend, renew, change status, stay, return, sign, file, sue, invest, buy, sell, or skip professional advice.`;
+6. **Visible Source Boundaries**: The visible JSON fields must include at least four source-boundary clauses using these exact meanings: "KASI/JPL 계산 검증 전용 (calculation-only)", "계산 원천은 해석 권위가 아님 (not doctrine/personality authority)", "Waite/Tetrabiblos 검토된 텍스트 후보 (reviewed text candidates)", "원문 복사 금지 (no raw source text copying)", "타로 이미지 권리와 의미 근거 분리 (tarot image rights separate from meaning)".
+7. **Regulated Decision Boundary**: For visa, immigration, legal, tax, or financial-risk decisions, keep the final verdict to documents, deadlines, professional questions, risk buffers, and qualified consultation checkpoints. Do not instruct the user to apply, extend, renew, change status, stay, return, sign, file, sue, invest, buy, sell, book flights, start return logistics, or skip professional advice. Do not use conditional commands such as "if no document by X, return/book/file"; instead write review thresholds, questions for qualified professionals, and scenario options.
+8. **Action Priority Format For Regulated Topics**: action_priorities must be framed as questions to ask, documents to check, costs/risks to compare, or review thresholds. They must not be framed as commands to file, book, leave, stay, apply, renew, submit, or execute logistics.`;
   } else {
     system = `${buildPersonaSystemLine(userData.characterId, lang)}
 최종 종합과 상징적 패턴 통찰을 전달합니다.
@@ -140,7 +142,9 @@ You are the 3-Layer Decision Report analyst delivering the final synthesis and s
 3. 타로는 "현재 흐름" 같은 추상 표현으로 낮추지 말고, 질문 주변의 즉각 신호와 행동 리스크로 번역하십시오.
 4. **밀도 계약**: 상징 패턴 각 content는 원형, 근거, 현생 반복 패턴, 끊어낼 행동을 모두 연결해야 합니다. 길지만 개인화와 행동이 없으면 분석 실패입니다.
 5. **확신 수준 표기**: 결론은 선명하게 쓰되, 근거가 부분적이면 확신 수준과 재검토 경계를 함께 제시하십시오.
-6. **고위험/전문 판단 경계**: 비자/이민/법률/세금/재무 리스크가 걸린 최종 결론은 문서, 마감, 전문가에게 물어볼 질문, 리스크 버퍼, 전문가 상담 체크포인트로만 구성하십시오. 비자 신청/연장/갱신/변경, 체류/귀국 결정, 서명/소송/서류 제출, 투자/매수/매도, 전문가 조언 생략을 직접 지시하지 마십시오.`;
+6. **보이는 원천 경계**: 사용자에게 보이는 JSON 필드 안에 다음 원천 경계 문구 중 최소 4개를 그대로 포함하십시오: "KASI/JPL 계산 검증 전용 (calculation-only)", "계산 원천은 해석 권위가 아님 (not doctrine/personality authority)", "Waite/Tetrabiblos 검토된 텍스트 후보 (reviewed text candidates)", "원문 복사 금지 (no raw source text copying)", "타로 이미지 권리와 의미 근거 분리 (tarot image rights separate from meaning)".
+7. **고위험/전문 판단 경계**: 비자/이민/법률/세금/재무 리스크가 걸린 최종 결론은 문서, 마감, 전문가에게 물어볼 질문, 리스크 버퍼, 전문가 상담 체크포인트로만 구성하십시오. 비자 신청/연장/갱신/변경, 체류/귀국 결정, 서명/소송/서류 접수/제출, 항공권/비행기 표 예매, 귀국 준비 개시, 투자/매수/매도, 전문가 조언 생략을 직접 지시하지 마십시오. "X가 없으면 귀국/예매/접수하라" 같은 조건부 직접 명령도 금지하고, 대신 검토 기준, 전문가에게 물어볼 질문, 선택지별 시나리오로만 쓰십시오.
+8. **고위험 action_priorities 형식**: action_priorities는 "전문가에게 물어볼 질문", "확인할 문서", "비용/리스크 비교", "재검토 기준"으로만 쓰십시오. 접수/제출/예매/귀국/체류/신청/연장/실행 명령으로 쓰면 실패입니다.`;
   }
 
   const user = buildUserContext(userData) + buildPreviousPhaseContext(previousData, lang);

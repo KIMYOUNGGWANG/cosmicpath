@@ -662,6 +662,9 @@ function schema_rejects_direct_command_variants_from_reviewer_blocker() {
     'Apply for permanent residence.',
     'Renew your work permit.',
     'Invest in Tesla.',
+    '서류를 접수해야만 생존합니다.',
+    '8월 31일까지 접수 증명서를 확보하지 못하면 한국 귀국 준비로 전환하세요.',
+    '9월 1일부로 한국 귀국 행 비행기 표 예매 및 자산 정리 절차를 개시할 것.',
   ];
 
   for (const command of phaseEightCommands) {

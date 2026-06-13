@@ -32,7 +32,7 @@ const FORBIDDEN_SOURCE_PATTERNS = [
   /KASI[^.\n]*(?:십신|격국|용신|성격|연애|직업)/iu,
   /JPL[^.\n]*(?:성격|연애|직업|타로|사주\s*해석)/iu,
   /(?:KASI|JPL)[^.\n]*(?:are|is|as)[^.\n]*(?:authority|authoritative|basis|source)[^.\n]*(?:personality|career|relationship|tarot|saju|doctrine|interpretation)/iu,
-  /(?:이미지\s*권리|image rights|visual rights)[^.\n]*(?:카드\s*의미|해석\s*근거|prove|ground|authorize|determine|meaning|interpretation)/iu,
+  /(?:이미지\s*권리|image rights|visual rights)[^.\n]*(?:카드\s*의미의?\s*근거|해석\s*근거|prove|ground|authorize|determine)/iu,
 ] as const;
 
 export function buildSourceBoundaryAnchors(): readonly PremiumGroundingAnchor[] {

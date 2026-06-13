@@ -92,6 +92,10 @@ function getPhaseTemperature(phaseNumber: number) {
         return 0.5;
     }
 
+    if (phaseNumber === 8) {
+        return 0.35;
+    }
+
     if (phaseNumber >= 6) {
         return 0.6;
     }
@@ -109,11 +113,16 @@ function isMaxTokensFinish(finishReason: string | null): boolean {
     return finishReason === 'MAX_TOKENS';
 }
 
-function collectReportStrings(value: unknown): string[] {
-    if (typeof value === 'string') return [value.trim()].filter(Boolean);
-    if (Array.isArray(value)) return value.flatMap((item) => collectReportStrings(item));
+const NON_PROSE_QUALITY_KEYS = new Set(['keywords']);
+
+function collectReportStrings(value: unknown, parentKey?: string): string[] {
+    if (typeof value === 'string') {
+        if (parentKey && NON_PROSE_QUALITY_KEYS.has(parentKey)) return [];
+        return [value.trim()].filter(Boolean);
+    }
+    if (Array.isArray(value)) return value.flatMap((item) => collectReportStrings(item, parentKey));
     if (!value || typeof value !== 'object') return [];
-    return Object.values(value).flatMap((item) => collectReportStrings(item));
+    return Object.entries(value).flatMap(([key, item]) => collectReportStrings(item, key));
 }
 
 const GENERIC_REPORT_PATTERNS = [
@@ -126,7 +135,7 @@ const GENERIC_REPORT_PATTERNS = [
     /우주의 흐름/,
     /긍정적인 마음/,
     /조화와 균형/,
-    /새로운 시작/,
+    /새로운 시작(?:이|을|의)?\s*(?:열리|맞이|기대|믿|준비되|다가옵니다|찾아옵니다)/,
     /좋은 흐름/,
 ] as const;
 
@@ -241,6 +250,7 @@ function buildQualityRetryUserPrompt(userPrompt: string, lastError: Error | null
     const errorMessage = lastError.message;
     const hasSafetyError = /Forbidden medical.*financial instruction marker found/i.test(errorMessage);
     const hasDateError = /past (?:month|date)|before currentDate|must be in YYYY-MM-DD format/i.test(errorMessage);
+    const hasSourceBoundaryError = /missing_sourceBoundary_anchors/i.test(errorMessage);
     const currentMonth = currentDate?.slice(0, 7);
     const retryReason = hasSafetyError
         ? 'The last output crossed a regulated-advice wording boundary.'
@@ -249,12 +259,17 @@ function buildQualityRetryUserPrompt(userPrompt: string, lastError: Error | null
             : errorMessage;
     const safetyRetry = hasSafetyError ? `
 <SAFETY_RETRY>
-Rewrite regulated guidance as decision-support boundaries only. For wellness, use observation routines and professional consultation boundaries. For visa, immigration, legal, tax, and financial-risk cases, use document checks, deadline mapping, questions for qualified professionals, risk buffers, and consultation triggers. Do not name clinical actions, drug-management actions, operation scheduling, visa/status actions, stay/return commands, signature/filing/lawsuit commands, named market instruments, speculative digital assets, borrowed-risk tactics, concentration bets, exposure sizing, or loss-recovery instructions.
+Rewrite regulated guidance as decision-support boundaries only. For wellness, use observation routines and professional consultation boundaries. For visa, immigration, legal, tax, and financial-risk cases, use document checks, deadline mapping, questions for qualified professionals, risk buffers, and consultation triggers. Do not name clinical actions, drug-management actions, operation scheduling, visa/status actions, stay/return commands, return-logistics commands, flight booking, application filing/submission/receipt commands, signature/filing/lawsuit commands, named market instruments, speculative digital assets, borrowed-risk tactics, concentration bets, exposure sizing, or loss-recovery instructions. Avoid conditional commands like "if no document by X, return/book/file"; write review thresholds and scenario options instead.
+Safe replacement examples: "전문가에게 확인할 질문은 무엇인가", "문서와 마감 체크리스트를 점검한다", "A/B 시나리오의 비용과 리스크를 비교한다", "특정 선택을 확정하지 말고 상담 후 재검토한다". Forbidden examples: "서류를 접수해야 한다", "귀국 준비로 전환하라", "비행기 표를 예매하라", "체류/귀국을 확정하라".
 </SAFETY_RETRY>` : '';
     const dateRetry = hasDateError ? `
 <DATE_RETRY>
 Use ${currentDate ?? 'the report current date'} as the earliest boundary. For month-level windows, use ${currentMonth ? `${currentMonth} or later` : 'the current month or later'}. If supplied context contains earlier dates or months, treat them only as historical intake context and do not copy them into future guidance. When exact timing is weak, write a review window such as "기준일 이후 2-4주 검증 창" instead of a specific earlier date.
 </DATE_RETRY>` : '';
+    const sourceBoundaryRetry = hasSourceBoundaryError ? `
+<SOURCE_BOUNDARY_RETRY>
+Include at least four visible source-boundary clauses in the JSON fields, using these exact meanings: "KASI/JPL 계산 검증 전용 (calculation-only)", "계산 원천은 해석 권위가 아님 (not doctrine/personality authority)", "Waite/Tetrabiblos 검토된 텍스트 후보 (reviewed text candidates)", "원문 복사 금지 (no raw source text copying)", "타로 이미지 권리와 의미 근거 분리 (tarot image rights separate from meaning)".
+</SOURCE_BOUNDARY_RETRY>` : '';
 
     return `${userPrompt}
 
@@ -262,7 +277,7 @@ Use ${currentDate ?? 'the report current date'} as the earliest boundary. For mo
 Previous attempt failed validation: ${retryReason}
 Rewrite the phase as premium-grade analysis, not filler. Each important paragraph must include: (1) the source signal being used, (2) what that signal means for this user/question, and (3) a concrete implication, timing boundary, risk, or next action. The combined user-visible text must satisfy the depth and density implied by the validation error, without padding, repeated phrasing, or generic reassurance. Use supplied Saju, astrology, tarot, timing, and user-question evidence wherever relevant.
 If the error mentions PREMIUM_QUALITY_GATE_FAILED, quote the missing supplied anchors exactly and name the source-role boundary before interpreting them.
-</QUALITY_RETRY>${safetyRetry}${dateRetry}`;
+</QUALITY_RETRY>${safetyRetry}${dateRetry}${sourceBoundaryRetry}`;
 }
 
 
