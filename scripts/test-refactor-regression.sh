@@ -89,7 +89,7 @@ require_match "src/app/start/start-page-helpers.ts" "en_relationship_contact_tim
 require_match "src/lib/payment/payment-config.ts" "PAID_DECISION_REPORT_NAME_EN"
 require_match "src/lib/product-positioning.ts" "Detailed 3-Layer Decision Report"
 require_match "src/lib/payment/payment-config.ts" "prod_ThdoB65NmPU37y"
-require_match "docs/api-spec.md" 'Next Move Report MVP Contract (2026-06-03)'
+require_match "docs/api-spec.md" 'Decision Note / Next Move Ritual Contract (2026-06-14)'
 require_match "docs/api-spec.md" '$3.99'
 
 require_match "docs/revenue/next-move-report-mvp-operating-loop.md" "300 targeted visits"
