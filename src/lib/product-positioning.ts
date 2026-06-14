@@ -7,5 +7,7 @@ export const THREE_LAYER_ROLE_EXPLANATION_EN =
 export const THREE_LAYER_ROLE_EXPLANATION_KO =
     '사주 = 구조, 점성술 = 타이밍, 타로 = 즉각 신호.';
 
+export const NEXT_MOVE_RITUAL_ENABLED: boolean = false;
+
 export const READING_PRODUCT_PRICE_CENTS = 399;
 export const READING_PRODUCT_PRICE_LABEL = '$3.99';
