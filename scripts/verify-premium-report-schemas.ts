@@ -124,6 +124,7 @@ type PremiumServiceApi = {
 type PhasePromptApi = {
   readonly buildPhase1Prompt: (userData: Record<string, unknown>) => { readonly system: string; readonly user: string };
   readonly buildPhase4Prompt: (userData: Record<string, unknown>) => { readonly system: string; readonly user: string };
+  readonly buildPhase5APrompt: (userData: Record<string, unknown>) => { readonly system: string; readonly user: string };
   readonly buildPhase5BPrompt: (userData: Record<string, unknown>) => { readonly system: string; readonly user: string };
 };
 
@@ -132,6 +133,7 @@ let premiumServiceApi: PremiumServiceApi | null = null;
 let phasePromptApi: PhasePromptApi | null = null;
 
 const phaseSixBlockedInstructionMarker = /처방|투약|약물|수술|치료\s*중단|특정\s*주식|코인|암호화폐|레버리지|몰빵|medication|surgery|specific\s+stock|crypto(?:currency)?|leverage|all-?in|portfolio\s+allocation|position\s+size/i;
+const phaseSevenBlockedInstructionMarker = /비자(?:를|을)?\s*(?:신청|연장|갱신|변경|전환|취득|포기)|귀국\s*준비|귀국\s*절차|체류\/귀국|잔류와\s*귀국|항공권|비행기\s*표|서류\s*(?:접수|제출)|apply\s+for|extend\s+(?:your\s+)?(?:visa|status|work\s+permit)|renew\s+(?:your\s+)?(?:visa|status|work\s+permit)|change\s+(?:your\s+)?(?:visa|status|work\s+permit)|stay\/return\/apply|return\/book\/file|stay\s+in\s+Canada|return\s+to\s+Korea|book\s+flights?/i;
 
 function schemas(): PhaseSchemaApi {
   if (!phaseSchemaApi) {
@@ -588,6 +590,17 @@ function phase6_prompt_avoids_output_blocked_instruction_markers() {
 
   assert.doesNotMatch(prompt.system, phaseSixBlockedInstructionMarker);
   assert.match(prompt.system, /안전 어휘 계약|Safety Language Contract/);
+}
+
+function phase7_prompt_avoids_regulated_output_instruction_markers() {
+  const prompt = phasePrompts().buildPhase5APrompt({
+    ...sampleUserData(),
+    context: 'kim-vancouver-visa-premium',
+    question: '밴쿠버에서 버텨야 할지 한국으로 돌아가야 할지 모르겠습니다. 11월에 비자가 만료됩니다.',
+  });
+
+  assert.doesNotMatch(prompt.system, phaseSevenBlockedInstructionMarker);
+  assert.match(prompt.system, /고위험|Regulated Decision Boundary/);
 }
 
 function schema_rejects_phase8_without_convergence_diagnosis() {
@@ -1073,11 +1086,39 @@ async function premium_generation_sanitizes_phase6_safety_retry_prompts() {
   }
 }
 
+async function premium_generation_sanitizes_phase7_safety_retry_prompts() {
+  const originalFetch = globalThis.fetch;
+  const unsafeRetryBodies: string[] = [];
+  const unsafePhaseSeven = validPhaseSevenPayload();
+  unsafePhaseSeven.action_plan[0].description = '8월까지 비자 스폰서십 서류 확보에만 집중하고 미확보 시 귀국 준비로 전환하세요.';
+
+  globalThis.fetch = async (_input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    unsafeRetryBodies.push(typeof init?.body === 'string' ? init.body : '');
+    return buildGoogleResponse(unsafePhaseSeven);
+  };
+
+  try {
+    const result = await premiumService().generateSinglePhase(7, sampleUserData(), null, 'test-key');
+    const retryBody = JSON.parse(unsafeRetryBodies[1] ?? '{}');
+    const retryText = retryBody.contents?.[0]?.parts?.[0]?.text ?? '';
+
+    assert.equal(result.success, false);
+    assert.match(result.error ?? '', /forbidden.*(medical|legal|immigration|financial)/i);
+    assert.match(retryText, /SAFETY_RETRY/);
+    assert.match(retryText, /문서\/질문\/비용 비교|document checks/i);
+    assert.doesNotMatch(retryText, phaseSevenBlockedInstructionMarker);
+    assert.doesNotMatch(retryText, /Forbidden medical.*financial instruction marker found/i);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
 const assertions: Array<{ name: string; run: SchemaAssertion }> = [
   { name: 'schema_accepts_valid_minimal_phase_payloads', run: schema_accepts_valid_minimal_phase_payloads },
   { name: 'premium_prompt_uses_computed_source_contract_and_full_astro_data', run: premium_prompt_uses_computed_source_contract_and_full_astro_data },
   { name: 'premium_prompts_use_three_layer_synthesis_contract', run: premium_prompts_use_three_layer_synthesis_contract },
   { name: 'phase6_prompt_avoids_output_blocked_instruction_markers', run: phase6_prompt_avoids_output_blocked_instruction_markers },
+  { name: 'phase7_prompt_avoids_regulated_output_instruction_markers', run: phase7_prompt_avoids_regulated_output_instruction_markers },
   { name: 'schema_rejects_phase8_without_convergence_diagnosis', run: schema_rejects_phase8_without_convergence_diagnosis },
   { name: 'schema_rejects_invalid_phase_number', run: schema_rejects_invalid_phase_number },
   { name: 'schema_rejects_past_phase5_dates_for_current_date_2026_06_06', run: schema_rejects_past_phase5_dates_for_current_date_2026_06_06 },
@@ -1095,6 +1136,7 @@ const assertions: Array<{ name: string; run: SchemaAssertion }> = [
   { name: 'schema_rejects_malformed_phase7_dates', run: schema_rejects_malformed_phase7_dates },
   { name: 'premium_generation_sends_response_schema_and_retries_invalid_payload', run: premium_generation_sends_response_schema_and_retries_invalid_payload },
   { name: 'premium_generation_sanitizes_phase6_safety_retry_prompts', run: premium_generation_sanitizes_phase6_safety_retry_prompts },
+  { name: 'premium_generation_sanitizes_phase7_safety_retry_prompts', run: premium_generation_sanitizes_phase7_safety_retry_prompts },
 ];
 
 async function run() {
