@@ -60,6 +60,7 @@ export interface PremiumReportData {
         avoid?: string;
         confidence_note?: string;
         copy_ready_message?: string;
+        gaeun_action?: string;
         action_conclusion: string;
         evidence_summary: string;
         next_question: string;

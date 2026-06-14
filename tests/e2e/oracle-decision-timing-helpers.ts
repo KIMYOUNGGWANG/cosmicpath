@@ -141,6 +141,7 @@ export async function mockDecisionReadingGeneration(page: Page): Promise<void> {
             avoid: '감정적으로 바로 퇴사 통보하지 마세요.',
             confidence_note: '사주와 점성 신호는 움직임보다 기준 정리에 더 강하게 겹칩니다.',
             copy_ready_message: '지금은 바로 퇴사보다 역할 조건을 먼저 확인해보겠습니다.',
+            gaeun_action: '가은 액션: 오늘 15분 동안 지원 조건표를 쓰고, 바로 퇴사 통보는 피하세요.',
             action_conclusion: 'narrow_first: 지금은 이직 여부를 바로 확정하지 말고 선택지를 먼저 좁히세요.',
             evidence_summary: '사주와 점성술 신호가 무작정 이동보다 역할 조건 확인에 더 강하게 겹칩니다.',
             next_question: '지원할 회사와 남을 조건을 각각 몇 개로 좁힐 수 있나요?',

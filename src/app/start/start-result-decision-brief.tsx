@@ -1,4 +1,4 @@
-import { AlertTriangle, Clock3, ListChecks, Lock, MessageCircle, Shield, Target } from 'lucide-react';
+import { AlertTriangle, Clock3, ListChecks, Lock, MessageCircle, Shield, Sparkles, Target } from 'lucide-react';
 import type { UnifiedReadingResult } from '@/lib/cosmic/schema';
 import type { ReadingData } from '@/components/reading/reading-input';
 import type { PremiumReportState } from './start-page-helpers';
@@ -84,6 +84,17 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
           : '자세한 기록에서 이 판정을 정확한 실행 순서로 이어가세요.'),
     220
   );
+  const gaeunAction = compactText(
+    freeFocus?.gaeun_action || freeFocus?.first_action,
+    isRelationshipContactTiming
+      ? (isEn
+          ? 'Gaeun action: pause, choose one safe boundary, then avoid pressure.'
+          : '가은 액션: 먼저 멈추고 안전한 경계 하나를 정한 뒤 압박은 피하세요.')
+      : (isEn
+          ? 'Gaeun action: write today\'s smallest next step, then avoid forcing the outcome.'
+          : '가은 액션: 오늘 가장 작은 다음 행동 하나를 적고, 결과를 억지로 만들려는 움직임은 피하세요.'),
+    220
+  );
   const avoid = compactText(
     freeFocus?.avoid,
     isEn ? 'Do not rush the part that can backfire.' : '역효과가 날 수 있는 움직임은 먼저 피하세요.',
@@ -112,6 +123,11 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
         : (isEn ? 'First Action' : '첫 행동'),
       value: firstAction,
       Icon: ListChecks,
+    },
+    {
+      label: isEn ? 'Gaeun Action' : '가은 액션',
+      value: gaeunAction,
+      Icon: Sparkles,
     },
     {
       label: isEn ? 'Avoid' : '피할 것',
@@ -153,7 +169,7 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
           ) : null}
         </div>
       </div>
-      <div className="grid gap-3 px-5 py-5 sm:px-7 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 px-5 py-5 sm:px-7 md:grid-cols-2 xl:grid-cols-5">
         {blocks.map(({ label, value, Icon }) => (
           <article key={label} className="rounded-[22px] border border-white/10 bg-black/20 p-4">
             <div className="mb-3 flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-white/42">
