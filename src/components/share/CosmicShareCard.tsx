@@ -5,10 +5,8 @@ import { Sparkles, Star } from 'lucide-react';
 
 interface CosmicShareCardProps {
     title: string;
-    trustScore: number;
     matchLevel: 'PERFECT' | 'PARTIAL' | 'CONFLICT';
     keywords: string[];
-    userName?: string;
 }
 
 /**
@@ -16,7 +14,7 @@ interface CosmicShareCardProps {
  * 9:16 비율, 딥 네이비 + 골드 테마
  */
 export const CosmicShareCard = forwardRef<HTMLDivElement, CosmicShareCardProps>(
-    function CosmicShareCard({ title, trustScore, matchLevel, keywords, userName }, ref) {
+    function CosmicShareCard({ title, matchLevel, keywords }, ref) {
         const matchLevelConfig = {
             PERFECT: { label: '완벽한 조화', color: 'from-emerald-400 to-teal-500', emoji: '✨' },
             PARTIAL: { label: '부분적 일치', color: 'from-amber-400 to-orange-500', emoji: '🌙' },
@@ -62,16 +60,15 @@ export const CosmicShareCard = forwardRef<HTMLDivElement, CosmicShareCardProps>(
 
                 {/* 중앙: 메인 콘텐츠 */}
                 <div className="relative px-8 py-6 flex flex-col items-center">
-                    {/* Trust Score */}
+                    {/* Public-safe summary mark */}
                     <div className="relative mb-6">
                         <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#A184FF]/20 to-[#6366F1]/20 flex items-center justify-center border border-[#A184FF]/30">
                             <div className="text-center">
-                                <div className="text-4xl font-bold text-white">
-                                    {trustScore}
-                                    <span className="text-xl text-white/60">%</span>
+                                <div className="text-2xl font-bold text-white">
+                                    Decision
                                 </div>
                                 <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1">
-                                    Trust Score
+                                    Note
                                 </div>
                             </div>
                         </div>
@@ -104,12 +101,6 @@ export const CosmicShareCard = forwardRef<HTMLDivElement, CosmicShareCardProps>(
                         ))}
                     </div>
 
-                    {/* User Name (Optional) */}
-                    {userName && (
-                        <div className="text-white/40 text-sm mb-4">
-                            for <span className="text-[#D4AF37]">{userName}</span>
-                        </div>
-                    )}
                 </div>
 
                 {/* 하단: 워터마크 (바이럴용) */}

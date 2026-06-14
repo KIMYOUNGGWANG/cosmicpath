@@ -477,8 +477,6 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
 
                     <ShareCard
                         shareUrl={shareUrl || (typeof window !== 'undefined' ? window.location.href : '')}
-                        trustScore={report.summary?.trust_score}
-                        mainCardName={metadata?.tarot?.[0]?.name}
                     />
 
                     {/* Guest: Save to Account */}

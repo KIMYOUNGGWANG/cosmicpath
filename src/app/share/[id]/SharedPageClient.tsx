@@ -25,8 +25,6 @@ interface SharedPageClientProps {
   shareSummary: {
     title: string;
     description: string;
-    trustScore: number;
-    mainCardName: string;
     language: 'ko' | 'en';
   };
   readingOwnerUserId: string | null;
@@ -127,7 +125,6 @@ export function SharedPageClient({
   }, [id, runtimeAccessKey]);
 
   const isEn = shareSummary.language === 'en';
-  const trustPercent = Math.round((shareSummary.trustScore / 5) * 100);
   const hasAccountOwnerAccess = Boolean(
     readingOwnerUserId &&
     session?.user?.id &&
@@ -373,9 +370,11 @@ export function SharedPageClient({
                   className="rounded-2xl border border-white/10 bg-black/20 p-4 transition-[transform,border-color,background-color] duration-300 hover:-translate-y-1 hover:border-amber-300/25 hover:bg-black/30"
                 >
                   <div className="text-[11px] uppercase tracking-[0.24em] text-white/45">
-                    {isEn ? 'Trust Score' : '신뢰도'}
+                    {isEn ? 'Public Snapshot' : '공개 스냅샷'}
                   </div>
-                  <div className="mt-3 text-3xl font-black text-amber-300">{trustPercent}</div>
+                  <div className="mt-3 text-sm font-semibold leading-6 text-amber-100">
+                    {isEn ? 'Summary only' : '요약만 공개'}
+                  </div>
                 </motion.div>
 
                 <motion.div
@@ -385,9 +384,11 @@ export function SharedPageClient({
                   className="rounded-2xl border border-white/10 bg-black/20 p-4 transition-[transform,border-color,background-color] duration-300 hover:-translate-y-1 hover:border-violet-300/25 hover:bg-black/30"
                 >
                   <div className="text-[11px] uppercase tracking-[0.24em] text-white/45">
-                    {isEn ? 'Signature Card' : '핵심 카드'}
+                    {isEn ? 'Private Details' : '비공개 정보'}
                   </div>
-                  <div className="mt-3 text-xl font-bold text-white">{shareSummary.mainCardName}</div>
+                  <div className="mt-3 text-sm font-semibold leading-6 text-white">
+                    {isEn ? 'Owner locked' : '소유자만 열람'}
+                  </div>
                 </motion.div>
 
                 <motion.div
@@ -457,8 +458,6 @@ export function SharedPageClient({
             <ShareCard
               shareUrl={shareUrl}
               readingId={id}
-              trustScore={shareSummary.trustScore}
-              mainCardName={shareSummary.mainCardName}
               className="p-6 md:p-7"
             />
 
