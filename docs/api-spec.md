@@ -141,17 +141,19 @@ interface DecisionTimingGrowthMetadata {
 
 ---
 
-## Next Move Report MVP Contract (2026-06-03)
+## Decision Note / Next Move Ritual Contract (2026-06-14)
 
 **Purpose**
 
-This is a positioning and offer update on top of the existing Decision Timing Reading flow. It does not add a new public API, a new reading response schema, or a new payment endpoint. `Next Move Report` is the public acquisition brand and paid offer name for this MVP; CosmicPath remains only legacy/internal context where existing routes, historical docs, or operating/legal references still require it.
+`CosmicPath Decision Note` is the canonical public product and system name for the active decision-support surface. `Next Move Ritual` is a bounded campaign and experience layer on top of the existing Decision Timing Reading flow. It does not add a new public API, a new reading response schema, or a new payment endpoint. `Next Move Report` is historical/campaign-only unless an existing paid report surface uses report wording for the already-defined `Detailed 3-Layer Decision Report`.
 
 **Attribution source**
 
 ```typescript
-type NextMoveReportSource = "next_move_report_mvp_v1";
+type NextMoveRitualSource = "next_move_report_mvp_v1";
 ```
+
+The source value remains unchanged for analytics continuity. Do not rename persisted attribution keys in this docs-only reconciliation wave.
 
 **Offer contract**
 
@@ -162,12 +164,24 @@ type NextMoveReportSource = "next_move_report_mvp_v1";
 - Fallback Stripe amount: `399` cents USD
 - Stripe product env: `NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID` and `NEXT_PUBLIC_STRIPE_READING_PRODUCT_ID_TEST` must point to a one-time USD 3.99 reading product. If a configured live Stripe product returns any other amount, `/api/payment/price` must block the response instead of silently showing `$3.99`.
 - Saju = structure, astrology = timing, tarot = immediate signal; birth-data inputs improve precision and calibration but are not the public product title.
+- `Next Move Ritual` campaign copy may frame the experience as today's next move, but the product/system handoff remains `CosmicPath Decision Note`.
 
 **Compatibility note**
 
 - The prior `career_timing_wedge_399` experiment and its `$3.99` fallback remain historical experiment references only.
-- The active MVP fallback offer for `next_move_report_mvp_v1` is `$3.99`; older docs, screenshots, or analytics notes may still mention CosmicPath decision timing wording or the prior $9 experiment only as historical context.
+- `Next Move Report` is historical/campaign-only unless an existing paid report surface uses report wording for the paid `Detailed 3-Layer Decision Report`.
+- The active campaign fallback offer for `next_move_report_mvp_v1` is `$3.99`; older docs, screenshots, or analytics notes may still mention prior CosmicPath decision timing wording or the prior $9 experiment only as historical context.
+- `free_focus.gaeun_action` is a backward-compatible public optional field, not a breaking wire replacement.
 - This change is business-copy and fallback-config only; `/api/payment`, `/api/payment/price`, and `/api/reading` response shapes remain unchanged.
+
+```typescript
+interface FreeFocusCompatibilityContract {
+  action_conclusion: string;
+  evidence_summary: string;
+  next_question: string;
+  gaeun_action?: string;
+}
+```
 
 ---
 
