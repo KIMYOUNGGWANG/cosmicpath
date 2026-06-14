@@ -27,7 +27,7 @@ export function PaymentModalPricePanel({
         <>
             <div className="mt-6 rounded-[24px] border border-white/10 bg-white/[0.03] px-5 py-4 shadow-[0_14px_36px_rgba(0,0,0,0.22)]">
                 <p className="text-[10px] uppercase tracking-[0.26em] text-white/42">
-                    {isEnglish ? 'One-time Decision Note price' : 'one-time Decision Note 가격'}
+                    {isEnglish ? 'Detailed 3-Layer Decision Report price' : '상세 3단 판정 리포트 가격'}
                 </p>
                 {showPriceConfirmationBlocked ? (
                     <div className="mt-2 space-y-1">

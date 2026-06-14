@@ -37,6 +37,9 @@ const DECLARED_SURFACES = [
   { filePath: 'src/app/payment/success/page.tsx', description: 'checkout success paid-product copy' },
   { filePath: 'src/components/seo/json-ld.tsx', description: 'global structured data' },
   { filePath: 'src/components/payment/PaymentModalPricePanel.tsx', description: 'checkout price panel copy' },
+  { filePath: 'src/components/payment/PaymentModalForm.tsx', description: 'checkout form paid-report copy' },
+  { filePath: 'src/components/landing/RitualSection.tsx', description: 'Next Move Ritual experience-layer copy' },
+  { filePath: 'src/app/privacy/page.tsx', description: 'privacy disclosure for ritual and public-safe share copy' },
   { filePath: 'src/components/reading/FinalVerdictCard.tsx', description: 'final verdict three-layer role copy' },
   { filePath: 'src/app/start/start-result-decision-brief.tsx', description: 'locked report offer copy' },
   { filePath: 'src/app/start/start-result-followup-panel.tsx', description: 'follow-up loop product metadata and copy' },
@@ -175,6 +178,38 @@ assertSurfaceHasPattern(paymentConfig, /price:\s*READING_PRODUCT_PRICE_CENTS|pri
 
 const termsPage = readSurface({ filePath: 'src/app/terms/page.tsx', description: 'terms page' });
 assertSurfaceHasPattern(termsPage, /\$3\.99 USD[\s\S]*Stripe checkout|Stripe checkout[\s\S]*\$3\.99 USD/, 'Terms must disclose one-time $3.99 USD Stripe checkout.');
+
+const ritualSection = getDeclaredSurfaceText('src/components/landing/RitualSection.tsx');
+assertSurfaceHas(ritualSection, CAMPAIGN_EXPERIENCE_NAME, 'Landing ritual copy must name Next Move Ritual as an experience layer.');
+assertSurfaceHas(
+  ritualSection,
+  'CosmicPath Decision Note의 판정 뒤에 붙는 경험 레이어',
+  'Landing ritual copy must keep CosmicPath Decision Note as the public product umbrella.'
+);
+assertSurfaceHas(
+  ritualSection,
+  '결과를 보장하지 않고',
+  'Landing ritual copy must not imply the ritual guarantees an outcome.'
+);
+
+const paymentPricePanel = getDeclaredSurfaceText('src/components/payment/PaymentModalPricePanel.tsx');
+assertSurfaceHas(
+  paymentPricePanel,
+  'Detailed 3-Layer Decision Report price',
+  'Paywall price panel must label the paid offer, not rename the public Decision Note product.'
+);
+
+const paymentForm = getDeclaredSurfaceText('src/components/payment/PaymentModalForm.tsx');
+assertSurfaceHas(
+  paymentForm,
+  'one-time Detailed 3-Layer Decision Report checkout',
+  'Paywall checkout footer must name the paid report offer.'
+);
+
+const privacyPage = getDeclaredSurfaceText('src/app/privacy/page.tsx');
+assertSurfaceHas(privacyPage, 'bounded Next Move Ritual action', 'Privacy must disclose bounded ritual action processing.');
+assertSurfaceHas(privacyPage, 'public-safe share summary', 'Privacy must disclose public-safe share summary processing.');
+assertSurfaceHas(privacyPage, '원문 질문과 생년월일을 노출하지 않는 요약', 'Korean privacy copy must disclose safe share defaults.');
 
 const jsonLd = readSurface({ filePath: 'src/components/seo/json-ld.tsx', description: 'JSON-LD' });
 assertSurfaceHasPattern(jsonLd, /price:\s*'3\.99'/, 'JSON-LD paid offer must expose the $3.99 price.');

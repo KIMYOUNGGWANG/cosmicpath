@@ -45,7 +45,7 @@ export function RitualSection() {
                     className="mb-8 inline-flex items-center gap-3 px-4 py-1 border border-white/10 rounded-full"
                 >
                     <span className={`w-1 h-1 rounded-full transition-colors duration-500 ${isHovered ? 'bg-acc-gold' : 'bg-starlight/30'}`} />
-                    <span className="text-[10px] tracking-[0.4em] text-starlight/40 font-mono uppercase">Note Ready</span>
+                    <span className="text-[10px] tracking-[0.4em] text-starlight/40 font-mono uppercase">Next Move Ritual</span>
                 </motion.div>
 
                 <motion.h2
@@ -54,7 +54,7 @@ export function RitualSection() {
                     transition={{ duration: 1.5 }}
                     className="font-cinzel text-2xl sm:text-3xl md:text-7xl text-starlight mb-10 tracking-[0.1em] sm:tracking-[0.2em] md:tracking-[0.3em]"
                 >
-                    첫 정리는 이렇게 시작돼요
+                    Decision Note 다음, 오늘 할 한 가지
                 </motion.h2>
 
                 <motion.p
@@ -64,8 +64,8 @@ export function RitualSection() {
                     className="text-moonlight text-xs md:text-sm mb-12 md:mb-20 font-light tracking-[0.2em] max-w-lg mx-auto leading-relaxed border-l border-r border-white/10 px-8"
                 >
                     {language === 'ko'
-                        ? "선택지를 적고, 기준을 확인하고, 오늘 할 일을 남깁니다."
-                        : "Write the choice, check the criteria, leave with one action."}
+                        ? "Next Move Ritual은 CosmicPath Decision Note의 판정 뒤에 붙는 경험 레이어입니다. 결과를 보장하지 않고, 오늘 24시간 안에 시도할 작고 안전한 행동만 남깁니다."
+                        : "Next Move Ritual is the experience layer after CosmicPath Decision Note: no outcome guarantees, just one small safe action to try within the next 24 hours."}
                 </motion.p>
 
                 {/* Chronos Dial: Color Hierarchy Refined */}
@@ -148,7 +148,7 @@ export function RitualSection() {
                                 START
                             </span>
                             <span className="relative z-10 font-cinzel text-lg md:text-2xl font-bold tracking-[0.2em] text-starlight group-hover:text-white group-hover:scale-110 transition-all duration-500">
-                                {language === 'ko' ? "정리 시작" : "WRITE"}
+                                {language === 'ko' ? "판정 시작" : "START"}
                             </span>
 
                             <div className="mt-4 w-8 h-[1px] bg-acc-gold/30 group-hover:w-16 group-hover:bg-acc-gold transition-all duration-700" />
@@ -180,7 +180,7 @@ export function RitualSection() {
                         className="font-cinzel text-[10px] md:text-xs tracking-[0.6em] text-acc-gold uppercase flex items-center gap-4"
                     >
                         <span className="w-12 h-px bg-gradient-to-r from-transparent to-acc-gold" />
-                        {isHovered ? "입력 준비 완료" : "미뤄둔 선택 대기 중"}
+                        {isHovered ? "판정 후 오늘 할 한 가지" : "미뤄둔 선택 대기 중"}
                         <span className="w-12 h-px bg-gradient-to-l from-transparent to-acc-gold" />
                     </motion.div>
                 </div>

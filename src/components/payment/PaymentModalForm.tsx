@@ -98,8 +98,8 @@ export function PaymentModalForm({
             </motion.button>
             <p className="mt-4 text-center text-xs text-white/35">
                 {isEnglish
-                    ? 'Stripe handles the one-time Decision Note checkout safely. Your current result stays saved when you come back.'
-                    : 'Stripe에서 one-time Decision Note 결제를 안전하게 처리하고, 지금 결과는 그대로 저장되어 다시 와도 이어서 볼 수 있습니다.'}
+                    ? 'Stripe handles the one-time Detailed 3-Layer Decision Report checkout safely. Your current result stays saved when you come back.'
+                    : 'Stripe에서 one-time 상세 3단 판정 리포트 결제를 안전하게 처리하고, 지금 결과는 그대로 저장되어 다시 와도 이어서 볼 수 있습니다.'}
             </p>
         </>
     );
