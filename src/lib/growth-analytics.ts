@@ -14,6 +14,7 @@ export type CanonicalGrowthEvent =
     | 'checkout_start'
     | 'paywall_view'
     | 'landing_view'
+    | 'ritual_action'
     | 'retention'
     | 'other';
 
@@ -47,7 +48,11 @@ const EVENT_ALIASES: Record<string, CanonicalGrowthEvent> = {
     paywall_view: 'paywall_view',
     paywall_open: 'paywall_view',
     soft_paywall_shown: 'paywall_view',
+    ritual_action_viewed: 'ritual_action',
+    ritual_action_clicked: 'ritual_action',
     landing_view: 'landing_view',
+    safe_share_card_opened: 'share',
+    safe_share_card_downloaded: 'share',
     guide_hub_view: 'landing_view',
     guide_article_view: 'landing_view',
 };

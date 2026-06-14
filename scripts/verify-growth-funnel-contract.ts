@@ -39,6 +39,10 @@ function assertPaywallCanonicalContract(): void {
   assert.equal(getCanonicalGrowthEvent('paywall_view'), 'paywall_view');
   assert.equal(getCanonicalGrowthEvent('paywall_open'), 'paywall_view');
   assert.equal(getCanonicalGrowthEvent('first_result_view'), 'first_result_view');
+  assert.equal(getCanonicalGrowthEvent('ritual_action_viewed'), 'ritual_action');
+  assert.equal(getCanonicalGrowthEvent('ritual_action_clicked'), 'ritual_action');
+  assert.equal(getCanonicalGrowthEvent('safe_share_card_opened'), 'share');
+  assert.equal(getCanonicalGrowthEvent('safe_share_card_downloaded'), 'share');
   assert.equal(getCanonicalGrowthEvent('checkout_success'), 'paid_conversion');
   console.log('paywall_view_canonical_contract');
 }
@@ -47,8 +51,10 @@ function assertCheckoutIntentSourceContract(): void {
   const startTracking = readProjectFile('src/app/start/use-start-growth-tracking.ts');
   const checkout = readProjectFile('src/components/payment/use-reading-checkout.ts');
   assert.ok(startTracking.includes("event: 'paywall_view'"));
+  assert.ok(startTracking.includes("event: 'ritual_action_viewed'"));
   assert.ok(startTracking.includes("funnelStep: 'free_result_pay_cta_exposed'"));
   assert.ok(startTracking.includes("conversionSource: 'free_result'"));
+  assert.ok(!startTracking.includes('gaeun_action,'));
   assert.ok(checkout.includes('checkoutIntentId'));
   assert.ok(checkout.includes('conversionSource: input.trackingSource'));
   console.log('checkout_intent_source_contract');
@@ -57,7 +63,12 @@ function assertCheckoutIntentSourceContract(): void {
 function assertFollowupFeedbackStageContract(): void {
   const metrics = readProjectFile('src/lib/growth-metrics.ts');
   assert.equal(getCanonicalGrowthEvent('followup_start'), 'followup_start');
+  assert.equal(getCanonicalGrowthEvent('ritual_action_clicked'), 'ritual_action');
   assert.ok(metrics.includes('followupSeeds'));
+  assert.ok(metrics.includes('ritualActionViews'));
+  assert.ok(metrics.includes('ritualActionClicks'));
+  assert.ok(metrics.includes('safeShareOpens'));
+  assert.ok(metrics.includes('safeShareDownloads'));
   assert.ok(metrics.includes('followupStarts'));
   assert.ok(metrics.includes('resultToFollowupSeedRate'));
   console.log('followup_feedback_stage_contract');

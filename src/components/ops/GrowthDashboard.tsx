@@ -21,6 +21,7 @@ import {
     HeartHandshake,
     LockKeyhole,
     MousePointerClick,
+    Share2,
     Sparkles,
     TrendingUp,
     Users,
@@ -298,7 +299,7 @@ function CampaignFunnelRow({ funnel }: { funnel: CampaignFunnel }) {
                     </div>
                 </div>
 
-                <div className="grid min-w-0 flex-1 grid-cols-2 gap-2 md:grid-cols-5">
+                <div className="grid min-w-0 flex-1 grid-cols-2 gap-2 md:grid-cols-6">
                     <CampaignStep
                         icon={Users}
                         label="sessions"
@@ -316,6 +317,12 @@ function CampaignFunnelRow({ funnel }: { funnel: CampaignFunnel }) {
                         label="result"
                         value={counts.firstResultViews.toLocaleString()}
                         caption={formatPercent(funnel.rates.analysisToResultRate)}
+                    />
+                    <CampaignStep
+                        icon={Sparkles}
+                        label="ritual"
+                        value={counts.ritualActionViews.toLocaleString()}
+                        caption={`${counts.ritualActionClicks.toLocaleString()} clicks`}
                     />
                     <CampaignStep
                         icon={LockKeyhole}
@@ -337,6 +344,8 @@ function CampaignFunnelRow({ funnel }: { funnel: CampaignFunnel }) {
                 <span className="inline-flex items-center gap-2 text-white/54">
                     follow-up seed {counts.followupSeeds.toLocaleString()}
                     <ArrowRight className="h-3.5 w-3.5" />
+                    safe share {counts.safeShareOpens.toLocaleString()} / {counts.safeShareDownloads.toLocaleString()}
+                    <Share2 className="h-3.5 w-3.5" />
                     checkout {counts.checkoutStarts.toLocaleString()}
                 </span>
             </div>

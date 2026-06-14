@@ -62,6 +62,7 @@ export async function mockReadingGeneration(page: Page): Promise<void> {
                     free_focus: {
                         action_conclusion: '연락: 오늘은 짧게 한 번만 보내도 됩니다.',
                         evidence_summary: '사주와 점성술 신호가 짧은 확인 메시지 쪽으로 기울어 있습니다.',
+                        gaeun_action: '가은 액션: 오늘은 한 문장만 보내고, 답장을 압박하지 마세요.',
                         next_question: '첫 문장을 얼마나 짧게 줄일 수 있나요?',
                     },
                     summary: {
