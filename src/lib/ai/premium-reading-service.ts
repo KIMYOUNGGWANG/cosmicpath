@@ -20,6 +20,7 @@ import {
 } from './phase-prompts';
 import { buildGoogleResponseJsonSchema } from './google-json-schema';
 import { assertPremiumGrounding } from './premium-grounding';
+import { attachPremiumQualityEnvelope } from './premium-quality-envelope';
 import { getPremiumPhaseSchema, parsePremiumPhaseResult } from './premium-report-schemas';
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
@@ -355,13 +356,23 @@ export async function generatePremiumReport(
         if (!phase5B.success) throw new Error(`Phase 5B failed: ${phase5B.error}`);
         Object.assign(results, phase5B.data);
 
-        return { success: true, report: results };
+        return {
+            success: true,
+            report: attachPremiumQualityEnvelope(results, userData),
+        };
 
     } catch (error) {
         console.error('[PremiumReading] Error:', error);
         return {
             success: false,
-            report: results, // Return partial results
+            report: attachPremiumQualityEnvelope(results, userData, {
+                reportMode: 'degraded_premium',
+                providerRecovery: {
+                    attempted: true,
+                    visibleToCustomer: true,
+                    reason: error instanceof Error ? error.message : 'unknown_premium_generation_error',
+                },
+            }),
             error: error instanceof Error ? error.message : 'Unknown error'
         };
     }

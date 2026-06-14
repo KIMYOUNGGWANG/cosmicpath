@@ -26,6 +26,7 @@
     "score:premium-report-eval": "node scripts/score-premium-report-eval.ts",
     "test:premium-report-resume": "node scripts/verify-premium-report-resume.ts",
     "test:premium-report-quality": "node scripts/verify-premium-report-quality.ts",
+    "test:premium-quality-envelope": "node scripts/verify-premium-quality-envelope.ts",
     "verify:stability": "node scripts/verify-stability-guards.cjs",
     "grant:admin": "node scripts/grant-admin.js",
     "lint": "npm run lint:target",

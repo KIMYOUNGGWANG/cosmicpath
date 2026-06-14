@@ -13,6 +13,7 @@ import {
   StructuredParseError,
   type ModelTier,
 } from '@/lib/ai/llm-client';
+import { attachPremiumQualityEnvelope } from '@/lib/ai/premium-quality-envelope';
 import { generatePremiumReport, generateSinglePhase } from '@/lib/ai/premium-reading-service';
 import type { PremiumReportPartial, UserData } from '@/lib/ai/phase-prompts';
 import { buildFallbackConvergenceDiagnosis } from '@/lib/ai/three-layer-synthesis';
@@ -644,10 +645,21 @@ export async function runPremiumReading(params: PremiumReadingParams) {
 
     const report = premiumResult.success
       ? premiumResult.report
-      : mergePremiumFallbackPhases(premiumResult.report, userData, {
-          reason: premiumResult.error,
-          currentDate,
-        });
+      : attachPremiumQualityEnvelope(
+          mergePremiumFallbackPhases(premiumResult.report, userData, {
+            reason: premiumResult.error,
+            currentDate,
+          }),
+          userData,
+          {
+            reportMode: 'degraded_premium',
+            providerRecovery: {
+              attempted: true,
+              visibleToCustomer: true,
+              reason: premiumResult.error ?? 'premium_full_recovery',
+            },
+          }
+        );
 
     return NextResponse.json(buildEnrichedPayload({
       success: true,

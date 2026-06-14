@@ -65,6 +65,7 @@ async function assertProgressIsSavedWhenLaterPhaseIsBlocked(): Promise<void> {
       outputPath,
       progressOutputPath,
       phases: [7, 8],
+      finalizeReport: (report) => ({ ...report, qualityEnvelope: true }),
     });
 
     assert.equal(result.status, 'blocked');
@@ -105,6 +106,7 @@ async function assertCompleteArtifactIsWrittenWhenAllPhasesPass(): Promise<void>
       outputPath,
       progressOutputPath,
       phases: [7, 8],
+      finalizeReport: (report) => ({ ...report, qualityEnvelope: true }),
     });
 
     assert.equal(result.status, 'complete');
@@ -113,6 +115,8 @@ async function assertCompleteArtifactIsWrittenWhenAllPhasesPass(): Promise<void>
     assert.deepEqual(complete.resume.completedPhases, [7, 8]);
     assert.ok('special_analysis' in complete.report);
     assert.ok('final_verdict' in complete.report);
+    assert.equal(complete.report.qualityEnvelope, true);
+    assert.ok(result.reportKeys.includes('qualityEnvelope'));
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }

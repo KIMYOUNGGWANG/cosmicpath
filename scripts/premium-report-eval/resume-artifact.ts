@@ -52,6 +52,10 @@ export type ResumeOptions = {
   readonly outputPath: string;
   readonly progressOutputPath: string;
   readonly phases: readonly number[];
+  readonly finalizeReport?: (
+    report: Record<string, unknown>,
+    premiumUserData: Record<string, unknown>,
+  ) => Record<string, unknown>;
 };
 
 const resumableArtifactSchema = z.object({
@@ -113,17 +117,21 @@ export async function resumePremiumReportArtifact(options: ResumeOptions): Promi
     });
   }
 
+  const finalReport = options.finalizeReport
+    ? options.finalizeReport(report, sourceArtifact.premiumUserData)
+    : report;
+
   writeResumeArtifact({
     path: options.outputPath,
     sourceArtifact,
-    report,
+    report: finalReport,
     status: 'complete',
     completedPhases,
   });
   writeResumeArtifact({
     path: options.progressOutputPath,
     sourceArtifact,
-    report,
+    report: finalReport,
     status: 'complete',
     completedPhases,
   });
@@ -133,7 +141,7 @@ export async function resumePremiumReportArtifact(options: ResumeOptions): Promi
     outputPath: options.outputPath,
     progressOutputPath: options.progressOutputPath,
     completedPhases,
-    reportKeys: Object.keys(report),
+    reportKeys: Object.keys(finalReport),
   };
 }
 

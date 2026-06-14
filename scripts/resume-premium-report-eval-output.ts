@@ -14,6 +14,15 @@ type ResumeCliOptions = {
   readonly phases: readonly number[];
 };
 
+type PremiumQualityFinalizer = (
+  report: Record<string, unknown>,
+  premiumUserData: Record<string, unknown>,
+) => Record<string, unknown>;
+
+type PremiumQualityEnvelopeApi = {
+  readonly attachPremiumQualityEnvelope: PremiumQualityFinalizer;
+};
+
 class ResumeCliInputError extends Error {
   constructor(message: string) {
     super(message);
@@ -35,6 +44,7 @@ async function main(): Promise<void> {
       outputPath: options.outputPath,
       progressOutputPath: options.progressOutputPath,
       phases: options.phases,
+      finalizeReport: loadPremiumQualityFinalizer(),
     });
 
     if (result.status === 'complete') {
@@ -107,8 +117,18 @@ function loadPremiumGenerationApi(): PremiumGenerationApi {
   throw new ResumeCliInputError('premium generation API unavailable');
 }
 
+function loadPremiumQualityFinalizer(): PremiumQualityFinalizer {
+  const loaded: unknown = localRequire('../src/lib/ai/premium-quality-envelope.ts');
+  if (isPremiumQualityEnvelopeApi(loaded)) return loaded.attachPremiumQualityEnvelope;
+  throw new ResumeCliInputError('premium quality envelope API unavailable');
+}
+
 function isPremiumGenerationApi(value: unknown): value is PremiumGenerationApi {
   return isRecord(value) && typeof value.generateSinglePhase === 'function';
+}
+
+function isPremiumQualityEnvelopeApi(value: unknown): value is PremiumQualityEnvelopeApi {
+  return isRecord(value) && typeof value.attachPremiumQualityEnvelope === 'function';
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
