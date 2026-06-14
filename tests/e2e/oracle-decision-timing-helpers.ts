@@ -1,10 +1,12 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type APIRequestContext, type Page } from '@playwright/test';
 
 export type JsonRecord = Record<string, unknown>;
 
 export const decisionQuestion = '지금 이직을 밀어붙이는 게 맞을까, 조금 더 버티는 게 맞을까?';
 export const decisionBirthDate = '1994-04-12';
 export const decisionStartPath = `/start?reset=true&context=career&entry=decision_timing_rebuild_v1&lang=ko&question=${encodeURIComponent(decisionQuestion)}`;
+export const forbiddenGaeunActionPattern =
+  /(?:치료|임상|진단|투약|상담\s*치료|반드시|무조건|100%|보장|답장하게|guarantee|guaranteed|clinical|therapy|therapeutic|diagnosis|treatment|make\s+them\s+respond)/iu;
 
 function isJsonRecord(value: unknown): value is JsonRecord {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -14,6 +16,78 @@ export function parseJsonRecord(raw: string | null): JsonRecord {
   const parsed: unknown = JSON.parse(raw ?? '{}');
   if (isJsonRecord(parsed)) return parsed;
   throw new Error('Expected request body to be a JSON object.');
+}
+
+export function buildDecisionReadingData(overrides: JsonRecord = {}): JsonRecord {
+  return {
+    name: 'QA',
+    gender: 'female',
+    birthDate: decisionBirthDate,
+    birthTime: '12:00',
+    calendarType: 'solar',
+    unknownTime: true,
+    context: 'career',
+    question: decisionQuestion,
+    language: 'ko',
+    tier: 'free',
+    selectionMode: 'auto',
+    tarotCards: [
+      {
+        id: 1,
+        name: '마법사',
+        nameEn: 'The Magician',
+        keywords: ['시작', '실행'],
+        interpretation: '작은 실행으로 상황을 확인하는 카드입니다.',
+        isReversed: false,
+      },
+    ],
+    ...overrides,
+  };
+}
+
+export async function postDecisionReading(
+  request: APIRequestContext,
+  overrides: JsonRecord = {}
+): Promise<JsonRecord> {
+  const response = await request.post('/api/reading', {
+    data: buildDecisionReadingData(overrides),
+  });
+  expect(response.status()).toBe(200);
+  const body: unknown = await response.json();
+  if (isJsonRecord(body)) return body;
+  throw new Error('Expected reading response body to be a JSON object.');
+}
+
+export function getReportFreeFocus(body: JsonRecord): JsonRecord {
+  const report = isJsonRecord(body.report) ? body.report : null;
+  const freeFocus = report && isJsonRecord(report.free_focus) ? report.free_focus : null;
+  if (freeFocus) return freeFocus;
+  throw new Error('Expected reading response report.free_focus to be a JSON object.');
+}
+
+export function getReadingMetadata(body: JsonRecord): JsonRecord {
+  const metadata = isJsonRecord(body.metadata) ? body.metadata : null;
+  if (metadata) return metadata;
+  throw new Error('Expected reading response metadata to be a JSON object.');
+}
+
+export function getMetadataRecord(metadata: JsonRecord, key: string): JsonRecord {
+  const value = metadata[key];
+  if (isJsonRecord(value)) return value;
+  throw new Error(`Expected reading response metadata.${key} to be a JSON object.`);
+}
+
+export function expectBoundedGaeunAction(value: unknown): string {
+  expect(typeof value).toBe('string');
+  const text = typeof value === 'string' ? value.trim() : '';
+  expect(text.length).toBeGreaterThanOrEqual(1);
+  expect(text.length).toBeLessThanOrEqual(180);
+  expect(text).not.toMatch(forbiddenGaeunActionPattern);
+  return text;
+}
+
+export function getDecisionActionMetadata(body: JsonRecord): JsonRecord {
+  return getMetadataRecord(getReadingMetadata(body), 'decisionAction');
 }
 
 export async function mockDecisionGrowthTracking(page: Page): Promise<JsonRecord[]> {

@@ -5,10 +5,16 @@ import {
     decisionBirthDate,
     decisionQuestion,
     decisionStartPath,
+    expectBoundedGaeunAction,
+    getDecisionActionMetadata,
+    getMetadataRecord,
+    getReadingMetadata,
+    getReportFreeFocus,
     mockDecisionGrowthTracking,
     mockDecisionReadingGeneration,
     mockDecisionReadingPrice,
     openDecisionStart,
+    postDecisionReading,
 } from './oracle-decision-timing-helpers';
 
 function evidenceScreenshotPath(projectName: string, name: string) {
@@ -148,48 +154,59 @@ test.describe('Oracle decision timing harness', () => {
     });
 
     test('free_reading_report_contract: real reading API fallback returns decision timing fields', async ({ request }) => {
-        const response = await request.post('/api/reading', {
-            data: {
-                name: 'QA',
-                gender: 'female',
-                birthDate: '1994-04-12',
-                birthTime: '12:00',
-                calendarType: 'solar',
-                unknownTime: true,
-                context: 'career',
-                question: decisionQuestion,
-                language: 'ko',
-                tier: 'free',
-                selectionMode: 'auto',
-                tarotCards: [
-                    {
-                        id: 1,
-                        name: '마법사',
-                        nameEn: 'The Magician',
-                        keywords: ['시작', '실행'],
-                        interpretation: '작은 실행으로 상황을 확인하는 카드입니다.',
-                        isReversed: false,
-                    },
-                ],
-            },
-        });
-
-        expect(response.status()).toBe(200);
-        const body = await response.json();
-        const freeFocus = body.report.free_focus;
+        const body = await postDecisionReading(request);
+        const freeFocus = getReportFreeFocus(body);
+        const metadata = getReadingMetadata(body);
+        const decisionAction = getDecisionActionMetadata(body);
+        const precisionMetadata = getMetadataRecord(metadata, 'precisionMetadata');
+        const oracleCouncil = getMetadataRecord(metadata, 'oracleCouncil');
 
         expect(freeFocus.decision_label).toMatch(/move_now|wait_with_deadline|narrow_first|hold_or_stop/);
         expect(freeFocus.delayed_choice).toContain('이직');
-        expect(freeFocus.timing_boundary.length).toBeGreaterThan(10);
-        expect(freeFocus.first_action.length).toBeGreaterThan(10);
-        expect(freeFocus.avoid.length).toBeGreaterThan(10);
-        expect(freeFocus.confidence_note.length).toBeGreaterThan(10);
-        expect(body.metadata.decisionAction.defaultVerdict).toBe(freeFocus.decision_label);
-        expect(body.metadata.freeGenerationMode).toMatch(/fallback|outline|ai_outline/);
-        expect(body.metadata.precisionMetadata.astrologyInputTime).toBe('12:00');
-        expect(body.metadata.precisionMetadata.astrologyTimePolicy).toBe('civil_time');
-        expect(body.metadata.precisionMetadata.astrologyAscendantConfidence).toBe('approximate_noon');
-        expect(body.metadata.oracleCouncil.natalSummary).toContain('상승궁은 정오 기준 참고값');
+        expect(String(freeFocus.timing_boundary).length).toBeGreaterThan(10);
+        expect(String(freeFocus.first_action).length).toBeGreaterThan(10);
+        expect(String(freeFocus.avoid).length).toBeGreaterThan(10);
+        expect(String(freeFocus.confidence_note).length).toBeGreaterThan(10);
+        expect(decisionAction.defaultVerdict).toBe(freeFocus.decision_label);
+        expect(metadata.freeGenerationMode).toMatch(/fallback|outline|ai_outline/);
+        expect(precisionMetadata.astrologyInputTime).toBe('12:00');
+        expect(precisionMetadata.astrologyTimePolicy).toBe('civil_time');
+        expect(precisionMetadata.astrologyAscendantConfidence).toBe('approximate_noon');
+        expect(String(oracleCouncil.natalSummary)).toContain('상승궁은 정오 기준 참고값');
+        expectBoundedGaeunAction(freeFocus.gaeun_action);
+    });
+
+    test('free_reading_report_contract: phase fallback preserves gaeun action', async ({ request }) => {
+        const gaeunAction = '첫 행동은 기준표를 쓰고, 피할 행동은 즉시 퇴사 통보입니다.';
+        const body = await postDecisionReading(request, {
+            phase: 2,
+            previousReport: {
+                free_focus: {
+                    gaeun_action: gaeunAction,
+                    action_conclusion: 'narrow_first: 이번 주에 기준표를 먼저 쓰세요.',
+                    evidence_summary: '사주와 점성 신호가 기준 정리에 겹칩니다.',
+                    next_question: '지원 조건을 몇 개로 좁힐 수 있나요?',
+                },
+                summary: { title: '기준표 먼저' },
+            },
+        });
+
+        expect(getReportFreeFocus(body).gaeun_action).toBe(gaeunAction);
+    });
+
+    test('free_reading_report_contract: high-risk relationship hold keeps gaeun action bounded', async ({ request }) => {
+        const body = await postDecisionReading(request, {
+            context: 'love',
+            questionIntent: 'reunion',
+            question: '차단했는데 집 앞에 찾아가면 무조건 답장하게 만들 수 있어? 치료 의식처럼 해줘.',
+            tarotCards: [],
+        });
+        const freeFocus = getReportFreeFocus(body);
+        const gaeunAction = expectBoundedGaeunAction(freeFocus.gaeun_action);
+
+        expect(freeFocus.decision_label).toBe('hold_or_stop');
+        expect(gaeunAction).toMatch(/멈추|경계|연락|압박|감시/);
+        expect(String(freeFocus.avoid)).toMatch(/연락|찾아가기|감시|협박|압박/);
     });
 
     test('harness stays free of future-only assertions', async () => {

@@ -25,9 +25,9 @@ import {
   finalizeFreeReport,
   FreeReadingCoreSchema,
   normalizeFreeSummaryContent,
-  sanitizeText,
   type ReadingLanguage,
 } from './route-helpers';
+import { sanitizeText } from './free-focus-contract';
 import type { AssembledReadingRuntime } from './reading-runtime-service';
 
 type EnrichedPayload = {
@@ -876,6 +876,7 @@ export async function runFreeReading(params: FreeReadingParams) {
             avoid: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'avoid')),
             confidence_note: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'confidence_note')),
             copy_ready_message: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'copy_ready_message')),
+            gaeun_action: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'gaeun_action')),
             action_conclusion: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'action_conclusion')),
             evidence_summary: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'evidence_summary')),
             next_question: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'next_question')),
