@@ -78,6 +78,13 @@ export function InterruptedResultPanel(props: ResultErrorPanelProps) {
           ? 'This decision note could not be completed at this moment.'
           : '지금은 결과를 끝까지 불러오지 못했습니다. 잠시 후 다시 시도해주세요.')}
       </p>
+      {(props.isPremium || props.hasPaidQuery) && (
+        <p className="mb-6 rounded-lg border border-white/10 bg-white/[0.03] px-4 py-3 text-xs leading-relaxed text-gray-300">
+          {props.language === 'en'
+            ? 'Completed premium sections stay saved. Retry continues from the remaining section instead of starting over.'
+            : '완료된 프리미엄 섹션은 저장됩니다. 다시 시도하면 처음부터가 아니라 남은 섹션부터 이어집니다.'}
+        </p>
+      )}
       <div className="flex flex-col items-center justify-center gap-3">
         {(props.isPremium || props.hasPaidQuery) ? (
           <button
@@ -85,7 +92,7 @@ export function InterruptedResultPanel(props: ResultErrorPanelProps) {
             className="btn-primary flex items-center gap-2 px-8 py-3 text-sm font-medium uppercase tracking-widest transition-all hover:brightness-110"
           >
             <RefreshCw size={16} />
-            {props.language === 'en' ? 'Retry Analysis' : '분석 이어서 진행하기'}
+            {props.language === 'en' ? 'Continue Analysis' : '남은 분석 이어가기'}
           </button>
         ) : (
           <div className="flex flex-col gap-3">

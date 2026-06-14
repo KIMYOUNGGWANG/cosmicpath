@@ -109,6 +109,32 @@ export async function resolveReadingError(
     return { kind: 'stop', retryState: options.retryState };
   }
 
+  if (isPremiumQualityGateFailure(options) && options.retryState.aiGenerationRetryCount < 1) {
+    options.setLoadingPhase({
+      phase: options.phase,
+      label: options.activeLanguage === 'en'
+        ? 'The premium quality gate caught an unstable section. Keeping your progress and retrying...'
+        : '프리미엄 품질 검증이 불안정한 섹션을 잡았습니다. 진행 상태를 유지하고 다시 시도합니다...',
+    });
+    await sleep(2500);
+    return {
+      kind: 'retry',
+      retryState: {
+        ...options.retryState,
+        aiGenerationRetryCount: options.retryState.aiGenerationRetryCount + 1,
+      },
+    };
+  }
+
+  if (isPremiumQualityGateFailure(options)) {
+    options.setStreamContent(
+      options.activeLanguage === 'en'
+        ? 'The premium quality gate protected this report. Your completed sections are saved, so retry continues from the remaining section.'
+        : '프리미엄 품질 검증이 리포트를 보호했습니다. 완료된 섹션은 저장되어 있어, 다시 시도하면 남은 섹션부터 이어집니다.'
+    );
+    return { kind: 'stop', retryState: options.retryState };
+  }
+
   if (isPremiumPhaseTimeout(options) && options.retryState.premiumPhaseTimeoutRetryCount < 1) {
     options.setLoadingPhase({
       phase: options.phase,
@@ -163,6 +189,14 @@ function isTemporaryOraclePressure(options: ResolveReadingErrorOptions) {
 
 function isAiGenerationFailure(options: ResolveReadingErrorOptions) {
   return options.response.status >= 500 && options.result.code === 'AI_GENERATION_FAILED';
+}
+
+function isPremiumQualityGateFailure(options: ResolveReadingErrorOptions) {
+  return (
+    options.requestTier === 'premium' &&
+    options.response.status === 502 &&
+    options.result.code === 'PREMIUM_QUALITY_GATE_FAILED'
+  );
 }
 
 function isPremiumPhaseTimeout(options: ResolveReadingErrorOptions) {
