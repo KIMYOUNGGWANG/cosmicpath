@@ -123,11 +123,34 @@ function assertGrowthMetadataPrivacyContract(): void {
   console.log('growth_metadata_privacy_contract');
 }
 
+function assertVisitMetricDefinitionContract(): void {
+  const dashboard = readProjectFile('src/components/ops/GrowthDashboard.tsx');
+  const page = readProjectFile('src/app/ops/growth/page.tsx');
+
+  assert.ok(dashboard.includes("label: '오늘 고유 추적 ID'"));
+  assert.ok(dashboard.includes("label: '최근 7일 고유 추적 ID'"));
+  assert.ok(dashboard.includes("label: '최근 30일 고유 추적 ID'"));
+  assert.ok(dashboard.includes("return '고유 추적 ID'"));
+  assert.ok(dashboard.includes('일부 경로는 별도 ID'));
+  assert.ok(dashboard.includes('저장소 초기화·복수 추적 ID'));
+  assert.ok(dashboard.includes('Vercel Visitors와 직접 비교하지 않습니다.'));
+  assert.ok(page.includes('자체 GrowthEvent에 기록된 고유 추적 ID'));
+  assert.ok(page.includes('일부 경로는 별도 ID'));
+  assert.ok(page.includes('저장소 초기화와 복수 추적 ID'));
+  assert.ok(!dashboard.includes("label: '오늘 방문'"));
+  assert.ok(!dashboard.includes("label: '최근 7일 방문'"));
+  assert.ok(!dashboard.includes("label: '최근 30일 방문'"));
+  console.log('visit_metric_definition_contract');
+}
+
 function runScenario(scenario: Scenario): void {
   if (scenario === 'canonical' || scenario === 'all') assertPaywallCanonicalContract();
   if (scenario === 'source' || scenario === 'all') assertCheckoutIntentSourceContract();
   if (scenario === 'followup' || scenario === 'all') assertFollowupFeedbackStageContract();
-  if (scenario === 'all') assertGrowthMetadataPrivacyContract();
+  if (scenario === 'all') {
+    assertGrowthMetadataPrivacyContract();
+    assertVisitMetricDefinitionContract();
+  }
 }
 
 try {

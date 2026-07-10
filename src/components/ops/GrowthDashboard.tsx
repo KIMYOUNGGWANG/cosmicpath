@@ -139,9 +139,9 @@ function formatSeriesLabel(dataKey?: string) {
         case 'paidConversions':
             return '유료 전환';
         case 'installs':
-            return '새 방문';
+            return '새 브라우저 신호';
         case 'activeUsers':
-            return '활성 방문';
+            return '고유 추적 ID';
         default:
             return dataKey ?? '숫자';
     }
@@ -424,36 +424,36 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
 
     const visitMetrics = [
         {
-            label: '오늘 방문',
+            label: '오늘 고유 추적 ID',
             value: summary.visits.today.toLocaleString(),
-            caption: '오늘 이벤트를 남긴 방문 수입니다.',
+            caption: '오늘 GrowthEvent에 기록된 고유 추적 ID입니다. 주 추적기는 저장소에 유지되지만 일부 경로는 별도 ID를 쓰며, Vercel Visitors와 직접 비교하지 않습니다.',
             icon: Activity,
             iconClassName: 'text-sky-200',
             surfaceClassName:
                 'bg-[radial-gradient(circle_at_top_right,rgba(125,211,252,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]',
         },
         {
-            label: '최근 7일 방문',
+            label: '최근 7일 고유 추적 ID',
             value: summary.visits.last7Days.toLocaleString(),
-            caption: '최근 7일 안에 한 번이라도 들어온 방문 수입니다.',
+            caption: '7일간 GrowthEvent에 기록된 고유 ID입니다. 저장소 초기화·복수 추적 ID·클라이언트 이벤트의 영향을 받습니다.',
             icon: CalendarDays,
             iconClassName: 'text-violet-200',
             surfaceClassName:
                 'bg-[radial-gradient(circle_at_top_right,rgba(196,181,253,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]',
         },
         {
-            label: '최근 30일 방문',
+            label: '최근 30일 고유 추적 ID',
             value: summary.visits.last30Days.toLocaleString(),
-            caption: '최근 30일 안에 한 번이라도 들어온 방문 수입니다.',
+            caption: '30일간 GrowthEvent에 기록된 고유 ID입니다. Vercel의 필터링된 방문자 수와 같은 지표가 아닙니다.',
             icon: Users,
             iconClassName: 'text-blue-200',
             surfaceClassName:
                 'bg-[radial-gradient(circle_at_top_right,rgba(96,165,250,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]',
         },
         {
-            label: '매일 오는 힘',
+            label: '오늘 / 30일 ID 비율',
             value: formatPercent(summary.visits.dauMauRate),
-            caption: '오늘 방문이 최근 30일 방문 안에서 차지하는 비율입니다.',
+            caption: '오늘 관측된 고유 ID가 최근 30일 고유 ID에서 차지하는 자체 이벤트 비율입니다.',
             icon: Gauge,
             iconClassName: 'text-amber-200',
             surfaceClassName:
@@ -519,8 +519,8 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
 
                     <div className="flex flex-wrap gap-3">
                         <SignalChip label="기간" value={windowLabel} />
-                        <SignalChip label="오늘 방문" value={formatCompact(summary.visits.today)} />
-                        <SignalChip label="30일 방문" value={formatCompact(summary.visits.last30Days)} />
+                        <SignalChip label="오늘 고유 추적 ID" value={formatCompact(summary.visits.today)} />
+                        <SignalChip label="30일 고유 추적 ID" value={formatCompact(summary.visits.last30Days)} />
                         <SignalChip label="가장 많이 들어온 곳" value={strongestSource} />
                     </div>
                 </div>
@@ -672,9 +672,9 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
                                 caption="새 브라우저로 들어온 방문 신호입니다."
                             />
                             <InsightRow
-                                label="하루 평균 방문"
+                                label="하루 평균 고유 추적 ID"
                                 value={`${avgDailyActive.toLocaleString()} · 최근 7일 ${avgTrailingDailyActive.toLocaleString()}`}
-                                caption="하루에 보통 얼마나 들어오는지 보는 숫자입니다."
+                                caption="자체 GrowthEvent의 추적 ID가 하루에 평균 몇 개 관측되는지 보는 숫자입니다."
                             />
                             <InsightRow
                                 label="공유 수"
@@ -682,9 +682,9 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
                                 caption="새 방문 대비 얼마나 공유가 붙는지 보는 숫자입니다."
                             />
                             <InsightRow
-                                label="다시 온 방문"
+                                label="2일 이상 관측된 ID"
                                 value={`${summary.totals.returningUsers.toLocaleString()} · ${formatPercent(summary.rates.retentionRate)}`}
-                                caption="2일 이상 다시 잡힌 방문 수와 비율입니다."
+                                caption="daily_active 이벤트가 2일 이상 기록된 sessionId 수와 설치 신호 대비 비율입니다."
                             />
                             <InsightRow
                                 label="결제 전환율"
@@ -764,7 +764,7 @@ export function GrowthDashboard({ summary }: GrowthDashboardProps) {
                                 >
                                     <div className="min-w-0">
                                         <p className="truncate font-medium text-white">{source.source}</p>
-                                        <p className="text-xs text-white/42">들어온 수</p>
+                                        <p className="text-xs text-white/42">이벤트 수</p>
                                     </div>
                                     <strong className="font-[var(--font-outfit)] text-lg tracking-[-0.04em] text-white">
                                         {source.count.toLocaleString()}
