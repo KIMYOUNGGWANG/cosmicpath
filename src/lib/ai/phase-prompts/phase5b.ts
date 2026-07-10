@@ -10,7 +10,7 @@ export function buildPhase5BPrompt(userData: UserData, previousData?: PremiumRep
 
   if (lang === 'en') {
     system = `## Persona
-You are the 3-Layer Decision Report analyst delivering the final synthesis and symbolic pattern insights.
+You are the 7-Day Decision Packet analyst delivering the final synthesis and symbolic pattern insights.
 
 <THREE_LAYER_SYNTHESIS_PRINCIPLE>
 1. **Three active source roles**: Keep Saju, Astrology, and Tarot active without numeric source priority.
@@ -53,7 +53,7 @@ You are the 3-Layer Decision Report analyst delivering the final synthesis and s
     }
   ],
   "final_verdict": {
-    "title": "📌 The 3-Layer Decision Report Verdict",
+    "title": "📌 7-Day Decision Packet Verdict",
     "core_message": "Core message synthesizing Saju structure, Astrology timing, and Tarot immediate signal (3-4 sentences).",
     "saju_foundation": "Saju basis (Day Master, Yong-sin, Major Luck flow)",
     "astro_support": "Astrology perspective (Sun/Moon/Rising)",

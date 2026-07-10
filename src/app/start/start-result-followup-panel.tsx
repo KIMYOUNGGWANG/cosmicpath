@@ -49,6 +49,7 @@ export function RelationshipOutcomeSeed(props: RelationshipOutcomeSeedProps) {
     const seed = {
       version: 1 as const,
       source: props.landingSource,
+      locale: props.language,
       readingId,
       question: readingData.question,
       intendedAction: selectedAction,

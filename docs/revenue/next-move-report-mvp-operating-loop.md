@@ -14,7 +14,7 @@ Naming contract:
 
 - `CosmicPath Decision Note` is the canonical public product/system name.
 - `Next Move Ritual` is a bounded campaign/experience layer.
-- `Next Move Report` is historical/campaign-only unless an existing paid report surface uses report wording.
+- `Next Move Report` is historical/campaign-only and must not appear on active paid surfaces.
 - `free_focus.gaeun_action` is a backward-compatible public optional field, not a breaking wire replacement.
 - The `next_move_report_mvp_v1` attribution value remains unchanged for analytics continuity.
 

@@ -22,6 +22,7 @@ export interface DecisionReviewOutcome {
 export interface DecisionReviewSeed {
     version: 1;
     source: string;
+    locale?: 'ko' | 'en';
     readingId?: string;
     question: string;
     intendedAction: DecisionIntendedAction;
@@ -48,6 +49,7 @@ const decisionReviewOutcomeSchema = z.object({
 const decisionReviewSeedSchema = z.object({
     version: z.literal(1),
     source: z.string().trim().min(1),
+    locale: z.enum(['ko', 'en']).optional(),
     readingId: z.string().trim().min(1).optional(),
     question: z.string().trim().min(1),
     intendedAction: z.enum(['contact_now', 'act_now', 'wait', 'reduce_scope', 'unsure']),

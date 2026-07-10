@@ -13,6 +13,7 @@ function reviewSeed(overrides: Record<string, unknown> = {}) {
     return {
         version: 1,
         source: 'decision_timing_rebuild_v1',
+        locale: 'ko',
         readingId: 'qa-career-reading',
         question: '이직 제안을 받을까, 지금 역할을 더 키울까?',
         intendedAction: 'wait',
@@ -107,6 +108,31 @@ test.describe('Decision Review', () => {
         await page.screenshot({
             path: '.omo/evidence/cosmicpath-career-first/review-active-desktop.png',
         });
+    });
+
+    test('preserves English across the saved seven-day review flow', async ({ page }) => {
+        await page.addInitScript(
+            ({ key, value }) => {
+                localStorage.setItem('user_language', 'en');
+                localStorage.setItem(key, JSON.stringify(value));
+            },
+            {
+                key: storageKey,
+                value: reviewSeed({
+                    locale: 'en',
+                    question: 'Should I take the new role or grow my current one?',
+                }),
+            }
+        );
+
+        await page.goto('/review');
+        await expect(page.getByRole('heading', { name: '7-Day Decision Review' })).toBeVisible();
+        await expect(page.getByText('Saved action · Wait with a deadline')).toBeVisible();
+        await page.getByRole('button', { name: 'Partly worked' }).click();
+        await page.getByRole('button', { name: 'Still uncertain' }).click();
+        await page.getByRole('button', { name: 'Save review' }).click();
+        await expect(page.getByText('Review saved on this device.')).toBeVisible();
+        await expect(page.locator('main')).not.toContainText(/[가-힣]/);
     });
 
     test('malformed state is distinguished and fails safely', async ({ page }) => {
