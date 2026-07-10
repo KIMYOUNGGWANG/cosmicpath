@@ -203,6 +203,13 @@ export interface PremiumReportData {
         action_priorities: string[];
         closing_words: string;
         convergence_diagnosis: ThreeLayerConvergenceDiagnosis;
+        decision_packet?: {
+            decision_fork: { option_a: string; option_b: string; recommended_test: string };
+            evidence_disagreement: { aligned: string; conflicting: string };
+            reality_checks: string[];
+            seven_day_experiment: { action: string; measure: string; stop_rule: string };
+            if_then_rules: { if: string; then: string }[];
+        };
     };
     date_selection?: {
         auspicious?: {

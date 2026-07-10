@@ -87,7 +87,7 @@ require_match "src/app/start/start-page-helpers.ts" "next_move_report_mvp_v1"
 require_match "src/app/start/start-page-helpers.ts" "relationship_contact_timing_v1"
 require_match "src/app/start/start-page-helpers.ts" "en_relationship_contact_timing_v1"
 require_match "src/lib/payment/payment-config.ts" "PAID_DECISION_REPORT_NAME_EN"
-require_match "src/lib/product-positioning.ts" "Detailed 3-Layer Decision Report"
+require_match "src/lib/product-positioning.ts" "7-Day Decision Packet"
 require_match "src/lib/payment/payment-config.ts" "prod_ThdoB65NmPU37y"
 require_match "docs/api-spec.md" 'Decision Note / Next Move Ritual Contract (2026-06-14)'
 require_match "docs/api-spec.md" '$3.99'
@@ -148,7 +148,8 @@ require_match "src/lib/ai/prompts/system-core.ts" "move_now"
 require_match "src/lib/ai/prompts/system-core.ts" "wait_with_deadline"
 require_match "src/lib/ai/prompt-core-rules.ts" "결정 타이밍 오라클"
 
-require_match "src/lib/ai/premium-reading-service.ts" "const MAX_ATTEMPTS_PER_MODEL = 3"
+require_match "src/lib/ai/premium-reading-service.ts" "PREMIUM_PHASE_MAX_ATTEMPTS"
+require_match "src/lib/ai/structured-request-budget.ts" "PREMIUM_PHASE_MAX_ATTEMPTS = 2"
 require_match "src/lib/ai/premium-reading-service.ts" "isMaxTokensFinish"
 require_absence "src/lib/ai/premium-reading-service.ts" "FALLBACK_MODEL_NAME"
 require_absence "src/lib/ai/premium-reading-service.ts" "Switching to fallback model"
@@ -195,3 +196,4 @@ require_match "scripts/verify-engine-accuracy.ts" "scenario=source_consistency"
 require_match "scripts/verify-engine-accuracy.ts" "scenario=unknown_time"
 
 echo "Refactor regression checks passed"
+node scripts/verify-decision-packet-render.ts

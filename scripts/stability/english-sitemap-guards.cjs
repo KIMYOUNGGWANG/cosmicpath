@@ -3,7 +3,7 @@ const { assertMatch, assertNoMatch } = require('./guard-assertions.cjs');
 function runEnglishSitemapGuards() {
   assertMatch(
     'src/app/en/contact-timing/page.tsx',
-    /title:\s*'Contact Decision Note'[\s\S]*siteName:\s*'CosmicPath'[\s\S]*First Decision Note free · Detailed 3-Layer Decision Report via Stripe[\s\S]*Saju = structure, astrology = timing, tarot = immediate signal/s,
+    /title:\s*'Contact Decision Note'[\s\S]*siteName:\s*'CosmicPath'[\s\S]*First Decision Note free · 7-Day Decision Packet via Stripe[\s\S]*Saju = structure, astrology = timing, tarot = immediate signal/s,
     'English contact timing route should keep CosmicPath as site brand and Decision Note as product name'
   );
   assertNoMatch(
@@ -18,13 +18,13 @@ function runEnglishSitemapGuards() {
   );
   assertMatch(
     'src/app/sitemap.ts',
-    /\/relationship\/contact-timing[\s\S]*\/terms[\s\S]*\/privacy/s,
-    'Sitemap should include the MVP route and legal pages'
+    /\/career\/uncertainty[\s\S]*\/relationship\/contact-timing/s,
+    'Sitemap should include the validated Career and Relationship acquisition routes'
   );
   assertNoMatch(
     'src/app/sitemap.ts',
-    /\/daily|\/career\/uncertainty/,
-    'Sitemap should not promote legacy Daily or Career acquisition routes during the Next Move MVP'
+    /\/daily|\/start|\/review|\/terms|\/privacy|\/en\/contact-timing/,
+    'Sitemap should not publish stateful, legal, internal, or unvalidated probe routes'
   );
 }
 

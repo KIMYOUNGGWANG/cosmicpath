@@ -157,6 +157,7 @@ export function CaseFileReport({
     const closingWords = report.final_verdict?.closing_words || report.summary.trust_reason;
     const displayQuestion = question || report.free_focus?.delayed_choice;
     const convergence = report.final_verdict?.convergence_diagnosis;
+    const decisionPacket = !isFreeView ? report.final_verdict?.decision_packet : undefined;
 
     return (
         <section className="mx-auto mt-4 max-w-7xl border border-white/12 bg-[#0c0b09] text-stone-100 shadow-[0_32px_90px_rgba(0,0,0,0.34)]">
@@ -243,6 +244,48 @@ export function CaseFileReport({
                             </article>
                         ))}
                     </div>
+
+                    {decisionPacket && (
+                        <section className="border-t border-[#c8a84d]/25 bg-[#11100d] px-5 py-8 md:px-10">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c8a84d]">7-Day Decision Packet</p>
+                            <h2 className="mt-3 break-keep font-cinzel text-2xl text-stone-100 md:text-3xl">
+                                {isEn ? 'A bounded decision test' : '검증 가능한 결정 실험'}
+                            </h2>
+                            <div className="mt-7 grid gap-px bg-white/10 lg:grid-cols-2">
+                                <article className="bg-[#0c0b09] p-5">
+                                    <h3 className="font-semibold text-stone-100">{isEn ? 'Decision fork' : '결정 갈림길'}</h3>
+                                    <p className="mt-3 text-sm leading-6 text-stone-400">A. {decisionPacket.decision_fork.option_a}</p>
+                                    <p className="text-sm leading-6 text-stone-400">B. {decisionPacket.decision_fork.option_b}</p>
+                                    <p className="mt-3 text-sm leading-6 text-[#c8a84d]">{decisionPacket.decision_fork.recommended_test}</p>
+                                </article>
+                                <article className="bg-[#0c0b09] p-5">
+                                    <h3 className="font-semibold text-stone-100">{isEn ? 'Evidence disagreement' : '근거 충돌'}</h3>
+                                    <p className="mt-3 text-sm leading-6 text-stone-400">{decisionPacket.evidence_disagreement.aligned}</p>
+                                    <p className="mt-2 text-sm leading-6 text-rose-200/80">{decisionPacket.evidence_disagreement.conflicting}</p>
+                                </article>
+                                <article className="bg-[#0c0b09] p-5">
+                                    <h3 className="font-semibold text-stone-100">{isEn ? 'Reality checks' : '현실 확인'}</h3>
+                                    <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-stone-400">
+                                        {decisionPacket.reality_checks.map((check) => <li key={check}>{check}</li>)}
+                                    </ul>
+                                </article>
+                                <article className="bg-[#0c0b09] p-5">
+                                    <h3 className="font-semibold text-stone-100">{isEn ? '7-day experiment' : '7일 실험'}</h3>
+                                    <p className="mt-3 text-sm leading-6 text-stone-400">{decisionPacket.seven_day_experiment.action}</p>
+                                    <p className="mt-2 text-xs leading-5 text-stone-500">{isEn ? 'Measure' : '측정'} · {decisionPacket.seven_day_experiment.measure}</p>
+                                    <p className="mt-2 text-xs leading-5 text-rose-200/80">{isEn ? 'Stop rule' : '중단 기준'} · {decisionPacket.seven_day_experiment.stop_rule}</p>
+                                </article>
+                            </div>
+                            <div className="mt-px grid gap-px bg-white/10 md:grid-cols-2">
+                                {decisionPacket.if_then_rules.map((rule) => (
+                                    <p key={`${rule.if}-${rule.then}`} className="bg-[#0c0b09] p-5 text-sm leading-6 text-stone-300">
+                                        <span className="text-[#c8a84d]">{isEn ? 'If' : '만약'}</span> {rule.if}<br />
+                                        <span className="text-[#c8a84d]">{isEn ? 'Then' : '그러면'}</span> {rule.then}
+                                    </p>
+                                ))}
+                            </div>
+                        </section>
+                    )}
 
                     <section id="case-file-4" className="grid gap-px bg-white/10 lg:grid-cols-[1fr_360px]">
                         <div className="bg-[#0c0b09] px-5 py-8 md:px-10">

@@ -102,7 +102,7 @@ test.describe('Start reception redesign contract', () => {
   });
 
   test('mobile start route has no horizontal overflow', async ({ page }) => {
-    await page.setViewportSize({ width: 393, height: 851 });
+    await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/start?reset=true&lang=ko');
 
     await expect(page.getByText('CosmicPath Decision Note 접수실').first()).toBeVisible();
@@ -114,5 +114,9 @@ test.describe('Start reception redesign contract', () => {
     }));
 
     expect(layout.scrollWidth).toBeLessThanOrEqual(layout.innerWidth + 1);
+    await page.waitForTimeout(1200);
+    await page.screenshot({
+      path: '.omo/evidence/cosmicpath-career-first/start-mobile-375-final.png',
+    });
   });
 });

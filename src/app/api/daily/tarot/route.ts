@@ -10,6 +10,7 @@ const querySchema = z.object({
 });
 
 const dailyTarotCache = new Map<string, { expiresAt: number; data: DailyTarotResponse }>();
+const PRIVATE_CACHE_CONTROL = 'private, no-store, max-age=0';
 
 function toYmd(date: Date): string {
     return date.toISOString().slice(0, 10);
@@ -76,10 +77,7 @@ export async function GET(request: NextRequest) {
     if (cached && cached.expiresAt > now.getTime()) {
         return NextResponse.json(cached.data, {
             headers: {
-                'Cache-Control': `public, s-maxage=${Math.max(
-                    1,
-                    Math.floor((cached.expiresAt - now.getTime()) / 1000)
-                )}, stale-while-revalidate=60`,
+                'Cache-Control': PRIVATE_CACHE_CONTROL,
             },
         });
     }
@@ -93,10 +91,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response, {
         headers: {
-            'Cache-Control': `public, s-maxage=${Math.max(
-                1,
-                Math.floor((midnight.getTime() - now.getTime()) / 1000)
-            )}, stale-while-revalidate=60`,
+            'Cache-Control': PRIVATE_CACHE_CONTROL,
         },
     });
 }

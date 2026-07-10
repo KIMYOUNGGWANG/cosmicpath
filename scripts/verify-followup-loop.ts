@@ -125,8 +125,8 @@ function assertBrowserContract(): void {
   const relationship = readProjectFile('src/app/start/start-result-relationship.ts');
   const opsRunner = readProjectFile('src/app/api/ops/followups/run/route.ts');
 
-  assert.ok(panel.includes('Detailed 3-Layer Decision Report'));
-  assert.ok(panel.includes('상세 3단 판정 리포트'));
+  assert.ok(panel.includes('7-Day Decision Packet'));
+  assert.ok(panel.includes('7일 결정 패킷'));
   assert.ok(panel.includes('7-day check-in'));
   assert.ok(panel.includes('7일 뒤 체크인 메일'));
   assert.ok(panel.includes("followUpDelayDays: 7"));

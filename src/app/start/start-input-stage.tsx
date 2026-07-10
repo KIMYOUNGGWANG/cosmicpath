@@ -47,8 +47,14 @@ export function StartInputStage(props: StartInputStageProps) {
               <h1 className="mb-3 mt-4 font-cinzel text-[2rem] text-starlight md:mb-4 md:mt-5 md:text-5xl">
                 {copy.title}
               </h1>
-              <p className="max-w-2xl text-sm leading-6 text-moonlight md:leading-7">
-                {copy.subtitle}
+              <p className="max-w-2xl break-keep text-sm leading-6 text-moonlight md:leading-7">
+                {props.language === 'ko' ? (
+                  <>
+                    <span className="block sm:hidden">사주·점성·타로로 선택을 정리합니다.</span>
+                    <span className="block sm:hidden">무료 첫 판정. 생년월일만 필수입니다.</span>
+                    <span className="hidden sm:inline">{copy.subtitle}</span>
+                  </>
+                ) : copy.subtitle}
               </p>
             </div>
           </div>

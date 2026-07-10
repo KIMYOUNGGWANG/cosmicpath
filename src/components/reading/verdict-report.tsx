@@ -43,6 +43,7 @@ export function VerdictReport({
         language,
         isFreeView,
     });
+    const decisionPacket = !isFreeView ? report.final_verdict?.decision_packet : undefined;
 
     const leftColumn = (
         <div className="flex flex-col gap-8">
@@ -62,6 +63,55 @@ export function VerdictReport({
                     convergenceScore={report.oracleCouncil?.convergenceScore}
                     language={language}
                 />
+            ) : null}
+
+            {decisionPacket ? (
+                <section className="rounded-3xl border border-[#D4AF37]/25 bg-gradient-to-b from-[#D4AF37]/10 to-white/[0.025] p-5 sm:p-7">
+                    <div className="font-cinzel text-xs uppercase tracking-[0.22em] text-[#D4AF37]">7-Day Decision Packet</div>
+                    <h2 className="mt-2 break-keep text-xl font-semibold text-white">
+                        {isEn ? 'Turn the reading into a bounded decision test' : '해석을 검증 가능한 결정 실험으로 바꾸기'}
+                    </h2>
+                    <div className="mt-5 space-y-5 text-sm leading-6 text-white/72">
+                        <div>
+                            <h3 className="font-semibold text-white">{isEn ? 'Decision fork' : '결정 갈림길'}</h3>
+                            <p className="mt-1">A. {decisionPacket.decision_fork.option_a}</p>
+                            <p>B. {decisionPacket.decision_fork.option_b}</p>
+                            <p className="mt-2 text-[#D4AF37]">{decisionPacket.decision_fork.recommended_test}</p>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="border border-white/10 bg-black/20 p-3">
+                                <h3 className="font-semibold text-white">{isEn ? 'Evidence agreement' : '근거 일치'}</h3>
+                                <p className="mt-1">{decisionPacket.evidence_disagreement.aligned}</p>
+                            </div>
+                            <div className="border border-white/10 bg-black/20 p-3">
+                                <h3 className="font-semibold text-white">{isEn ? 'Evidence disagreement' : '근거 충돌'}</h3>
+                                <p className="mt-1">{decisionPacket.evidence_disagreement.conflicting}</p>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-white">{isEn ? 'Reality checks' : '현실 확인'}</h3>
+                            <ul className="mt-2 list-disc space-y-1 pl-5">
+                                {decisionPacket.reality_checks.map((check) => <li key={check}>{check}</li>)}
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-white">{isEn ? '7-day experiment' : '7일 실험'}</h3>
+                            <p className="mt-1">{decisionPacket.seven_day_experiment.action}</p>
+                            <p className="mt-1 text-white/55">{isEn ? 'Measure' : '측정'}: {decisionPacket.seven_day_experiment.measure}</p>
+                            <p className="mt-1 text-rose-200">{isEn ? 'Stop rule' : '중단 기준'}: {decisionPacket.seven_day_experiment.stop_rule}</p>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-white">{isEn ? 'If / Then rules' : '조건별 다음 수'}</h3>
+                            <ul className="mt-2 space-y-2">
+                                {decisionPacket.if_then_rules.map((rule) => (
+                                    <li key={`${rule.if}-${rule.then}`} className="border-l-2 border-[#D4AF37]/45 pl-3">
+                                        {isEn ? 'If' : '만약'} {rule.if} → {isEn ? 'then' : '그러면'} {rule.then}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                </section>
             ) : null}
 
             {!isFreeView && report.action_plan ? (

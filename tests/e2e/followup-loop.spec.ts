@@ -61,8 +61,8 @@ test.describe('seven-day follow-up loop', () => {
         const relationship = readProjectFile('src/app/start/start-result-relationship.ts');
         const opsRunner = readProjectFile('src/app/api/ops/followups/run/route.ts');
 
-        expect(panel).toContain('Detailed 3-Layer Decision Report');
-        expect(panel).toContain('상세 3단 판정 리포트');
+        expect(panel).toContain('7-Day Decision Packet');
+        expect(panel).toContain('7일 결정 패킷');
         expect(panel).toContain('7-day check-in');
         expect(panel).toContain('7일 뒤 체크인 메일');
         expect(panel).toContain('next_move_report_decision_seed');

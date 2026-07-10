@@ -30,7 +30,7 @@ export default function JsonLd() {
                 '@type': 'Service',
                 '@id': `${siteUrl}/#decision-note`,
                 name: 'CosmicPath Decision Note',
-                alternateName: 'Detailed 3-Layer Decision Report',
+                alternateName: '7-Day Decision Packet',
                 serviceType: 'Decision Note with Saju structure, astrology timing, and tarot immediate signal',
                 provider: { '@id': `${siteUrl}/#organization` },
                 areaServed: ['KR', 'US'],
@@ -38,7 +38,7 @@ export default function JsonLd() {
                     '@type': 'Audience',
                     audienceType: 'People with relationship, career, money, or life-direction questions',
                 },
-                description: 'Detailed 3-Layer Decision Report explains why this verdict was chosen, using Saju as structure, astrology as timing, and tarot as immediate signal.',
+                description: '7-Day Decision Packet explains why this verdict was chosen, using Saju as structure, astrology as timing, and tarot as immediate signal.',
                 offers: [
                     {
                         '@type': 'Offer',
@@ -50,7 +50,7 @@ export default function JsonLd() {
                     },
                     {
                         '@type': 'Offer',
-                        name: 'Detailed 3-Layer Decision Report',
+                        name: '7-Day Decision Packet',
                         price: '3.99',
                         priceCurrency: 'USD',
                         availability: 'https://schema.org/InStock',

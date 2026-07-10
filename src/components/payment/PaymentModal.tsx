@@ -83,9 +83,7 @@ export function PaymentModal({
     const isFreePromo = discount === 100 && Boolean(promoCodeId);
     const priceState = useReadingPrice({ isOpen, price, discount, isEnglish });
     const startReadingCheckout = useReadingCheckout();
-    const offerName = isRelationshipContactTiming
-        ? READING_PRODUCT.name
-        : (isEnglish ? 'Detailed Decision Timing Note' : '자세한 결정 타이밍 노트');
+    const offerName = isEnglish ? READING_PRODUCT.name : '7일 결정 패킷';
     const isCheckoutPausedForPriceIssue = priceState.hasBlockingPriceIssue && !isFreePromo;
 
     useDocumentScrollLock(isOpen);

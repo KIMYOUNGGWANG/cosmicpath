@@ -22,15 +22,14 @@ import { buildGoogleResponseJsonSchema } from './google-json-schema';
 import { assertPremiumGrounding } from './premium-grounding';
 import { attachPremiumQualityEnvelope } from './premium-quality-envelope';
 import { getPremiumPhaseSchema, parsePremiumPhaseResult } from './premium-report-schemas';
+import {
+    PREMIUM_PHASE_MAX_ATTEMPTS,
+    PREMIUM_PHASE_REQUEST_TIMEOUT_MS,
+} from './structured-request-budget';
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 const PRIMARY_MODEL_NAME = 'gemini-3.5-flash';
 const FAST_PHASE_REQUEST_TIMEOUT_MS = 18000;
-const PHASE_ONE_REQUEST_TIMEOUT_MS = 55000;
-const DEEP_PHASE_REQUEST_TIMEOUT_MS = 55000;
-const FORTUNE_FLOW_REQUEST_TIMEOUT_MS = 55000;
-const PHASE_EIGHT_REQUEST_TIMEOUT_MS = 55000;   // Past life + glossary + final verdict
-const MAX_ATTEMPTS_PER_MODEL = 3;
 const PHASE_OUTPUT_TOKEN_BUDGETS: Record<number, { initial: number; retry: number; final: number }> = {
     1: { initial: 8192, retry: 12288, final: 16384 },   // Summary + traits + core analysis
     2: { initial: 6144, retry: 8192, final: 12288 },    // Astro deep
@@ -59,19 +58,19 @@ function extractGoogleTextParts(parts: unknown): string {
 
 function getPhaseRequestTimeoutMs(phaseNumber: number) {
     if (phaseNumber === 1) {
-        return PHASE_ONE_REQUEST_TIMEOUT_MS;
+        return PREMIUM_PHASE_REQUEST_TIMEOUT_MS;
     }
 
     if (phaseNumber === 5) {
-        return FORTUNE_FLOW_REQUEST_TIMEOUT_MS;
+        return PREMIUM_PHASE_REQUEST_TIMEOUT_MS;
     }
 
     if (phaseNumber === 8) {
-        return PHASE_EIGHT_REQUEST_TIMEOUT_MS;
+        return PREMIUM_PHASE_REQUEST_TIMEOUT_MS;
     }
 
     if (phaseNumber >= 2) {
-        return DEEP_PHASE_REQUEST_TIMEOUT_MS;
+        return PREMIUM_PHASE_REQUEST_TIMEOUT_MS;
     }
 
     return FAST_PHASE_REQUEST_TIMEOUT_MS;
@@ -440,7 +439,7 @@ export async function generateSinglePhase(
 
     let lastError: Error | null = null;
 
-    for (let attempt = 0; attempt < MAX_ATTEMPTS_PER_MODEL; attempt++) {
+    for (let attempt = 0; attempt < PREMIUM_PHASE_MAX_ATTEMPTS; attempt++) {
         const requestTimeoutMs = getPhaseRequestTimeoutMs(phaseNumber);
         const maxOutputTokens = getPhaseMaxOutputTokens(phaseNumber, attempt);
         const thinkingConfig = getPhaseThinkingConfig();
@@ -488,7 +487,7 @@ export async function generateSinglePhase(
                 if (response.status === 429) {
                     lastError = new Error(errorMsg);
                     const waitTime = Math.pow(2, attempt) * 3000;
-                    console.warn(`[Phase ${phaseNumber}] Rate limited on ${PRIMARY_MODEL_NAME}. Waiting ${waitTime / 1000}s... (Attempt ${attempt + 1}/${MAX_ATTEMPTS_PER_MODEL})`);
+                    console.warn(`[Phase ${phaseNumber}] Rate limited on ${PRIMARY_MODEL_NAME}. Waiting ${waitTime / 1000}s... (Attempt ${attempt + 1}/${PREMIUM_PHASE_MAX_ATTEMPTS})`);
                     await new Promise(resolve => setTimeout(resolve, waitTime));
                     continue;
                 }
@@ -527,14 +526,14 @@ export async function generateSinglePhase(
                     `Phase ${phaseNumber} exceeded maxOutputTokens=${maxOutputTokens} on ${PRIMARY_MODEL_NAME}`
                 );
                 console.warn(
-                    `[Phase ${phaseNumber}] MAX_TOKENS from ${PRIMARY_MODEL_NAME}; retrying with a larger output budget (attempt ${attempt + 1}/${MAX_ATTEMPTS_PER_MODEL}).`
+                    `[Phase ${phaseNumber}] MAX_TOKENS from ${PRIMARY_MODEL_NAME}; retrying with a larger output budget (attempt ${attempt + 1}/${PREMIUM_PHASE_MAX_ATTEMPTS}).`
                 );
                 continue;
             }
 
             if (finishReason && finishReason !== 'STOP') {
                 console.warn(
-                    `[Phase ${phaseNumber}] Non-STOP finish from ${PRIMARY_MODEL_NAME}: ${finishReason} (maxOutputTokens=${maxOutputTokens}, attempt=${attempt + 1}/${MAX_ATTEMPTS_PER_MODEL})`
+                    `[Phase ${phaseNumber}] Non-STOP finish from ${PRIMARY_MODEL_NAME}: ${finishReason} (maxOutputTokens=${maxOutputTokens}, attempt=${attempt + 1}/${PREMIUM_PHASE_MAX_ATTEMPTS})`
                 );
             }
 
@@ -571,7 +570,7 @@ export async function generateSinglePhase(
             console.error(`[Phase ${phaseNumber}] Attempt ${attempt + 1} Error on ${PRIMARY_MODEL_NAME}:`, errorMessage);
             lastError = error instanceof Error ? error : new Error(String(error));
 
-            if (attempt < MAX_ATTEMPTS_PER_MODEL - 1) {
+            if (attempt < PREMIUM_PHASE_MAX_ATTEMPTS - 1) {
                 const waitTime = 1500 * (attempt + 1);
                 await new Promise(resolve => setTimeout(resolve, waitTime));
             }

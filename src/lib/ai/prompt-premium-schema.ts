@@ -58,7 +58,14 @@ export function buildPremiumStructuredJsonSchema(
       "verdict_modifier": "Confidence and action-size adjustment from the convergence level"
     },
     "action_priorities": ["...", "...", "..."],
-    "closing_words": "..."
+    "closing_words": "...",
+    "decision_packet": {
+      "decision_fork": {"option_a": "...", "option_b": "...", "recommended_test": "..."},
+      "evidence_disagreement": {"aligned": "...", "conflicting": "..."},
+      "reality_checks": ["...", "..."],
+      "seven_day_experiment": {"action": "...", "measure": "...", "stop_rule": "..."},
+      "if_then_rules": [{"if": "...", "then": "..."}, {"if": "...", "then": "..."}]
+    }
   }
 }
 \`\`\`
@@ -116,7 +123,14 @@ export function buildPremiumStructuredJsonSchema(
       "verdict_modifier": "수렴 수준에 따른 확신도와 행동 크기 조정"
     },
     "action_priorities": ["...", "...", "..."],
-    "closing_words": "..."
+    "closing_words": "...",
+    "decision_packet": {
+      "decision_fork": {"option_a": "...", "option_b": "...", "recommended_test": "..."},
+      "evidence_disagreement": {"aligned": "...", "conflicting": "..."},
+      "reality_checks": ["...", "..."],
+      "seven_day_experiment": {"action": "...", "measure": "...", "stop_rule": "..."},
+      "if_then_rules": [{"if": "...", "then": "..."}, {"if": "...", "then": "..."}]
+    }
   }
 }
 \`\`\`

@@ -70,7 +70,7 @@ test.describe('Oracle decision timing harness', () => {
         await expect(page.getByText(/지원할 회사 3곳과 남을 조건 2개를 적어 비교하세요/).first()).toBeVisible();
         await expect(page.getByText(/가은 액션: 오늘 15분 동안 지원 조건표를 쓰고/).first()).toBeVisible();
         await expect(page.getByText(/감정적으로 바로 퇴사 통보하지 마세요/).first()).toBeVisible();
-        await expect(page.getByText(/one-time \$3\.99 (Detailed 3-Layer Decision Report|상세 3단 판정 리포트)/).first()).toBeVisible();
+        await expect(page.getByText(/one-time \$3\.99 (7-Day Decision Packet|7일 결정 패킷)/).first()).toBeVisible();
         await page.screenshot({
             path: evidenceScreenshotPath(testInfo.project.name, 'free-result'),
             fullPage: true,
@@ -79,7 +79,7 @@ test.describe('Oracle decision timing harness', () => {
         await page.getByRole('button', { name: /타이밍 열기|Unlock timing/i }).click();
         const paymentDialog = page.getByRole('dialog', { name: /Decision Note payment/i });
         await expect(paymentDialog).toBeVisible();
-        await expect(paymentDialog.getByText(/Detailed 3-Layer Decision Report|상세 3단 판정 리포트/i).first()).toBeVisible();
+        await expect(paymentDialog.getByText(/7-Day Decision Packet|7일 결정 패킷/i).first()).toBeVisible();
         await expect(paymentDialog.getByText(/타이밍|Timing/i).first()).toBeVisible();
         await page.screenshot({
             path: evidenceScreenshotPath(testInfo.project.name, 'paywall'),

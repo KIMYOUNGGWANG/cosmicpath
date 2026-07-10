@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import { Bell } from 'lucide-react';
+import Link from 'next/link';
 import type { ReadingData } from '@/components/reading/reading-input';
 import { trackClientGrowthEvent } from '@/lib/client-growth-events';
+import { saveDecisionReview, type DecisionIntendedAction } from '@/lib/decision-review';
 import {
   getRelationshipFollowupEvent,
   getRelationshipLandingVariant,
-  isRelationshipContactTimingSource,
 } from './start-result-relationship';
 
 type RelationshipOutcomeSeedProps = {
@@ -18,32 +19,49 @@ type RelationshipOutcomeSeedProps = {
 };
 
 export function RelationshipOutcomeSeed(props: RelationshipOutcomeSeedProps) {
-  const [intendedAction, setIntendedAction] = useState<'contact_now' | 'wait' | 'unsure'>('unsure');
+  const [intendedAction, setIntendedAction] = useState<DecisionIntendedAction>('unsure');
   const [isSaved, setIsSaved] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const isEn = props.language === 'en';
 
-  if (!isRelationshipContactTimingSource(props.landingSource) || !props.readingData) {
+  if (!props.readingData) {
     return null;
   }
 
   const readingData = props.readingData;
   const readingId = props.shareUrl?.split('/').pop();
-  const options = [
-    { value: 'contact_now' as const, label: isEn ? 'I will contact them' : '연락할게요' },
-    { value: 'wait' as const, label: isEn ? 'I will wait' : '기다릴게요' },
-    { value: 'unsure' as const, label: isEn ? 'Still unsure' : '아직 모르겠어요' },
-  ];
+  const isRelationship = readingData.context === 'love';
+  const options: readonly { value: DecisionIntendedAction; label: string }[] = isRelationship
+    ? [
+        { value: 'contact_now', label: isEn ? 'I will contact them' : '연락할게요' },
+        { value: 'wait', label: isEn ? 'I will wait' : '기다릴게요' },
+        { value: 'unsure', label: isEn ? 'Still unsure' : '아직 모르겠어요' },
+      ]
+    : [
+        { value: 'act_now', label: isEn ? 'Run a small test' : '작게 실행할게요' },
+        { value: 'wait', label: isEn ? 'Wait with a deadline' : '기한을 두고 기다릴게요' },
+        { value: 'reduce_scope', label: isEn ? 'Narrow the options' : '선택지를 좁힐게요' },
+      ];
+  const selectedAction = intendedAction === 'unsure' && !isRelationship ? 'act_now' : intendedAction;
 
   const saveOutcomeSeed = () => {
     const followUpDueAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     const seed = {
+      version: 1 as const,
       source: props.landingSource,
       readingId,
       question: readingData.question,
-      intendedAction,
+      intendedAction: selectedAction,
       followUpDueAt,
       createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
     };
+
+    if (!saveDecisionReview(seed)) {
+      setSaveError(true);
+      setIsSaved(false);
+      return;
+    }
 
     try {
       localStorage.setItem(getSeedStorageKey(props.landingSource), JSON.stringify(seed));
@@ -59,16 +77,17 @@ export function RelationshipOutcomeSeed(props: RelationshipOutcomeSeedProps) {
       readingId,
       metadata: {
         landingVariant: getRelationshipLandingVariant(props.landingSource, isEn),
-        intendedAction,
+        intendedAction: selectedAction,
         followUpDueAt,
         followUpDelayDays: 7,
         followUpChannel: 'email_and_local_seed',
-        decisionNoteProduct: 'Detailed 3-Layer Decision Report',
+        decisionNoteProduct: '7-Day Decision Packet',
         questionLength: readingData.question.length,
       },
     });
 
     setIsSaved(true);
+    setSaveError(false);
   };
 
   return (
@@ -84,8 +103,8 @@ export function RelationshipOutcomeSeed(props: RelationshipOutcomeSeedProps) {
           </h3>
           <p className="mt-2 break-keep text-sm leading-6 text-white/58">
             {isEn
-              ? 'After a Detailed 3-Layer Decision Report is unlocked by email, CosmicPath schedules a 7-day check-in. This button also saves a local cue on this device so you can compare what happened.'
-              : '이메일로 상세 3단 판정 리포트를 열면 CosmicPath가 7일 뒤 체크인 메일을 예약합니다. 이 버튼은 이 기기에도 결정 씨앗을 저장해 실제 결과와 비교할 수 있게 해요.'}
+              ? 'After a 7-Day Decision Packet is unlocked by email, CosmicPath schedules a 7-day check-in. This button also saves a local cue on this device so you can compare what happened.'
+              : '이메일로 7일 결정 패킷을 열면 CosmicPath가 7일 뒤 체크인 메일을 예약합니다. 이 버튼은 이 기기에도 결정 씨앗을 저장해 실제 결과와 비교할 수 있게 해요.'}
           </p>
         </div>
         {isSaved ? (
@@ -99,9 +118,10 @@ export function RelationshipOutcomeSeed(props: RelationshipOutcomeSeedProps) {
           <button
             key={option.value}
             type="button"
-            onClick={() => setIntendedAction(option.value)}
+            aria-pressed={selectedAction === option.value}
+            onClick={() => { setIntendedAction(option.value); setSaveError(false); }}
             className={`rounded-full border px-4 py-2 text-sm transition-all ${
-              intendedAction === option.value
+              selectedAction === option.value
                 ? 'border-acc-gold/45 bg-acc-gold/14 text-acc-gold'
                 : 'border-white/12 bg-white/[0.03] text-white/62 hover:border-white/25 hover:text-white'
             }`}
@@ -120,6 +140,19 @@ export function RelationshipOutcomeSeed(props: RelationshipOutcomeSeedProps) {
           ? (isEn ? 'Saved for later check-in' : '7일 뒤 확인 씨앗 저장됨')
           : (isEn ? 'Save 7-day check-in' : '7일 뒤 이 결정 확인하기')}
       </button>
+      {saveError ? (
+        <p role="alert" className="mt-3 break-keep text-sm text-rose-200">
+          {isEn ? 'This device could not save the review. Free up storage and try again.' : '이 기기에 리뷰를 저장하지 못했습니다. 저장 공간을 확인한 뒤 다시 시도하세요.'}
+        </p>
+      ) : null}
+      {isSaved ? (
+        <Link
+          href="/review"
+          className="mt-3 inline-flex w-full items-center justify-center rounded-[18px] border border-white/12 px-5 py-3 text-sm font-semibold text-white/72 sm:ml-3 sm:w-auto"
+        >
+          {isEn ? 'Open Decision Review' : '결정 리뷰 열기'}
+        </Link>
+      ) : null}
     </section>
   );
 }

@@ -14,8 +14,8 @@ type BannedPhrase = {
 const PUBLIC_PRODUCT_NAME = 'CosmicPath Decision Note';
 const CAMPAIGN_EXPERIENCE_NAME = 'Next Move Ritual';
 const HISTORICAL_REPORT_NAME = 'Next Move Report';
-const PAID_PRODUCT_NAME_EN = 'Detailed 3-Layer Decision Report';
-const PAID_PRODUCT_NAME_KO = '상세 3단 판정 리포트';
+const PAID_PRODUCT_NAME_EN = '7-Day Decision Packet';
+const PAID_PRODUCT_NAME_KO = '7일 결정 패킷';
 const ROLE_EXPLANATION_EN = 'Saju = structure, astrology = timing, tarot = immediate signal';
 const OPTIONAL_GAEUN_ACTION_CONTRACT =
   '`free_focus.gaeun_action` is a backward-compatible public optional field, not a breaking wire replacement.';
@@ -164,6 +164,8 @@ const strategyCanvas = readSurfaceIfPresent({
   description: 'optional local strategy canvas naming reconciliation',
 });
 assertSurfaceHas(apiSpec, 'type NextMoveRitualSource = "next_move_report_mvp_v1";', 'API spec must preserve the existing source key under the ritual naming layer.');
+assertSurfaceHas(apiSpec, '- Premium unlock label: `7-Day Decision Packet` (`7일 결정 패킷`)', 'API spec must lock the active paid packet label.');
+assertSurfaceHas(apiSpec, '`final_verdict.decision_packet`', 'API spec must document the additive paid packet response field.');
 assertSurfaceHas(apiSpec, 'gaeun_action?: string;', 'API spec must document gaeun_action as an optional additive field.');
 assertSurfaceHas(nextMoveRitualLoop, '`Next Move Ritual` is a bounded campaign/experience layer.', 'Operating loop must scope Next Move Ritual to campaign/experience usage.');
 if (strategyCanvas !== undefined) {
@@ -195,14 +197,14 @@ assertSurfaceHas(
 const paymentPricePanel = getDeclaredSurfaceText('src/components/payment/PaymentModalPricePanel.tsx');
 assertSurfaceHas(
   paymentPricePanel,
-  'Detailed 3-Layer Decision Report price',
+  '7-Day Decision Packet price',
   'Paywall price panel must label the paid offer, not rename the public Decision Note product.'
 );
 
 const paymentForm = getDeclaredSurfaceText('src/components/payment/PaymentModalForm.tsx');
 assertSurfaceHas(
   paymentForm,
-  'one-time Detailed 3-Layer Decision Report checkout',
+  'one-time 7-Day Decision Packet checkout',
   'Paywall checkout footer must name the paid report offer.'
 );
 
@@ -242,6 +244,6 @@ assertSurfaceHas(
   'System prompt core must inject the three-layer verdict quality contract block into the runtime prompt.'
 );
 
-console.log('decision_positioning_contract public=CosmicPath Decision Note paid=Detailed 3-Layer Decision Report price=$3.99');
+console.log('decision_positioning_contract public=CosmicPath Decision Note paid=7-Day Decision Packet price=$3.99');
 console.log('three_layer_roles Saju=structure astrology=timing tarot=immediate_signal');
 console.log('Decision Note positioning verification passed');

@@ -114,5 +114,5 @@ export async function openNextMovePaywall(page: Page): Promise<void> {
     await page.getByRole('button', { name: /연락 타이밍 열기/ }).click();
     const paymentDialog = page.getByRole('dialog', { name: /Decision Note payment/i });
     await expect(paymentDialog).toBeVisible();
-    await expect(paymentDialog.getByText(/Detailed 3-Layer Decision Report/i).first()).toBeVisible();
+    await expect(paymentDialog.getByText(/7-Day Decision Packet|7일 결정 패킷/i).first()).toBeVisible();
 }

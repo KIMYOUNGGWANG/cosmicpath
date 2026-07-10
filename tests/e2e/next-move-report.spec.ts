@@ -116,7 +116,7 @@ test.describe('Next Move Report MVP', () => {
         await expect(page.getByText(/CosmicPath Decision Note as digital content/i).first()).toBeVisible();
         await expect(page.getByText(/no guaranteed relationship, career, money, health, or life outcome/i).first()).toBeVisible();
         await expect(page.getByText(/not therapy, medical, diagnostic, legal, or financial advice/i).first()).toBeVisible();
-        await expect(page.getByText(/one-time Detailed 3-Layer Decision Report/i).first()).toBeVisible();
+        await expect(page.getByText(/one-time 7-Day Decision Packet/i).first()).toBeVisible();
         await expect(page.getByText(/Stripe checkout/i).first()).toBeVisible();
         await expect(page.getByText(/refund request may be limited once the note is generated or opened/i).first()).toBeVisible();
 
@@ -140,7 +140,7 @@ test.describe('Next Move Report MVP', () => {
             await expect(page).toHaveTitle(/Contact Decision Note/i);
             await expect(page.getByRole('link', { name: /^CosmicPath$/i }).first()).toBeVisible();
             await expect(page.getByText(/First Decision Note free/i).first()).toBeVisible();
-            await expect(page.getByText(/Detailed 3-Layer Decision Report via Stripe/i).first()).toBeVisible();
+            await expect(page.getByText(/7-Day Decision Packet via Stripe/i).first()).toBeVisible();
             await expect(page.getByText(/decision support only/i).first()).toBeVisible();
             await expect(page.locator('body')).not.toContainText('$3.99');
             await expect(page.locator('body')).not.toContainText('COSMICPATH');
@@ -151,9 +151,11 @@ test.describe('Next Move Report MVP', () => {
 
         const sitemapXml = await sitemap.text();
         expect(sitemapXml).toContain('/relationship/contact-timing');
-        expect(sitemapXml).toContain('/terms');
-        expect(sitemapXml).toContain('/privacy');
-        expect(sitemapXml).not.toContain('/career/uncertainty');
+        expect(sitemapXml).toContain('/career/uncertainty');
+        expect(sitemapXml).not.toContain('/terms</loc>');
+        expect(sitemapXml).not.toContain('/privacy</loc>');
+        expect(sitemapXml).not.toContain('/start</loc>');
+        expect(sitemapXml).not.toContain('/en/contact-timing</loc>');
         expect(sitemapXml).not.toContain('/daily</loc>');
     });
 });

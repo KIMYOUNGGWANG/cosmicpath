@@ -107,8 +107,8 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
   );
   const priceLabel = props.dynamicPrice;
   const unlockTrustCopy = isEn
-    ? `This is a one-time${priceLabel ? ` ${priceLabel}` : ''} Detailed 3-Layer Decision Report. Locked sections include why this verdict was chosen, timing, and message/action variants.`
-    : `one-time${priceLabel ? ` ${priceLabel}` : ''} 상세 3단 판정 리포트로 잠긴 섹션을 엽니다. 왜 이 판정인지, 타이밍, message/action variants를 확인합니다.`;
+    ? `This is a one-time${priceLabel ? ` ${priceLabel}` : ''} 7-Day Decision Packet. Locked sections include why this verdict was chosen, timing, and message/action variants.`
+    : `one-time${priceLabel ? ` ${priceLabel}` : ''} 7일 결정 패킷으로 잠긴 섹션을 엽니다. 왜 이 판정인지, 타이밍, message/action variants를 확인합니다.`;
   const blocks = [
     {
       label: isRelationshipContactTiming ? (isEn ? 'Contact Verdict' : '연락 판정') : (isEn ? 'Decision' : '판정'),

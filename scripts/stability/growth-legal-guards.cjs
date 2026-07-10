@@ -18,7 +18,7 @@ function runGrowthLegalGuards() {
   );
   assertMatch(
     'src/app/terms/page.tsx',
-    /CosmicPath Decision Note[\s\S]*Detailed 3-Layer Decision Report/,
+    /CosmicPath Decision Note[\s\S]*7-Day Decision Packet/,
     'Terms should disclose the Decision Note umbrella and paid report content'
   );
   assertMatch(

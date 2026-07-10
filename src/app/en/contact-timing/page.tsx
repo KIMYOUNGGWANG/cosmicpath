@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Contact Decision Note',
     description:
-      'First Decision Note free. Unlock the Detailed 3-Layer Decision Report for why this direction was chosen, when to move, and what message can backfire.',
+      'First Decision Note free. Unlock the 7-Day Decision Packet for why this direction was chosen, when to move, and what message can backfire.',
     url: '/en/contact-timing',
     siteName: 'CosmicPath',
     images: ['/og-image.png'],
@@ -108,7 +108,7 @@ export default function EnglishContactTimingPage() {
             <Link href="/" className="text-sm font-semibold tracking-[0.24em] text-white/72 transition-colors hover:text-white">
               CosmicPath
             </Link>
-            <span className="text-sm text-white/48">First Decision Note free · Detailed 3-Layer Decision Report via Stripe</span>
+            <span className="text-sm text-white/48">First Decision Note free · 7-Day Decision Packet via Stripe</span>
           </header>
 
           <div className="grid flex-1 items-center gap-10 py-16 lg:grid-cols-[minmax(0,1fr)_420px]">

@@ -153,7 +153,27 @@ export interface PremiumReport {
         };
         action_priorities: string[];      // 우선순위 행동 목록
         closing_words: string;            // 마무리 격려 멘트
+        decision_packet: DecisionPacket;
     };
+}
+
+export interface DecisionPacket {
+    decision_fork: {
+        option_a: string;
+        option_b: string;
+        recommended_test: string;
+    };
+    evidence_disagreement: {
+        aligned: string;
+        conflicting: string;
+    };
+    reality_checks: string[];
+    seven_day_experiment: {
+        action: string;
+        measure: string;
+        stop_rule: string;
+    };
+    if_then_rules: { if: string; then: string }[];
 }
 
 // API 응답 타입

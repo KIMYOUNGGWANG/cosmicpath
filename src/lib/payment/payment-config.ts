@@ -27,7 +27,7 @@ export const READING_PRODUCT = {
     // 개발 모드에서는 테스트용 ID를 우선 사용합니다.
     productId: readingProductId,
     name: PAID_DECISION_REPORT_NAME_EN,
-    description: 'Detailed 3-layer decision report unlock',
+    description: '7-day decision packet unlock',
     currency: 'USD',
     price: READING_PRODUCT_PRICE_CENTS,
     followUpQuestions: 0,

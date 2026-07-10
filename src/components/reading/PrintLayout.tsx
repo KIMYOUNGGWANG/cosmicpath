@@ -67,7 +67,7 @@ export const PrintLayout = forwardRef<HTMLDivElement, PrintLayoutProps>(({ data,
                             COSMIC PATH
                         </div>
                         <div className="text-xs text-slate-400 uppercase tracking-widest">
-                            Detailed 3-Layer Decision Report
+                            7-Day Decision Packet
                         </div>
                     </div>
 
@@ -510,6 +510,29 @@ function buildReportBookPages(data: PremiumReportData, isEn: boolean): ReportBoo
             ].filter(Boolean).join('\n\n'),
             bullets: data.final_verdict.action_priorities,
         });
+
+        const packet = data.final_verdict.decision_packet;
+        if (packet) {
+            pushTextPage(pages, {
+                id: 'decision-packet',
+                label: '7-Day Decision Packet',
+                title: isEn ? 'A bounded decision test' : '검증 가능한 결정 실험',
+                body: [
+                    `${isEn ? 'Option A' : '선택지 A'}: ${packet.decision_fork.option_a}`,
+                    `${isEn ? 'Option B' : '선택지 B'}: ${packet.decision_fork.option_b}`,
+                    `${isEn ? 'Recommended test' : '추천 시험'}: ${packet.decision_fork.recommended_test}`,
+                    `${isEn ? 'Evidence agreement' : '근거 일치'}: ${packet.evidence_disagreement.aligned}`,
+                    `${isEn ? 'Evidence disagreement' : '근거 충돌'}: ${packet.evidence_disagreement.conflicting}`,
+                    `${isEn ? '7-day action' : '7일 행동'}: ${packet.seven_day_experiment.action}`,
+                    `${isEn ? 'Measure' : '측정'}: ${packet.seven_day_experiment.measure}`,
+                    `${isEn ? 'Stop rule' : '중단 기준'}: ${packet.seven_day_experiment.stop_rule}`,
+                ].join('\n\n'),
+                bullets: [
+                    ...packet.reality_checks,
+                    ...packet.if_then_rules.map((rule) => `${isEn ? 'If' : '만약'} ${rule.if} → ${isEn ? 'then' : '그러면'} ${rule.then}`),
+                ],
+            });
+        }
     }
 
     return pages;

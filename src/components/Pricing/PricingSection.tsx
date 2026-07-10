@@ -55,7 +55,7 @@ export function PricingSection({ language, onSelect }: PricingSectionProps) {
             title: PAID_DECISION_REPORT_NAME_KO,
             price: priceLabel || READING_PRODUCT_PRICE_LABEL,
             period: "일회성 결제",
-            cta: "상세 3단 판정 리포트 열기",
+            cta: "7일 결정 패킷 열기",
             features: [
                 THREE_LAYER_ROLE_EXPLANATION_KO,
                 "질문과 생년월일 기반 판정 정밀도",

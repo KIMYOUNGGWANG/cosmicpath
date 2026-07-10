@@ -7,6 +7,7 @@ import { z } from 'zod';
 import devLog from '@/lib/dev-logger';
 import { safeIncrementUsageCounter } from '@/lib/usage-metrics';
 import { buildGoogleResponseJsonSchema } from './google-json-schema';
+import { getStructuredRequestConfig } from './structured-request-budget';
 
 // 지원 모델 타입
 export type ModelProvider = 'openai' | 'anthropic' | 'google';
@@ -502,42 +503,12 @@ export async function generateStructuredReport<T>(
         };
     };
 
-    const getStructuredRequestConfig = (attempt: number) => {
-        if (tier === 'basic') {
-            return {
-                timeoutMs: 26000,
-                maxRetries: 1,
-                maxOutputTokens: attempt > 0 ? 2304 : 1536,
-                initialDelayMs: 1500,
-                temperature: 0.3,
-            };
-        }
-
-        if (tier === 'free') {
-            return {
-                timeoutMs: attempt > 0 ? 60000 : 48000,
-                maxRetries: 2,
-                maxOutputTokens: attempt > 0 ? 8192 : 6144,
-                initialDelayMs: 3000,
-                temperature: 0.2,
-            };
-        }
-
-        return {
-            timeoutMs: attempt > 0 ? 28000 : 24000,
-            maxRetries: 1,
-            maxOutputTokens: attempt > 0 ? 5120 : 4096,
-            initialDelayMs: 1500,
-            temperature: 0.4,
-        };
-    };
-
     const requestStructuredReport = async (model: string): Promise<T> => {
         const maxStructuredAttempts = tier === 'free' ? 2 : 1;
         let lastError: Error | null = null;
 
         for (let attempt = 0; attempt < maxStructuredAttempts; attempt++) {
-            const requestConfig = getStructuredRequestConfig(attempt);
+            const requestConfig = getStructuredRequestConfig(tier, attempt);
             const thinkingConfig = getGeminiThinkingConfig(model);
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
             const options = {
