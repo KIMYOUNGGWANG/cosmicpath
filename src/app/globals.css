@@ -1165,3 +1165,17 @@ h4 {
   color: #22c55e;
   font-weight: 600;
 }
+
+@media (max-width: 639px) {
+  [data-start-intake] .text-\[10px\],
+  [data-start-intake] .text-\[11px\] {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+
+  [data-start-intake] .text-white\/38,
+  [data-start-intake] .text-white\/40,
+  [data-start-intake] .text-white\/42 {
+    color: rgb(255 255 255 / 0.58);
+  }
+}

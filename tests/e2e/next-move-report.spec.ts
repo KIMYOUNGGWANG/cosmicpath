@@ -28,7 +28,10 @@ test.describe('Next Move Report MVP', () => {
         await expect(page).toHaveTitle(/CosmicPath.*Decision Note/i);
         const heroCta = page.getByRole('link', { name: /Open Decision Note|Decision Note 시작/i }).first();
         await expect(heroCta).toBeVisible();
-        await expect(heroCta).toHaveAttribute('href', '/start?reset=true&entry=decision_timing_rebuild_v1');
+        await expect(heroCta).toHaveAttribute(
+            'href',
+            /^\/start\?reset=true&entry=decision_timing_rebuild_v1(?:&lang=en)?$/,
+        );
         await expect(page.getByText(/Decision Note room|첫 판정은 무료/i).first()).toBeVisible();
         await expect(page.locator('a[href="/relationship/contact-timing"]')).toHaveCount(0);
         await expect(page.locator('nav a[href="/daily"]')).toHaveCount(0);

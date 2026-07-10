@@ -29,6 +29,7 @@ export function StartInputStage(props: StartInputStageProps) {
 
   return (
     <motion.div
+      data-start-intake
       key="input"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -51,7 +52,7 @@ export function StartInputStage(props: StartInputStageProps) {
                 {props.language === 'ko' ? (
                   <>
                     <span className="block sm:hidden">사주·점성·타로로 선택을 정리합니다.</span>
-                    <span className="block sm:hidden">무료 첫 판정. 생년월일만 필수입니다.</span>
+                    <span className="block sm:hidden">첫 판정은 무료입니다. 생년월일만 필수입니다.</span>
                     <span className="hidden sm:inline">{copy.subtitle}</span>
                   </>
                 ) : copy.subtitle}

@@ -173,7 +173,8 @@ export function DecisionReviewExperience() {
                 <header className="border-b border-white/10 p-6 sm:p-9">
                     <div className="flex items-center gap-2 font-cinzel text-xs uppercase tracking-[0.26em] text-acc-gold">
                         <RotateCcw className="h-4 w-4" />
-                        Outcome, not another prediction
+                        <span className="sm:hidden">Outcome Review</span>
+                        <span className="hidden sm:inline">Outcome, not another prediction</span>
                     </div>
                     <h1 className="mt-4 break-keep text-3xl font-semibold sm:text-4xl">7일 결정 리뷰</h1>
                     <p className="mt-3 break-keep text-sm leading-7 text-white/58">
@@ -187,7 +188,8 @@ export function DecisionReviewExperience() {
                         <p className="mt-4 text-balance break-keep text-lg leading-8 text-white/88 sm:text-xl">{reviewState.seed.question}</p>
                         <p className="mt-4 text-sm text-acc-gold">저장한 행동 · {intendedActionLabels[reviewState.seed.intendedAction]}</p>
                         <div className="mt-6 border-t border-white/10 pt-5 text-xs leading-6 text-white/48">
-                            7일 실험 결과를 사실 기준으로 기록하세요. 아직 판단하기 어렵다면 그대로 표시해도 됩니다.
+                            7일 실험 결과를 사실 기준으로 기록하세요. 아직 판단하기{' '}
+                            <span className="whitespace-nowrap">어렵다면</span> 그대로 표시해도 됩니다.
                         </div>
                     </aside>
 
