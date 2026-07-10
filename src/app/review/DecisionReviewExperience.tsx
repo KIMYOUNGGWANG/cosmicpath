@@ -82,7 +82,7 @@ export function DecisionReviewExperience() {
     }
 
     if (reviewState.status === 'pending') {
-        const isEn = reviewState.seed.locale === 'en';
+        const isEn = (reviewState.seed.locale ?? fallbackLanguage) === 'en';
         const copy = labels[isEn ? 'en' : 'ko'];
         const dueDate = new Intl.DateTimeFormat(isEn ? 'en-US' : 'ko-KR', {
             month: 'long',
@@ -170,7 +170,7 @@ export function DecisionReviewExperience() {
         }
     };
 
-    const isEn = reviewState.seed.locale === 'en';
+    const isEn = (reviewState.seed.locale ?? fallbackLanguage) === 'en';
     const copy = labels[isEn ? 'en' : 'ko'];
     const outcomeOptions = Object.entries(copy.outcomes) as [DecisionOutcome, string][];
     const certaintyOptions = Object.entries(copy.certainty) as [DecisionCertainty, string][];

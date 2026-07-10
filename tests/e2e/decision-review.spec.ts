@@ -135,6 +135,24 @@ test.describe('Decision Review', () => {
         await expect(page.locator('main')).not.toContainText(/[가-힣]/);
     });
 
+    test('uses the stored language for a legacy seed without locale', async ({ page }) => {
+        await page.addInitScript(
+            ({ key, value }) => {
+                localStorage.setItem('user_language', 'en');
+                localStorage.setItem(key, JSON.stringify(value));
+            },
+            {
+                key: storageKey,
+                value: reviewSeed({ locale: undefined, question: 'Should I wait?' }),
+            }
+        );
+
+        await page.goto('/review');
+        await expect(page.getByRole('heading', { name: '7-Day Decision Review' })).toBeVisible();
+        await expect(page.getByText('Saved action · Wait with a deadline')).toBeVisible();
+        await expect(page.locator('main')).not.toContainText(/[가-힣]/);
+    });
+
     test('malformed state is distinguished and fails safely', async ({ page }) => {
         await page.addInitScript((key) => localStorage.setItem(key, '{'), storageKey);
 
