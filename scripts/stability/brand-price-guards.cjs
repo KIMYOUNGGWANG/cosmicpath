@@ -3,7 +3,7 @@ const { assertMatch, assertNoMatch } = require('./guard-assertions.cjs');
 function runBrandPriceGuards() {
   assertMatch(
     'src/lib/product-positioning.ts',
-    /PUBLIC_DECISION_NOTE_NAME = 'CosmicPath Decision Note'[\s\S]*PAID_DECISION_REPORT_NAME_EN = 'Detailed 3-Layer Decision Report'[\s\S]*PAID_DECISION_REPORT_NAME_KO = '상세 3단 판정 리포트'[\s\S]*READING_PRODUCT_PRICE_CENTS = 399/s,
+    /PUBLIC_DECISION_NOTE_NAME = 'CosmicPath Decision Note'[\s\S]*PAID_DECISION_REPORT_NAME_EN = '7-Day Decision Packet'[\s\S]*PAID_DECISION_REPORT_NAME_KO = '7일 결정 패킷'[\s\S]*READING_PRODUCT_PRICE_CENTS = 399/s,
     'Product positioning should declare the public umbrella, paid report names, and 399-cent contract'
   );
   assertMatch(
@@ -33,12 +33,12 @@ function runBrandPriceGuards() {
   );
   assertMatch(
     'src/app/terms/page.tsx',
-    /one-time Detailed 3-Layer Decision Report[\s\S]*상세 3단 판정 리포트[\s\S]*\$3\.99 USD[\s\S]*Stripe checkout/s,
+    /one-time 7-Day Decision Packet[\s\S]*7일 결정 패킷[\s\S]*\$3\.99 USD[\s\S]*Stripe checkout/s,
     'Terms should disclose the one-time $3.99 Stripe checkout boundary for the paid report'
   );
   assertMatch(
     'src/app/terms/page.tsx',
-    /상세 3단 판정 리포트[\s\S]*\$3\.99 USD[\s\S]*단건 디지털 리포트/s,
+    /7일 결정 패킷[\s\S]*\$3\.99 USD[\s\S]*단건 디지털 리포트/s,
     'Korean terms should disclose the paid report $3.99 one-time digital report boundary'
   );
   assertMatch(
@@ -58,12 +58,12 @@ function runBrandPriceGuards() {
   );
   assertMatch(
     'src/components/seo/json-ld.tsx',
-    /'@type':\s*'Service'[\s\S]*name:\s*'CosmicPath Decision Note'[\s\S]*alternateName:\s*'Detailed 3-Layer Decision Report'/,
+    /'@type':\s*'Service'[\s\S]*name:\s*'CosmicPath Decision Note'[\s\S]*alternateName:\s*'7-Day Decision Packet'/,
     'Global JSON-LD should expose the public umbrella and paid report names'
   );
   assertMatch(
     'src/components/seo/json-ld.tsx',
-    /name:\s*'Detailed 3-Layer Decision Report',\s*price:\s*'3\.99'/,
+    /name:\s*'7-Day Decision Packet',\s*price:\s*'3\.99'/,
     'Global JSON-LD should expose the paid report offer at $3.99'
   );
   assertNoMatch(
@@ -73,7 +73,7 @@ function runBrandPriceGuards() {
   );
   assertMatch(
     'src/app/payment/success/page.tsx',
-    /Your one-time \$3\.99 Detailed 3-Layer Decision Report is opening now\./,
+    /Your one-time \$3\.99 7-Day Decision Packet is opening now\./,
     'Payment success should use the paid report product name and one-time $3.99 price'
   );
   assertNoMatch(

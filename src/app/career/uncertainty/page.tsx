@@ -8,8 +8,8 @@ const CAREER_TIMING_ENTRY = 'career_timing_wedge_399';
 const PRIMARY_CAREER_QUESTION = '지금 내 커리어에서 더 버텨야 할까, 아니면 방향을 바꿔야 할까?';
 
 export const metadata: Metadata = {
-  title: '버틸지 옮길지 먼저 보기 | $3.99 커리어 타이밍 리딩 | CosmicPath',
-  description: '이직, 퇴사, 승진, 번아웃이 헷갈릴 때 지금 움직일지 더 기다릴지 먼저 보는 커리어 타이밍 리딩입니다. 첫 결과 무료, 전체 리딩 $3.99.',
+  title: '버틸지 옮길지 먼저 보기 | $3.99 7일 결정 패킷 | CosmicPath',
+  description: '이직, 퇴사, 승진, 번아웃이 헷갈릴 때 첫 판정은 무료로 보고, 결정 갈림길과 7일 실험은 $3.99 7일 결정 패킷으로 확인하세요.',
   robots: {
     index: true,
     follow: true,
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: '버틸지 옮길지 먼저 보기 | CosmicPath',
-    description: '첫 결과 무료, 전체 커리어 타이밍 리딩 $3.99.',
+    description: '첫 판정 무료, 커리어 7일 결정 패킷 $3.99.',
     url: '/career/uncertainty',
     siteName: 'CosmicPath',
     images: ['/og-image.png'],
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: '버틸지 옮길지 먼저 보기 | CosmicPath',
-    description: '첫 결과 무료, 전체 커리어 타이밍 리딩 $3.99.',
+    description: '첫 판정 무료, 커리어 7일 결정 패킷 $3.99.',
     images: ['/og-image.png'],
   },
 };
@@ -37,19 +37,19 @@ const PROMPT_CARDS = [
   {
     title: '지금 옮겨도 될까',
     summary: '괜히 조급한 건지, 진짜 타이밍이 온 건지부터 봅니다.',
-    question: '지금 이직을 준비해야 할까, 아니면 지금 자리에서 더 버텨야 할까?',
+    question: '지금 이직할까, 현 역할을 더 키울까?',
     slug: 'move_or_hold',
   },
   {
     title: '6개월 안에 뭘 먼저 할까',
     summary: '불안할수록 해야 할 일을 늘리기보다 먼저 챙길 한 가지를 좁혀봅니다.',
-    question: '앞으로 6개월 안에 내 커리어에서 가장 먼저 준비해야 할 것은 무엇일까?',
+    question: '6개월 안에 가장 먼저 준비할 건 뭘까?',
     slug: 'next_six_months',
   },
   {
     title: '이 일, 나랑 맞을까',
     summary: '열심히 하는데도 자꾸 안 맞는 느낌이 드는 이유를 봅니다.',
-    question: '지금 하고 있는 일이 내 강점을 제대로 쓰고 있는 걸까, 아니면 방향이 어긋난 걸까?',
+    question: '지금 일이 내 강점을 제대로 쓰고 있을까?',
     slug: 'role_fit',
   },
 ] as const;
@@ -83,8 +83,12 @@ export default function CareerUncertaintyPage() {
               요즘 계속 헷갈리죠
             </h1>
             <p className="mt-6 max-w-3xl break-keep text-base leading-8 text-moonlight md:text-xl">
-              이직이 맞는 건지, 그냥 지금이 너무 지쳐서 흔들리는 건지, 아니면 아예 방향이 안 맞는 건지 혼자선 잘 안 보일 때가 있습니다.
-              CosmicPath는 그 찝찝함을 &ldquo;지금 움직여도 되는지, 더 쌓아야 하는지, 무엇부터 준비해야 하는지&rdquo; 같은 커리어 질문으로 바꿔 읽습니다.
+              <span className="block md:hidden">이직인지, 번아웃인지,</span>
+              <span className="block md:hidden">방향 문제인지 구분합니다.</span>
+              <span className="block md:hidden">지금 움직일지 더 준비할지</span>
+              <span className="block md:hidden">커리어 질문으로 바꿔 읽습니다.</span>
+              <span className="hidden md:block">이직이 맞는지, 지쳐서 흔들리는지, 방향이 어긋난지 혼자선 구분하기 어렵습니다.</span>
+              <span className="hidden md:block">CosmicPath는 지금 움직일지, 더 준비할지, 무엇부터 할지 커리어 질문으로 바꿔 읽습니다.</span>
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -98,7 +102,7 @@ export default function CareerUncertaintyPage() {
                 이 일이 나랑 맞을까
               </span>
               <span className="rounded-full border border-acc-gold/25 bg-acc-gold/10 px-4 py-2 text-xs uppercase tracking-[0.2em] text-acc-gold">
-                첫 결과 무료 · 전체 $3.99
+                첫 판정 무료 · 7일 결정 패킷 $3.99
               </span>
             </div>
           </div>
@@ -134,7 +138,7 @@ export default function CareerUncertaintyPage() {
               <p className="mt-4 break-keep text-sm leading-7 text-white/72">{card.summary}</p>
               <p className="mt-6 break-keep text-sm leading-7 text-moonlight">{`"${card.question}"`}</p>
               <p className="mt-5 break-keep text-xs leading-6 text-white/52">
-                첫 결과를 무료로 보고, 근거·타이밍·행동 순서는 $3.99로 엽니다.
+                무료 판정 후, $3.99 패킷에서 갈림길과 7일 실험을 엽니다.
               </p>
               <div className="mt-8 inline-flex items-center text-sm font-semibold text-acc-gold transition-transform duration-300 group-hover:translate-x-1">
                 이 질문으로 먼저 보기
@@ -183,7 +187,7 @@ export default function CareerUncertaintyPage() {
             </h2>
             <p className="mt-4 break-keep text-sm leading-7 text-white/72">
               커리어 맥락이 이미 들어가 있어서, 뜬구름 잡는 설명 없이 지금 내 상황부터 바로 볼 수 있습니다.
-              무료 결과로 방향을 먼저 확인하고, 전체 리딩에서는 근거·타이밍·행동 순서를 엽니다.
+              무료 판정으로 방향을 먼저 확인하세요. 7일 결정 패킷은 근거 충돌, 현실 확인, 중단 기준, 조건별 다음 수를 엽니다.
             </p>
 
             <div className="mt-8 space-y-3">

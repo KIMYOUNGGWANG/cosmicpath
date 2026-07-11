@@ -335,6 +335,16 @@ function schema_accepts_valid_minimal_phase_payloads() {
         convergence_diagnosis: validConvergenceDiagnosis(),
         action_priorities: ['우선순위 조정', '리스크 축소'],
         closing_words: '당장의 정리에서 안정이 옵니다.',
+        decision_packet: {
+          decision_fork: { option_a: '작게 시험한다', option_b: '기준일까지 관찰한다', recommended_test: '행동 하나만 실행한다' },
+          evidence_disagreement: { aligned: '작은 검증을 지지합니다.', conflicting: '세부 시점은 불확실합니다.' },
+          reality_checks: ['실제 반응을 기록합니다.', '비용 한도를 확인합니다.'],
+          seven_day_experiment: { action: '요청 하나를 실행합니다.', measure: '반응 한 건을 확인합니다.', stop_rule: '한도를 넘으면 중단합니다.' },
+          if_then_rules: [
+            { if: '반응이 오면', then: '한 단계 키웁니다.' },
+            { if: '반응이 없으면', then: '선택지를 줄입니다.' },
+          ],
+        },
       },
     },
   };
@@ -559,6 +569,27 @@ function validPhaseEightPayload() {
       convergence_diagnosis: validConvergenceDiagnosis(),
       action_priorities: ['우선순위 조정', '리스크 축소'],
       closing_words: '당장의 정리에서 안정이 옵니다.',
+      decision_packet: {
+        decision_fork: {
+          option_a: '작은 시험을 시작한다',
+          option_b: '기준일까지 관찰한다',
+          recommended_test: '되돌릴 수 있는 행동 하나만 실행한다',
+        },
+        evidence_disagreement: {
+          aligned: '큰 확정보다 작은 검증을 지지합니다.',
+          conflicting: '세부 시점은 아직 불확실합니다.',
+        },
+        reality_checks: ['실제 반응을 기록합니다.', '비용과 에너지 한도를 확인합니다.'],
+        seven_day_experiment: {
+          action: '요청 하나를 실행합니다.',
+          measure: '구체적 반응 한 건을 확인합니다.',
+          stop_rule: '정한 한도를 넘으면 중단합니다.',
+        },
+        if_then_rules: [
+          { if: '구체적 반응이 오면', then: '다음 행동을 한 단계 키웁니다.' },
+          { if: '반응이 없으면', then: '선택지를 줄여 재검토합니다.' },
+        ],
+      },
     },
   };
 }

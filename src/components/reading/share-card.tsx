@@ -8,16 +8,12 @@ import { Check, Copy, Gift, Twitter } from 'lucide-react';
 interface ShareCardProps {
     shareUrl: string;
     readingId?: string;
-    trustScore?: number;
-    mainCardName?: string;
     className?: string;
 }
 
 export function ShareCard({
     shareUrl,
     readingId,
-    trustScore = 4.5,
-    mainCardName = 'Decision Note',
     className,
 }: ShareCardProps) {
     const [copied, setCopied] = useState(false);
@@ -25,7 +21,7 @@ export function ShareCard({
     const resolvedReadingId = readingId || shareUrl.split('/').filter(Boolean).at(-1);
     const ogImageUrl = resolvedReadingId
         ? `/api/og/reading/${resolvedReadingId}`
-        : `/api/og?title=CosmicPath%20Decision%20Note&score=${trustScore}&card=${encodeURIComponent(mainCardName)}`;
+        : '/og-image.png';
 
     const handleCopy = async () => {
         try {
@@ -37,7 +33,7 @@ export function ShareCard({
         }
     };
 
-    const shareText = `CosmicPath Decision Note로 막혀 있던 질문 하나를 판정했습니다. 신뢰도 ${trustScore}/5.0`;
+    const shareText = 'CosmicPath Decision Note로 미뤄둔 선택 하나를 안전한 공개 요약으로 정리했습니다.';
     const threadsUrl = `https://www.threads.net/intent/post?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
 

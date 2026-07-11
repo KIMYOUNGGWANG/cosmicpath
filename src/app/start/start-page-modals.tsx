@@ -55,10 +55,12 @@ export function StartPageModals(props: StartPageModalsProps) {
           isOpen={props.isShareModalOpen}
           onClose={props.onCloseShare}
           title={props.reportData.summary?.title || '내 리딩 결과'}
-          trustScore={props.reportData.summary?.trust_score ? Math.round(props.reportData.summary.trust_score * 20) : 85}
           matchLevel={getShareMatchLevel(props.reportData.summary?.trust_score || 0)}
           keywords={props.reportData.summary?.keywords?.slice(0, 4) || ['타이밍', '변화', '선택']}
-          userName={props.readingData?.name}
+          source={props.trackingSource}
+          language={props.language}
+          readingId={props.shareUrl?.split('/').pop()}
+          resultType={props.reportData.free_focus?.decision_label}
         />
       )}
     </>

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 const readingProductId = 'prod_TgwKnGfpJBusty';
-const paidProductName = 'Detailed 3-Layer Decision Report';
+const paidProductName = '7-Day Decision Packet';
 
 type PriceApiPayload = {
     readonly productId: string;
@@ -61,7 +61,7 @@ test.describe('Decision Note payment price consistency', () => {
         expect(readProjectFile('src/lib/product-positioning.ts')).toContain(paidProductName);
 
         const jsonLd = readProjectFile('src/components/seo/json-ld.tsx');
-        expect(jsonLd).toMatch(/name:\s*'Detailed 3-Layer Decision Report',\s*price:\s*'3\.99'/);
+        expect(jsonLd).toMatch(/name:\s*'7-Day Decision Packet',\s*price:\s*'3\.99'/);
         expect(jsonLd).not.toMatch(/name:\s*'Detailed\s+Decision\s+Note'[\s\S]{0,140}9\.99/);
     });
 
@@ -74,7 +74,7 @@ test.describe('Decision Note payment price consistency', () => {
         await page.goto('/terms');
 
         await expect(page.getByText(paidProductName).first()).toBeVisible();
-        await expect(page.getByText(/상세 3단 판정 리포트/i).first()).toBeVisible();
+        await expect(page.getByText(/7일 결정 패킷/i).first()).toBeVisible();
         await expect(page.getByText(/\$3\.99 USD/i).first()).toBeVisible();
         await expect(page.getByText(/refund request may be limited once the note is generated or opened/i)).toBeVisible();
         await expect(page.locator('body')).not.toContainText('$9.99');
@@ -97,7 +97,7 @@ test.describe('Decision Note payment price consistency', () => {
         await page.goto('/payment/success?session_id=cs_test_price&reading_id=qa-next-move-reading');
 
         await expect(page.getByText(/Payment complete/i)).toBeVisible();
-        await expect(page.getByText(/Your one-time \$3\.99 Detailed 3-Layer Decision Report is opening now/i)).toBeVisible();
+        await expect(page.getByText(/Your one-time \$3\.99 7-Day Decision Packet is opening now/i)).toBeVisible();
         await expect(page).toHaveURL(/\/start\?.*paid=true/, { timeout: 5000 });
 
         const termsSource = readProjectFile('src/app/terms/page.tsx');
@@ -105,7 +105,7 @@ test.describe('Decision Note payment price consistency', () => {
         expect(termsSource).not.toMatch(staleLegacyPaidProductPrice);
 
         const paymentSuccessSource = readProjectFile('src/app/payment/success/page.tsx');
-        expect(paymentSuccessSource).toContain('Your one-time $3.99 Detailed 3-Layer Decision Report is opening now.');
+        expect(paymentSuccessSource).toContain('Your one-time $3.99 7-Day Decision Packet is opening now.');
         expect(paymentSuccessSource).not.toMatch(staleLegacyPaidProductPrice);
 
         const billingSuccessSource = readProjectFile('src/app/billing/success/page.tsx');

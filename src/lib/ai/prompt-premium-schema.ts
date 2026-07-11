@@ -17,6 +17,7 @@ export function buildPremiumStructuredJsonSchema(
     "avoid": "The move or risk to avoid first",
     "confidence_note": "One sentence about source agreement or uncertainty",
     "copy_ready_message": "Optional line or message only when useful",
+    "gaeun_action": "Optional bounded next-move ritual/action, 1-180 chars, based on first_action + avoid, with no clinical/therapy/guarantee claims",
     "action_conclusion": "Decision label plus one concrete next move",
     "evidence_summary": "1-2 lines grounded in Saju/Astro/Tarot evidence",
     "next_question": "One precise follow-up question"
@@ -57,7 +58,14 @@ export function buildPremiumStructuredJsonSchema(
       "verdict_modifier": "Confidence and action-size adjustment from the convergence level"
     },
     "action_priorities": ["...", "...", "..."],
-    "closing_words": "..."
+    "closing_words": "...",
+    "decision_packet": {
+      "decision_fork": {"option_a": "...", "option_b": "...", "recommended_test": "..."},
+      "evidence_disagreement": {"aligned": "...", "conflicting": "..."},
+      "reality_checks": ["...", "..."],
+      "seven_day_experiment": {"action": "...", "measure": "...", "stop_rule": "..."},
+      "if_then_rules": [{"if": "...", "then": "..."}, {"if": "...", "then": "..."}]
+    }
   }
 }
 \`\`\`
@@ -74,6 +82,7 @@ export function buildPremiumStructuredJsonSchema(
     "avoid": "먼저 피해야 할 행동이나 리스크",
     "confidence_note": "근거 일치도 또는 불확실성 한 문장",
     "copy_ready_message": "필요할 때만 쓰는 선택적 문장 또는 메시지",
+    "gaeun_action": "선택적 가은 액션/의식, 1-180자, first_action과 avoid 기반, 임상/치료/보장 표현 금지",
     "action_conclusion": "판정 라벨과 지금 붙잡을 행동 결론 1개",
     "evidence_summary": "사주/점성/타로 근거 기반 1-2줄 요약",
     "next_question": "바로 이어서 물어볼 다음 질문 1개"
@@ -114,7 +123,14 @@ export function buildPremiumStructuredJsonSchema(
       "verdict_modifier": "수렴 수준에 따른 확신도와 행동 크기 조정"
     },
     "action_priorities": ["...", "...", "..."],
-    "closing_words": "..."
+    "closing_words": "...",
+    "decision_packet": {
+      "decision_fork": {"option_a": "...", "option_b": "...", "recommended_test": "..."},
+      "evidence_disagreement": {"aligned": "...", "conflicting": "..."},
+      "reality_checks": ["...", "..."],
+      "seven_day_experiment": {"action": "...", "measure": "...", "stop_rule": "..."},
+      "if_then_rules": [{"if": "...", "then": "..."}, {"if": "...", "then": "..."}]
+    }
   }
 }
 \`\`\`

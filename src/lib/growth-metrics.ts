@@ -31,6 +31,10 @@ interface CampaignFunnelEventCounts {
     questionSubmits: number;
     analysisStarts: number;
     firstResultViews: number;
+    ritualActionViews: number;
+    ritualActionClicks: number;
+    safeShareOpens: number;
+    safeShareDownloads: number;
     paywallViews: number;
     checkoutStarts: number;
     paidConversions: number;
@@ -209,6 +213,10 @@ function createEmptyFunnelCounts(): CampaignFunnelEventCounts {
         questionSubmits: 0,
         analysisStarts: 0,
         firstResultViews: 0,
+        ritualActionViews: 0,
+        ritualActionClicks: 0,
+        safeShareOpens: 0,
+        safeShareDownloads: 0,
         paywallViews: 0,
         checkoutStarts: 0,
         paidConversions: 0,
@@ -274,6 +282,10 @@ function getCampaignStageKeys(event: CampaignSessionEvent): Array<keyof Campaign
     }
     if (event.event === 'analysis_start') stageKeys.push('analysisStarts');
     if (event.canonicalEvent === 'first_result_view') stageKeys.push('firstResultViews');
+    if (event.event === 'ritual_action_viewed') stageKeys.push('ritualActionViews');
+    if (event.event === 'ritual_action_clicked') stageKeys.push('ritualActionClicks');
+    if (event.event === 'safe_share_card_opened') stageKeys.push('safeShareOpens');
+    if (event.event === 'safe_share_card_downloaded') stageKeys.push('safeShareDownloads');
     if (event.canonicalEvent === 'paywall_view') stageKeys.push('paywallViews');
     if (event.canonicalEvent === 'checkout_start') stageKeys.push('checkoutStarts');
     if (event.canonicalEvent === 'paid_conversion') stageKeys.push('paidConversions');

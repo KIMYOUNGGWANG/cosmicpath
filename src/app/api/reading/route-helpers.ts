@@ -11,7 +11,6 @@ import {
 } from '@/lib/ai/oracle-personas';
 import {
   buildDecisionActionContract,
-  DECISION_ACTION_VERDICTS,
   isDecisionActionVerdict,
   isDecisionQuestionJob,
   type DecisionActionContract,
@@ -21,6 +20,19 @@ import {
   type OracleSajuProfile,
 } from '@/lib/saju/saju-engine';
 import { normalizeConvergenceDiagnosis } from '@/lib/ai/three-layer-synthesis';
+import {
+  buildFreeFocusFallback,
+  FreeFocusCoreSchema,
+  FreeFocusSchema,
+  isRecord,
+  normalizeFreeFocus,
+  sanitizeText,
+  takeLeadSentences,
+} from './free-focus-contract';
+import {
+  buildRelationshipSafetyFreeFocus,
+  shouldApplyRelationshipSafetyHold,
+} from './free-focus-safety';
 
 export const ReadingRequestSchema = z.object({
   name: z.string().optional().default(''),
@@ -79,19 +91,6 @@ export interface StoredReadingRuntime {
   partnerSaju?: StoredLegacySajuResult | null;
 }
 
-interface FreeFocusPayload {
-  decision_label: typeof DECISION_ACTION_VERDICTS[number];
-  delayed_choice: string;
-  timing_boundary: string;
-  first_action: string;
-  avoid: string;
-  confidence_note: string;
-  copy_ready_message?: string;
-  action_conclusion: string;
-  evidence_summary: string;
-  next_question: string;
-}
-
 const FreeReadingTraitSchema = z.object({
   type: z.enum(['saju', 'astro', 'tarot']),
   name: z.string().min(1).max(32),
@@ -100,18 +99,7 @@ const FreeReadingTraitSchema = z.object({
 });
 
 const FreeReadingReportSchema = z.object({
-  free_focus: z.object({
-    decision_label: z.enum(DECISION_ACTION_VERDICTS),
-    delayed_choice: z.string().min(1).max(160),
-    timing_boundary: z.string().min(1).max(180),
-    first_action: z.string().min(1).max(180),
-    avoid: z.string().min(1).max(180),
-    confidence_note: z.string().min(1).max(180),
-    copy_ready_message: z.string().min(1).max(180).optional(),
-    action_conclusion: z.string().min(1).max(280),
-    evidence_summary: z.string().min(1).max(360),
-    next_question: z.string().min(1).max(96),
-  }),
+  free_focus: FreeFocusSchema,
   summary: z.object({
     title: z.string().min(1).max(40),
     content: z.string().min(1).max(720),
@@ -122,18 +110,7 @@ const FreeReadingReportSchema = z.object({
 });
 
 export const FreeReadingCoreSchema = z.object({
-  free_focus: z.object({
-    decision_label: z.enum(DECISION_ACTION_VERDICTS).optional(),
-    delayed_choice: z.string().min(1).max(160).optional(),
-    timing_boundary: z.string().min(1).max(180).optional(),
-    first_action: z.string().min(1).max(180).optional(),
-    avoid: z.string().min(1).max(180).optional(),
-    confidence_note: z.string().min(1).max(180).optional(),
-    copy_ready_message: z.string().min(1).max(180).optional(),
-    action_conclusion: z.string().min(1).max(280),
-    evidence_summary: z.string().min(1).max(360),
-    next_question: z.string().min(1).max(96),
-  }),
+  free_focus: FreeFocusCoreSchema,
   summary: z.object({
     title: z.string().min(1).max(40),
   }),
@@ -178,77 +155,6 @@ const FREE_READING_TITLES: Record<OracleQuestionIntent, Record<ReadingLanguage, 
   },
 };
 
-const RELATIONSHIP_SAFETY_INTENTS = new Set<OracleQuestionIntent>(['compatibility', 'reunion', 'timing']);
-const HIGH_RISK_RELATIONSHIP_TERMS = [
-  '스토킹',
-  '감시',
-  '몰래',
-  '집 앞',
-  '회사 앞',
-  '찾아가',
-  '찾아갈',
-  '따라가',
-  '계속 확인',
-  '계속 전화',
-  '계속 연락',
-  '거절했는데',
-  '차단했는데',
-  '협박',
-  '압박',
-  'stalk',
-  'stalking',
-  'surveillance',
-  'follow them',
-  'show up',
-  'blocked me',
-  'threat',
-  'pressure',
-] as const;
-
-function isHighRiskRelationshipQuestion(question: string | undefined): boolean {
-  const normalized = question?.trim().toLowerCase();
-  if (!normalized) return false;
-
-  return HIGH_RISK_RELATIONSHIP_TERMS.some((term) => normalized.includes(term.toLowerCase()));
-}
-
-function shouldApplyRelationshipSafetyHold(params: {
-  questionIntent: OracleQuestionIntent;
-  question?: string;
-}) {
-  return RELATIONSHIP_SAFETY_INTENTS.has(params.questionIntent) && isHighRiskRelationshipQuestion(params.question);
-}
-
-function buildRelationshipSafetyFreeFocus(language: ReadingLanguage): FreeFocusPayload {
-  const safetyContractKeywords = ['보류', 'Hold', '스토킹', 'pressure'] as const;
-
-  if (language === 'en') {
-    return {
-      decision_label: 'hold_or_stop',
-      delayed_choice: 'Whether to keep contacting this person',
-      timing_boundary: 'Hold now and review only after the pressure or surveillance pattern has stopped.',
-      first_action: 'Step back from repeated checking and choose one safer boundary today.',
-      avoid: 'Do not send another message, show up, monitor, threaten, or pressure them.',
-      confidence_note: 'Safety overrides timing when the question includes pressure or surveillance behavior.',
-      action_conclusion: `${safetyContractKeywords[1]}: do not send another message right now. Step back from repeated checking, surveillance, or pressure and choose a safer boundary instead.`,
-      evidence_summary: `The relationship signal is high-risk because the question includes ${safetyContractKeywords[3]} or surveillance behavior; the safest verdict is to pause, not optimize timing.`,
-      next_question: 'What boundary can I keep without checking or pressuring them again?',
-    };
-  }
-
-  return {
-    decision_label: 'hold_or_stop',
-    delayed_choice: '이 사람에게 계속 연락할지 말지',
-    timing_boundary: '지금은 보류하고, 압박이나 감시 행동이 멈춘 뒤에만 다시 검토하세요.',
-    first_action: '반복 확인을 멈추고 오늘 지킬 수 있는 안전한 경계 하나를 정하세요.',
-    avoid: '추가 연락, 찾아가기, 감시, 협박, 답장 압박을 하지 마세요.',
-    confidence_note: '압박이나 감시 신호가 있으면 연락 타이밍보다 안전 경계를 우선합니다.',
-    action_conclusion: `${safetyContractKeywords[0]}: 지금은 추가 연락을 보내지 마세요. 반복 확인, 감시, 압박 대신 안전한 거리와 경계를 먼저 잡아야 합니다.`,
-    evidence_summary: `질문에 ${safetyContractKeywords[2]}, 감시, 압박 신호가 있어 연락 타이밍보다 안전 경계를 우선합니다.`,
-    next_question: '상대를 다시 확인하거나 압박하지 않고 지킬 수 있는 경계는 무엇인가요?',
-  };
-}
-
 const CONFIDENCE_TEXT_EN = {
   very_high: {
     message: 'Saju, natal timing, and tarot are converging in the same direction.',
@@ -271,10 +177,6 @@ const CONFIDENCE_TEXT_EN = {
     recommendation: 'Wait, observe, and gather one more concrete signal first.',
   },
 } as const;
-
-export function sanitizeText(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : '';
-}
 
 function extractEvidenceLine(summary: string, labels: string[]): string {
   const lines = summary.split('\n').map((line) => line.trim()).filter(Boolean);
@@ -304,10 +206,6 @@ export function parseJsonRecord(value: string | null | undefined): Record<string
   }
 
   return {};
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function isTarotCard(value: unknown): value is TarotCard {
@@ -419,34 +317,6 @@ export function extractStoredReadingRuntime(metadata: Record<string, unknown>): 
   };
 }
 
-function takeLeadSentences(text: string, maxLength = 160): string {
-  const normalized = text.replace(/\s+/g, ' ').trim();
-  if (!normalized) return '';
-
-  const sentences = normalized
-    .split(/(?<=[.!?。])\s+/)
-    .map((sentence) => sentence.trim())
-    .filter(Boolean);
-
-  if (sentences.length === 0) {
-    return normalized.slice(0, maxLength).trim();
-  }
-
-  let collected = '';
-  for (const sentence of sentences) {
-    const candidate = collected ? `${collected} ${sentence}` : sentence;
-    if (candidate.length > maxLength && collected) {
-      break;
-    }
-    collected = candidate.slice(0, maxLength).trim();
-    if (candidate.length >= maxLength) {
-      break;
-    }
-  }
-
-  return collected || normalized.slice(0, maxLength).trim();
-}
-
 export function normalizeFreeSummaryContent(value: string): string {
   return takeLeadSentences(
     value
@@ -469,268 +339,9 @@ export function buildFreeSummaryPhaseTwoUserPrompt(params: {
   const previousSummary = isRecord(previousFreeReport.summary) ? previousFreeReport.summary : {};
 
   return params.language === 'en'
-    ? `${params.baseUserPrompt}\n\n# Phase 1 Outline\n- Action conclusion: ${sanitizeText(previousFreeFocus.action_conclusion)}\n- Evidence summary: ${sanitizeText(previousFreeFocus.evidence_summary)}\n- Next question: ${sanitizeText(previousFreeFocus.next_question)}\n- Headline: ${sanitizeText(previousSummary.title)}\n\n# Phase 2 Task\nWrite only the final summary.content as plain text.\n- 3-4 short sentences\n- max 720 characters\n- no JSON, markdown, bullets, or code fences\n- turn the outline into one readable, decision-useful paragraph\n- 5-7 sentences: intro + saju evidence + astro evidence + 1-2 actions + closing`
-    : `${params.baseUserPrompt}\n\n# 1단계 아웃라인\n- 행동 결론: ${sanitizeText(previousFreeFocus.action_conclusion)}\n- 근거 요약: ${sanitizeText(previousFreeFocus.evidence_summary)}\n- 다음 질문: ${sanitizeText(previousFreeFocus.next_question)}\n- 헤드라인: ${sanitizeText(previousSummary.title)}\n\n# 2단계 작업\n최종 summary.content 본문만 plain text로 작성하세요.\n- 5~7문장 (도입 1 + 사주 근거 1~2 + 점성 근거 1 + 행동 1~2 + 마무리 1)\n- 720자 이내\n- JSON, 마크다운, 불릿, 코드펜스 금지\n- 1단계 아웃라인을 실제 판단에 도움이 되는 한 문단으로 풀어쓰기`;
+    ? `${params.baseUserPrompt}\n\n# Phase 1 Outline\n- Action conclusion: ${sanitizeText(previousFreeFocus.action_conclusion)}\n- Evidence summary: ${sanitizeText(previousFreeFocus.evidence_summary)}\n- Gaeun action: ${sanitizeText(previousFreeFocus.gaeun_action)}\n- Next question: ${sanitizeText(previousFreeFocus.next_question)}\n- Headline: ${sanitizeText(previousSummary.title)}\n\n# Phase 2 Task\nWrite only the final summary.content as plain text.\n- 3-4 short sentences\n- max 720 characters\n- no JSON, markdown, bullets, or code fences\n- turn the outline into one readable, decision-useful paragraph\n- 5-7 sentences: intro + saju evidence + astro evidence + 1-2 actions + closing`
+    : `${params.baseUserPrompt}\n\n# 1단계 아웃라인\n- 행동 결론: ${sanitizeText(previousFreeFocus.action_conclusion)}\n- 근거 요약: ${sanitizeText(previousFreeFocus.evidence_summary)}\n- 가은 액션: ${sanitizeText(previousFreeFocus.gaeun_action)}\n- 다음 질문: ${sanitizeText(previousFreeFocus.next_question)}\n- 헤드라인: ${sanitizeText(previousSummary.title)}\n\n# 2단계 작업\n최종 summary.content 본문만 plain text로 작성하세요.\n- 5~7문장 (도입 1 + 사주 근거 1~2 + 점성 근거 1 + 행동 1~2 + 마무리 1)\n- 720자 이내\n- JSON, 마크다운, 불릿, 코드펜스 금지\n- 1단계 아웃라인을 실제 판단에 도움이 되는 한 문단으로 풀어쓰기`;
 }
-
-function buildFallbackActionConclusion(
-  questionIntent: OracleQuestionIntent,
-  language: ReadingLanguage
-): string {
-  const fallbackMap: Record<OracleQuestionIntent, Record<ReadingLanguage, string>> = {
-    general: {
-      ko: '선택지 축소: 지금은 감정 반응보다 패턴을 먼저 읽고, 이번 주 안에 기준 3개로 다음 한 수를 정리하세요.',
-      en: 'Narrow the option: read the pattern before reacting emotionally, then define three decision criteria this week.',
-    },
-    compatibility: {
-      ko: '지금 움직여도 됨: 상대를 바꾸려 하기보다 이번 주 안에 소통 방식부터 작게 조정하세요.',
-      en: 'Move now: instead of trying to change the other person, adjust one communication pattern this week.',
-    },
-    reunion: {
-      ko: '기다릴 것: 재회를 서두르기보다 이번 달에는 흐름을 안정시키고 반응 신호를 확인하세요.',
-      en: 'Wait: instead of rushing reunion, stabilize the flow and confirm response signals this month.',
-    },
-    wealth: {
-      ko: '아직 진행 금지: 확장보다 이번 달 현금 흐름과 손실 리스크를 먼저 정리하세요.',
-      en: 'Do not proceed yet: prioritize cash flow and downside control this month before expansion.',
-    },
-    timing: {
-      ko: '선택지 축소: 지금은 밀어붙이기보다 이번 주에 움직일 일과 기다릴 일을 분리하세요.',
-      en: 'Narrow the option: separate what to move on and what to wait on this week before pushing ahead.',
-    },
-    career: {
-      ko: '기다릴 것: 결정을 서두르기보다 이번 달 커리어 신호를 확인하고 준비를 정리하세요.',
-      en: 'Wait: before making the career decision, confirm the signals and tighten your preparation this month.',
-    },
-    business: {
-      ko: '아직 진행 금지: 확장보다 이번 주 병목과 수익 구조부터 먼저 검증하세요.',
-      en: 'Do not proceed yet: validate the bottleneck and revenue structure this week before expanding.',
-    },
-  };
-
-  return fallbackMap[questionIntent][language];
-}
-
-function buildFallbackNextQuestion(
-  questionIntent: OracleQuestionIntent,
-  language: ReadingLanguage
-): string {
-  const questionMap: Record<OracleQuestionIntent, Record<ReadingLanguage, string>> = {
-    general: {
-      ko: '지금 흐름에서 먼저 멈춰야 할 것과 밀어야 할 것을 더 구체적으로 알려줘.',
-      en: 'Tell me more specifically what I should stop forcing and what I should push forward now.',
-    },
-    compatibility: {
-      ko: '이 관계에서 내가 먼저 조정해야 할 소통 패턴은 뭐야?',
-      en: 'What communication pattern should I adjust first in this relationship?',
-    },
-    reunion: {
-      ko: '재회를 원한다면 지금 내 쪽에서 먼저 바꿔야 할 행동은 뭐야?',
-      en: 'If I want reunion, what should I change on my side first?',
-    },
-    wealth: {
-      ko: '이번 달엔 확장과 방어 중 어디에 더 무게를 둬야 해?',
-      en: 'This month, should I lean more toward expansion or protection?',
-    },
-    timing: {
-      ko: '지금 움직여야 할 시기와 더 기다려야 할 시기를 나눠서 말해줘.',
-      en: 'Break down when I should move now and when I should wait longer.',
-    },
-    career: {
-      ko: '이직을 밀어붙이기 전에 확인해야 할 신호 한 가지는 뭐야?',
-      en: 'What is the one signal I should confirm before pushing this career move?',
-    },
-    business: {
-      ko: '이 사업에서 가장 먼저 검증해야 할 병목은 뭐야?',
-      en: 'What bottleneck should I validate first in this business?',
-    },
-  };
-
-  return questionMap[questionIntent][language];
-}
-
-function buildFallbackDelayedChoice(params: {
-  question?: string;
-  questionIntent: OracleQuestionIntent;
-  language: ReadingLanguage;
-}): string {
-  const question = takeLeadSentences(params.question ?? '', 140);
-  if (question) return question;
-
-  const fallbackMap: Record<OracleQuestionIntent, Record<ReadingLanguage, string>> = {
-    general: { ko: '지금 미루고 있는 선택 하나', en: 'The delayed choice in front of you' },
-    compatibility: { ko: '관계에서 먼저 조정할 행동', en: 'The relationship move to adjust first' },
-    reunion: { ko: '재회를 서두를지 기다릴지', en: 'Whether to rush reunion or wait' },
-    wealth: { ko: '돈 문제에서 확장할지 방어할지', en: 'Whether to expand or protect financially' },
-    timing: { ko: '지금 움직일지 더 기다릴지', en: 'Whether to move now or wait longer' },
-    career: { ko: '커리어에서 옮길지 더 다질지', en: 'Whether to move or build deeper in career' },
-    business: { ko: '사업을 확장할지 먼저 검증할지', en: 'Whether to expand or validate the business first' },
-  };
-
-  return fallbackMap[params.questionIntent][params.language];
-}
-
-function buildFallbackTimingBoundary(
-  decisionAction: DecisionActionContract,
-  language: ReadingLanguage
-): string {
-  const map: Record<typeof DECISION_ACTION_VERDICTS[number], Record<ReadingLanguage, string>> = {
-    move_now: {
-      ko: '이번 주 안에 첫 행동을 시작하고, 결과는 다음 2주 안에 다시 확인하세요.',
-      en: 'Start the first action this week, then review the result within the next two weeks.',
-    },
-    wait_with_deadline: {
-      ko: '기다리되 무기한으로 두지 말고, 48시간에서 2주 사이에 재검토 기준을 정하세요.',
-      en: 'Wait, but set a review boundary between 48 hours and two weeks instead of leaving it open-ended.',
-    },
-    narrow_first: {
-      ko: '이번 주 안에 조건을 좁히고, 다음 2주 안에 움직일지 보류할지 정하세요.',
-      en: 'Narrow the criteria this week, then decide within two weeks whether to move or hold.',
-    },
-    hold_or_stop: {
-      ko: '지금은 멈추고, 안전 조건이나 추가 근거가 생긴 뒤에만 다시 검토하세요.',
-      en: 'Stop now, and review only after safety conditions or stronger evidence appear.',
-    },
-  };
-
-  return map[decisionAction.defaultVerdict][language];
-}
-
-function buildFallbackFirstAction(
-  decisionAction: DecisionActionContract,
-  language: ReadingLanguage
-): string {
-  const map: Record<typeof DECISION_ACTION_VERDICTS[number], Record<ReadingLanguage, string>> = {
-    move_now: {
-      ko: '오늘 바로 작게 실행할 수 있는 첫 단계 하나를 완료하세요.',
-      en: 'Complete one small first step you can take today.',
-    },
-    wait_with_deadline: {
-      ko: '기다리는 동안 확인할 신호 하나와 재검토 날짜를 적어두세요.',
-      en: 'Write down one signal to watch and the date you will review it.',
-    },
-    narrow_first: {
-      ko: '선택 기준 3개를 적고, 맞지 않는 선택지를 먼저 제거하세요.',
-      en: 'Write three criteria and remove the option that does not fit them.',
-    },
-    hold_or_stop: {
-      ko: '오늘은 행동을 멈추고 안전한 경계나 전문가 확인을 먼저 잡으세요.',
-      en: 'Pause the action today and set a safer boundary or professional check first.',
-    },
-  };
-
-  return map[decisionAction.defaultVerdict][language];
-}
-
-function buildFallbackAvoid(
-  decisionAction: DecisionActionContract,
-  language: ReadingLanguage
-): string {
-  const map: Record<typeof DECISION_ACTION_VERDICTS[number], Record<ReadingLanguage, string>> = {
-    move_now: {
-      ko: '준비가 끝났다는 느낌을 기다리느라 첫 행동을 미루지 마세요.',
-      en: 'Do not delay the first step while waiting to feel fully ready.',
-    },
-    wait_with_deadline: {
-      ko: '무기한 기다리거나 불안해서 중간에 여러 번 확인하지 마세요.',
-      en: 'Do not wait indefinitely or check repeatedly from anxiety.',
-    },
-    narrow_first: {
-      ko: '모든 선택지를 동시에 붙잡고 결정을 더 흐리지 마세요.',
-      en: 'Do not hold every option at once and blur the decision further.',
-    },
-    hold_or_stop: {
-      ko: '근거보다 강하게 밀어붙이거나 고위험 결정을 혼자 확정하지 마세요.',
-      en: 'Do not push beyond the evidence or make a high-risk decision alone.',
-    },
-  };
-
-  return map[decisionAction.defaultVerdict][language];
-}
-
-function buildFreeFocusFallback(
-  report: Record<string, unknown>,
-  params: {
-    questionIntent: OracleQuestionIntent;
-    decisionAction: DecisionActionContract;
-    language: ReadingLanguage;
-    advisorEvidenceSummary: string;
-    question?: string;
-  }
-): FreeFocusPayload {
-  const summary = report.summary && typeof report.summary === 'object'
-    ? report.summary as Record<string, unknown>
-    : {};
-  const finalVerdict = report.final_verdict && typeof report.final_verdict === 'object'
-    ? report.final_verdict as Record<string, unknown>
-    : {};
-
-  const actionSource =
-    sanitizeText((report.free_focus as Record<string, unknown> | undefined)?.action_conclusion) ||
-    takeLeadSentences(sanitizeText(finalVerdict.core_message), 120) ||
-    buildFallbackActionConclusion(params.questionIntent, params.language);
-
-  const evidenceSource = takeLeadSentences(
-    sanitizeText((report.free_focus as Record<string, unknown> | undefined)?.evidence_summary) ||
-    params.advisorEvidenceSummary ||
-    sanitizeText(summary.trust_reason) ||
-    sanitizeText(summary.content),
-    170
-  );
-
-  return {
-    decision_label: params.decisionAction.defaultVerdict,
-    delayed_choice: buildFallbackDelayedChoice({
-      question: params.question,
-      questionIntent: params.questionIntent,
-      language: params.language,
-    }),
-    timing_boundary: buildFallbackTimingBoundary(params.decisionAction, params.language),
-    first_action: buildFallbackFirstAction(params.decisionAction, params.language),
-    avoid: buildFallbackAvoid(params.decisionAction, params.language),
-    confidence_note: evidenceSource || buildFallbackActionConclusion(params.questionIntent, params.language),
-    action_conclusion: actionSource,
-    evidence_summary: evidenceSource || buildFallbackActionConclusion(params.questionIntent, params.language),
-    next_question:
-      sanitizeText((report.free_focus as Record<string, unknown> | undefined)?.next_question) ||
-      buildFallbackNextQuestion(params.questionIntent, params.language),
-  };
-}
-
-function normalizeFreeFocus(
-  report: Record<string, unknown>,
-  params: {
-    questionIntent: OracleQuestionIntent;
-    decisionAction: DecisionActionContract;
-    language: ReadingLanguage;
-    advisorEvidenceSummary: string;
-    question?: string;
-  }
-): FreeFocusPayload {
-  const fallback = buildFreeFocusFallback(report, params);
-  const existingFreeFocus =
-    report.free_focus && typeof report.free_focus === 'object' && !Array.isArray(report.free_focus)
-      ? report.free_focus as Record<string, unknown>
-      : {};
-
-  return {
-    decision_label: isDecisionActionVerdict(existingFreeFocus.decision_label)
-      ? existingFreeFocus.decision_label
-      : fallback.decision_label,
-    delayed_choice: sanitizeText(existingFreeFocus.delayed_choice) || fallback.delayed_choice,
-    timing_boundary: sanitizeText(existingFreeFocus.timing_boundary) || fallback.timing_boundary,
-    first_action: sanitizeText(existingFreeFocus.first_action) || fallback.first_action,
-    avoid: sanitizeText(existingFreeFocus.avoid) || fallback.avoid,
-    confidence_note: sanitizeText(existingFreeFocus.confidence_note) || fallback.confidence_note,
-    ...(sanitizeText(existingFreeFocus.copy_ready_message)
-      ? { copy_ready_message: sanitizeText(existingFreeFocus.copy_ready_message) }
-      : {}),
-    action_conclusion: sanitizeText(existingFreeFocus.action_conclusion) || fallback.action_conclusion,
-    evidence_summary: sanitizeText(existingFreeFocus.evidence_summary) || fallback.evidence_summary,
-    next_question: sanitizeText(existingFreeFocus.next_question) || fallback.next_question,
-  };
-}
-
 export function buildOracleReportEnrichment(
   report: unknown,
   params: {
@@ -1026,6 +637,9 @@ export function finalizeFreeReport(params: {
       copy_ready_message:
         sanitizeText(currentFreeFocus.copy_ready_message) ||
         sanitizeText(previousFreeFocus.copy_ready_message),
+      gaeun_action:
+        sanitizeText(currentFreeFocus.gaeun_action) ||
+        sanitizeText(previousFreeFocus.gaeun_action),
       action_conclusion:
         sanitizeText(currentFreeFocus.action_conclusion) ||
         sanitizeText(previousFreeFocus.action_conclusion),

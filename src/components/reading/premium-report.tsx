@@ -60,6 +60,7 @@ export interface PremiumReportData {
         avoid?: string;
         confidence_note?: string;
         copy_ready_message?: string;
+        gaeun_action?: string;
         action_conclusion: string;
         evidence_summary: string;
         next_question: string;
@@ -202,6 +203,13 @@ export interface PremiumReportData {
         action_priorities: string[];
         closing_words: string;
         convergence_diagnosis: ThreeLayerConvergenceDiagnosis;
+        decision_packet?: {
+            decision_fork: { option_a: string; option_b: string; recommended_test: string };
+            evidence_disagreement: { aligned: string; conflicting: string };
+            reality_checks: string[];
+            seven_day_experiment: { action: string; measure: string; stop_rule: string };
+            if_then_rules: { if: string; then: string }[];
+        };
     };
     date_selection?: {
         auspicious?: {
@@ -476,8 +484,6 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
 
                     <ShareCard
                         shareUrl={shareUrl || (typeof window !== 'undefined' ? window.location.href : '')}
-                        trustScore={report.summary?.trust_score}
-                        mainCardName={metadata?.tarot?.[0]?.name}
                     />
 
                     {/* Guest: Save to Account */}

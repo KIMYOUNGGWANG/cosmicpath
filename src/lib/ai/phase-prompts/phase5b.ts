@@ -10,7 +10,7 @@ export function buildPhase5BPrompt(userData: UserData, previousData?: PremiumRep
 
   if (lang === 'en') {
     system = `## Persona
-You are the 3-Layer Decision Report analyst delivering the final synthesis and symbolic pattern insights.
+You are the 7-Day Decision Packet analyst delivering the final synthesis and symbolic pattern insights.
 
 <THREE_LAYER_SYNTHESIS_PRINCIPLE>
 1. **Three active source roles**: Keep Saju, Astrology, and Tarot active without numeric source priority.
@@ -53,7 +53,7 @@ You are the 3-Layer Decision Report analyst delivering the final synthesis and s
     }
   ],
   "final_verdict": {
-    "title": "📌 The 3-Layer Decision Report Verdict",
+    "title": "📌 7-Day Decision Packet Verdict",
     "core_message": "Core message synthesizing Saju structure, Astrology timing, and Tarot immediate signal (3-4 sentences).",
     "saju_foundation": "Saju basis (Day Master, Yong-sin, Major Luck flow)",
     "astro_support": "Astrology perspective (Sun/Moon/Rising)",
@@ -66,7 +66,14 @@ You are the 3-Layer Decision Report analyst delivering the final synthesis and s
       "verdict_modifier": "Confidence and action-size adjustment from the convergence level"
     },
     "action_priorities": ["Action now", "This month", "This year"],
-    "closing_words": "Strong, leading closing message."
+    "closing_words": "Strong, leading closing message.",
+    "decision_packet": {
+      "decision_fork": {"option_a": "First real option", "option_b": "Second real option", "recommended_test": "Smallest reversible test that distinguishes them"},
+      "evidence_disagreement": {"aligned": "What the sources agree on", "conflicting": "Where evidence conflicts or remains unknown"},
+      "reality_checks": ["Observable check one", "Observable check two"],
+      "seven_day_experiment": {"action": "One bounded action for seven days", "measure": "Observable success measure", "stop_rule": "Condition that stops or changes the test"},
+      "if_then_rules": [{"if": "Observable condition", "then": "Next bounded move"}, {"if": "Opposite condition", "then": "Alternative move"}]
+    }
   }
 }
 
@@ -133,6 +140,13 @@ You are the 3-Layer Decision Report analyst delivering the final synthesis and s
     "action_priorities": ["기준일 이후 첫 행동 (근거 있는 시기 범위 또는 재검토 경계)", "기준일 이후 이번 달/다음 달 점검 행동", "올해 결정할 것과 보류할 것"],
     "closing_words": "격려와 방향 제시. 선명하지만 근거 경계가 있는 어조. 기준일 이후의 시기 범위, 확신 수준, 재검토 경계, 첫 행동을 함께 제시.",
     "behavioral_verdict": "이 사람이 인생에서 가장 먼저 점검해야 하는 행동 패턴을 한 문단으로 정리. 형식: '[패턴 진단] + [이것이 돈/관계/건강에 미치는 구체적 영향] + [대안 행동 1가지]'. 고위험 사안의 대안 행동은 전문가 질문 목록 작성, 문서 비교, 비용/리스크 산정, 재검토 기준 설정으로만 쓰십시오. 결과 확정형 행동어를 직접 지시하지 마십시오. (근거: 사주 원국의 실제 글자 관계 인용 필수)"
+    ,"decision_packet": {
+      "decision_fork": {"option_a": "실제 선택지 A", "option_b": "실제 선택지 B", "recommended_test": "두 선택지를 구분할 가장 작고 되돌릴 수 있는 시험"},
+      "evidence_disagreement": {"aligned": "세 원천이 동의하는 근거", "conflicting": "근거가 충돌하거나 아직 모르는 지점"},
+      "reality_checks": ["관찰 가능한 현실 확인 1", "관찰 가능한 현실 확인 2"],
+      "seven_day_experiment": {"action": "7일 동안 할 한 가지 제한된 행동", "measure": "관찰 가능한 성공 기준", "stop_rule": "실험을 멈추거나 바꿀 조건"},
+      "if_then_rules": [{"if": "관찰 조건", "then": "다음의 제한된 행동"}, {"if": "반대 조건", "then": "대안 행동"}]
+    }
   }
 }
 

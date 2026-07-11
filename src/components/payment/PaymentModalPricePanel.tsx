@@ -27,7 +27,7 @@ export function PaymentModalPricePanel({
         <>
             <div className="mt-6 rounded-[24px] border border-white/10 bg-white/[0.03] px-5 py-4 shadow-[0_14px_36px_rgba(0,0,0,0.22)]">
                 <p className="text-[10px] uppercase tracking-[0.26em] text-white/42">
-                    {isEnglish ? 'One-time Decision Note price' : 'one-time Decision Note 가격'}
+                    {isEnglish ? '7-Day Decision Packet price' : '7일 결정 패킷 가격'}
                 </p>
                 {showPriceConfirmationBlocked ? (
                     <div className="mt-2 space-y-1">
@@ -65,8 +65,8 @@ export function PaymentModalPricePanel({
                             ? 'We will show the exact one-time price after Stripe confirms the product.'
                             : 'Stripe 상품 확인 후 정확한 one-time 금액을 다시 표시합니다.')
                         : (isEnglish
-                            ? 'One-time $3.99 unlock for this Detailed 3-Layer Decision Report.'
-                            : '이 상세 3단 판정 리포트를 여는 one-time $3.99 결제입니다.')}
+                            ? 'One-time $3.99 unlock for this 7-Day Decision Packet.'
+                            : '이 7일 결정 패킷을 여는 one-time $3.99 결제입니다.')}
                 </p>
                 {showPriceLoadingState ? (
                     <div className="flex items-center justify-center gap-2 text-xs text-white/45">

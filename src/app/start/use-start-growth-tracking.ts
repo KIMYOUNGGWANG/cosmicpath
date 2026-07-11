@@ -43,6 +43,7 @@ export function useStartGrowthTracking(options: UseStartGrowthTrackingOptions) {
   } = options;
   const hasTrackedLandingView = useRef(false);
   const hasTrackedFreeResult = useRef(false);
+  const hasTrackedRitualAction = useRef(false);
   const hasTrackedReportComplete = useRef(false);
 
   useEffect(() => {
@@ -88,6 +89,25 @@ export function useStartGrowthTracking(options: UseStartGrowthTrackingOptions) {
           entry: entry || undefined,
         },
       });
+      if (reportData.free_focus?.gaeun_action && !hasTrackedRitualAction.current) {
+        hasTrackedRitualAction.current = true;
+        await trackClientGrowthEvent({
+          event: 'ritual_action_viewed',
+          source: landingSource,
+          step,
+          language,
+          context: readingData?.context,
+          invitationMode: isInvitationMode,
+          price: dynamicPrice || undefined,
+          readingId,
+          metadata: {
+            decisionLabel: reportData.free_focus.decision_label || 'unknown',
+            entry: entry || undefined,
+            landingVariant: activeLandingVariant,
+            resultType: reportData.free_focus.decision_label || 'unknown',
+          },
+        });
+      }
       await trackClientGrowthEvent({
         event: 'paywall_view',
         source: landingSource,
@@ -137,6 +157,7 @@ export function useStartGrowthTracking(options: UseStartGrowthTrackingOptions) {
   return {
     resetResultTracking: () => {
       hasTrackedFreeResult.current = false;
+      hasTrackedRitualAction.current = false;
       hasTrackedReportComplete.current = false;
     },
   };

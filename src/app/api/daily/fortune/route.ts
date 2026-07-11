@@ -31,6 +31,7 @@ const querySchema = z.object({
 });
 
 const dailyFortuneCache = new Map<string, { expiresAt: number; data: DailyFortuneResponse }>();
+const PRIVATE_CACHE_CONTROL = 'private, no-store, max-age=0';
 
 const dayMasterLabel: Record<DayMaster, string> = {
     jia: '갑(甲)',
@@ -181,10 +182,7 @@ export async function GET(request: NextRequest) {
     if (cached && cached.expiresAt > now.getTime()) {
         return NextResponse.json(cached.data, {
             headers: {
-                'Cache-Control': `public, s-maxage=${Math.max(
-                    1,
-                    Math.floor((cached.expiresAt - now.getTime()) / 1000)
-                )}, stale-while-revalidate=60`,
+                'Cache-Control': PRIVATE_CACHE_CONTROL,
             },
         });
     }
@@ -221,10 +219,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response, {
         headers: {
-            'Cache-Control': `public, s-maxage=${Math.max(
-                1,
-                Math.floor((midnight.getTime() - now.getTime()) / 1000)
-            )}, stale-while-revalidate=60`,
+            'Cache-Control': PRIVATE_CACHE_CONTROL,
         },
     });
 }

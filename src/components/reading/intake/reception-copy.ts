@@ -5,7 +5,7 @@ export const START_RECEPTION_COPY = {
     badge: 'CosmicPath Decision Note',
     title: 'CosmicPath Decision Note 접수실',
     subtitle:
-      '사주 구조, 점성 타이밍, 타로 즉시 신호로 미뤄둔 선택을 정리합니다. 첫 판정은 무료이고 생년월일은 필수입니다.',
+      '사주·점성·타로 신호로 미뤄둔 선택을 정리합니다. 첫 판정은 무료입니다. 생년월일만 필수입니다.',
     sideTitle: 'Decision Note 접수 기준',
     sideSubtitle: '선택 질문과 생년월일을 먼저 받고, 나머지는 정밀도 보정 입력으로만 씁니다.',
     sideNote:

@@ -1,12 +1,22 @@
-# Next Move Report MVP Operating Loop
+# Next Move Ritual Operating Loop
 
 Date: 2026-06-04
 Scope: question-first decision report for choices users are delaying.
 Offer: free first verdict, then one-off digital report through the existing Stripe reading checkout.
 
+Historical file note: this filename keeps `next-move-report` for continuity. The active public product/system name is `CosmicPath Decision Note`.
+
 ## Product Direction Lock
 
-Next Move Report is no longer framed as a product for deciding whether to wait for a reply.
+Next Move Ritual is a bounded campaign and experience layer for choices users are delaying. It is not a replacement product name for `CosmicPath Decision Note`.
+
+Naming contract:
+
+- `CosmicPath Decision Note` is the canonical public product/system name.
+- `Next Move Ritual` is a bounded campaign/experience layer.
+- `Next Move Report` is historical/campaign-only and must not appear on active paid surfaces.
+- `free_focus.gaeun_action` is a backward-compatible public optional field, not a breaking wire replacement.
+- The `next_move_report_mvp_v1` attribution value remains unchanged for analytics continuity.
 
 Primary wedge:
 

@@ -108,6 +108,7 @@ test.describe('Decision timing funnel growth event sequence', () => {
             expect(hasEventWithSource(growthEvents, 'analysis_start', flow.source)).toBeTruthy();
             expect(hasEventWithSource(growthEvents, 'decision_question_submit', flow.source)).toBeTruthy();
             expect(hasEventWithSource(growthEvents, 'first_result_view', flow.source)).toBeTruthy();
+            expect(hasEventWithSource(growthEvents, 'ritual_action_viewed', flow.source)).toBeTruthy();
             await expect
                 .poll(() => hasEventWithSource(growthEvents, 'paywall_view', flow.source))
                 .toBeTruthy();
@@ -117,7 +118,9 @@ test.describe('Decision timing funnel growth event sequence', () => {
             const analysisIndex = indexOfEventSequence(growthEvents, 'analysis_start', flow.source);
             const decisionIndex = indexOfEventSequence(growthEvents, 'decision_question_submit', flow.source);
             const firstResultIndex = indexOfEventSequence(growthEvents, 'first_result_view', flow.source);
+            const ritualActionIndex = indexOfEventSequence(growthEvents, 'ritual_action_viewed', flow.source);
             const paywallViewIndex = indexOfEventSequence(growthEvents, 'paywall_view', flow.source);
+            const ritualActionEvent = findEventWithSource(growthEvents, 'ritual_action_viewed', flow.source);
             const paywallViewEvent = findEventWithSource(growthEvents, 'paywall_view', flow.source);
 
             expect(landingIndex).toBeGreaterThanOrEqual(0);
@@ -125,7 +128,15 @@ test.describe('Decision timing funnel growth event sequence', () => {
             expect(analysisIndex).toBeGreaterThan(promptIndex);
             expect(decisionIndex).toBeGreaterThan(analysisIndex);
             expect(firstResultIndex).toBeGreaterThan(decisionIndex);
-            expect(paywallViewIndex).toBeGreaterThan(firstResultIndex);
+            expect(ritualActionIndex).toBeGreaterThan(firstResultIndex);
+            expect(paywallViewIndex).toBeGreaterThan(ritualActionIndex);
+            expect(ritualActionEvent).toMatchObject({
+                metadata: expect.objectContaining({
+                    resultType: expect.any(String),
+                }),
+            });
+            expect(JSON.stringify(ritualActionEvent)).not.toContain('가은 액션');
+            expect(JSON.stringify(ritualActionEvent)).not.toContain('1990-01-01');
             expect(paywallViewEvent).toMatchObject({
                 metadata: expect.objectContaining({
                     conversionSource: 'free_result',

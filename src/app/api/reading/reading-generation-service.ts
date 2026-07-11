@@ -15,6 +15,7 @@ import {
 } from '@/lib/ai/llm-client';
 import { attachPremiumQualityEnvelope } from '@/lib/ai/premium-quality-envelope';
 import { generatePremiumReport, generateSinglePhase } from '@/lib/ai/premium-reading-service';
+import { parsePremiumPhaseResult } from '@/lib/ai/premium-report-schemas';
 import type { PremiumReportPartial, UserData } from '@/lib/ai/phase-prompts';
 import { buildFallbackConvergenceDiagnosis } from '@/lib/ai/three-layer-synthesis';
 import {
@@ -25,9 +26,9 @@ import {
   finalizeFreeReport,
   FreeReadingCoreSchema,
   normalizeFreeSummaryContent,
-  sanitizeText,
   type ReadingLanguage,
 } from './route-helpers';
+import { sanitizeText } from './free-focus-contract';
 import type { AssembledReadingRuntime } from './reading-runtime-service';
 
 type EnrichedPayload = {
@@ -164,7 +165,7 @@ function getLifePathNumber(birthDate: string): number {
   return Math.max(value, 1);
 }
 
-function buildPremiumPhaseFallback(
+export function buildPremiumPhaseFallback(
   phaseNumber: number,
   userData: UserData,
   metadata: PremiumFallbackMetadata
@@ -479,11 +480,53 @@ function buildPremiumPhaseFallback(
             }),
             level: 'two_aligned',
           },
+          decision_packet: {
+            decision_fork: {
+              option_a: textFor(language, '확인할 사실과 질문을 정리한다', 'Organize the facts and questions to verify'),
+              option_b: textFor(language, '기준일까지 관찰하고 보류한다', 'Observe and hold until the review date'),
+              recommended_test: textFor(language, `${firstActionDate}에 문서·질문·비용 비교표 하나를 만듭니다.`, `Build one document, question, and cost comparison on ${firstActionDate}.`),
+            },
+            evidence_disagreement: {
+              aligned: textFor(language, '복구 응답에서는 세 원천의 세부 합의를 확정하지 않습니다.', 'The recovered response does not claim detailed agreement among the three sources.'),
+              conflicting: textFor(language, '세부 근거 충돌은 알 수 없으므로 현실 자료와 전문가 질문으로 확인합니다.', 'Detailed source conflict remains unknown and must be checked through real evidence and qualified questions.'),
+            },
+            reality_checks: [
+              textFor(language, `${reviewDate}까지 실제 답변 또는 시장 반응을 기록합니다.`, `Record actual replies or market response through ${reviewDate}.`),
+              textFor(language, '시간·비용·에너지 손실이 정한 한도를 넘는지 확인합니다.', 'Check whether time, cost, or energy exceeds the chosen limit.'),
+            ],
+            seven_day_experiment: {
+              action: textFor(language, `${firstActionDate}에 확인할 문서·질문·비용 항목을 한 장으로 정리합니다.`, `Put the documents, questions, and costs to verify on one page on ${firstActionDate}.`),
+              measure: textFor(language, `${reviewDate}까지 검증된 사실 두 개와 아직 모르는 점 하나를 구분합니다.`, `Separate two verified facts from one remaining unknown by ${reviewDate}.`),
+              stop_rule: textFor(language, '전문 판단이 필요한 선택은 자격 있는 검토 전 확정하지 않습니다.', 'Do not finalize a regulated or professional decision before qualified review.'),
+            },
+            if_then_rules: [
+              {
+                if: textFor(language, '구체적이고 반복 가능한 반응이 확인되면', 'a concrete, repeatable response appears'),
+                then: textFor(language, '다음 행동을 한 단계만 키웁니다.', 'increase the next action by one step only.'),
+              },
+              {
+                if: textFor(language, '반응이 없거나 중단 기준을 넘으면', 'there is no response or the stop rule is crossed'),
+                then: textFor(language, '확정하지 않고 선택지를 줄여 다시 검토합니다.', 'do not commit; narrow the options and review.'),
+              },
+            ],
+          },
         },
       };
     default:
       return {};
   }
+}
+
+function buildValidatedPremiumPhaseFallback(
+  phaseNumber: number,
+  userData: UserData,
+  metadata: PremiumFallbackMetadata
+): PremiumReportPartial {
+  return parsePremiumPhaseResult(
+    phaseNumber,
+    buildPremiumPhaseFallback(phaseNumber, userData, metadata),
+    { currentDate: metadata.currentDate }
+  );
 }
 
 function mergePremiumFallbackPhases(
@@ -494,7 +537,7 @@ function mergePremiumFallbackPhases(
   const completedReport: PremiumReportPartial = { ...report };
   for (let phaseNumber = 1; phaseNumber <= 8; phaseNumber += 1) {
     Object.assign(completedReport, {
-      ...buildPremiumPhaseFallback(phaseNumber, userData, metadata),
+      ...buildValidatedPremiumPhaseFallback(phaseNumber, userData, metadata),
       ...completedReport,
     });
   }
@@ -611,7 +654,7 @@ export async function runPremiumReading(params: PremiumReadingParams) {
           `[Reading API] Premium phase ${params.phase} failed. Returning recovered phase payload.`,
           phaseResult.error
         );
-        const fallbackReport = buildPremiumPhaseFallback(params.phase, userData, {
+        const fallbackReport = buildValidatedPremiumPhaseFallback(params.phase, userData, {
           reason: phaseResult.error,
           currentDate,
         });
@@ -876,6 +919,7 @@ export async function runFreeReading(params: FreeReadingParams) {
             avoid: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'avoid')),
             confidence_note: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'confidence_note')),
             copy_ready_message: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'copy_ready_message')),
+            gaeun_action: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'gaeun_action')),
             action_conclusion: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'action_conclusion')),
             evidence_summary: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'evidence_summary')),
             next_question: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'next_question')),

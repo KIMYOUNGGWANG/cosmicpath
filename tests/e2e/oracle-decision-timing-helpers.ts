@@ -1,10 +1,12 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type APIRequestContext, type Page } from '@playwright/test';
 
 export type JsonRecord = Record<string, unknown>;
 
 export const decisionQuestion = '지금 이직을 밀어붙이는 게 맞을까, 조금 더 버티는 게 맞을까?';
 export const decisionBirthDate = '1994-04-12';
 export const decisionStartPath = `/start?reset=true&context=career&entry=decision_timing_rebuild_v1&lang=ko&question=${encodeURIComponent(decisionQuestion)}`;
+export const forbiddenGaeunActionPattern =
+  /(?:치료|임상|진단|투약|상담\s*치료|반드시|무조건|100%|보장|답장하게|guarantee|guaranteed|clinical|therapy|therapeutic|diagnosis|treatment|make\s+them\s+respond)/iu;
 
 function isJsonRecord(value: unknown): value is JsonRecord {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -14,6 +16,78 @@ export function parseJsonRecord(raw: string | null): JsonRecord {
   const parsed: unknown = JSON.parse(raw ?? '{}');
   if (isJsonRecord(parsed)) return parsed;
   throw new Error('Expected request body to be a JSON object.');
+}
+
+export function buildDecisionReadingData(overrides: JsonRecord = {}): JsonRecord {
+  return {
+    name: 'QA',
+    gender: 'female',
+    birthDate: decisionBirthDate,
+    birthTime: '12:00',
+    calendarType: 'solar',
+    unknownTime: true,
+    context: 'career',
+    question: decisionQuestion,
+    language: 'ko',
+    tier: 'free',
+    selectionMode: 'auto',
+    tarotCards: [
+      {
+        id: 1,
+        name: '마법사',
+        nameEn: 'The Magician',
+        keywords: ['시작', '실행'],
+        interpretation: '작은 실행으로 상황을 확인하는 카드입니다.',
+        isReversed: false,
+      },
+    ],
+    ...overrides,
+  };
+}
+
+export async function postDecisionReading(
+  request: APIRequestContext,
+  overrides: JsonRecord = {}
+): Promise<JsonRecord> {
+  const response = await request.post('/api/reading', {
+    data: buildDecisionReadingData(overrides),
+  });
+  expect(response.status()).toBe(200);
+  const body: unknown = await response.json();
+  if (isJsonRecord(body)) return body;
+  throw new Error('Expected reading response body to be a JSON object.');
+}
+
+export function getReportFreeFocus(body: JsonRecord): JsonRecord {
+  const report = isJsonRecord(body.report) ? body.report : null;
+  const freeFocus = report && isJsonRecord(report.free_focus) ? report.free_focus : null;
+  if (freeFocus) return freeFocus;
+  throw new Error('Expected reading response report.free_focus to be a JSON object.');
+}
+
+export function getReadingMetadata(body: JsonRecord): JsonRecord {
+  const metadata = isJsonRecord(body.metadata) ? body.metadata : null;
+  if (metadata) return metadata;
+  throw new Error('Expected reading response metadata to be a JSON object.');
+}
+
+export function getMetadataRecord(metadata: JsonRecord, key: string): JsonRecord {
+  const value = metadata[key];
+  if (isJsonRecord(value)) return value;
+  throw new Error(`Expected reading response metadata.${key} to be a JSON object.`);
+}
+
+export function expectBoundedGaeunAction(value: unknown): string {
+  expect(typeof value).toBe('string');
+  const text = typeof value === 'string' ? value.trim() : '';
+  expect(text.length).toBeGreaterThanOrEqual(1);
+  expect(text.length).toBeLessThanOrEqual(180);
+  expect(text).not.toMatch(forbiddenGaeunActionPattern);
+  return text;
+}
+
+export function getDecisionActionMetadata(body: JsonRecord): JsonRecord {
+  return getMetadataRecord(getReadingMetadata(body), 'decisionAction');
 }
 
 export async function mockDecisionGrowthTracking(page: Page): Promise<JsonRecord[]> {
@@ -67,6 +141,7 @@ export async function mockDecisionReadingGeneration(page: Page): Promise<void> {
             avoid: '감정적으로 바로 퇴사 통보하지 마세요.',
             confidence_note: '사주와 점성 신호는 움직임보다 기준 정리에 더 강하게 겹칩니다.',
             copy_ready_message: '지금은 바로 퇴사보다 역할 조건을 먼저 확인해보겠습니다.',
+            gaeun_action: '가은 액션: 오늘 15분 동안 지원 조건표를 쓰고, 바로 퇴사 통보는 피하세요.',
             action_conclusion: 'narrow_first: 지금은 이직 여부를 바로 확정하지 말고 선택지를 먼저 좁히세요.',
             evidence_summary: '사주와 점성술 신호가 무작정 이동보다 역할 조건 확인에 더 강하게 겹칩니다.',
             next_question: '지원할 회사와 남을 조건을 각각 몇 개로 좁힐 수 있나요?',

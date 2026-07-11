@@ -175,24 +175,24 @@ function PaymentSuccessContent() {
                             {isNextMovePayment ? (
                                 isEnglish ? (
                                     <>
-                                        Your one-time $3.99 Detailed 3-Layer Decision Report is opening now.<br />
+                                        Your one-time $3.99 7-Day Decision Packet is opening now.<br />
                                         We will move you back to the result in a moment.
                                     </>
                                 ) : (
                                     <>
-                                        상세 3단 판정 리포트를 여는 중입니다.<br />
+                                        7일 결정 패킷을 여는 중입니다.<br />
                                         곧 결과로 돌아갑니다.
                                     </>
                                 )
                             ) : isDecisionTimingPayment ? (
                                 isEnglish ? (
                                     <>
-                                        Your one-time $3.99 Detailed 3-Layer Decision Report is opening now.<br />
+                                        Your one-time $3.99 7-Day Decision Packet is opening now.<br />
                                         We will move you back to the result in a moment.
                                     </>
                                 ) : (
                                     <>
-                                        상세 3단 판정 리포트를 여는 중입니다.<br />
+                                        7일 결정 패킷을 여는 중입니다.<br />
                                         곧 결과로 돌아갑니다.
                                     </>
                                 )

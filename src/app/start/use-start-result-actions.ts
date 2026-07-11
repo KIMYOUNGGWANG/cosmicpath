@@ -98,14 +98,18 @@ export function useStartResultActions(options: UseStartResultActionsOptions) {
 
   const handleShareCardOpen = () => {
     void trackClientGrowthEvent({
-      event: 'share_clicked',
-      source: 'result_share_button',
+      event: 'safe_share_card_opened',
+      source: options.landingSource,
       step: 'result',
       language: options.language,
       context: options.readingData?.context,
       invitationMode: options.isInvitationMode,
       price: options.dynamicPrice || undefined,
       readingId: options.shareUrl?.split('/').pop() || sessionStorage.getItem('pending_reading_id') || undefined,
+      metadata: {
+        resultType: options.reportData?.free_focus?.decision_label || 'unknown',
+        shareSurface: 'result_share_button',
+      },
     });
     options.openShareModal();
   };

@@ -13,10 +13,12 @@ interface ShareCardModalProps {
     isOpen: boolean;
     onClose: () => void;
     title: string;
-    trustScore: number;
     matchLevel: 'PERFECT' | 'PARTIAL' | 'CONFLICT';
     keywords: string[];
-    userName?: string;
+    source?: string;
+    language?: 'ko' | 'en';
+    readingId?: string;
+    resultType?: string;
 }
 
 /**
@@ -27,10 +29,12 @@ export function ShareCardModal({
     isOpen,
     onClose,
     title,
-    trustScore,
     matchLevel,
     keywords,
-    userName,
+    source,
+    language,
+    readingId,
+    resultType,
 }: ShareCardModalProps) {
     const { cardRef, isCapturing, captureAndDownload } = useShareCard({
         filename: 'decision-note',
@@ -42,9 +46,15 @@ export function ShareCardModal({
     const handleDownload = async () => {
         await captureAndDownload();
         await trackClientGrowthEvent({
-            event: 'share_clicked',
-            source: 'share_card_download',
+            event: 'safe_share_card_downloaded',
+            source: source || 'share_card_modal',
             step: 'share_modal',
+            language,
+            readingId,
+            metadata: {
+                resultType: resultType || 'unknown',
+                shareSurface: 'share_card_modal',
+            },
         });
         setIsDownloaded(true);
         setTimeout(() => setIsDownloaded(false), 3000);
@@ -82,10 +92,8 @@ export function ShareCardModal({
                             <CosmicShareCard
                                 ref={cardRef}
                                 title={title}
-                                trustScore={trustScore}
                                 matchLevel={matchLevel}
                                 keywords={keywords}
-                                userName={userName}
                             />
                         </div>
 
@@ -125,7 +133,7 @@ export function ShareCardModal({
 
                         {/* 안내 문구 */}
                         <p className="text-white/40 text-xs mt-4 text-center">
-                            저장한 이미지를 인스타그램 스토리에 공유해보세요 ✨
+                            공유용 요약 카드로 저장됩니다.
                         </p>
                     </motion.div>
                 </motion.div>

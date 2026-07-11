@@ -193,6 +193,27 @@ export const PremiumPhase8Schema = z.object({
     closing_words: nonEmptyString,
     convergence_diagnosis: convergenceDiagnosisSchema,
     behavioral_verdict: nonEmptyString.optional(),
+    decision_packet: z.object({
+      decision_fork: z.object({
+        option_a: nonEmptyString,
+        option_b: nonEmptyString,
+        recommended_test: nonEmptyString,
+      }).strict(),
+      evidence_disagreement: z.object({
+        aligned: nonEmptyString,
+        conflicting: nonEmptyString,
+      }).strict(),
+      reality_checks: z.array(nonEmptyString).min(2),
+      seven_day_experiment: z.object({
+        action: nonEmptyString,
+        measure: nonEmptyString,
+        stop_rule: nonEmptyString,
+      }).strict(),
+      if_then_rules: z.array(z.object({
+        if: nonEmptyString,
+        then: nonEmptyString,
+      }).strict()).min(2),
+    }).strict(),
   }).strict(),
 }).strict();
 

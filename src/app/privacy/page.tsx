@@ -28,6 +28,7 @@ export default async function PrivacyPage() {
                                 <p>
                                     This English summary explains what personal information CosmicPath collects during the current validation cycle.
                                     The product may process decision context that you type, optional birth data, and technical data for note restore and storage.
+                                    CosmicPath Decision Note may also create a bounded Next Move Ritual action and a public-safe share summary without exposing raw inputs by default.
                                     The Korean governing version remains below for legal reference.
                                 </p>
                             </section>
@@ -42,13 +43,13 @@ export default async function PrivacyPage() {
                                 <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
                                     <h2 className="mb-3 text-lg font-cinzel text-white">Why We Use It</h2>
                                     <p>
-                                        The data is used to prepare decision notes, deliver paid content, support note restore and storage, prevent abuse, and improve the service through analytics.
+                                        The data is used to prepare decision notes, create bounded ritual actions, deliver paid content, support note restore and storage, prevent abuse, prepare public-safe sharing, and improve the service through analytics.
                                     </p>
                                 </div>
                                 <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
                                     <h2 className="mb-3 text-lg font-cinzel text-white">Sensitive Details</h2>
                                     <p>
-                                        Please do not paste highly sensitive third-party secrets, private identifiers, passwords, addresses, or screenshots from another person&apos;s private account.
+                                        Please do not paste highly sensitive third-party secrets, private identifiers, passwords, addresses, or screenshots from another person&apos;s private account. Public share surfaces are designed around safe summaries, not raw questions or birth data.
                                     </p>
                                 </div>
                                 <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
@@ -97,7 +98,7 @@ export default async function PrivacyPage() {
                                     </tr>
                                     <tr className="transition-colors hover:bg-white/[0.02]">
                                         <td className="border border-white/10 p-4 font-medium">결정 정리 선택 정보</td>
-                                        <td className="border border-white/10 p-4">결정 보조를 위해 입력한 상황 설명, 메시지 초안, 선택적 출생정보, 선택적 타로 선택 정보</td>
+                                        <td className="border border-white/10 p-4">결정 보조를 위해 입력한 상황 설명, 메시지 초안, 선택적 출생정보, 선택적 타로 선택 정보, Next Move Ritual 행동 및 공개 안전 공유 요약</td>
                                     </tr>
                                     <tr className="transition-colors hover:bg-white/[0.02]">
                                         <td className="border border-white/10 p-4 font-medium">결제 및 결과 발송 (선택)</td>
@@ -119,6 +120,7 @@ export default async function PrivacyPage() {
                             <li><strong>노트 복원 및 보관:</strong> 결제 후 결과 조회, 저장된 노트 복원, 고객 지원을 위한 최소 정보 확인</li>
                             <li><strong>회원 관리:</strong> 서비스 이용에 따른 본인 확인 및 부정 이용 방지</li>
                             <li><strong>결제 및 정산:</strong> 유료 콘텐츠 대금 결제 및 환불 처리</li>
+                            <li><strong>안전한 공유:</strong> 공개 공유 화면에서는 원문 질문, 생년월일, 상세 입력 대신 안전 요약과 제한된 행동 문구만 표시</li>
                             <li><strong>서비스 개선:</strong> 신규 서비스 개발 및 이용 통계 분석</li>
                         </ul>
                     </section>
@@ -127,6 +129,7 @@ export default async function PrivacyPage() {
                         <h2 className="mb-4 text-xl font-cinzel text-white">2-1. 결정 맥락 입력 시 주의사항</h2>
                         <p>
                             오늘의 결정 정리는 이용자가 직접 입력한 결정 맥락을 바탕으로 참고용 방향과 근거를 정리합니다.
+                            Next Move Ritual 행동은 결과를 보장하지 않는 작고 안전한 다음 행동으로만 제공되며, 공개 공유 기본값은 원문 질문과 생년월일을 노출하지 않는 요약입니다.
                             타인의 주민등록번호, 연락처, 주소, 비밀번호, 계정 화면, 사적인 대화 전문 등 고도로 민감한 제3자 비밀은 입력하지 마십시오.
                             필요한 경우 상대방을 식별할 수 없는 별명이나 요약문으로 바꾸어 입력해 주세요.
                         </p>

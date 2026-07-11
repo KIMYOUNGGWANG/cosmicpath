@@ -36,7 +36,7 @@ export default async function TermsPage() {
                                 <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
                                     <h2 className="mb-3 text-lg font-cinzel text-white">What You Buy</h2>
                                     <p>
-                                        The paid unlock is a one-time Detailed 3-Layer Decision Report (상세 3단 판정 리포트) for $3.99 USD, purchased through Stripe checkout.
+                                        The paid unlock is a one-time 7-Day Decision Packet (7일 결정 패킷) for $3.99 USD, purchased through Stripe checkout.
                                         It gives you access to deeper evidence, timing, next-action order, and risk framing.
                                     </p>
                                 </div>
@@ -81,7 +81,7 @@ export default async function TermsPage() {
                         <ol className="list-decimal space-y-2 pl-5">
                             <li>&quot;서비스&quot;란 회사가 이용자에게 제공하는 의사결정 보조 콘텐츠, 사주, 점성술, 타로 기반 참고 해석 및 관련 콘텐츠 일체를 의미합니다.</li>
                             <li>&quot;이용자&quot;란 본 약관에 따라 회사가 제공하는 서비스를 이용하는 회원 및 비회원을 말합니다.</li>
-                            <li>&quot;유료 콘텐츠&quot;란 이용자가 서비스를 이용함에 있어 별도의 대가를 지불하고 구매하는 디지털 상품(상세 3단 판정 리포트 등)을 의미합니다.</li>
+                            <li>&quot;유료 콘텐츠&quot;란 이용자가 서비스를 이용함에 있어 별도의 대가를 지불하고 구매하는 디지털 상품(7일 결정 패킷 등)을 의미합니다.</li>
                             <li>&quot;결제&quot;란 이용자가 유료 콘텐츠를 이용하기 위하여 회사가 정한 결제 수단을 통해 일정 금액을 지불하는 행위를 의미합니다.</li>
                         </ol>
                     </section>
@@ -128,7 +128,7 @@ export default async function TermsPage() {
                         <h2 className="mb-4 text-xl font-cinzel text-white">제7조 (유료 콘텐츠의 구매 및 결제)</h2>
                         <ol className="list-decimal space-y-2 pl-5">
                             <li>이용자는 회사가 제공하는 결제 방식(신용카드, 간편결제 등)을 통해 유료 콘텐츠를 구매할 수 있습니다.</li>
-                            <li>상세 3단 판정 리포트는 Stripe checkout을 통해 $3.99 USD의 단건 디지털 리포트로 제공됩니다.</li>
+                            <li>7일 결정 패킷은 Stripe checkout을 통해 $3.99 USD의 단건 디지털 리포트로 제공됩니다.</li>
                             <li>결제와 관련된 보안 책임은 이용자에게 있으며, 이용자의 부주의로 인한 결제 정보 노출에 대해 회사는 책임을 지지 않습니다.</li>
                             <li>회사는 정책 및 결제 업체의 기준에 따라 결제 수단별 결제 한도를 부여할 수 있습니다.</li>
                         </ol>

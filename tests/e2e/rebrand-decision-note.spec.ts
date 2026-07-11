@@ -2,6 +2,8 @@ import { expect, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
+test.use({ locale: 'ko-KR' });
+
 const firstViewportOldBrandPattern =
   /\bAI\b|Destiny|Fortune|Cosmic Radar|Premium Report|전체 리포트|오라클/i;
 
@@ -47,6 +49,8 @@ function jsonLdGraphNodes(payload: unknown): readonly JsonRecord[] {
 
 test.describe('CosmicPath frontend rebrand', () => {
   test('landing presents CosmicPath Decision Note brand', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.addInitScript(() => localStorage.setItem('user_language', 'ko'));
     await page.setExtraHTTPHeaders({ 'Accept-Language': 'ko-KR,ko;q=0.9' });
     await page.goto('/');
 
@@ -61,8 +65,32 @@ test.describe('CosmicPath frontend rebrand', () => {
     await expect(page.getByText(/Saju structure.*astrology timing.*tarot's immediate signal|사주.*구조.*점성.*타이밍.*타로.*즉각/i).first()).toBeVisible();
     await expect(page.locator('body')).not.toContainText(/3단분석으로 열기|Open my 3-layer reading|3단 근거 보기|3단분석 시작|CosmicPath 3단분석|optional evidence layers|선택적 근거 레이어로만/i);
 
-    const cta = page.getByRole('link', { name: /Decision Note 시작|Open Decision Note/i }).first();
-    await expect(cta).toHaveAttribute('href', '/start?reset=true&entry=decision_timing_rebuild_v1');
+    const cta = page.getByRole('link', {
+      name: /커리어 결정부터 보기|Start with a career decision/i,
+    }).first();
+    const href = await cta.getAttribute('href');
+    expect(href).not.toBeNull();
+
+    const target = new URL(href ?? '', 'https://cosmicpath.app');
+    expect(target.pathname).toBe('/start');
+    expect(target.searchParams.get('reset')).toBe('true');
+    expect(target.searchParams.get('entry')).toBe('decision_timing_rebuild_v1');
+    expect(target.searchParams.get('context')).toBe('career');
+    const prefilledQuestion = target.searchParams.get('question');
+    expect([
+      '하반기에 이직, 사업, 지금 일 중 어디에 힘을 실어야 할까.',
+      'Should I change jobs, build my own thing, or deepen the work I have now?',
+    ]).toContain(prefilledQuestion);
+
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(2500);
+    await page.screenshot({
+      path: '.omo/evidence/cosmicpath-career-first/home-desktop-1440-playwright-final.png',
+    });
+
+    await cta.click();
+    await expect(page).toHaveURL(/\/start\?.*context=career/);
+    await expect(page.locator('textarea').first()).toHaveValue(prefilledQuestion ?? '');
   });
 
   test('start empty relationship question keeps Decision Note reception language', async ({ page }) => {
@@ -81,9 +109,10 @@ test.describe('CosmicPath frontend rebrand', () => {
 
   test('share legal and payment surfaces keep decision-note regression language', async ({ page }) => {
     await page.goto('/terms');
-    await expect(page.getByText(/CosmicPath Decision Note as digital content/i).first()).toBeVisible();
+    await expect(page.locator('body')).toContainText('7일 결정 패킷은 Stripe checkout을 통해 $3.99 USD의 단건 디지털 리포트');
     await expect(page.locator('body')).not.toContainText(/AI-generated|Oracle|Fortune|Destiny|Premium Report/i);
 
+    await page.setExtraHTTPHeaders({ 'Accept-Language': 'ko-KR,ko;q=0.9' });
     await page.goto('/privacy');
     await expect(page.getByText(/결정 정리 선택 정보/i).first()).toBeVisible();
     await expect(page.locator('body')).not.toContainText(/AI-generated|Oracle|Fortune|Destiny|Premium Report/i);
@@ -112,12 +141,12 @@ test.describe('CosmicPath frontend rebrand', () => {
 
     const paymentConfig = readFileSync(projectFile('src/lib/payment/payment-config.ts'), 'utf8');
     expect(paymentConfig).toContain('name: PAID_DECISION_REPORT_NAME_EN');
-    expect(paymentConfig).toContain("description: 'Detailed 3-layer decision report unlock'");
+    expect(paymentConfig).toContain("description: '7-day decision packet unlock'");
 
     const decisionBrief = readFileSync(projectFile('src/app/start/start-result-decision-brief.tsx'), 'utf8');
     expect(decisionBrief).toContain('one-time');
-    expect(decisionBrief).toContain('Detailed 3-Layer Decision Report');
-    expect(decisionBrief).toContain('상세 3단 판정 리포트');
+    expect(decisionBrief).toContain('7-Day Decision Packet');
+    expect(decisionBrief).toContain('7일 결정 패킷');
     expect(decisionBrief).toContain('why this verdict');
     expect(decisionBrief).toContain('message/action variants');
     expect(decisionBrief).not.toMatch(/subscription|membership|auto-renew/i);
@@ -132,11 +161,11 @@ test.describe('CosmicPath frontend rebrand', () => {
     const englishContactTiming = readFileSync(projectFile('src/app/en/contact-timing/page.tsx'), 'utf8');
     expect(englishContactTiming).toMatch(/title:\s*'Contact Decision Note'/);
     expect(englishContactTiming).toMatch(/>\s*CosmicPath\s*<\/Link>/);
-    expect(englishContactTiming).toMatch(/First Decision Note free · Detailed 3-Layer Decision Report via Stripe/);
+    expect(englishContactTiming).toMatch(/First Decision Note free · 7-Day Decision Packet via Stripe/);
     expect(englishContactTiming).toMatch(/Decision support only/);
 
     await page.goto('/en/contact-timing');
-    await expect(page.getByText('First Decision Note free · Detailed 3-Layer Decision Report via Stripe')).toBeVisible();
+    await expect(page.getByText('First Decision Note free · 7-Day Decision Packet via Stripe')).toBeVisible();
     await expect(page.getByText(/Saju = structure.*astrology = timing.*tarot = immediate signal/i).first()).toBeVisible();
     await expect(page.locator('body')).not.toContainText(/Application error|Unhandled Runtime Error|Next\.js/);
   });
@@ -161,9 +190,9 @@ test.describe('CosmicPath frontend rebrand', () => {
     expect(stringField(organization, 'name')).toBe('CosmicPath');
     expect(stringField(website, 'name')).toBe('CosmicPath');
     expect(stringField(service, 'name')).toBe('CosmicPath Decision Note');
-    expect(stringField(service, 'alternateName')).toBe('Detailed 3-Layer Decision Report');
+    expect(stringField(service, 'alternateName')).toBe('7-Day Decision Packet');
     expect(offerNames).toContain('First Decision Note');
-    expect(offerNames).toContain('Detailed 3-Layer Decision Report');
+    expect(offerNames).toContain('7-Day Decision Packet');
 
     const englishContactTiming = readFileSync(projectFile('src/app/en/contact-timing/page.tsx'), 'utf8');
     expect(englishContactTiming).toMatch(/title:\s*'Contact Decision Note'/);

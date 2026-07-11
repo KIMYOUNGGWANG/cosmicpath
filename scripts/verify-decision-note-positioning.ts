@@ -12,9 +12,23 @@ type BannedPhrase = {
 };
 
 const PUBLIC_PRODUCT_NAME = 'CosmicPath Decision Note';
-const PAID_PRODUCT_NAME_EN = 'Detailed 3-Layer Decision Report';
-const PAID_PRODUCT_NAME_KO = '상세 3단 판정 리포트';
+const CAMPAIGN_EXPERIENCE_NAME = 'Next Move Ritual';
+const HISTORICAL_REPORT_NAME = 'Next Move Report';
+const PAID_PRODUCT_NAME_EN = '7-Day Decision Packet';
+const PAID_PRODUCT_NAME_KO = '7일 결정 패킷';
 const ROLE_EXPLANATION_EN = 'Saju = structure, astrology = timing, tarot = immediate signal';
+const OPTIONAL_GAEUN_ACTION_CONTRACT =
+  '`free_focus.gaeun_action` is a backward-compatible public optional field, not a breaking wire replacement.';
+const NEXT_MOVE_REPORT_PUBLIC_BRAND_PATTERN = new RegExp(
+  '`?Next Move Report`?\\s+is\\s+the\\s+' +
+    'public acquisition brand',
+  'i'
+);
+const COSMICPATH_LEGACY_INTERNAL_PATTERN = new RegExp(
+  'CosmicPath\\s+remains\\s+only\\s+' +
+    'legacy/internal',
+  'i'
+);
 
 const DECLARED_SURFACES = [
   { filePath: 'src/lib/product-positioning.ts', description: 'shared product-positioning contract' },
@@ -23,12 +37,16 @@ const DECLARED_SURFACES = [
   { filePath: 'src/app/payment/success/page.tsx', description: 'checkout success paid-product copy' },
   { filePath: 'src/components/seo/json-ld.tsx', description: 'global structured data' },
   { filePath: 'src/components/payment/PaymentModalPricePanel.tsx', description: 'checkout price panel copy' },
+  { filePath: 'src/components/payment/PaymentModalForm.tsx', description: 'checkout form paid-report copy' },
+  { filePath: 'src/components/landing/RitualSection.tsx', description: 'Next Move Ritual experience-layer copy' },
+  { filePath: 'src/app/privacy/page.tsx', description: 'privacy disclosure for ritual and public-safe share copy' },
   { filePath: 'src/components/reading/FinalVerdictCard.tsx', description: 'final verdict three-layer role copy' },
   { filePath: 'src/app/start/start-result-decision-brief.tsx', description: 'locked report offer copy' },
   { filePath: 'src/app/start/start-result-followup-panel.tsx', description: 'follow-up loop product metadata and copy' },
   { filePath: 'src/app/en/contact-timing/page.tsx', description: 'English contact timing positioning surface' },
   { filePath: 'src/components/Pricing/PricingSection.tsx', description: 'pricing section paid report copy' },
   { filePath: 'docs/api-spec.md', description: 'truthful active API and offer contract docs' },
+  { filePath: 'docs/revenue/next-move-report-mvp-operating-loop.md', description: 'Next Move Ritual operating loop docs' },
   { filePath: 'scripts/stability/brand-price-guards.cjs', description: 'brand and price stability guard' },
   { filePath: 'scripts/stability/english-sitemap-guards.cjs', description: 'English sitemap stability guard' },
   { filePath: 'tests/e2e/payment-price-consistency.spec.ts', description: 'payment price E2E contract' },
@@ -53,6 +71,8 @@ const BANNED_PHRASES = [
   { label: 'legacy Saju percentage copy', pattern: /\bSaju 50%\b/i },
   { label: 'legacy astrology percentage copy', pattern: /\bAstro 30%\b/i },
   { label: 'legacy tarot percentage copy', pattern: /\bTarot 20%\b/i },
+  { label: 'report as acquisition brand', pattern: NEXT_MOVE_REPORT_PUBLIC_BRAND_PATTERN },
+  { label: 'standalone legacy containment', pattern: COSMICPATH_LEGACY_INTERNAL_PATTERN },
 ] as const satisfies readonly BannedPhrase[];
 
 function readSurface(surface: DeclaredSurface): string {
@@ -60,6 +80,13 @@ function readSurface(surface: DeclaredSurface): string {
     existsSync(surface.filePath),
     `Missing declared decision-positioning surface: ${surface.filePath} (${surface.description})`
   );
+  return readFileSync(surface.filePath, 'utf8');
+}
+
+function readSurfaceIfPresent(surface: DeclaredSurface): string | undefined {
+  if (!existsSync(surface.filePath)) {
+    return undefined;
+  }
   return readFileSync(surface.filePath, 'utf8');
 }
 
@@ -75,6 +102,12 @@ const surfaceEntries = DECLARED_SURFACES.map((surface) => ({
   surface,
   text: readSurface(surface),
 }));
+
+function getDeclaredSurfaceText(filePath: string): string {
+  const entry = surfaceEntries.find((candidate) => candidate.surface.filePath === filePath);
+  assert.ok(entry, `Missing loaded decision-positioning surface: ${filePath}`);
+  return entry.text;
+}
 
 const combinedSurfaceText = surfaceEntries.map((entry) => entry.text).join('\n');
 
@@ -95,6 +128,16 @@ assertSurfaceHas(
 );
 assertSurfaceHas(
   combinedSurfaceText,
+  CAMPAIGN_EXPERIENCE_NAME,
+  `Declared surfaces should keep ${CAMPAIGN_EXPERIENCE_NAME} as the bounded campaign experience name.`
+);
+assertSurfaceHas(
+  combinedSurfaceText,
+  `\`${HISTORICAL_REPORT_NAME}\` is historical/campaign-only`,
+  `${HISTORICAL_REPORT_NAME} must be constrained to historical/campaign-only usage.`
+);
+assertSurfaceHas(
+  combinedSurfaceText,
   PAID_PRODUCT_NAME_EN,
   `Declared surfaces should expose the paid product name ${PAID_PRODUCT_NAME_EN}.`
 );
@@ -108,6 +151,26 @@ assertSurfaceHas(
   ROLE_EXPLANATION_EN,
   'Declared surfaces should explain the three-layer roles as Saju = structure, astrology = timing, tarot = immediate signal.'
 );
+assertSurfaceHas(
+  combinedSurfaceText,
+  OPTIONAL_GAEUN_ACTION_CONTRACT,
+  'Declared surfaces should pin gaeun_action as an optional backward-compatible field.'
+);
+
+const apiSpec = getDeclaredSurfaceText('docs/api-spec.md');
+const nextMoveRitualLoop = getDeclaredSurfaceText('docs/revenue/next-move-report-mvp-operating-loop.md');
+const strategyCanvas = readSurfaceIfPresent({
+  filePath: 'docs/strategy/product-strategy-canvas.md',
+  description: 'optional local strategy canvas naming reconciliation',
+});
+assertSurfaceHas(apiSpec, 'type NextMoveRitualSource = "next_move_report_mvp_v1";', 'API spec must preserve the existing source key under the ritual naming layer.');
+assertSurfaceHas(apiSpec, '- Premium unlock label: `7-Day Decision Packet` (`7일 결정 패킷`)', 'API spec must lock the active paid packet label.');
+assertSurfaceHas(apiSpec, '`final_verdict.decision_packet`', 'API spec must document the additive paid packet response field.');
+assertSurfaceHas(apiSpec, 'gaeun_action?: string;', 'API spec must document gaeun_action as an optional additive field.');
+assertSurfaceHas(nextMoveRitualLoop, '`Next Move Ritual` is a bounded campaign/experience layer.', 'Operating loop must scope Next Move Ritual to campaign/experience usage.');
+if (strategyCanvas !== undefined) {
+  assertSurfaceHas(strategyCanvas, 'This canvas remains legacy strategy context', 'Strategy canvas must declare that older product language is historical context.');
+}
 
 const paymentConfig = readSurface({ filePath: 'src/lib/payment/payment-config.ts', description: 'payment config' });
 assertSurfaceHas(paymentConfig, 'prod_TgwKnGfpJBusty', 'Reading product must preserve the test fallback Stripe product ID.');
@@ -117,6 +180,38 @@ assertSurfaceHasPattern(paymentConfig, /price:\s*READING_PRODUCT_PRICE_CENTS|pri
 
 const termsPage = readSurface({ filePath: 'src/app/terms/page.tsx', description: 'terms page' });
 assertSurfaceHasPattern(termsPage, /\$3\.99 USD[\s\S]*Stripe checkout|Stripe checkout[\s\S]*\$3\.99 USD/, 'Terms must disclose one-time $3.99 USD Stripe checkout.');
+
+const ritualSection = getDeclaredSurfaceText('src/components/landing/RitualSection.tsx');
+assertSurfaceHas(ritualSection, CAMPAIGN_EXPERIENCE_NAME, 'Landing ritual copy must name Next Move Ritual as an experience layer.');
+assertSurfaceHas(
+  ritualSection,
+  'CosmicPath Decision Note의 판정 뒤에 붙는 경험 레이어',
+  'Landing ritual copy must keep CosmicPath Decision Note as the public product umbrella.'
+);
+assertSurfaceHas(
+  ritualSection,
+  '결과를 보장하지 않고',
+  'Landing ritual copy must not imply the ritual guarantees an outcome.'
+);
+
+const paymentPricePanel = getDeclaredSurfaceText('src/components/payment/PaymentModalPricePanel.tsx');
+assertSurfaceHas(
+  paymentPricePanel,
+  '7-Day Decision Packet price',
+  'Paywall price panel must label the paid offer, not rename the public Decision Note product.'
+);
+
+const paymentForm = getDeclaredSurfaceText('src/components/payment/PaymentModalForm.tsx');
+assertSurfaceHas(
+  paymentForm,
+  'one-time 7-Day Decision Packet checkout',
+  'Paywall checkout footer must name the paid report offer.'
+);
+
+const privacyPage = getDeclaredSurfaceText('src/app/privacy/page.tsx');
+assertSurfaceHas(privacyPage, 'bounded Next Move Ritual action', 'Privacy must disclose bounded ritual action processing.');
+assertSurfaceHas(privacyPage, 'public-safe share summary', 'Privacy must disclose public-safe share summary processing.');
+assertSurfaceHas(privacyPage, '원문 질문과 생년월일을 노출하지 않는 요약', 'Korean privacy copy must disclose safe share defaults.');
 
 const jsonLd = readSurface({ filePath: 'src/components/seo/json-ld.tsx', description: 'JSON-LD' });
 assertSurfaceHasPattern(jsonLd, /price:\s*'3\.99'/, 'JSON-LD paid offer must expose the $3.99 price.');
@@ -149,6 +244,6 @@ assertSurfaceHas(
   'System prompt core must inject the three-layer verdict quality contract block into the runtime prompt.'
 );
 
-console.log('decision_positioning_contract public=CosmicPath Decision Note paid=Detailed 3-Layer Decision Report price=$3.99');
+console.log('decision_positioning_contract public=CosmicPath Decision Note paid=7-Day Decision Packet price=$3.99');
 console.log('three_layer_roles Saju=structure astrology=timing tarot=immediate_signal');
 console.log('Decision Note positioning verification passed');

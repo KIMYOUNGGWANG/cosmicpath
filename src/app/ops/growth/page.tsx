@@ -46,7 +46,8 @@ export default async function GrowthOpsPage() {
                             </h1>
                             <p className="mt-4 text-sm leading-7 text-white/64">
                                 최근 {summary.dateRange.days}일 동안 사람들이 무료 결과를 보고, 추가 질문을 하고, 다시 돌아오고, 결제까지 갔는지를 먼저 봅니다.
-                                오늘 방문, 최근 7일 방문, 최근 30일 방문도 같이 보여서 제품 크기와 전환 흐름을 함께 읽을 수 있습니다.
+                                자체 GrowthEvent에 기록된 고유 추적 ID도 함께 보여서 제품 흐름을 읽을 수 있습니다.
+                                주 추적기는 저장소에 유지되지만 일부 경로는 별도 ID를 사용합니다. 이 값은 이벤트가 남은 ID만 세며, 저장소 초기화와 복수 추적 ID의 영향을 받습니다. Vercel Analytics의 필터링된 Visitors와는 정의가 달라 직접 비교하지 않습니다.
                             </p>
                         </div>
 

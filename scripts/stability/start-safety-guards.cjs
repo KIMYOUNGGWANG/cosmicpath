@@ -17,18 +17,18 @@ function runStartSafetyGuards() {
     'Shared prompt rules should include explicit relationship reply-guarantee and stalking boundaries'
   );
   assertMatch(
-    'src/app/api/reading/route-helpers.ts',
+    'src/app/api/reading/free-focus-safety.ts',
     /계속 확인/,
     'Free reading high-risk terms should include repeated checking'
   );
   assertMatch(
-    'src/app/api/reading/route-helpers.ts',
+    'src/app/api/reading/free-focus-safety.ts',
     /찾아가/,
     'Free reading high-risk terms should include showing-up behavior'
   );
   assertMatch(
-    'src/app/api/reading/route-helpers.ts',
-    /buildRelationshipSafetyFreeFocus[\s\S]*보류[\s\S]*Hold[\s\S]*스토킹[\s\S]*pressure/i,
+    'src/app/api/reading/free-focus-safety.ts',
+    /buildRelationshipSafetyFreeFocus(?=[\s\S]*보류)(?=[\s\S]*Hold)(?=[\s\S]*pressure)(?=[\s\S]*스토킹)/i,
     'Free reading fallback should convert high-risk relationship pressure into hold guidance'
   );
   assertMatch(

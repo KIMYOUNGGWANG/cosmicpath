@@ -56,14 +56,14 @@ export function IntakeHeader({
                             {sequenceSummary}
                         </span>
                     </div>
-                    <p className="mt-2 text-sm leading-6 text-white/62">
+                    <p className="mt-2 break-keep text-sm leading-6 text-white/62">
                         {isRelationshipContactEntry
                             ? (isEn
                                 ? 'Ask the contact-or-wait decision first. Birth date is required; name, time, city, gender, partner details, and tarot calibrate precision.'
-                                : '연락할까, 기다릴까 질문을 먼저 적어주세요. 생년월일은 필수이고 이름, 생시, 출생지, 성별, 상대 정보, 타로는 정밀도 보정 입력입니다.')
+                                : '연락할지 기다릴지 먼저 적어주세요. 생년월일만 필수입니다. 나머지 입력은 정밀도를 보정합니다.')
                             : (isEn
                                 ? 'Ask one real question. Birth date is required; name, birth time, city, gender, and tarot calibrate precision.'
-                                : '지금 풀고 싶은 질문 하나를 적어주세요. 생년월일은 필수이고 이름, 생시, 출생지, 성별, 타로는 정밀도 보정 입력입니다.')}
+                                : '질문 하나를 적어주세요. 생년월일만 필수입니다. 나머지 입력은 정밀도를 보정합니다.')}
                     </p>
                 </div>
                 {isEn ? (
