@@ -24,6 +24,7 @@ export function formatWindowLabel(from: string, to: string) {
     const formatter = new Intl.DateTimeFormat('ko-KR', {
         month: 'short',
         day: 'numeric',
+        timeZone: 'UTC',
     });
 
     return `${formatter.format(new Date(from))} - ${formatter.format(new Date(to))}`;

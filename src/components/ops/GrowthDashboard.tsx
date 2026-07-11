@@ -29,6 +29,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 
 import type { GrowthSummary } from '@/lib/growth-metrics';
+import { formatWindowLabel } from '@/components/ops/OpsDashboardPrimitives';
 
 interface GrowthDashboardProps {
     summary: GrowthSummary;
@@ -112,15 +113,6 @@ function formatCompact(value: number) {
         notation: 'compact',
         maximumFractionDigits: value >= 1000 ? 1 : 0,
     }).format(value);
-}
-
-function formatWindowLabel(from: string, to: string) {
-    const formatter = new Intl.DateTimeFormat('ko-KR', {
-        month: 'short',
-        day: 'numeric',
-    });
-
-        return `${formatter.format(new Date(from))} - ${formatter.format(new Date(to))}`;
 }
 
 function average(values: number[]) {

@@ -125,12 +125,14 @@ function assertGrowthMetadataPrivacyContract(): void {
 
 function assertVisitMetricDefinitionContract(): void {
   const dashboard = readProjectFile('src/components/ops/GrowthDashboard.tsx');
+  const primitives = readProjectFile('src/components/ops/OpsDashboardPrimitives.tsx');
   const page = readProjectFile('src/app/ops/growth/page.tsx');
 
   assert.ok(dashboard.includes("label: '오늘 고유 추적 ID'"));
   assert.ok(dashboard.includes("label: '최근 7일 고유 추적 ID'"));
   assert.ok(dashboard.includes("label: '최근 30일 고유 추적 ID'"));
   assert.ok(dashboard.includes("return '고유 추적 ID'"));
+  assert.ok(primitives.includes("timeZone: 'UTC'"));
   assert.ok(dashboard.includes('일부 경로는 별도 ID'));
   assert.ok(dashboard.includes('저장소 초기화·복수 추적 ID'));
   assert.ok(dashboard.includes('Vercel Visitors와 직접 비교하지 않습니다.'));
