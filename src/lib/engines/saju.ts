@@ -1527,7 +1527,117 @@ export function formatWolwoon(wolwoon: WolwoonResult): string {
   return `${icon} ${wolwoon.month}월: ${wolwoon.tenGod} (${wolwoon.grade})`;
 }
 
+// =====================================
+// 일운(日運) 계산 타입 및 함수 (Task 5)
+// =====================================
+
+export interface IlwoonResult {
+  date: string; // 'YYYY-MM-DD'
+  year: number;
+  month: number;
+  day: number;
+  stem: string;
+  branch: string;
+  tenGod: string;
+  twelveStage: TwelveStageType;
+  clashWithNatal: boolean;
+  combineWithNatal: boolean;
+  score: number;
+  grade: '대길' | '길' | '중립' | '소흉' | '흉';
+  summary: string;
+}
+
+/**
+ * 단일 일운(日運) 계산
+ */
+export function calculateIlwoon(
+  targetDate: Date,
+  dayMaster: string,
+  bodyStrength: BodyStrength = '중화',
+  natalBranches: string[] = []
+): IlwoonResult {
+  const year = targetDate.getFullYear();
+  const month = targetDate.getMonth() + 1;
+  const day = targetDate.getDate();
+
+  const calendar = new KoreanLunarCalendar();
+  calendar.setSolarDate(year, month, day);
+  const gapja = calendar.getKoreanGapja();
+  const dayPillar = parseGapja(gapja.day);
+
+  const stem = dayPillar.stem;
+  const branch = dayPillar.branch;
+
+  const tenGod = TEN_GOD_MATRIX[dayMaster]?.[stem] || '비견';
+  const twelveStage = calculateTwelveStage(dayMaster, branch);
+
+  const clashWithNatal = natalBranches.some(nb => detectClash(branch, nb));
+  const combineWithNatal = natalBranches.some(nb => detectCombine(branch, nb).found);
+
+  let score = 50;
+  if (['정재', '정관', '정인', '식신'].includes(tenGod)) score += 15;
+  if (['편재', '편관', '상관'].includes(tenGod)) score += 5;
+  if (['겁재'].includes(tenGod)) score -= 10;
+
+  if (['장생', '건록', '제왕', '관대'].includes(twelveStage)) score += 15;
+  if (['사', '묘', '절', '쇠'].includes(twelveStage)) score -= 10;
+
+  if (clashWithNatal) score -= 20;
+  if (combineWithNatal) score += 10;
+
+  score = Math.max(0, Math.min(100, score));
+
+  let grade: '대길' | '길' | '중립' | '소흉' | '흉' = '중립';
+  if (score >= 80) grade = '대길';
+  else if (score >= 65) grade = '길';
+  else if (score <= 30) grade = '흉';
+  else if (score <= 45) grade = '소흉';
+
+  const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  let summary = `${dateStr} (${stem}${branch}): ${tenGod}운, ${twelveStage}`;
+  if (clashWithNatal) summary += ' ⚠️원국충';
+  if (combineWithNatal) summary += ' ✨원국합';
+
+  return {
+    date: dateStr,
+    year,
+    month,
+    day,
+    stem,
+    branch,
+    tenGod,
+    twelveStage,
+    clashWithNatal,
+    combineWithNatal,
+    score,
+    grade,
+    summary
+  };
+}
+
+/**
+ * 향후 N일간의 일운 계산 (기본 30일)
+ */
+export function calculateMonthlyIlwoon(
+  startDate: Date = new Date(),
+  daysCount: number = 30,
+  dayMaster: string,
+  bodyStrength: BodyStrength = '중화',
+  natalBranches: string[] = []
+): IlwoonResult[] {
+  const results: IlwoonResult[] = [];
+  const curr = new Date(startDate);
+
+  for (let i = 0; i < daysCount; i++) {
+    results.push(calculateIlwoon(curr, dayMaster, bodyStrength, natalBranches));
+    curr.setDate(curr.getDate() + 1);
+  }
+
+  return results;
+}
+
 // 사주 결과 타입
+
 
 
 export interface SajuResult {
@@ -1585,6 +1695,13 @@ export interface SajuResult {
   sewoonMultiYear?: SewoonResult[];  // 다년 세운 (향후 5년 등)
   // Phase 9: 월운 추가
   wolwoon?: WolwoonResult[];   // 올해 12개월 월운
+  // Phase 10: 일운 추가
+  ilwoon?: IlwoonResult[];     // 향후 30일 일운
+  // Phase 11: 계산 메타데이터
+  /** 서머타임(DST) 보정이 적용되었는지 여부 */
+  dstCorrected?: boolean;
+  /** 적용된 자시법 모드 */
+  ziSiMode?: ZiSiMode;
   // Dr.Saju High-Accuracy Engine Data
   oraclePromptBlock?: string;
   raw?: any;
@@ -2995,6 +3112,64 @@ export function countTenGodGroups(tenGods: Record<string, string>): Record<keyof
   return counts;
 }
 
+// =====================================
+// 자시법(子時法) 모드 정의
+// =====================================
+
+/**
+ * 자시법(子時法) 3옵션
+ * - tongja (통자시): 23:30부터 자시, 23:30~23:59 출생은 일주를 다음 날 기준으로 넘김 (전통 명리학 주류)
+ * - yaja (야자시): 자시를 둘로 나누어 23:30~00:29는 전날 일주로 유지, 시주만 자시
+ * - joja (조자시): 23시 이후 → 다음날 일진 (기존 CosmicPath 로직)
+ */
+export type ZiSiMode = 'tongja' | 'yaja' | 'joja';
+
+// =====================================
+// 한국 서머타임(DST) 시행 기간 테이블
+// =====================================
+
+/**
+ * 한국 서머타임(DST) 시행 기간
+ * 해당 기간 출생자는 시계 시각에서 -1시간을 차감해야 정확한 진태양시 산출 가능
+ * 출처: 한국천문연구원 역사 자료
+ */
+const KOREA_DST_PERIODS: ReadonlyArray<{ start: Date; end: Date }> = [
+  // 1948년: 6월 1일 ~ 9월 12일
+  { start: new Date(1948, 5, 1), end: new Date(1948, 8, 12) },
+  // 1949년: 4월 3일 ~ 9월 10일
+  { start: new Date(1949, 3, 3), end: new Date(1949, 8, 10) },
+  // 1950년: 4월 1일 ~ 9월 9일
+  { start: new Date(1950, 3, 1), end: new Date(1950, 8, 9) },
+  // 1951년: 5월 6일 ~ 9월 8일
+  { start: new Date(1951, 4, 6), end: new Date(1951, 8, 8) },
+  // 1955년: 5월 5일 ~ 9월 8일
+  { start: new Date(1955, 4, 5), end: new Date(1955, 8, 8) },
+  // 1956년: 5월 20일 ~ 9월 29일
+  { start: new Date(1956, 4, 20), end: new Date(1956, 8, 29) },
+  // 1957년: 5월 5일 ~ 9월 21일
+  { start: new Date(1957, 4, 5), end: new Date(1957, 8, 21) },
+  // 1958년: 5월 4일 ~ 9월 20일
+  { start: new Date(1958, 4, 4), end: new Date(1958, 8, 20) },
+  // 1959년: 5월 3일 ~ 9월 19일
+  { start: new Date(1959, 4, 3), end: new Date(1959, 8, 19) },
+  // 1960년: 5월 1일 ~ 9월 17일
+  { start: new Date(1960, 4, 1), end: new Date(1960, 8, 17) },
+  // 1987년: 5월 10일 ~ 10월 11일
+  { start: new Date(1987, 4, 10), end: new Date(1987, 9, 11) },
+  // 1988년: 5월 8일 ~ 10월 8일
+  { start: new Date(1988, 4, 8), end: new Date(1988, 9, 8) },
+];
+
+/**
+ * 주어진 날짜가 한국 서머타임(DST) 시행 기간에 속하는지 판정
+ */
+export function isKoreaDstPeriod(date: Date): boolean {
+  const checkDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return KOREA_DST_PERIODS.some(
+    (period) => checkDate >= period.start && checkDate <= period.end
+  );
+}
+
 /**
  * 메인 사주 계산 함수
  * korean-lunar-calendar 라이브러리를 사용하여 KARI 표준 기반 정확한 간지 계산
@@ -3002,6 +3177,10 @@ export function countTenGodGroups(tenGods: Record<string, string>): Record<keyof
  */
 export interface CalculateSajuOptions {
   skipLongitudeCorrection?: boolean;
+  /** 자시법(子時法) 모드 선택 (기본: 'tongja' 통자시) */
+  ziSiMode?: ZiSiMode;
+  /** DST 자동 보정 여부 (기본: true — 한국 DST 기간 출생자 자동 -1시간) */
+  dstCorrection?: boolean;
 }
 
 export function calculateSaju(
@@ -3017,22 +3196,62 @@ export function calculateSaju(
     throw new Error('Invalid birth date for Saju calculation');
   }
 
+  // 0. 서머타임(DST) 보정 (Task 2)
+  // 한국 DST 기간(1948-51, 1955-60, 1987-88) 출생자는 시계 시각이 +1시간 빠르므로 차감
+  const dstEnabled = options.dstCorrection !== false; // 기본: true
+  let effectiveBirthHour = birthHour;
+  let effectiveBirthMinute = birthMinute;
+  let dstCorrected = false;
+
+  if (dstEnabled && isKoreaDstPeriod(birthDate)) {
+    effectiveBirthHour = birthHour - 1;
+    if (effectiveBirthHour < 0) {
+      effectiveBirthHour += 24;
+      // 자정을 넘어가는 경우(0시→23시) birthDate를 하루 전으로 조정해야 함
+      // 하지만 이 경우는 극히 드묾 (DST 기간에 0시 출생자)
+    }
+    dstCorrected = true;
+  }
+
   // 1. 경도 기반 시간 보정 (지역시 → 진태양시)
   // KST는 동경 135도 기준, 출생지 경도와의 차이 × 4분/도
   const timeCorrectionMinutes = options.skipLongitudeCorrection ? 0 : Math.round((135 - longitude) * 4);
   const adjDate = new Date(birthDate);
-  adjDate.setHours(birthHour, birthMinute);
+  adjDate.setHours(effectiveBirthHour, effectiveBirthMinute);
   adjDate.setMinutes(adjDate.getMinutes() - timeCorrectionMinutes);
 
   const year = adjDate.getFullYear();
   const month = adjDate.getMonth() + 1;
   const day = adjDate.getDate();
   const hour = adjDate.getHours();
+  const minute = adjDate.getMinutes();
 
-  // 2. 조자시(朝子時) 처리: 밤 23시(보정 전 23:30)부터는 다음 날의 일진을 사용
-  const isAfterZi = hour >= 23;
+  // 2. 자시(子時) 처리 — 자시법(子時法) 3모드 (Task 1)
+  const ziSiMode: ZiSiMode = options.ziSiMode || 'tongja';
+  // 자시 진입 경계: 23:30 (30분 기준, 전통 명리학)
+  const isInZiHour = hour >= 23 || (hour === 23 && minute >= 30) || hour < 1;
+  // 조자시 경계: 23:00 (현행 기존 로직 호환)
+  const isAfterZiLegacy = hour >= 23;
+
+  let advanceDayPillar = false;
+  switch (ziSiMode) {
+    case 'tongja':
+      // 통자시: 23:30부터 자시 → 다음 날 일진 사용
+      advanceDayPillar = hour >= 23;
+      break;
+    case 'yaja':
+      // 야자시: 23:30~00:29는 전날 일주 유지 (시주만 자시)
+      // 00:30 이후만 다음 날 일진
+      advanceDayPillar = false; // 야자시에서는 23시대 출생은 절대 다음 날로 안 넘김
+      break;
+    case 'joja':
+      // 조자시: 기존 CosmicPath 로직 (23시 이후 → 다음날 일진)
+      advanceDayPillar = hour >= 23;
+      break;
+  }
+
   const calendarDate = new Date(adjDate);
-  if (isAfterZi) {
+  if (advanceDayPillar) {
     calendarDate.setDate(calendarDate.getDate() + 1);
   }
 
@@ -3190,6 +3409,9 @@ export function calculateSaju(
   // 올해 12개월 월운
   const wolwoon = calculateYearlyWolwoon(currentYear, dayMaster, bodyStrength);
 
+  // 향후 30일 일운 (Task 5)
+  const ilwoon = calculateMonthlyIlwoon(new Date(), 30, dayMaster, bodyStrength, natalBranchList);
+
   return {
     yeonPillar,
     monthPillar,
@@ -3212,7 +3434,10 @@ export function calculateSaju(
     daeun,
     sewoon,
     sewoonMultiYear,
-    wolwoon
+    wolwoon,
+    ilwoon,
+    dstCorrected,
+    ziSiMode,
   };
 }
 

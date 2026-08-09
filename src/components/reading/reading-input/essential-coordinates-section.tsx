@@ -28,6 +28,8 @@ type EssentialCoordinatesSectionProps = {
     readonly onUnknownTimeChange: (unknownTime: boolean) => void;
     readonly onCityNameChange: (cityName: string) => void;
     readonly onGenderChange: (gender: ReadingGender) => void;
+    readonly ziSiMode?: 'tongja' | 'yaja' | 'joja';
+    readonly onZiSiModeChange?: (ziSiMode: 'tongja' | 'yaja' | 'joja') => void;
 };
 
 export function EssentialCoordinatesSection({
@@ -52,6 +54,8 @@ export function EssentialCoordinatesSection({
     onUnknownTimeChange,
     onCityNameChange,
     onGenderChange,
+    ziSiMode,
+    onZiSiModeChange,
 }: EssentialCoordinatesSectionProps) {
     const isEn = language === 'en';
 
@@ -206,6 +210,39 @@ export function EssentialCoordinatesSection({
                     onLeftSelect={() => onCalendarTypeChange('solar')}
                     onRightSelect={() => onCalendarTypeChange('lunar')}
                 />
+            </div>
+
+            {/* 자시법 (子時法) 선택 가이드 (Task 4) */}
+            <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] p-3.5 md:p-4">
+                <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-semibold uppercase tracking-[0.22em] text-acc-gold">
+                        {isEn ? 'Zi-Hour Method (子時法)' : '자시법(子時法) 선택'}
+                    </label>
+                    <span className="text-[10px] text-white/40">
+                        {isEn ? 'Default: Tongja (Recommended)' : '기본값: 통자시 (전통 추천)'}
+                    </span>
+                </div>
+                <div className="mt-2.5 grid grid-cols-3 gap-2">
+                    {[
+                        { value: 'tongja', label: isEn ? 'Tongja (Default)' : '통자시 (기본)', desc: '23:30~ 다음날 일진' },
+                        { value: 'yaja', label: isEn ? 'Yaja (23:30)' : '야자시', desc: '23시 전날 일진 유지' },
+                        { value: 'joja', label: isEn ? 'Joja (23:00)' : '조자시', desc: '23시부터 다음날 일진' },
+                    ].map((opt) => (
+                        <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => onZiSiModeChange?.(opt.value as 'tongja' | 'yaja' | 'joja')}
+                            className={`flex flex-col items-center justify-center rounded-lg border py-2 px-2 text-center transition-all ${
+                                (ziSiMode || 'tongja') === opt.value
+                                    ? 'border-acc-gold bg-acc-gold/15 text-starlight shadow-md'
+                                    : 'border-white/10 bg-white/[0.03] text-white/50 hover:bg-white/[0.06] hover:text-white/80'
+                            }`}
+                        >
+                            <span className="text-xs font-bold">{opt.label}</span>
+                            <span className="mt-0.5 text-[10px] opacity-70">{opt.desc}</span>
+                        </button>
+                    ))}
+                </div>
             </div>
 
             <div className="mt-5 rounded-[22px] border border-white/10 bg-black/20 p-4 md:p-5">

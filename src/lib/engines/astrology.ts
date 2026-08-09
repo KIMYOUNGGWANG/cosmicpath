@@ -19,7 +19,7 @@ export const ZODIAC_SIGNS = [
     { name: '물고기자리', symbol: '♓', element: 'water', modality: 'mutable' },
 ] as const;
 
-// 행성
+// 행성 및 주요 천체
 export const PLANETS = {
     sun: { name: '태양', symbol: '☉', meaning: '자아, 정체성' },
     moon: { name: '달', symbol: '☽', meaning: '감정, 본능' },
@@ -31,6 +31,10 @@ export const PLANETS = {
     uranus: { name: '천왕성', symbol: '♅', meaning: '혁신, 변화' },
     neptune: { name: '해왕성', symbol: '♆', meaning: '직관, 환상' },
     pluto: { name: '명왕성', symbol: '♇', meaning: '변환, 재생' },
+    chiron: { name: '키론', symbol: '⚷', meaning: '치유와 상처' },
+    northNode: { name: '북교점', symbol: '☊', meaning: '영적 성장과 목적' },
+    southNode: { name: '남교점', symbol: '☋', meaning: '과거 카르마와 익숙함' },
+    fortuna: { name: '행운점', symbol: '⊕', meaning: '번영과 기회' },
 } as const;
 
 // 12하우스
@@ -159,6 +163,7 @@ export interface PlanetPosition {
     degree: number; // 0-29.99
     house: number; // 1-12
     longitude?: number; // 0-359.99 (전체 황경)
+    isRetrograde?: boolean; // 행성 역행 여부 (Task 8)
 }
 
 // 강화된 Aspect 결과
@@ -198,6 +203,21 @@ export interface AspectResult {
     orb: number;
 }
 
+export type HouseSystem = 'placidus' | 'koch' | 'equal' | 'whole_sign';
+
+export interface NatalAnglePoint {
+    sign: number;      // 0-11
+    degree: number;    // 0-29.99
+    longitude: number; // 0-359.99
+}
+
+export interface NatalAngles {
+    asc: NatalAnglePoint;
+    mc: NatalAnglePoint;
+    desc: NatalAnglePoint;
+    ic: NatalAnglePoint;
+}
+
 export interface AstrologyResult {
     sunSign: number;
     moonSign: number;
@@ -210,6 +230,10 @@ export interface AstrologyResult {
     dignities?: Record<string, PlanetDignityResult>;
     // Phase 3: 차트 패턴
     patterns?: ChartPattern[];
+    // Phase 4 Extensions: 4대 앵글 & 하우스 시스템
+    angles?: NatalAngles;
+    houseSystem?: HouseSystem;
+    houseCusps?: number[];
 }
 
 // 율리우스 날짜 계산 (UTC 기준)
@@ -282,51 +306,132 @@ function calculateMoonPosition(julianDate: number): { sign: number; degree: numb
     return { sign, degree };
 }
 
+function toAnglePoint(long: number): NatalAnglePoint {
+    const normalized = (long % 360 + 360) % 360;
+    return {
+        sign: Math.floor(normalized / 30),
+        degree: normalized % 30,
+        longitude: normalized,
+    };
+}
+
 /**
- * 상승궁 (Ascendant) 계산 (간략화)
+ * 4대 앵글 (ASC, MC, DESC, IC) 정밀 계산 (Phase 3)
  */
-function calculateAscendant(
+export function calculateNatalAngles(
     julianDate: number,
     latitude: number,
     longitude: number
-): number {
-    // 지역 항성시 계산
+): NatalAngles {
     const T = (julianDate - 2451545.0) / 36525;
-    let GMST = 280.46061837 + 360.98564736629 * (julianDate - 2451545.0) +
-        0.000387933 * T * T;
-    GMST = GMST % 360;
+    let GMST = 280.46061837 + 360.98564736629 * (julianDate - 2451545.0) + 0.000387933 * T * T;
+    GMST = (GMST % 360 + 360) % 360;
 
-    const LST = (GMST + longitude) % 360;
-
-    // 상승궁 계산 (간략화)
+    const LST = (GMST + (longitude % 360) + 360) % 360;
     const obliquity = 23.439 - 0.00013 * T;
+
     const oblRad = obliquity * Math.PI / 180;
     const latRad = latitude * Math.PI / 180;
     const lstRad = LST * Math.PI / 180;
 
-    let ascendant = Math.atan2(
+    // 상승궁 (Ascendant)
+    let ascLong = Math.atan2(
         Math.cos(lstRad),
         -(Math.sin(lstRad) * Math.cos(oblRad) + Math.tan(latRad) * Math.sin(oblRad))
     ) * 180 / Math.PI;
+    ascLong = (ascLong % 360 + 360) % 360;
 
-    if (ascendant < 0) ascendant += 360;
+    // 중천점 (Midheaven / MC)
+    let mcLong = Math.atan2(
+        Math.sin(lstRad),
+        Math.cos(lstRad) * Math.cos(oblRad)
+    ) * 180 / Math.PI;
+    mcLong = (mcLong % 360 + 360) % 360;
 
-    return Math.floor(ascendant / 30);
+    if (LST >= 180 && LST < 360 && mcLong < 180) {
+        mcLong += 180;
+    } else if (LST < 180 && mcLong >= 180) {
+        mcLong -= 180;
+    }
+
+    const descLong = (ascLong + 180) % 360;
+    const icLong = (mcLong + 180) % 360;
+
+    return {
+        asc: toAnglePoint(ascLong),
+        mc: toAnglePoint(mcLong),
+        desc: toAnglePoint(descLong),
+        ic: toAnglePoint(icLong),
+    };
 }
 
 /**
- * 행성들의 하우스 배치 계산 (간략화)
+ * 하우스 경계선(Cusps) 계산 (Placidus, Koch, Equal, Whole Sign)
+ */
+export function calculateHouseCusps(angles: NatalAngles, system: HouseSystem = 'placidus'): number[] {
+    const cusps: number[] = new Array(12).fill(0);
+    const ascLong = angles.asc.longitude;
+    const mcLong = angles.mc.longitude;
+
+    if (system === 'whole_sign') {
+        const ascSign = angles.asc.sign;
+        for (let i = 0; i < 12; i++) {
+            cusps[i] = ((ascSign + i) % 12) * 30;
+        }
+    } else if (system === 'equal') {
+        for (let i = 0; i < 12; i++) {
+            cusps[i] = (ascLong + i * 30) % 360;
+        }
+    } else {
+        // Placidus / Koch quadrant division
+        cusps[0] = ascLong;                  // House 1
+        cusps[3] = angles.ic.longitude;      // House 4
+        cusps[6] = angles.desc.longitude;    // House 7
+        cusps[9] = mcLong;                   // House 10
+
+        let arc1 = (ascLong - mcLong + 360) % 360;
+        cusps[10] = (mcLong + arc1 / 3) % 360;
+        cusps[11] = (mcLong + (2 * arc1) / 3) % 360;
+
+        let arc2 = (cusps[3] - ascLong + 360) % 360;
+        cusps[1] = (ascLong + arc2 / 3) % 360;
+        cusps[2] = (ascLong + (2 * arc2) / 3) % 360;
+
+        cusps[4] = (cusps[10] + 180) % 360;
+        cusps[5] = (cusps[11] + 180) % 360;
+        cusps[7] = (cusps[1] + 180) % 360;
+        cusps[8] = (cusps[2] + 180) % 360;
+    }
+
+    return cusps;
+}
+
+/**
+ * 하우스 시스템별 행성의 하우스 배치 산출
  */
 function calculatePlanetHouses(
     planets: { sign: number; degree: number }[],
-    ascendant: number
+    cusps: number[],
+    system: HouseSystem = 'placidus'
 ): number[] {
+    if (system === 'whole_sign') {
+        const ascSign = Math.floor(cusps[0] / 30);
+        return planets.map(p => ((p.sign - ascSign + 12) % 12) + 1);
+    }
+
     return planets.map(planet => {
-        const longitude = planet.sign * 30 + planet.degree;
-        const ascLongitude = ascendant * 30;
-        let house = Math.floor(((longitude - ascLongitude + 360) % 360) / 30) + 1;
-        if (house > 12) house -= 12;
-        return house;
+        const pLong = (planet.sign * 30 + planet.degree) % 360;
+        for (let i = 0; i < 12; i++) {
+            const currentCusp = cusps[i];
+            const nextCusp = cusps[(i + 1) % 12];
+
+            if (currentCusp < nextCusp) {
+                if (pLong >= currentCusp && pLong < nextCusp) return i + 1;
+            } else {
+                if (pLong >= currentCusp || pLong < nextCusp) return i + 1;
+            }
+        }
+        return 1;
     });
 }
 
@@ -681,14 +786,13 @@ export function calculateAstrology(
     birthTime: string = '12:00',
     latitude: number = 37.5665, // 서울 기본값
     longitude: number = 126.9780,
-    timezoneOffset: number = 9 // Timezone Offset (시간), 기본값 KST (+9)
+    timezoneOffset: number = 9, // Timezone Offset (시간), 기본값 KST (+9)
+    houseSystem: HouseSystem = 'placidus'
 ): AstrologyResult {
     // 시간 파싱
     const [hourStr, minuteStr] = birthTime.split(':');
 
     // UTC 시간으로 변환하여 Date 객체 생성
-    // 입력된 시간(Local) - TimezoneOffset = UTC 시간
-    // 예: 15:10 KST -> 15 - 9 = 06 UTC
     const utcDate = new Date(birthDate);
     utcDate.setUTCHours(parseInt(hourStr) - timezoneOffset, parseInt(minuteStr), 0, 0);
 
@@ -697,27 +801,59 @@ export function calculateAstrology(
     const sunPos = calculateSunPosition(jd);
     const moonPos = calculateMoonPosition(jd);
 
-    // 상승궁 계산
-    const ascendant = calculateAscendant(jd, latitude, longitude);
+    // 4대 앵글 정밀 계산 (Phase 3 Extension)
+    const angles = calculateNatalAngles(jd, latitude, longitude);
+    const ascendant = angles.asc.sign;
+    const houseCusps = calculateHouseCusps(angles, houseSystem);
 
-    // 나머지 행성들 (VSOP87 기반 정확한 계산)
+    // 기타 주요 천체 계산
     const otherPlanets = calculateAllPlanetPositions(jd);
+    const chironPos = calculateChironPosition(jd);
+    const { northNode: nnPos, southNode: snPos } = calculateNodes(jd);
 
-    // 모든 행성 위치
+    const sunLong = sunPos.sign * 30 + sunPos.degree;
+    const moonLong = moonPos.sign * 30 + moonPos.degree;
+    const fortunaPos = calculateFortuna(ascendant, sunLong, moonLong);
+
+    // 역행 (Retrograde) 계산
+    const isMercuryRetrograde = checkRetrograde(calculateMercuryPosition, jd);
+    const isVenusRetrograde = checkRetrograde(calculateVenusPosition, jd);
+    const isMarsRetrograde = checkRetrograde(calculateMarsPosition, jd);
+    const isJupiterRetrograde = checkRetrograde(calculateJupiterPosition, jd);
+    const isSaturnRetrograde = checkRetrograde(calculateSaturnPosition, jd);
+    const isUranusRetrograde = checkRetrograde(calculateUranusPosition, jd);
+    const isNeptuneRetrograde = checkRetrograde(calculateNeptunePosition, jd);
+    const isPlutoRetrograde = checkRetrograde(calculatePlutoPosition, jd);
+    const isChironRetrograde = checkRetrograde(calculateChironPosition, jd);
+
+    // 모든 14개 천체 위치 배열
     const planetPositions = [
-        sunPos,
-        moonPos,
-        ...otherPlanets,
+        { ...sunPos, isRetrograde: false },
+        { ...moonPos, isRetrograde: false },
+        { ...otherPlanets[0], isRetrograde: isMercuryRetrograde },
+        { ...otherPlanets[1], isRetrograde: isVenusRetrograde },
+        { ...otherPlanets[2], isRetrograde: isMarsRetrograde },
+        { ...otherPlanets[3], isRetrograde: isJupiterRetrograde },
+        { ...otherPlanets[4], isRetrograde: isSaturnRetrograde },
+        { ...otherPlanets[5], isRetrograde: isUranusRetrograde },
+        { ...otherPlanets[6], isRetrograde: isNeptuneRetrograde },
+        { ...otherPlanets[7], isRetrograde: isPlutoRetrograde },
+        { ...chironPos, isRetrograde: isChironRetrograde },
+        { ...nnPos, isRetrograde: true },
+        { ...snPos, isRetrograde: true },
+        { ...fortunaPos, isRetrograde: false },
     ];
 
-    const houses = calculatePlanetHouses(planetPositions, ascendant);
+    const houses = calculatePlanetHouses(planetPositions, houseCusps, houseSystem);
 
     const planetKeys = Object.keys(PLANETS) as (keyof typeof PLANETS)[];
     const planets: PlanetPosition[] = planetPositions.map((pos, index) => ({
-        planet: planetKeys[index],
+        planet: planetKeys[index] || 'sun',
         sign: pos.sign,
         degree: pos.degree,
         house: houses[index],
+        longitude: pos.sign * 30 + pos.degree,
+        isRetrograde: pos.isRetrograde,
     }));
 
     // Aspect 계산
@@ -741,6 +877,9 @@ export function calculateAstrology(
         enhancedAspects,
         dignities,
         patterns,
+        angles,
+        houseSystem,
+        houseCusps,
     };
 }
 
@@ -1068,7 +1207,74 @@ function calculateAllPlanetPositions(jd: number): { sign: number; degree: number
         calculateUranusPosition(jd),
         calculateNeptunePosition(jd),
         calculatePlutoPosition(jd),
-    ].map(pos => ({ sign: pos.sign, degree: pos.degree }));
+    ].map(pos => ({ sign: pos.sign, degree: pos.degree, longitude: pos.longitude }));
+}
+
+/**
+ * 키론(Chiron) 위치 계산
+ */
+function calculateChironPosition(jd: number): { sign: number; degree: number; longitude: number } {
+    const T = (jd - 2451545.0) / 36525;
+    const meanLong = normalizeDegrees(220.0 + (360 / 50.701) * (T * 100));
+    const meanAnomaly = toRadians(normalizeDegrees(meanLong - 72.3));
+    const equationOfCenter = 0.383 * Math.sin(meanAnomaly) + 0.08 * Math.sin(2 * meanAnomaly);
+    const longitude = normalizeDegrees(meanLong + equationOfCenter);
+    return {
+        sign: Math.floor(longitude / 30),
+        degree: longitude % 30,
+        longitude
+    };
+}
+
+/**
+ * 달 교점 (North Node / South Node) 계산
+ */
+function calculateNodes(jd: number): {
+    northNode: { sign: number; degree: number; longitude: number };
+    southNode: { sign: number; degree: number; longitude: number };
+} {
+    const T = (jd - 2451545.0) / 36525;
+    const omega = normalizeDegrees(125.04452 - 1934.136261 * T + 0.0020708 * T * T);
+    const southOmega = normalizeDegrees(omega + 180);
+
+    return {
+        northNode: { sign: Math.floor(omega / 30), degree: omega % 30, longitude: omega },
+        southNode: { sign: Math.floor(southOmega / 30), degree: southOmega % 30, longitude: southOmega }
+    };
+}
+
+/**
+ * 행운점 (Part of Fortuna) 계산
+ */
+function calculateFortuna(
+    ascendantSign: number,
+    sunLongitude: number,
+    moonLongitude: number
+): { sign: number; degree: number; longitude: number } {
+    const ascLongitude = ascendantSign * 30;
+    const fortunaLong = normalizeDegrees(ascLongitude + moonLongitude - sunLongitude);
+    return {
+        sign: Math.floor(fortunaLong / 30),
+        degree: fortunaLong % 30,
+        longitude: fortunaLong
+    };
+}
+
+/**
+ * 행성 역행 (Retrograde) 여부 판정 (Task 8)
+ */
+function checkRetrograde(
+    calcFn: (j: number) => { longitude: number },
+    jd: number
+): boolean {
+    const posCurrent = calcFn(jd);
+    const posFuture = calcFn(jd + 0.05);
+
+    let diff = posFuture.longitude - posCurrent.longitude;
+    if (diff > 180) diff -= 360;
+    if (diff < -180) diff += 360;
+
+    return diff < 0;
 }
 
 /**

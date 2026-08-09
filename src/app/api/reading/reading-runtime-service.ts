@@ -63,6 +63,8 @@ type ReadingRuntimeAssemblyParams = {
   latitude?: number;
   calendarType: 'solar' | 'lunar';
   unknownTime: boolean;
+  ziSiMode?: 'tongja' | 'yaja' | 'joja';
+  dstCorrection?: boolean;
   partnerBirthDate?: string;
   partnerBirthTime?: string;
   partnerGender?: 'male' | 'female';
@@ -133,6 +135,8 @@ export async function assembleReadingRuntime(
     isLunar: params.calendarType === 'lunar',
     unknownTime: params.unknownTime || false,
     timezoneOffset: 9,
+    ziSiMode: params.ziSiMode,
+    dstCorrection: params.dstCorrection,
   });
 
   const saju = mapToLegacySaju(sajuProfile);

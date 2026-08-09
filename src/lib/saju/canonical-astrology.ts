@@ -40,6 +40,10 @@ export const PLANET_KEY_TO_ID = {
   uranus: 'Uranus',
   neptune: 'Neptune',
   pluto: 'Pluto',
+  chiron: 'Chiron',
+  northNode: 'NorthNode',
+  southNode: 'SouthNode',
+  fortuna: 'Fortuna',
 } as const satisfies Record<keyof typeof PLANETS, PlanetId>;
 
 export type AstrologyAscendantConfidence = 'exact_time' | 'approximate_noon';

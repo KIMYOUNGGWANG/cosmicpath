@@ -99,3 +99,32 @@ export function hasReadingAccess(params: {
 
     return hasSessionAccess || hasAccessKeyMatch;
 }
+
+/**
+ * 일운(日運) 캘린더 등급별 게이팅 (Task 14)
+ * - free: 첫 3일만 미리보기 제공
+ * - basic / premium: 30일 전체 제공
+ */
+export function filterIlwoonForTier<T>(ilwoonList: T[] | undefined, hasVerifiedAccess: boolean): {
+    visibleList: T[];
+    isGated: boolean;
+    hiddenCount: number;
+} {
+    if (!ilwoonList || ilwoonList.length === 0) {
+        return { visibleList: [], isGated: false, hiddenCount: 0 };
+    }
+
+    if (hasVerifiedAccess) {
+        return { visibleList: ilwoonList, isGated: false, hiddenCount: 0 };
+    }
+
+    const freeLimit = 3;
+    const visibleList = ilwoonList.slice(0, freeLimit);
+    const hiddenCount = Math.max(0, ilwoonList.length - freeLimit);
+
+    return {
+        visibleList,
+        isGated: hiddenCount > 0,
+        hiddenCount,
+    };
+}

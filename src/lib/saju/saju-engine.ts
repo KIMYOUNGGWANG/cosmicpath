@@ -157,7 +157,8 @@ export type ZodiacSign =
 
 export type PlanetId =
   | 'Sun' | 'Moon' | 'Mercury' | 'Venus' | 'Mars'
-  | 'Jupiter' | 'Saturn' | 'Uranus' | 'Neptune' | 'Pluto';
+  | 'Jupiter' | 'Saturn' | 'Uranus' | 'Neptune' | 'Pluto'
+  | 'Chiron' | 'NorthNode' | 'SouthNode' | 'Fortuna';
 
 export interface PlanetPosition {
   id: PlanetId;
@@ -681,6 +682,8 @@ export function calculateOracleSajuProfile(options: {
   isLunar?: boolean;
   unknownTime?: boolean;
   timezoneOffset?: number;
+  ziSiMode?: 'tongja' | 'yaja' | 'joja';
+  dstCorrection?: boolean;
 }): OracleSajuProfile {
   const astrologyInputTime = options.unknownTime ? '12:00' : options.birthTime ?? '12:00';
   const astrologyTimeParts = parseTimeParts(astrologyInputTime);
@@ -718,6 +721,8 @@ export function calculateOracleSajuProfile(options: {
       // `calculateTrueSolarTime` already applied the longitude shift.
       // Prevent a second correction from drifting the chart near boundary hours.
       skipLongitudeCorrection: true,
+      ziSiMode: options.ziSiMode,
+      dstCorrection: options.dstCorrection,
     }
   );
   const raw = createOracleRawProfile(saju, {

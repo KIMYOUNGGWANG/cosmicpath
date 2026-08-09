@@ -379,8 +379,76 @@ function runEdgeScenario() {
     assertValidSign(kstChart.ascendant, 'kst ascendant');
     assertValidSign(utcChart.ascendant, 'utc ascendant');
     assert.notEqual(kstChart.ascendant, utcChart.ascendant);
-
     mark('astro_timezone_boundary');
+    mark('astrology_timezone_offset_boundary');
+
+    // === 신규 업그레이드 엔진 검증 (Tasks 1, 2, 5, 7, 8) ===
+    const { isKoreaDstPeriod, calculateIlwoon, calculateMonthlyIlwoon } = localRequire('../src/lib/engines/saju.ts');
+
+    // Task 1: 자시법 yaja (야자시) 모드 검증 - 23:30에 일주가 안 넘어가야 함
+    const yajaZi = calculateSaju(
+      new Date(2026, 5, 6),
+      23,
+      30,
+      false,
+      'male',
+      126.9780,
+      { skipLongitudeCorrection: true, ziSiMode: 'yaja' }
+    );
+    assert.equal(`${yajaZi.dayPillar.stem}${yajaZi.dayPillar.branch}`, beforeZiDay);
+    assert.equal(yajaZi.ziSiMode, 'yaja');
+    mark('saju_zisi_yaja_mode');
+
+    // Task 2: 서머타임 (DST) 기간 검증 (1987년 7월 15일)
+    const dstDate = new Date(1987, 6, 15);
+    assert.equal(isKoreaDstPeriod(dstDate), true);
+    const dstSaju = calculateSaju(dstDate, 14, 0, false, 'male');
+    assert.equal(dstSaju.dstCorrected, true);
+    mark('saju_dst_auto_correction');
+
+    // Task 5: 일운 30일 계산 검증
+    const ilwoon30 = calculateMonthlyIlwoon(new Date(2026, 5, 1), 30, '갑', '중화', ['자', '오', '묘', '유']);
+    assert.equal(ilwoon30.length, 30);
+    assert.equal(typeof ilwoon30[0].score, 'number');
+    mark('saju_ilwoon_30days');
+
+    // Task 7 & 8: 점성술 Chiron, Nodes, Fortuna, Retrograde 검증
+    assert.equal(kstChart.planets.length, 14);
+    const chiron = kstChart.planets.find((p: any) => p.planet === 'chiron');
+    const northNode = kstChart.planets.find((p: any) => p.planet === 'northNode');
+    const fortuna = kstChart.planets.find((p: any) => p.planet === 'fortuna');
+    assert.ok(chiron, 'Chiron must be present');
+    assert.ok(northNode, 'North Node must be present');
+    assert.ok(fortuna, 'Fortuna must be present');
+    assert.equal(typeof kstChart.planets[2].isRetrograde, 'boolean');
+
+    // Phase 3: 4대 앵글 및 하우스 시스템 검증
+    assert.ok(kstChart.angles && kstChart.angles.mc, '4 Angles (ASC, MC, DESC, IC) must exist');
+    assert.equal(typeof kstChart.angles.mc.longitude, 'number');
+    assert.equal(kstChart.houseSystem, 'placidus');
+
+    const wholeSignChart = calculateAstrology(new Date(2026, 2, 20), '23:30', 37.5665, 126.9780, 9, 'whole_sign');
+    assert.equal(wholeSignChart.houseSystem, 'whole_sign');
+    assert.ok(wholeSignChart.houseCusps?.length === 12, 'House cusps must be 12');
+
+    mark('astrology_chiron_nodes_retrograde');
+
+    // Task 9: 자미두수 (Ziwei Doushu) 독자 엔진 검증 (Phase 2 Upgrade)
+    const { calculateZiweiChart } = localRequire('../src/lib/engines/ziwei.ts');
+    const ziweiRes = calculateZiweiChart(new Date(1993, 7, 2), 15, 'male', false, 2026);
+    assert.ok(ziweiRes.palaceList.length === 12, 'Ziwei chart must have 12 palaces');
+    assert.ok(ziweiRes.wuxingJu.number >= 2 && ziweiRes.wuxingJu.number <= 6, 'WuxingJu number must be valid');
+    assert.ok(ziweiRes.siHuaSummary.화록, 'SiHua summary must exist');
+
+    // 주성 7단계 밝기 및 보성/흉성 검증
+    const allStars = ziweiRes.palaceList.flatMap((p: any) => p.stars);
+    const ziweiStar = allStars.find((s: any) => s.name === '자미');
+    assert.ok(ziweiStar && ziweiStar.brightness, 'Ziwei star must have 7-level brightness');
+    assert.ok(allStars.some((s: any) => s.name === '문창'), 'Wenchang auxiliary star must exist');
+    assert.ok(allStars.some((s: any) => s.name === '경양'), 'Jingyang malefic star must exist');
+    assert.ok(ziweiRes.yearlyFortune && ziweiRes.yearlyFortune.year === 2026, 'Yearly fortune for 2026 must exist');
+
+    mark('saju_ziwei_chart_calc');
     mark('engine_accuracy_audit_edge_contract');
   } finally {
     restoreLoader();

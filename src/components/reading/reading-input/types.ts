@@ -31,6 +31,8 @@ export type ReadingData = {
     readonly partnerBirthTime?: string;
     readonly partnerGender?: ReadingGender;
     readonly inviteCode?: string;
+    readonly ziSiMode?: 'tongja' | 'yaja' | 'joja';
+    readonly dstCorrection?: boolean;
 };
 
 export type ReadingInputProps = {
