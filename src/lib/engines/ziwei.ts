@@ -113,8 +113,8 @@ function getStarBrightness(starName: string, branchIdx: number): ZiweiBrightness
 // 오행국 결정 테이블 (납음오행 기반)
 // =====================================
 function determineWuxingJu(mingStem: string, mingBranch: string): ZiweiWuxingJu {
-  const stemIdx = ZIWEI_STEMS.indexOf(mingStem as any);
-  const branchIdx = ZIWEI_BRANCHES.indexOf(mingBranch as any);
+  const stemIdx = (ZIWEI_STEMS as readonly string[]).indexOf(mingStem);
+  const branchIdx = (ZIWEI_BRANCHES as readonly string[]).indexOf(mingBranch);
 
   const g = Math.floor(stemIdx / 2) + 1;
   const z = (Math.floor(branchIdx / 2) % 3) + 1;
@@ -153,7 +153,7 @@ export const SIHUA_TABLE: Record<string, Record<'화록' | '화권' | '화과' |
  * 자미성(紫微星) 지지 위치 계산
  */
 function locateZiweiStar(lunarDay: number, juNumber: number): number {
-  let rem = lunarDay % juNumber;
+  const rem = lunarDay % juNumber;
   let quotient = Math.floor(lunarDay / juNumber);
 
   if (rem !== 0) {

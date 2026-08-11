@@ -389,11 +389,11 @@ export function calculateHouseCusps(angles: NatalAngles, system: HouseSystem = '
         cusps[6] = angles.desc.longitude;    // House 7
         cusps[9] = mcLong;                   // House 10
 
-        let arc1 = (ascLong - mcLong + 360) % 360;
+        const arc1 = (ascLong - mcLong + 360) % 360;
         cusps[10] = (mcLong + arc1 / 3) % 360;
         cusps[11] = (mcLong + (2 * arc1) / 3) % 360;
 
-        let arc2 = (cusps[3] - ascLong + 360) % 360;
+        const arc2 = (cusps[3] - ascLong + 360) % 360;
         cusps[1] = (ascLong + arc2 / 3) % 360;
         cusps[2] = (ascLong + (2 * arc2) / 3) % 360;
 
@@ -1005,7 +1005,7 @@ function calculateVenusPosition(jd: number): { sign: number; degree: number; lon
     const Mj = toRadians(normalizeDegrees(34.35 + 3034.9 * T));  // Jupiter mean anomaly approx
     const perturbation = 0.00313 * Math.cos(2 * M - 2 * Mj - toRadians(148.3));
 
-    let longitude = normalizeDegrees(L + toDegrees(nu - M) + perturbation);
+    const longitude = normalizeDegrees(L + toDegrees(nu - M) + perturbation);
 
     return {
         sign: Math.floor(longitude / 30),
@@ -1036,7 +1036,7 @@ function calculateMarsPosition(jd: number): { sign: number; degree: number; long
     const Mj = toRadians(normalizeDegrees(34.35 + 3034.9 * T));
     const perturbation = -0.01133 * Math.sin(Mj) + 0.00678 * Math.cos(2 * Mj);
 
-    let longitude = normalizeDegrees(L + toDegrees(nu - M) + perturbation);
+    const longitude = normalizeDegrees(L + toDegrees(nu - M) + perturbation);
 
     return {
         sign: Math.floor(longitude / 30),
@@ -1069,7 +1069,7 @@ function calculateJupiterPosition(jd: number): { sign: number; degree: number; l
         - 0.056 * Math.sin(2 * M - 2 * Ms + toRadians(21))
         + 0.042 * Math.sin(3 * M - 5 * Ms + toRadians(21));
 
-    let longitude = normalizeDegrees(L + toDegrees(nu - M) + perturbation);
+    const longitude = normalizeDegrees(L + toDegrees(nu - M) + perturbation);
 
     return {
         sign: Math.floor(longitude / 30),
@@ -1102,7 +1102,7 @@ function calculateSaturnPosition(jd: number): { sign: number; degree: number; lo
         - 0.229 * Math.cos(2 * M - 4 * Mj + toRadians(2))
         + 0.119 * Math.sin(M - 2 * Mj + toRadians(3));
 
-    let longitude = normalizeDegrees(L + toDegrees(nu - M) + perturbation);
+    const longitude = normalizeDegrees(L + toDegrees(nu - M) + perturbation);
 
     return {
         sign: Math.floor(longitude / 30),
@@ -1129,7 +1129,7 @@ function calculateUranusPosition(jd: number): { sign: number; degree: number; lo
         Math.sqrt(1 - e) * Math.cos(E / 2)
     );
 
-    let longitude = normalizeDegrees(L + toDegrees(nu - M));
+    const longitude = normalizeDegrees(L + toDegrees(nu - M));
 
     return {
         sign: Math.floor(longitude / 30),
@@ -1156,7 +1156,7 @@ function calculateNeptunePosition(jd: number): { sign: number; degree: number; l
         Math.sqrt(1 - e) * Math.cos(E / 2)
     );
 
-    let longitude = normalizeDegrees(L + toDegrees(nu - M));
+    const longitude = normalizeDegrees(L + toDegrees(nu - M));
 
     return {
         sign: Math.floor(longitude / 30),
@@ -1184,7 +1184,7 @@ function calculatePlutoPosition(jd: number): { sign: number; degree: number; lon
         Math.sqrt(1 - e) * Math.cos(E / 2)
     );
 
-    let longitude = normalizeDegrees(L + toDegrees(nu - M));
+    const longitude = normalizeDegrees(L + toDegrees(nu - M));
 
     return {
         sign: Math.floor(longitude / 30),
