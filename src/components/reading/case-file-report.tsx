@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, Lock } from 'lucide-react';
+import { ArrowRight, Lock, RefreshCw } from 'lucide-react';
 import type { PremiumReportData } from './premium-report';
 
 type TarotCard = {
@@ -13,6 +13,7 @@ type CaseFileReportProps = {
     readonly language?: 'ko' | 'en';
     readonly isFreeView?: boolean;
     readonly isLoading?: boolean;
+    readonly hasError?: boolean;
     readonly onRetry?: () => void;
     readonly onUnlock?: (source?: string) => void;
     readonly onOpenTarotCard?: (index: number) => void;
@@ -38,35 +39,39 @@ type TimelineItem = {
 const CHAPTERS_KO = ['판정', '사주', '점성', '타로', '타이밍', '실행'];
 const CHAPTERS_EN = ['Verdict', 'Saju', 'Astro', 'Tarot', 'Timing', 'Action'];
 
-function compactText(value: string | undefined, fallback: string, limit = 210) {
-    const text = value?.trim() || fallback;
-
+function cleanHumanText(value: string | undefined, fallback: string, limit = 260): string {
+    if (!value || !value.trim()) return fallback;
+    let text = value.trim();
+    // Strip redundant leading raw jargon prefixes like "지금 움직이기: 사주 근거: "
+    text = text.replace(/^([가-힣\s]+:\s*)+사주\s*근거:\s*/i, '');
     if (text.length <= limit) return text;
     return `${text.slice(0, limit).trim()}...`;
 }
 
+const compactText = cleanHumanText;
+
 function buildEvidence(report: PremiumReportData, isEn: boolean): readonly EvidenceItem[] {
     return [
         {
-            label: isEn ? '01 / Saju' : '01 / 사주',
+            label: isEn ? '01 / Saju' : '01 / 사주 기질',
             title: isEn ? 'Foundation' : '기질과 구조',
-            body: compactText(
+            body: cleanHumanText(
                 report.final_verdict?.saju_foundation || report.saju_sections?.[0]?.content,
                 isEn ? 'Your birth structure sets the baseline for this decision.' : '사주는 이번 선택에서 반복되는 기질과 구조를 보여줍니다.'
             ),
         },
         {
-            label: isEn ? '02 / Astrology' : '02 / 점성술',
+            label: isEn ? '02 / Astrology' : '02 / 점성술 기상도',
             title: isEn ? 'Current Weather' : '현재의 기상도',
-            body: compactText(
+            body: cleanHumanText(
                 report.final_verdict?.astro_support || report.astro_deep?.sun_moon_dynamic?.content,
                 isEn ? 'The sky layer clarifies when the pressure rises or releases.' : '점성술은 압력이 높아지는 시점과 풀리는 리듬을 보완합니다.'
             ),
         },
         {
-            label: isEn ? '03 / Tarot' : '03 / 타로',
+            label: isEn ? '03 / Tarot' : '03 / 타로 3카드',
             title: isEn ? 'Near-term Signal' : '가까운 신호',
-            body: compactText(
+            body: cleanHumanText(
                 report.final_verdict?.tarot_insight || report.tarot_details?.[0]?.interpretation,
                 isEn ? 'Tarot reads the immediate emotional signal around the question.' : '타로는 지금 질문 주변의 즉각적인 심리 신호를 잡아냅니다.'
             ),
@@ -138,6 +143,7 @@ export function CaseFileReport({
     language = 'ko',
     isFreeView = false,
     isLoading = false,
+    hasError = false,
     onRetry,
     onUnlock,
     onOpenTarotCard,
@@ -332,13 +338,27 @@ export function CaseFileReport({
                         </div>
                     )}
 
-                    {onRetry && (
-                        <div className="border-t border-white/10 px-5 py-5 md:px-10">
-                            <button onClick={onRetry} className="text-sm text-stone-500 underline decoration-white/20 underline-offset-4 transition hover:text-stone-200">
-                                {isEn ? 'Refresh missing premium sections' : '누락된 상세 섹션 다시 생성하기'}
-                            </button>
-                        </div>
-                    )}
+                    {(() => {
+                        const isPartialOrIncomplete = hasError || (
+                            !isLoading && (
+                                !report.summary ||
+                                (!isFreeView && !report.final_verdict && !report.fortune_flow)
+                            )
+                        );
+
+                        return onRetry && isPartialOrIncomplete ? (
+                            <div className="border-t border-white/10 bg-[#0f0e0c] px-5 py-4 text-center md:px-10">
+                                <button
+                                    type="button"
+                                    onClick={onRetry}
+                                    className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-medium text-stone-400 transition hover:border-[#c8a84d]/40 hover:bg-[#c8a84d]/10 hover:text-[#c8a84d]"
+                                >
+                                    <RefreshCw className="h-3.5 w-3.5 text-[#c8a84d]" />
+                                    <span>{isEn ? 'Resume loading missing sections' : '리포트 세부 데이터 이어서 불러오기'}</span>
+                                </button>
+                            </div>
+                        ) : null;
+                    })()}
                 </div>
             </div>
         </section>

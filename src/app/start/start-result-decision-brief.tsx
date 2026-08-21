@@ -109,48 +109,64 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
   const unlockTrustCopy = isEn
     ? `This is a one-time${priceLabel ? ` ${priceLabel}` : ''} 7-Day Decision Packet. Locked sections include why this verdict was chosen, timing, and message/action variants.`
     : `one-time${priceLabel ? ` ${priceLabel}` : ''} 7일 결정 패킷으로 잠긴 섹션을 엽니다. 왜 이 판정인지, 타이밍, message/action variants를 확인합니다.`;
-  const blocks = [
+
+  const subBlocks = [
     {
-      label: isRelationshipContactTiming ? (isEn ? 'Contact Verdict' : '연락 판정') : (isEn ? 'Decision' : '판정'),
-      value: `${decisionLabel}: ${verdict}`,
-      Icon: isRelationshipContactTiming ? MessageCircle : Target,
+      label: isEn ? 'Delayed Choice' : '미룬 선택',
+      value: delayedChoice,
+      Icon: Shield,
+      accent: 'border-white/10 bg-black/25 text-white/90',
+      badgeColor: 'text-acc-gold/90 bg-acc-gold/10 border-acc-gold/20',
     },
-    { label: isEn ? 'Delayed Choice' : '미룬 선택', value: delayedChoice, Icon: Shield },
-    { label: isEn ? 'Timing Boundary' : '타이밍 경계', value: timingBoundary, Icon: Clock3 },
+    {
+      label: isEn ? 'Timing Boundary' : '타이밍 경계',
+      value: timingBoundary,
+      Icon: Clock3,
+      accent: 'border-white/10 bg-black/25 text-white/90',
+      badgeColor: 'text-amber-300/90 bg-amber-500/10 border-amber-500/20',
+    },
     {
       label: isRelationshipContactTiming
         ? (isEn ? 'First Safer Move' : '첫 안전 행동')
         : (isEn ? 'First Action' : '첫 행동'),
       value: firstAction,
       Icon: ListChecks,
+      accent: 'border-white/10 bg-black/25 text-white/90',
+      badgeColor: 'text-emerald-300/90 bg-emerald-500/10 border-emerald-500/20',
     },
     {
       label: isEn ? 'Gaeun Action' : '가은 액션',
       value: gaeunAction,
       Icon: Sparkles,
+      accent: 'border-white/10 bg-black/25 text-white/90',
+      badgeColor: 'text-purple-300/90 bg-purple-500/10 border-purple-500/20',
     },
     {
-      label: isEn ? 'Avoid' : '피할 것',
+      label: isEn ? 'Avoid' : '피할 것 (주의)',
       value: avoid,
       Icon: AlertTriangle,
+      accent: 'border-rose-500/25 bg-rose-950/20 text-rose-100/90',
+      badgeColor: 'text-rose-400 bg-rose-500/15 border-rose-500/30',
     },
   ];
 
   return (
-    <section className="mx-auto mb-6 max-w-3xl overflow-hidden rounded-[30px] border border-acc-gold/18 bg-[linear-gradient(180deg,rgba(244,216,138,0.08),rgba(255,255,255,0.025))] shadow-[0_28px_80px_rgba(7,10,20,0.42)] backdrop-blur-2xl">
-      <div className="border-b border-white/8 px-5 py-5 sm:px-7">
+    <section className="mx-auto mb-8 max-w-3xl overflow-hidden rounded-[32px] border border-acc-gold/25 bg-[linear-gradient(180deg,rgba(244,216,138,0.09),rgba(15,18,28,0.85))] shadow-[0_32px_96px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
+      {/* Header */}
+      <div className="border-b border-white/10 px-6 py-6 sm:px-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-acc-gold/20 bg-acc-gold/10 px-3 py-1 text-[10px] uppercase tracking-[0.24em] text-acc-gold">
+            <div className="inline-flex items-center gap-2 rounded-full border border-acc-gold/30 bg-acc-gold/15 px-3.5 py-1 text-[11px] font-medium uppercase tracking-[0.24em] text-acc-gold shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+              <Target className="h-3.5 w-3.5 text-acc-gold" />
               {isEn ? 'First Decision Brief' : '첫 결정 브리프'}
             </div>
-            <h2 className="mt-3 text-2xl font-bold leading-tight text-white md:text-3xl">
+            <h2 className="mt-3.5 text-2xl font-bold leading-tight text-white md:text-3xl">
               {isRelationshipContactTiming
                 ? (isEn ? 'Read this before you text them.' : '연락하기 전 이 세 가지만 먼저 보세요.')
                 : (isEn ? 'Move now, wait, narrow, or stop?' : '움직일지, 기다릴지, 좁힐지, 멈출지 먼저 보세요.')}
             </h2>
             {props.readingData?.question ? (
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-white/58">
+              <p className="mt-2.5 max-w-2xl text-sm leading-6 text-white/60">
                 &ldquo;{props.readingData.question}&rdquo;
               </p>
             ) : null}
@@ -159,7 +175,7 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
             <button
               type="button"
               onClick={() => { void props.onUnlock(); }}
-              className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-acc-gold/25 bg-acc-gold/10 px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.18em] text-acc-gold transition-all hover:border-acc-gold/50 hover:bg-acc-gold hover:text-black"
+              className="inline-flex min-h-[46px] shrink-0 items-center justify-center gap-2 rounded-full border border-acc-gold/40 bg-acc-gold/15 px-6 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-acc-gold shadow-[0_0_20px_rgba(212,175,55,0.25)] transition-all hover:scale-[1.02] hover:border-acc-gold hover:bg-acc-gold hover:text-black"
             >
               <Lock size={14} />
               {isRelationshipContactTiming
@@ -169,25 +185,51 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
           ) : null}
         </div>
       </div>
-      <div className="grid gap-3 px-5 py-5 sm:px-7 md:grid-cols-2 xl:grid-cols-5">
-        {blocks.map(({ label, value, Icon }) => (
-          <article key={label} className="rounded-[22px] border border-white/10 bg-black/20 p-4">
-            <div className="mb-3 flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-white/42">
-              <Icon className="h-3.5 w-3.5 text-acc-gold" />
-              {label}
+
+      {/* Hero Verdict Banner */}
+      <div className="mx-6 my-6 rounded-[26px] border border-acc-gold/30 bg-[linear-gradient(135deg,rgba(212,175,55,0.12),rgba(20,24,38,0.7))] p-6 sm:mx-8 sm:p-7 shadow-[0_12px_40px_rgba(0,0,0,0.3)]">
+        <div className="mb-3 flex items-center gap-3">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-acc-gold/40 bg-acc-gold/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-acc-gold shadow-[0_0_12px_rgba(212,175,55,0.3)]">
+            {isRelationshipContactTiming ? <MessageCircle className="h-3.5 w-3.5" /> : <Target className="h-3.5 w-3.5" />}
+            <span>{isRelationshipContactTiming ? (isEn ? 'Verdict' : '연락 판정') : (isEn ? 'Verdict' : '핵심 판정')}</span>
+          </div>
+          <span className="text-sm font-semibold text-acc-gold/90">{decisionLabel}</span>
+        </div>
+        <p className="text-base font-medium leading-relaxed text-white/95 sm:text-lg">
+          {verdict}
+        </p>
+      </div>
+
+      {/* Spacious 2-Column Grid for Sub-Blocks */}
+      <div className="grid grid-cols-1 gap-4 px-6 pb-6 sm:px-8 md:grid-cols-2">
+        {subBlocks.map(({ label, value, Icon, accent, badgeColor }, idx) => (
+          <article
+            key={label}
+            className={`rounded-[24px] border ${accent} p-5 sm:p-6 transition-all duration-300 hover:border-white/20 hover:bg-black/35 ${
+              idx === subBlocks.length - 1 && subBlocks.length % 2 !== 0 ? 'md:col-span-2' : ''
+            }`}
+          >
+            <div className="mb-3 flex items-center gap-2">
+              <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-wider ${badgeColor}`}>
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </span>
             </div>
-            <p className="text-sm leading-7 text-white/78">{value}</p>
+            <p className="text-sm font-normal leading-7 text-white/85 sm:text-base sm:leading-7">
+              {value}
+            </p>
           </article>
         ))}
       </div>
+
       {!props.isPremium ? (
-        <div className="border-t border-white/8 px-5 py-4 sm:px-7">
+        <div className="border-t border-white/10 px-6 py-5 sm:px-8">
           {freeFocus?.copy_ready_message ? (
-            <p className="mb-3 rounded-[18px] border border-white/10 bg-white/[0.04] px-4 py-3 text-sm leading-6 text-white/72">
+            <p className="mb-4 rounded-[20px] border border-acc-gold/20 bg-acc-gold/[0.06] px-5 py-4 text-sm leading-6 text-white/80">
               &ldquo;{freeFocus.copy_ready_message}&rdquo;
             </p>
           ) : null}
-          <p className="mb-2 flex items-start gap-2 text-xs leading-5 text-white/55">
+          <p className="mb-2.5 flex items-start gap-2 text-xs leading-5 text-white/60">
             <Shield className="mt-0.5 h-3.5 w-3.5 shrink-0 text-acc-gold" />
             <span>{confidenceNote}</span>
           </p>

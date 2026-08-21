@@ -67,7 +67,7 @@ export function buildEvidenceFirstNarrativeRule(
 
   return language === 'en'
     ? '# Evidence-First Writing Rule\n- Start from the strongest shared signal before edge cases.\n- If evidence is thin, say that clearly instead of padding with confidence.\n- Avoid filler, repeated reassurance, and empty inspiration.'
-    : '# 행동 패턴 묘사 우선 규칙\n- 명리 용어 해설보다 인간 행동 패턴 묘사를 우선해라.\n- "편관이 있다" 대신 → "결국 의사결정권을 가져야 만족하는 타입이다"\n- "재물운이 좋다" 대신 → "돈을 버는 능력보다 계속 일을 키우는 성향이 강한 사람"\n- 명리 용어는 (근거: ...) 인용에만 사용하고, 본문은 현실의 언어로 번역해서 써라.\n- 엣지 케이스보다 가장 강하게 겹치는 신호에서 먼저 시작해라.\n- 근거가 약하면 자신감 있는 말로 덮지 말고, 불확실성을 그대로 밝혀라.\n- 빈 위로, 반복 위안, 공허한 고무 문장은 금지.';
+    : '# 행동 패턴 묘사 우선 규칙 (쉬운 언어 번역 필수)\n- 명리 용어/점성술 한자어 나열을 절대 금지하고, 인간 행동 패턴 및 상황 묘사를 가장 먼저 써라.\n- "일간 을목이 묘목에 뿌리를 둔 편재 구조로..." 처럼 용어만 나열하는 서술은 전면 금지한다.\n- 올바른 작성법: "스스로 주도권을 쥐고 일을 추진하려는 성향이 강하나, 현재 현실적인 금액이나 주변의 압박으로 진로 갈등이 일어나는 시기입니다. (사주 근거: 을목 일간, 편재)"\n- "재물운이 좋다" 대신 → "돈을 버는 능력보다 계속 일을 키우는 성향이 강한 사람"\n- 전문 용어는 오직 괄호 (근거: ...) 내에만 짧게 부연하고, 문장 본문은 일반인이 읽자마자 1초 만에 이해하는 직관적 한글로 번역해서 써라.\n- 엣지 케이스보다 가장 강하게 겹치는 신호에서 먼저 시작해라.\n- 근거가 약하면 자신감 있는 말로 덮지 말고, 불확실성을 그대로 밝혀라.\n- 빈 위로, 반복 위안, 공허한 고무 문장은 금지.';
 }
 
 export function buildPromptDepthRule(
