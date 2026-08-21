@@ -61,10 +61,6 @@ const nextConfig: NextConfig = {
       exclude: ['error', 'warn'],
     } : false,
   },
-
-  turbopack: {
-    root: __dirname,
-  },
 };
 
 export default nextConfig;
