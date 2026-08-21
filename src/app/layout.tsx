@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import Script from "next/script";
 import "./globals.css";
 import JsonLd from "@/components/seo/json-ld";
-import { Analytics } from '@vercel/analytics/react';
+import { Analytics } from '@vercel/analytics/next';
 import SessionProvider from "@/components/providers/SessionProvider";
 import LenisProvider from "@/components/providers/LenisProvider";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
