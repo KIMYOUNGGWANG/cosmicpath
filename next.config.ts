@@ -5,7 +5,17 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname),
   // Security: Disable x-powered-by header
   poweredByHeader: false,
-  allowedDevOrigins: ['127.0.0.1', 'localhost'],
+  allowedDevOrigins: [
+    '127.0.0.1',
+    'localhost',
+    '172.16.225.18',
+    '172.20.10.3',
+    '192.168.*',
+    '172.16.*',
+    '172.20.*',
+    '10.*',
+    '*.local',
+  ],
 
   images: {
     localPatterns: [
