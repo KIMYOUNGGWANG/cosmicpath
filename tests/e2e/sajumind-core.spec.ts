@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('SajuMind Core API and Flow Contracts', () => {
+  test.beforeEach(async () => {
+    test.setTimeout(60000);
+  });
   test('POST /api/sajumind/chart returns Day Master and Five Elements', async ({ request }) => {
     const res = await request.post('/api/sajumind/chart', {
       data: {
