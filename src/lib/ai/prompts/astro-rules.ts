@@ -110,7 +110,7 @@ export function formatAstrologyForPrompt(astro: AstrologyResult, lang: 'ko' | 'e
 
     // 3. 행성 품위
     if (astro.dignities && Object.keys(astro.dignities).length > 0) {
-        const significantDignities = Object.entries(astro.dignities).filter(([_, d]) => Math.abs(d.score) >= 4);
+        const significantDignities = Object.entries(astro.dignities).filter(([, d]) => Math.abs(d.score) >= 4);
         if (significantDignities.length > 0) {
             lines.push('');
             lines.push(lang === 'ko' ? '【행성 품위 (중요)】' : '【Planet Dignities (Significant)】');
@@ -168,8 +168,8 @@ export function getAstrologyInterpretationDirective(astro: AstrologyResult, lang
         const elementCount: Record<string, number> = { fire: 0, earth: 0, air: 0, water: 0 };
         [sunElement, moonElement, ascElement].forEach(e => { elementCount[e]++; });
 
-        const dominant = Object.entries(elementCount).filter(([_, c]) => c >= 2).map(([e]) => e);
-        const lacking = Object.entries(elementCount).filter(([_, c]) => c === 0).map(([e]) => e);
+        const dominant = Object.entries(elementCount).filter(([, c]) => c >= 2).map(([e]) => e);
+        const lacking = Object.entries(elementCount).filter(([, c]) => c === 0).map(([e]) => e);
 
         return `
 <ASTROLOGY_ANALYSIS>
@@ -182,7 +182,7 @@ ${astroContext}
 3. 행성 품위(Dignities)가 높은(+4~5) 행성은 강점, 낮은(-4~5) 행성은 보완점으로 언급하세요.
 4. 강력한 Aspects는 성격과 관계에 큰 영향을 미칩니다.
 5. 차트 패턴(Grand Trine, T-Square 등)은 전체적인 삶의 구조를 나타냅니다.
-6. 점성술은 타이밍 압력과 풀리는 창을 읽는 레이어이므로, 사주 구조와 타로 즉각 신호와 교차 검증하세요.
+6. 점성술은 타이밍 압력과 풀리는 창을 읽는 레이어이므로, 사주 구조와 자미두수/수비학 데이터와 교차 검증하세요.
 </ASTROLOGY_INTERPRETATION_RULES>
 
 <SUN_MOON_DYNAMIC_GUIDE>
@@ -263,7 +263,7 @@ ${astroContext}
 3. High Dignities (+4~5) = strengths; Low Dignities (-4~5) = areas to improve.
 4. Strong Aspects significantly influence personality and relationships.
 5. Chart Patterns represent overall life structure.
-6. Astrology reads timing pressure and release windows; cross-validate it with Saju structure and Tarot's immediate signal.
+6. Astrology reads timing pressure and release windows; cross-validate it with Saju structure and Ziwei/Numerology strategic cycles.
 </ASTROLOGY_INTERPRETATION_RULES>
 `;
     }

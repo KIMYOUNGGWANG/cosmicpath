@@ -17,7 +17,6 @@
 import { InterpretationGuide } from '../core/conflict-resolver';
 import { SajuResult, formatSaju } from '../engines/saju';
 import { AstrologyResult, formatAstrology } from '../engines/astrology';
-import { TarotCard } from '../engines/tarot';
 import {
   type OracleAdvisorProfile,
   type OracleCharacterId,
@@ -49,7 +48,7 @@ export type Language = 'ko' | 'en';
 export interface ChatReadingData {
   saju: string | SajuResult | null | undefined;
   astrology: string | AstrologyResult | null | undefined;
-  tarot: TarotCard[] | string | null | undefined;
+  tarot: unknown[] | string | null | undefined;
   name?: string;
   characterId?: OracleCharacterId;
   questionIntent?: OracleQuestionIntent;
@@ -205,7 +204,7 @@ export function buildUserPrompt(
   guide: InterpretationGuide,
   saju: SajuResult,
   astrology: AstrologyResult,
-  tarotCards: TarotCard[],
+  tarotCards: unknown[] | undefined,
   context: ReadingContext,
   question: string,
   language: Language = 'ko',
@@ -234,9 +233,11 @@ export function buildUserPrompt(
         : `\n<사주_정밀_데이터>\n${saju.oraclePromptBlock}\n</사주_정밀_데이터>`)
     : '';
   const astroData = formatAstrology(astrology);
-  const tarotData = tarotCards
-    .map(c => isEn ? `${c.nameEn} (${c.isReversed ? 'R' : 'U'})` : `${c.name} (${c.isReversed ? '역' : '정'})`)
-    .join(', ');
+  const tarotData = Array.isArray(tarotCards) && tarotCards.length > 0
+    ? (tarotCards as Array<{ name?: string; nameEn?: string; isReversed?: boolean }>)
+        .map(c => isEn ? `${c?.nameEn || c?.name || ''} (${c?.isReversed ? 'R' : 'U'})` : `${c?.name || ''} (${c?.isReversed ? '역' : '정'})`)
+        .join(', ')
+    : (isEn ? 'None' : '없음');
 
   // Partner Data Formatting
   let partnerInfo = '';
@@ -424,11 +425,16 @@ export function buildChatSystemPrompt(
 
   const tarotCards = Array.isArray(readingData.tarot) ? readingData.tarot : [];
   const tarotSummary = tarotCards
-    .map((c: TarotCard) => isEn
-      ? `${c.nameEn} (${c.isReversed ? 'R' : 'U'})`
-      : `${c.name} (${c.isReversed ? '역' : '정'})`
-    )
-    .join(', ') || (isEn ? 'No tarot data' : '타로 정보 없음');
+    .map((c) => {
+      const item = typeof c === 'object' && c !== null ? (c as Record<string, unknown>) : {};
+      const name = String(item.name || '');
+      const nameEn = String(item.nameEn || name);
+      const isReversed = Boolean(item.isReversed);
+      return isEn
+        ? `${nameEn} (${isReversed ? 'R' : 'U'})`
+        : `${name} (${isReversed ? '역' : '정'})`;
+    })
+    .join(', ') || (isEn ? 'Deterministic Saju/Astrology/Ziwei Data' : '순수 사주·점성술·자미두수 데이터 기반');
 
   const basePrompt = buildUnifiedSystemPrompt(language);
 

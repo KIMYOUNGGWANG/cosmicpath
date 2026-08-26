@@ -171,6 +171,8 @@ function locateZiweiStar(lunarDay: number, juNumber: number): number {
   return pos;
 }
 
+import { globalEngineCache } from './engine-cache';
+
 // =====================================
 // 자미두수 명반 산출 메인 함수
 // =====================================
@@ -181,6 +183,10 @@ export function calculateZiweiChart(
   isLunarInput: boolean = false,
   targetYear?: number
 ): ZiweiChartResult {
+  const cacheKey = `ziwei_${birthDate.toISOString().slice(0, 10)}_${birthHour}_${gender}_${isLunarInput}_${targetYear || ''}`;
+  const cached = globalEngineCache.get<ZiweiChartResult>(cacheKey);
+  if (cached) return cached;
+
   const year = birthDate.getFullYear();
   const month = birthDate.getMonth() + 1;
   const day = birthDate.getDate();
@@ -412,7 +418,7 @@ export function calculateZiweiChart(
     };
   }
 
-  return {
+  const result: ZiweiChartResult = {
     solarDate: solarDateStr,
     lunarDate: lunarDateStr,
     isLeapMonth,
@@ -426,4 +432,7 @@ export function calculateZiweiChart(
     siHuaSummary,
     yearlyFortune,
   };
+
+  globalEngineCache.set(cacheKey, result);
+  return result;
 }

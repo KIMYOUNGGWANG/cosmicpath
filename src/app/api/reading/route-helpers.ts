@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { generateInterpretationGuide } from '@/lib/core/conflict-resolver';
 import { calculateAstrology, ZODIAC_SIGNS } from '@/lib/engines/astrology';
-import type { TarotCard } from '@/lib/engines/tarot';
 import {
   buildOracleAdvisorProfile,
   ORACLE_QUESTION_INTENTS,
@@ -72,6 +71,15 @@ export const ReadingRequestSchema = z.object({
 });
 
 export type ReadingLanguage = 'ko' | 'en';
+export type TarotCard = {
+  id: number;
+  name: string;
+  nameEn: string;
+  keywords: string[];
+  interpretation: string;
+  isReversed: boolean;
+  image?: string;
+};
 export type ReadingGuideSnapshot = ReturnType<typeof generateInterpretationGuide>;
 export type StoredLegacySajuResult = ReturnType<typeof mapToLegacySaju>;
 
@@ -92,7 +100,7 @@ export interface StoredReadingRuntime {
 }
 
 const FreeReadingTraitSchema = z.object({
-  type: z.enum(['saju', 'astro', 'tarot']),
+  type: z.enum(['saju', 'astro', 'ziwei', 'tarot']),
   name: z.string().min(1).max(32),
   description: z.string().min(1).max(120),
   grade: z.enum(['S', 'A', 'B']),
@@ -157,7 +165,7 @@ const FREE_READING_TITLES: Record<OracleQuestionIntent, Record<ReadingLanguage, 
 
 const CONFIDENCE_TEXT_EN = {
   very_high: {
-    message: 'Saju, natal timing, and tarot are converging in the same direction.',
+    message: 'Saju, natal timing, and multi-system signals are converging in the same direction.',
     recommendation: 'Act with conviction, but keep execution disciplined.',
   },
   high: {
@@ -403,7 +411,7 @@ export function buildReadingMetadata(params: {
   guide: ReadingGuideSnapshot;
   saju: StoredLegacySajuResult;
   astrology: ReturnType<typeof calculateAstrology>;
-  cards: TarotCard[];
+  cards?: unknown[];
   characterId: string;
   questionIntent: OracleQuestionIntent;
   decisionAction: DecisionActionContract;
@@ -431,8 +439,8 @@ export function buildReadingMetadata(params: {
       ascendant: params.astrology.ascendant,
     },
     astrologyResult: params.astrology,
-    tarot: params.cards.map((card) => ({ name: card.name, isReversed: card.isReversed })),
-    tarotCards: params.cards,
+    tarot: Array.isArray(params.cards) ? params.cards.map((card: any) => ({ name: card?.name || '', isReversed: !!card?.isReversed })) : [],
+    tarotCards: Array.isArray(params.cards) ? params.cards : [],
     characterId: params.characterId,
     questionIntent: params.questionIntent,
     decisionAction: params.decisionAction,
@@ -483,7 +491,7 @@ function buildDeterministicFreeReport(params: {
   guide: ReadingGuideSnapshot;
   saju: StoredLegacySajuResult;
   astrology: ReturnType<typeof calculateAstrology>;
-  cards: TarotCard[];
+  cards?: unknown[];
   questionIntent: OracleQuestionIntent;
   decisionAction: DecisionActionContract;
   question?: string;
@@ -504,21 +512,20 @@ function buildDeterministicFreeReport(params: {
   );
   const astroLine = extractEvidenceLine(
     params.advisorEvidenceSummary,
-    params.language === 'en' ? ['Natal', 'Ziwei'] : ['점성', '자미']
+    params.language === 'en' ? ['Natal'] : ['점성']
   );
-  const tarotLine = extractEvidenceLine(
+  const ziweiLine = extractEvidenceLine(
     params.advisorEvidenceSummary,
-    params.language === 'en' ? ['Tarot'] : ['타로']
+    params.language === 'en' ? ['Ziwei'] : ['자미']
   );
-  const tarotCard = params.cards[0];
-  const tarotDescription = tarotLine || (
+  const ziweiDescription = ziweiLine || (
     params.language === 'en'
-      ? `${tarotCard?.nameEn || 'Tarot'}${tarotCard?.isReversed ? ' reversed' : ''} reflects the immediate emotional weather around this question.`
-      : `${tarotCard?.name || '타로'}${tarotCard?.isReversed ? ' 역방향' : ''} 카드가 지금 질문의 즉각적인 심리 신호를 비춥니다. ${takeLeadSentences(tarotCard?.interpretation || '', 90)}`
+      ? `Ziwei celestial palace blueprint indicates a structural transition in your authority and destiny sectors.`
+      : `자미두수 명반 12궁 배치가 관록궁과 명궁의 구조적 전환기를 가리킵니다.`
   );
   const evidenceSummary = takeLeadSentences(
-    [sajuLine, astroLine, tarotDescription].filter(Boolean).join(' '),
-    180
+    [sajuLine, astroLine, ziweiDescription].filter(Boolean).join(' '),
+    240
   ) || freeFocus.evidence_summary;
   const safetyFreeFocus = shouldApplyRelationshipSafetyHold(params)
     ? buildRelationshipSafetyFreeFocus(params.language)
@@ -548,7 +555,7 @@ function buildDeterministicFreeReport(params: {
     traits: buildDeterministicFreeTraits(params, {
       sajuLine,
       astroLine,
-      tarotDescription,
+      ziweiDescription,
     }),
   };
 }
@@ -594,7 +601,7 @@ export function finalizeFreeReport(params: {
   guide: ReadingGuideSnapshot;
   saju: StoredLegacySajuResult;
   astrology: ReturnType<typeof calculateAstrology>;
-  cards: TarotCard[];
+  cards?: unknown[];
   questionIntent: OracleQuestionIntent;
   decisionAction: DecisionActionContract;
   question?: string;
@@ -682,7 +689,7 @@ function buildDeterministicFreeTraits(
     guide: ReadingGuideSnapshot;
     saju: StoredLegacySajuResult;
     astrology: ReturnType<typeof calculateAstrology>;
-    cards: TarotCard[];
+    cards?: unknown[];
     questionIntent: OracleQuestionIntent;
     advisorEvidenceSummary: string;
     language: ReadingLanguage;
@@ -690,25 +697,24 @@ function buildDeterministicFreeTraits(
   overrides?: {
     sajuLine?: string;
     astroLine?: string;
-    tarotDescription?: string;
+    ziweiDescription?: string;
   }
 ): FreeReadingReport['traits'] {
-  const tarotCard = params.cards[0];
   const sajuLine = overrides?.sajuLine || extractEvidenceLine(
     params.advisorEvidenceSummary,
     params.language === 'en' ? ['Saju'] : ['사주']
   );
   const astroLine = overrides?.astroLine || extractEvidenceLine(
     params.advisorEvidenceSummary,
-    params.language === 'en' ? ['Natal', 'Ziwei'] : ['점성', '자미']
+    params.language === 'en' ? ['Natal'] : ['점성']
   );
-  const tarotDescription = overrides?.tarotDescription || extractEvidenceLine(
+  const ziweiDescription = overrides?.ziweiDescription || extractEvidenceLine(
     params.advisorEvidenceSummary,
-    params.language === 'en' ? ['Tarot'] : ['타로']
+    params.language === 'en' ? ['Ziwei'] : ['자미']
   ) || (
     params.language === 'en'
-      ? `${tarotCard?.nameEn || 'Tarot'}${tarotCard?.isReversed ? ' reversed' : ''} reflects the immediate emotional weather around this question.`
-      : `${tarotCard?.name || '타로'}${tarotCard?.isReversed ? ' 역방향' : ''} 카드가 지금 질문의 즉각적인 심리 신호를 비춥니다. ${takeLeadSentences(tarotCard?.interpretation || '', 90)}`
+      ? `Ziwei Doushu palace alignments highlight key turning points in your vocation and fortune sectors.`
+      : `자미두수 명반 배치가 관록궁과 복덕궁의 주요 변곡점을 가리킵니다.`
   );
 
   return [
@@ -739,12 +745,12 @@ function buildDeterministicFreeTraits(
       grade: toTraitGrade(params.guide.radarScores.astrology),
     },
     {
-      type: 'tarot',
+      type: 'ziwei',
       name: params.language === 'en'
-        ? `${tarotCard?.nameEn || 'Tarot'} signal`
-        : `${tarotCard?.name || '타로'} 카드 신호`,
-      description: takeLeadSentences(tarotDescription, 110),
-      grade: toTraitGrade(params.guide.radarScores.tarot),
+        ? 'Ziwei Palace Blueprint'
+        : '자미두수 명반 신호',
+      description: takeLeadSentences(ziweiDescription, 110),
+      grade: toTraitGrade(params.guide.radarScores.ziwei ?? 85),
     },
   ];
 }

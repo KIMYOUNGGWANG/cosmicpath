@@ -10,7 +10,6 @@ import {
     NumerologySection,
     PastLifeSection,
     SpecialAnalysisSection,
-    TarotSpreadSection,
 } from '../premium-report-sections';
 import { LuckyAssetsGrid } from '../LuckyAssetsGrid';
 import { SoulmateSection } from '../SoulmateSection';
@@ -20,20 +19,14 @@ type TabContentProps = {
     readonly tabId: TabId;
     readonly report: VerdictReportProps['report'];
     readonly language: NonNullable<VerdictReportProps['language']>;
-    readonly tarotCards?: VerdictReportProps['tarotCards'];
-    readonly onCardClick?: VerdictReportProps['onCardClick'];
     readonly isExpanded: boolean;
     readonly onToggle: () => void;
 };
-
-const noopCardClick = (): void => {};
 
 export function TabContent({
     tabId,
     report,
     language,
-    tarotCards,
-    onCardClick,
     isExpanded,
     onToggle,
 }: TabContentProps) {
@@ -43,14 +36,6 @@ export function TabContent({
 
     const renderDetailContent = () => {
         switch (tabId) {
-            case 'tarot':
-                return (
-                    <TarotSpreadSection
-                        cards={tarotCards ? [...tarotCards] : []}
-                        onCardClick={onCardClick ?? noopCardClick}
-                        language={language}
-                    />
-                );
             case 'saju':
                 return report.saju_sections ? (
                     <AccordionSection

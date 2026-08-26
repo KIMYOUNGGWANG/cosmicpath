@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
-import { Check, Circle, Target } from 'lucide-react';
+import { Check, Circle, Target, Award } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ActionItem {
@@ -72,9 +72,9 @@ export function ActionChecklist({ items, language = 'ko', storageKey = 'cosmic-a
         >
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                    <Target size={18} className="text-gold" />
-                    {isEn ? 'Action Checklist' : '행동 체크리스트'}
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                    <Target size={18} className="text-[#d4af37]" />
+                    <span>{isEn ? 'Action Checklist' : '행동 체크리스트'}</span>
                 </h2>
                 <span className="text-xs text-white/50">
                     {completedCount}/{totalCount} {isEn ? 'completed' : '완료'}
@@ -84,7 +84,7 @@ export function ActionChecklist({ items, language = 'ko', storageKey = 'cosmic-a
             {/* Progress Bar */}
             <div className="h-2 bg-white/10 rounded-full overflow-hidden mb-6">
                 <motion.div
-                    className="h-full bg-gradient-to-r from-gold to-amber-400 rounded-full"
+                    className="h-full bg-gradient-to-r from-[#d4af37] to-amber-400 rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${progress}%` }}
                     transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -95,52 +95,53 @@ export function ActionChecklist({ items, language = 'ko', storageKey = 'cosmic-a
             <div className="space-y-3">
                 {items.map((item, index) => {
                     const isChecked = checkedItems.has(index);
+                    const cleanTitle = (item.title || '').replace(/[🚀⚠️💰👉🎂📋✨⚡🤝]/g, '').trim();
                     return (
                         <motion.div
                             key={index}
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
+                            transition={{ delay: index * 0.05 }}
                             onClick={() => toggleItem(index)}
                             className={cn(
                                 "flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all duration-300",
                                 isChecked
-                                    ? "bg-green-500/10 border-green-500/30"
-                                    : "bg-white/5 border-white/10 hover:border-gold/30"
+                                    ? "bg-emerald-500/10 border-emerald-500/30"
+                                    : "bg-[#141622]/80 border-white/10 hover:border-[#d4af37]/40 hover:bg-[#1a1e30]"
                             )}
                         >
                             {/* Checkbox */}
                             <div className={cn(
-                                "w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5 transition-all",
+                                "w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 transition-all",
                                 isChecked
-                                    ? "bg-green-500 text-white"
-                                    : "border-2 border-white/30"
+                                    ? "bg-emerald-500 text-white"
+                                    : "border border-white/30 bg-black/20"
                             )}>
                                 {isChecked ? (
-                                    <Check size={14} strokeWidth={3} />
+                                    <Check size={13} strokeWidth={3} />
                                 ) : (
-                                    <Circle size={14} className="opacity-0" />
+                                    <Circle size={10} className="opacity-0" />
                                 )}
                             </div>
 
                             {/* Content */}
-                            <div className="flex-1">
+                            <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                     <span className={cn(
-                                        "text-sm font-bold transition-all",
-                                        isChecked ? "text-green-400 line-through opacity-70" : "text-white"
+                                        "text-xs md:text-sm font-bold transition-all truncate",
+                                        isChecked ? "text-emerald-400 line-through opacity-70" : "text-white"
                                     )}>
-                                        {item.title}
+                                        {cleanTitle || item.title}
                                     </span>
                                     {item.date && (
-                                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-white/50">
+                                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-white/10 text-white/50 shrink-0">
                                             {item.date}
                                         </span>
                                     )}
                                 </div>
                                 <p className={cn(
                                     "text-xs leading-relaxed transition-all",
-                                    isChecked ? "text-white/30 line-through" : "text-white/60"
+                                    isChecked ? "text-white/30 line-through" : "text-stone-400"
                                 )}>
                                     {item.description}
                                 </p>
@@ -148,14 +149,18 @@ export function ActionChecklist({ items, language = 'ko', storageKey = 'cosmic-a
 
                             {/* Type Badge */}
                             <span className={cn(
-                                "text-[10px] px-2 py-1 rounded-full shrink-0",
-                                item.type === 'urgent' ? "bg-red-500/20 text-red-300" :
-                                    item.type === 'opportunity' ? "bg-gold/20 text-gold" :
-                                        "bg-white/10 text-white/50"
+                                "text-[10px] font-bold px-2 py-0.5 rounded-md shrink-0 border",
+                                item.type === 'urgent' || item.type === 'warning'
+                                    ? "bg-rose-500/15 text-rose-300 border-rose-500/30"
+                                    : item.type === 'opportunity'
+                                        ? "bg-[#d4af37]/15 text-[#d4af37] border-[#d4af37]/30"
+                                        : "bg-white/10 text-stone-300 border-white/10"
                             )}>
-                                {item.type === 'urgent' ? (isEn ? 'Urgent' : '긴급') :
-                                    item.type === 'opportunity' ? (isEn ? 'Chance' : '기회') :
-                                        (isEn ? 'Task' : '할 일')}
+                                {item.type === 'urgent' || item.type === 'warning'
+                                    ? (isEn ? 'Defend' : '방어')
+                                    : item.type === 'opportunity'
+                                        ? (isEn ? 'Action' : '실행')
+                                        : (isEn ? 'Review' : '검토')}
                             </span>
                         </motion.div>
                     );
@@ -165,16 +170,19 @@ export function ActionChecklist({ items, language = 'ko', storageKey = 'cosmic-a
             {/* Completion Message */}
             {progress === 100 && (
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="mt-6 p-4 bg-gradient-to-r from-green-500/20 to-emerald-500/10 rounded-xl border border-green-500/30 text-center"
+                    className="mt-6 p-4 bg-emerald-950/40 rounded-xl border border-emerald-500/30 text-center flex flex-col items-center"
                 >
-                    <span className="text-2xl">🎉</span>
-                    <p className="text-sm text-green-300 font-medium mt-1">
-                        {isEn ? 'All tasks completed! You\'re mastering your destiny.' : '모든 행동 지침 완료! 운명을 주도하고 있습니다.'}
+                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mb-1.5">
+                        <Award size={18} />
+                    </div>
+                    <p className="text-xs font-bold text-emerald-300">
+                        {isEn ? 'All strategic actions completed' : '모든 행동 지침을 성공적으로 완수했습니다'}
                     </p>
                 </motion.div>
             )}
         </motion.section>
     );
 }
+

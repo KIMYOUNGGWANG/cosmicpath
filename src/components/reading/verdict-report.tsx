@@ -19,8 +19,6 @@ export function VerdictReport({
     metadata,
     language = 'ko',
     isLoading,
-    tarotCards,
-    onCardClick,
     scoreGridNode,
     isFreeView,
 }: VerdictReportProps) {
@@ -59,7 +57,7 @@ export function VerdictReport({
                 <ConsensusSignalMeter
                     sajuScore={radarScores.saju ?? 60}
                     astroScore={radarScores.astrology ?? 60}
-                    tarotScore={radarScores.tarot ?? 60}
+                    tarotScore={radarScores.ziwei ?? radarScores.tarot ?? 80}
                     convergenceScore={report.oracleCouncil?.convergenceScore}
                     language={language}
                 />
@@ -173,8 +171,6 @@ export function VerdictReport({
                         report={report}
                         metadata={metadata}
                         language={language}
-                        tarotCards={tarotCards}
-                        onCardClick={onCardClick}
                     />
                     {report.glossary ? (
                         <GlossarySection data={report.glossary} language={language} />

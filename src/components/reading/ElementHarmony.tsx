@@ -202,7 +202,7 @@ export function ElementHarmony({ sajuData, scores, language = 'ko' }: ElementHar
                                     {isEn ? 'Dominant' : '강점'}
                                 </span>
                             </div>
-                            <p className="text-sm text-moonlight leading-relaxed">
+                            <p className="text-sm text-moonlight leading-relaxed break-keep">
                                 {isEn
                                     ? `Your ${dominant.en} element is thriving. This grants you ${dominant.description.split(',')[0].toLowerCase()} energy.`
                                     : `당신의 ${dominant.name}(${dominant.en}) 기운이 가장 왕성합니다. ${dominant.description}의 에너지가 강합니다.`}
@@ -217,7 +217,7 @@ export function ElementHarmony({ sajuData, scores, language = 'ko' }: ElementHar
                                     {isEn ? 'Needs Attention' : '보완 필요'}
                                 </span>
                             </div>
-                            <p className="text-sm text-dim leading-relaxed">
+                            <p className="text-sm text-dim leading-relaxed break-keep">
                                 {isEn
                                     ? `Your ${lacking.en} element requires nurturing. Focus on activities related to ${lacking.description.split(',')[0].toLowerCase()}.`
                                     : `${lacking.name}(${lacking.en}) 기운이 약합니다. ${lacking.description}과 관련된 활동이 필요합니다.`}

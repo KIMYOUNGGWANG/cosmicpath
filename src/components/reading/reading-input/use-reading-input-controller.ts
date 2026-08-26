@@ -217,7 +217,7 @@ export function useReadingInputController({
         question,
         questionFieldRef,
         questionPlaceholder: activeQuestionSuggestions[0] ?? '',
-        questionSuggestions: activeQuestionSuggestions.slice(0, 2),
+        questionSuggestions: activeQuestionSuggestions.slice(0, 3),
         recommendedCharacterId,
         routePersona,
         selectedCharacterId,

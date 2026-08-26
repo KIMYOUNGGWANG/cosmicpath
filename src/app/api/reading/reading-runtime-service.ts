@@ -1,5 +1,4 @@
 import type { AstrologyResult } from '@/lib/engines/astrology';
-import { drawCards, type TarotCard } from '@/lib/engines/tarot';
 import { extractAllTags } from '@/lib/core/tag-engine';
 import { generateInterpretationGuide } from '@/lib/core/conflict-resolver';
 import {
@@ -28,6 +27,17 @@ import {
   type StoredLegacySajuResult,
 } from './route-helpers';
 
+import type { ThaiAstrologyResult } from '@/lib/engines/thai-astrology';
+import { calculateThaiAstrology } from '@/lib/engines/thai-astrology';
+import type { ZiweiChartResult } from '@/lib/engines/ziwei';
+import { calculateZiweiChart } from '@/lib/engines/ziwei';
+import type { YearHeatmapResult } from '@/lib/engines/timing-heatmap';
+import { calculateWeeklyTimingHeatmap } from '@/lib/engines/timing-heatmap';
+import type { ShadowTransformationResult } from '@/lib/engines/saju-transformation';
+import { calculateShadowTransformations } from '@/lib/engines/saju-transformation';
+import type { Compatibility4DResult } from '@/lib/engines/compatibility-matrix';
+import { calculate4DCompatibility } from '@/lib/engines/compatibility-matrix';
+
 export type AssembledReadingRuntime = {
   guide: ReadingGuideSnapshot;
   saju: StoredLegacySajuResult;
@@ -39,9 +49,14 @@ export type AssembledReadingRuntime = {
   effectiveSelectionMode: OracleSelectionMode;
   advisorProfile: ReturnType<typeof buildOracleAdvisorProfile>;
   advisorEvidenceSummary: string;
-  cards: TarotCard[];
+  cards: unknown[];
   precisionMetadata?: OracleSajuProfile['precisionMetadata'] | null;
   oracleCouncil?: OracleSajuProfile['oracleCouncil'] | null;
+  thaiAstrology?: ThaiAstrologyResult | null;
+  ziweiChart?: ZiweiChartResult | null;
+  weeklyHeatmap?: YearHeatmapResult | null;
+  shadowTransformations?: ShadowTransformationResult | null;
+  compatibility4D?: Compatibility4DResult | null;
 };
 
 type RequestTarotCard = {
@@ -117,9 +132,7 @@ export async function assembleReadingRuntime(
       effectiveSelectionMode: storedRuntime.selectionMode,
       advisorProfile: storedRuntime.advisorProfile,
       advisorEvidenceSummary: storedRuntime.advisorEvidenceSummary,
-      cards: storedRuntime.cards.length > 0
-        ? storedRuntime.cards
-        : (params.tarotCards || drawCards(1)) as TarotCard[],
+      cards: storedRuntime.cards || [],
       precisionMetadata: storedRuntime.precisionMetadata,
       oracleCouncil: storedRuntime.oracleCouncil,
     };
@@ -181,8 +194,56 @@ export async function assembleReadingRuntime(
     evidencePriority: advisorProfile.evidencePriority,
     language: params.language,
   });
-  const cards = (params.tarotCards || drawCards(1)) as TarotCard[];
-  const guide = generateInterpretationGuide(extractAllTags(saju, astrology, cards), params.question);
+  const cards: unknown[] = [];
+  const guide = generateInterpretationGuide(extractAllTags(saju, astrology, []), params.question);
+
+  let thaiAstrology: ThaiAstrologyResult | null = null;
+  try {
+    thaiAstrology = calculateThaiAstrology({
+      birthDate: params.birthDate,
+      birthTime: params.birthTime || '12:00',
+      tropicalSunSign: 4,
+      tropicalMoonSign: 9,
+      tropicalAscendantSign: 7,
+    });
+  } catch (e) {
+    console.error('Failed to compute Thai astrology in runtime:', e);
+  }
+
+  let ziweiChart: ZiweiChartResult | null = null;
+  try {
+    const birthDateObj = new Date(params.birthDate);
+    const hour = parseInt((params.birthTime || '12').split(':')[0] || '12', 10);
+    ziweiChart = calculateZiweiChart(
+      isNaN(birthDateObj.getTime()) ? new Date() : birthDateObj,
+      isNaN(hour) ? 12 : hour,
+      params.gender,
+      params.calendarType === 'lunar'
+    );
+  } catch (e) {
+    console.error('Failed to compute Ziwei chart in runtime:', e);
+  }
+
+  let weeklyHeatmap: YearHeatmapResult | null = null;
+  try {
+    weeklyHeatmap = calculateWeeklyTimingHeatmap(saju, new Date().getFullYear());
+  } catch (e) {
+    console.error('Failed to compute weekly heatmap in runtime:', e);
+  }
+
+  let shadowTransformations: ShadowTransformationResult | null = null;
+  try {
+    shadowTransformations = calculateShadowTransformations(saju);
+  } catch (e) {
+    console.error('Failed to compute shadow transformations in runtime:', e);
+  }
+
+  let compatibility4D: Compatibility4DResult | null = null;
+  try {
+    compatibility4D = partnerSaju ? calculate4DCompatibility(saju, partnerSaju) : calculate4DCompatibility(saju);
+  } catch (e) {
+    console.error('Failed to compute 4D compatibility in runtime:', e);
+  }
 
   return {
     guide,
@@ -198,5 +259,10 @@ export async function assembleReadingRuntime(
     cards,
     precisionMetadata,
     oracleCouncil,
+    thaiAstrology,
+    ziweiChart,
+    weeklyHeatmap,
+    shadowTransformations,
+    compatibility4D,
   };
 }

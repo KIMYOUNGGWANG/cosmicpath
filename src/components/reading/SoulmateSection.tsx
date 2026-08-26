@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Heart, Users, Calendar, Sparkles } from 'lucide-react';
+import { Heart, Users, Calendar, Sparkles, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface SoulmateData {
@@ -108,9 +108,9 @@ export function SoulmateSection({ data, language = 'ko' }: SoulmateSectionProps)
 
                 {/* Warnings */}
                 {data.warnings && (
-                    <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
-                        <p className="text-xs text-red-300 flex items-start gap-2">
-                            <span className="mt-0.5">⚠️</span>
+                    <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl">
+                        <p className="text-xs text-rose-300 flex items-start gap-2">
+                            <ShieldAlert size={15} className="mt-0.5 shrink-0 text-rose-400" />
                             <span>{data.warnings}</span>
                         </p>
                     </div>

@@ -976,12 +976,6 @@ function detectGuiinDa(shinSal?: SajuResult['shinSal']): PatternMatch | null {
 function detectSamhyeongsal(interactions: SajuResult['interactions']): PatternMatch | null {
     if (!interactions) return null;
 
-    // 삼형 패턴 체크 (3개 지지가 모두 존재)
-    const samhyeongSets = [
-        ['인', '사', '신'],  // 인사신 삼형
-        ['축', '술', '미'],  // 축술미 삼형
-    ];
-
     // punishments에서 3개 이상이 연관된 경우
     if (interactions.punishments.length >= 2) {
         return {

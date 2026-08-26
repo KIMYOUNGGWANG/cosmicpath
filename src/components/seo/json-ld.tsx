@@ -24,21 +24,21 @@ export default function JsonLd() {
                 url: siteUrl,
                 inLanguage: ['ko-KR', 'en'],
                 publisher: { '@id': `${siteUrl}/#organization` },
-                description: 'CosmicPath Decision Note는 질문 하나를 먼저 판정합니다. Saju = structure, astrology = timing, tarot = immediate signal.',
+                description: 'CosmicPath Decision Note는 질문 하나를 먼저 판정합니다. Saju = structure, astrology = timing, ziwei & numerology = strategic cycles.',
             },
             {
                 '@type': 'Service',
                 '@id': `${siteUrl}/#decision-note`,
                 name: 'CosmicPath Decision Note',
                 alternateName: '7-Day Decision Packet',
-                serviceType: 'Decision Note with Saju structure, astrology timing, and tarot immediate signal',
+                serviceType: 'Decision Note with Saju structure, astrology timing, and 5-Layer synthesis',
                 provider: { '@id': `${siteUrl}/#organization` },
                 areaServed: ['KR', 'US'],
                 audience: {
                     '@type': 'Audience',
                     audienceType: 'People with relationship, career, money, or life-direction questions',
                 },
-                description: '7-Day Decision Packet explains why this verdict was chosen, using Saju as structure, astrology as timing, and tarot as immediate signal.',
+                description: '7-Day Decision Packet explains why this verdict was chosen, using 5-Layer synthesis combining Saju, astrology, Ziwei Doushu, and numerology.',
                 offers: [
                     {
                         '@type': 'Offer',

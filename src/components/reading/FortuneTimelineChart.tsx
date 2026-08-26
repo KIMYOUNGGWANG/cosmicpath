@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useState, useId } from 'react';
+import { Crown, ShieldAlert } from 'lucide-react';
 
 
 export interface TimelineScore {
@@ -328,10 +329,12 @@ export function FortuneTimelineChart({ scores, language = 'ko' }: FortuneTimelin
                                     transition={{ delay: 1.2 }}
                                     className="flex items-center gap-3 p-3 bg-gold/5 rounded-lg border border-gold/20 backdrop-blur-sm"
                                 >
-                                    <span className="text-xl">👑</span>
+                                    <div className="p-2 rounded-lg bg-[#d4af37]/15 border border-[#d4af37]/30 text-[#d4af37] shrink-0">
+                                        <Crown size={18} />
+                                    </div>
                                     <div>
-                                        <div className="text-xs font-bold text-gold mb-0.5">
-                                            {isEn ? `Best: ${peak.year}` : `최고의 해: ${peak.year}년`}
+                                        <div className="text-xs font-bold text-[#d4af37] mb-0.5">
+                                            {isEn ? `Peak Window: ${peak.year}` : `최고의 도약기: ${peak.year}년`}
                                         </div>
                                         <p className="text-xs text-gray-400 leading-snug line-clamp-1">{peak.summary}</p>
                                     </div>
@@ -350,12 +353,14 @@ export function FortuneTimelineChart({ scores, language = 'ko' }: FortuneTimelin
                                     initial={{ opacity: 0, x: 20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: 1.4 }}
-                                    className="flex items-center gap-3 p-3 bg-red-500/5 rounded-lg border border-red-500/20 backdrop-blur-sm"
+                                    className="flex items-center gap-3 p-3 bg-rose-500/5 rounded-xl border border-rose-500/20 backdrop-blur-sm"
                                 >
-                                    <span className="text-xl">⚠️</span>
+                                    <div className="p-2 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-400 shrink-0">
+                                        <ShieldAlert size={18} />
+                                    </div>
                                     <div>
-                                        <div className="text-xs font-bold text-red-400 mb-0.5">
-                                            {isEn ? `Caution: ${low.year}` : `주의할 해: ${low.year}년`}
+                                        <div className="text-xs font-bold text-rose-400 mb-0.5">
+                                            {isEn ? `Caution Window: ${low.year}` : `리스크 관리기: ${low.year}년`}
                                         </div>
                                         <p className="text-xs text-gray-400 leading-snug line-clamp-1">{low.summary}</p>
                                     </div>

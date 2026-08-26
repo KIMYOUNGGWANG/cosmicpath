@@ -337,13 +337,13 @@ export function DailySealedWidget({ linkedOracleContext }: DailySealedWidgetProp
                                 </div>
                                 <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
                                     <p className="text-[11px] uppercase tracking-[0.24em] text-starlight/42">Dual Read</p>
-                                    <p className="mt-2 text-lg font-semibold text-white">Fortune + Tarot</p>
-                                    <p className="mt-1 text-xs leading-5 text-starlight/56">운의 흐름과 카드 메시지를 동시에 봅니다.</p>
+                                    <p className="mt-2 text-lg font-semibold text-white">Fortune + Energy</p>
+                                    <p className="mt-1 text-xs leading-5 text-starlight/56">운의 흐름과 에너지 신호를 동시에 봅니다.</p>
                                 </div>
                                 <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
                                     <p className="text-[11px] uppercase tracking-[0.24em] text-starlight/42">Pro Layer</p>
                                     <p className="mt-2 text-lg font-semibold text-white">Action Advice</p>
-                                    <p className="mt-1 text-xs leading-5 text-starlight/56">구독자는 카드별 행동 가이드까지 확인합니다.</p>
+                                    <p className="mt-1 text-xs leading-5 text-starlight/56">구독자는 오늘의 행동 가이드까지 확인합니다.</p>
                                 </div>
                             </div>
                         </div>
@@ -370,7 +370,7 @@ export function DailySealedWidget({ linkedOracleContext }: DailySealedWidgetProp
                                 onTimeChange={setInputTime}
                                 onSubmit={handleQuickSubmit}
                                 isLoading={isLoading}
-                                buttonText="Reveal Fortune & Tarot"
+                                buttonText="Reveal Daily Reading"
                             />
 
                             <p className="mt-4 text-center text-[10px] leading-5 text-starlight/32">
@@ -704,7 +704,7 @@ export function DailySealedWidget({ linkedOracleContext }: DailySealedWidgetProp
                             <div className="mb-4 flex items-center justify-between gap-3">
                                 <div>
                                     <p className="text-xs uppercase tracking-[0.22em] text-starlight/45">
-                                        Daily Tarot
+                                        Daily Energy Signal
                                     </p>
                                     <h3 className="mt-2 text-2xl font-gowun-batang text-white">
                                         {tarot.cardNameKo}
@@ -714,7 +714,7 @@ export function DailySealedWidget({ linkedOracleContext }: DailySealedWidgetProp
 
                                 <div className="rounded-2xl border border-acc-gold/20 bg-acc-gold/10 px-3 py-2 text-right">
                                     <p className="text-[10px] uppercase tracking-[0.18em] text-starlight/45">
-                                        Card
+                                        Signal
                                     </p>
                                     <p className="text-sm font-semibold text-acc-gold">#{tarot.cardIndex}</p>
                                 </div>
@@ -729,16 +729,13 @@ export function DailySealedWidget({ linkedOracleContext }: DailySealedWidgetProp
                                             {tarot.cardNameKo}
                                         </p>
                                         <span className="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] uppercase tracking-[0.18em] text-starlight/55">
-                                            {tarot.isReversed ? 'Reversed' : 'Upright'}
+                                            {tarot.keywordKo}
                                         </span>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="mb-4 flex flex-wrap gap-2">
-                                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-starlight/70">
-                                    {tarot.isReversed ? '역방향' : '정방향'}
-                                </span>
                                 <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[11px] text-cyan-100">
                                     {tarot.keywordKo}
                                 </span>
@@ -749,7 +746,7 @@ export function DailySealedWidget({ linkedOracleContext }: DailySealedWidgetProp
 
                             <div className="rounded-2xl border border-white/6 bg-black/20 p-4">
                                 <p className="mb-2 text-xs uppercase tracking-[0.18em] text-starlight/45">
-                                    Free Meaning
+                                    Energy Insight
                                 </p>
                                 <p className="text-sm leading-relaxed text-starlight/90 break-keep">
                                     {tarot.meaning}
@@ -759,7 +756,7 @@ export function DailySealedWidget({ linkedOracleContext }: DailySealedWidgetProp
                             {tarot.isPremium ? (
                                 <div className="mt-4 rounded-2xl border border-acc-gold/20 bg-acc-gold/5 p-4">
                                     <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-acc-gold">
-                                        Tarot Advice
+                                        Action Advice
                                     </p>
                                     <p className="text-sm leading-relaxed text-starlight/90 break-keep">
                                         {tarot.advice}
@@ -768,10 +765,10 @@ export function DailySealedWidget({ linkedOracleContext }: DailySealedWidgetProp
                             ) : (
                                 <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                                     <p className="mb-3 text-xs uppercase tracking-[0.16em] text-starlight/45">
-                                        Premium Tarot Advice
+                                        Premium Action Advice
                                     </p>
                                     <p className="mb-4 text-sm leading-relaxed text-starlight/65 break-keep">
-                                        행동 가이드는 Pro 구독자에게만 열립니다. 오늘의 카드 에너지를 실제 선택으로 연결하려면 프리미엄 조언을 확인하세요.
+                                        행동 가이드는 Pro 구독자에게만 열립니다. 오늘의 에너지를 실제 선택으로 연결하려면 프리미엄 조언을 확인하세요.
                                     </p>
                                     <button
                                         onClick={() => setIsSubscriptionModalOpen(true)}

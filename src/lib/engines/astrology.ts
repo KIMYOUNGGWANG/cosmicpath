@@ -961,7 +961,6 @@ function calculateMercuryPosition(jd: number): { sign: number; degree: number; l
     const cosNode = Math.cos(longNodeRad);
     const sinNode = Math.sin(longNodeRad);
     const cosI = Math.cos(I);
-    const sinI = Math.sin(I);
     const cosOmega = Math.cos(omega);
     const sinOmega = Math.sin(omega);
 
@@ -990,9 +989,6 @@ function calculateVenusPosition(jd: number): { sign: number; degree: number; lon
     const e = 0.00677672 - 0.00004107 * T;
     const L = normalizeDegrees(181.97909950 + 58517.81538729 * T);
     const longPeri = normalizeDegrees(131.60246718 + 0.00268329 * T);
-    const longNode = normalizeDegrees(76.67984255 - 0.27769418 * T);
-    const I = toRadians(3.39467605 - 0.00078890 * T);
-
     const M = toRadians(normalizeDegrees(L - longPeri));
     const E = solveKepler(M, e);
 

@@ -3,7 +3,6 @@ import { prisma } from '@/lib/prisma';
 import { isSubscriptionActive } from '@/lib/subscription';
 import { generateCompletion } from '@/lib/ai/llm-client';
 import { calculateAstrology, ZODIAC_SIGNS } from '@/lib/engines/astrology';
-import { MAJOR_ARCANA } from '@/lib/engines/tarot';
 import { calculateTrueSolarTime } from '@/lib/saju/true-solar-time';
 import { calculateSaju, formatSaju } from '@/lib/engines/saju';
 
@@ -230,16 +229,18 @@ function findFinalVerdict(content: string): string {
   return truncateText(content, 220);
 }
 
-function getTarotDraw(seed: string) {
-  const cardIndex = hashText(seed) % MAJOR_ARCANA.length;
-  const card = MAJOR_ARCANA[cardIndex];
-  const reversed = hashText(`${seed}:reversed`) % 2 === 1;
-
+function getEnergySignal(seed: string) {
+  const energyKeywords = [
+    '새로운 출발과 창조적 돌파', '내적 중심과 지혜로운 인내', '풍요와 확장적 결실', '리더십과 질서 확립',
+    '원칙 수호와 멘토십', '가치관 일치와 핵심 선택', '목표를 향한 과감한 돌진', '용기와 내면의 힘',
+    '성찰과 독립적 탐색', '운명적 전환점과 기회의 창', '균형과 공정한 조율', '새로운 관점과 성장',
+    '불필요한 고리 단절과 환골탈태', '절제와 조화로운 통합', '욕망 점검과 정렬', '기존 틀의 해체와 재건',
+    '희망과 영감의 인도', '무의식 직관과 통찰', '명확한 성공과 번영', '성숙한 평가와 도약', '완전한 성취와 새로운 장'
+  ];
+  const index = hashText(seed) % energyKeywords.length;
   return {
-    name: card.name,
-    nameEn: card.nameEn,
-    isReversed: reversed,
-    interpretation: reversed ? card.reversed : card.upright,
+    name: `에너지 핵심 신호`,
+    interpretation: energyKeywords[index],
   };
 }
 
@@ -575,7 +576,7 @@ export async function buildOracleChatPromptContext(input: {
     };
   }
 
-  const tarot = getTarotDraw(`${input.userId}:${input.roomId ?? 'new'}:${input.content}`);
+  const energy = getEnergySignal(`${input.userId}:${input.roomId ?? 'new'}:${input.content}`);
   const latestReadingContext = await getLatestOracleChatUserContext(input.userId);
   const latestSajuSummary = getLatestSajuSummary(history.messages);
   const sajuSummary =
@@ -586,8 +587,8 @@ export async function buildOracleChatPromptContext(input: {
   const astrologySummary = getCurrentAstrologySummary();
   const councilData: OracleCouncilData = {
     sajuSummary,
-    tarotCard: `${tarot.nameEn}${tarot.isReversed ? ' (Reversed)' : ''}`,
-    tarotIsReversed: tarot.isReversed,
+    tarotCard: energy.name,
+    tarotIsReversed: false,
     natalSummary: astrologySummary,
     finalVerdict: '',
   };
@@ -599,9 +600,9 @@ export async function buildOracleChatPromptContext(input: {
       '당신은 Grand Oracle이며, 내부 위원회의 의견을 취합해 결론을 내리는 수석 오라클입니다.',
       '답변은 한국어로 작성하고 반드시 아래 마크다운 섹션 순서를 지키세요.',
       '### 📜 사주 분석결과',
-      '### ⚖️ 타로 리딩',
+      '### 🔮 5단 다층 분석 (자미두수·수비학·에너지)',
       '### 🌠 현재 행성 흐름',
-      '### 🔮 수석 오라클의 최종 결론',
+      '### 👑 수석 오라클의 최종 결론',
       '규칙:',
       '- 사주 데이터가 비어 있으면 "출생 정보가 없어 정밀 사주 교차 검증은 생략했다"는 식으로 정직하게 밝히세요.',
       '- 최종 결론에는 한 문장 결론, 지금 할 행동 1개, 더 기다려야 할 조건 1개를 넣으세요.',
@@ -609,7 +610,7 @@ export async function buildOracleChatPromptContext(input: {
       historyText ? `최근 대화:\n${historyText}` : '',
       `도메인: ${input.domain}`,
       `사주 요약: ${sajuSummary}`,
-      `타로 카드: ${tarot.name} (${tarot.nameEn})${tarot.isReversed ? ' 역방향' : ' 정방향'} - ${tarot.interpretation}`,
+      `에너지 핵심 신호: ${energy.interpretation}`,
       `현재 행성 흐름: ${astrologySummary}`,
     ].filter(Boolean).join('\n\n'),
   };

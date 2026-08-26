@@ -1,6 +1,5 @@
 import type { AstrologyResult } from '../../engines/astrology';
 import type { SajuResult } from '../../engines/saju';
-import type { TarotCard } from '../../engines/tarot';
 import type {
   OracleAdvisorProfile,
   OracleCharacterId,
@@ -22,6 +21,12 @@ export interface AstroData {
   [key: string]: unknown;
 }
 
+import type { ThaiAstrologyResult } from '../../engines/thai-astrology';
+import type { ZiweiChartResult } from '../../engines/ziwei';
+import type { YearHeatmapResult } from '../../engines/timing-heatmap';
+import type { ShadowTransformationResult } from '../../engines/saju-transformation';
+import type { Compatibility4DResult } from '../../engines/compatibility-matrix';
+
 // 사용자 입력 데이터 타입
 export interface UserData {
   name?: string;
@@ -38,7 +43,12 @@ export interface UserData {
   question: string;
   sajuData?: SajuResult;
   astroData?: AstroData;
-  tarotCards?: TarotCard[];
+  tarotCards?: unknown[];
+  thaiAstrology?: ThaiAstrologyResult | null;
+  ziweiChart?: ZiweiChartResult | null;
+  weeklyHeatmap?: YearHeatmapResult | null;
+  shadowTransformations?: ShadowTransformationResult | null;
+  compatibility4D?: Compatibility4DResult | null;
   language?: 'ko' | 'en';
   currentDate?: string; // "YYYY-MM-DD"
   // 상대방 정보 (궁합/재회 분석용 - optional)

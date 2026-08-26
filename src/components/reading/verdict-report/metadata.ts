@@ -3,6 +3,7 @@ import type { SajuResult } from '@/lib/engines/saju';
 export type RadarScores = {
     readonly saju?: number;
     readonly astrology?: number;
+    readonly ziwei?: number;
     readonly tarot?: number;
 };
 
@@ -37,6 +38,7 @@ export function readRadarScores(metadata?: Record<string, unknown>): RadarScores
     return {
         saju: readOptionalNumber(radarScores['saju']),
         astrology: readOptionalNumber(radarScores['astrology']),
+        ziwei: readOptionalNumber(radarScores['ziwei']),
         tarot: readOptionalNumber(radarScores['tarot']),
     };
 }

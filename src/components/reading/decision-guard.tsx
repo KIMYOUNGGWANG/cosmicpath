@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { ShieldAlert } from 'lucide-react';
 
 interface DecisionGuardProps {
     isOpen: boolean;
@@ -18,14 +19,16 @@ export function DecisionGuard({ isOpen, onAccept, language = 'ko' }: DecisionGua
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -12 }}
-                    className="relative mx-auto mb-8 w-full max-w-3xl overflow-hidden rounded-2xl border border-red-500/25 bg-[#1a1c23] p-6 text-center shadow-2xl"
+                    className="relative mx-auto mb-8 w-full max-w-3xl overflow-hidden rounded-2xl border border-rose-500/30 bg-[#141520] p-6 text-center shadow-2xl"
                 >
-                    <div className="absolute inset-0 bg-red-500/5" />
+                    <div className="absolute inset-0 bg-rose-500/5 pointer-events-none" />
 
                     <div className="relative z-10">
-                        <div className="mb-4 text-4xl">⚠️</div>
-                        <h3 className="mb-3 text-xl font-bold text-white">
-                            {isEn ? 'Destiny Warning' : '운명의 경고'}
+                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400">
+                            <ShieldAlert size={26} />
+                        </div>
+                        <h3 className="mb-2 text-lg font-bold text-white">
+                            {isEn ? 'Strategic Uncertainty Notice' : '전략적 신중 검토 권고'}
                         </h3>
                         <p className="mb-6 text-sm leading-relaxed text-gray-300 md:text-base">
                             {isEn ? (

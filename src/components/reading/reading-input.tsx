@@ -6,7 +6,7 @@ import { GuideSelectionSection } from './reading-input/guide-selection-section';
 import { IntakeHeader } from './reading-input/intake-header';
 import { PartnerInformationSection } from './reading-input/partner-information-section';
 import { QuestionSection } from './reading-input/question-section';
-import { TarotSubmitSection } from './reading-input/tarot-submit-section';
+import { IntakeSubmitSection } from './reading-input/intake-submit-section';
 import type { ReadingInputProps } from './reading-input/types';
 import { useReadingInputController } from './reading-input/use-reading-input-controller';
 
@@ -132,10 +132,10 @@ export function ReadingInput({
                 ) : null}
             </div>
 
-            <TarotSubmitSection
+            <IntakeSubmitSection
                 language={controller.language}
-                tarotLabel={controller.intakeCopy.tarotLabel}
-                tarotSummary={controller.intakeCopy.tarotSummary}
+                intakeLabel={controller.intakeCopy.tarotLabel}
+                intakeSummary={controller.intakeCopy.tarotSummary}
                 isLoading={controller.isLoading}
                 inviteCode={controller.inviteCode}
                 isSubmitDisabled={controller.isSubmitDisabled}

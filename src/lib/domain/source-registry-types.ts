@@ -2,7 +2,8 @@ export const SOURCE_DOMAINS = [
   'calendar_astronomy',
   'western_astrology',
   'myeongli_saju',
-  'tarot',
+  'ziwei_doushu',
+  'thai_astrology',
   'product_safety',
   'cross_domain',
 ] as const;
@@ -67,12 +68,12 @@ export const ASTROLOGY_CLAIMS = [
   'modern_outer_planet_doctrine',
   'modern_psychological_astrology',
 ] as const;
-export const TAROT_CLAIMS = [
-  'rws_major_arcana_meaning',
-  'rws_minor_arcana_meaning',
-  'rws_reversed_meaning',
-  'rws_spread_position_semantics',
-  'tarot_image_provenance',
+export const TAROT_CLAIMS = [] as const;
+export const ZIWEI_CLAIMS = [
+  'ziwei_12_palaces_meaning',
+  'ziwei_major_stars_doctrine',
+  'ziwei_sihua_dynamics',
+  'ziwei_sanfang_sizheng',
 ] as const;
 export const SAFETY_CLAIMS = [
   'health_safety_boundary',
@@ -84,7 +85,7 @@ export const SAFETY_CLAIMS = [
   'danger_safety_boundary',
 ] as const;
 export const PRODUCT_CONTRACT_CLAIMS = ['provider_recovery_provenance', 'report_grounding_contract'] as const;
-export const DOCTRINE_CLAIMS = [...MYEONGLI_CLAIMS, ...ASTROLOGY_CLAIMS, ...TAROT_CLAIMS] as const;
+export const DOCTRINE_CLAIMS = [...MYEONGLI_CLAIMS, ...ASTROLOGY_CLAIMS, ...ZIWEI_CLAIMS] as const;
 export const REPORT_AUTHORITY_CLAIMS = [...DOCTRINE_CLAIMS, ...SAFETY_CLAIMS, ...PRODUCT_CONTRACT_CLAIMS] as const;
 
 export function source(args: SourceArgs): SourceRegistryRecord {

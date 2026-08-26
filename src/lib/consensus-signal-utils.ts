@@ -1,7 +1,7 @@
 export type SignalDirection = 'agree' | 'neutral' | 'disagree';
 
 export interface SourceSignal {
-  source: 'saju' | 'astro' | 'tarot';
+  source: 'saju' | 'astro' | 'ziwei' | 'numerology';
   score: number;
   direction: SignalDirection;
   label: { ko: string; en: string };
@@ -31,17 +31,17 @@ const SUMMARIES: Record<ConsensusResult['level'], { ko: string; en: string }> = 
 export function computeConsensus(
   sajuScore: number,
   astroScore: number,
-  tarotScore: number,
+  ziweiScore: number,
   convergenceScore?: number,
 ): ConsensusResult {
   const sources: [SourceSignal, SourceSignal, SourceSignal] = [
     { source: 'saju',  score: sajuScore,  direction: scoreToDirection(sajuScore),  label: { ko: '사주', en: 'Saju' } },
     { source: 'astro', score: astroScore, direction: scoreToDirection(astroScore), label: { ko: '점성', en: 'Astro' } },
-    { source: 'tarot', score: tarotScore, direction: scoreToDirection(tarotScore), label: { ko: '타로', en: 'Tarot' } },
+    { source: 'ziwei', score: ziweiScore, direction: scoreToDirection(ziweiScore), label: { ko: '자미', en: 'Ziwei' } },
   ];
 
   const agreementCount = sources.filter(s => s.direction === 'agree').length;
-  const consensusScore = convergenceScore ?? Math.round((sajuScore + astroScore + tarotScore) / 3);
+  const consensusScore = convergenceScore ?? Math.round((sajuScore + astroScore + ziweiScore) / 3);
 
   const level: ConsensusResult['level'] =
     agreementCount === 3 ? 'strong' :

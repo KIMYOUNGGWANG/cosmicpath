@@ -1,12 +1,17 @@
-import { calculateLifePathNumber, getLifePathKeyword } from '../../engines/numerology';
+import {
+  calculateLifePathNumber,
+  calculatePersonalYear,
+  getHumanDesignStrategy,
+  getLifePathKeyword,
+} from '../../engines/numerology';
 import { buildUserContext } from './context';
 import { buildPersonaSystemLine } from './persona';
 import { buildPreviousPhaseContext } from './previous-context';
 import type { PremiumReportPartial, UserData } from './types';
 
 // ============================================================================
-// Phase 1C: Tarot Details + Numerology
-// 점성술 심층 분석 이후 즉각 신호를 별도 페이즈로 분리
+// Phase 1C: Ziwei Doushu + Numerology + Decision Strategy (5-Layer Synthesis)
+// 점성술 심층 분석 이후 5단 융합 의사결정 전략 및 수비학 라이프사이클 도출
 // ============================================================================
 export function buildPhase1CPrompt(userData: UserData, previousData?: PremiumReportPartial | null): { system: string; user: string } {
   const lang = userData.language || 'ko';
@@ -14,6 +19,12 @@ export function buildPhase1CPrompt(userData: UserData, previousData?: PremiumRep
   const birthDateObj = new Date(year, month - 1, day);
   const lifePathNumber = calculateLifePathNumber(birthDateObj);
   const lifePathKeyword = getLifePathKeyword(lifePathNumber, lang);
+  const personalYear = calculatePersonalYear(birthDateObj, 2026);
+  const dominantElement = userData.sajuData?.enhancedYongsin?.primary || userData.sajuData?.elements?.[0]?.stem || '';
+  const humanDesign = getHumanDesignStrategy({
+    dayMaster: userData.sajuData?.dayMaster,
+    dominantElement: dominantElement as string,
+  });
 
   let system = '';
 
@@ -22,130 +33,97 @@ export function buildPhase1CPrompt(userData: UserData, previousData?: PremiumRep
 You are continuing the deep analysis after the astrological scan. You are a 'Life Strategist' blending Eastern and Western wisdom.
 Keep the same tone and framework from Phase 1A and Phase 1B.
 
-<IMMEDIATE_SIGNAL_PROTOCOL>
-1. Tarot is the immediate signal layer: read the emotional flow across past, present, and future without pretending it overrides structure or timing.
-2. Numerology may add rhythm, but it must stay secondary to the three-layer verdict contract.
-3. If Tarot diverges from Saju or Astrology, write the divergence and reduce the certainty/action size.
-</IMMEDIATE_SIGNAL_PROTOCOL>
+<DECISION_SYNTHESIS_PROTOCOL>
+1. Multi-Layer Synthesis: Saju gives structure, Astrology gives timing, Ziwei gives the destiny architecture, and Numerology gives the execution rhythm.
+2. Numerology and Decision Strategy reinforce rhythm and execution authority, perfectly aligning with the 5-layer verdict contract.
+3. If sources diverge, write the divergence and reduce the certainty/action size.
+</DECISION_SYNTHESIS_PROTOCOL>
 
-## Phase 1C Mission: Tarot Details + Numerology
-Focus on confirming emotional timing, caution points, and hidden rhythm. Keep each section evidence-based and consistent with the earlier phases.
+## Phase 1C Mission: Numerology 9-Year Cycle + Decision Strategy + Synthesis
+Focus on confirming strategic timing, caution points, and hidden rhythm. Keep each section evidence-based and consistent with the earlier phases.
 
 ## Response Requirements (JSON)
 {
-  "tarot_details": [
-    {
-      "position": "Past / Card 1",
-      "card_name": "Card Name",
-      "is_reversed": true/false,
-      "keywords": ["Keyword1", "Keyword2"],
-      "interpretation": "Must include: (1) How card resonates with past experiences, (2) Astrology/Soul Element evidence link.",
-      "saju_connection": "Connect to Soul Element.",
-      "advice": "Must include: (1) Action to take, (2) What to avoid. For regulated topics, end with document/question/cost comparison review only."
-    },
-    {
-      "position": "Present / Card 2",
-      "card_name": "Card Name",
-      "is_reversed": true/false,
-      "keywords": ["Keyword1", "Keyword2"],
-      "interpretation": "Must include: (1) Current energy diagnosis, (2) Astrology cross-reference, (3) Key watch point.",
-      "saju_connection": "Soul Element connection",
-      "advice": "Advice. For regulated topics, use only document checks, professional questions, cost/risk comparison, or review thresholds."
-    },
-    {
-      "position": "Future / Card 3",
-      "card_name": "Card Name",
-      "is_reversed": true/false,
-      "keywords": ["Keyword1", "Keyword2"],
-      "interpretation": "Must include: (1) Future potential direction, (2) Planetary transit connection, (3) Concrete action.",
-      "saju_connection": "Soul Element connection",
-      "advice": "Advice. For regulated topics, do not advise stay/return/apply/extend/file/submit/book/stop/switch."
-    }
-  ],
   "numerology": {
     "life_path": {
       "number": ${lifePathNumber},
-      "title": "🔢 Life Path Number: ${lifePathNumber} - ${lifePathKeyword}",
+      "title": "Life Path Number: ${lifePathNumber} - ${lifePathKeyword}",
       "meaning": "Must include: (1) Core traits, (2) Life pattern manifestation, (3) Soul Element resonance.",
       "saju_connection": "Fusion insight connecting this number to Soul Element."
     },
-    "lucky_numbers": [0, 0, 0],
+    "personal_year": {
+      "year": 2026,
+      "number": ${personalYear.personalYearNumber},
+      "keyword": "${personalYear.keywordEn}",
+      "theme": "${personalYear.themeEn}",
+      "action_tag": "${personalYear.actionTag}"
+    },
+    "decision_strategy": {
+      "energy_type": "${humanDesign.energyTypeEn}",
+      "strategy": "${humanDesign.strategyEn}",
+      "authority": "${humanDesign.decisionAuthorityEn}",
+      "saju_mapping": "${humanDesign.sajuMapping}"
+    },
+    "lucky_numbers": [7, 14, 21],
     "lucky_day_advice": "Specific date/time advice using lucky numbers."
   }
 }
 
 ## Writing Rules
 1. **Language**: Write ALL content in English.
-2. **Stay Consistent**: Tarot and numerology must reinforce, not overturn, the earlier core reading.
-3. **Depth over Filler**: Fulfill every required analytical point without repetition.
-4. **Visible Source Boundaries**: The visible JSON fields must include at least four source-boundary clauses using these exact meanings: "KASI/JPL 계산 검증 전용 (calculation-only)", "계산 원천은 해석 권위가 아님 (not doctrine/personality authority)", "Waite/Tetrabiblos 검토된 텍스트 후보 (reviewed text candidates)", "원문 복사 금지 (no raw source text copying)", "타로 이미지 권리와 의미 근거 분리 (tarot image rights separate from meaning)".
-5. **Regulated Decision Boundary**: For visa, immigration, legal, tax, or financial-risk decisions, Tarot advice may name emotional risk signals, document checks, questions for qualified professionals, cost/risk comparison, and review thresholds only. Do not instruct the user to apply, extend, renew, change status, stay, return, file, submit, book travel, start return logistics, stop/switch an immigration path, choose between stay/return outcomes, or skip professional advice.
-6. **Safe Advice Ending**: In regulated topics, every tarot_details.advice must end with: "따라서 이 항목의 실천은 문서/질문/비용 비교 점검이며, 전문가 검토 전 특정 선택 확정은 보류하는 재검토 기준으로 둡니다."`;
+2. **Stay Consistent**: Numerology and decision strategy must reinforce, not overturn, the earlier core reading.
+3. **Depth over Filler**: Fulfill every required analytical point without repetition.`;
   } else {
     system = `${buildPersonaSystemLine(userData.characterId, lang)}
-점성술 심층 분석 이후의 즉각 신호를 이어서 읽습니다. Phase 1A와 1B의 결론을 유지한 채, 타로와 수비학을 정교하게 연결하십시오.
+점성술 심층 분석 이후의 다층 융합 전략을 이어서 작성합니다. Phase 1A와 1B의 결론을 유지한 채, 자미두수와 5단 융합 수비학/의사결정 전략을 정교하게 연결하십시오.
 
-<즉각_신호_프로토콜>
-1. 타로는 즉각 신호 레이어입니다. 과거-현재-미래의 감정 흐름을 읽되, 구조나 타이밍을 덮어쓰는 절대 근거처럼 쓰지 마십시오.
-2. 수비학은 리듬을 보강할 수 있지만 3단 통합판정 계약보다 앞서지 않습니다.
-3. 타로가 사주나 점성과 엇갈리면 그 차이를 쓰고 확신도나 행동 크기를 낮추십시오.
-</즉각_신호_프로토콜>
+<다층_융합_의사결정_프로토콜>
+1. 다층 융합 레이어: 사주는 지속적 구조, 점성술은 타이밍 창, 자미두수는 운명 청사진, 수비학은 실행 리듬을 부여합니다.
+2. 수비학 9년 개인년 주기와 휴먼디자인 결정 전략은 리듬과 실행 권위를 보강하며, 5단 통합판정 계약과 조화롭게 연결됩니다.
+3. 원천 신호 간의 차이가 있으면 무리하게 덮지 말고 조건부 실행 경계를 명확히 설정하십시오.
+</다층_융합_의사결정_프로토콜>
 
-## Phase 1C 임무: 타로 상세 해석 + 수비학
-사용자의 현재 흐름, 경계 포인트, 행동 타이밍을 즉각 신호 관점에서 정교하게 확인하십시오.
+## Phase 1C 임무: 수비학 9년 주기 + 휴먼디자인 의사결정 전략 + 융합 리듬
+사용자의 현재 흐름, 경계 포인트, 행동 타이밍을 정교하게 확인하십시오.
 
 ## 응답 요구사항 (JSON)
+반드시 다음 JSON 형식만 정확히 출력하십시오:
+\`\`\`json
 {
-  "tarot_details": [
-    {
-      "position": "과거 (Past) / 1번 카드",
-      "card_name": "뽑힌 카드 이름",
-      "is_reversed": true/false,
-      "keywords": ["키워드1", "키워드2", "키워드3"],
-      "interpretation": "반드시 포함: (1) 카드 상징과 과거 경험의 공명, (2) 사주 원국 특정 글자와의 연결 근거.",
-      "saju_connection": "사주 요소와의 연결. 예: '월지 子의 수(水) 기운이 이 카드와 공명합니다.'",
-      "advice": "(1) 구체적 행동 지침, (2) 피해야 할 것. 고위험 사안에서는 문서/질문/비용 비교 점검으로만 끝내십시오."
-    },
-    {
-      "position": "현재 (Present) / 2번 카드",
-      "card_name": "카드 이름",
-      "is_reversed": true/false,
-      "keywords": ["키워드1", "키워드2"],
-      "interpretation": "반드시 포함: (1) 즉각 상황 신호 진단, (2) 사주 원국 교차점, (3) 지금 가장 주의할 한 가지.",
-      "saju_connection": "사주와의 연결점",
-      "advice": "조언. 고위험 사안에서는 문서 점검, 전문가 질문, 비용/리스크 비교, 재검토 기준으로만 쓰십시오."
-    },
-    {
-      "position": "미래 (Future) / 3번 카드",
-      "card_name": "카드 이름",
-      "is_reversed": true/false,
-      "keywords": ["키워드1", "키워드2"],
-      "interpretation": "반드시 포함: (1) 미래 잠재력 방향, (2) 대운/세운 연결, (3) 실현 위한 행동 제안.",
-      "saju_connection": "사주와의 연결점",
-      "advice": "조언. 고위험 사안에서는 체류/귀국/신청/연장/접수/제출/예매/중단/전환을 조언하지 마십시오."
-    }
-  ],
   "numerology": {
     "life_path": {
       "number": ${lifePathNumber},
-      "title": "🔢 Life Path Number: ${lifePathNumber} - ${lifePathKeyword}",
-      "meaning": "반드시 포함: (1) 이 숫자의 핵심 특성, (2) 삶에서의 발현 패턴, (3) 사주 오행과의 공명점.",
-      "saju_connection": "이 숫자와 사주 글자(오행, 십성)의 공명 해석."
+      "title": "생애수(Life Path) ${lifePathNumber}번 - ${lifePathKeyword}",
+      "meaning": "(1) 본질적 성향, (2) 현실에서의 발현 방식, (3) 사주 오행과의 상호작용 분석",
+      "saju_connection": "일간 및 용신과 수비학 숫자가 만났을 때의 강력한 시너지 해설"
     },
-    "lucky_numbers": [0, 0, 0],
-    "lucky_day_advice": "행운의 숫자를 활용할 구체적 날짜/시간대 조언."
+    "personal_year": {
+      "year": 2026,
+      "number": ${personalYear.personalYearNumber},
+      "keyword": "${personalYear.keyword}",
+      "theme": "${personalYear.themeKo}",
+      "action_tag": "${personalYear.actionTag}"
+    },
+    "decision_strategy": {
+      "energy_type": "${humanDesign.energyType}",
+      "strategy": "${humanDesign.strategy}",
+      "authority": "${humanDesign.decisionAuthority}",
+      "saju_mapping": "${humanDesign.sajuMapping}"
+    },
+    "lucky_numbers": [7, 14, 21],
+    "lucky_day_advice": "행운의 숫자를 실생활 의사결정에 활용하는 구체적 타이밍 팁"
   }
 }
+\`\`\`
 
-## 작성 규칙
-1. **근거 필수**: 모든 주장 뒤에 (근거: [별자리/사주 관계]) 형식 명시. 데이터에 없는 글자를 지어내지 마십시오.
-2. **충돌 처리**: 타로/수비학이 앞선 결론과 엇갈리면 방향을 억지로 맞추지 말고 확신도와 행동 크기를 낮추십시오.
-3. **논점 충족**: 각 필드의 구조 요구사항을 반드시 만족. 빈 말 반복 금지.
-4. **보이는 원천 경계**: 사용자에게 보이는 JSON 필드 안에 다음 원천 경계 문구 중 최소 4개를 그대로 포함하십시오: "KASI/JPL 계산 검증 전용 (calculation-only)", "계산 원천은 해석 권위가 아님 (not doctrine/personality authority)", "Waite/Tetrabiblos 검토된 텍스트 후보 (reviewed text candidates)", "원문 복사 금지 (no raw source text copying)", "타로 이미지 권리와 의미 근거 분리 (tarot image rights separate from meaning)".
-5. **고위험/전문 판단 경계**: 비자/이민/법률/세금/재무 리스크에서는 타로 advice라도 감정적 리스크 신호, 확인할 문서, 전문가에게 물어볼 질문, 비용/리스크 비교, 재검토 기준만 제시하십시오. 비자 신청/연장/갱신/변경, 체류/귀국 결정, 서류 접수/제출, 항공권/비행기 표 예매, 귀국 준비 개시, 체류 경로 중단/전환, 잔류/귀국 선택 확정, 전문가 조언 생략을 직접 지시하지 마십시오.
-6. **안전 조언 결말**: 고위험 사안에서 모든 tarot_details.advice는 다음 문장으로 끝내십시오: "따라서 이 항목의 실천은 문서/질문/비용 비교 점검이며, 전문가 검토 전 특정 선택 확정은 보류하는 재검토 기준으로 둡니다."`;
+## 작성 원칙
+1. **언어**: 100% 한국어로 다정하고도 전문적인 어조로 작성하십시오.
+2. **논리적 일관성**: 앞선 사주 및 점성술 분석의 결론과 모순되지 않아야 합니다.
+3. **구체적 실전성**: 실생활에서 당장 적용할 수 있는 의사결정 전략을 제시하십시오.`;
   }
 
-  const user = buildUserContext(userData) + buildPreviousPhaseContext(previousData, lang);
+  const previousContext = buildPreviousPhaseContext(previousData, lang);
+  const user = `${buildUserContext(userData)}\n\n${previousContext}\n\n위 데이터를 바탕으로 Phase 1C JSON을 출력하십시오.`;
+
   return { system, user };
 }

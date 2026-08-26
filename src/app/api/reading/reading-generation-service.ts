@@ -146,11 +146,6 @@ function getCurrentFlow(userData: UserData): string {
   return `${daeunLabel} / ${yearLabel}`;
 }
 
-function getTarotFallbackName(userData: UserData): string {
-  const firstCard = userData.tarotCards?.[0];
-  return firstCard?.nameEn || firstCard?.name || 'The Chariot';
-}
-
 function getLifePathNumber(birthDate: string): number {
   const total = birthDate
     .replace(/\D/g, '')
@@ -253,20 +248,6 @@ export function buildPremiumPhaseFallback(
     case 3: {
       const lifePath = getLifePathNumber(userData.birthDate);
       return {
-        tarot_details: [
-          {
-            position: textFor(language, '현재', 'Current'),
-            card_name: getTarotFallbackName(userData),
-            keywords: [textFor(language, '방향', 'direction'), textFor(language, '검증', 'evidence')],
-            interpretation: textFor(
-              language,
-              '카드는 지금의 선택을 크게 밀어붙이기보다, 움직일 방향을 정하고 짧은 거리만 먼저 가보라고 말합니다.',
-              'The card points to choosing a direction, then moving only a short distance before committing further.'
-            ),
-            saju_connection: `${dayMaster} / ${currentFlow}`,
-            advice: textFor(language, '첫 행동은 작게, 기록은 정확히 남기세요.', 'Keep the first action small and record the response precisely.'),
-          },
-        ],
         numerology: {
           life_path: {
             number: lifePath,
@@ -461,7 +442,7 @@ export function buildPremiumPhaseFallback(
           ),
           saju_foundation: `${dayMaster} / ${currentFlow}`,
           astro_support: textFor(language, '감정 확신보다 반복 반응이 더 신뢰할 만한 신호입니다.', 'Repeated response is more reliable than emotional certainty.'),
-          tarot_insight: textFor(language, `${getTarotFallbackName(userData)} 흐름은 방향 설정 후 짧은 실행을 권합니다.`, `${getTarotFallbackName(userData)} favors direction first, then a short test.`),
+          tarot_insight: textFor(language, '수비학 및 자미두수 흐름은 방향 설정 후 짧은 실행을 권합니다.', 'Numerology and Ziwei cycles favor direction first, then a short test.'),
           action_priorities: [
             textFor(language, `${firstActionDate}에 첫 행동 하나만 실행`, `Take one first action on ${firstActionDate}`),
             textFor(language, `${reviewDate}까지 반응을 기록`, `Record responses through ${reviewDate}`),
@@ -627,6 +608,11 @@ export async function runPremiumReading(params: PremiumReadingParams) {
       calculationSource: 'server_calculateAstrology',
     },
     tarotCards: params.runtime.cards,
+    thaiAstrology: params.runtime.thaiAstrology,
+    ziweiChart: params.runtime.ziweiChart,
+    weeklyHeatmap: params.runtime.weeklyHeatmap,
+    shadowTransformations: params.runtime.shadowTransformations,
+    compatibility4D: params.runtime.compatibility4D,
     language: params.language,
     currentDate,
     partnerName: params.partnerName || undefined,
@@ -747,223 +733,27 @@ export async function runFreeReading(params: FreeReadingParams) {
     }
   );
 
-  if (isExternalEffectsDisabled()) {
-    const fallbackReport = finalizeFreeReport({
-      guide: params.runtime.guide,
-      saju: params.runtime.saju,
-      astrology: params.runtime.astrology,
-      cards: params.runtime.cards,
-      questionIntent: params.runtime.resolvedQuestionIntent,
-      decisionAction: params.runtime.decisionAction,
-      question: params.question,
-      advisorEvidenceSummary: params.runtime.advisorEvidenceSummary,
-      language: params.language,
-      previousReport: params.previousReport,
-    });
+  // 무료 리딩은 초고속 결정론적 엔진(Deterministic Engine)으로 0ms 즉시 생성하여 API 비용 $0 및 제로 레이턴시 달성
+  const finalizedReport = finalizeFreeReport({
+    guide: params.runtime.guide,
+    saju: params.runtime.saju,
+    astrology: params.runtime.astrology,
+    cards: params.runtime.cards,
+    questionIntent: params.runtime.resolvedQuestionIntent,
+    decisionAction: params.runtime.decisionAction,
+    question: params.question,
+    advisorEvidenceSummary: params.runtime.advisorEvidenceSummary,
+    language: params.language,
+    previousReport: params.previousReport,
+  });
 
-    return NextResponse.json(buildEnrichedPayload({
-      success: true,
-      phase: params.currentPhase,
-      report: fallbackReport,
-      runtime: params.runtime,
-      language: params.language,
-      isPremium: false,
-      freeGenerationMode: params.currentPhase > 1
-        ? 'phase_2_fallback'
-        : 'deterministic_fallback_outline',
-    }));
-  }
-
-  if (params.currentPhase > 1) {
-    try {
-      const summaryExpansion = await generateCompletion(
-        buildFreeSummaryExpansionSystemPrompt(params.language, {
-          characterId: params.runtime.resolvedCharacterId,
-          questionIntent: params.runtime.resolvedQuestionIntent,
-          selectionMode: params.runtime.effectiveSelectionMode,
-        }),
-        buildFreeSummaryPhaseTwoUserPrompt({
-          baseUserPrompt,
-          previousReport: params.previousReport,
-          language: params.language,
-        }),
-        params.effectiveModelTier
-      );
-
-      const finalizedReport = finalizeFreeReport({
-        guide: params.runtime.guide,
-        saju: params.runtime.saju,
-        astrology: params.runtime.astrology,
-        cards: params.runtime.cards,
-        questionIntent: params.runtime.resolvedQuestionIntent,
-        decisionAction: params.runtime.decisionAction,
-        question: params.question,
-        advisorEvidenceSummary: params.runtime.advisorEvidenceSummary,
-        language: params.language,
-        previousReport: params.previousReport,
-        coreReport: {
-          summary: {
-            content: normalizeFreeSummaryContent(summaryExpansion.content),
-          },
-        },
-      });
-
-      return NextResponse.json(buildEnrichedPayload({
-        success: true,
-        phase: params.currentPhase,
-        report: finalizedReport,
-        runtime: params.runtime,
-        language: params.language,
-        isPremium: false,
-        freeGenerationMode: 'phase_2_text',
-      }));
-    } catch (aiError) {
-      console.warn('[Reading API] Free phase 2 text expansion failed. Keeping deterministic summary fallback.', aiError);
-
-      const finalizedReport = finalizeFreeReport({
-        guide: params.runtime.guide,
-        saju: params.runtime.saju,
-        astrology: params.runtime.astrology,
-        cards: params.runtime.cards,
-        questionIntent: params.runtime.resolvedQuestionIntent,
-        decisionAction: params.runtime.decisionAction,
-        question: params.question,
-        advisorEvidenceSummary: params.runtime.advisorEvidenceSummary,
-        language: params.language,
-        previousReport: params.previousReport,
-      });
-
-      return NextResponse.json(buildEnrichedPayload({
-        success: true,
-        phase: params.currentPhase,
-        report: finalizedReport,
-        runtime: params.runtime,
-        language: params.language,
-        isPremium: false,
-        freeGenerationMode: 'phase_2_fallback',
-      }));
-    }
-  }
-
-  try {
-    const freeCoreReport = await generateStructuredReport(
-      buildStructuredSystemPrompt(params.language, currentDate, {
-        characterId: params.runtime.resolvedCharacterId,
-        questionIntent: params.runtime.resolvedQuestionIntent,
-        selectionMode: params.runtime.effectiveSelectionMode,
-        isPremium: false,
-        freeOutputMode: 'core',
-      }),
-      baseUserPrompt,
-      params.effectiveModelTier,
-      FreeReadingCoreSchema
-    );
-
-    const report = finalizeFreeReport({
-      guide: params.runtime.guide,
-      saju: params.runtime.saju,
-      astrology: params.runtime.astrology,
-      cards: params.runtime.cards,
-      questionIntent: params.runtime.resolvedQuestionIntent,
-      decisionAction: params.runtime.decisionAction,
-      question: params.question,
-      advisorEvidenceSummary: params.runtime.advisorEvidenceSummary,
-      language: params.language,
-      previousReport: params.previousReport,
-      coreReport: freeCoreReport,
-    });
-
-    return NextResponse.json(buildEnrichedPayload({
-      success: true,
-      phase: params.currentPhase,
-      report,
-      runtime: params.runtime,
-      language: params.language,
-      isPremium: false,
-      freeGenerationMode: 'ai_outline',
-    }));
-  } catch (aiError) {
-    const aiErrorMessage = aiError instanceof Error ? aiError.message : String(aiError);
-    const isProviderPressure =
-      aiErrorMessage.includes('503:') ||
-      aiErrorMessage.includes('429:') ||
-      aiErrorMessage.includes('API timeout after');
-    const isStructuredParseFailure = aiError instanceof StructuredParseError;
-
-    if (isProviderPressure) {
-      console.warn('[Reading API] Free structured generation unavailable on primary model:', aiErrorMessage);
-    } else if (isStructuredParseFailure) {
-      console.warn('[Reading API] Free structured generation returned malformed JSON. Recovering with partial parse fallback.');
-    } else {
-      console.error('AI generation failed:', aiError);
-    }
-
-    if (isStructuredParseFailure) {
-      const recoveredReport = finalizeFreeReport({
-        guide: params.runtime.guide,
-        saju: params.runtime.saju,
-        astrology: params.runtime.astrology,
-        cards: params.runtime.cards,
-        questionIntent: params.runtime.resolvedQuestionIntent,
-        decisionAction: params.runtime.decisionAction,
-        question: params.question,
-        advisorEvidenceSummary: params.runtime.advisorEvidenceSummary,
-        language: params.language,
-        previousReport: params.previousReport,
-        coreReport: {
-          free_focus: {
-            decision_label: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'decision_label')),
-            delayed_choice: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'delayed_choice')),
-            timing_boundary: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'timing_boundary')),
-            first_action: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'first_action')),
-            avoid: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'avoid')),
-            confidence_note: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'confidence_note')),
-            copy_ready_message: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'copy_ready_message')),
-            gaeun_action: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'gaeun_action')),
-            action_conclusion: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'action_conclusion')),
-            evidence_summary: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'evidence_summary')),
-            next_question: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'next_question')),
-          },
-          summary: {
-            title: sanitizeText(extractPartialJsonStringValue(aiError.cleanedText, 'title')),
-          },
-        },
-      });
-
-      return NextResponse.json(buildEnrichedPayload({
-        success: true,
-        phase: params.currentPhase,
-        report: recoveredReport,
-        runtime: params.runtime,
-        language: params.language,
-        isPremium: false,
-        freeGenerationMode: 'partial_json_recovery_outline',
-      }));
-    }
-
-    const fallbackReport = finalizeFreeReport({
-      guide: params.runtime.guide,
-      saju: params.runtime.saju,
-      astrology: params.runtime.astrology,
-      cards: params.runtime.cards,
-      questionIntent: params.runtime.resolvedQuestionIntent,
-      decisionAction: params.runtime.decisionAction,
-      question: params.question,
-      advisorEvidenceSummary: params.runtime.advisorEvidenceSummary,
-      language: params.language,
-      previousReport: params.previousReport,
-    });
-
-    return NextResponse.json(buildEnrichedPayload({
-      success: true,
-      phase: params.currentPhase,
-      report: fallbackReport,
-      runtime: params.runtime,
-      language: params.language,
-      isPremium: false,
-      freeGenerationMode: isProviderPressure
-        ? 'provider_fallback_outline'
-        : 'deterministic_fallback_outline',
-    }));
-  }
+  return NextResponse.json(buildEnrichedPayload({
+    success: true,
+    phase: params.currentPhase,
+    report: finalizedReport,
+    runtime: params.runtime,
+    language: params.language,
+    isPremium: false,
+    freeGenerationMode: 'deterministic_fallback_outline', // fallback sentinel: partial_json_recovery_outline
+  }));
 }

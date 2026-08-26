@@ -3,11 +3,6 @@
 import { ArrowRight, Lock, RefreshCw } from 'lucide-react';
 import type { PremiumReportData } from './premium-report';
 
-type TarotCard = {
-    readonly name: string;
-    readonly isReversed?: boolean;
-};
-
 type CaseFileReportProps = {
     readonly report: PremiumReportData;
     readonly language?: 'ko' | 'en';
@@ -16,8 +11,6 @@ type CaseFileReportProps = {
     readonly hasError?: boolean;
     readonly onRetry?: () => void;
     readonly onUnlock?: (source?: string) => void;
-    readonly onOpenTarotCard?: (index: number) => void;
-    readonly tarotCards?: readonly TarotCard[];
     readonly displayPrice?: string;
     readonly personName?: string;
     readonly question?: string;
@@ -36,8 +29,8 @@ type TimelineItem = {
     readonly score?: number;
 };
 
-const CHAPTERS_KO = ['판정', '사주', '점성', '타로', '타이밍', '실행'];
-const CHAPTERS_EN = ['Verdict', 'Saju', 'Astro', 'Tarot', 'Timing', 'Action'];
+const CHAPTERS_KO = ['판정', '사주', '점성', '자미두수', '타이밍', '실행'];
+const CHAPTERS_EN = ['Verdict', 'Saju', 'Astro', 'Ziwei', 'Timing', 'Action'];
 
 function cleanHumanText(value: string | undefined, fallback: string, limit = 260): string {
     if (!value || !value.trim()) return fallback;
@@ -69,11 +62,11 @@ function buildEvidence(report: PremiumReportData, isEn: boolean): readonly Evide
             ),
         },
         {
-            label: isEn ? '03 / Tarot' : '03 / 타로 3카드',
-            title: isEn ? 'Near-term Signal' : '가까운 신호',
+            label: isEn ? '03 / Ziwei' : '03 / 자미두수 명반',
+            title: isEn ? 'Destiny Blueprint' : '운명 청사진',
             body: cleanHumanText(
-                report.final_verdict?.tarot_insight || report.tarot_details?.[0]?.interpretation,
-                isEn ? 'Tarot reads the immediate emotional signal around the question.' : '타로는 지금 질문 주변의 즉각적인 심리 신호를 잡아냅니다.'
+                report.oracleCouncil?.ziweiSummary || (isEn ? 'The 12-palace celestial map reveals your long-term archetype and core life strengths.' : '자미두수 12궁 명반은 타고난 그릇과 기회의 방향성을 정밀하게 보여줍니다.'),
+                isEn ? 'The 12-palace celestial map reveals your long-term archetype.' : '자미두수 12궁 명반은 타고난 그릇과 기회의 방향성을 보여줍니다.'
             ),
         },
     ];
@@ -146,8 +139,6 @@ export function CaseFileReport({
     hasError = false,
     onRetry,
     onUnlock,
-    onOpenTarotCard,
-    tarotCards = [],
     displayPrice,
     personName,
     question,
@@ -186,7 +177,7 @@ export function CaseFileReport({
                         <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
                             <div className="max-w-3xl">
                                 <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c8a84d]">
-                                    {isEn ? 'Three-layer verdict' : '사주 + 점성술 + 타로 3단 판정'}
+                                    {isEn ? 'Three-layer verdict' : '사주 + 점성술 + 자미두수 3단 판정'}
                                 </p>
                                 <h1 className="mt-4 font-cinzel text-3xl font-semibold leading-tight text-stone-50 md:text-5xl">
                                     {verdictTitle}
@@ -242,11 +233,6 @@ export function CaseFileReport({
                                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#c8a84d]">{item.label}</p>
                                 <h2 className="mt-4 font-cinzel text-2xl text-stone-100">{item.title}</h2>
                                 <p className="mt-4 leading-7 text-stone-400">{item.body}</p>
-                                {index === 2 && tarotCards.length > 0 && (
-                                    <button onClick={() => onOpenTarotCard?.(0)} className="mt-5 inline-flex items-center gap-2 border-b border-[#c8a84d]/50 pb-1 text-sm text-[#c8a84d] transition hover:border-[#c8a84d]">
-                                        {tarotCards[0]?.name} <ArrowRight className="h-3.5 w-3.5" />
-                                    </button>
-                                )}
                             </article>
                         ))}
                     </div>
@@ -323,6 +309,30 @@ export function CaseFileReport({
                             <p className="mt-8 border-t border-white/10 pt-5 text-sm leading-6 text-stone-500">{closingWords}</p>
                         </aside>
                     </section>
+
+                    {/* SajuMind Daily Retention Bridge */}
+                    <div className="border-t border-white/10 bg-[radial-gradient(ellipse_at_top,_rgba(200,168,77,0.08),_transparent_70%)] px-5 py-6 md:px-10">
+                        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                            <div>
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#c8a84d]">
+                                    {isEn ? 'Daily Timing & Mindset' : '데일리 타이밍 & 멘탈 체크인'}
+                                </p>
+                                <h4 className="mt-1 text-base font-semibold text-stone-100">
+                                    {isEn ? 'Check today’s celestial transit with SajuMind' : '오늘의 일진 에너지와 감정 패턴 확인하기'}
+                                </h4>
+                                <p className="mt-1 text-xs text-stone-400">
+                                    {isEn ? 'Track daily emotional patterns matched to your Day Master.' : '나의 타고난 일간(Day Master)과 오늘의 일진 간 상호작용을 매일 확인하세요.'}
+                                </p>
+                            </div>
+                            <a
+                                href="/sajumind"
+                                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-[#c8a84d]/40 bg-[#c8a84d]/10 px-5 py-2.5 text-xs font-semibold text-[#c8a84d] transition hover:bg-[#c8a84d]/20 hover:border-[#c8a84d]"
+                            >
+                                <span>{isEn ? 'Open SajuMind' : '사주마인드 시작'}</span>
+                                <ArrowRight className="h-3.5 w-3.5" />
+                            </a>
+                        </div>
+                    </div>
 
                     {isFreeView && (
                         <div className="border-t border-[#c8a84d]/25 bg-[#18150d] px-5 py-5 md:px-10">

@@ -2,7 +2,6 @@
 @source "../**/*.{ts,tsx,js,jsx,html}";
 @source not "../../.agent";
 @source not "../../.agents";
-@source not "../../insane-design";
 
 /* ================================
    CosmicPath - Quiet Decision Theme

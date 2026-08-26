@@ -14,30 +14,45 @@ const MATCH_STYLES: Record<UnifiedReadingResult['matchLevel'], string> = {
     CONFLICT: 'border-rose-300/30 bg-rose-400/12 text-rose-100',
 };
 
-const SOURCE_META = {
+const SOURCE_META: Record<string, {
+    label: string;
+    description: string;
+    icon: typeof ScrollText;
+    accentClassName: string;
+    chipClassName: string;
+    barClassName: string;
+}> = {
     SAJU: {
         label: '사주 원국',
-        description: '태어난 시간의 흐름과 기질을 읽는 축',
+        description: '타고난 기질과 10년 대운의 구조를 읽는 핵심 축',
         icon: ScrollText,
         accentClassName: 'text-amber-100',
         chipClassName: 'border-amber-300/20 bg-amber-400/10 text-amber-100',
         barClassName: 'from-amber-300 via-amber-200 to-amber-100',
     },
     ASTROLOGY: {
-        label: '점성 흐름',
-        description: '행성 정렬과 시기의 추진력을 확인하는 축',
+        label: '점성 트랜짓',
+        description: '행성 정렬과 시기의 압력 및 기회의 창을 확인하는 축',
         icon: Star,
         accentClassName: 'text-violet-100',
         chipClassName: 'border-violet-300/20 bg-violet-400/10 text-violet-100',
         barClassName: 'from-violet-300 via-fuchsia-200 to-indigo-100',
     },
-    TAROT: {
-        label: '타로 직관',
-        description: '현재 질문의 직관과 심리 신호를 읽는 축',
+    ZIWEI: {
+        label: '자미두수 명반',
+        description: '12궁 배치를 통해 타고난 그릇과 기회의 방향성을 정밀 진단하는 축',
         icon: Sparkles,
         accentClassName: 'text-fuchsia-100',
         chipClassName: 'border-fuchsia-300/20 bg-fuchsia-400/10 text-fuchsia-100',
         barClassName: 'from-fuchsia-300 via-pink-200 to-rose-100',
+    },
+    THAI: {
+        label: '태국 왕실 점성',
+        description: '출생 요일 수호신과 108년 마하탁사 생애 대운을 추적하는 축',
+        icon: Sparkles,
+        accentClassName: 'text-emerald-100',
+        chipClassName: 'border-emerald-300/20 bg-emerald-400/10 text-emerald-100',
+        barClassName: 'from-emerald-300 via-teal-200 to-cyan-100',
     },
 } as const;
 
@@ -67,7 +82,7 @@ export function UnifiedReadingDisplay({ result }: UnifiedReadingDisplayProps) {
                             Cosmic Synthesis
                         </h2>
                         <p className="mt-2 max-w-2xl text-sm leading-6 text-white/58 sm:text-base">
-                            사주, 점성, 타로가 공통으로 가리킨 행동 신호를 한 장의 결정 리딩으로 정리했습니다.
+                            사주, 서양 점성, 태국 점성, 자미두수가 가리킨 행동 신호를 한 장의 결정 리딩으로 정리했습니다.
                         </p>
                     </div>
 

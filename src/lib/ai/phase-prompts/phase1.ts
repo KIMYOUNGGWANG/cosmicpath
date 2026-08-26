@@ -21,21 +21,21 @@ ${buildThreeLayerSynthesisPromptRule('en')}
 <SOURCE_ROLE_PROTOCOL>
 1. Saju is the structure layer: durable pattern, inherited pressure, and repeated decision habit.
 2. Astrology is the timing layer: current pressure, release window, and situational weather.
-3. Tarot is the immediate signal layer: what the question is activating right now.
+3. Ziwei Doushu is the destiny blueprint layer: 12-palace star map and core life strengths.
 4. Conflict resolution is not source ranking. If one layer diverges, write the divergence and lower certainty or reduce action size.
 </SOURCE_ROLE_PROTOCOL>
 
 ## Phase 1 Mission: Core Summary + Traits (Impression & Traits)
 Create a strong first impression so that the user feels "This resonates deeply with me!" as soon as they open the report.
-Lead with the strongest shared signal across Saju, Astrology, and Tarot, with all three source roles active in the decision.
+Lead with the strongest shared signal across Saju, Astrology, and Ziwei Doushu.
 
 ## Response Requirements (JSON)
 {
   "summary": {
     "title": "Poetic and inspiring headline (e.g., In 2026, the storm clears and a new path emerges)",
-    "content": "Comprehensive summary of 7-9 sentences. The first sentence must literally follow this label structure: \"Saju structure layer first, for ${userData.name} (${userData.birthDate}) and the exact question '${question}', from today ${currentDate} through the 7-day review window, first action is [prepare/compare/estimate/document/ask verb phrase], and decision boundary is [qualified-review threshold or hold condition].\" For regulated topics, the first action must be a question/document/cost comparison task and the decision boundary must be a review threshold; do not name stay/return/apply/extend/file/submit/book/stop/switch as the action or boundary. Keep the phrases \"first action is\" and \"decision boundary is\" intact. Then show how Saju structure, Astrology timing, and Tarot immediate signal align or diverge. (Use empowering language: 'Your chart suggests...' NOT 'You are destined to...')",
+    "content": "Comprehensive summary of 7-9 sentences. The first sentence must literally follow this label structure: \"Saju structure layer first, for ${userData.name} (${userData.birthDate}) and the exact question '${question}', from today ${currentDate} through the 7-day review window, first action is [prepare/compare/estimate/document/ask verb phrase], and decision boundary is [qualified-review threshold or hold condition].\" For regulated topics, the first action must be a question/document/cost comparison task and the decision boundary must be a review threshold; do not name stay/return/apply/extend/file/submit/book/stop/switch as the action or boundary. Keep the phrases \"first action is\" and \"decision boundary is\" intact. Then show how Saju structure, Astrology timing, and Ziwei blueprint align. In the 2nd and 3rd sentences, deeply uncover the user's hidden fatigue and past 1-2 year turning points. (Use empowering language: 'Your chart suggests...' NOT 'You are destined to...')",
     "trust_score": 3-5,
-    "trust_reason": "Clear reasoning naming the shared signal or conflict across Saju structure, Astrology timing, and Tarot immediate signal."
+    "trust_reason": "Clear reasoning naming the shared signal across Saju structure and Astrology timing."
   },
   "traits": [
     {
@@ -45,15 +45,15 @@ Lead with the strongest shared signal across Saju, Astrology, and Tarot, with al
       "grade": "S"
     },
     {
-      "type": "tarot",
-      "name": "Tarot Badge (e.g., The Seeker of Light)",
-      "description": "Immediate psychological and situational signal read from the 3-card spread. What is the user's question activating right now?",
+      "type": "ziwei",
+      "name": "Ziwei Badge (e.g., The Strategic Sovereign)",
+      "description": "12-palace celestial archetype and core opportunity pattern cross-verified with natal chart data.",
       "grade": "A"
     },
     {
       "type": "saju",
       "name": "Soul Element Badge (e.g., The Iron Will)",
-      "description": "Introduce the user's Saju structure as the durable pattern layer and connect it to the shared signal or conflict note.",
+      "description": "Introduce the user's Saju structure as the durable pattern layer and connect it to the shared signal.",
       "grade": "B"
     }
   ],
@@ -100,50 +100,48 @@ ${buildThreeLayerSynthesisPromptRule('ko')}
 <원천_역할_프로토콜>
 1. 사주는 구조 레이어입니다: 오래 반복되는 패턴, 기질, 선택 습관, 장기 압력을 읽습니다.
 2. 점성은 타이밍 레이어입니다: 지금의 압력, 풀리는 창, 외부 상황의 리듬을 읽습니다.
-3. 타로는 즉각 신호 레이어입니다: 질문을 둘러싼 현재 감정, 상황 마찰, 바로 보이는 위험을 읽습니다.
+3. 자미두수는 운명 청사진 레이어입니다: 12궁 명반과 주성/사화(祿權科忌)의 흐름으로 타고난 그릇과 기회의 방향성을 정밀하게 읽습니다.
 4. 충돌 처리는 원천 서열화가 아닙니다. 한 레이어가 엇갈리면 그 차이를 쓰고, 확신도나 행동 크기를 낮추십시오.
 </원천_역할_프로토콜>
 
 ## Phase 1 임무: 핵심 요약 + 트레이트 (Impression & Traits)
-사용자가 리포트를 열자마자 "내 상황을 정확히 짚고 있다"라고 느낄 수 있도록 신뢰감 있는 첫인상을 주십시오.
-사주, 점성술, 타로 데이터를 따로 설명하지 말고, **"하나의 교차 판정"**으로 연결하되, 세 원천의 공통 신호와 충돌 지점을 먼저 드러내야 합니다.
+사용자가 리포트를 열자마자 "내 무의식과 현실을 정확히 꿰뚫어 보고 있다"라고 느낄 수 있도록 신뢰감과 전율을 주는 첫인상을 전달하십시오.
+사주, 점성술, 자미두수 데이터를 따로 나열하지 말고, **"동서양 3대 학문의 입체 교차 판정"**으로 연결하여, 공통 신호와 결정적 타이밍을 일상 언어로 뚜렷하게 제시하십시오.
 
 <핵심_분석_원칙>
-1. **글자 간 상호작용 (충/형/합/파)**: 단순히 "편관이 있다"가 아닌, "월지의 [글자A]가 일지의 [글자B]와 충돌([상호작용])하여 내면의 갈등이 크다"처럼 실제 명식의 글자 간 관계를 해석하십시오.
-2. **타로-사주 상호검증**: 사주에 부족한 오행이 타로 카드에서 보완되는지 확인하십시오.
-3. **점성술-사주 융합**: 태양 별자리의 원소와 사주 일간의 오행을 대조하여 일간의 특성을 심층 분석하십시오.
+1. **글자 간 상호작용 (충/형/합/파)**: 단순히 "편관이 있다"가 아닌, "월지의 [글자A]가 일지의 [글자B]와 충돌([상호작용])하여 내면의 갈등이 크다"처럼 실제 명식의 글자 간 관계를 심리적 현실 언어로 해석하십시오.
+2. **자미두수-사주 상호검증**: 사주의 10년 대운 흐름과 자미두수 명궁/신궁의 주성 및 사화(祿權科忌) 배치가 어떻게 서로를 보완하거나 증폭하는지 대조하십시오.
+3. **점성술-사주 융합**: 태양/달 별자리의 원소와 사주 일간의 오행을 대조하여 일간의 본질과 현재 심리 상태를 심층 분석하십시오.
 * **주의**: 예시에 나온 글자(인목, 신금 등)를 그대로 사용하지 말고, 반드시 아래 제공된 <사주_원국>의 실제 글자만 사용하십시오.
 </핵심_분석_원칙>
 
 <style_guide>
-**서술 균형 지침**: 행동 패턴을 먼저 판정하고, 명리 근거는 그 판정 바로 뒤에 붙여 검증 가능하게 쓰십시오.
+**서술 균형 지침**: 행동 패턴과 심리적 진단을 먼저 판정하고, 명리/점성 근거는 그 판정 바로 뒤에 괄호로 붙여 검증 가능하게 쓰십시오.
 
 **금지 (X):**
 - "당신은 화(火) 기운이 강합니다."
 - "편관이 있어서 리더십이 있습니다."
 - "재물운이 좋아 돈을 벌 수 있습니다."
-- 사전적 정의 나열, 추상적 덕담
+- 사전적 정의 나열, 추상적 덕담, 뜬구름 잡는 위로
 
 **필수 (O):**
-- "이 사람은 쉬는 날에도 머리가 안 쉰다. 판을 설계하고, 규칙을 만들고, 통제할 수 있는 영역을 넓히는 것이 본능이다. (근거: 일간 [글자]가 [글자]들로부터 강한 생조를 받아 극도로 신강)"
-- "돈 자체를 좇기보다 '내 영역의 크기'에 집착한다. 차곡차곡 저축하는 타입이 아니라, 자기만의 시스템을 구축해 한 번에 파이를 가져가려는 성향이다. (근거: [글자A]-[글자B]의 상호작용)"
-- "인간관계가 좁아지는 이유는 까다로워서가 아니라, 시간이 갈수록 사람을 책임감으로 보기 시작하기 때문이다. (근거: 일지 [글자]의 특성)"
+- "이 사람은 겉으로는 여유로워 보여도 속으로는 100% 통제되지 않는 상황을 극도로 불안해한다. 완벽주의 때문에 스스로에게 가혹한 잣대를 들이대며 에너지를 소진하는 패턴이다. (근거: 일간 [글자]가 [글자]들로부터 강한 생조를 받아 극도로 신강)"
+- "돈 자체를 좇기보다 '내 선택권과 자유'에 집착한다. 차곡차곡 모으는 안정형보다, 자기만의 독자적 영역을 구축해 판을 키우려는 본능이 강하다. (근거: [글자A]-[글자B]의 상호작용)"
+- "인간관계에서 피로를 느끼는 이유는 정이 없어서가 아니라, 한 번 마음을 준 사람에게 지나친 책임감을 짊어지려 하기 때문이다. (근거: 일지 [글자]의 특성)"
 
 **톤 규칙:**
-- 자기계발 강사처럼 말하지 말 것
-- 근거가 충분한 성향은 명확히 판정할 것
-- 실제 사람을 오래 관찰한 전략가처럼 묘사할 것
-- 설명보다 결정 지원 판정에 가깝게 작성할 것
-- 특히 돈, 권력, 관계에서 드러나는 숨은 욕망을 구체적으로 묘사할 것
+- 자기계발 강사나 기계적 챗봇처럼 말하지 말 것
+- 심리 상담의 날카로운 통찰과 전략가의 명쾌한 판단을 융합할 것
+- 읽는 사람이 "어떻게 내 속마음을 알았지?"라며 무릎을 칠 만큼 구체적인 행동 패턴을 묘사할 것
 </style_guide>
 
 ## 응답 요구사항 (JSON)
 {
   "summary": {
-    "title": "시적이고 강렬한 헤드라인 (15-30자. 예: '긴 어둠 끝에 새벽이 밝아온다')",
-    "content": "선명하고 밀도 높은 종합 요약. 첫 문장은 반드시 다음 리터럴 라벨 구조를 따르십시오: \"사주 구조 레이어 기준으로, ${userData.name}님(${userData.birthDate})의 원 질문 '${question}'에 대해 오늘 ${currentDate}부터 7일 검증 창에서 첫 행동은 [문서 작성/비교/비용 산정/전문가 질문 작성]이고, 결정 경계는 [전문가 검토 전 재검토 조건 또는 보류 조건]입니다.\" 고위험 사안에서는 첫 행동을 질문/문서/비용 비교 작업으로만 쓰고, 결정 경계도 재검토 기준으로만 쓰십시오. 첫 문장 안에서 체류/귀국/신청/연장/접수/제출/예매/중단/전환을 행동이나 경계로 쓰면 실패입니다. '첫 행동은'과 '결정 경계는'이라는 문구를 절대 바꾸지 마십시오. 명리 용어 해설로 분량을 채우지 말고, 이 사람의 행동 패턴, 반복되는 실패 구조, 심리적 약점, 돈과 인간관계에서의 습관을 냉정하게 묘사. 근거가 충분한 대목은 '이 사람은 ~하는 타입이다'처럼 판정형으로 쓰되, 근거가 약하면 조건과 재검토 경계를 함께 표기. 반드시 (1) <사주_원국>의 실제 글자 간 충/합 관계를 (근거: [글자A]-[글자B]의 [관계]) 형식으로 인용, (2) 점성술의 태양/달 관계, (3) 타로 3장의 흐름, (4) 사용자 질문에 대한 첫 행동/리스크/타이밍 경계를 서술하십시오. '~할 수 있다', '~가능성이 있습니다'만으로 주장을 흐리지 말고 근거와 행동 크기 조정을 연결하십시오.",
+    "title": "시적이고 강렬한 헤드라인 (15-30자. 예: '치열한 내면의 안개가 걷히고 주도권을 쥐는 해')",
+    "content": "선명하고 밀도 높은 종합 요약. 첫 문장은 반드시 다음 리터럴 라벨 구조를 따르십시오: \"사주 구조 레이어 기준으로, ${userData.name}님(${userData.birthDate})의 원 질문 '${question}'에 대해 오늘 ${currentDate}부터 7일 검증 창에서 첫 행동은 [문서 작성/비교/비용 산정/전문가 질문 작성]이고, 결정 경계는 [전문가 검토 전 재검토 조건 또는 보류 조건]입니다.\" 고위험 사안에서는 첫 행동을 질문/문서/비용 비교 작업으로만 쓰고, 결정 경계도 재검토 기준으로만 쓰십시오. 첫 문장 안에서 체류/귀국/신청/연장/접수/제출/예매/중단/전환을 행동이나 경계로 쓰면 실패입니다. '첫 행동은'과 '결정 경계는'이라는 문구를 절대 바꾸지 마십시오. 첫 문장 직후 2~3번째 문장에서는 사용자의 질문('${question}') 뒤에 숨겨진 심리적 고통과 최근 1~2년의 고비(번아웃/갈등)를 사주 원국의 실제 글자 관계(근거: [글자A]-[글자B] 충/합)로 족집게처럼 짚어내십시오. 명리 용어 해설로 분량을 채우지 말고, 이 사람의 행동 패턴, 반복되는 실패 구조, 심리적 약점, 돈과 인간관계에서의 습관을 냉정하게 묘사. 근거가 충분한 대목은 '이 사람은 ~하는 타입이다'처럼 판정형으로 쓰되, 근거가 약하면 조건과 재검토 경계를 함께 표기. 반드시 (1) <사주_원국>의 실제 글자 간 충/합 관계를 (근거: [글자A]-[글자B]의 [관계]) 형식으로 인용, (2) 점성술의 태양/달/행성 관계, (3) 자미두수 명반의 핵심 배치, (4) 사용자 질문에 대한 첫 행동/리스크/타이밍 경계를 서술하십시오. '~할 수 있다', '~가능성이 있습니다'만으로 주장을 흐리지 말고 근거와 행동 크기 조정을 연결하십시오.",
     "trust_score": 3-5,
-    "trust_reason": "구체적 근거 기반 진단. 예: '원국의 자오충(子午冲)과 타로 Tower 카드가 동시에 나타나, 2026년 변화 압력이 커지므로 계약/관계 결정은 행동 크기를 줄여 검증합니다.' (근거 없는 막연한 신뢰 표현 금지)"
+    "trust_reason": "구체적 근거 기반 진단. 예: '사주의 일지 충돌과 점성술 토성 트랜짓이 동시에 겹쳐 압력이 높아지는 시기이므로, 이번 주는 무리한 베팅 대신 리스크 버퍼를 확보하는 방향으로 일치합니다.' (근거 없는 막연한 신뢰 표현 금지)"
   },
   "traits": [
     {
@@ -154,15 +152,15 @@ ${buildThreeLayerSynthesisPromptRule('ko')}
     },
     {
       "type": "astro",
-      "name": "점성술 뱃지 (간결 제목, 15자 이하. 예: 고독한 왕좌)",
+      "name": "점성술 뱃지 (간결 제목, 15자 이하. 예: 고독한 전략가)",
       "description": "태양(Ego)과 달(Emotion)의 별자리 관계를 언급하고, 하우스 데이터가 <점성술_데이터>에 있을 때만 하우스를 삶의 영역(직업, 관계 등)에 연결하십시오. 하우스 데이터가 없으면 '하우스 단위 근거 없음'이라고 낮추고, 사용자 질문에 대한 타이밍/리스크 함의를 쓰십시오. 별자리 데이터에 없는 내용을 추측하지 마십시오.",
       "grade": "A"
     },
     {
-      "type": "tarot",
-      "name": "타로 뱃지 (간결 제목, 15자 이하. 예: 파도를 타는 모험가)",
-      "description": "3장 카드의 흐름에서 읽히는 현재 심리 상태를 분석하고, **사주에서 부족한 오행을 타로가 보완하는지, 아니면 더 악화시키는지** 교차 검증한 뒤 행동 지침까지 연결하십시오. 카드 데이터에 있는 정보만 사용하십시오.",
-      "grade": "B"
+      "type": "ziwei",
+      "name": "자미두수 뱃지 (간결 제목, 15자 이하. 예: 제왕의 지략)",
+      "description": "명궁(命宮)과 신궁(身宮)의 주성 배치 및 사화(화록/화권/화과/화기)의 흐름에서 읽히는 타고난 그릇과 기회 창출 패턴을 분석하고, 사주/점성술과 교차 검증하여 일상 언어로 명쾌하게 풀어내십시오.",
+      "grade": "A"
     }
   ],
   "core_analysis": {

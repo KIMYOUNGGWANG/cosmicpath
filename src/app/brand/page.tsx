@@ -27,7 +27,7 @@ export default function BrandAssetsPage() {
                     <CosmicRadar
                         sajuScore={88}
                         starScore={95}
-                        tarotScore={82}
+                        ziweiScore={89}
                         isLoading={false}
                     />
                 </div>
@@ -35,9 +35,9 @@ export default function BrandAssetsPage() {
                 <div className="absolute bottom-12 text-center">
                     <h2 className="font-cinzel text-xl mb-4 text-starlight tracking-widest">3-WAY INTEGRATED ENGINE</h2>
                     <div className="flex gap-4 justify-center">
-                        <div className="px-4 py-1.5 bg-acc-logic/10 border border-acc-logic/30 rounded-full text-xs text-acc-logic font-bold uppercase tracking-wider">Logic (사주)</div>
-                        <div className="px-4 py-1.5 bg-tarot-purple/10 border border-tarot-purple/30 rounded-full text-xs text-tarot-purple font-bold uppercase tracking-wider">Intuition (타로)</div>
-                        <div className="px-4 py-1.5 bg-star-yellow/10 border border-star-yellow/30 rounded-full text-xs text-star-yellow font-bold uppercase tracking-wider">Flow (별자리)</div>
+                        <div className="px-4 py-1.5 bg-acc-logic/10 border border-acc-logic/30 rounded-full text-xs text-acc-logic font-bold uppercase tracking-wider">Structure (사주)</div>
+                        <div className="px-4 py-1.5 bg-purple-500/10 border border-purple-500/30 rounded-full text-xs text-purple-300 font-bold uppercase tracking-wider">Blueprint (자미두수)</div>
+                        <div className="px-4 py-1.5 bg-star-yellow/10 border border-star-yellow/30 rounded-full text-xs text-star-yellow font-bold uppercase tracking-wider">Timing (점성술)</div>
                     </div>
                 </div>
             </div>

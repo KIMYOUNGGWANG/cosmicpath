@@ -2,7 +2,7 @@
 
 import { useState, useEffect, type UIEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, AlertTriangle, Briefcase, Calendar, ChevronDown, Coins, Droplets, Flame, Heart, Shield, Sparkles, Star, Target, TrendingUp, type LucideIcon, ScrollText, Zap } from 'lucide-react';
+import { Activity, AlertTriangle, Briefcase, Calendar, ChevronDown, Coins, Droplets, Flame, Heart, Shield, Sparkles, Star, Target, TrendingUp, type LucideIcon, ScrollText, Zap, CheckCircle2, ShieldAlert, Lightbulb, Compass, Orbit } from 'lucide-react';
 import { EvidenceTooltip } from '../ui/confidence-badge';
 import { InsightCard, InsightHighlight } from './ui/InsightCard';
 import { DraftProposal } from './draft-proposal';
@@ -12,6 +12,9 @@ import { ElementHarmony } from './ElementHarmony';
 import { cn } from '@/lib/utils';
 import { FortuneTimelineChart } from './FortuneTimelineChart';
 import type { SajuResult } from '@/lib/engines/saju';
+import type { ShadowTransformationResult } from '@/lib/engines/saju-transformation';
+import type { YearHeatmapResult } from '@/lib/engines/timing-heatmap';
+import type { Compatibility4DResult } from '@/lib/engines/compatibility-matrix';
 
 export function PremiumSectionInterruptionCard({
   language,
@@ -92,8 +95,8 @@ export function HeaderSection({
           />
           <EvidenceTooltip
             tag="🔮"
-            sources={['tarot']}
-            explanation={isEn ? 'Reads the current intuitive energy.' : '현재의 직관적 에너지를 읽습니다.'}
+            sources={['ziwei']}
+            explanation={isEn ? 'Analyzes the 12-palace destiny architecture.' : '자미두수 12궁 명반을 정밀 분석합니다.'}
           />
         </div>
         <p className="whitespace-pre-line text-sm leading-relaxed text-gray-200">
@@ -261,7 +264,7 @@ export function CoreAnalysisSection({
         <ElementHarmony sajuData={sajuData} scores={data.element_scores} language={language} />
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <InsightCard
           title={isEn ? 'Lacking Elements' : '부족한 오행'}
           tag={isEn ? 'Custom Remedy' : '맞춤 개운법'}
@@ -273,7 +276,7 @@ export function CoreAnalysisSection({
             <span className="text-lg font-bold text-blue-200">{data.lacking_elements.elements}</span>
           </div>
 
-          <p className="mb-6 leading-relaxed text-blue-100/80">{data.lacking_elements.description}</p>
+          <p className="mb-6 leading-relaxed text-blue-100/80 break-keep">{data.lacking_elements.description}</p>
 
           <InsightHighlight type="tip">
             <span className="mr-2 font-bold">{isEn ? 'Remedy:' : '개운법:'}</span>
@@ -292,7 +295,7 @@ export function CoreAnalysisSection({
             <span className="text-lg font-bold text-amber-200">{data.abundant_elements.elements}</span>
           </div>
 
-          <p className="mb-6 leading-relaxed text-amber-100/80">{data.abundant_elements.description}</p>
+          <p className="mb-6 leading-relaxed text-amber-100/80 break-keep">{data.abundant_elements.description}</p>
 
           <InsightHighlight type="default">
             <span className="mr-2 font-bold">{isEn ? 'Strategy:' : '활용법:'}</span>
@@ -322,7 +325,7 @@ export function AccordionSection({
       <h2 className="mb-6 flex items-center gap-3 text-xl font-cinzel text-white">
         {source && (
           <EvidenceTooltip
-            tag={source === 'saju' ? '📜' : source === 'tarot' ? '🔮' : '🌌'}
+            tag={source === 'saju' ? '📜' : '🌌'}
             sources={[source]}
             explanation={isEn ? 'Analysis based on this scholarly system.' : '이 섹션의 분석은 해당 학문 체계를 근거로 합니다.'}
           />
@@ -393,79 +396,141 @@ export function NumerologySection({
   language: 'ko' | 'en';
 }) {
   const isEn = language === 'en';
-  const { life_path, lucky_numbers, lucky_day_advice } = data;
+  const { life_path, personal_year, decision_strategy, lucky_numbers, lucky_day_advice } = data;
+
+  const actionBadgeColors: Record<string, string> = {
+    PUSH: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+    HARVEST: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+    PIVOT: 'bg-sky-500/20 text-sky-300 border-sky-500/40',
+    DEFEND: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+  };
 
   return (
     <section className="mt-6 px-4 md:px-6">
-      <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-white">
-        <span className="text-xl">🔢</span>
-        {isEn ? 'Numerology Insight' : '수비학(Numerology) 분석'}
-        <span className="ml-2 rounded-full border border-indigo-500/30 bg-indigo-500/20 px-2 py-0.5 text-xs text-indigo-300">
-          NEW
-        </span>
-      </h2>
-
-      <div className="relative overflow-hidden rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-900/30 to-purple-900/30 p-5">
-        <div className="absolute right-0 top-0 h-32 w-32 translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-500/10 blur-3xl" />
-
-        <div className="flex flex-col items-center gap-6 md:flex-row">
-          <div className="flex flex-shrink-0 flex-col items-center">
-            <div className="relative flex h-24 w-24 items-center justify-center rounded-full border border-white/20 bg-gradient-to-br from-white/10 to-white/5 shadow-[0_0_20px_rgba(99,102,241,0.3)]">
-              <span className="bg-gradient-to-br from-white to-indigo-300 bg-clip-text text-5xl font-bold text-transparent">
-                {life_path.number}
-              </span>
-              <div className="absolute -bottom-3 rounded-full bg-indigo-600 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg">
-                Life Path
-              </div>
-            </div>
-          </div>
-
-          <div className="flex-1 space-y-3 text-center md:text-left">
-            <div>
-              <h3 className="mb-1 text-lg font-bold text-white">{life_path.title}</h3>
-              <p className="text-sm leading-relaxed text-indigo-100">{life_path.meaning}</p>
-            </div>
-
-            <div className="rounded-lg border border-white/5 bg-black/30 p-3">
-              <div className="mb-1 flex items-center justify-center gap-2 md:justify-start">
-                <span className="text-xs font-bold text-gold">🔗 {isEn ? 'Saju Connection' : '사주 연결 고리'}</span>
-              </div>
-              <p className="text-xs text-gray-300">{life_path.saju_connection}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-5 grid grid-cols-1 gap-4 border-t border-white/10 pt-4 md:grid-cols-2">
-          <div>
-            <div className="mb-2 flex items-center gap-1 text-xs font-medium text-gray-400">
-              <span>🍀</span> {isEn ? 'Lucky Numbers' : '행운의 숫자'}
-            </div>
-            <div className="flex gap-2">
-              {lucky_numbers.map((num, index) => (
-                <div
-                  key={index}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/10 text-sm font-bold text-white"
-                >
-                  {num}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <div className="mb-2 flex items-center gap-1 text-xs font-medium text-gray-400">
-              <span>💡</span> {isEn ? 'Action Tip' : '활용 팁'}
-            </div>
-            <p className="text-xs leading-relaxed text-gray-300">{lucky_day_advice}</p>
-          </div>
-        </div>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="flex items-center gap-2 text-lg font-bold text-white">
+          <span className="text-xs font-extrabold uppercase tracking-widest text-[#f5d77f] border border-[#c8a84d]/40 bg-[#c8a84d]/15 px-2.5 py-0.5 rounded-full">
+            {isEn ? '5-Layer Synthesis' : '5대 엔진 융합'}
+          </span>
+          <span>{isEn ? 'Numerology & Life Cycle Strategy' : '수비학 9년 인생 주기 & 행동 전략'}</span>
+        </h2>
       </div>
 
-      <div className="mt-4 flex justify-end">
-        <span className="flex items-center gap-1 text-[10px] text-gray-500">
-          <span>📐</span>
-          {isEn ? 'Calculated via Pythagorean Numerology' : '피타고라스 수비학 기반 계산'}
-        </span>
+      <div className="space-y-4">
+        {/* 1. Life Path Number Card */}
+        <div className="relative overflow-hidden rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-950/40 via-purple-950/20 to-[#0e0d0a] p-5 shadow-lg">
+          <div className="flex flex-col items-center gap-6 md:flex-row">
+            <div className="flex flex-shrink-0 flex-col items-center">
+              <div className="relative flex h-24 w-24 items-center justify-center rounded-full border border-indigo-400/30 bg-gradient-to-br from-indigo-500/20 to-purple-500/10 shadow-[0_0_24px_rgba(99,102,241,0.25)]">
+                <span className="bg-gradient-to-br from-white via-indigo-200 to-indigo-400 bg-clip-text text-5xl font-bold text-transparent">
+                  {life_path.number}
+                </span>
+                <div className="absolute -bottom-3 rounded-full border border-indigo-400/50 bg-indigo-900/90 px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-200 shadow-md">
+                  Life Path
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 space-y-3 text-center md:text-left">
+              <div>
+                <h3 className="mb-1 text-base font-bold text-white md:text-lg">{life_path.title}</h3>
+                <p className="text-sm leading-relaxed text-indigo-100/90">{life_path.meaning}</p>
+              </div>
+
+              <div className="rounded-xl border border-white/10 bg-black/40 p-3">
+                <div className="mb-1 flex items-center justify-center gap-2 md:justify-start">
+                  <span className="text-xs font-bold text-[#e8c86d]">
+                    {isEn ? '[Saju Connection]' : '[사주 오행 연결 고리]'}
+                  </span>
+                </div>
+                <p className="text-xs leading-relaxed text-stone-300">{life_path.saju_connection}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 2-Column: Personal Year (2026) & Decision Strategy */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {/* 2. 9-Year Personal Year Cycle */}
+          {personal_year && (
+            <div className="rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-950/20 to-black/60 p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
+                  {isEn ? '2026-2027 Personal Year Cycle' : '2026년 개인년 9년 주기'}
+                </span>
+                {personal_year.action_tag && (
+                  <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-extrabold tracking-wider ${actionBadgeColors[personal_year.action_tag] || 'bg-amber-500/20 text-amber-300 border-amber-500/30'}`}>
+                    {personal_year.action_tag}
+                  </span>
+                )}
+              </div>
+              <h4 className="text-sm font-bold text-stone-100 mb-1.5">
+                {personal_year.keyword} (Year {personal_year.number})
+              </h4>
+              <p className="text-xs leading-relaxed text-stone-300 mb-3">
+                {personal_year.theme}
+              </p>
+              <div className="rounded-lg border border-amber-500/20 bg-black/30 p-2.5 text-[11px] text-amber-200/90">
+                {isEn
+                  ? `Cycle Signal: Year ${personal_year.number} aligns with your current major luck timing.`
+                  : `주기 판정: 올해는 9년 주기 중 ${personal_year.number}번째 해로, 사주 세운과 조화를 이룹니다.`}
+              </div>
+            </div>
+          )}
+
+          {/* 3. Human Design Decision Strategy */}
+          {decision_strategy && (
+            <div className="rounded-2xl border border-sky-500/25 bg-gradient-to-br from-sky-950/20 to-black/60 p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-sky-300">
+                  {isEn ? 'Human Design Strategy' : '휴먼디자인 의사결정 전략'}
+                </span>
+                <span className="rounded-full border border-sky-500/40 bg-sky-500/20 px-2.5 py-0.5 text-[10px] font-extrabold tracking-wider text-sky-300">
+                  AUTHORITY
+                </span>
+              </div>
+              <h4 className="text-sm font-bold text-stone-100 mb-1.5">
+                {decision_strategy.energy_type}
+              </h4>
+              <p className="text-xs leading-relaxed text-stone-300 mb-2">
+                <strong className="text-sky-200">{isEn ? 'Execution Rule: ' : '행동 전략: '}</strong>
+                {decision_strategy.strategy}
+              </p>
+              <p className="text-xs leading-relaxed text-stone-300">
+                <strong className="text-sky-200">{isEn ? 'Internal Authority: ' : '내부 권위: '}</strong>
+                {decision_strategy.authority}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* 4. Lucky Numbers & Timing Advice */}
+        <div className="rounded-2xl border border-white/10 bg-black/30 p-5">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <div className="mb-2 text-xs font-medium text-stone-400">
+                {isEn ? 'Resonant Harmonic Numbers' : '공명 조화 숫자'}
+              </div>
+              <div className="flex gap-2">
+                {lucky_numbers.map((num, index) => (
+                  <div
+                    key={index}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-sm font-bold text-stone-200 shadow-sm"
+                  >
+                    {num}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-2 text-xs font-medium text-stone-400">
+                {isEn ? 'Timing Action Tip' : '타이밍 실행 팁'}
+              </div>
+              <p className="text-xs leading-relaxed text-stone-300">{lucky_day_advice}</p>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -656,7 +721,10 @@ export function DateSelectionSection({
               : 'border border-white/10 bg-white/5 text-gray-400 hover:border-white/20'
           )}
         >
-          ✅ {isEn ? 'Lucky Days' : '길일'} ({auspiciousDates.length})
+          <span className="flex items-center justify-center gap-1.5">
+            <CheckCircle2 size={15} />
+            <span>{isEn ? 'Auspicious Windows' : '도약 길일'} ({auspiciousDates.length})</span>
+          </span>
         </button>
         <button
           onClick={() => setActiveTab('inauspicious')}
@@ -667,7 +735,10 @@ export function DateSelectionSection({
               : 'border border-white/10 bg-white/5 text-gray-400 hover:border-white/20'
           )}
         >
-          ⚠️ {isEn ? 'Avoid' : '흉일'} ({inauspiciousDates.length})
+          <span className="flex items-center justify-center gap-1.5">
+            <ShieldAlert size={15} />
+            <span>{isEn ? 'Defend Windows' : '방어 흉일'} ({inauspiciousDates.length})</span>
+          </span>
         </button>
       </div>
 
@@ -739,11 +810,38 @@ export function AstroDeepSection({
     setOpenItems((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]));
   };
 
+  const sectionMetaMap: Record<string, { ko: string; en: string; subtitleKo: string; subtitleEn: string }> = {
+    sun_moon_dynamic: {
+      ko: '내면과 외면의 조화 (태양 · 달 별자리)',
+      en: 'Inner vs Outer Self (Sun & Moon Harmony)',
+      subtitleKo: '의식적 목표와 무의식적 감정 욕구의 균형',
+      subtitleEn: 'Conscious ambitions vs emotional needs',
+    },
+    ascendant_influence: {
+      ko: '사회적 페르소나와 첫인상 (상승궁 · 어센던트)',
+      en: 'Social Persona & Impression (Rising Sign)',
+      subtitleKo: '세상이 나를 인식하는 프레임과 본래 내면의 갭',
+      subtitleEn: 'How the world perceives you vs your inner truth',
+    },
+    dominant_element: {
+      ko: '기질적 핵심 원소와 에너지 분포 (원소 밸런스)',
+      en: 'Core Elements & Energy Balance',
+      subtitleKo: '나를 주도하는 원소와 보완이 필요한 기운',
+      subtitleEn: 'Your primary elemental drive and balancing qualities',
+    },
+    planetary_warning: {
+      ko: '주의해야 할 행성 주기와 타이밍 (리스크 관리)',
+      en: 'Planetary Cycles & Strategic Timing',
+      subtitleKo: '불필요한 충돌을 피하고 안정을 유지해야 할 시기',
+      subtitleEn: 'Timing windows requiring patience and strategic caution',
+    },
+  };
+
   const sections = [
-    { id: 'sun_moon_dynamic', data: data.sun_moon_dynamic, icon: '☀️🌙' },
-    { id: 'ascendant_influence', data: data.ascendant_influence, icon: '⬆️' },
-    { id: 'dominant_element', data: data.dominant_element, icon: '🔥' },
-    { id: 'planetary_warning', data: data.planetary_warning, icon: '⚠️' },
+    { id: 'sun_moon_dynamic', data: data.sun_moon_dynamic, icon: <Sparkles className="text-amber-300" size={18} /> },
+    { id: 'ascendant_influence', data: data.ascendant_influence, icon: <Compass className="text-indigo-300" size={18} /> },
+    { id: 'dominant_element', data: data.dominant_element, icon: <Flame className="text-rose-400" size={18} /> },
+    { id: 'planetary_warning', data: data.planetary_warning, icon: <ShieldAlert className="text-amber-400" size={18} /> },
   ].filter((section) => section.data);
 
   if (sections.length === 0) {
@@ -752,13 +850,15 @@ export function AstroDeepSection({
 
   return (
     <section className="mt-8 px-4 md:px-6">
-      <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-white">
-        <span className="text-2xl">🌌</span>
-        {isEn ? 'Astro Deep Dive' : '점성술 심층 분석'}
-        <span className="ml-2 rounded-full border border-purple-500/30 bg-purple-500/20 px-2 py-0.5 text-xs text-purple-300">
-          NEW
-        </span>
-      </h2>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="flex items-center gap-2 text-lg font-bold text-white">
+          <Orbit size={20} className="text-[#d4af37]" />
+          <span>{isEn ? 'Astrological Deep Dive' : '서양 점성술 천체 심층 분석'}</span>
+          <span className="ml-2 rounded-full border border-purple-500/30 bg-purple-500/15 px-2.5 py-0.5 text-xs text-purple-300">
+            {isEn ? 'CELESTIAL MAP' : '천체 기상도'}
+          </span>
+        </h2>
+      </div>
 
       <div className="space-y-3">
         {sections.map(({ id, data: sectionData, icon }) => {
@@ -766,6 +866,9 @@ export function AstroDeepSection({
             return null;
           }
           const isOpen = openItems.includes(id);
+          const meta = sectionMetaMap[id];
+          const displayTitle = meta ? (isEn ? meta.en : meta.ko) : (sectionData.title || '').replace(/[☀️🌙⬆️🔥💧⚠️]/g, '').trim();
+          const displaySubtitle = meta ? (isEn ? meta.subtitleEn : meta.subtitleKo) : '';
 
           return (
             <div
@@ -782,12 +885,19 @@ export function AstroDeepSection({
                 className="flex w-full cursor-pointer items-center justify-between p-4 text-left"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">{icon}</span>
-                  <span className="text-sm font-medium text-white md:text-base">{sectionData.title}</span>
+                  <div className="p-2 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                    {icon}
+                  </div>
+                  <div>
+                    <span className="text-sm font-semibold text-white md:text-base block">{displayTitle}</span>
+                    {displaySubtitle && (
+                      <span className="text-xs text-white/50 block mt-0.5">{displaySubtitle}</span>
+                    )}
+                  </div>
                 </div>
                 <ChevronDown
                   size={20}
-                  className={cn('text-gray-400 transition-transform duration-300', isOpen && 'rotate-180')}
+                  className={cn('text-gray-400 transition-transform duration-300 shrink-0 ml-2', isOpen && 'rotate-180')}
                 />
               </button>
 
@@ -801,8 +911,8 @@ export function AstroDeepSection({
                     className="overflow-hidden"
                   >
                     <div className="px-4 pb-4">
-                      <div className="pl-9">
-                        <p className="whitespace-pre-line text-[15px] leading-loose text-white/80">
+                      <div className="pl-11">
+                        <p className="whitespace-pre-line text-[15px] leading-loose text-white/80 break-keep">
                           {sectionData.content}
                         </p>
                       </div>
@@ -825,7 +935,7 @@ export function AstroDeepSection({
   );
 }
 
-export function CompatibleDeepDiveSection({
+export function DeepDiveSection({
   data,
   language,
 }: {
@@ -833,12 +943,12 @@ export function CompatibleDeepDiveSection({
   language: 'ko' | 'en';
 }) {
   const isEn = language === 'en';
-  const [activeTab, setActiveTab] = useState<'saju' | 'astro' | 'tarot'>('saju');
+  const [activeTab, setActiveTab] = useState<'saju' | 'astro' | 'ziwei'>('saju');
 
   return (
     <section className="mt-6 px-4 md:mt-8 md:px-6">
       <div className="mb-6 flex gap-2 rounded-xl border border-white/10 bg-white/5 p-1 backdrop-blur-sm">
-        {(['saju', 'astro', 'tarot'] as const).map((tab) => (
+        {(['saju', 'astro', 'ziwei'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -851,7 +961,7 @@ export function CompatibleDeepDiveSection({
           >
             {tab === 'saju' && (isEn ? '📜 Saju' : '📜 사주명리')}
             {tab === 'astro' && (isEn ? '🌌 Astrology' : '🌌 점성술')}
-            {tab === 'tarot' && (isEn ? '🔮 Tarot' : '🔮 타로')}
+            {tab === 'ziwei' && (isEn ? '🔮 Ziwei Doushu' : '🔮 자미두수 명반')}
           </button>
         ))}
       </div>
@@ -870,10 +980,10 @@ export function CompatibleDeepDiveSection({
             <ContentCard title={isEn ? 'Transit' : '트랜짓'} content={data.astro.transit} />
           </div>
         )}
-        {activeTab === 'tarot' && data.tarot && (
+        {activeTab === 'ziwei' && data.tarot && (
           <div className="space-y-4">
-            <ContentCard title={isEn ? 'Spread' : '스프레드'} content={data.tarot.spread_analysis} />
-            <ContentCard title={isEn ? 'Card Detail' : '카드 상세'} content={data.tarot.card_details} />
+            <ContentCard title={isEn ? '12-Palace Blueprint' : '12궁 명반 구조'} content={data.tarot.spread_analysis} />
+            <ContentCard title={isEn ? 'Vocation & Destiny Turning Point' : '관록·재백궁 심층 변곡점'} content={data.tarot.card_details} />
           </div>
         )}
       </div>
@@ -957,10 +1067,10 @@ export function FortuneFlowSection({
           className="mb-6"
         >
           <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-gray-300">
-            <span className="text-gold">🗓️</span>
-            {isEn ? '12-Month Fortune Map' : '12개월 월운 지도'}
+            <Calendar size={16} className="text-[#d4af37]" />
+            {isEn ? '12-Month Execution Matrix' : '12개월 타이밍 매트릭스'}
             <span className="ml-2 rounded-full border border-emerald-500/30 bg-emerald-500/20 px-2 py-0.5 text-xs text-emerald-300">
-              NEW
+              MATRIX
             </span>
           </h3>
 
@@ -970,50 +1080,47 @@ export function FortuneFlowSection({
               const isCurrentMonth = index === currentMonth;
               const isSelected = selectedMonth === index;
 
-              const getScoreColor = (value: number) => {
-                if (value >= 70) {
-                  return 'from-emerald-500/30 to-emerald-600/20 border-emerald-500/40';
-                }
-                if (value >= 50) {
-                  return 'from-amber-500/30 to-amber-600/20 border-amber-500/40';
-                }
-                return 'from-red-500/30 to-red-600/20 border-red-500/40';
+              const getActionTag = (val: number) => {
+                if (val >= 75) return { label: 'PUSH', cls: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' };
+                if (val >= 65) return { label: 'PIVOT', cls: 'bg-amber-500/20 text-amber-300 border-amber-500/40' };
+                if (val >= 55) return { label: 'HARVEST', cls: 'bg-blue-500/20 text-blue-300 border-blue-500/40' };
+                return { label: 'DEFEND', cls: 'bg-rose-500/20 text-rose-300 border-rose-500/40' };
               };
+              const actionTag = getActionTag(score);
 
               return (
                 <button
                   key={index}
                   onClick={() => setSelectedMonth(isSelected ? null : index)}
                   className={cn(
-                    'relative rounded-xl border p-3 text-center transition-all duration-300',
+                    'relative flex flex-col items-center rounded-xl p-2.5 transition-all text-center border',
                     isSelected
-                      ? `bg-gradient-to-br ${getScoreColor(score)} scale-105 shadow-lg`
+                      ? 'border-[#d4af37] bg-[#d4af37]/15 shadow-[0_0_15px_rgba(212,175,55,0.25)]'
                       : isCurrentMonth
-                        ? 'border-gold/50 bg-gradient-to-br from-gold/20 to-gold/10'
-                        : 'border-white/10 bg-white/5 hover:border-white/30'
+                        ? 'border-emerald-500/40 bg-emerald-500/10'
+                        : 'border-white/10 bg-white/5 hover:border-white/20'
                   )}
                 >
                   {isCurrentMonth && (
-                    <span className="absolute -right-1.5 -top-1.5 h-3 w-3 animate-pulse rounded-full bg-gold" />
+                    <span className="absolute -top-1.5 -right-1 flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
+                    </span>
                   )}
-                  <p className="text-xs text-gray-400">{month.month}</p>
-                  <p className="mt-1 text-sm font-bold text-white">{month.theme}</p>
-                  {month.score != null && (
-                    <div className="mt-2 text-xs">
-                      <span
-                        className={cn(
-                          'rounded-full px-1.5 py-0.5',
-                          score >= 70
-                            ? 'bg-emerald-500/20 text-emerald-300'
-                            : score >= 50
-                              ? 'bg-amber-500/20 text-amber-300'
-                              : 'bg-red-500/20 text-red-300'
-                        )}
-                      >
-                        {score}점
-                      </span>
-                    </div>
-                  )}
+                  <span className="text-xs text-gray-400 mb-1">{month.month}</span>
+                  <span className={cn(
+                    'text-sm font-bold',
+                    score >= 70 ? 'text-emerald-400' :
+                    score >= 50 ? 'text-amber-400' : 'text-rose-400'
+                  )}>
+                    {score}
+                  </span>
+                  <span className={cn(
+                    'mt-1.5 text-[9px] font-extrabold px-1.5 py-0.5 rounded border',
+                    actionTag.cls
+                  )}>
+                    {actionTag.label}
+                  </span>
                 </button>
               );
             })}
@@ -1021,25 +1128,46 @@ export function FortuneFlowSection({
 
           {selectedMonth !== null && monthlyData[selectedMonth] && (
             <motion.div
+              key={selectedMonth}
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="rounded-xl border border-white/10 bg-white/5 p-4"
+              className="rounded-2xl border border-white/10 bg-black/40 p-4 backdrop-blur-sm"
             >
-              <div className="mb-3 flex items-center gap-2">
-                <span className="text-lg">{monthlyData[selectedMonth].element || '🌟'}</span>
-                <h4 className="font-bold text-white">
-                  {monthlyData[selectedMonth].month} - {monthlyData[selectedMonth].theme}
-                </h4>
+              <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-3">
+                <div>
+                  <span className="text-xs text-[#d4af37] font-semibold">{isEn ? 'Selected Month' : '선택된 월'}</span>
+                  <h4 className="text-base font-bold text-white">
+                    {monthlyData[selectedMonth].month} - {monthlyData[selectedMonth].theme}
+                  </h4>
+                </div>
+                {monthlyData[selectedMonth].score != null && (
+                  <div className="flex items-center gap-2">
+                    <span className={cn(
+                      'text-xs font-bold px-2 py-0.5 rounded-full border',
+                      monthlyData[selectedMonth].score! >= 75 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' :
+                      monthlyData[selectedMonth].score! >= 65 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
+                      monthlyData[selectedMonth].score! >= 55 ? 'bg-blue-500/20 text-blue-300 border-blue-500/40' :
+                      'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                    )}>
+                      {monthlyData[selectedMonth].score! >= 75 ? 'PUSH' :
+                       monthlyData[selectedMonth].score! >= 65 ? 'PIVOT' :
+                       monthlyData[selectedMonth].score! >= 55 ? 'HARVEST' : 'DEFEND'}
+                    </span>
+                    <span className="text-xs font-semibold text-gold">
+                      {monthlyData[selectedMonth].score}점
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-3 text-sm">
                 {monthlyData[selectedMonth].opportunity && (
-                  <div className="flex gap-2">
-                    <span className="text-emerald-400">✅</span>
+                  <div className="flex gap-2.5 items-start">
+                    <CheckCircle2 size={15} className="text-emerald-400 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-medium text-emerald-300">{isEn ? 'Opportunity' : '기회'}</p>
-                      <p className="text-gray-300">{monthlyData[selectedMonth].opportunity}</p>
+                      <p className="font-semibold text-xs text-emerald-300 mb-0.5">{isEn ? 'Opportunity' : '기회 영역'}</p>
+                      <p className="text-xs text-stone-300 leading-relaxed">{monthlyData[selectedMonth].opportunity}</p>
                     </div>
                   </div>
                 )}
@@ -1296,136 +1424,6 @@ export function CompatibilitySection({
   );
 }
 
-export function TarotSpreadSection({
-  cards,
-  onCardClick,
-  language,
-}: {
-  cards: { name: string; isReversed: boolean; image?: string }[];
-  onCardClick: (idx: number) => void;
-  language: 'ko' | 'en';
-}) {
-  const isEn = language === 'en';
-  const roles = isEn
-    ? ['Current Situation', 'Challenge/Obstacle', 'Solution/Outcome']
-    : ['현재 상황', '장애물/과제', '해결책/결과'];
-
-  const [flipped, setFlipped] = useState<boolean[]>(cards.map(() => false));
-
-  useEffect(() => {
-    // PRD F-04: 3초 후 첫 번째 카드만 자동 공개, 나머지는 수동 클릭
-    const timer = setTimeout(() => {
-      setFlipped((prev) => prev.map((v, i) => (i === 0 ? true : v)));
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [cards]);
-
-  const handleCardClick = (idx: number) => {
-    if (!flipped[idx]) {
-      setFlipped((prev) => prev.map((v, i) => (i === idx ? true : v)));
-    } else {
-      onCardClick(idx);
-    }
-  };
-
-  return (
-    <motion.section
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.1 }}
-      className="mt-6 px-4 md:px-6"
-    >
-      <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-white">
-        <EvidenceTooltip
-          tag="🔮"
-          sources={['tarot']}
-          explanation={isEn
-            ? 'Reads the current intuition and psychological state through Tarot cards.'
-            : '타로 카드를 통해 현재의 직관과 심리 상태를 읽어냅니다.'}
-        />
-        {isEn ? 'Tarot Reading' : '타로 리딩'}
-      </h2>
-      <div className="grid grid-cols-3 gap-2 md:gap-4 relative perspective-[1000px]">
-        {cards.map((card, idx) => (
-          <div key={idx} className="flex flex-col items-center">
-            <motion.div
-              onClick={() => handleCardClick(idx)}
-              className="group relative aspect-[2/3] w-full cursor-pointer rounded-lg transition-all"
-              style={{ transformStyle: 'preserve-3d' }}
-              animate={{ rotateY: flipped[idx] ? 180 : 0 }}
-              transition={{ duration: 0.6, type: 'spring', stiffness: 260, damping: 20 }}
-            >
-              {/* Back of Card */}
-              <div
-                className="absolute inset-0 backface-hidden rounded-lg border border-[#D4AF37]/30 bg-[#0a0a0c] flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.1)]"
-                style={{ backfaceVisibility: 'hidden' }}
-              >
-                <div className="w-full h-full border border-white/5 m-1 rounded-md flex flex-col items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 opacity-10" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")` }} />
-                  {/* Glow pulse — 클릭 유도 힌트 */}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none">
-                    <span className="relative flex h-5 w-5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#D4AF37] opacity-50" />
-                      <Star size={20} className="relative text-[#D4AF37]/80" />
-                    </span>
-                    <span className="text-[9px] md:text-[10px] text-[#D4AF37]/60 tracking-widest uppercase font-medium px-2 text-center">
-                      {isEn ? 'Tap to reveal' : '터치하여 확인'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Front of Card */}
-              <div 
-                className="absolute inset-0 backface-hidden rounded-lg border border-white/10 hover:border-tarot-purple/50 overflow-hidden"
-                style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
-              >
-                  {card.image ? (
-                    <img
-                      src={card.image}
-                      alt={card.name}
-                      className={cn('h-full w-full object-cover', card.isReversed && 'rotate-180')}
-                      onError={(event) => {
-                        (event.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <div
-                      className={cn(
-                        'h-full w-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20',
-                        card.isReversed && 'rotate-180'
-                      )}
-                    />
-                  )}
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 p-2 text-center transition-all group-hover:bg-black/20">
-                    <span
-                      className={cn(
-                        'notranslate text-[10px] font-bold text-white/90 md:text-sm shadow-black drop-shadow-md',
-                        card.isReversed && 'text-red-300'
-                      )}
-                      translate="no"
-                    >
-                      {card.name}
-                      {card.isReversed && (isEn ? ' (Rev)' : ' (역)')}
-                    </span>
-                  </div>
-              </div>
-            </motion.div>
-            <span className="mt-2 text-[10px] font-medium text-gold md:text-xs">
-              {roles[idx] || (isEn ? `Card ${idx + 1}` : `카드 ${idx + 1}`)}
-            </span>
-          </div>
-        ))}
-      </div>
-      <p className="mt-4 text-center text-[10px] text-gray-500">
-        {isEn
-          ? 'Click each card to see detailed integrated interpretation.'
-          : '각 카드를 클릭하면 상세한 융합 해석을 볼 수 있습니다.'}
-      </p>
-    </motion.section>
-  );
-}
-
 export function TraitsSection({
   traits,
   language,
@@ -1443,8 +1441,8 @@ export function TraitsSection({
       case 'astrology':
       case 'astro':
         return '🌌';
-      case 'tarot':
-        return '🔮';
+      case 'ziwei':
+        return '宮';
       default:
         return '✨';
     }
@@ -1457,8 +1455,8 @@ export function TraitsSection({
       case 'astro':
       case 'astrology':
         return isEn ? 'Astrology' : '점성술';
-      case 'tarot':
-        return isEn ? 'Tarot' : '타로';
+      case 'ziwei':
+        return isEn ? 'Ziwei' : '자미두수';
       default:
         return isEn ? 'Analysis' : '분석';
     }
@@ -1536,5 +1534,377 @@ export function TraitsSection({
         ))}
       </div>
     </motion.section>
+  );
+}
+
+/**
+ * ⚡ 1. 전화위복(轉禍爲福) 살의 프로페셔널 승화 섹션
+ */
+export function ShadowTransformationSection({
+  data,
+  language,
+}: {
+  data: ShadowTransformationResult;
+  language: 'ko' | 'en';
+}) {
+  const isEn = language === 'en';
+  const detectedTransformations = data.transformations.filter(t => t.isDetected);
+
+  return (
+    <section className="mt-8 px-4 md:px-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="flex items-center gap-2 text-lg font-bold text-white">
+          <span className="rounded-full border border-amber-500/40 bg-amber-500/15 px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-widest text-[#f5d77f]">
+            TRANSFORMATION
+          </span>
+          <span>{isEn ? 'Transformation of Shadows' : '전화위복(轉禍爲福): 살의 프로페셔널 승화'}</span>
+        </h2>
+      </div>
+
+      {/* Synthesis Banner */}
+      <div className="mb-5 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-950/40 via-black to-stone-900/60 p-5 shadow-lg">
+        <div className="flex items-start gap-3.5">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-amber-400/40 bg-amber-500/20 text-xs font-bold text-amber-300">
+            ★
+          </span>
+          <div>
+            <h3 className="text-sm font-bold text-stone-100 mb-1">
+              {isEn ? `Primary Superpower: ${data.primarySuperpower}` : `핵심 승화 무기: ${data.primarySuperpower}`}
+            </h3>
+            <p className="text-xs leading-relaxed text-amber-200/90">
+              {isEn ? data.overallSynthesisEn : data.overallSynthesisKo}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Detected Sal Transformation Cards */}
+      <div className="space-y-4">
+        {detectedTransformations.map((item) => (
+          <div
+            key={item.id}
+            className="rounded-2xl border border-stone-800 bg-gradient-to-b from-[#141210] to-[#0c0a09] p-5 shadow-md"
+          >
+            <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="font-cinzel text-base font-bold text-amber-300">
+                  {isEn ? item.salNameEn : `${item.salNameKo} (${item.salNameHanja})`}
+                </span>
+              </div>
+              <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-amber-300 uppercase">
+                {item.category}
+              </span>
+            </div>
+
+            {/* 2-Column: Shadow vs Transformed Superpower */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mb-4">
+              {/* Shadow Risk */}
+              <div className="rounded-xl border border-rose-500/20 bg-rose-950/15 p-3.5">
+                <div className="text-[11px] font-bold text-rose-300 mb-1 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+                  {isEn ? 'Unconscious Shadow Pattern' : '의식하지 않을 때의 그림자(위험)'}
+                </div>
+                <p className="text-xs leading-relaxed text-rose-200/80 break-keep">
+                  {isEn ? item.shadowPattern.en : item.shadowPattern.ko}
+                </p>
+              </div>
+
+              {/* Transformed Superpower */}
+              <div className="rounded-xl border border-emerald-500/25 bg-emerald-950/15 p-3.5">
+                <div className="text-[11px] font-bold text-emerald-300 mb-1 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  {isEn ? item.transformedSuperpower.titleEn : item.transformedSuperpower.titleKo}
+                </div>
+                <p className="text-xs leading-relaxed text-emerald-200/80 break-keep">
+                  {isEn ? item.transformedSuperpower.descEn : item.transformedSuperpower.descKo}
+                </p>
+              </div>
+            </div>
+
+            {/* Archetypes & Action Strategy */}
+            <div className="rounded-xl border border-white/5 bg-black/40 p-3.5 space-y-2.5">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] font-bold text-stone-400">
+                  {isEn ? 'Optimal High-Value Domains:' : '최적화 고수익 도메인:'}
+                </span>
+                {item.recommendedArchetypes.map((arch, i) => (
+                  <span
+                    key={i}
+                    className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-stone-300 font-medium"
+                  >
+                    {arch}
+                  </span>
+                ))}
+              </div>
+              <div className="text-xs leading-relaxed text-amber-200/90 border-t border-white/5 pt-2 break-keep">
+                <strong className="text-amber-300">{isEn ? 'Execution Directive: ' : '실전 무기 활용법: '}</strong>
+                {isEn ? item.actionStrategy.en : item.actionStrategy.ko}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * 📈 2. 12개월 48주차 주간 골든타임 히트맵 섹션
+ */
+export function WeeklyHeatmapSection({
+  data,
+  language,
+}: {
+  data: YearHeatmapResult;
+  language: 'ko' | 'en';
+}) {
+  const isEn = language === 'en';
+  const [selectedQuarter, setSelectedQuarter] = useState<1 | 2 | 3 | 4>(1);
+
+  const quarterMonths = data.months.slice((selectedQuarter - 1) * 3, selectedQuarter * 3);
+
+  const phaseColors: Record<string, { bg: string; text: string; border: string }> = {
+    ATTACK: { bg: 'bg-emerald-500/20', text: 'text-emerald-300', border: 'border-emerald-500/40' },
+    HARVEST: { bg: 'bg-amber-500/20', text: 'text-amber-300', border: 'border-amber-500/40' },
+    NEGOTIATE: { bg: 'bg-sky-500/20', text: 'text-sky-300', border: 'border-sky-500/40' },
+    DEFEND: { bg: 'bg-rose-500/20', text: 'text-rose-300', border: 'border-rose-500/40' },
+  };
+
+  return (
+    <section className="mt-8 px-4 md:px-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="flex items-center gap-2 text-lg font-bold text-white">
+          <span className="rounded-full border border-sky-500/40 bg-sky-500/15 px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-widest text-sky-300">
+            TIMING HEATMAP
+          </span>
+          <span>{isEn ? '12-Month 48-Week Action Heatmap' : '12개월 48주차 주간 골든타임 히트맵'}</span>
+        </h2>
+      </div>
+
+      {/* Peak Quarter Highlight */}
+      <div className="mb-4 rounded-2xl border border-sky-500/30 bg-gradient-to-r from-sky-950/40 to-black/80 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div>
+          <span className="text-[10px] font-extrabold uppercase tracking-widest text-sky-300">
+            {isEn ? 'Peak Annual Momentum' : '연간 최고 전성기 분기'}
+          </span>
+          <h3 className="text-base font-bold text-white mt-0.5">
+            {data.peakQuarter}
+          </h3>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-black/40 px-3.5 py-2 text-xs text-stone-300">
+          <span className="text-[#f5d77f] font-bold">
+            {isEn ? `Highest Week: Week ${data.highestScoringWeek.weekOfYear} (${data.highestScoringWeek.score} pts)` : `최고조 주차: ${data.highestScoringWeek.month}월 ${data.highestScoringWeek.weekOfMonth}주차 (${data.highestScoringWeek.score}점)`}
+          </span>
+          <div className="text-[11px] text-stone-400 mt-0.5">
+            {isEn ? 'Golden Execution Days: ' : '최고 황금일: '}
+            <strong className="text-white">{data.highestScoringWeek.dates.join(', ')}</strong>
+          </div>
+        </div>
+      </div>
+
+      {/* Quarter Tab Selector */}
+      <div className="grid grid-cols-4 gap-2 mb-4">
+        {([1, 2, 3, 4] as const).map((q) => (
+          <button
+            key={q}
+            onClick={() => setSelectedQuarter(q)}
+            className={cn(
+              'py-2 rounded-xl text-xs font-bold transition-all border text-center',
+              selectedQuarter === q
+                ? 'border-sky-400 bg-sky-500/25 text-sky-200 shadow-md'
+                : 'border-white/10 bg-black/30 text-stone-400 hover:text-stone-200 hover:bg-white/5'
+            )}
+          >
+            {isEn ? `Q${q}` : `${q}분기 (${(q - 1) * 3 + 1}~${q * 3}월)`}
+          </button>
+        ))}
+      </div>
+
+      {/* Monthly Breakdown in Quarter */}
+      <div className="space-y-4">
+        {quarterMonths.map((m) => (
+          <div
+            key={m.month}
+            className="rounded-2xl border border-stone-800 bg-[#0e0d0b] p-4 shadow-sm"
+          >
+            <div className="flex items-center justify-between mb-3 border-b border-white/5 pb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="font-cinzel text-sm font-bold text-white">
+                  {isEn ? m.monthNameEn : m.monthNameKo}
+                </span>
+                <span className="text-[11px] text-stone-400">
+                  {isEn ? `Avg ${m.averageScore} pts` : `평균 ${m.averageScore}점`}
+                </span>
+              </div>
+              <span className={cn('rounded-full border px-2 py-0.5 text-[9px] font-extrabold tracking-wider uppercase', phaseColors[m.dominantPhase]?.border, phaseColors[m.dominantPhase]?.bg, phaseColors[m.dominantPhase]?.text)}>
+                {m.dominantPhase}
+              </span>
+            </div>
+
+            {/* Weeks Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+              {m.weeks.map((w) => {
+                const cfg = phaseColors[w.phase] || phaseColors.NEGOTIATE;
+                return (
+                  <div
+                    key={w.weekOfYear}
+                    className="rounded-xl border border-white/5 bg-black/40 p-3 flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[11px] font-bold text-stone-300">
+                          {isEn ? `Week ${w.weekOfMonth}` : `${w.weekOfMonth}주차`}
+                        </span>
+                        <span className={cn('text-[10px] font-extrabold px-1.5 py-0.2 rounded border', cfg.border, cfg.bg, cfg.text)}>
+                          {w.score}점
+                        </span>
+                      </div>
+                      <p className="text-[11px] leading-relaxed text-stone-400 mb-2">
+                        {isEn ? w.themeEn : w.themeKo}
+                      </p>
+                    </div>
+
+                    <div className="border-t border-white/5 pt-1.5 text-[10px] text-stone-500">
+                      {w.goldenDates.length > 0 && (
+                        <div className="text-amber-300/90 font-medium">
+                          {isEn ? 'Golden: ' : '황금일: '}
+                          {w.goldenDates.map(d => d.slice(5)).join(', ')}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * 🎯 3. 4차원 입체 궁합 & 갈등 3초 화해 매뉴얼 섹션
+ */
+export function Compatibility4DSection({
+  data,
+  language,
+}: {
+  data: Compatibility4DResult;
+  language: 'ko' | 'en';
+}) {
+  const isEn = language === 'en';
+
+  return (
+    <section className="mt-8 px-4 md:px-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="flex items-center gap-2 text-lg font-bold text-white">
+          <span className="rounded-full border border-pink-500/40 bg-pink-500/15 px-2.5 py-0.5 text-xs font-extrabold uppercase tracking-widest text-pink-300">
+            4D SYNERGY
+          </span>
+          <span>{isEn ? '4D Compatibility & Conflict Manual' : '4차원 입체 궁합 & 갈등 3초 화해 매뉴얼'}</span>
+        </h2>
+      </div>
+
+      <div className="space-y-4">
+        {/* Score & Grade Header Card */}
+        <div className="rounded-2xl border border-pink-500/30 bg-gradient-to-r from-pink-950/30 via-black to-stone-900/60 p-5 flex items-center justify-between shadow-lg">
+          <div>
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-pink-300">
+              {isEn ? 'Overall Dynamic Score' : '4차원 종합 시너지 점수'}
+            </span>
+            <h3 className="text-2xl font-bold font-cinzel text-white mt-1">
+              {data.overallScore} <span className="text-sm font-sans font-normal text-stone-400">/ 100</span>
+            </h3>
+          </div>
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-pink-400/40 bg-gradient-to-br from-pink-500/20 to-purple-500/10 text-2xl font-bold font-cinzel text-pink-200 shadow-md">
+            {data.grade}
+          </div>
+        </div>
+
+        {/* 2-Column: Spiritual Sync vs Material Sync */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {/* 1. Spiritual Sync */}
+          <div className="rounded-2xl border border-purple-500/25 bg-black/40 p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-purple-300">
+                {isEn ? '1. Spiritual & Value Alignment' : '1. 영혼 & 가치관 궁합'}
+              </span>
+              <span className="text-xs font-extrabold text-purple-300">{data.spiritualSync.score}점</span>
+            </div>
+            <h4 className="text-sm font-bold text-stone-200 mb-1">
+              {isEn ? data.spiritualSync.titleEn : data.spiritualSync.titleKo}
+            </h4>
+            <p className="text-xs leading-relaxed text-stone-400">
+              {isEn ? data.spiritualSync.descEn : data.spiritualSync.descKo}
+            </p>
+          </div>
+
+          {/* 2. Material Sync */}
+          <div className="rounded-2xl border border-emerald-500/25 bg-black/40 p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-emerald-300">
+                {isEn ? '2. Material & Lifestyle Sync' : '2. 현실 & 생활방식 궁합'}
+              </span>
+              <span className="text-xs font-extrabold text-emerald-300">{data.materialSync.score}점</span>
+            </div>
+            <h4 className="text-sm font-bold text-stone-200 mb-1">
+              {isEn ? data.materialSync.titleEn : data.materialSync.titleKo}
+            </h4>
+            <p className="text-xs leading-relaxed text-stone-400">
+              {isEn ? data.materialSync.descEn : data.materialSync.descKo}
+            </p>
+          </div>
+        </div>
+
+        {/* 3. Conflict Danger Trigger */}
+        <div className="rounded-2xl border border-rose-500/25 bg-rose-950/15 p-4">
+          <div className="text-xs font-bold text-rose-300 mb-1">
+            {isEn ? '3. High-Stress Conflict Danger Point' : '3. 충돌 위기 트리거 & 금기 표현'}
+          </div>
+          <p className="text-xs text-rose-200/90 mb-2">
+            {isEn ? data.conflictTrigger.dangerPointEn : data.conflictTrigger.dangerPointKo}
+          </p>
+          <div className="rounded-xl border border-rose-500/30 bg-black/50 p-2.5 text-xs text-rose-300">
+            <strong>{isEn ? 'Worst Phrase to Avoid: ' : '절대 하지 말아야 할 최악의 반응: '}</strong>
+            {isEn ? data.conflictTrigger.worstResponseToAvoidEn : data.conflictTrigger.worstResponseToAvoidKo}
+          </div>
+        </div>
+
+        {/* 4. 3-Second Conflict Resolution Manual */}
+        <div className="rounded-2xl border border-amber-500/35 bg-gradient-to-br from-amber-950/20 via-black to-[#110e08] p-5 shadow-lg">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/20 text-[10px] font-bold text-amber-300">
+              ⚡
+            </span>
+            <h4 className="text-sm font-bold text-amber-200">
+              {isEn ? '3-Second Instant De-Escalation Magic Manual' : '싸웠을 때 3초 만에 상대를 녹이는 마법의 대화법'}
+            </h4>
+          </div>
+
+          <div className="space-y-3">
+            <div className="rounded-xl border border-amber-400/30 bg-black/60 p-3.5">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 block mb-1">
+                {isEn ? 'Magic Opening Sentence (Verbatim):' : '상대의 방어벽을 즉시 해제하는 마법의 오프닝 문장:'}
+              </span>
+              <p className="text-sm font-semibold text-stone-100 italic leading-relaxed">
+                {isEn ? data.threeSecondResolution.magicOpeningPhraseEn : data.threeSecondResolution.magicOpeningPhraseKo}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div className="rounded-lg border border-white/10 bg-black/30 p-2.5 text-stone-300">
+                <strong className="text-amber-300">{isEn ? 'Core Rule: ' : '핵심 원칙: '}</strong>
+                {isEn ? data.threeSecondResolution.coreDeEscalationRuleEn : data.threeSecondResolution.coreDeEscalationRuleKo}
+              </div>
+              <div className="rounded-lg border border-white/10 bg-black/30 p-2.5 text-stone-300">
+                <strong className="text-amber-300">{isEn ? 'Best Timing: ' : '대화 타이밍: '}</strong>
+                {isEn ? data.threeSecondResolution.bestTimeToTalkEn : data.threeSecondResolution.bestTimeToTalkKo}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

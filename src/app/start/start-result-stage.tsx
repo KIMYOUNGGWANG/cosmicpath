@@ -17,6 +17,8 @@ import { DecisionBriefCard } from './start-result-decision-brief';
 import { GuideRematchCard } from './start-result-actions-panel';
 import { InterruptedResultPanel, QuotaExceededPanel } from './start-result-error-panels';
 import { RelationshipOutcomeSeed } from './start-result-followup-panel';
+import { MobileFloatingUnlockBar } from '@/components/reading/MobileFloatingUnlockBar';
+import { ExitIntentPromoModal } from '@/components/reading/ExitIntentPromoModal';
 
 const PremiumReport = dynamic(() => import('@/components/reading/premium-report').then((mod) => mod.PremiumReport), {
   loading: () => <div className="flex justify-center py-20"><Skeleton className="h-96 w-full" /></div>,
@@ -78,10 +80,15 @@ export function StartResultStage(props: StartResultStageProps) {
       transition={{ duration: 1.2 }}
     >
       {props.isLoading ? (
-        <div className="flex min-h-[420px] items-center justify-center px-4 py-12 md:min-h-[500px] md:py-16">
+        <div className="flex min-h-[500px] items-center justify-center px-4 py-16 md:py-24">
           <OracleCalibrationPanel
             language={props.language}
-            loadingLabel={props.loadingPhase.label || (props.language === 'en' ? 'Preparing your reading...' : '리딩을 정리하는 중...')}
+            loadingLabel={
+              props.loadingPhase.label ||
+              (props.isPremium
+                ? (props.language === 'en' ? 'Compiling VIP 8-Phase Report...' : '결제 완료: VIP 8단계 심층 리포트를 편성하는 중...')
+                : (props.language === 'en' ? 'Preparing your reading...' : '리딩을 정리하는 중...'))
+            }
             loadingPhase={props.loadingPhase.phase}
             isPremium={props.isPremium}
             characterId={props.metadata?.characterId ?? props.readingData?.characterId}
@@ -198,9 +205,22 @@ export function StartResultStage(props: StartResultStageProps) {
               </div>
             ) : null}
 
-            <div className="pb-12">
+            <div className="pb-16">
               <DailyRetentionBanner language={props.language} />
             </div>
+
+            <MobileFloatingUnlockBar
+              language={props.language}
+              isPremium={props.isPremium}
+              priceLabel={props.dynamicPrice}
+              onUnlock={props.onUnlock}
+            />
+
+            <ExitIntentPromoModal
+              isPremium={props.isPremium}
+              language={props.language}
+              onUnlock={props.onUnlock}
+            />
           </ErrorBoundary>
         </div>
       ) : props.streamContent.startsWith('__QUOTA_EXCEEDED__') ? (

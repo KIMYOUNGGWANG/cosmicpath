@@ -36,18 +36,16 @@ export function buildStartUnifiedResult(
       confidence: (metadata.radarScores?.astrology || 75) / 100,
     });
   }
-  if (metadata.tarot) {
-    sources.push({
-      source: 'TAROT',
-      originalText: getSourceSummary(metadata.tarot, '타로 카드 리딩'),
-      detectedTags: uniqueTags.slice(2, 4),
-      confidence: (metadata.radarScores?.tarot || 85) / 100,
-    });
-  }
+  sources.push({
+    source: 'ZIWEI',
+    originalText: getSourceSummary(metadata.oracleCouncil, '자미두수 12궁 명반 분석'),
+    detectedTags: uniqueTags.slice(2, 4),
+    confidence: (metadata.radarScores?.ziwei || 85) / 100,
+  });
 
   return {
     summary: reportData.summary?.title || '핵심 리딩 요약',
-    detailedContent: reportData.summary?.content || '사주, 별자리, 타로를 함께 읽어 정리한 현재 결론입니다.',
+    detailedContent: reportData.summary?.content || '사주, 서양점성술, 자미두수를 함께 읽어 정리한 현재 결론입니다.',
     primaryTags: uniqueTags.slice(0, 5),
     totalConfidenceScore: reportData.summary?.trust_score ? reportData.summary.trust_score * 20 : 85,
     matchLevel: getMatchLevel(reportData.summary?.trust_score || 0),

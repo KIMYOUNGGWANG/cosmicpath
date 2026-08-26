@@ -28,34 +28,6 @@ export function buildUserContext(userData: UserData): string {
   const nameStr = userData.name ? (isEn ? `${userData.name}` : `${userData.name}님`) : (isEn ? 'User' : '사용자님');
   const genderStr = userData.gender === 'male' ? (isEn ? 'Male' : '남성(乾命)') : (isEn ? 'Female' : '여성(坤命)');
 
-  // 타로 카드 3장 스프레드 의미 부여
-  let tarotContext = '';
-  if (userData.tarotCards && userData.tarotCards.length > 0) {
-    if (userData.tarotCards.length >= 3) {
-      if (isEn) {
-        tarotContext = `
-<TAROT_SPREAD_GUIDE>
-Card 1 (${userData.tarotCards[0].nameEn}): [Current Situation/Essence/Past Cause] - Why did this card appear now?
-Card 2 (${userData.tarotCards[1].nameEn}): [Immediate Challenge/Obstacle/Current Process] - What is blocking you?
-Card 3 (${userData.tarotCards[2].nameEn}): [Solution/Advice/Future Outcome] - Where is this heading?
-* Connect the flow of these 3 cards into a narrative like a novel. (e.g., "Reviewing past regrets (Card 1) led to current conflicts (Card 2), but will eventually lead to victory (Card 3).")
-</TAROT_SPREAD_GUIDE>`;
-      } else {
-        tarotContext = `
-<타로_스프레드_해석_지침>
-카드 1 (${userData.tarotCards[0].name}): [현재 상황/본질/과거의 원인] - 이 카드가 왜 지금 나왔을까요?
-카드 2 (${userData.tarotCards[1].name}): [당면한 과제/장애물/현재의 진행] - 무엇이 당신을 가로막고 있나요?
-카드 3 (${userData.tarotCards[2].name}): [해결책/조언/미래의 결과] - 결국 어디로 흘러가나요?
-* 이 3장의 흐름(Narrative)을 하나의 소설처럼 연결하십시오. (예: "과거의 미련(카드1)이 발목을 잡아 현재의 갈등(카드2)을 만들었지만, 결국 승리(카드3)할 것입니다.")
-</타로_스프레드_해석_지침>`;
-      }
-    } else {
-      tarotContext = isEn
-        ? `<TAROT_SINGLE_CARD>\n${JSON.stringify(userData.tarotCards, null, 2)}\n</TAROT_SINGLE_CARD>`
-        : `<타로_단일_카드>\n${JSON.stringify(userData.tarotCards, null, 2)}\n</타로_단일_카드>`;
-    }
-  }
-
   if (isEn) {
     return `
 <USER_INFO>
@@ -68,6 +40,12 @@ Question: ${userData.question || 'General Reading'}
 Today's Date: ${currentDate}
 </USER_INFO>
 
+<QUESTION_INTENT_PRECISION_ANCHOR>
+1. Specific Dilemma: "${userData.question || 'General Guidance'}" (Context: ${userData.context})
+2. Precision Requirement: You must answer this exact dilemma directly. Map the user's pain points, decision fork (Option A vs Option B), and requested timeline directly to the Saju Day Master/Month Pillar/Major Luck and Planetary Transits.
+3. Anti-Vagueness: Do not provide generic horoscope platitudes. Provide concrete timing windows, causal diagnostic roots, and exact next moves.
+</QUESTION_INTENT_PRECISION_ANCHOR>
+
 ${sharedPrelude}
 
 ${calculationSourceContract}
@@ -78,7 +56,28 @@ ${premiumRules}
 
 ${userData.sajuData ? `<SAJU_DATA>\n${JSON.stringify(userData.sajuData, null, 2)}\n</SAJU_DATA>${userData.sajuData.oraclePromptBlock ? `\n\n<SAJU_PRECISION_DATA>\n${userData.sajuData.oraclePromptBlock}\n</SAJU_PRECISION_DATA>` : ''}` : ''}
 ${userData.astroData ? `<ASTRO_DATA>\n${JSON.stringify(userData.astroData, null, 2)}\n</ASTRO_DATA>` : ''}
-${tarotContext ? tarotContext : (userData.tarotCards ? `<TAROT_CARDS>\n${JSON.stringify(userData.tarotCards, null, 2)}\n</TAROT_CARDS>` : '')}
+${userData.thaiAstrology ? `
+<THAI_ASTROLOGY_COORDINATES>
+- Birth Day Deity: ${userData.thaiAstrology.dayDeity.nameKo} (${userData.thaiAstrology.dayDeity.nameTh}, Ruler: ${userData.thaiAstrology.dayDeity.rulerPlanetKo})
+- Sidereal Sun Sign: ${userData.thaiAstrology.siderealSun.sign.nameKo} (${userData.thaiAstrology.siderealSun.sign.nameTh}, Lahiri Ayanamsa: ${userData.thaiAstrology.ayanamsaDegrees}°)
+- Supreme Blessing (Siri): ${userData.thaiAstrology.siriPlanet.planetKo} (${userData.thaiAstrology.siriPlanet.nameKo})
+- Critical Taboo (Kalakini): ${userData.thaiAstrology.kalakiniPlanet.planetKo} (${userData.thaiAstrology.kalakiniPlanet.nameKo})
+- Current Maha Thaksa Cycle: ${userData.thaiAstrology.currentMahaThaksaCycle.primaryRulerKo} (Age ${userData.thaiAstrology.currentMahaThaksaCycle.startAge}~${userData.thaiAstrology.currentMahaThaksaCycle.endAge})
+- Strategic Advice: ${userData.thaiAstrology.currentMahaThaksaCycle.strategicAdviceKo}
+- Dual Astrology Lens: ${userData.thaiAstrology.dualAstrologySynthesis.integratedPersona}
+</THAI_ASTROLOGY_COORDINATES>` : ''}
+${userData.ziweiChart ? `
+<ZIWEI_DOUSHU_COORDINATES>
+- Ming Palace Branch: ${userData.ziweiChart.mingGongBranch} (Five Elements Pattern: ${userData.ziweiChart.wuxingJu.name})
+- Shen Palace Branch: ${userData.ziweiChart.shenGongBranch}
+- Key Palaces: ${userData.ziweiChart.palaceList.slice(0, 4).map(p => `${p.name}: ${p.stars.map(s => s.name).join(', ') || '보좌'}`).join(' | ')}
+- SiHua Energy: ${JSON.stringify(userData.ziweiChart.siHuaSummary)}
+</ZIWEI_DOUSHU_COORDINATES>` : ''}
+${userData.weeklyHeatmap ? `
+<TIMING_HEATMAP_COORDINATES>
+- Year: ${userData.weeklyHeatmap.year} (Peak Quarter: ${userData.weeklyHeatmap.peakQuarter})
+- Highest Week: Month ${userData.weeklyHeatmap.highestScoringWeek.month}, Week ${userData.weeklyHeatmap.highestScoringWeek.weekOfMonth} (Score ${userData.weeklyHeatmap.highestScoringWeek.score})
+</TIMING_HEATMAP_COORDINATES>` : ''}
 `;
   }
 
@@ -92,6 +91,24 @@ ${tarotContext ? tarotContext : (userData.tarotCards ? `<TAROT_CARDS>\n${JSON.st
 질문(Query): ${userData.question || '종합 운세'}
 오늘의 날짜: ${currentDate} (현재 시점 기준의 운세를 정확히 판단할 것)
 </사용자_정보>
+
+<질문_정밀_해체_및_족집게_직답_앵커>
+1. 사용자의 실제 질문: "${userData.question || '종합 운세'}" (영역: ${userData.context})
+2. 직답 의무: 사용자가 물어본 고민의 본질(심리적 고통/불안 트리거, 선택 갈림길 A vs B, 특정 목표 시점)에 대해 반드시 1:1로 정확하게 짚어 직답하십시오. 질문과 무관한 뻔한 운세 텍스트를 늘어놓는 것은 실패입니다.
+3. 원국-고민 인과 사슬: 사주 일간, 월지 격국, 충/형/합/파, 현재 대운, 2026 세운(병오년)과 월운의 상호작용이 "왜 지금 이 질문과 갈등을 일으켰는지"를 명확한 인과관계로 밝히십시오.
+4. 모호한 양다리 표현 금지: "~할 수도 있고 아닐 수도 있습니다" 같은 회피성 문장을 금지하고, [결론 직답] + [실제 사주/점성 데이터 근거] + [골든타임/위험 시점] + [실전 행동 수칙]으로 선명하게 제시하십시오.
+</질문_정밀_해체_및_족집게_직답_앵커>
+
+<명리학_점성술_현실언어_번역지침>
+1. 어려운 한자어나 전문 용어는 단독으로 쓰지 말고, 반드시 현대인의 일상 현실 언어로 100% 직관 번역하십시오:
+   - 편관(七殺) ➔ "외부 조직, 비자, 상사, 규제로부터 오는 강한 압박과 통제"
+   - 식상(食傷) ➔ "기존 틀을 깨고 새로운 판을 주도적으로 시작하려는 실행력과 표현 갈망"
+   - 역마살(驛馬) ➔ "한곳에 갇히면 에너지가 마르고, 환경을 이동해야 운이 풀리는 승부사 기질"
+   - 천을귀인(天乙貴人) ➔ "결정적 고비에서 비자나 일자리, 핵심 기회를 열어줄 조력자"
+   - 인성(印星) ➔ "문서, 자격증, 학위, 공인된 인정과 보호막"
+   - 재성(財星) ➔ "현금 흐름, 실질적 결과물, 사업적 결실"
+2. 사주 4주 8자의 글자 상호작용(충/합)을 설명할 때는 반드시 유저의 실제 심리와 현실 행동 패턴(돈, 이직, 인간관계, 불안)으로 풀어서 서술하십시오.
+</명리학_점성술_현실언어_번역지침>
 
 ${sharedPrelude}
 
@@ -111,7 +128,28 @@ ${userData.sajuData ? `<사주_핵심_좌표>
 
 <사주_원국>\n${JSON.stringify(userData.sajuData, null, 2)}\n</사주_원국>${userData.sajuData.oraclePromptBlock ? `\n\n<사주_정밀_데이터>\n${userData.sajuData.oraclePromptBlock}\n</사주_정밀_데이터>` : ''}` : ''}
 ${userData.astroData ? `<점성술_데이터>\n${JSON.stringify(userData.astroData, null, 2)}\n</점성술_데이터>` : ''}
-${tarotContext ? tarotContext : (userData.tarotCards ? `<타로_카드>\n${JSON.stringify(userData.tarotCards, null, 2)}\n</타로_카드>` : '')}
+${userData.thaiAstrology ? `
+<태국왕실점성_마하탁사_좌표>
+- 출생 요일 수호신: ${userData.thaiAstrology.dayDeity.nameKo} (${userData.thaiAstrology.dayDeity.nameTh}, 지배 행성: ${userData.thaiAstrology.dayDeity.rulerPlanetKo})
+- 실제 항성 태양궁(라히리 아야남샤 ${userData.thaiAstrology.ayanamsaDegrees}°): ${userData.thaiAstrology.siderealSun.sign.nameKo} (${userData.thaiAstrology.siderealSun.sign.nameTh})
+- 인생 최대 축복성(시리, Siri): ${userData.thaiAstrology.siriPlanet.planetKo} (${userData.thaiAstrology.siriPlanet.nameKo})
+- 절대 경계성(칼라키니, Kalakini): ${userData.thaiAstrology.kalakiniPlanet.planetKo} (${userData.thaiAstrology.kalakiniPlanet.nameKo})
+- 현재 마하탁사 대운 주기: ${userData.thaiAstrology.currentMahaThaksaCycle.primaryRulerKo} (만 ${userData.thaiAstrology.currentMahaThaksaCycle.startAge}세 ~ ${userData.thaiAstrology.currentMahaThaksaCycle.endAge}세)
+- 대운 전략: ${userData.thaiAstrology.currentMahaThaksaCycle.strategicAdviceKo}
+- 듀얼 렌즈(내면 vs 현실) 종합: ${userData.thaiAstrology.dualAstrologySynthesis.integratedPersona}
+</태국왕실점성_마하탁사_좌표>` : ''}
+${userData.ziweiChart ? `
+<자미두수_명반_좌표>
+- 명궁(命宮) 지지: ${userData.ziweiChart.mingGongBranch} (국: ${userData.ziweiChart.wuxingJu.name})
+- 신궁(身宮) 지지: ${userData.ziweiChart.shenGongBranch}
+- 주요 궁 배치: ${userData.ziweiChart.palaceList.slice(0, 4).map(p => `${p.name}: ${p.stars.map(s => s.name).join(', ') || '보좌'}`).join(' | ')}
+- 사화(四化) 요약: ${JSON.stringify(userData.ziweiChart.siHuaSummary)}
+</자미두수_명반_좌표>` : ''}
+${userData.weeklyHeatmap ? `
+<48주_타이밍_히트맵_좌표>
+- 연도: ${userData.weeklyHeatmap.year}년 (최고 분기: ${userData.weeklyHeatmap.peakQuarter})
+- 골든 위크: ${userData.weeklyHeatmap.highestScoringWeek.month}월 ${userData.weeklyHeatmap.highestScoringWeek.weekOfMonth}주차 (${userData.weeklyHeatmap.highestScoringWeek.score}점)
+</48주_타이밍_히트맵_좌표>` : ''}
 ${userData.partnerSajuData ? `
 <상대방_정보>
 이름: ${userData.partnerName || '상대방'}

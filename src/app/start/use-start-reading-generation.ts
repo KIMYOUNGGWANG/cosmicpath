@@ -20,6 +20,7 @@ import {
   saveFinalReadingResult,
   saveIntermediatePremiumResult,
 } from './start-reading-save';
+import { calculateSajuMindProfile } from '@/lib/sajumind/engine';
 
 type UseStartReadingGenerationOptions = {
   readonly readingData: ReadingData | null;
@@ -167,6 +168,32 @@ export function useStartReadingGeneration(options: UseStartReadingGenerationOpti
         }
 
         if (shouldStopAfterCurrentPhase) break;
+
+        // Progressive Early Reveal: As soon as Phase 1 (Summary & Core Verdict) lands, reveal results to the user
+        if (phase === 1 && accumulatedReport.summary) {
+          saveToSessionAndBackup('reading_step', 'result');
+          options.setStep('result');
+          if (options.isPremium || isPremiumOverride) {
+            options.setIsPremium(true);
+            saveToSessionAndBackup('is_premium_user', 'true');
+          }
+          if (typeof window !== 'undefined' && dataToUse.name && dataToUse.birthDate) {
+            try {
+              if (!localStorage.getItem('sajumind_profile_v1')) {
+                const sajumindProfile = calculateSajuMindProfile(
+                  dataToUse.name,
+                  dataToUse.birthDate,
+                  dataToUse.birthTime || undefined,
+                  dataToUse.cityName || 'Seoul'
+                );
+                localStorage.setItem('sajumind_profile_v1', JSON.stringify(sajumindProfile));
+              }
+            } catch (syncErr) {
+              console.debug('SajuMind profile auto-sync failed:', syncErr);
+            }
+          }
+        }
+
         const tarotCardsForSave = getTarotCardsForSave(cards, accumulatedMetadata);
 
         if ((options.isPremium || isPremiumOverride) && phase === 1) {

@@ -14,26 +14,12 @@ function evidenceTab(tab: EvidenceTab): EvidenceTab {
 export function EvidenceTabs({
     report,
     language = 'ko',
-    tarotCards,
-    onCardClick,
 }: Omit<VerdictReportProps, 'isLoading' | 'onRetry' | 'isFreeView'>) {
     const isEn = language === 'en';
     const [activeTab, setActiveTab] = useState<TabId | null>(null);
     const [expandedTab, setExpandedTab] = useState<TabId | null>(null);
 
     const tabs: readonly EvidenceTab[] = [
-        ...(tarotCards && tarotCards.length > 0
-            ? [
-                evidenceTab({
-                    id: 'tarot',
-                    label: isEn ? 'Tarot' : '타로',
-                    icon: <Layers size={14} className="opacity-70" />,
-                    summary: report.tarot_details?.[0]?.interpretation
-                        ? `${report.tarot_details[0].interpretation.split('.')[0]}.`
-                        : (isEn ? 'The cards add an immediate timing signal.' : '카드가 질문 주변의 즉각 신호를 더합니다.'),
-                }),
-            ]
-            : []),
         ...(report.saju_sections
             ? [
                 evidenceTab({
@@ -165,8 +151,6 @@ export function EvidenceTabs({
                                 tabId={tab.id}
                                 report={report}
                                 language={language}
-                                tarotCards={tarotCards}
-                                onCardClick={onCardClick}
                                 isExpanded={expandedTab === tab.id}
                                 onToggle={() => setExpandedTab(expandedTab === tab.id ? null : tab.id)}
                             />

@@ -63,6 +63,8 @@ export function proxy() {
     return response;
 }
 
+export default proxy;
+
 // Apply to all routes except static files
 export const config = {
     matcher: [

@@ -17,23 +17,23 @@ import {
 } from '@/lib/daily/daily-linked-context';
 
 export const metadata: Metadata = {
-    title: '오늘의 운세 & 타로 | CosmicPath',
-    description: '생년월일 기반 오늘의 운세와 데일리 타로를 확인하고 오늘의 흐름과 행동 가이드를 받아보세요.',
-    keywords: ['오늘의 운세', '데일리 타로', '무료 타로', '생년월일 운세', '오늘의 타로', '사주 운세'],
+    title: '오늘의 운세 & 에너지 브리프 | CosmicPath',
+    description: '생년월일과 오늘의 천문 기상도 기반 오늘의 운세와 행동 가이드를 확인해보세요.',
+    keywords: ['오늘의 운세', '데일리 에너지', '일일 운세', '생년월일 운세', '사주 운세', '점성술 기상도'],
     alternates: {
         canonical: '/daily',
     },
     openGraph: {
-        title: '오늘의 운세 & 타로 | CosmicPath',
-        description: '생년월일 기반 오늘의 운세와 데일리 타로를 확인하고 오늘의 흐름과 행동 가이드를 받아보세요.',
+        title: '오늘의 운세 & 에너지 브리프 | CosmicPath',
+        description: '생년월일과 오늘의 천문 기상도 기반 오늘의 운세와 행동 가이드를 확인해보세요.',
         url: 'https://www.cosmicpath.app/daily',
         type: 'website',
         images: ['/og-image.png'],
     },
     twitter: {
         card: 'summary_large_image',
-        title: '오늘의 운세 & 타로 | CosmicPath',
-        description: '매일 자정 갱신되는 오늘의 운세와 타로 리추얼.',
+        title: '오늘의 운세 & 에너지 브리프 | CosmicPath',
+        description: '매일 자정 갱신되는 오늘의 운세와 천문 에너지 리추얼.',
         images: ['/og-image.png'],
     },
 };

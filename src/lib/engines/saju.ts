@@ -519,7 +519,7 @@ export function determineDaeunDirection(
  */
 function findDateForSunLongitude(targetLong: number, startDate: Date, direction: 1 | -1): Date {
   // 시작점에서 direction 방향으로 탐색
-  let currentDate = new Date(startDate);
+  const currentDate = new Date(startDate);
   let previousDate = new Date(startDate);
 
   // 최대 400일 탐색 (1년 + 여유)
@@ -1578,6 +1578,8 @@ export function calculateIlwoon(
   if (['정재', '정관', '정인', '식신'].includes(tenGod)) score += 15;
   if (['편재', '편관', '상관'].includes(tenGod)) score += 5;
   if (['겁재'].includes(tenGod)) score -= 10;
+  if (bodyStrength === '신약' && ['비견', '정인', '편인'].includes(tenGod)) score += 10;
+  if (bodyStrength === '신강' && ['식신', '상관', '정재', '편재', '정관', '편관'].includes(tenGod)) score += 10;
 
   if (['장생', '건록', '제왕', '관대'].includes(twelveStage)) score += 15;
   if (['사', '묘', '절', '쇠'].includes(twelveStage)) score -= 10;
@@ -1704,7 +1706,7 @@ export interface SajuResult {
   ziSiMode?: ZiSiMode;
   // Dr.Saju High-Accuracy Engine Data
   oraclePromptBlock?: string;
-  raw?: any;
+  raw?: unknown;
 }
 
 // =====================================
@@ -2107,9 +2109,7 @@ export function checkTongguen(stem: string, branches: string[]): boolean {
  */
 export function checkPurity(
   gyeokTenGod: string,
-  tenGods: Record<string, string>,
-  dayMaster: string,
-  stems: string[]
+  tenGods: Record<string, string>
 ): boolean {
   // 관살혼잡 체크: 정관과 편관이 동시에 있으면 불순
   const tenGodValues = Object.values(tenGods);
@@ -2202,7 +2202,7 @@ export function determineGyeokguk(
   const isTongguen = isTouchu ? checkTongguen(jeonggi, branches) : false;
 
   // 5. 3문: 청순(淸純) 여부
-  const isPure = checkPurity(monthTenGod, tenGods, dayMaster, stems);
+  const isPure = checkPurity(monthTenGod, tenGods);
 
   // 6. 격국 결정
   let gyeokType: GyeokgukType = '보통격';
@@ -2392,17 +2392,17 @@ export function calculateBodyStrength(
  * 조후(調候) 용신 산출
  * 계절에 따른 필요 오행 조정
  */
-export function getJohuYongsin(monthBranch: string, dayElement: keyof typeof FIVE_ELEMENTS): keyof typeof FIVE_ELEMENTS | null {
+export function getJohuYongsin(monthBranch: string, dayElement?: keyof typeof FIVE_ELEMENTS): keyof typeof FIVE_ELEMENTS | null {
   const env = JOHU_TABLE[monthBranch];
   if (!env) return null;
 
   // 겨울(寒) → 火 필요
   if (env.cold >= 2) {
-    return 'fire';
+    return dayElement === 'fire' ? 'earth' : 'fire';
   }
   // 여름(熱) → 水 필요
   if (env.hot >= 2) {
-    return 'water';
+    return dayElement === 'water' ? 'metal' : 'water';
   }
   // 건조(燥) → 水 필요
   if (env.dry >= 2) {
@@ -2429,7 +2429,6 @@ export function determineEnhancedYongsin(
 ): EnhancedYongsinResult {
   const dayElement = STEM_ELEMENTS[dayMaster];
   const elementCycle: (keyof typeof FIVE_ELEMENTS)[] = ['wood', 'fire', 'earth', 'metal', 'water'];
-  const dayIdx = elementCycle.indexOf(dayElement);
 
   // 1단계: 강약 기반 방향 결정
   const { strength: bodyStrength, score: bodyScore } = calculateBodyStrength(
@@ -3200,7 +3199,7 @@ export function calculateSaju(
   // 한국 DST 기간(1948-51, 1955-60, 1987-88) 출생자는 시계 시각이 +1시간 빠르므로 차감
   const dstEnabled = options.dstCorrection !== false; // 기본: true
   let effectiveBirthHour = birthHour;
-  let effectiveBirthMinute = birthMinute;
+  const effectiveBirthMinute = birthMinute;
   let dstCorrected = false;
 
   if (dstEnabled && isKoreaDstPeriod(birthDate)) {
@@ -3224,14 +3223,8 @@ export function calculateSaju(
   const month = adjDate.getMonth() + 1;
   const day = adjDate.getDate();
   const hour = adjDate.getHours();
-  const minute = adjDate.getMinutes();
 
-  // 2. 자시(子時) 처리 — 자시법(子時法) 3모드 (Task 1)
   const ziSiMode: ZiSiMode = options.ziSiMode || 'tongja';
-  // 자시 진입 경계: 23:30 (30분 기준, 전통 명리학)
-  const isInZiHour = hour >= 23 || (hour === 23 && minute >= 30) || hour < 1;
-  // 조자시 경계: 23:00 (현행 기존 로직 호환)
-  const isAfterZiLegacy = hour >= 23;
 
   let advanceDayPillar = false;
   switch (ziSiMode) {
@@ -3455,9 +3448,7 @@ function calculateSajuFallback(
   adjDate.setHours(birthHour, birthMinute);
   adjDate.setMinutes(adjDate.getMinutes() - 30);
 
-  const year = adjDate.getFullYear();
   const month = adjDate.getMonth() + 1;
-  const day = adjDate.getDate();
   const hour = adjDate.getHours();
 
   // 2. 조자시 처리
@@ -3592,7 +3583,7 @@ export function getYongsinRecommendation(dayMaster: string, birthMonth: number):
 
   // 기본: 일간을 생해주는 오행이 용신
   const generatingElement = Object.entries(ELEMENT_RELATIONS.generates)
-    .find(([_, generated]) => generated === dayElement)?.[0] as keyof typeof FIVE_ELEMENTS | undefined;
+    .find(([, generated]) => generated === dayElement)?.[0] as keyof typeof FIVE_ELEMENTS | undefined;
 
   return {
     yongsin: generatingElement || 'wood',
@@ -3635,15 +3626,12 @@ export function diagnoseElementBalance(saju: SajuResult): {
   balanced: boolean;
 } {
   const distribution = analyzeElementDistribution(saju);
-  const values = Object.values(distribution);
-  const avg = values.reduce((a, b) => a + b, 0) / values.length;
-
   const excessive = (Object.entries(distribution) as [keyof typeof FIVE_ELEMENTS, number][])
-    .filter(([_, count]) => count >= 3)
+    .filter(([, count]) => count >= 3)
     .map(([element]) => element);
 
   const lacking = (Object.entries(distribution) as [keyof typeof FIVE_ELEMENTS, number][])
-    .filter(([_, count]) => count === 0)
+    .filter(([, count]) => count === 0)
     .map(([element]) => element);
 
   return {

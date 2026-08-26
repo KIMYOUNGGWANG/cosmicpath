@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { auth } from '@/lib/auth';
-import { getDailyTarotReading, type DailyTarotResponse } from '@/lib/daily-tarot';
+import { getDailyTarotReading, type DailyTarotResponse } from '@/lib/daily-energy';
 import { prisma } from '@/lib/prisma';
 import { isSubscriptionActive } from '@/lib/subscription';
 

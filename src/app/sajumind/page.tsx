@@ -9,7 +9,7 @@ import { SajuMindCheckInWidget } from '@/components/sajumind/sajumind-checkin';
 import { SajuMindChartView } from '@/components/sajumind/sajumind-chart-view';
 import { SajuMindPatternsView } from '@/components/sajumind/sajumind-patterns-view';
 import { SajuMindTalkView } from '@/components/sajumind/sajumind-talk-view';
-import { calculateDailyTransit } from '@/lib/sajumind/engine';
+import { calculateDailyTransit, calculateSajuMindProfile } from '@/lib/sajumind/engine';
 import type { SajuChartProfile, DailyTransitInfo, CheckInResult } from '@/lib/sajumind/types';
 
 const STORAGE_KEY = 'sajumind_profile_v1';
@@ -22,13 +22,28 @@ export default function SajuMindPage() {
   const [recentCheckIn, setRecentCheckIn] = useState<CheckInResult | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Restore saved profile on mount
+  // Restore saved profile on mount (or auto-bridge from /start reading data)
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         setProfile(parsed);
+      } else {
+        const pendingRaw = localStorage.getItem('pending_reading_data') || sessionStorage.getItem('pending_reading_data');
+        if (pendingRaw) {
+          const parsed = JSON.parse(pendingRaw);
+          if (parsed?.name && parsed?.birthDate) {
+            const bridgedProfile = calculateSajuMindProfile(
+              parsed.name,
+              parsed.birthDate,
+              parsed.birthTime || undefined,
+              parsed.cityName || 'Seoul'
+            );
+            setProfile(bridgedProfile);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(bridgedProfile));
+          }
+        }
       }
     } catch (e) {
       console.warn('Failed to load SajuMind profile from storage:', e);

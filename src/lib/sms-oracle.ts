@@ -5,7 +5,6 @@ import { calculateDailyForecast, calculateDayMaster, type DayMaster } from '@/li
 import { devLog } from '@/lib/dev-logger';
 import { calculateAstrology, ZODIAC_SIGNS } from '@/lib/engines/astrology';
 import { calculateSaju, formatSaju } from '@/lib/engines/saju';
-import { MAJOR_ARCANA } from '@/lib/engines/tarot';
 import { prisma } from '@/lib/prisma';
 import { sendSmsOracleMessage } from '@/lib/sms-oracle-gateway';
 import { isSubscriptionActive } from '@/lib/subscription';
@@ -230,12 +229,14 @@ function getCurrentAstrologySummary(now: Date = new Date()): string {
   return `태양 ${sun}, 달 ${moon}, 상승궁 ${ascendant} 흐름이라 감정보다 타이밍 판단이 중요합니다.`;
 }
 
-function buildTarotSummary(seed: string): string {
-  const card = MAJOR_ARCANA[hashText(seed) % MAJOR_ARCANA.length];
-  const isReversed = hashText(`${seed}:reversed`) % 2 === 1;
-  const interpretation = isReversed ? card.reversed : card.upright;
-
-  return `타로는 ${card.name}${isReversed ? ' 역방향' : ''}입니다. ${truncateText(interpretation, 60)}`;
+function buildEnergySummary(seed: string): string {
+  const energyKeywords = [
+    '새로운 출발과 창조적 돌파', '내적 중심과 지혜로운 인내', '풍요와 확장적 결실', '리더십과 질서 확립',
+    '원칙 수호와 멘토십', '가치관 일치와 핵심 선택', '목표를 향한 과감한 돌진', '용기와 내면의 힘',
+    '성찰과 독립적 탐색', '운명적 전환점과 기회의 창', '균형과 공정한 조율', '새로운 관점과 성장',
+  ];
+  const interpretation = energyKeywords[hashText(seed) % energyKeywords.length];
+  return `에너지 신호: ${interpretation}`;
 }
 
 function buildForecastSummary(birthDate: string, targetDate: string): {
@@ -696,7 +697,7 @@ function buildTodayContext(
       forecast?.summary ?? '출생 정보가 없어 오늘은 최근 고민과 현재 하늘 흐름 중심으로 읽습니다.',
     sajuSummary: buildSajuSummary(birthContext),
     astrologySummary: getCurrentAstrologySummary(),
-    tarotSummary: buildTarotSummary(seed),
+    tarotSummary: buildEnergySummary(seed),
   };
 }
 

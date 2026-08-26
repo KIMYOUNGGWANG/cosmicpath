@@ -3,13 +3,7 @@ import type { PremiumReportData } from '../premium-report';
 
 export type VerdictReportLanguage = 'ko' | 'en';
 
-export type TarotCardSummary = {
-    readonly name: string;
-    readonly isReversed: boolean;
-};
-
 export type TabId =
-    | 'tarot'
     | 'saju'
     | 'astro'
     | 'numerology'
@@ -30,8 +24,6 @@ export type VerdictReportProps = {
     readonly language?: VerdictReportLanguage;
     readonly isLoading?: boolean;
     readonly onRetry?: () => void;
-    readonly tarotCards?: readonly TarotCardSummary[];
-    readonly onCardClick?: (idx: number) => void;
     readonly scoreGridNode?: React.ReactNode;
     readonly isFreeView?: boolean;
 };

@@ -51,8 +51,8 @@ export function buildRelationshipDecisionSafetyRule(
   }
 
   return language === 'en'
-    ? '# Relationship Decision Safety Rule\n- Decision support only: never promise a guaranteed reply, reunion, confession, or relationship outcome.\n- Banned claims include: guaranteed reply, make them respond, 무조건 답장, 반드시 연락, 100%.\n- If the question mentions stalking, surveillance, repeated checking, coercion, threats, or pressure after a boundary, choose Hold and prioritize safety over timing.\n- Saju, astrology, and tarot are evidence labels for why the verdict leans contact, wait, narrow, or hold; they are not proof of the other person’s mind.'
-    : '# 관계/DM 안전 규칙\n- 의사결정 보조만 제공하세요. 답장, 재회, 고백 성공, 관계 결과를 보장하지 마세요.\n- 금지 표현: guaranteed reply, make them respond, 무조건 답장, 반드시 연락, 100%.\n- stalking, 감시, 반복 확인, 협박, 거절 뒤 압박, 스토킹 문맥이면 타이밍보다 안전을 우선하고 보류 판정을 먼저 제시하세요.\n- 사주, 점성술, 타로는 연락/대기/축소/보류 판정이 나온 이유를 설명하는 근거 레이어일 뿐, 상대 마음을 증명하는 도구가 아닙니다.';
+    ? '# Relationship Decision Safety Rule\n- Decision support only: never promise a guaranteed reply, reunion, confession, or relationship outcome.\n- Banned claims include: guaranteed reply, make them respond, 무조건 답장, 반드시 연락, 100%.\n- If the question mentions stalking, surveillance, repeated checking, coercion, threats, or pressure after a boundary, choose Hold and prioritize safety over timing.\n- Saju, astrology, Ziwei Doushu, and Thai Astrology are evidence labels for why the verdict leans contact, wait, narrow, or hold; they are not proof of the other person’s mind.'
+    : '# 관계/DM 안전 규칙\n- 의사결정 보조만 제공하세요. 답장, 재회, 고백 성공, 관계 결과를 보장하지 마세요.\n- 금지 표현: guaranteed reply, make them respond, 무조건 답장, 반드시 연락, 100%.\n- stalking, 감시, 반복 확인, 협박, 거절 뒤 압박, 스토킹 문맥이면 타이밍보다 안전을 우선하고 보류 판정을 먼저 제시하세요.\n- 사주, 점성술, 자미두수, 태국 점성술은 연락/대기/축소/보류 판정이 나온 이유를 설명하는 근거 레이어일 뿐, 상대 마음을 증명하는 도구가 아닙니다.';
 }
 
 export function buildEvidenceFirstNarrativeRule(
@@ -61,13 +61,29 @@ export function buildEvidenceFirstNarrativeRule(
 ) {
   if (format === 'inline') {
     return language === 'en'
-      ? 'Writing rule: start from the strongest shared signal, keep uncertainty explicit when evidence is thin, and avoid filler, repeated reassurance, or empty inspiration.'
-      : '작성 규칙: 가장 강하게 겹치는 신호에서 시작하고, 근거가 약하면 불확실성을 그대로 말하며, 빈 위로나 반복 위안, 공허한 고무 문장을 넣지 마세요.';
+      ? 'Writing rule: Deliver an instant psychological shock (Aha-moment). Expose the user\'s unspoken bottlenecks and past 1-3 year life pivots using Saju, Western Astrology, Ziwei Doushu, and Thai Astrology frameworks. Translate everything into accessible everyday language with zero jargon dumping.'
+      : '작성 규칙: 첫 문단에서 사용자의 숨겨진 무의식과 최근 1~3년의 고비/변곡점을 사주, 점성술, 자미두수, 태국 점성학 프레임워크로 꿰뚫어 전율을 일으키고, 모든 전문 용어는 100% 직관적인 일상 언어로 번역하세요.';
   }
 
   return language === 'en'
-    ? '# Evidence-First Writing Rule\n- Start from the strongest shared signal before edge cases.\n- If evidence is thin, say that clearly instead of padding with confidence.\n- Avoid filler, repeated reassurance, and empty inspiration.'
-    : '# 행동 패턴 묘사 우선 규칙 (쉬운 언어 번역 필수)\n- 명리 용어/점성술 한자어 나열을 절대 금지하고, 인간 행동 패턴 및 상황 묘사를 가장 먼저 써라.\n- "일간 을목이 묘목에 뿌리를 둔 편재 구조로..." 처럼 용어만 나열하는 서술은 전면 금지한다.\n- 올바른 작성법: "스스로 주도권을 쥐고 일을 추진하려는 성향이 강하나, 현재 현실적인 금액이나 주변의 압박으로 진로 갈등이 일어나는 시기입니다. (사주 근거: 을목 일간, 편재)"\n- "재물운이 좋다" 대신 → "돈을 버는 능력보다 계속 일을 키우는 성향이 강한 사람"\n- 전문 용어는 오직 괄호 (근거: ...) 내에만 짧게 부연하고, 문장 본문은 일반인이 읽자마자 1초 만에 이해하는 직관적 한글로 번역해서 써라.\n- 엣지 케이스보다 가장 강하게 겹치는 신호에서 먼저 시작해라.\n- 근거가 약하면 자신감 있는 말로 덮지 말고, 불확실성을 그대로 밝혀라.\n- 빈 위로, 반복 위안, 공허한 고무 문장은 금지.';
+    ? `# Psychological Resonance & 4-Engine Decision Rule
+- **1. Psychological & Shadow Scan (Instant Hook)**: Before answering the surface question, accurately expose the user's hidden perfectionism, unspoken fatigue, control anxiety, or relationship boundary issues derived from their core chart.
+- **2. Past Pivot Verification (Thai Astrology Framework)**: Reference observable past turning points (e.g., career pivots, mental burnout, or relationship realignments in the past 1-3 years) to establish undeniable credibility.
+- **3. Translating Terminology to Everyday Reality**: Never dump dry astrological or Saju terms ("Gwan-sal", "Sun square Saturn", "Mars in 7th House"). Translate 100% into real-world human behavior, workplace dynamics, financial habits, and psychological patterns.
+- **4. Concrete Timing & Action**: Provide exact months/weeks for golden timing windows and clear next steps.`
+    : `# 소름 돋는 심리 투시 & 4대 학문 융합 규칙 (쉬운 일상 언어 번역 필수)
+- **1. 내면 투시 & 자아 스캔 (3초 만에 소름 돋게 만들기)**:
+  - 질문에 기계적으로 답하기 전, 사주 일간/월지와 자미두수 명궁, 점성술 달/상승궁, 태국 라그나를 통해 **"이 사람이 혼자 있을 때 느끼는 외로움/완벽주의/통제 욕구/인간관계 피로도"**를 2문장으로 먼저 정확히 팩트 폭격하십시오.
+  - 예: "이직운이 좋습니다" (X) ➔ "당신은 사실 일 자체보다 '내 노력에 비해 인정받지 못하는 환경'과 '비효율적인 구조를 혼자 감당하는 것'에 한계가 온 상태입니다. 겉으로는 묵묵히 버티는 척하지만, 마음속으로는 이미 문을 닫았습니다." (O)
+- **2. 과거 변곡점 검증 (태국 점성학 & 대운 프레임워크)**:
+  - 최근 1~3년(예: 2023~2024년) 사이 겪었을 인생의 큰 고비, 인간관계 정리, 또는 진로의 방향 전환을 원국의 충/형/대운 변화와 연결하여 짚어내고, 현재 겪는 고통이 자책할 일이 아니라 운의 계절(환절기) 때문임을 규명하십시오.
+- **3. 태국식 카르마 해소 & 차트의 가장 성숙한 활용법**:
+  - "이 사람이 자신의 차트를 가장 성숙하게 다루어 반복되는 실패 굴레를 끊으려면 어떤 태도와 전략으로 살아야 하는가?"를 명쾌하게 제시하십시오.
+- **4. 전문 용어 나열 절대 금지 (100% 현실 언어 번역)**:
+  - "일간 을목이 편재를 만나...", "7하우스 화성이..." 식의 사전식 용어 도배 전면 금지.
+  - 전문 용어는 오직 괄호 (근거: ...) 내에만 짧게 부연하고, 문장 본문은 일반인이 읽자마자 깊이 공감하고 소름 돋을 만큼 생생한 일상 한국어로 풀어내십시오.
+- **5. 골든타임 & 실전 액션**:
+  - 막연한 덕담 대신, 운이 열리는 구체적 시기(몇 월 몇 째 주)와 당장 해야 할 1순위 행동을 제시하십시오.`;
 }
 
 export function buildPromptDepthRule(
@@ -78,28 +94,50 @@ export function buildPromptDepthRule(
   if (mode === 'premium') {
     if (format === 'inline') {
       return language === 'en'
-        ? 'Premium depth rule: depth means evidence density, personal relevance, and decision usefulness, not page padding. Every important paragraph must follow Claim -> Evidence -> User-specific implication -> Action/Risk/Timing. Do not repeat the same reassurance, label, or abstract theme to increase length.'
-        : '프리미엄 깊이 규칙: 깊이는 페이지 부풀리기가 아니라 근거 밀도, 개인화, 의사결정 도움입니다. 중요한 단락은 반드시 판정 -> 근거 -> 사용자/질문에 대한 함의 -> 행동/리스크/타이밍 순서로 작성하세요. 분량을 늘리기 위해 같은 위로, 라벨, 추상 주제를 반복하지 마세요.';
+        ? 'Premium depth rule: Deliver an elite, high-substance reading worth far more than the purchase price. Every paragraph must provide rich psychological depth, root-cause diagnosis of user dilemmas, past pivot validation, Thai astrology karmic mastery, exact timing windows, and specific action blueprints. Explain in vivid, crystal-clear language.'
+        : '프리미엄 깊이 규칙: 4,000원 이상의 압도적 가치를 느끼도록 분량과 깊이를 극대화하세요. 단순 요약이 아닌 심리적 원인 진단, 과거 변곡점 검증, 성숙한 차트 사용법, 정확한 시기별 골든타임, 구체적 행동 매뉴얼을 풍성하고 친절한 일상 언어로 상세히 서술하세요.';
     }
 
     return language === 'en'
-      ? '# Premium Depth Rule\n- Premium depth is evidence density, personal relevance, and decision usefulness, not page padding.\n- Every paragraph must connect one source signal to the user/question and one concrete implication, timing boundary, risk, or next action.\n- Do not repeat the same reassurance, label, or abstract theme to increase length.'
-      : '# 프리미엄 깊이 규칙\n- 프리미엄의 깊이는 페이지 부풀리기가 아니라 근거 밀도, 개인화, 의사결정 도움입니다.\n- 모든 단락은 근거 신호 1개를 사용자/질문과 연결하고, 구체적 함의·타이밍 경계·리스크·다음 행동 중 하나를 남겨야 합니다.\n- 분량을 늘리기 위해 같은 위로, 같은 라벨, 추상 주제를 반복하지 마세요.';
+      ? '# Premium Depth Rule\n- Premium depth means exceptional insight density, personal relevance, and immediate practical value.\n- Every section must delve into the user\'s real psychology, unconscious fears, external bottlenecks, exact timeline milestones, past turning points, and tactical moves.\n- Use rich, descriptive, and compassionate language that feels like an elite 1:1 consultation.\n- Never provide short or superficial answers. Elaborate thoroughly on each point.'
+      : '# 프리미엄 깊이 규칙 (4,000원 결제 가치 극대화)\n- 프리미엄 리포트는 단순한 짧은 요약이 아니라, 1:1 심층 VIP 상담을 받는 듯한 압도적 분량과 깊이를 제공해야 합니다.\n- 사용자가 겪고 있는 고민의 이면에 있는 심리적 불안, 내면의 강점과 맹점, 과거 1~3년의 변곡점, 주변 환경과의 마찰 원인을 소름 돋을 정도로 정확하게 짚어내세요.\n- 각 분석 항목마다 [근본 원인 및 본질 ➔ 현재 직면한 현실 딜레마 ➔ 과거 변곡점 및 업장 해소 ➔ 운이 열리는 구체적 시기(골든타임) ➔ 즉시 실행할 현실적 행동 매뉴얼] 5단계를 충실하고 넉넉한 분량으로 전개하세요.\n- 단문으로 끊지 말고, 읽는 사람이 무릎을 탁 치며 "내 이야기다"라고 감탄할 수 있도록 풍성하고 매끄러운 호흡으로 문장을 완성하세요.\n- 전문 한자어나 모호한 비유 대신, 현대인의 일상/직장/연애/재정 상황에 정확히 대입되는 생생한 표현을 사용하세요.';
   }
 
   if (mode === 'free-core') {
     return language === 'en'
-      ? '# Free Depth Rule\n- This is phase 1 of a free reading. Deliver the clearest high-signal outline first and avoid exhaustive sub-analysis.\n- Return only `free_focus` and compact `summary` metadata in this phase.\n- `free_focus` is the free brief, not the paid final verdict.\n- Do not write the long summary body yet. Phase 2 will expand it later.\n- `free_focus.action_conclusion` MUST begin by directly answering the user\'s question. Example: "You asked about changing jobs — this is a good time to move." Starting with generic fortune flow language like "Your current energy..." is forbidden.\n- The first sentence must include a clear decision label: move_now, wait_with_deadline, narrow_first, or hold_or_stop.\n- Required `free_focus` fields: decision_label, delayed_choice, timing_boundary, first_action, avoid, confidence_note, action_conclusion, evidence_summary, next_question; copy_ready_message and gaeun_action are optional. If present, gaeun_action must be 1-180 chars, based on first_action + avoid, with no clinical, therapy, guarantee, or outcome-control claims.\n- `free_focus.evidence_summary` must cite Saju (Day Master + current Daeun/Sewoon) AND at least one Astro signal; if Tarot is supplied, include it as the immediate question signal. Tarot alone cannot fulfill this rule.\n- `free_focus.action_conclusion` must end with a concrete action verb phrase and a date (YYYY-MM format or "this week/month"). Vague closings like "consider this carefully" are forbidden.\n- FORBIDDEN abstract phrases: "current energy", "go with the flow", "balance/harmony", "inner voice", "the universe says", "time of change", "new beginning" — replace with specific chart data.\n- `free_focus` must always contain one decisive next move, one compact evidence summary, one timing boundary, one risk to avoid, and one precise follow-up question.'
-      : '# 무료 깊이 규칙\n- 이것은 무료 리딩 1단계입니다. 가장 해상도 높은 아웃라인을 먼저 주고, 과도한 세부 분해는 피하세요.\n- 이 단계에서는 `free_focus`와 압축된 `summary` 메타데이터만 반환하세요.\n- `free_focus`는 무료 브리프이지 유료 최종판정이 아닙니다.\n- 긴 summary 본문은 아직 쓰지 마세요. 본문은 2단계에서 확장합니다.\n- `free_focus.action_conclusion`은 반드시 사용자의 질문에 대한 직접 답변으로 시작해야 합니다. 예: "이직을 물어보셨는데, 지금 움직여도 됩니다." "당신의 현재 운세 흐름은..." 같은 포괄적 서술로 시작하는 것은 금지합니다.\n- 첫 문장에는 반드시 명확한 판정 라벨을 넣으세요: move_now, wait_with_deadline, narrow_first, hold_or_stop.\n- 필수 `free_focus` 필드: decision_label, delayed_choice, timing_boundary, first_action, avoid, confidence_note, action_conclusion, evidence_summary, next_question. copy_ready_message와 gaeun_action은 선택입니다. gaeun_action을 쓰면 1~180자이며 first_action + avoid를 바탕으로 하고, 임상/치료/보장/결과 통제 주장을 넣지 마세요.\n- `free_focus.action_conclusion`은 반드시 구체적 행동 동사 + 날짜(YYYY-MM 형식 또는 "이번 주/달")로 끝내야 합니다. "신중하게 고민해보세요" 같은 모호한 마무리 금지.\n- `free_focus.evidence_summary`는 사주(일간 + 현재 대운/세운 글자) + 점성술 신호 1개를 반드시 인용해야 하며, 타로가 제공되면 질문 주변의 즉각 신호로 함께 연결해야 합니다. 타로 단독 인용으로 이 규칙을 충족할 수 없습니다.\n- 금지 추상 명사구: "현재 에너지", "흐름을 타", "균형/조화", "내면의 목소리", "우주가 말한다", "변화의 시기", "새로운 시작" — 반드시 구체적 차트 데이터로 대체하세요.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 타이밍 경계 1개, 피할 리스크 1개, 다음 질문 1개를 반드시 넣으세요.';
+      ? '# Free Depth Rule\n- This is phase 1 of a free reading. Deliver an instant shock of recognition (Aha-moment) that makes unlocking the full reading irresistible.\n- Return only `free_focus` and compact `summary` metadata in this phase.\n- `free_focus.action_conclusion` MUST begin by exposing the user\'s real inner dilemma behind their question, followed by a clear decision label: move_now, wait_with_deadline, narrow_first, or hold_or_stop.\n- `free_focus.evidence_summary` must cite Saju, Astrology, Ziwei, and Thai Astrology signals in everyday understandable terms.'
+      : '# 무료 깊이 규칙 (결제 전환 훅 극대화)\n- 이것은 무료 리딩 1단계입니다. 유저가 읽자마자 "어? 날 어떻게 알았지?" 하고 소름이 돋는 강렬한 첫인상을 주어야 합니다.\n- 이 단계에서는 `free_focus`와 압축된 `summary` 메타데이터만 반환하세요.\n- `free_focus.action_conclusion`은 질문 뒤에 숨겨진 유저의 진짜 내면 심리와 딜레마를 먼저 짚고, 명확한 판정 라벨(move_now, wait_with_deadline, narrow_first, hold_or_stop)로 답변하세요.\n- `free_focus.evidence_summary`는 사주 + 점성술/자미두수/태국점성학 신호를 일반인이 이해하기 쉬운 언어로 요약하세요.\n- `free_focus.action_conclusion`은 반드시 구체적 행동 동사 + 날짜(YYYY-MM 형식 또는 "이번 주/달")로 끝내야 합니다.';
   }
 
   if (mode === 'free-phase2') {
     return language === 'en'
-      ? '# Free Reading Phase 2\n- Write only the final free `summary.content` body as plain text.\n- This is still the free brief, not the paid final verdict.\n- Expand the existing phase-1 conclusion into 3-4 short sentences that stay concrete, emotionally readable, and decision-useful.\n- Integrate the shared Saju, Astrology, and Tarot signal without repeating raw data dumps.'
-      : '# 무료 리딩 2단계\n- 무료 최종 `summary.content` 본문만 plain text로 작성하세요.\n- 이것은 여전히 무료 브리프이며 유료 최종판정이 아닙니다.\n- 1단계 결론을 바탕으로 3-4개의 짧은 문장으로 확장하되, 구체적이고 정서적으로 읽히며 실제 판단에 도움이 되게 쓰세요.\n- 사주, 점성, 타로의 공통 신호를 묶되 데이터 나열을 반복하지 마세요.';
+      ? '# Free Reading Phase 2\n- Write only the final free `summary.content` body as plain text.\n- Expand the phase-1 conclusion into 3-4 clear, emotionally resonant, and decision-useful sentences that hook the reader deeply.\n- Integrate Saju, Astrology, Ziwei, and Thai Astrology signals in everyday relatable language.'
+      : '# 무료 리딩 2단계\n- 무료 최종 `summary.content` 본문만 plain text로 작성하세요.\n- 1단계 결론을 바탕으로 유저의 속마음을 꿰뚫는 3-4개의 완성도 높은 문장으로 확장하되, 매우 직관적이고 공감 가며 실제 판단에 도움이 되게 쓰세요.\n- 사주, 점성, 자미두수, 태국 점성학의 공통 신호를 일상 언어로 매끄럽게 연결하세요.';
   }
 
   return language === 'en'
-    ? '# Free Depth Rule\n- This is a free reading. Deliver the clearest high-signal summary first and avoid exhaustive sub-analysis.\n- Return only `free_focus`, `summary`, and `traits`.\n- `free_focus` is the free brief, not the paid final verdict.\n- `free_focus.action_conclusion` MUST begin by directly answering the user\'s question. Example: "You asked about changing jobs — this is a good time to move." Starting with generic fortune flow language like "Your current energy..." is forbidden.\n- The first sentence must include a clear decision label: move_now, wait_with_deadline, narrow_first, or hold_or_stop.\n- Required `free_focus` fields: decision_label, delayed_choice, timing_boundary, first_action, avoid, confidence_note, action_conclusion, evidence_summary, next_question; copy_ready_message and gaeun_action are optional. If present, gaeun_action must be 1-180 chars, based on first_action + avoid, with no clinical, therapy, guarantee, or outcome-control claims.\n- `free_focus.action_conclusion` must end with a concrete verb phrase and a date (YYYY-MM or "this week/month"). Vague closings forbidden.\n- `free_focus.evidence_summary` must cite Saju (Day Master + current Daeun/Sewoon) AND one Astro signal; if Tarot is supplied, include it as the immediate question signal. Tarot alone cannot fulfill this.\n- FORBIDDEN abstract phrases: "current energy", "go with the flow", "balance/harmony", "inner voice", "the universe says", "time of change" — replace with specific chart data.\n- `free_focus` must always contain one decisive next move, one compact evidence summary, one timing boundary, one risk to avoid, and one precise follow-up question.'
-    : '# 무료 깊이 규칙\n- 이것은 무료 리딩입니다. 가장 해상도 높은 요약을 먼저 주고, 과도한 세부 분해는 피하세요.\n- 출력은 `free_focus`, `summary`, `traits`만 반환하세요.\n- `free_focus`는 무료 브리프이지 유료 최종판정이 아닙니다.\n- `free_focus.action_conclusion`은 반드시 사용자의 질문에 대한 직접 답변으로 시작해야 합니다.\n- 첫 문장에는 반드시 명확한 판정 라벨을 넣으세요: move_now, wait_with_deadline, narrow_first, hold_or_stop.\n- 필수 `free_focus` 필드: decision_label, delayed_choice, timing_boundary, first_action, avoid, confidence_note, action_conclusion, evidence_summary, next_question. copy_ready_message와 gaeun_action은 선택입니다. gaeun_action을 쓰면 1~180자이며 first_action + avoid를 바탕으로 하고, 임상/치료/보장/결과 통제 주장을 넣지 마세요.\n- `free_focus.action_conclusion`은 반드시 구체적 행동 동사 + 날짜(YYYY-MM 형식 또는 "이번 주/달")로 끝내야 합니다.\n- `free_focus.evidence_summary`는 사주(일간 + 현재 대운/세운 글자) + 점성술 신호 1개를 반드시 인용해야 하며, 타로가 제공되면 질문 주변의 즉각 신호로 함께 연결해야 합니다. 타로 단독 인용 금지.\n- 금지 추상 명사구: "현재 에너지", "흐름을 타", "균형/조화", "내면의 목소리", "우주가 말한다", "변화의 시기", "새로운 시작" — 구체적 차트 데이터로 대체.\n- `free_focus`에는 결론 1개, 근거 요약 1개, 타이밍 경계 1개, 피할 리스크 1개, 다음 질문 1개를 반드시 넣으세요.';
+    ? '# Free Depth Rule\n- Deliver the clearest high-signal summary first.\n- Return only `free_focus`, `summary`, and `traits` in accessible everyday language.'
+    : '# 무료 깊이 규칙\n- 가장 해상도 높은 요약을 먼저 전달하고, 일반인이 쉽게 이해하는 직관적 언어로 작성하세요.';
+}
+
+export function buildAntiVaguenessRule(
+  language: PromptRuleLanguage,
+  format: PromptRuleFormat = 'markdown'
+) {
+  if (format === 'inline') {
+    return language === 'en'
+      ? 'Anti-vagueness rule: Never use generic Barnum-effect platitudes or ambiguous predictions. Pinpoint the root cause of the user\'s dilemma and provide concrete timing with verifiable chart evidence.'
+      : '모호한 표현 금지 규칙: 두루뭉술한 덕담이나 "~할 수도 있고 아닐 수도 있습니다" 식의 양다리 문장을 전면 금지하고, 고민의 근본 원인과 구체적 시기/행동을 못박아 직답하세요.';
+  }
+
+  return language === 'en'
+    ? `# Strict Anti-Vagueness & Accuracy Directive
+- **Never use generic Barnum-effect platitudes** (e.g., "Good things may happen if you try", "Results vary based on circumstances").
+- **Pinpoint the exact psychological root cause** behind the user's specific dilemma.
+- **Directly answer the user's timeline and decision fork** with definite dates and concrete next moves.
+- **Enforce Causal Reasoning**: [Direct Verdict] -> [Saju/Astro Causal Proof with actual letters] -> [Golden timing window (Month/Week)] -> [Specific Action & Stop Rule].`
+    : `# 족집게 적중도 & 모호한 표현 전면 금지 규칙
+- **두루뭉술한 양다리 표현 전면 금지**: "~할 수도 있고 아닐 수도 있습니다", "상황에 따라 다릅니다", "마음가짐에 달렸습니다" 같은 애매한 회피성 문장은 즉각 실패로 간주합니다.
+- **질문 1:1 직답 강제**: 사용자가 입력한 구체적 상황(예: 특정 월, 특정 갈림길, 특정 상대방 갈등)에 대해 회피하지 말고 명확한 결론과 시기를 못박으십시오.
+- **모든 문장의 인과 사슬 구조**: [결론 직답] ➔ [실제 사주/점성 데이터 글자 근거(예: 일간/월지/대운/세운의 충·합)] ➔ [운이 열리는 정확한 월/주차 골든타임] ➔ [구체적 1순위 실행 행동 및 금기사항].`;
 }

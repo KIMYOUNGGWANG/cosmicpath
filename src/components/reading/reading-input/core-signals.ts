@@ -36,7 +36,7 @@ export function buildCoreSignals({
             unknownTime || !birthTime
                 ? (isEn ? 'Unknown Time OK' : '생시 몰라도 진행')
                 : `${isEn ? 'Birth Time' : '생시'} ${birthTime}`,
-            isEn ? 'Tarot Prep Ready' : '타로 준비 가능',
+            isEn ? 'Precision Sync Ready' : '3원 융합 분석 준비',
         ];
     }
 

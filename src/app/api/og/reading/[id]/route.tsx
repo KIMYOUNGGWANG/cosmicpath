@@ -142,7 +142,7 @@ export async function GET(
                 <span style={{ color: '#8B5CF6' }}>•</span>
                 Astrology timing
                 <span style={{ color: '#8B5CF6' }}>•</span>
-                Tarot signal
+                Ziwei & Numerology
               </div>
             </div>
 

@@ -1,17 +1,19 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect } from 'react';
 
 interface CosmicRadarProps {
     sajuScore: number;    // 0-100
     starScore: number;    // 0-100
-    tarotScore: number;   // 0-100
+    tarotScore?: number;  // legacy alias
+    ziweiScore?: number;  // 0-100
     isLoading?: boolean;
     details?: {
         saju?: string;
         star?: string;
         tarot?: string;
+        ziwei?: string;
     };
     language?: 'ko' | 'en';
 }
@@ -20,10 +22,12 @@ export function CosmicRadar({
     sajuScore = 0,
     starScore = 0,
     tarotScore = 0,
+    ziweiScore,
     isLoading = false,
     details,
     language = 'ko'
 }: CosmicRadarProps) {
+    const effectiveZiwei = ziweiScore ?? tarotScore;
     const isEn = language === 'en';
     // 애니메이션을 위한 상태
     const [currentScores, setCurrentScores] = useState({ saju: 0, star: 0, tarot: 0 });
@@ -45,10 +49,10 @@ export function CosmicRadar({
             setCurrentScores({
                 saju: sajuScore,
                 star: starScore,
-                tarot: tarotScore,
+                tarot: effectiveZiwei,
             });
         }
-    }, [isLoading, sajuScore, starScore, tarotScore]);
+    }, [isLoading, sajuScore, starScore, effectiveZiwei]);
 
     // 좌표 계산 (중심점: 100, 100 / 반지름: 80)
     const getCoordinates = (value: number, angle: number) => {
@@ -142,14 +146,14 @@ export function CosmicRadar({
                 </span>
             </div>
 
-            {/* 타로 (Right Bottom) */}
+            {/* 자미두수 (Right Bottom) */}
             <div
                 className="absolute bottom-8 right-0 translate-x-12 flex flex-col items-start cursor-pointer group"
                 onClick={() => setActiveTooltip('tarot')}
             >
-                <span className="text-lg font-bold tracking-tighter" style={{ color: 'var(--tarot-purple)' }}>Intuition</span>
+                <span className="text-lg font-bold tracking-tighter" style={{ color: 'var(--tarot-purple)' }}>Destiny</span>
                 <span className="text-[10px] font-medium text-white/50 -mt-1 group-hover:text-white/80 transition-colors uppercase tracking-widest">
-                    {isEn ? 'Tarot' : '타로'}
+                    {isEn ? 'Ziwei' : '자미두수'}
                 </span>
             </div>
 
@@ -160,7 +164,7 @@ export function CosmicRadar({
             >
                 <span className="text-lg font-bold tracking-tighter" style={{ color: 'var(--star-yellow)' }}>Flow</span>
                 <span className="text-[10px] font-medium text-white/50 -mt-1 group-hover:text-white/80 transition-colors uppercase tracking-widest">
-                    {isEn ? 'Astrology' : '별자리'}
+                    {isEn ? 'Astrology' : '점성술'}
                 </span>
             </div>
 
@@ -177,34 +181,37 @@ export function CosmicRadar({
                 </motion.div>
             )}
 
-            {/* 툴팁 */}
-            {activeTooltip && (
-                <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    className="absolute -bottom-4 left-0 right-0 mx-4 md:mx-0 bg-white/10 backdrop-blur-xl p-4 rounded-2xl border border-white/20 text-xs shadow-2xl z-20"
-                    onClick={() => setActiveTooltip(null)}
-                >
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="text-lg">
-                            {activeTooltip === 'saju' && "📜"}
-                            {activeTooltip === 'star' && "🌌"}
-                            {activeTooltip === 'tarot' && "🔮"}
-                        </span>
-                        <span className="font-bold text-white uppercase tracking-wider">
-                            {activeTooltip === 'saju' && (isEn ? "Saju Logic Breakdown" : "사주 논리 분석")}
-                            {activeTooltip === 'star' && (isEn ? "Star Flow Breakdown" : "별자리 흐름 분석")}
-                            {activeTooltip === 'tarot' && (isEn ? "Tarot Intuition Breakdown" : "타로 직관 분석")}
-                        </span>
-                    </div>
-                    <p className="text-gray-200 leading-relaxed text-left">
-                        {activeTooltip === 'saju' && (details?.saju || (isEn ? "Logical index derived from the balance of innate elements and current energy flow." : "타고난 오행의 균형과 현재 대운의 흐름이 결합되어 도출된 논리적 지표입니다."))}
-                        {activeTooltip === 'star' && (details?.star || (isEn ? "Temporal index based on the interaction between current planetary positions and your natal chart." : "현재 행성들의 위치와 당신의 네이탈 차트 간의 상호작용을 통한 시기적 지표입니다."))}
-                        {activeTooltip === 'tarot' && (details?.tarot || (isEn ? "Index of your current psychological energy and potential symbolized by chosen Tarot cards." : "선택하신 타로 카드가 상징하는 현재의 심리적 에너지와 잠재력의 지표입니다."))}
-                    </p>
-                    <div className="mt-2 text-[10px] text-gold/60 text-right">{isEn ? 'Click to close' : '클릭하여 닫기'}</div>
-                </motion.div>
-            )}
+            {/* 툴팁 상세 설명 패널 */}
+            <AnimatePresence>
+                {activeTooltip && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute -bottom-4 left-0 right-0 mx-4 md:mx-0 p-4 rounded-xl bg-white/10 backdrop-blur-xl border border-white/20 text-center z-20"
+                        onClick={() => setActiveTooltip(null)}
+                    >
+                        <div className="flex items-center justify-center gap-2 mb-2">
+                            <span className="text-lg">
+                                {activeTooltip === 'saju' && "📜"}
+                                {activeTooltip === 'star' && "✨"}
+                                {activeTooltip === 'tarot' && "🔮"}
+                            </span>
+                            <h4 className="text-xs font-bold text-white uppercase tracking-wide">
+                                {activeTooltip === 'saju' && (isEn ? "Saju Pillars Breakdown" : "사주 원국 분석")}
+                                {activeTooltip === 'star' && (isEn ? "Astrology Transit Flow" : "별자리 트랜짓 흐름")}
+                                {activeTooltip === 'tarot' && (isEn ? "Ziwei Palace Structure" : "자미두수 12궁 명반")}
+                            </h4>
+                        </div>
+                        <p className="text-[11px] text-white/70 leading-relaxed text-left">
+                            {activeTooltip === 'saju' && (details?.saju || (isEn ? "Detailed analysis of your birth date and time based on ancient eastern four pillars." : "생년월일시를 바탕으로 분석한 동양 정통 사주 원국과 10년 대운의 구조입니다."))}
+                            {activeTooltip === 'star' && (details?.star || (isEn ? "Planetary alignments, transits, and elemental distributions at your birth moment." : "출생 순간의 행성 정렬과 현재의 트랜짓이 가리키는 기회의 창입니다."))}
+                            {activeTooltip === 'tarot' && (details?.ziwei || (isEn ? "12-Palace destiny chart analysis based on your birth coordinates." : "출생 좌표를 바탕으로 산출된 자미두수 12궁 명반과 기회의 방향성 지표입니다."))}
+                        </p>
+                        <div className="mt-2 text-[10px] text-gold/60 text-right">{isEn ? 'Click to close' : '클릭하여 닫기'}</div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

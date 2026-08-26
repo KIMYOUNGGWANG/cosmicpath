@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { Calendar, Sparkles, ShieldAlert } from 'lucide-react';
 import type { IlwoonResult } from '@/lib/engines/saju';
 
 export interface DailyFortuneCalendarProps {
@@ -15,41 +16,41 @@ const GRADE_STYLES: Record<IlwoonResult['grade'], { bg: string; border: string; 
     border: 'border-amber-500/50',
     text: 'text-amber-300',
     badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
-    icon: '🌟',
+    icon: '대길',
   },
   길: {
     bg: 'bg-emerald-950/40 hover:bg-emerald-900/50',
     border: 'border-emerald-500/50',
     text: 'text-emerald-300',
     badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-    icon: '✨',
+    icon: '길',
   },
   중립: {
     bg: 'bg-slate-900/50 hover:bg-slate-800/60',
-    border: 'border-slate-700/60',
+    border: 'border-slate-700/50',
     text: 'text-slate-300',
     badge: 'bg-slate-800 text-slate-300 border-slate-700',
-    icon: '○',
+    icon: '평',
   },
   소흉: {
     bg: 'bg-orange-950/40 hover:bg-orange-900/50',
     border: 'border-orange-500/50',
     text: 'text-orange-300',
     badge: 'bg-orange-500/20 text-orange-300 border-orange-500/40',
-    icon: '⚡',
+    icon: '주의',
   },
   흉: {
     bg: 'bg-rose-950/40 hover:bg-rose-900/50',
     border: 'border-rose-500/50',
     text: 'text-rose-300',
     badge: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
-    icon: '⚠️',
+    icon: '경계',
   },
 };
 
 export function DailyFortuneCalendar({
   ilwoonList,
-  title = '📅 향후 30일 일운(日運) 캘린더',
+  title = '향후 30일 일운(日運) 캘린더',
   subtitle = '나의 사주 원국과 매일의 간지가 만드는 기운의 흐름을 확인하세요.',
 }: DailyFortuneCalendarProps) {
   const [selectedDay, setSelectedDay] = useState<IlwoonResult | null>(null);
@@ -158,13 +159,13 @@ export function DailyFortuneCalendar({
 
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
             {selectedDay.combineWithNatal && (
-              <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-emerald-300">
-                ✨ 사주 원국과 합(合)을 형성합니다.
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/40 bg-emerald-500/10 px-2 py-1 text-emerald-300">
+                <Sparkles size={13} /> 사주 원국과 합(合)을 형성합니다.
               </span>
             )}
             {selectedDay.clashWithNatal && (
-              <span className="inline-flex items-center gap-1 rounded-md border border-rose-500/40 bg-rose-500/10 px-2 py-1 text-rose-300">
-                ⚠️ 사주 원국과 충(沖)을 이룹니다. 신중한 선택이 필요합니다.
+              <span className="inline-flex items-center gap-1.5 rounded-md border border-rose-500/40 bg-rose-500/10 px-2 py-1 text-rose-300">
+                <ShieldAlert size={13} /> 사주 원국과 충(沖)을 이룹니다. 신중한 선택이 필요합니다.
               </span>
             )}
           </div>

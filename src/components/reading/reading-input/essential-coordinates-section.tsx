@@ -76,11 +76,11 @@ export function EssentialCoordinatesSection({
                         {isNextMoveReportEntry
                             ? (isRelationshipContactEntry
                                 ? (isEn
-                                    ? 'Birth date is required for the contact verdict. Name, birth time, city, gender, partner details, and tarot calibrate precision.'
-                                    : '연락 판정에도 생년월일은 필수입니다. 이름, 생시, 출생지, 성별, 상대 정보, 타로는 정밀도 보정 입력입니다.')
+                                    ? 'Birth date is required for the contact verdict. Name, birth time, city, gender, and partner details calibrate precision.'
+                                    : '연락 판정에도 생년월일은 필수입니다. 이름, 생시, 출생지, 성별, 상대 정보는 정밀도 보정 입력입니다.')
                                 : (isEn
-                                    ? 'Birth date is required for the first verdict. Name, birth time, city, gender, and tarot calibrate precision.'
-                                    : '첫 판정에도 생년월일은 필수입니다. 이름, 생시, 출생지, 성별, 타로는 정밀도 보정 입력입니다.'))
+                                    ? 'Birth date is required for the first verdict. Name, birth time, city, and gender calibrate precision.'
+                                    : '첫 판정에도 생년월일은 필수입니다. 이름, 생시, 출생지, 성별은 정밀도 보정 입력입니다.'))
                             : (isEn
                                 ? 'For saju, astrology timing, numerology, and true-solar-time calibration, the first result can use your name, birth date, birth city, birth time, gender, and calendar.'
                                 : '사주, 점성 타이밍, 수비학과 진태양시 보정을 함께 쓰기 때문에 이름, 생년월일, 출생 도시, 태어난 시간, 성별, 양력/음력을 함께 받을 수 있습니다.')}
@@ -267,11 +267,11 @@ export function EssentialCoordinatesSection({
                         {isNextMoveReportEntry
                             ? (isRelationshipContactEntry
                                 ? (isEn
-                                    ? 'The free contact verdict needs your question and birth date first. Name, time, city, gender, partner details, and tarot calibrate precision.'
-                                    : '무료 연락 판정은 질문과 생년월일을 먼저 필요로 합니다. 이름, 생시, 출생지, 성별, 상대 정보, 타로는 정밀도 보정 입력입니다.')
+                                    ? 'The free contact verdict needs your question and birth date first. Name, time, city, gender, and partner details calibrate precision.'
+                                    : '무료 연락 판정은 질문과 생년월일을 먼저 필요로 합니다. 이름, 생시, 출생지, 성별, 상대 정보는 정밀도 보정 입력입니다.')
                                 : (isEn
-                                    ? 'The free Decision Note needs your question and birth date first. Name, time, city, gender, and tarot calibrate precision.'
-                                    : '무료 Decision Note는 질문과 생년월일을 먼저 필요로 합니다. 이름, 생시, 출생지, 성별, 타로는 정밀도 보정 입력입니다.'))
+                                    ? 'The free Decision Note needs your question and birth date first. Name, time, city, and gender calibrate precision.'
+                                    : '무료 Decision Note는 질문과 생년월일을 먼저 필요로 합니다. 이름, 생시, 출생지, 성별은 정밀도 보정 입력입니다.'))
                             : (isEn
                                 ? 'The first result now uses the quality-critical inputs up front: name for numerology, birth city for calibration, and the core saju fields for the initial read.'
                                 : '무료 결과도 이제 이름, 출생 도시, 핵심 사주 입력을 먼저 반영합니다. 수비학과 보정 정확도를 초반부터 같이 잡는 구조입니다.')}

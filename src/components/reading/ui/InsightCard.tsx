@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, ShieldAlert, Lightbulb, Sparkles } from 'lucide-react';
 
 interface InsightCardProps {
     title: string;
@@ -65,7 +65,7 @@ export function InsightCard({ title, icon: Icon, score, tag, children, className
             </div>
 
             {/* Content Body */}
-            <div className="prose prose-invert prose-p:text-gray-300 prose-p:leading-relaxed prose-sm max-w-none">
+            <div className="prose prose-invert prose-p:text-gray-300 prose-p:leading-relaxed prose-sm max-w-none break-keep">
                 {children}
             </div>
 
@@ -79,18 +79,24 @@ export function InsightCard({ title, icon: Icon, score, tag, children, className
 export function InsightHighlight({ children, type = 'default' }: { children: React.ReactNode, type?: 'default' | 'warning' | 'tip' }) {
     const styles = {
         default: "bg-indigo-500/10 border-indigo-500/20 text-indigo-200",
-        warning: "bg-red-500/10 border-red-500/20 text-red-200",
+        warning: "bg-rose-500/10 border-rose-500/20 text-rose-200",
         tip: "bg-emerald-500/10 border-emerald-500/20 text-emerald-200"
     };
 
     return (
         <div className={cn(
-            "mt-4 p-4 rounded-xl border flex gap-3 text-sm leading-relaxed",
+            "mt-4 p-4 rounded-xl border flex gap-3 text-sm leading-relaxed items-start",
             styles[type]
         )}>
-            <span className="text-lg">
-                {type === 'warning' ? '⚠️' : type === 'tip' ? '💡' : '✨'}
-            </span>
+            <div className="mt-0.5 shrink-0">
+                {type === 'warning' ? (
+                    <ShieldAlert size={18} className="text-rose-400" />
+                ) : type === 'tip' ? (
+                    <Lightbulb size={18} className="text-emerald-400" />
+                ) : (
+                    <Sparkles size={18} className="text-indigo-400" />
+                )}
+            </div>
             <div className="flex-1">
                 {children}
             </div>

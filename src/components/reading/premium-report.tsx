@@ -6,10 +6,9 @@ import { motion } from 'framer-motion';
 import { CompatibilityHeader } from './CompatibilityHeader';
 import { useRef, useState, useEffect } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { Download } from 'lucide-react';
+import { Download, Sparkles, Printer } from 'lucide-react';
 import * as analytics from '@/lib/client-analytics';
 import { PrintLayout } from './PrintLayout';
-import { TarotDetailModal } from './tarot-detail-modal';
 import { ShareCard } from './share-card';
 import { BlindSpotTeaser } from './blind-spot-teaser';
 import { CaseFileReport } from './case-file-report';
@@ -22,8 +21,45 @@ import { PaymentModal } from '../payment/PaymentModal';
 import { normalizePriceLabel, READING_PRODUCT } from '@/lib/payment/payment-config';
 import { GhostDetectorSection } from '../dashboard/GhostDetectorSection';
 import type { SajuResult } from '@/lib/engines/saju';
-import { HeaderSection } from './premium-report-sections';
+import {
+    HeaderSection,
+    CoreAnalysisSection,
+    AccordionSection,
+    AstroDeepSection,
+    FortuneFlowSection,
+    LifeAreasSection,
+    SpecialAnalysisSection,
+    DateSelectionSection,
+    ActionPlanSection,
+    NumerologySection,
+    PastLifeSection,
+    ShadowTransformationSection,
+    WeeklyHeatmapSection,
+    Compatibility4DSection,
+} from './premium-report-sections';
+import dynamic from 'next/dynamic';
+import { ZiweiChartComponent } from './ziwei-chart';
+import { ExecutiveSummaryDashboard } from './ExecutiveSummaryDashboard';
+import { ReportSidebarNav } from './ReportSidebarNav';
+import { calculateZiweiChart, type ZiweiChartResult } from '@/lib/engines/ziwei';
+import { calculateShadowTransformations, type ShadowTransformationResult } from '@/lib/engines/saju-transformation';
+import { calculateWeeklyTimingHeatmap, type YearHeatmapResult } from '@/lib/engines/timing-heatmap';
+import { calculate4DCompatibility, type Compatibility4DResult } from '@/lib/engines/compatibility-matrix';
+import { calculateThaiAstrology, type ThaiAstrologyResult } from '@/lib/engines/thai-astrology';
+import { ThaiAstrologySection } from './ThaiAstrologySection';
+import { ExecutiveChapterBar, type ChapterKey } from './ExecutiveChapterBar';
 import type { ThreeLayerConvergenceDiagnosis } from '@/lib/ai/three-layer-synthesis';
+
+const ChatInterface = dynamic(
+    () => import('@/components/oracle-chat/ChatInterface').then((mod) => mod.ChatInterface),
+    {
+        loading: () => (
+            <div className="h-48 w-full animate-pulse rounded-2xl bg-white/5 border border-white/10 p-6 flex items-center justify-center text-white/40 text-xs">
+                오라클 1:1 대화 인터페이스를 로드하는 중...
+            </div>
+        ),
+    }
+);
 
 // 새로운 Premium Report 타입 (기존 CosmicReport 대체)
 export interface PremiumReportData {
@@ -230,6 +266,23 @@ export interface PremiumReportData {
             meaning: string;
             saju_connection: string;
         };
+        personal_year?: {
+            year?: number;
+            number?: number;
+            theme: string;
+            keyword?: string;
+            action_tag?: string;
+            action_code?: string;
+            tactical_advice?: string;
+        };
+        decision_strategy?: {
+            energy_type?: string;
+            strategy?: string;
+            authority?: string;
+            wedge_tactic?: string;
+            optimal_timing?: string;
+            blindspot_risk?: string;
+        };
         lucky_numbers: number[];
         lucky_day_advice: string;
     };
@@ -249,6 +302,7 @@ export interface PremiumReportData {
 interface PremiumReportProps {
     report: PremiumReportData;
     metadata?: {
+        readingId?: string;
         tarot?: {
             name: string;
             isReversed: boolean;
@@ -260,7 +314,8 @@ interface PremiumReportProps {
         radarScores?: {
             saju: number;
             astrology: number;
-            tarot: number;
+            ziwei?: number;
+            tarot?: number;
         };
         precisionMetadata?: {
             inputDate: string;
@@ -326,54 +381,79 @@ function isSajuResult(value: unknown): value is SajuResult {
 
 export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock, isPremium, price, isLoading, onRetry, userQuestion }: PremiumReportProps) {
     const isEn = language === 'en';
-    const [selectedCardIdx, setSelectedCardIdx] = useState<number | null>(null);
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-
-    // PDF Printing Logic
+    const [activeChapter, setActiveChapter] = useState<ChapterKey>('brief');
+    const [readingProgress, setReadingProgress] = useState(0);
     const printRef = useRef<HTMLDivElement>(null);
+    const metadataWithReading = metadata as MetadataWithReadingData | undefined;
+    const readingData = metadataWithReading?.readingData;
+    const sajuResult = isSajuResult(metadata?.sajuResult) ? metadata.sajuResult : null;
+    const userName = (readingData?.name as string | undefined) || (report.summary?.title ? report.summary.title.split(' ')[0] : '귀하');
+
+    // Track scroll progress for executive chapter bar
+    useEffect(() => {
+        const handleScroll = () => {
+            const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            if (height > 0) {
+                const scrolled = (winScroll / height) * 100;
+                setReadingProgress(Math.min(100, Math.max(0, Math.round(scrolled))));
+            }
+        };
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    const isProgrammaticScrollRef = useRef(false);
+    const scrollTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+    const handleChapterSelect = (nextChapter: ChapterKey) => {
+        setActiveChapter(nextChapter);
+
+        // Temporarily lock scroll-spy while smooth scrolling to target
+        isProgrammaticScrollRef.current = true;
+        if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+        scrollTimerRef.current = setTimeout(() => {
+            isProgrammaticScrollRef.current = false;
+        }, 1200);
+
+        const chapterMap: Record<ChapterKey, string> = {
+            brief: 'domain-brief',
+            timing: 'domain-timing',
+            intelligence: 'domain-intelligence',
+            life: 'domain-life',
+        };
+        const targetId = chapterMap[nextChapter];
+        const target = (targetId ? document.getElementById(targetId) : null) ||
+                       (nextChapter === 'timing' ? (document.getElementById('section-flow') || document.getElementById('section-weekly-heatmap') || document.getElementById('section-thai-astrology')) : null) ||
+                       (nextChapter === 'intelligence' ? (document.getElementById('section-ziwei') || document.getElementById('section-core')) : null) ||
+                       document.getElementById('dossier-main-container');
+
+        if (target) {
+            // 135px offset compensates for top global navbar (~56px) + sticky chapter radar bar (~60px) + padding
+            const headerOffset = 135;
+            const elementPosition = target.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+            window.scrollTo({
+                top: Math.max(0, offsetPosition),
+                behavior: 'smooth',
+            });
+        }
+    };
+
+    const handleChapterInView = (nextChapter: ChapterKey) => {
+        if (isProgrammaticScrollRef.current) return;
+        setActiveChapter(nextChapter);
+    };
+
     const handlePrint = useReactToPrint({
         contentRef: printRef,
-        documentTitle: `CosmicPath_Report_${report.summary.title.replace(/\s+/g, '_')}`,
+        documentTitle: `CosmicPath_Decision_Report_${report.summary.title || 'VIP'}`,
     });
 
-    // Dynamic price from prop or fetched from API
-    const resolvedPriceProp = normalizePriceLabel(price);
-    const [fetchedPrice, setFetchedPrice] = useState<string | null>(null);
-    const dynamicPrice = resolvedPriceProp || normalizePriceLabel(fetchedPrice);
-    const originalPrice = '$19.90';
-    const displayPrice = dynamicPrice || (isEn ? 'Shown at checkout' : '결제 단계에서 확인');
+    const displayPrice = normalizePriceLabel(price || (isEn ? '$3.99' : '₩4,900')) || (isEn ? '$3.99' : '₩4,900');
 
-    // Fetch price from Stripe when component mounts (if not provided via prop)
-    useEffect(() => {
-        if (resolvedPriceProp) return;
-
-        let isMounted = true;
-
-        fetch(`/api/payment/price?productId=${READING_PRODUCT.productId}`, { cache: 'no-store' })
-            .then(async (response) => {
-                const data = await response.json();
-
-                if (
-                    isMounted &&
-                    response.ok &&
-                    data?.metadata?.fallback !== 'true' &&
-                    normalizePriceLabel(data.formattedPrice)
-                ) {
-                    setFetchedPrice(data.formattedPrice);
-                }
-            })
-            .catch(err => console.error('Failed to fetch price:', err));
-
-        return () => {
-            isMounted = false;
-        };
-    }, [resolvedPriceProp]);
-
-    const handleUnlock = (source?: string) => {
-        const contextValue = typeof source === 'string' ? source : 'generic_locked_item';
-        analytics.trackEvent('paywall_item_clicked', { context: contextValue });
-        analytics.trackEvent('checkout_start', { step: 'click_cta' });
-        
+    const handleUnlock = () => {
         if (onUnlock) {
             onUnlock();
         } else {
@@ -381,30 +461,108 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
         }
     };
 
-    // Phase B: Paywall View Tracking
-    useEffect(() => {
-        if (!isPremium) {
-            analytics.trackEvent('paywall_view', { step: 'rendered' });
+    // Extract Birth Info from precision metadata or readingData
+    const birthDateStr = (metadata?.precisionMetadata?.inputDate || (readingData?.birthDate as string)) || '';
+    const birthTimeStr = (metadata?.precisionMetadata?.inputTime || (readingData?.birthTime as string)) || '12:00';
+    const birthGender = ((readingData?.gender as string) || 'male') as 'male' | 'female';
+
+    // Deterministic Calculations
+    let computedZiweiChart: ZiweiChartResult | null = null;
+    if (birthDateStr) {
+        try {
+            const birthDateObj = new Date(birthDateStr);
+            const hour = parseInt(birthTimeStr.split(':')[0] || '12', 10);
+            if (!isNaN(birthDateObj.getTime())) {
+                computedZiweiChart = calculateZiweiChart(
+                    birthDateObj,
+                    isNaN(hour) ? 12 : hour,
+                    birthGender
+                );
+            }
+        } catch (e) {
+            console.error('Failed to compute Ziwei chart:', e);
         }
-    }, [isPremium]);
+    }
 
-    // Dynamic Teaser Hooks
-    const readingData = metadata?.readingData;
-    const userName = readingData?.name || '';
-    const sajuResult = isSajuResult(metadata?.sajuResult) ? metadata.sajuResult : null;
+    let computedShadowTransformations: ShadowTransformationResult | null = null;
+    if (sajuResult) {
+        try {
+            computedShadowTransformations = calculateShadowTransformations(sajuResult);
+        } catch (e) {
+            console.error('Failed to compute shadow transformations:', e);
+        }
+    }
 
-    const tarotCards = metadata?.tarot || [];
-    // Auth & Save Logic
-    const { status } = useSession();
-    const { openLoginModal } = useLoginModal();
+    let computedWeeklyHeatmap: YearHeatmapResult | null = null;
+    if (sajuResult) {
+        try {
+            const currentYear = new Date().getFullYear();
+            computedWeeklyHeatmap = calculateWeeklyTimingHeatmap(sajuResult, currentYear);
+        } catch (e) {
+            console.error('Failed to compute weekly heatmap:', e);
+        }
+    }
+
+    let computedCompatibility4D: Compatibility4DResult | null = null;
+    if (sajuResult) {
+        try {
+            computedCompatibility4D = calculate4DCompatibility(sajuResult);
+        } catch (e) {
+            console.error('Failed to compute 4D compatibility:', e);
+        }
+    }
+
+    // Thai Royal Astrology & Maha Thaksa 108
+    let computedThaiAstrology: ThaiAstrologyResult | null = null;
+    if (birthDateStr) {
+        try {
+            computedThaiAstrology = calculateThaiAstrology({
+                birthDate: birthDateStr,
+                birthTime: birthTimeStr,
+                tropicalSunSign: 4,
+                tropicalMoonSign: 9,
+                tropicalAscendantSign: 7,
+            });
+        } catch (e) {
+            console.error('Failed to compute Thai astrology:', e);
+        }
+    }
+
+    const scrollToSection = (id: string) => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
+    const readingId = metadata?.readingId || shareUrl?.split('/').pop();
+
+    const availableSectionIds = [
+        'section-executive',
+        computedZiweiChart ? 'section-ziwei' : '',
+        report.core_analysis ? 'section-core' : '',
+        computedShadowTransformations ? 'section-shadow-transformation' : '',
+        report.saju_sections && report.saju_sections.length > 0 ? 'section-saju' : '',
+        report.astro_deep ? 'section-astro' : '',
+        computedThaiAstrology ? 'section-thai-astrology' : '',
+        report.fortune_flow ? 'section-flow' : '',
+        computedWeeklyHeatmap ? 'section-weekly-heatmap' : '',
+        report.life_areas ? 'section-life-areas' : '',
+        report.special_analysis ? 'section-special' : '',
+        computedCompatibility4D ? 'section-compatibility-4d' : '',
+        report.date_selection ? 'section-dates' : '',
+        report.action_plan && report.action_plan.length > 0 ? 'section-action' : '',
+        report.numerology ? 'section-numerology' : '',
+        readingId ? 'section-followup-chat' : '',
+    ].filter(Boolean) as string[];
 
     return (
-        <div className={`w-full mx-auto pb-24 md:pb-32 ${isPremium ? 'max-w-screen-2xl px-4 lg:px-8' : 'max-w-2xl'}`}>
+        <div className={`w-full mx-auto pb-24 md:pb-32 ${isPremium ? 'max-w-7xl px-4 sm:px-6 lg:px-8' : 'max-w-3xl px-4'}`}>
             {!(isPremium && report.final_verdict) && (
                 readingData?.partnerName ? (
                     <CompatibilityHeader
-                        userName={readingData?.name || 'User'}
-                        partnerName={readingData.partnerName}
+                        userName={String(readingData?.name || 'User')}
+                        partnerName={String(readingData.partnerName)}
                         score={report.summary.trust_score * 20}
                         title={report.summary.title}
                         content={report.summary.content}
@@ -424,146 +582,325 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     ref={printRef}
                     data={report}
                     language={language}
-                    userData={{ name: report.summary.title.split(' ')[0] }} // Simplified user name extraction or pass from props
+                    userData={{ name: report.summary.title.split(' ')[0] }}
                 />
             </div>
 
+            {/* Responsive Executive Chapter Navigation Bar */}
+            {isPremium && (
+                <ExecutiveChapterBar
+                    activeChapter={activeChapter}
+                    onSelectChapter={handleChapterSelect}
+                    language={language}
+                    progress={readingProgress}
+                />
+            )}
+
+            {/* Executive Verdict & 7-Day Decision Packet */}
             <CaseFileReport
                 report={report}
                 language={language}
                 isFreeView={!isPremium}
                 isLoading={isLoading}
                 onRetry={onRetry}
-                tarotCards={tarotCards}
-                onOpenTarotCard={setSelectedCardIdx}
                 onUnlock={handleUnlock}
                 displayPrice={displayPrice}
                 personName={userName}
                 question={userQuestion}
             />
 
-            {!isPremium && (
-                <div className="mt-0 px-4 md:px-6 mb-16">
-                    <BlindSpotTeaser
-                        title={language === 'en' ? "Important Blind Spot Note" : "중요한 사각지대 메모"}
-                        previewText={language === 'en' ? "Conflicting planetary alignments suggest a meaningful risk of misreading the situation unless you review the underlying pattern." : "별자리와 타로카드 배열에서 다시 확인할 만한 오판 리스크가 보입니다."}
-                        hiddenText={language === 'en' ? "Unlock to see the full detailed reading and the decision context not shown in the preview." : "자세한 전체 결론과 점검 포인트를 보려면 잠금을 해제하세요."}
-                        language={language || 'ko'}
-                        isLocked={true}
-                        onUnlock={handleUnlock}
+            {/* Premium In-Depth Sections (Full VIP Experience with Left Sidebar) */}
+            {isPremium && (
+                <div id="dossier-main-container" className="mt-8 flex gap-8 items-start scroll-mt-28">
+                    {/* Desktop Sticky Left Sidebar Navigation */}
+                    <ReportSidebarNav
+                        language={language}
+                        onPrint={handlePrint}
+                        availableSectionIds={availableSectionIds}
+                        activeChapter={activeChapter}
+                        onSelectChapter={handleChapterSelect}
+                        onChapterInView={handleChapterInView}
                     />
+
+                    {/* Main Dossier Content */}
+                    <main className="flex-1 min-w-0 space-y-12 md:space-y-16">
+                        {/* ========================================================
+                            DOMAIN 1: VIP EXECUTIVE BRIEF & ACTION BLUEPRINT
+                        ======================================================== */}
+                        <div id="domain-brief" className="space-y-8 scroll-mt-24">
+                            {/* VIP 30-Second Executive Strategy Brief (Full-Width Hero) */}
+                            <div id="section-executive" className="scroll-mt-24">
+                                <ExecutiveSummaryDashboard
+                                    report={report}
+                                    question={userQuestion}
+                                    language={language}
+                                    sajuResult={sajuResult || undefined}
+                                    userName={userName}
+                                />
+                            </div>
+
+                            {/* Action Blueprint & Action Checklist */}
+                            {report.action_plan && report.action_plan.length > 0 && (
+                                <div id="section-action" className="scroll-mt-24">
+                                    <ActionPlanSection
+                                        actionPlan={report.action_plan}
+                                        trustScore={report.summary.trust_score * 20}
+                                        language={language}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Super Days Calendar & Timing Matrix */}
+                            {report.date_selection && (
+                                <div id="section-dates" className="scroll-mt-24">
+                                    <DateSelectionSection
+                                        data={report.date_selection}
+                                        language={language}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Ghost Detector Bonus Section */}
+                            {sajuResult && (
+                                <div>
+                                    <GhostDetectorSection sajuResult={sajuResult} userName={userName} />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* ========================================================
+                            DOMAIN 2: TIMING & FORTUNE ROADMAP
+                        ======================================================== */}
+                        <div id="domain-timing" className="space-y-8 pt-6 border-t border-[#c8a84d]/20 scroll-mt-24">
+                            <div className="flex items-center gap-3">
+                                <div className="h-2 w-2 rounded-full bg-[#c8a84d]" />
+                                <h3 className="text-sm font-mono uppercase tracking-widest text-[#e6ca7d] font-bold">
+                                    {isEn ? 'DOMAIN II • TIMING & FORTUNE ROADMAP' : '제2영역 • 운세 및 타이밍 로드맵'}
+                                </h3>
+                            </div>
+
+                            {/* 12-Month Fortune Flow */}
+                            {report.fortune_flow && (
+                                <div id="section-flow" className="scroll-mt-24">
+                                    <FortuneFlowSection
+                                        data={report.fortune_flow}
+                                        language={language}
+                                    />
+                                </div>
+                            )}
+
+                            {/* 48-Week Strategic Heatmap */}
+                            {computedWeeklyHeatmap && (
+                                <div id="section-weekly-heatmap" className="scroll-mt-24">
+                                    <WeeklyHeatmapSection
+                                        data={computedWeeklyHeatmap}
+                                        language={language}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Thai Royal Astrology & Maha Thaksa 108 */}
+                            {computedThaiAstrology && (
+                                <div id="section-thai-astrology" className="scroll-mt-24">
+                                    <ThaiAstrologySection
+                                        data={computedThaiAstrology}
+                                        language={language}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* ========================================================
+                            DOMAIN 3: 5-ENGINE DEEP INTELLIGENCE
+                        ======================================================== */}
+                        <div id="domain-intelligence" className="space-y-8 pt-6 border-t border-[#c8a84d]/20 scroll-mt-24">
+                            <div className="flex items-center gap-3">
+                                <div className="h-2 w-2 rounded-full bg-[#c8a84d]" />
+                                <h3 className="text-sm font-mono uppercase tracking-widest text-[#e6ca7d] font-bold">
+                                    {isEn ? 'DOMAIN III • 5-ENGINE DEEP INTELLIGENCE' : '제3영역 • 5대 엔진 심층 명반'}
+                                </h3>
+                            </div>
+
+                            {/* Ziwei 12 Palaces Chart */}
+                            {computedZiweiChart && (
+                                <div id="section-ziwei" className="scroll-mt-24">
+                                    <ZiweiChartComponent chart={computedZiweiChart} />
+                                </div>
+                            )}
+
+                            {/* Core Saju 5-Elements Harmony */}
+                            {report.core_analysis && (
+                                <div id="section-core" className="scroll-mt-24">
+                                    <CoreAnalysisSection
+                                        data={report.core_analysis}
+                                        sajuData={sajuResult || undefined}
+                                        language={language}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Shadow Transformation Superpowers */}
+                            {computedShadowTransformations && (
+                                <div id="section-shadow-transformation" className="scroll-mt-24">
+                                    <ShadowTransformationSection
+                                        data={computedShadowTransformations}
+                                        language={language}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Classical Saju 4 Pillars Breakdown */}
+                            {report.saju_sections && report.saju_sections.length > 0 && (
+                                <div id="section-saju" className="scroll-mt-24">
+                                    <AccordionSection
+                                        title={isEn ? 'Classical Saju 4 Pillars Breakdown' : '정통 사주 4주 심층 분석'}
+                                        items={report.saju_sections}
+                                        source="saju"
+                                        language={language}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Western Astrology Deep Dive */}
+                            {report.astro_deep && (
+                                <div id="section-astro" className="scroll-mt-24">
+                                    <AstroDeepSection
+                                        data={report.astro_deep}
+                                        language={language}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Numerology 9-Year Cycle Strategy */}
+                            {report.numerology && (
+                                <div id="section-numerology" className="scroll-mt-24">
+                                    <NumerologySection
+                                        data={report.numerology}
+                                        language={language}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* ========================================================
+                            DOMAIN 4: LIFE AREAS, ALLIES & 1:1 CONSULTATION
+                        ======================================================== */}
+                        <div id="domain-life" className="space-y-8 pt-6 border-t border-[#c8a84d]/20 scroll-mt-24">
+                            <div className="flex items-center gap-3">
+                                <div className="h-2 w-2 rounded-full bg-[#c8a84d]" />
+                                <h3 className="text-sm font-mono uppercase tracking-widest text-[#e6ca7d] font-bold">
+                                    {isEn ? 'DOMAIN IV • LIFE AREAS, ALLIES & CONSULTATION' : '제4영역 • 인연, 라이프 & 1:1 오라클'}
+                                </h3>
+                            </div>
+
+                            {/* 4 Life Areas */}
+                            {report.life_areas && (
+                                <div id="section-life-areas" className="scroll-mt-24">
+                                    <LifeAreasSection
+                                        data={report.life_areas}
+                                        language={language}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Special Analysis (Lucky Assets, Directions) */}
+                            {report.special_analysis && (
+                                <div id="section-special" className="scroll-mt-24">
+                                    <SpecialAnalysisSection
+                                        data={report.special_analysis}
+                                        language={language}
+                                    />
+                                </div>
+                            )}
+
+                            {/* 4D Compatibility Matrix */}
+                            {computedCompatibility4D && (
+                                <div id="section-compatibility-4d" className="scroll-mt-24">
+                                    <Compatibility4DSection
+                                        data={computedCompatibility4D}
+                                        language={language}
+                                    />
+                                </div>
+                            )}
+
+                            {/* 1:1 Oracle Chat Follow-Up Interface */}
+                            {readingId && (
+                                <div id="section-followup-chat" className="scroll-mt-24">
+                                    <div className="rounded-3xl border border-[#c8a84d]/40 bg-gradient-to-b from-[#181611]/90 via-[#0f0e0b]/95 to-[#0a0907]/98 p-6 md:p-8 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
+                                        <div className="mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
+                                            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#c8a84d]/40 bg-[#c8a84d]/20 text-[#f5d77f]">
+                                                <Sparkles className="h-5 w-5" />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-bold text-white">
+                                                    {isEn ? '1:1 Private Oracle Consultation' : '1:1 프라이빗 오라클 심층 상담'}
+                                                </h3>
+                                                <p className="text-xs text-white/50">
+                                                    {isEn ? 'Ask follow-up questions directly to the AI Oracle Council.' : '방금 분석된 당신의 5단 융합 명반을 기반으로 추가 질문을 나눠보세요.'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <ChatInterface readingId={readingId} />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Dossier Completion & Print Banner */}
+                        <div className="rounded-2xl border border-[#c8a84d]/30 bg-gradient-to-r from-[#c8a84d]/10 via-[#181611] to-[#0c0b08] p-6 text-center shadow-lg">
+                            <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#c8a84d]/20 text-[#f5d77f] mb-3">
+                                <Sparkles className="w-5 h-5" />
+                            </div>
+                            <h4 className="text-base font-bold text-white">
+                                {isEn ? 'VIP Decision Dossier Complete' : 'VIP 의사결정 마스터 리포트 완독'}
+                            </h4>
+                            <p className="text-xs text-white/60 mt-1 max-w-md mx-auto">
+                                {isEn
+                                    ? 'All 5-engine calculations, timing heatmaps, and strategic advice are securely preserved.'
+                                    : '5대 계산 엔진과 타이밍 히트맵, 실전 전략이 모두 체계적으로 기록되었습니다.'}
+                            </p>
+                            <div className="mt-4 flex items-center justify-center gap-3">
+                                <button
+                                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                                    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs text-white font-medium transition-all"
+                                >
+                                    {isEn ? 'Back to Top ⬆' : '최상단으로 이동 ⬆'}
+                                </button>
+                                <button
+                                    onClick={handlePrint}
+                                    className="px-4 py-2 rounded-xl bg-[#c8a84d]/20 hover:bg-[#c8a84d]/30 text-xs text-[#f5d77f] font-semibold border border-[#c8a84d]/40 transition-all flex items-center gap-1.5"
+                                >
+                                    <Printer className="w-3.5 h-3.5" />
+                                    <span>{isEn ? 'Save as PDF' : 'PDF로 소장하기'}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </main>
                 </div>
             )}
 
-            {/* Ghost Detector (Viral Hook) — Personal Report */}
-            {(() => {
-                return sajuResult && (
-                    <GhostDetectorSection
-                        sajuResult={sajuResult}
-                        userName={readingData?.name || 'You'}
-                    />
-                );
-            })()}
-
-            {/* Share Panel */}
-            <section className="mt-16 px-4 md:px-6 text-center">
-                <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent mb-10" />
-
-
-                {/* Visual Share Card */}
-                <div className="mb-12">
-                    <h2 className="text-xl font-cinzel text-white mb-6">
-                        {language === 'en' ? 'Save Your Result Card' : '결과 카드 저장하기'}
-                    </h2>
-                    <p className="text-white/60 text-sm mb-8 font-light">
-                        {language === 'en'
-                            ? "Save this card for later, or share it if you want to keep the result close."
-                            : "결과 카드를 저장해두거나, 필요하면 공유해서 다시 보기 쉽게 남겨두세요."}
-                    </p>
-
-
-                    <ShareCard
-                        shareUrl={shareUrl || (typeof window !== 'undefined' ? window.location.href : '')}
-                    />
-
-                    {/* Guest: Save to Account */}
-                    {status === 'unauthenticated' && (
-                        <motion.button
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            onClick={openLoginModal}
-                            className="mt-6 px-6 py-3 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/30 rounded-full text-[#D4AF37] font-cinzel text-sm transition-all flex items-center gap-2 mx-auto"
-                        >
-                            <Download className="w-4 h-4" />
-                            <span>{language === 'en' ? 'Save Result needed' : '결과 영구 저장하기'}</span>
-                        </motion.button>
-                    )}
-                </div>
-
-                {/* Optional print action */}
-                <button
-                    onClick={() => handlePrint()}
-                    className="text-xs text-white/30 hover:text-white/60 underline decoration-white/20 underline-offset-4 transition-colors"
-                >
-                    {language === 'en' ? 'Print Full Report' : '전체 리포트 인쇄하기'}
-                </button>
-            </section>
-
-            {/* Tarot Detail Modal */}
-            {selectedCardIdx !== null && (() => {
-                const detail = report.tarot_details?.[selectedCardIdx];
-                const hasDetail = !!detail;
-
-                return (
-                    <TarotDetailModal
-                        isOpen={selectedCardIdx !== null}
-                        onClose={() => setSelectedCardIdx(null)}
-                        cardName={hasDetail ? detail.card_name : (tarotCards[selectedCardIdx]?.name || (isEn ? "Assigned Card" : "배정된 카드"))}
-                        role={hasDetail ? detail.position : (isEn ? ["Current Situation", "Challenge/Obstacle", "Solution/Outcome"][selectedCardIdx] : ["현재 상황", "장애물/과제", "해결책/결과"][selectedCardIdx])}
-                        isReversed={hasDetail ? detail.is_reversed : tarotCards[selectedCardIdx]?.isReversed}
-                        convergenceData={hasDetail ? {
-                            sajuConnection: detail.saju_connection || (isEn ? "Deep connection with your Saju chart." : "사주와 깊은 연결이 있습니다."),
-                            astroConnection: detail.interpretation,
-                            insight: detail.advice || (isEn ? "Trust your intuition." : "직관을 믿으세요."),
-                        } : (isEn ? {
-                            sajuConnection: "The current flow of your Saju luck strongly resonates with the transformative energy symbolized by this card.",
-                            astroConnection: "The driving force shown by the planetary alignment further strengthens the determination contained in the card.",
-                            insight: "This card represents the direction your intuition is currently pointing. Both Saju and Astrology strongly suggest that now is the time to act."
-                        } : {
-                            sajuConnection: "현재 사주의 운 흐름과 이 카드가 상징하는 변화의 에너지가 강하게 공명하고 있습니다.",
-                            astroConnection: "행성의 정렬 상태가 보여주는 추진력이 카드에 담긴 결단력을 더욱 강화합니다.",
-                            insight: "이 카드는 현재 당신의 직관이 가리키는 방향을 나타냅니다. 사주와 점성술 모두 지금은 행동해야 할 때임을 강력하게 시사하고 있습니다."
-                        })}
-                        language={language}
-                    />
-                );
-            })()}
-
-            {/* Stripe Payment Modal */}
-            <PaymentModal
-                isOpen={isCheckoutOpen}
-                onClose={() => setIsCheckoutOpen(false)}
-                currentReport={report}
-                metadata={metadata}
-                readingData={(metadata as MetadataWithReadingData)?.readingData}
-                price={dynamicPrice || undefined}
-                trackingSource="shared_report_unlock"
-            />
-
-            {/* Sticky CTA for Partial Result (Show if we can unlock) */}
-            {!report.fortune_flow && !isPremium && (
+            {/* Sticky Floating CTA for Free Users */}
+            {!isPremium && (
                 <StickyCTA
                     price={displayPrice}
-                    originalPrice={originalPrice}
+                    originalPrice={isEn ? '$19.99' : '₩29,000'}
                     onUnlock={handleUnlock}
                     language={language}
-                    isSuppressed={isCheckoutOpen}
                 />
             )}
 
+            {/* Modal Checkout */}
+            {isCheckoutOpen && (
+                <PaymentModal
+                    isOpen={isCheckoutOpen}
+                    onClose={() => setIsCheckoutOpen(false)}
+                    price={displayPrice}
+                    metadata={{
+                        readingId: readingId,
+                        language: language,
+                    }}
+                />
+            )}
         </div>
     );
 }
-
-// Compatibility renderer for older saved report payloads
-// 📅 Date Selection Section (NEW - P1-3)

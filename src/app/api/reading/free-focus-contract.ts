@@ -47,8 +47,14 @@ export const FreeFocusCoreSchema = z.object({
 
 export type FreeFocusPayload = z.infer<typeof FreeFocusSchema>;
 
+export function cleanActionVerdictText(text: string): string {
+  if (!text) return '';
+  return text.replace(/^(?:narrow_first|move_now|wait_with_deadline|hold_or_stop|선택지\s*좁히기|지금\s*움직이기|기한을\s*두고\s*기다리기|보류\s*또는\s*중단)\s*:\s*/iu, '').trim();
+}
+
 export function sanitizeText(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : '';
+  if (typeof value !== 'string') return '';
+  return cleanActionVerdictText(value.trim());
 }
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
@@ -103,13 +109,34 @@ function fallbackMap<T extends string>(map: Record<T, Record<FreeFocusLanguage, 
 
 function buildFallbackActionConclusion(questionIntent: OracleQuestionIntent, language: FreeFocusLanguage): string {
   return fallbackMap({
-    general: { ko: '선택지 축소: 지금은 감정 반응보다 패턴을 먼저 읽고, 이번 주 안에 기준 3개로 다음 한 수를 정리하세요.', en: 'Narrow the option: read the pattern before reacting emotionally, then define three decision criteria this week.' },
-    compatibility: { ko: '지금 움직여도 됨: 상대를 바꾸려 하기보다 이번 주 안에 소통 방식부터 작게 조정하세요.', en: 'Move now: instead of trying to change the other person, adjust one communication pattern this week.' },
-    reunion: { ko: '기다릴 것: 재회를 서두르기보다 이번 달에는 흐름을 안정시키고 반응 신호를 확인하세요.', en: 'Wait: instead of rushing reunion, stabilize the flow and confirm response signals this month.' },
-    wealth: { ko: '아직 진행 금지: 확장보다 이번 달 현금 흐름과 손실 리스크를 먼저 정리하세요.', en: 'Do not proceed yet: prioritize cash flow and downside control this month before expansion.' },
-    timing: { ko: '선택지 축소: 지금은 밀어붙이기보다 이번 주에 움직일 일과 기다릴 일을 분리하세요.', en: 'Narrow the option: separate what to move on and what to wait on this week before pushing ahead.' },
-    career: { ko: '기다릴 것: 결정을 서두르기보다 이번 달 커리어 신호를 확인하고 준비를 정리하세요.', en: 'Wait: before making the career decision, confirm the signals and tighten your preparation this month.' },
-    business: { ko: '아직 진행 금지: 확장보다 이번 주 병목과 수익 구조부터 먼저 검증하세요.', en: 'Do not proceed yet: validate the bottleneck and revenue structure this week before expanding.' },
+    general: {
+      ko: '단도직입 판정: 여러 갈래로 에너지를 분산시키지 마십시오. 당신의 명식은 잔가지를 쳐내고 단 하나의 핵심 킬러 무기에 집중할 때 비로소 운이 폭발합니다. 불필요한 일들을 정리하고 주도권을 잡으십시오.',
+      en: 'Direct Verdict: Stop scattering your energy across too many fronts. Your chart unlocks its highest breakthrough only when you eliminate distractions and focus on one single core weapon.',
+    },
+    compatibility: {
+      ko: '단도직입 판정: 상대를 억지로 바꾸려 하거나 참기만 하지 마십시오. 당신의 명식은 선을 넘는 순간 한 번에 관계를 끊는 패턴이 있으니, 감정 대신 명확한 경계 기준 1가지를 먼저 제시하십시오.',
+      en: 'Direct Verdict: Do not try to force change or swallow your frustration. State one clear, calm boundary now before resentment triggers an abrupt detachment.',
+    },
+    reunion: {
+      ko: '단도직입 판정: 지금 조급하게 장문의 연락을 보내면 상대의 방어기제만 자극합니다. 이번 달은 침묵으로 흐름을 반전시키고, 상대 쪽에서 신호가 올 때까지 내 축을 먼저 세우십시오.',
+      en: 'Direct Verdict: Rushing to send an emotional message now will only trigger defensiveness. Hold your ground with calm silence this month until the reaction signals shift in your favor.',
+    },
+    wealth: {
+      ko: '단도직입 판정: 무리한 분산 투자나 충동적 확장은 손실로 이어집니다. 당신의 차트는 현재 현금흐름 방어가 최우선이며, 하반기 골든 윈도우 전까지 새 판을 벌리지 말고 지출 누수를 먼저 막으십시오.',
+      en: 'Direct Verdict: Premature expansion or speculative risk will trigger unnecessary leaks. Prioritize cash flow defense now and eliminate financial leaks before the upcoming golden window.',
+    },
+    timing: {
+      ko: '단도직입 판정: 지금 억지로 결과를 밀어붙일 때가 아닙니다. 1~2개월 뒤 맞이할 대형 기회의 창(골든타임)을 위해 리소스를 비축하고, 이번 달은 내실을 다지는 전략적 대기를 택하십시오.',
+      en: 'Direct Verdict: Do not force an outcome prematurely. Conserve your firepower and build leverage now to seize the massive timing window opening over the next 1-2 months.',
+    },
+    career: {
+      ko: '단도직입 판정: 감정적인 즉시 퇴사나 섣부른 이직은 불리합니다. 당신의 차트에서 하반기 9~10월에 훨씬 유리한 제안과 협상 테이블이 열리니, 지금은 포트폴리오를 날카롭게 다듬으십시오.',
+      en: 'Direct Verdict: Do not make an impulsive exit out of frustration. A far stronger negotiation window opens in Q3-Q4; spend this period sharpening your portfolio and leverage.',
+    },
+    business: {
+      ko: '단도직입 판정: 외형 확장이나 무리한 마케팅 집행을 멈추십시오. 현재 구조에서 가장 새어나가는 현금 누수 병목 1개를 먼저 틀어막지 않으면 성장이 밑 빠진 독이 됩니다.',
+      en: 'Direct Verdict: Pause outward expansion and excessive spend. Validate and fix the single biggest leak in your operational funnel before attempting to scale.',
+    },
   }, questionIntent, language);
 }
 

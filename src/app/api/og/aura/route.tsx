@@ -38,7 +38,7 @@ const VARIANT_COPY: Record<
         spectrumLabel: 'Chemistry Spectrum',
         defaultName: 'Cosmic Compatibility',
         defaultCatchphrase:
-            'Share a compatibility reading built from Saju, astrology, and tarot.',
+            'Share a compatibility reading built from Saju, astrology, and numerology.',
     },
 };
 

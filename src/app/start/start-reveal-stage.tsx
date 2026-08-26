@@ -38,16 +38,16 @@ export function StartRevealStage(props: StartRevealStageProps) {
     >
       <div className="text-center mb-12">
         <h2 className="text-2xl md:text-3xl font-cinzel text-starlight mb-4">
-          {props.language === 'en' ? 'Your Note Is Ready' : '정리할 준비가 끝났습니다'}
+          {props.language === 'en' ? 'Your Destiny Analysis Is Ready' : '운명 분석 및 궤도 정렬 완료'}
         </h2>
         <p className="text-acc-gold/80 text-sm tracking-widest uppercase">
-          {props.language === 'en' ? 'Tap to unseal your first direction' : '터치해서 첫 방향의 봉인을 풀어보세요'}
+          {props.language === 'en' ? 'Tap to unseal your core cosmic verdict' : '터치하여 사주와 점성술이 밝혀낸 핵심 운명 코드를 봉인 해제하세요'}
         </p>
       </div>
 
       <RevealContainer
         onReveal={props.onReveal}
-        title={props.language === 'en' ? 'UNSEAL YOUR PATH' : '당신의 길을 열어보세요'}
+        title={props.language === 'en' ? 'UNSEAL YOUR DESTINY' : '운명 봉인 해제'}
       >
         <div className="flex h-full w-full items-center justify-center bg-[#0A0A0C] p-4">
           <OracleCalibrationPanel

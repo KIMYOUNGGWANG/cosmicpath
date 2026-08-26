@@ -1,6 +1,6 @@
 # Divination Source Registry
 
-This registry is the first product-owned knowledge contract for premium reports. It does not claim that the product can already perform expert Saju, astrology, or Tarot interpretation. It defines which observed sources can and cannot be used while later waves build claim-level corpora, rule maps, fixtures, and reviewer gates.
+This registry is the first product-owned knowledge contract for premium reports. It defines which observed sources can and cannot be used across Saju, astrology, Ziwei Doushu, Thai astrology, and Numerology interpretation while building claim-level corpora, rule maps, fixtures, and reviewer gates.
 
 ## Rule
 
@@ -23,10 +23,7 @@ Finding a source on the web is not enough. Calendar APIs, search portals, catalo
 - Korean discovery portals such as RISS, KCI, National Library, and OAK: internal discovery only. Search/catalog presence does not prove doctrine quality, rights, or paid-report authority.
 - Classical Myeongli candidates: internal/citation context only until edition, collation, commentary lineage, Korean terminology, rights, and domain review pass.
 - Ptolemy/Tetrabiblos candidate: classical astrology context only; it cannot justify modern outer planets or modern psychological astrology.
-- Waite `Pictorial Key`: Tarot text candidate only; it never grants image rights.
-- First rights-safe corpus slice: exact locators are stored for the verified public-text candidates, while Sacred Texts remains index-only and separate from Waite text authority and all image-rights questions.
-- Commons RWS image candidates: image discovery only until exact file-level license and derivative review pass.
-- Product safety policy and report grounding contract: product constraints only. They can restrict or structure claims, but cannot prove Saju, astrology, or Tarot doctrine.
+- Product safety policy and report grounding contract: product constraints only. They can restrict or structure claims, but cannot prove Saju, astrology, or Ziwei doctrine.
 
 ## Runtime Boundaries
 

@@ -16,7 +16,7 @@ import {
     getShinSalSummary,
 } from '../../engines/saju';
 
-import { analyzePatterns, PatternAnalysisResult } from '../../engines/saju-patterns';
+import { analyzePatterns } from '../../engines/saju-patterns';
 
 export const SAJU_RULES = {
     version: '2.0.0',
@@ -134,7 +134,7 @@ export const SAJU_RULES = {
             water: ['Cancer', 'Scorpio', 'Pisces'],
             wood: ['Aries', 'Leo']
         },
-        conflictResolution: '사주 해석이 우선, 점성술로 시기 보완, 타로로 현재 에너지 확인'
+        conflictResolution: '사주 해석이 우선, 점성술로 시기 보완, 자미두수와 수비학으로 주기와 전략 확인'
     }
 };
 
@@ -276,7 +276,7 @@ export function formatSajuForPrompt(saju: SajuResult, lang: 'ko' | 'en' = 'ko'):
         // 대운 흐름 요약 (처음 5개)
         lines.push('');
         lines.push(lang === 'ko' ? '대운 흐름 (앞으로 50년):' : 'Daewoon Flow (Next 50 years):');
-        saju.daeun.sequence.slice(0, 5).forEach((d, i) => {
+        saju.daeun.sequence.slice(0, 5).forEach((d) => {
             const marker = saju.daeun?.currentDaeun?.stem === d.stem && saju.daeun?.currentDaeun?.branch === d.branch ? '◀' : '';
             lines.push(`  ${d.startAge}~${d.endAge}${lang === 'ko' ? '세' : 'yo'}: ${d.stem}${d.branch} (${d.tenGod}) ${marker}`);
         });
@@ -317,7 +317,7 @@ ${sajuContext}
 1. 위 사주 분석은 결정론적 엔진에서 계산된 정확한 데이터입니다.
 2. 격국(${saju.gyeokguk?.type || '보통격'})과 용신(${saju.enhancedYongsin?.primary ? FIVE_ELEMENTS[saju.enhancedYongsin.primary] : '미정'})을 중심으로 해석하세요.
 3. 신강/신약(${saju.enhancedYongsin?.bodyStrength || '중화'})에 따른 조언을 제공하세요.
-4. 사주는 오래 반복되는 구조와 선택 습관을 읽는 레이어이므로, 점성 타이밍과 타로 즉각 신호와 교차 검증하세요.
+4. 사주는 오래 반복되는 구조와 선택 습관을 읽는 레이어이므로, 점성 타이밍과 자미두수/수비학 데이터와 교차 검증하세요.
 ${currentDaeun ? `5. 현재 대운: ${currentDaeun.stem}${currentDaeun.branch} (${currentDaeun.startAge}~${currentDaeun.endAge}세, ${currentDaeun.tenGod}) — 답변에 자연스럽게 반영하세요.` : ''}
 ${nextDaeunInfo ? `6. 다음 대운 전환: ${nextDaeunInfo.startAge}세부터 ${nextDaeunInfo.stem}${nextDaeunInfo.branch} (${nextDaeunInfo.tenGod})` : ''}
 </SAJU_INTERPRETATION_RULES>
@@ -337,7 +337,7 @@ ${sajuContext}
 1. The above Saju analysis is accurate data calculated by a deterministic engine.
 2. Focus on Structure (${saju.gyeokguk?.type || '보통격'}) and Yongsin (${saju.enhancedYongsin?.primary || 'undetermined'}).
 3. Provide advice based on body strength (${saju.enhancedYongsin?.bodyStrength || '중화'}).
-4. Saju represents durable structure and repeating decision habits; cross-validate it with Astrology timing and Tarot's immediate signal.
+4. Saju represents durable structure and repeating decision habits; cross-validate it with Astrology timing and Ziwei/Numerology data.
 ${currentDaeun ? `5. Current Daewoon: ${currentDaeun.stem}${currentDaeun.branch} (Age ${currentDaeun.startAge}~${currentDaeun.endAge}, ${currentDaeun.tenGod}).` : ''}
 ${nextDaeunInfo ? `6. Next Daewoon transition: Age ${nextDaeunInfo.startAge} → ${nextDaeunInfo.stem}${nextDaeunInfo.branch} (${nextDaeunInfo.tenGod})` : ''}
 </SAJU_INTERPRETATION_RULES>
@@ -385,7 +385,7 @@ ${sajuContext}
 3. 신강/신약(${saju.enhancedYongsin?.bodyStrength || '중화'})에 따른 조언을 제공하세요.
 4. 발견된 패턴(길격/흉격)을 자연스럽게 통합하세요.
 5. 신살(길신/흉살)을 참조하되, 과장 없이 균형 있게 언급하세요.
-6. 사주는 오래 반복되는 구조와 선택 습관을 읽는 레이어이므로, 점성 타이밍과 타로 즉각 신호와 교차 검증하세요.
+6. 사주는 오래 반복되는 구조와 선택 습관을 읽는 레이어이므로, 점성 타이밍과 자미두수/수비학 데이터와 교차 검증하세요.
 </SAJU_INTERPRETATION_RULES>
 
 <DAEWOON_INTERPRETATION_GUIDE>
@@ -474,7 +474,7 @@ ${sajuContext}
 3. Provide advice based on body strength (${saju.enhancedYongsin?.bodyStrength || '중화'}).
 4. Naturally integrate detected patterns (positive/negative).
 5. Reference divine stars (positive/negative) with balance, without exaggeration.
-6. Saju represents durable structure and repeating decision habits, so cross-validate it with Astrology timing and Tarot's immediate signal.
+6. Saju represents durable structure and repeating decision habits, so cross-validate it with Astrology timing and Ziwei/Numerology strategic cycles.
 </SAJU_INTERPRETATION_RULES>
 
 <DAEWOON_INTERPRETATION_GUIDE>

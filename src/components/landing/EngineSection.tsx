@@ -14,11 +14,11 @@ const ORBITAL_BASE = [
 
 const DATA_NODES = [
     { id: 0, orbit: 0, icon: '命', label: '사주', color: '#7B8C9F' },
-    { id: 1, orbit: 1, icon: '時', label: '시기', color: '#D7B25D' },
-    { id: 2, orbit: 1, icon: '間', label: '간격', color: '#B77C6D' },
-    { id: 3, orbit: 2, icon: '日', label: '겉의 흐름', color: '#CDBB83' },
-    { id: 4, orbit: 2, icon: '月', label: '속의 흐름', color: '#94A3B8' },
-    { id: 5, orbit: 3, icon: '牌', label: '카드', color: '#9F8F78' },
+    { id: 1, orbit: 1, icon: '星', label: '점성술', color: '#D7B25D' },
+    { id: 2, orbit: 1, icon: '宮', label: '자미두수', color: '#B77C6D' },
+    { id: 3, orbit: 2, icon: '數', label: '수비학', color: '#CDBB83' },
+    { id: 4, orbit: 2, icon: '運', label: '10년대운', color: '#94A3B8' },
+    { id: 5, orbit: 3, icon: '時', label: '골든타임', color: '#9F8F78' },
 ];
 
 export function EngineSection() {
@@ -89,7 +89,7 @@ export function EngineSection() {
 
     // Compute actual pixel radii from current container size
     const orbitalPaths = ORBITAL_BASE.map((base) => ({
-        radius: Math.floor((orbitalSize / 2) * base.radiusFraction * 2),
+        radius: Math.floor(orbitalSize * base.radiusFraction * 2),
         duration: base.duration,
     }));
 
@@ -126,11 +126,11 @@ export function EngineSection() {
                     </span>
                     <h2 className="font-cinzel text-2xl md:text-4xl text-starlight mb-6 leading-tight">
                         한 줄 조언보다, <br className="md:hidden" />
-                        <span className="text-acc-gold">근거를 나누어 봅니다.</span>
+                        <span className="text-acc-gold">독립된 근거를 교차합니다.</span>
                     </h2>
                     <p className="text-moonlight max-w-xl mx-auto text-base md:text-lg leading-relaxed">
-                        사주, 점성, 타로는 전면 캐릭터가 아니라 판단 보조 자료입니다.<br />
-                        결론보다 먼저 어떤 근거가 같은 방향을 가리키는지 확인합니다.
+                        사주(구조), 점성술(타이밍), 자미두수(명반), 수비학(주기)을 결합합니다.<br />
+                        결론보다 먼저 어떤 천문 데이터가 같은 방향을 가리키는지 검증합니다.
                     </p>
                 </motion.div>
 
@@ -158,17 +158,14 @@ export function EngineSection() {
                         </div>
                     </motion.div>
 
-                    {/* Orbital Paths — radius now computed from container size */}
-                    {orbitalPaths.map((orbit, i) => (
+                    {/* Orbital Rings with Floating Nodes */}
+                    {orbitalPaths.map((orbit, index) => (
                         <motion.div
-                            key={i}
-                            className="absolute top-1/2 left-1/2 rounded-full border border-white/5"
+                            key={index}
+                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/[0.08]"
                             style={{
-                                width: orbit.radius * 2,
-                                height: orbit.radius * 2,
-                                marginLeft: -orbit.radius,
-                                marginTop: -orbit.radius,
-                                willChange: 'transform',
+                                width: orbit.radius,
+                                height: orbit.radius,
                             }}
                             animate={{ rotate: 360 }}
                             transition={{
@@ -177,25 +174,25 @@ export function EngineSection() {
                                 ease: 'linear',
                             }}
                         >
-                            {/* Nodes on this orbit */}
-                            {DATA_NODES.filter(n => n.orbit === i).map((node, nodeIdx) => {
-                                const nodesOnOrbit = DATA_NODES.filter(n => n.orbit === i).length;
-                                const angle = (360 / nodesOnOrbit) * nodeIdx;
+                            {/* Render Nodes on this Orbit */}
+                            {DATA_NODES.filter((n) => n.orbit === index).map((node, nodeIndex) => {
+                                const angle = (nodeIndex * (360 / DATA_NODES.filter((n) => n.orbit === index).length)) * (Math.PI / 180);
+                                const x = Math.cos(angle) * (orbit.radius / 2);
+                                const y = Math.sin(angle) * (orbit.radius / 2);
+
                                 return (
                                     <motion.div
                                         key={node.id}
-                                        className="absolute w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-xs md:text-sm font-bold border border-white/20 backdrop-blur-sm cursor-pointer group"
+                                        className="group absolute w-8 h-8 md:w-10 md:h-10 rounded-full border border-white/20 flex items-center justify-center text-xs md:text-sm font-bold shadow-lg cursor-pointer transition-all hover:scale-125 hover:border-gold"
                                         style={{
-                                            top: '50%',
-                                            left: '50%',
-                                            transform: `rotate(${angle}deg) translateX(${orbit.radius}px) rotate(-${angle}deg)`,
-                                            backgroundColor: `${node.color}20`,
+                                            left: `calc(50% + ${x}px - 16px)`,
+                                            top: `calc(50% + ${y}px - 16px)`,
+                                            backgroundColor: '#05070B',
                                             color: node.color,
-                                            boxShadow: `0 0 15px ${node.color}40`,
-                                            willChange: 'transform',
                                         }}
-                                        whileHover={{ scale: 1.2, zIndex: 50 }}
-                                        animate={{ rotate: -360 }}
+                                        animate={{
+                                            rotate: -360,
+                                        }}
                                         transition={{
                                             rotate: { duration: orbit.duration, repeat: Infinity, ease: 'linear' },
                                         }}
@@ -231,16 +228,16 @@ export function EngineSection() {
 
                     {/* Stat 2 */}
                     <div className="flex flex-col items-center p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-acc-logic/30 transition-colors">
-                        <div className="text-4xl md:text-5xl font-bold text-acc-logic mb-2 font-cinzel">3</div>
-                        <div className="text-sm font-bold text-white mb-1">근거 묶음</div>
-                        <div className="text-xs text-dim text-center">사주 + 별자리 + 카드<br />세 방향을 같이 봐요</div>
+                        <div className="text-4xl md:text-5xl font-bold text-acc-logic mb-2 font-cinzel">4</div>
+                        <div className="text-sm font-bold text-white mb-1">융합 엔진</div>
+                        <div className="text-xs text-dim text-center">사주 + 점성 + 자미두수 + 수비학<br />4대 체계를 교차 검증해요</div>
                     </div>
 
                     {/* Stat 3 */}
-                    <div className="flex flex-col items-center p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-tarot-purple/30 transition-colors">
-                        <div className="text-4xl md:text-5xl font-bold text-tarot-purple mb-2 font-cinzel">78</div>
-                        <div className="text-sm font-bold text-white mb-1">카드 기준</div>
-                        <div className="text-xs text-dim text-center">78장 기준으로 지금의 흔들림을<br />보조 근거로 봐요</div>
+                    <div className="flex flex-col items-center p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-[#c8a84d]/30 transition-colors">
+                        <div className="text-4xl md:text-5xl font-bold text-[#e6ca7d] mb-2 font-cinzel">12</div>
+                        <div className="text-sm font-bold text-white mb-1">월별 장부</div>
+                        <div className="text-xs text-dim text-center">12개월 월별 운세와 9년 주기를<br />정밀하게 산출해요</div>
                     </div>
 
                     {/* Stat 4 */}

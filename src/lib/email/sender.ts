@@ -59,25 +59,27 @@ function buildResultEmailContent(params: {
     birthInfo?: string;
     sajuSummary?: string;
     userContext?: string;
+    executiveVerdict?: string;
+    goldenTiming?: string;
 }) {
     const isEnglish = params.language === 'en';
     const subject = isEnglish
-        ? 'Your CosmicPath reading is ready'
-        : 'CosmicPath 리딩이 준비됐어요';
-    const title = isEnglish ? 'Your reading is ready' : '리딩이 준비됐어요';
+        ? 'Your CosmicPath VIP Decision Dossier is ready'
+        : 'CosmicPath VIP 결정 리포트가 도착했습니다';
+    const title = isEnglish ? 'Your VIP Decision Dossier' : 'VIP 운명 결정 리포트가 준비되었습니다';
     const subtitle = isEnglish
-        ? 'Open it now, then come back whenever you want a clearer next step.'
-        : '지금 열어보고, 다음 행동이 더 궁금할 때 다시 돌아오세요.';
-    const focusLabel = isEnglish ? 'What this reading is about' : '이번 리딩 주제';
+        ? 'Your 4-Intelligence synthesis (Saju, Western & Thai Astrology, Ziwei Doushu) is complete.'
+        : '사주·서양점성·태국왕실점성·자미두수 4대 엔진 교차 분석이 완료되었습니다.';
+    const focusLabel = isEnglish ? 'Decision Inquiry' : '의뢰하신 질문';
     const focusValue = params.userContext?.trim() || params.cleanTitle;
-    const birthLabel = isEnglish ? 'Birth details' : '생년월일 정보';
-    const birthValue = params.birthInfo?.trim() || (isEnglish ? 'Not added' : '입력되지 않음');
-    const summaryLabel = isEnglish ? 'Saju summary' : '사주 요약';
-    const summaryValue = params.sajuSummary?.trim() || (isEnglish ? 'Still being prepared' : '아직 정리되지 않았어요');
-    const buttonLabel = isEnglish ? 'Open my reading' : '내 리딩 열기';
+    const verdictLabel = isEnglish ? 'Executive Direct Verdict' : '30초 총괄 판정';
+    const verdictValue = params.executiveVerdict?.trim() || params.sajuSummary?.trim() || (isEnglish ? 'Optimal Timing Strategy Defined' : '맞춤형 타이밍 실행 전략 수립 완료');
+    const timingLabel = isEnglish ? 'Golden Timing Windows (2026)' : '2026 골든타임 행동 신호';
+    const timingValue = params.goldenTiming?.trim() || (isEnglish ? '🚀 PUSH & 🛑 DEFEND Calendar Mapped' : '🚀 PUSH(전력질주) & 🛑 DEFEND(리스크방어) 월 매핑 완료');
+    const buttonLabel = isEnglish ? 'Open Full VIP Dossier (15 Sections)' : 'VIP 15개 심층 리포트 열기';
     const backupLabel = isEnglish
-        ? 'If the button does not open, use this link:'
-        : '버튼이 열리지 않으면 아래 링크를 사용해 주세요:';
+        ? 'If the button does not open, use this direct link:'
+        : '버튼이 열리지 않으면 아래 링크로 바로 접속하세요:';
 
     return {
         subject,
@@ -90,39 +92,39 @@ function buildResultEmailContent(params: {
                 <title>${escapeHtml(subject)}</title>
             </head>
             <body style="margin:0;padding:24px;background:#08080f;color:#e5e7eb;font-family:Inter,Arial,sans-serif;">
-                <div style="max-width:560px;margin:0 auto;border:1px solid rgba(212,175,55,.18);border-radius:24px;background:#10111c;overflow:hidden;">
-                    <div style="padding:32px 28px;background:linear-gradient(180deg,rgba(212,175,55,.16),rgba(16,17,28,0));border-bottom:1px solid rgba(255,255,255,.08);">
-                        <p style="margin:0 0 10px 0;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#f4d88a;">CosmicPath</p>
-                        <h1 style="margin:0;font-size:30px;line-height:1.2;color:#ffffff;">${escapeHtml(title)}</h1>
-                        <p style="margin:14px 0 0 0;font-size:15px;line-height:1.7;color:#cbd5e1;">${escapeHtml(subtitle)}</p>
+                <div style="max-width:560px;margin:0 auto;border:1px solid rgba(212,175,55,.28);border-radius:24px;background:#10111c;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.6);">
+                    <div style="padding:32px 28px;background:linear-gradient(180deg,rgba(212,175,55,.18),rgba(16,17,28,0));border-bottom:1px solid rgba(255,255,255,.08);">
+                        <p style="margin:0 0 10px 0;font-size:12px;letter-spacing:2px;font-weight:700;text-transform:uppercase;color:#f4d88a;">CosmicPath • Decision Intelligence</p>
+                        <h1 style="margin:0;font-size:26px;line-height:1.3;color:#ffffff;font-weight:800;">${escapeHtml(title)}</h1>
+                        <p style="margin:12px 0 0 0;font-size:14px;line-height:1.6;color:#cbd5e1;">${escapeHtml(subtitle)}</p>
                     </div>
 
                     <div style="padding:28px;">
                         <div style="display:grid;gap:14px;">
-                            <div style="padding:18px;border-radius:18px;background:#15182a;border:1px solid rgba(255,255,255,.08);">
-                                <p style="margin:0 0 8px 0;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#f4d88a;">${escapeHtml(focusLabel)}</p>
-                                <p style="margin:0;font-size:15px;line-height:1.7;color:#ffffff;">${escapeHtml(focusValue)}</p>
+                            <div style="padding:16px 20px;border-radius:18px;background:#15182a;border:1px solid rgba(255,255,255,.08);">
+                                <p style="margin:0 0 6px 0;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#f4d88a;">${escapeHtml(focusLabel)}</p>
+                                <p style="margin:0;font-size:14px;line-height:1.6;color:#ffffff;font-style:italic;">&ldquo;${escapeHtml(focusValue)}&rdquo;</p>
                             </div>
-                            <div style="padding:18px;border-radius:18px;background:#15182a;border:1px solid rgba(255,255,255,.08);">
-                                <p style="margin:0 0 8px 0;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#f4d88a;">${escapeHtml(birthLabel)}</p>
-                                <p style="margin:0;font-size:15px;line-height:1.7;color:#ffffff;">${escapeHtml(birthValue)}</p>
+                            <div style="padding:18px 20px;border-radius:18px;background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(21,24,42,0.8));border:1px solid rgba(212,175,55,.3);">
+                                <p style="margin:0 0 6px 0;font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#f4d88a;">${escapeHtml(verdictLabel)}</p>
+                                <p style="margin:0;font-size:15px;line-height:1.7;color:#ffffff;font-weight:700;">${escapeHtml(verdictValue)}</p>
                             </div>
-                            <div style="padding:18px;border-radius:18px;background:#15182a;border:1px solid rgba(255,255,255,.08);">
-                                <p style="margin:0 0 8px 0;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#f4d88a;">${escapeHtml(summaryLabel)}</p>
-                                <p style="margin:0;font-size:15px;line-height:1.7;color:#ffffff;">${escapeHtml(summaryValue)}</p>
+                            <div style="padding:16px 20px;border-radius:18px;background:#15182a;border:1px solid rgba(255,255,255,.08);">
+                                <p style="margin:0 0 6px 0;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#f4d88a;">${escapeHtml(timingLabel)}</p>
+                                <p style="margin:0;font-size:14px;line-height:1.6;color:#e2e8f0;">${escapeHtml(timingValue)}</p>
                             </div>
                         </div>
 
                         <div style="margin-top:28px;text-align:center;">
-                            <a href="${escapeHtml(params.resultUrl)}" style="display:inline-block;padding:15px 24px;border-radius:14px;background:linear-gradient(135deg,#d4af37,#f4d88a);color:#08080f;text-decoration:none;font-size:16px;font-weight:800;">
+                            <a href="${escapeHtml(params.resultUrl)}" style="display:inline-block;padding:16px 28px;border-radius:16px;background:linear-gradient(135deg,#d4af37,#f4d88a);color:#08080f;text-decoration:none;font-size:15px;font-weight:800;letter-spacing:0.5px;box-shadow:0 10px 25px rgba(212,175,55,0.3);">
                                 ${escapeHtml(buttonLabel)}
                             </a>
                         </div>
                     </div>
 
-                    <div style="padding:20px 28px 28px;border-top:1px solid rgba(255,255,255,.08);">
-                        <p style="margin:0 0 8px 0;font-size:13px;line-height:1.6;color:#94a3b8;">${escapeHtml(backupLabel)}</p>
-                        <a href="${escapeHtml(params.resultUrl)}" style="color:#f4d88a;font-size:13px;line-height:1.7;word-break:break-all;text-decoration:none;">
+                    <div style="padding:20px 28px 28px;border-top:1px solid rgba(255,255,255,.08);background:#0d0e18;">
+                        <p style="margin:0 0 8px 0;font-size:12px;line-height:1.6;color:#94a3b8;">${escapeHtml(backupLabel)}</p>
+                        <a href="${escapeHtml(params.resultUrl)}" style="color:#f4d88a;font-size:12px;line-height:1.7;word-break:break-all;text-decoration:none;">
                             ${escapeHtml(params.resultUrl)}
                         </a>
                     </div>
@@ -240,6 +242,8 @@ interface SendResultEmailParams {
     birthInfo?: string;
     sajuSummary?: string;
     userContext?: string;
+    executiveVerdict?: string;
+    goldenTiming?: string;
     language?: EmailLanguage;
     accessKey?: string;
 }
@@ -251,6 +255,8 @@ export async function sendResultEmail({
     birthInfo,
     sajuSummary,
     userContext,
+    executiveVerdict,
+    goldenTiming,
     language,
     accessKey,
 }: SendResultEmailParams) {
@@ -277,6 +283,8 @@ export async function sendResultEmail({
         birthInfo,
         sajuSummary,
         userContext,
+        executiveVerdict,
+        goldenTiming,
     });
 
     try {

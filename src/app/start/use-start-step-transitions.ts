@@ -96,13 +96,14 @@ export function useStartStepTransitions(options: UseStartStepTransitionsOptions)
     localStorage.setItem(USER_LANGUAGE_STORAGE_KEY, data.language);
     saveToSessionAndBackup('pending_reading_data', JSON.stringify({ ...data, tarotCards: [] }));
     saveToSessionAndBackup('is_session_active', 'true');
-    saveToSessionAndBackup('reading_step', 'tarot');
+    saveToSessionAndBackup('reading_step', 'reveal');
     syncResultUrl(null);
     void trackQuestionStart(data, options);
     setLoadingPhase({ phase: 0, label: '' });
-    setIsLoading(false);
-    transitionToStep('tarot', 'input_submit');
+    setIsLoading(true);
+    transitionToStep('reveal', 'input_submit');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    void startReadingRef.current?.([], false, data);
   };
 
   const handleTarotComplete = (cards: TarotSelection[]) => {
@@ -130,7 +131,7 @@ export function useStartStepTransitions(options: UseStartStepTransitionsOptions)
     transitionToStep('reveal', 'tarot_complete');
     saveToSessionAndBackup('reading_step', 'reveal');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    void startReadingRef.current?.(cards);
+    void startReadingRef.current?.(cards, false, readingData || undefined);
   };
 
   const handleRevealComplete = () => {

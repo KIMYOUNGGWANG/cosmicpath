@@ -1,9 +1,16 @@
 import type { ReadingData } from '@/components/reading/reading-input';
 import type { PremiumReportData } from '@/components/reading/premium-report';
-import { MAJOR_ARCANA, type TarotCard } from '@/lib/engines/tarot';
 import type { ReadingContext } from '@/lib/ai/prompt-builder';
 
-export type TarotSelection = TarotCard;
+export type TarotSelection = {
+  id: number;
+  name: string;
+  nameEn: string;
+  keywords?: string[];
+  interpretation?: string;
+  isReversed: boolean;
+  image?: string;
+};
 
 export type PremiumReportState = Partial<PremiumReportData> & {
   summary?: PremiumReportData['summary'] & { keywords?: string[] };
@@ -30,7 +37,7 @@ export type SourceSummaryRecord = Record<string, unknown> & { summary?: string }
 export type ReadingMetadata = {
   tarot?: TarotSelection[] | SourceSummaryRecord;
   tarotCards?: TarotSelection[];
-  radarScores?: { saju: number; astrology: number; tarot: number };
+  radarScores?: { saju: number; astrology: number; ziwei?: number; tarot?: number };
   precisionMetadata?: {
     inputDate: string;
     inputTime: string;
@@ -58,7 +65,7 @@ export type PremiumReportViewMetadata = {
   readingData?: (Record<string, unknown> & { name?: string }) | undefined;
   tarot?: TarotSelection[] | undefined;
   tarotCards?: TarotSelection[] | undefined;
-  radarScores?: { saju: number; astrology: number; tarot: number } | undefined;
+  radarScores?: { saju: number; astrology: number; ziwei?: number; tarot?: number } | undefined;
   precisionMetadata?: ReadingMetadata['precisionMetadata'];
   oracleCouncil?: ReadingMetadata['oracleCouncil'];
   characterId?: string;
@@ -165,7 +172,7 @@ export function normalizeStoredTarotCards(cards: unknown): TarotSelection[] {
     return [];
   }
 
-  return cards.flatMap((card) => {
+  return cards.flatMap((card, index) => {
     if (isTarotSelection(card)) {
       return [card];
     }
@@ -174,27 +181,14 @@ export function normalizeStoredTarotCards(cards: unknown): TarotSelection[] {
       return [];
     }
 
-    const partialCard = card as { name?: string; nameEn?: string; isReversed?: boolean };
-    if (typeof partialCard.isReversed !== 'boolean') {
-      return [];
-    }
-
-    const matched = MAJOR_ARCANA.find((entry) =>
-      entry.name === partialCard.name || entry.nameEn === partialCard.nameEn || entry.name === partialCard.nameEn
-    );
-
-    if (!matched) {
-      return [];
-    }
-
+    const partialCard = card as { id?: number; name?: string; nameEn?: string; isReversed?: boolean; keywords?: string[]; interpretation?: string };
     return [{
-      id: matched.id,
-      name: matched.name,
-      nameEn: matched.nameEn,
-      keywords: [...matched.keywords],
-      interpretation: partialCard.isReversed ? matched.reversed : matched.upright,
-      isReversed: partialCard.isReversed,
-      image: matched.image,
+      id: typeof partialCard.id === 'number' ? partialCard.id : index,
+      name: partialCard.name || 'Celestial Signal',
+      nameEn: partialCard.nameEn || 'Celestial Signal',
+      keywords: Array.isArray(partialCard.keywords) ? partialCard.keywords : [],
+      interpretation: partialCard.interpretation || '',
+      isReversed: Boolean(partialCard.isReversed),
     }];
   });
 }
@@ -223,7 +217,7 @@ export function getReadingPhaseLabels(language: 'ko' | 'en', tier: 'free' | 'pre
     '',
     '질문에 맞는 가이드를 정리 중... (1/8)',
     '점성술 심층 신호를 해석 중... (2/8)',
-    '타로와 수비학 흐름을 교차 확인 중... (3/8)',
+    '자미두수와 수비학 흐름을 교차 확인 중... (3/8)',
     '사주 원국을 계산 중... (4/8)',
     '변곡점과 흐름을 읽는 중... (5/8)',
     '분야별 포인트를 정리 중... (6/8)',
@@ -234,7 +228,7 @@ export function getReadingPhaseLabels(language: 'ko' | 'en', tier: 'free' | 'pre
     '',
     'Aligning the decision lens... (1/8)',
     'Reading your deeper astrology signals... (2/8)',
-    'Cross-checking tarot and numerology... (3/8)',
+    'Cross-checking Ziwei and numerology... (3/8)',
     'Calculating your saju foundation... (4/8)',
     'Mapping the flow and turning points... (5/8)',
     'Weaving signals across life areas... (6/8)',

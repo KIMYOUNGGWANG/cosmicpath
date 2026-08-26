@@ -22,10 +22,10 @@
     "src/lib/ai/prompts/system-core.ts",
     "src/lib/ai/prompts/saju-rules.ts",
     "src/lib/ai/prompts/astro-rules.ts",
-    "src/lib/ai/prompts/tarot-rules.ts",
     "src/lib/engines/saju.ts",
     "src/lib/engines/astrology.ts",
-    "src/lib/engines/tarot.ts",
+    "src/lib/engines/thai-astrology.ts",
+    "src/lib/engines/ziwei.ts",
     "src/lib/core/conflict-resolver.ts"
   ]
 }

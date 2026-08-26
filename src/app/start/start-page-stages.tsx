@@ -16,7 +16,6 @@ import type {
 import { StartInputStage } from './start-input-stage';
 import { StartRevealStage } from './start-reveal-stage';
 import { StartResultStage } from './start-result-stage';
-import { StartTarotStage } from './start-tarot-stage';
 
 type StartPageStagesProps = {
   readonly language: 'ko' | 'en';
@@ -83,15 +82,7 @@ export function StartPageStages(props: StartPageStagesProps) {
             onSubmit={props.onInputSubmit}
           />
         )}
-        {props.step === 'tarot' && (
-          <StartTarotStage
-            language={props.language}
-            isNextMoveReportEntry={props.isNextMoveReportEntry || props.isDecisionTimingEntry}
-            isRelationshipContactEntry={props.isNextMoveReportEntry}
-            onSelect={props.onTarotComplete}
-          />
-        )}
-        {props.step === 'reveal' && (
+        {(props.step === 'tarot' || props.step === 'reveal') && (
           <StartRevealStage
             language={props.language}
             loadingPhase={props.loadingPhase}

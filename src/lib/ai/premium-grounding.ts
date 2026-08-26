@@ -122,10 +122,10 @@ function buildAstrologyAnchors(userData: UserData): readonly PremiumGroundingAnc
 }
 
 function buildTarotAnchors(userData: UserData): readonly PremiumGroundingAnchor[] {
-  return (userData.tarotCards ?? []).map((card) => anchor(
+  return (userData.tarotCards as Array<{ name?: string; isReversed?: boolean }> ?? []).map((card) => anchor(
     'tarot',
-    card.name,
-    `${card.name} ${card.isReversed ? '역방향' : '정방향'}`
+    card?.name || '',
+    `${card?.name || ''} ${card?.isReversed ? '역방향' : '정방향'}`
   ));
 }
 

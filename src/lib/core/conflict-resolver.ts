@@ -11,7 +11,7 @@ export interface MatchingResult {
     level: 'high' | 'medium' | 'low';
     matchingTags: string[];     // 2원 이상에서 일치하는 태그
     conflictingTags: string[];  // 충돌하는 태그
-    dominantSource: 'saju' | 'astrology' | 'tarot' | 'balanced';
+    dominantSource: 'saju' | 'astrology' | 'ziwei' | 'balanced';
 }
 
 // 신뢰도 결과 타입
@@ -30,9 +30,9 @@ export interface InterpretationGuide {
     radarScores: {
         saju: number;
         astrology: number;
-        tarot: number;
+        ziwei: number;
     };
-    prioritySource: 'saju' | 'astrology' | 'tarot';
+    prioritySource: 'saju' | 'astrology' | 'ziwei';
     tone: 'confident' | 'balanced' | 'exploratory';
     keyThemes: string[];
     warnings: string[];
@@ -66,10 +66,10 @@ export function analyzeTimeFrame(question: string): TimeFrame {
 /**
  * 시간 프레임에 따른 우선순위 소스 결정
  */
-export function getPrioritySource(timeFrame: TimeFrame): 'saju' | 'astrology' | 'tarot' {
+export function getPrioritySource(timeFrame: TimeFrame): 'saju' | 'astrology' | 'ziwei' {
     switch (timeFrame) {
         case 'short':
-            return 'tarot';      // 단기: 타로 우선 (직관적, 현재 상황)
+            return 'ziwei';      // 단기: 자미두수/구조 전환점 우선
         case 'medium':
             return 'astrology';  // 중기: 점성술 우선 (행성 운행)
         case 'long':
@@ -83,12 +83,12 @@ export function getPrioritySource(timeFrame: TimeFrame): 'saju' | 'astrology' | 
  * 태그 매칭 스코어 계산
  */
 export function calculateMatchingScore(tagResult: TagExtractionResult): MatchingResult {
-    const { sajuTags, astrologyTags, tarotTags, uniqueTags } = tagResult;
+    const { sajuTags, astrologyTags, ziweiTags, uniqueTags } = tagResult;
 
     // 각 소스의 태그 값을 Set으로 변환
     const sajuTagSet = new Set(sajuTags.map(t => t.value));
     const astrologyTagSet = new Set(astrologyTags.map(t => t.value));
-    const tarotTagSet = new Set(tarotTags.map(t => t.value));
+    const ziweiTagSet = new Set(ziweiTags.map(t => t.value));
 
     // 2원 이상에서 공통으로 나타나는 태그
     const matchingTags: string[] = [];
@@ -99,9 +99,9 @@ export function calculateMatchingScore(tagResult: TagExtractionResult): Matching
     uniqueTags.forEach(tag => {
         const inSaju = sajuTagSet.has(tag);
         const inAstrology = astrologyTagSet.has(tag);
-        const inTarot = tarotTagSet.has(tag);
+        const inZiwei = ziweiTagSet.has(tag);
 
-        const sourceCount = [inSaju, inAstrology, inTarot].filter(Boolean).length;
+        const sourceCount = [inSaju, inAstrology, inZiwei].filter(Boolean).length;
         sourceDepthByTag.set(tag, sourceCount);
 
         if (sourceCount >= 2) {
@@ -112,7 +112,7 @@ export function calculateMatchingScore(tagResult: TagExtractionResult): Matching
     // 충돌 태그 식별 (반대 극성)
     const polarityMap: Record<string, Tag['polarity'][]> = {};
 
-    [...sajuTags, ...astrologyTags, ...tarotTags].forEach(tag => {
+    [...sajuTags, ...astrologyTags, ...ziweiTags].forEach(tag => {
         if (!polarityMap[tag.value]) {
             polarityMap[tag.value] = [];
         }
@@ -128,14 +128,10 @@ export function calculateMatchingScore(tagResult: TagExtractionResult): Matching
         }
     });
 
-    // 매칭 스코어 계산
-    // 기존 union(uniqueTags) 분모는 교차검증이 조금만 있어도 점수를 과하게 낮췄다.
-    // 실제 체감 신뢰도에 맞추기 위해, 각 소스의 평균 태그 밀도 기준으로
-    // 2원/3원 일치 태그를 가중 합산한다.
     const averageSourceTagCount = (
         sajuTagSet.size +
         astrologyTagSet.size +
-        tarotTagSet.size
+        ziweiTagSet.size
     ) / 3;
 
     const weightedMatches = matchingTags.reduce((sum, tag) => {
@@ -147,14 +143,11 @@ export function calculateMatchingScore(tagResult: TagExtractionResult): Matching
         ? weightedMatches / averageSourceTagCount
         : 0;
 
-    // 충돌 패널티는 유지하되, 일치보다 과도하게 전체 점수를 붕괴시키지 않게 완화
     const conflictPenalty = conflictingTags.length * 0.03;
 
-    // 최종 스코어 (0-100)
     const rawScore = matchRatio * 100 - conflictPenalty * 100;
     const score = Math.max(0, Math.min(100, rawScore));
 
-    // 레벨 결정
     let level: MatchingResult['level'];
     if (score >= 70) {
         level = 'high';
@@ -164,11 +157,10 @@ export function calculateMatchingScore(tagResult: TagExtractionResult): Matching
         level = 'low';
     }
 
-    // 지배적 소스 결정
     const sourceCounts = {
         saju: sajuTags.length,
         astrology: astrologyTags.length,
-        tarot: tarotTags.length,
+        ziwei: ziweiTags.length,
     };
 
     const maxCount = Math.max(...Object.values(sourceCounts));
@@ -178,7 +170,7 @@ export function calculateMatchingScore(tagResult: TagExtractionResult): Matching
 
     const dominantSource: MatchingResult['dominantSource'] =
         dominantSources.length === 1
-            ? dominantSources[0] as 'saju' | 'astrology' | 'tarot'
+            ? dominantSources[0] as 'saju' | 'astrology' | 'ziwei'
             : 'balanced';
 
     return {
@@ -194,7 +186,7 @@ export function calculateMatchingScore(tagResult: TagExtractionResult): Matching
  * 개별 소스별 점수 계산 (Radar Chart용)
  */
 export function calculateRadarScores(tagResult: TagExtractionResult, matching: MatchingResult) {
-    const { sajuTags, astrologyTags, tarotTags } = tagResult;
+    const { sajuTags, astrologyTags, ziweiTags } = tagResult;
     const matchingSet = new Set(matching.matchingTags);
     const conflictSet = new Set(matching.conflictingTags);
 
@@ -204,7 +196,6 @@ export function calculateRadarScores(tagResult: TagExtractionResult, matching: M
         const matches = tags.filter(t => matchingSet.has(t.value)).length;
         const conflicts = tags.filter(t => conflictSet.has(t.value)).length;
 
-        // 기본 60점 + (매칭 비율 * 40) - (충돌 패널티)
         const matchRatio = matches / tags.length;
         const score = 60 + (matchRatio * 40) - (conflicts * 5);
 
@@ -214,33 +205,27 @@ export function calculateRadarScores(tagResult: TagExtractionResult, matching: M
     return {
         saju: calculateSourceScore(sajuTags),
         astrology: calculateSourceScore(astrologyTags),
-        tarot: calculateSourceScore(tarotTags),
+        ziwei: calculateSourceScore(ziweiTags),
     };
 }
 
 /**
  * 신뢰도 점수 계산
- * Confidence Score = (Tag Overlap × 0.6) + (Historical Accuracy × 0.3) + (User Feedback × 0.1)
- * MVP에서는 Tag Overlap만 사용
  */
 export function calculateConfidence(
     matching: MatchingResult,
-    historicalAccuracy: number = 0.7,  // 기본값 70%
-    userFeedback: number = 0.5         // 기본값 중립
+    historicalAccuracy: number = 0.7,
+    userFeedback: number = 0.5
 ): ConfidenceResult {
-    // MVP: Tag Overlap 위주
     const tagOverlapScore = matching.score / 100;
 
-    // 신뢰도 공식
     const rawConfidence =
         tagOverlapScore * 0.6 +
         historicalAccuracy * 0.3 +
         userFeedback * 0.1;
 
-    // 백분율 (0-100)
     const percentage = Math.round(rawConfidence * 100);
 
-    // 별점 (1-5)
     let score: number;
     let level: ConfidenceResult['level'];
     let message: string;
@@ -249,7 +234,7 @@ export function calculateConfidence(
     if (percentage >= 80) {
         score = 5;
         level = 'very_high';
-        message = '사주, 점성술, 타로가 모두 같은 방향을 가리킵니다.';
+        message = '사주, 점성술, 자미두수가 모두 같은 방향을 가리킵니다.';
         recommendation = '확신을 가지고 행동하세요.';
     } else if (percentage >= 65) {
         score = 4;
@@ -289,20 +274,12 @@ export function generateInterpretationGuide(
     tagResult: TagExtractionResult,
     question: string = ''
 ): InterpretationGuide {
-    // 매칭 분석
     const matching = calculateMatchingScore(tagResult);
-
-    // 레이더 차트 점수
     const radarScores = calculateRadarScores(tagResult, matching);
-
-    // 신뢰도 계산
     const confidence = calculateConfidence(matching);
-
-    // 시간 프레임 기반 우선순위 소스
     const timeFrame = analyzeTimeFrame(question);
     const prioritySource = getPrioritySource(timeFrame);
 
-    // 톤 결정
     let tone: InterpretationGuide['tone'];
     if (matching.level === 'high') {
         tone = 'confident';
@@ -312,11 +289,9 @@ export function generateInterpretationGuide(
         tone = 'exploratory';
     }
 
-    // 핵심 테마 추출
     const topTags = getTopTags(tagResult.allTags, 5);
     const keyThemes = topTags.map(t => t.tag);
 
-    // 경고 사항
     const warnings: string[] = [];
 
     if (matching.conflictingTags.length > 0) {
@@ -327,7 +302,6 @@ export function generateInterpretationGuide(
         warnings.push('현재 명확한 방향을 제시하기 어려운 시기입니다. 중요한 결정은 신중하게 하세요.');
     }
 
-    // 특정 부정적 태그 경고
     const cautionTags = tagResult.allTags.filter(t =>
         t.polarity === 'caution' || t.polarity === 'negative'
     );
@@ -346,18 +320,12 @@ export function generateInterpretationGuide(
     };
 }
 
-/**
- * 신뢰도 별점 렌더링 (UI용)
- */
 export function renderConfidenceStars(score: number): string {
     const filled = '⭐';
     const empty = '☆';
     return filled.repeat(score) + empty.repeat(5 - score);
 }
 
-/**
- * 매칭 레벨에 따른 색상 클래스 반환 (UI용)
- */
 export function getMatchingLevelColor(level: MatchingResult['level']): string {
     switch (level) {
         case 'high':

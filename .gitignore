@@ -76,3 +76,25 @@ relationship-contact-timing-*.png
 dev.db
 prisma/dev.db
 .agent_backup_*/
+
+# oh-my-agent runtime (local artifacts — do not commit)
+.antigravitycli/
+.agents/state/
+.agents/backup/
+.migration-backup/
+.qwen/tmp/
+
+# local agent and IDE tooling artifacts
+.codex/
+.opencode/
+.claude/
+.serena/
+.githooks/
+.vscode/
+.mcp.json
+.agents/mcp*.json
+.agents/oma-config.yaml
+.agents/runtime/
+.agents/config/
+.agents/hooks/
+.agents/agents/

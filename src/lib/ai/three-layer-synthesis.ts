@@ -29,10 +29,10 @@ export const THREE_LAYER_SOURCE_ROLES = {
     role: 'timing: current pressure, release window, situational activation',
     failureMode: 'do not use it as the whole product identity or generic horoscope copy',
   },
-  tarot: {
-    label: 'Tarot',
-    role: 'immediate signal: emotional weather, near-term risk, question-specific trigger',
-    failureMode: 'do not let tarot overwrite birth-data evidence or become the only proof',
+  ziwei: {
+    label: 'Ziwei Doushu',
+    role: 'destiny architecture: 12-palace star map, SiHua dynamics, deep personality blueprint',
+    failureMode: 'do not invent star placements or contradict calculated palace masters',
   },
 } as const satisfies Record<string, SourceRole>;
 
@@ -62,12 +62,12 @@ function buildLevelCopy(level: ConvergenceDiagnosisLevel, language: SynthesisLan
   const copy = {
     all_aligned: {
       ko: {
-        conflict: '세 원천이 같은 방향을 가리키므로 판정 강도를 높여도 됩니다.',
-        modifier: '사주 구조, 점성 타이밍, 타로의 즉각 신호가 같은 결론으로 수렴합니다.',
+        conflict: '사주 구조와 점성술 타이밍, 자미두수 배치가 같은 방향을 가리키므로 판정 확신도가 매우 높습니다.',
+        modifier: '사주 원국 구조와 점성 타이밍 및 명반이 완벽하게 일치하여 같은 결론으로 수렴합니다.',
       },
       en: {
-        conflict: 'All three sources point in the same direction, so the verdict can be direct.',
-        modifier: 'Saju structure, astrology timing, and tarot signal converge on the same decision.',
+        conflict: 'Saju structure, astrology timing, and Ziwei blueprint align in the same direction, indicating very high certainty.',
+        modifier: 'Saju structure, astrology timing, and destiny chart converge on the same decision.',
       },
     },
     two_aligned: {
@@ -114,13 +114,13 @@ export function buildThreeLayerSynthesisPromptRule(
 ): string {
   if (format === 'inline') {
     return language === 'en'
-      ? 'Three-layer synthesis: Saju is structure, astrology is timing, tarot is the immediate signal. The final verdict must say where they align, where they conflict, and what rule turns that into action.'
-      : '3단 합성 규칙: 사주는 구조, 점성은 타이밍, 타로는 즉각 신호입니다. 최종판정에서 일치점, 충돌점, 행동으로 바꾸는 판정 규칙을 반드시 말하세요.';
+      ? 'Three-layer synthesis: Saju is structure, astrology is timing, Ziwei is the destiny blueprint. The final verdict must say where they align, where they conflict, and what rule turns that into action.'
+      : '3단 합성 규칙: 사주는 구조, 점성은 타이밍, 자미두수는 운명 청사진입니다. 최종판정에서 일치점, 충돌점, 행동으로 바꾸는 판정 규칙을 반드시 말하세요.';
   }
 
   return language === 'en'
-    ? '# Three-Layer Synthesis Rule\n- Treat CosmicPath as a Saju + Astrology + Tarot cross-reading.\n- Source roles: Saju = durable structure and repeating pattern; Astrology = current timing pressure and release window; Tarot = immediate emotional/situational signal around the question.\n- Keep all three source roles active in the paid verdict.\n- The final verdict must explicitly state: shared signal, conflict note, decision rule, and verdict modifier.\n- If the three sources diverge, lower certainty and prescribe a smaller test or review boundary instead of forcing a confident prediction.'
-    : '# 3단 합성 규칙\n- CosmicPath는 사주 + 점성 + 타로 교차 리딩입니다.\n- 역할 분담: 사주 = 오래 반복되는 구조와 패턴, 점성 = 지금의 타이밍 압력과 풀리는 창, 타로 = 질문 주변의 즉각적인 감정/상황 신호.\n- 유료 최종판정에서는 세 원천 역할을 모두 살아 있게 쓰세요.\n- 최종판정은 반드시 공통 신호, 충돌 메모, 판정 규칙, 결론 보정 문장을 포함해야 합니다.\n- 세 원천이 갈라지면 확신을 낮추고, 큰 예측 대신 작은 검증이나 재검토 경계를 처방하세요.';
+    ? '# Three-Layer Synthesis Rule\n- Treat CosmicPath as a Saju + Astrology + Ziwei cross-reading.\n- Source roles: Saju = durable structure and repeating pattern; Astrology = current timing pressure and release window; Ziwei = 12-palace destiny architecture and life blueprint.\n- Keep all three source roles active in the paid verdict.\n- The final verdict must explicitly state: shared signal, conflict note, decision rule, and verdict modifier.\n- If the three sources diverge, lower certainty and prescribe a smaller test or review boundary instead of forcing a confident prediction.'
+    : '# 3단 합성 규칙\n- CosmicPath는 사주 + 점성 + 자미두수 교차 리딩입니다.\n- 역할 분담: 사주 = 오래 반복되는 구조와 패턴, 점성 = 지금의 타이밍 압력과 풀리는 창, 자미두수 = 12궁 명반과 운명 청사진.\n- 유료 최종판정에서는 세 원천 역할을 모두 살아 있게 쓰세요.\n- 최종판정은 반드시 공통 신호, 충돌 메모, 판정 규칙, 결론 보정 문장을 포함해야 합니다.\n- 세 원천이 갈라지면 확신을 낮추고, 큰 예측 대신 작은 검증이나 재검토 경계를 처방하세요.';
 }
 
 export function buildThreeLayerVerdictQualityContract(
@@ -139,8 +139,8 @@ export function buildThreeLayerVerdictQualityContract(
 - Source-role contract:
   - ${THREE_LAYER_SOURCE_ROLES.saju.label}: ${THREE_LAYER_SOURCE_ROLES.saju.role}; ${THREE_LAYER_SOURCE_ROLES.saju.failureMode}.
   - ${THREE_LAYER_SOURCE_ROLES.astrology.label}: ${THREE_LAYER_SOURCE_ROLES.astrology.role}; ${THREE_LAYER_SOURCE_ROLES.astrology.failureMode}.
-  - ${THREE_LAYER_SOURCE_ROLES.tarot.label}: ${THREE_LAYER_SOURCE_ROLES.tarot.role}; ${THREE_LAYER_SOURCE_ROLES.tarot.failureMode}.
-- A missing layer is not silently replaced. If Saju, astrology, or tarot evidence is absent or weak, say so and reduce certainty/action size.
+  - ${THREE_LAYER_SOURCE_ROLES.ziwei.label}: ${THREE_LAYER_SOURCE_ROLES.ziwei.role}; ${THREE_LAYER_SOURCE_ROLES.ziwei.failureMode}.
+- A missing layer is not silently replaced. If Saju, astrology, or Ziwei evidence is absent or weak, say so and reduce certainty/action size.
 - final_verdict.core_message must be a decision argument, not a mood summary: source agreement -> user-specific implication -> first action/review boundary.
 - Avoid abstract padding such as current energy, harmony, flow, new beginning, or universe says unless tied to explicit source data.
 </THREE_LAYER_VERDICT_QUALITY_CONTRACT>`
@@ -149,8 +149,8 @@ export function buildThreeLayerVerdictQualityContract(
 - 원천 역할 계약:
   - 사주: 구조(반복 패턴, 기본 기질, 장기 압력). 단기 기분이나 하루 운세처럼 쓰지 말 것.
   - 점성: 타이밍(현재 압력, 풀리는 창, 상황 활성화). 전체 상품 정체성이나 별자리 운세 카피로 쓰지 말 것.
-  - 타로: 즉각 신호(감정 날씨, 단기 리스크, 질문별 촉발점). 생년월일 근거를 덮어쓰거나 유일한 증거로 쓰지 말 것.
-- A missing layer is not silently replaced. 사주, 점성, 타로 중 빠지거나 약한 근거가 있으면 명시하고 확신도/행동 크기를 낮출 것.
+  - 자미두수: 운명 청사진(12궁 명반, 주성/사화 구조, 타고난 그릇). 근거 없는 글자를 날조하지 말 것.
+- A missing layer is not silently replaced. 사주, 점성, 자미두수 중 빠지거나 약한 근거가 있으면 명시하고 확신도/행동 크기를 낮출 것.
 - final_verdict.core_message는 분위기 요약이 아니라 판정 논증이어야 한다: 원천 일치 -> 사용자별 함의 -> 첫 행동/재검토 경계.
 - 현재 에너지, 조화, 흐름, 새로운 시작, 우주가 말한다 같은 추상 패딩은 명시적 원천 데이터와 연결되지 않으면 금지.
 </THREE_LAYER_VERDICT_QUALITY_CONTRACT>`;
