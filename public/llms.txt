@@ -1,0 +1,36 @@
+# CosmicPath
+
+> CosmicPath is an AI decision-support platform that synthesizes 5 deterministic cosmic calculation engines (Saju, Western Astrology, Ziwei Doushu, Thai Royal Astrology, and Numerology) to provide an evidence-bound verdict for critical life choices.
+
+## Core Philosophy
+CosmicPath does not offer generic fortune-telling, fatalistic prophecies, or mysticism. Instead, it operates as an **Executive Decision Dossier**, using deterministic birth chart mathematics and astrological celestial timing to answer a single pressing life question:
+- Should I move now, wait with a deadline, narrow my options, or hold?
+- What are the precise 12-month and 48-week golden timing windows?
+- How can I transform unconscious weaknesses (Sal/Shadows) into professional superpowers?
+
+## The 5 Deterministic Calculation Engines
+1. **Saju (Four Pillars of Destiny / 사주명리학)**: Establishes structural baseline, Day Master strength, 10-year major luck (대운), and five-element harmony (오행 분포).
+2. **Western Astrology (서양 점성술)**: Computes planetary transits, natal aspects, Sun-Moon psychological dynamics, and acute timing pressure windows.
+3. **Ziwei Doushu (자미두수 12궁 명반)**: Maps long-term destiny architecture across 12 life palaces (Self, Wealth, Career, Relationships, Karma, etc.).
+4. **Thai Royal Astrology (태국 왕실 점성술)**: Analyzes Tanulak-Tanuset identity gaps and the 108-year Maha Thaksa (마하탁사) 8-major-planetary-period lifecycle.
+5. **Pythagorean Numerology (수비학)**: Calculates Life Path Number and 9-year personal decision cycles.
+
+## 4 Canonical Decision Verdicts
+Every reading arrives at one of 4 clear, evidence-backed decision labels:
+- **Move Now (지금 움직이기)**: High alignment across deterministic engines; take decisive action.
+- **Wait with Deadline (기한을 두고 기다리기)**: Transits indicate resistance; gather leverage until a specific window.
+- **Narrow First (선택지 먼저 좁히기)**: Ambiguous options; filter variables before committing capital or energy.
+- **Hold or Stop (보류 또는 중단)**: High systemic risks detected; defend existing resources.
+
+## Ethical Boundaries & Guardrails
+- **No Diagnosis**: Never provides medical, psychological, or health diagnoses.
+- **No Legal/Tax Direction**: Does not replace certified immigration lawyers, attorneys, or CPAs.
+- **No Financial Instruction**: Does not recommend specific securities, stocks, or investments.
+- **Pure Deterministic Fact**: AI prompts are strictly bound to calculated engine outputs; LLMs cannot hallucinate astronomical or saju facts.
+
+## Key Public URLs
+- Landing Page: https://www.cosmicpath.app/
+- Free Decision Intake: https://www.cosmicpath.app/start
+- Career Uncertainty Decision Portal: https://www.cosmicpath.app/career/uncertainty
+- Relationship Contact Timing Portal: https://www.cosmicpath.app/relationship/contact-timing
+- Full LLM Documentation: https://www.cosmicpath.app/llms-full.txt

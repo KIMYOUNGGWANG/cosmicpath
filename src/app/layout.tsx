@@ -10,10 +10,10 @@ import MobileBottomNav from "@/components/layout/MobileBottomNav";
 
 const SITE_URL = "https://www.cosmicpath.app";
 const OG_IMAGE_URL = `${SITE_URL}/og-image.png`;
-const KOREAN_TITLE = "CosmicPath Decision Note | 미뤄둔 선택 하나를 판정";
-const KOREAN_DESCRIPTION = "사주로 구조를 보고, 점성으로 타이밍을 보고, 타로로 지금 질문의 즉각 신호를 확인해 하나의 질문을 판정합니다.";
-const ENGLISH_TITLE = "CosmicPath Decision Note | One delayed choice, one verdict";
-const ENGLISH_DESCRIPTION = "CosmicPath Decision Note cross-checks Saju structure, astrology timing, and tarot's immediate signal before naming the next move.";
+const KOREAN_TITLE = "CosmicPath | 5대 엔진 기반 인생 의사결정 도시에";
+const KOREAN_DESCRIPTION = "사주 4주 원국, 서양 점성술 천체도, 자미두수 12궁 명반, 태국 왕실 점성술(108년 마하탁사), 수비학 9년 주기의 5대 계산 엔진을 융합하여 미뤄둔 하나의 선택을 명쾌하게 판정합니다.";
+const ENGLISH_TITLE = "CosmicPath | 5-Engine Strategic Decision Dossier";
+const ENGLISH_DESCRIPTION = "Synthesizing deterministic Saju, Western Astrology, Ziwei Doushu 12 Palaces, Thai Royal Astrology, and Numerology to deliver an evidence-bound verdict for your critical decision.";
 
 export async function generateMetadata(): Promise<Metadata> {
   const headersList = await headers();
@@ -44,7 +44,22 @@ export async function generateMetadata(): Promise<Metadata> {
       ...base,
       title: { default: KOREAN_TITLE, template: "%s | CosmicPath" },
       description: KOREAN_DESCRIPTION,
-      keywords: ["Decision Note", "결정 정리", "선택 판정", "사주", "점성술", "타로", "관계 고민", "커리어 고민", "돈 흐름", "다음 행동"],
+      keywords: [
+        "CosmicPath",
+        "코스믹패스",
+        "인생 의사결정",
+        "사주 팔자",
+        "서양 점성술",
+        "자미두수 12궁",
+        "태국 점성술",
+        "마하탁사",
+        "수비학",
+        "12개월 운세",
+        "이직 타이밍",
+        "결정 장애",
+        "선택 판정",
+        "의사결정 도시에"
+      ],
       openGraph: {
         type: "website",
         locale: "ko_KR",
@@ -52,7 +67,7 @@ export async function generateMetadata(): Promise<Metadata> {
         title: KOREAN_TITLE,
         description: KOREAN_DESCRIPTION,
         siteName: "CosmicPath",
-        images: [{ url: OG_IMAGE_URL, width: 1200, height: 630, alt: "CosmicPath Decision Note 미리보기" }],
+        images: [{ url: OG_IMAGE_URL, width: 1200, height: 630, alt: "CosmicPath 5대 엔진 의사결정 도시에" }],
       },
       twitter: {
         card: "summary_large_image",
@@ -67,7 +82,19 @@ export async function generateMetadata(): Promise<Metadata> {
     ...base,
     title: { default: ENGLISH_TITLE, template: "%s | CosmicPath" },
     description: ENGLISH_DESCRIPTION,
-    keywords: ["Decision Note", "decision timing", "saju", "astrology", "tarot", "relationship decision", "career decision"],
+    keywords: [
+      "CosmicPath",
+      "Decision Note",
+      "Decision Intelligence",
+      "Saju",
+      "Western Astrology",
+      "Ziwei Doushu",
+      "Thai Astrology",
+      "Numerology",
+      "Life Decisions",
+      "Career Timing",
+      "Timing Roadmap"
+    ],
     openGraph: {
       type: "website",
       locale: "en_US",
@@ -75,7 +102,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title: ENGLISH_TITLE,
       description: ENGLISH_DESCRIPTION,
       siteName: "CosmicPath",
-      images: [{ url: OG_IMAGE_URL, width: 1200, height: 630, alt: "CosmicPath Decision Note preview" }],
+      images: [{ url: OG_IMAGE_URL, width: 1200, height: 630, alt: "CosmicPath 5-Engine Decision Dossier" }],
     },
     twitter: {
       card: "summary_large_image",

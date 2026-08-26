@@ -16,10 +16,10 @@ import { Footer } from '@/components/landing/Footer';
 
 const SITE_URL = 'https://www.cosmicpath.app';
 const OG_IMAGE_URL = `${SITE_URL}/og-image.png`;
-const KOREAN_TITLE = 'CosmicPath Decision Note | 미뤄둔 선택 하나를 판정';
-const KOREAN_DESCRIPTION = '사주로 구조를 보고, 점성으로 타이밍을 보고, 타로로 지금 질문의 즉각 신호를 확인해 하나의 질문을 판정합니다.';
-const ENGLISH_TITLE = 'CosmicPath Decision Note | One delayed choice, one verdict';
-const ENGLISH_DESCRIPTION = "CosmicPath Decision Note cross-checks Saju structure, astrology timing, and tarot's immediate signal before naming the next move.";
+const KOREAN_TITLE = 'CosmicPath | 5대 엔진 기반 인생 의사결정 도시에';
+const KOREAN_DESCRIPTION = '사주 4주 원국, 서양 점성술 천체도, 자미두수 12궁 명반, 태국 왕실 점성술(108년 마하탁사), 수비학 9년 주기의 5대 계산 엔진을 융합하여 미뤄둔 하나의 선택을 명쾌하게 판정합니다.';
+const ENGLISH_TITLE = 'CosmicPath | 5-Engine Strategic Decision Dossier';
+const ENGLISH_DESCRIPTION = 'Synthesizing deterministic Saju, Western Astrology, Ziwei Doushu 12 Palaces, Thai Royal Astrology, and Numerology to deliver an evidence-bound verdict for your critical decision.';
 
 async function getLandingLanguage(): Promise<'ko' | 'en'> {
     const headersList = await headers();

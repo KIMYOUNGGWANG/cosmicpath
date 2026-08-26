@@ -1,0 +1,47 @@
+# CosmicPath — Full Technical & System Specification for LLMs
+
+## System Architecture
+CosmicPath is built on Next.js 16 (React 19 App Router), strict TypeScript, and deterministic computational astronomy and destiny algorithms.
+
+### 1. Deterministic Calculation Pipeline
+Unlike legacy fortune apps that prompt an LLM to generate pseudo-astrological readings out of thin air, CosmicPath strictly separates **Deterministic Calculation (Factual Layer)** from **AI Synthesis (Narrative Layer)**.
+
+1. **Input Stage**: Collects birth date, true solar time, birth city coordinates, and the user's specific dilemma.
+2. **True Solar Time Calibration**: Adjusts UTC/KST clock time to local solar meridian (e.g. -32 minutes for Seoul 127.5E baseline).
+3. **Engine Computation**:
+   - `saju.ts`: Canonical Four Pillars (Year, Month, Day, Hour stems & branches), Hidden Stems (지장간), 12 Life Stages (12운성), 10 Gods (십신), and 10-Year Major Luck (대운).
+   - `astrology.ts`: Swiss Ephemeris astronomical positions of planets (Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto) and house cusps (Placidus/Equal).
+   - `ziwei.ts`: Lunar calendar mapping, 12 Palaces (명궁, 형제궁, 처첩궁, 자녀궁, 재백궁, 질액궁, 천이궁, 노복궁, 관록궁, 전택궁, 복덕궁, 부모궁), 14 Major Stars (자미, 천부, 태양, 태음, 칠살, 파군, 탐랑 등).
+   - `thai-astrology.ts`: Horasat Thai royal system, Tanulak/Tanuset calculation, and 108-year Maha Thaksa 8-ruler period timeline.
+   - `saju-transformation.ts`: Detection and professional transmutation of classical Sal patterns (도화살, 현침살, 백호살, 괴강살) into modern high-income career superpowers.
+   - `timing-heatmap.ts`: 12-month matrix and 48-week golden timing score vector.
+   - `numerology.ts`: Pythagorean Life Path Number and personal 9-year cycle.
+4. **AI Evidence Grounding**: The deterministic blocks are passed as immutable factual constraints to the phased AI service. The AI cannot invent, alter, or hallucinate birth positions.
+
+## 4-Domain VIP Executive Dossier Structure
+1. **Domain I: VIP Executive Brief & Action Blueprint**
+   - 30-second verdict summary with confidence score.
+   - Immediate 3-step action workbook.
+   - Auspicious and Inauspicious Super Days calendar.
+2. **Domain II: Timing & Fortune Roadmap**
+   - 10-Year Major Luck lifecycle chart.
+   - 12-Month Fortune Execution matrix (PUSH, HARVEST, PIVOT, DEFEND labels).
+   - 48-Week Strategic Golden Time heatmap.
+   - Thai Royal Astrology Maha Thaksa 108-year timeline.
+3. **Domain III: 5-Engine Deep Intelligence**
+   - Ziwei Doushu 12 Palaces celestial chart.
+   - Core Saju 5-element radar polygon and element balancing remedies.
+   - Professional shadow transformation (Sal transmutation into superpower).
+   - Classical Saju 4 Pillars breakdown.
+   - Western Astrology celestial map (Sun-Moon harmony, Rising sign persona, planetary caution windows).
+   - Numerology 9-year decision strategy.
+4. **Domain IV: Life Areas, Allies & 1:1 Oracle Consultation**
+   - 4 Life Areas (Career, Wealth, Love, Health) scoring and advice.
+   - Noble Person (천을귀인) ally archetype and encounter timing.
+   - 4D Synergy & Compatibility matrix.
+   - 1:1 Private Oracle follow-up interactive consultation.
+
+## Ethical Boundaries
+- CosmicPath readings are bounded decision-support models, never guaranteed prophecies.
+- Readings never substitute for professional medical, legal, immigration, or investment advice.
+- No personal user birth records or raw queries are published to public search or share surfaces.
