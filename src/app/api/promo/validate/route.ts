@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { rateLimit } from '@/lib/rate-limiter';
+import { isPromoExemptAccount } from '@/lib/promo-codes';
 
 const validateSchema = z.object({
     code: z.string().min(1),
@@ -42,12 +43,14 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ valid: false, message: '만료된 코드입니다.' });
         }
 
-        if (promoCode.usedCount >= promoCode.maxUses) {
+        const isExempt = await isPromoExemptAccount(normalizedEmail);
+
+        if (promoCode.usedCount >= promoCode.maxUses && !isExempt) {
             return NextResponse.json({ valid: false, message: '선착순 마감된 코드입니다.' });
         }
 
         // Check if this email already used this promo code
-        if (normalizedEmail) {
+        if (normalizedEmail && !isExempt) {
             const existingRedemption = await prisma.promoRedemption.findUnique({
                 where: {
                     promoCodeId_email: {

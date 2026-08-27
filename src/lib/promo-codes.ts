@@ -62,6 +62,28 @@ export async function createSingleUsePromotionCode(params: {
   throw new Error('프로모션 코드 생성에 실패했습니다.');
 }
 
+export async function isPromoExemptAccount(email?: string | null): Promise<boolean> {
+  if (!email) return false;
+  const normalized = normalizeEmail(email);
+  if (normalized === 'rladudrhkd1095@gmail.com') return true;
+
+  const envAdmins = (process.env.ADMIN_EMAILS ?? '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  if (envAdmins.includes(normalized)) return true;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email: normalized },
+      select: { role: true },
+    });
+    return user?.role === 'ADMIN';
+  } catch {
+    return false;
+  }
+}
+
 export async function validatePromotionCodeForCheckout(params: {
   codeId: string;
   expectedDiscount?: number;
@@ -79,7 +101,9 @@ export async function validatePromotionCodeForCheckout(params: {
     throw new Error('만료된 코드입니다.');
   }
 
-  if (promoCode.usedCount >= promoCode.maxUses) {
+  const isExempt = await isPromoExemptAccount(params.email);
+
+  if (promoCode.usedCount >= promoCode.maxUses && !isExempt) {
     throw new Error('선착순 마감된 코드입니다.');
   }
 
@@ -90,7 +114,7 @@ export async function validatePromotionCodeForCheckout(params: {
     throw new Error('프로모션 할인 정보가 일치하지 않습니다.');
   }
 
-  if (params.email) {
+  if (params.email && !isExempt) {
     const normalizedEmail = normalizeEmail(params.email);
     const existingRedemption = await prisma.promoRedemption.findUnique({
       where: {
@@ -116,6 +140,7 @@ export async function redeemPromotionCode(params: {
   userAgent?: string;
 }) {
   const normalizedEmail = normalizeEmail(params.email);
+  const isExempt = await isPromoExemptAccount(normalizedEmail);
 
   return prisma.$transaction(async (tx) => {
     const promoCode = await tx.promotionCode.findUnique({
@@ -139,27 +164,38 @@ export async function redeemPromotionCode(params: {
       },
     });
 
-    if (existingRedemption) {
+    if (existingRedemption && !isExempt) {
       throw new Error('이미 이 프로모션 코드를 사용하셨습니다.');
     }
 
-    if (promoCode.usedCount >= promoCode.maxUses) {
+    if (promoCode.usedCount >= promoCode.maxUses && !isExempt) {
       throw new Error('선착순 마감된 코드입니다.');
     }
 
-    await tx.promotionCode.update({
-      where: { id: params.codeId },
-      data: { usedCount: { increment: 1 } },
-    });
+    let redemption;
+    if (existingRedemption) {
+      redemption = await tx.promoRedemption.update({
+        where: { id: existingRedemption.id },
+        data: {
+          readingId: params.readingId,
+          userAgent: params.userAgent,
+        },
+      });
+    } else {
+      await tx.promotionCode.update({
+        where: { id: params.codeId },
+        data: { usedCount: { increment: 1 } },
+      });
 
-    const redemption = await tx.promoRedemption.create({
-      data: {
-        promoCodeId: params.codeId,
-        email: normalizedEmail,
-        readingId: params.readingId,
-        userAgent: params.userAgent,
-      },
-    });
+      redemption = await tx.promoRedemption.create({
+        data: {
+          promoCodeId: params.codeId,
+          email: normalizedEmail,
+          readingId: params.readingId,
+          userAgent: params.userAgent,
+        },
+      });
+    }
 
     if (params.readingId) {
       const [user, reading] = await Promise.all([

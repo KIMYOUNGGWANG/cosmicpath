@@ -89,16 +89,16 @@ export default function JsonLd() {
             {
                 '@type': 'Service',
                 '@id': `${siteUrl}/#decision-note`,
-                name: 'CosmicPath Decision Dossier',
-                alternateName: 'VIP 5-Engine Decision Dossier',
-                serviceType: 'Decision Support Dossier with 5-Engine deterministic calculations',
+                name: 'CosmicPath Decision Note',
+                alternateName: '7-Day Decision Packet',
+                serviceType: 'VIP 5-Engine Decision Support Dossier with deterministic calculations',
                 provider: { '@id': `${siteUrl}/#organization` },
                 areaServed: ['KR', 'US', 'GLOBAL'],
                 audience: {
                     '@type': 'Audience',
                     audienceType: 'People facing critical career, relationship, financial, or life decisions',
                 },
-                description: 'VIP Decision Dossier explains why this verdict was chosen, using 5-Engine synthesis combining Saju, Western Astrology, Ziwei Doushu, Thai Astrology, and Numerology.',
+                description: 'VIP 7-Day Decision Packet explains why this verdict was chosen, using 5-Engine synthesis combining Saju, Western Astrology, Ziwei Doushu, Thai Astrology, and Numerology.',
                 offers: [
                     {
                         '@type': 'Offer',
@@ -110,7 +110,7 @@ export default function JsonLd() {
                     },
                     {
                         '@type': 'Offer',
-                        name: 'VIP Decision Master Report',
+                        name: '7-Day Decision Packet',
                         price: '3.99',
                         priceCurrency: 'USD',
                         availability: 'https://schema.org/InStock',
