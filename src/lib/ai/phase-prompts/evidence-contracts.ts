@@ -18,7 +18,8 @@ When citing evidence, quote the supplied value directly enough that it can be au
 }
 
 export function buildGroundedEvidenceContract(userData: UserData, lang: 'ko' | 'en') {
-  const anchors = buildPremiumGroundingAnchors(userData)
+  const effectiveUserData = userData.language ? userData : { ...userData, language: lang };
+  const anchors = buildPremiumGroundingAnchors(effectiveUserData)
     .map((anchor) => `- ${anchor.family}/${anchor.label}: ${anchor.text}`)
     .join('\n');
 

@@ -4,12 +4,12 @@ const SOURCE_BOUNDARY_RULES = [
   {
     label: 'calculationOnly',
     text: 'KASI/JPL 계산 검증 전용 (calculation-only)',
-    pattern: /(?:KASI|JPL)[^.\n]*(?:계산|검증|calendar|ephemeris|position)[^.\n]*(?:전용|만|only|validate)|(?:계산|검증|calendar|ephemeris|position)[^.\n]*(?:KASI|JPL)[^.\n]*(?:전용|만|only|validate)/iu,
+    pattern: /(?:KASI|JPL)[^.\n]*(?:계산|검증|calculation(?:-only)?|calendar|ephemeris|position)[^.\n]*(?:전용|만|only|validate|validation)|(?:계산|검증|calculation(?:-only)?|calendar|ephemeris|position)[^.\n]*(?:KASI|JPL)[^.\n]*(?:전용|만|only|validate|validation)|(?:KASI|JPL)[^.\n]*(?:are|is|for)?\s*calculation-only/iu,
   },
   {
     label: 'notDoctrineAuthority',
     text: '계산 원천은 해석 권위가 아님 (not doctrine/personality authority)',
-    pattern: /(?:해석\s*권위|doctrine|personality claims?)[^.\n]*(?:쓰지|아님|아닙|not|by itself)|(?:not|아님|아닙|쓰지)[^.\n]*(?:해석\s*권위|doctrine|personality claims?)/iu,
+    pattern: /(?:해석\s*권위|doctrine|personality (?:claims?|authority)?)[^.\n]*(?:쓰지|아님|아닙|not|by itself)|(?:not|아님|아닙|쓰지)[^.\n]*(?:해석\s*권위|doctrine|personality (?:claims?|authority)?)/iu,
   },
   {
     label: 'reviewedTextCandidates',

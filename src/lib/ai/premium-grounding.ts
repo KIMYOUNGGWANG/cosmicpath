@@ -99,39 +99,211 @@ export function assertPremiumGrounding(
   }
 }
 
+const STEM_DATA_BY_KO: Record<string, { en: string; hanja: string; element: string }> = {
+  갑: { en: 'Jia', hanja: '甲', element: 'Wood' },
+  을: { en: 'Yi', hanja: '乙', element: 'Wood' },
+  병: { en: 'Bing', hanja: '丙', element: 'Fire' },
+  정: { en: 'Ding', hanja: '丁', element: 'Fire' },
+  무: { en: 'Wu', hanja: '戊', element: 'Earth' },
+  기: { en: 'Ji', hanja: '己', element: 'Earth' },
+  경: { en: 'Geng', hanja: '庚', element: 'Metal' },
+  신: { en: 'Xin', hanja: '辛', element: 'Metal' },
+  임: { en: 'Ren', hanja: '壬', element: 'Water' },
+  계: { en: 'Gui', hanja: '癸', element: 'Water' },
+};
+
+const BRANCH_DATA_BY_KO: Record<string, { en: string; hanja: string; animal: string }> = {
+  자: { en: 'Zi', hanja: '子', animal: 'Rat' },
+  축: { en: 'Chou', hanja: '丑', animal: 'Ox' },
+  인: { en: 'Yin', hanja: '寅', animal: 'Tiger' },
+  묘: { en: 'Mao', hanja: '卯', animal: 'Rabbit' },
+  진: { en: 'Chen', hanja: '辰', animal: 'Dragon' },
+  사: { en: 'Si', hanja: '巳', animal: 'Snake' },
+  오: { en: 'Wu', hanja: '午', animal: 'Horse' },
+  미: { en: 'Wei', hanja: '未', animal: 'Goat' },
+  신: { en: 'Shen', hanja: '申', animal: 'Monkey' },
+  유: { en: 'You', hanja: '酉', animal: 'Rooster' },
+  술: { en: 'Xu', hanja: '戌', animal: 'Dog' },
+  해: { en: 'Hai', hanja: '亥', animal: 'Pig' },
+};
+
+const ZODIAC_KO_TO_EN: Record<string, string> = {
+  양자리: 'Aries',
+  황소자리: 'Taurus',
+  쌍둥이자리: 'Gemini',
+  게자리: 'Cancer',
+  사자자리: 'Leo',
+  처녀자리: 'Virgo',
+  천칭자리: 'Libra',
+  전갈자리: 'Scorpio',
+  궁수자리: 'Sagittarius',
+  사수자리: 'Sagittarius',
+  염소자리: 'Capricorn',
+  물병자리: 'Aquarius',
+  물고기자리: 'Pisces',
+};
+
+const ZODIAC_EN_TO_KO: Record<string, string> = {
+  Aries: '양자리',
+  Taurus: '황소자리',
+  Gemini: '쌍둥이자리',
+  Cancer: '게자리',
+  Leo: '사자자리',
+  Virgo: '처녀자리',
+  Libra: '천칭자리',
+  Scorpio: '전갈자리',
+  Sagittarius: '궁수자리',
+  Capricorn: '염소자리',
+  Aquarius: '물병자리',
+  Pisces: '물고기자리',
+};
+
+function escapeRegex(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function buildSajuAnchors(userData: UserData): readonly PremiumGroundingAnchor[] {
   const saju = userData.sajuData;
   if (!saju) return [];
+  const isEn = userData.language === 'en';
+
   return compactAnchors([
-    anchor('saju', 'dayMaster', saju.dayMaster ? `일간 ${saju.dayMaster}` : ''),
-    anchor('saju', 'yearPillar', pillarText('연주', saju.yeonPillar)),
-    anchor('saju', 'monthPillar', pillarText('월주', saju.monthPillar)),
-    anchor('saju', 'dayPillar', pillarText('일주', saju.dayPillar)),
-    anchor('saju', 'hourPillar', pillarText('시주', saju.hourPillar)),
+    buildDayMasterAnchor(saju.dayMaster, isEn),
+    buildPillarAnchor('yearPillar', '연주', 'Year Pillar', saju.yeonPillar, isEn),
+    buildPillarAnchor('monthPillar', '월주', 'Month Pillar', saju.monthPillar, isEn),
+    buildPillarAnchor('dayPillar', '일주', 'Day Pillar', saju.dayPillar, isEn),
+    buildPillarAnchor('hourPillar', '시주', 'Hour Pillar', saju.hourPillar, isEn),
   ]);
+}
+
+function buildDayMasterAnchor(dayMaster: string | undefined, isEn: boolean): PremiumGroundingAnchor | null {
+  if (!dayMaster) return null;
+  const meta = STEM_DATA_BY_KO[dayMaster];
+  const stemEn = meta?.en ?? '';
+  const hanja = meta?.hanja ?? '';
+  const element = meta?.element ?? '';
+
+  const pattern = new RegExp(
+    `(?:일간\\s*${escapeRegex(dayMaster)}|(?:day\\s*master)[^.\\n]*(?:${escapeRegex(dayMaster)}|${hanja}|${stemEn}|${element})|(?:${escapeRegex(dayMaster)}|${hanja}|${stemEn})\\s*(?:${element}\\s*)?(?:day\\s*master))`,
+    'iu'
+  );
+
+  const text = isEn && stemEn
+    ? `Day Master ${stemEn}${element ? ` (${element})` : ''} [${dayMaster}]`
+    : `일간 ${dayMaster}`;
+
+  return anchor('saju', 'dayMaster', text, pattern);
+}
+
+function buildPillarAnchor(
+  label: string,
+  koreanPillarName: string,
+  englishPillarName: string,
+  pillar: { readonly stem?: string; readonly branch?: string } | undefined,
+  isEn: boolean
+): PremiumGroundingAnchor | null {
+  if (!pillar?.stem || !pillar?.branch) return null;
+  const s = pillar.stem;
+  const b = pillar.branch;
+  const sMeta = STEM_DATA_BY_KO[s];
+  const bMeta = BRANCH_DATA_BY_KO[b];
+  const sEn = sMeta?.en ?? '';
+  const bEn = bMeta?.en ?? '';
+  const sHanja = sMeta?.hanja ?? '';
+  const bHanja = bMeta?.hanja ?? '';
+
+  const pattern = new RegExp(
+    `(?:${koreanPillarName}\\s*(?:${s}${b}|${sHanja}${bHanja})|(?:${englishPillarName}|four\\s*pillars?)[^.\\n]*(?:${s}${b}|${sHanja}${bHanja}|${sEn}[\\s-]*${bEn}))`,
+    'iu'
+  );
+
+  const text = isEn && sEn && bEn
+    ? `${englishPillarName} ${sEn}-${bEn} (${s}${b})`
+    : `${koreanPillarName} ${s}${b}`;
+
+  return anchor('saju', label, text, pattern);
 }
 
 function buildAstrologyAnchors(userData: UserData): readonly PremiumGroundingAnchor[] {
   const astro = userData.astroData;
   if (!astro) return [];
+  const isEn = userData.language === 'en';
+
   return compactAnchors([
-    anchor('astrology', 'sunSign', astro.sunSign ? `태양 ${astro.sunSign}` : ''),
-    anchor('astrology', 'moonSign', astro.moonSign ? `달 ${astro.moonSign}` : ''),
-    anchor('astrology', 'ascendant', astro.ascendant ? `상승궁 ${astro.ascendant}` : ''),
+    buildAstroSignAnchor('sunSign', '태양', 'Sun', astro.sunSign, isEn),
+    buildAstroSignAnchor('moonSign', '달', 'Moon', astro.moonSign, isEn),
+    buildAstroSignAnchor('ascendant', '상승궁', 'Ascendant', astro.ascendant, isEn),
   ]);
 }
 
+function buildAstroSignAnchor(
+  label: 'sunSign' | 'moonSign' | 'ascendant',
+  koreanPrefix: string,
+  englishLabel: string,
+  rawSign: string | undefined,
+  isEn: boolean
+): PremiumGroundingAnchor | null {
+  if (!rawSign) return null;
+  const koreanSign = ZODIAC_EN_TO_KO[rawSign] ?? rawSign;
+  const englishSign = ZODIAC_KO_TO_EN[rawSign] ?? rawSign;
+
+  const labelPrefix = label === 'ascendant' ? '(?:ascendant|rising)' : englishLabel.toLowerCase();
+  const pattern = new RegExp(
+    `(?:${koreanPrefix}\\s*${escapeRegex(koreanSign)}|(?:${labelPrefix})[^.\\n]*(?:${escapeRegex(englishSign)}|${escapeRegex(koreanSign)})|(?:${escapeRegex(englishSign)}|${escapeRegex(koreanSign)})\\s*${labelPrefix})`,
+    'iu'
+  );
+
+  const text = isEn
+    ? `${englishLabel} in ${englishSign}`
+    : `${koreanPrefix} ${koreanSign}`;
+
+  return anchor('astrology', label, text, pattern);
+}
+
 function buildTarotAnchors(userData: UserData): readonly PremiumGroundingAnchor[] {
-  return (userData.tarotCards as Array<{ name?: string; isReversed?: boolean }> ?? []).map((card) => anchor(
-    'tarot',
-    card?.name || '',
-    `${card?.name || ''} ${card?.isReversed ? '역방향' : '정방향'}`
-  ));
+  const isEn = userData.language === 'en';
+  return compactAnchors(
+    (userData.tarotCards as Array<{ name?: string; isReversed?: boolean }> ?? []).map((card) =>
+      buildTarotAnchor(card, isEn)
+    )
+  );
+}
+
+function buildTarotAnchor(
+  card: { name?: string; isReversed?: boolean },
+  isEn: boolean
+): PremiumGroundingAnchor | null {
+  const cardName = card.name?.trim();
+  if (!cardName) return null;
+  const isReversed = Boolean(card.isReversed);
+
+  const directionKo = isReversed ? '역방향' : '정방향';
+  const directionEn = isReversed ? 'reversed' : 'upright';
+  const escaped = escapeRegex(cardName);
+
+  const pattern = new RegExp(
+    `(?:${escaped}[^.\\n]*(?:${directionKo}|${directionEn})|(?:${directionKo}|${directionEn})[^.\\n]*${escaped})`,
+    'iu'
+  );
+
+  const text = isEn
+    ? `${cardName} ${isReversed ? 'Reversed' : 'Upright'}`
+    : `${cardName} ${directionKo}`;
+
+  return anchor('tarot', cardName, text, pattern);
 }
 
 function buildUnknownTimeAnchors(userData: UserData): readonly PremiumGroundingAnchor[] {
   if (userData.unknownTime !== true) return [];
-  return [anchor('unknownTimeCaveat', 'unknownTime', '시간 미상')];
+  const isEn = userData.language === 'en';
+  return [
+    anchor(
+      'unknownTimeCaveat',
+      'unknownTime',
+      isEn ? 'Birth time unknown' : '시간 미상',
+      /시간\s*미상|unknown\s*time|time\s*unknown|birth\s*time\s*(?:is\s*)?unknown/iu
+    ),
+  ];
 }
 
 function minimumReasons(
@@ -185,14 +357,10 @@ function normalizeText(value: string): string {
   return value.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
 }
 
-function pillarText(label: string, pillar: { readonly stem?: string; readonly branch?: string } | undefined): string {
-  return pillar?.stem && pillar.branch ? `${label} ${pillar.stem}${pillar.branch}` : '';
+function anchor(family: GroundingFamily, label: string, text: string, pattern?: RegExp): PremiumGroundingAnchor {
+  return pattern ? { family, label, text, pattern } : { family, label, text };
 }
 
-function anchor(family: GroundingFamily, label: string, text: string): PremiumGroundingAnchor {
-  return { family, label, text };
-}
-
-function compactAnchors(values: readonly PremiumGroundingAnchor[]): readonly PremiumGroundingAnchor[] {
-  return values.filter((value) => value.text.trim().length > 0);
+function compactAnchors(values: readonly (PremiumGroundingAnchor | null)[]): readonly PremiumGroundingAnchor[] {
+  return values.filter((value): value is PremiumGroundingAnchor => Boolean(value && value.text.trim().length > 0));
 }

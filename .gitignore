@@ -98,3 +98,6 @@ prisma/dev.db
 .agents/config/
 .agents/hooks/
 .agents/agents/
+
+# oma docs generated artifacts
+docs/generated/
