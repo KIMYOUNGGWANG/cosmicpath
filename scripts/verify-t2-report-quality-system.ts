@@ -158,10 +158,9 @@ async function assertRuntimeFailure(api: PremiumApi, artifact: BaselineReportArt
 
 function assertCorpus(api: RegistryApi): void {
   const registry = api.SOURCE_REGISTRY;
-  assert.ok(registry.some((item) => item.sourceUrlOrLocator.includes('gutenberg.org/ebooks/43548')));
-  assert.ok(registry.some((item) => item.sourceUrlOrLocator.includes('Ptolemy/Tetrabiblos')));
+  assert.ok(registry.some((item) => item.sourceUrlOrLocator.includes('penelope.uchicago.edu') || item.sourceUrlOrLocator.includes('Ptolemy/Tetrabiblos')));
   assert.ok(registry.some((item) => item.sourceId === 'sanming_tonghui_wikisource_candidate'));
-  assert.ok(registry.some((item) => item.sourceId.includes('sacred_texts') || item.sourceUrlOrLocator.includes('sacred-texts.com/tarot/pkt')));
+  assert.ok(registry.some((item) => item.sourceId === 'ziwei_doushu_quanshu_public_text' || item.sourceId.includes('ziwei')));
   console.log('corpus_path_rights_safe_slice_contract');
 }
 

@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
+import { Sparkles } from 'lucide-react';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import type { UnifiedReadingResult } from '@/lib/cosmic/schema';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -170,13 +171,11 @@ export function StartResultStage(props: StartResultStageProps) {
 
                 <button
                   onClick={props.onShareCard}
-                  className="flex items-center gap-2 px-6 py-3 text-dim transition-[transform,color] duration-300 hover:-translate-y-0.5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+                  className="group inline-flex items-center gap-2.5 rounded-full border border-white/15 bg-white/5 px-6 py-3.5 text-sm font-semibold text-stone-200 shadow-[0_4px_20px_rgba(0,0,0,0.3)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-[#c8a84d]/50 hover:bg-[#c8a84d]/10 hover:text-white hover:shadow-[0_8px_30px_rgba(200,168,77,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8a84d]/70"
                 >
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span className="border-b border-transparent text-sm transition-colors hover:border-white/50">
-                    {props.language === 'en' ? 'Save Result Card' : '결과 카드 저장하기'}
+                  <Sparkles className="h-4 w-4 text-[#e8c86d] transition-transform group-hover:scale-110" />
+                  <span>
+                    {props.language === 'en' ? 'Create 9:16 Story Card' : '소장용 인스타/스레드 스토리 카드 (9:16)'}
                   </span>
                 </button>
               </div>

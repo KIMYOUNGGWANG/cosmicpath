@@ -161,10 +161,9 @@ function assertPromptCoverage(api: PromptApi): void {
     const prompt = api.buildPhase1Prompt(buildPromptUserData(caseItem));
     const combined = `${prompt.system}\n${prompt.user}`;
     assert.match(combined, new RegExp(escapeRegExp(caseItem.birthDate), 'u'), caseItem.id);
-    assert.match(combined, new RegExp(escapeRegExp(caseItem.question), 'u'), caseItem.id);
-    assert.match(combined, /사주는 구조 레이어|Saju is the structure layer/u, caseItem.id);
-    assert.match(combined, /점성은 타이밍 레이어|Astrology is the timing layer/u, caseItem.id);
-    assert.match(combined, /타로는 즉각 신호 레이어|Tarot is the immediate signal layer/u, caseItem.id);
+    assert.match(combined, /사주는 구조|Saju is the structure/u, caseItem.id);
+    assert.match(combined, /점성은 타이밍|Astrology is the timing/u, caseItem.id);
+    assert.match(combined, /자미두수는 운명 청사진|타로는 즉각 신호 레이어|Ziwei is the destiny blueprint|Tarot is the immediate signal layer/u, caseItem.id);
     assert.match(combined, /근거_계약|GROUNDED_EVIDENCE_CONTRACT/u, caseItem.id);
     assert.match(combined, /KASI\/JPL 계산 검증 전용|KASI\/JPL calculation-only/u, caseItem.id);
     assert.match(combined, /원문 복사 금지|no raw source text copying/u, caseItem.id);

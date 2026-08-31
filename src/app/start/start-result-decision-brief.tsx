@@ -22,6 +22,7 @@ import {
   isRelationshipContactTimingSource,
 } from './start-result-relationship';
 import { cleanActionVerdictText } from '@/app/api/reading/free-focus-contract';
+import { BlindSpotTeaser } from '@/components/reading/blind-spot-teaser';
 
 function getDecisionVerdictLabel(
   value: string | undefined,
@@ -232,6 +233,18 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
             </div>
           )}
         </div>
+
+        {/* High-Impact Blind Spot Risk Teaser */}
+        {!props.isPremium && (
+          <BlindSpotTeaser
+            title={isEn ? "5-Engine Blind Spot Risk" : "5대 엔진이 감지한 숨은 사각지대 리스크"}
+            previewText={riskAvoidance || (isEn ? "A hidden planetary and cycle clash threatens your next move..." : "선택 직후 발생할 수 있는 치명적 손실과 관계/계약 충돌의 씨앗이 감지되었습니다.")}
+            hiddenText={coreInsight || (isEn ? "Planetary transit clash indicates high vulnerability in contracts and impulsive communication before the golden window. Detailed defensive roadmap is in your VIP Dossier." : "사주 형충살과 점성술 흉각이 겹치는 시기에는 충동적인 연락이나 계약 시 70% 이상의 손실 리스크가 발생합니다. 상세 대처법과 골든타임은 VIP 리포트에서 확인하세요.")}
+            language={props.language}
+            isLocked={true}
+            onUnlock={() => { void props.onUnlock(); }}
+          />
+        )}
       </div>
 
       {/* High-Converting Blurred VIP Teaser Area */}

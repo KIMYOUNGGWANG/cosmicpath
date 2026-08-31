@@ -15,7 +15,7 @@ async function loadRuntimeModules() {
   const { assembleReadingRuntime } = localRequire('../src/app/api/reading/reading-runtime-service.ts') as {
     assembleReadingRuntime: AssembleReadingRuntime;
   };
-  const { MAJOR_ARCANA } = localRequire('../src/lib/engines/tarot.ts') as {
+  const { MAJOR_ARCANA } = localRequire('./report-test-data/tarot.ts') as {
     MAJOR_ARCANA: readonly TarotArcana[];
   };
   const { ZODIAC_SIGNS } = localRequire('../src/lib/engines/astrology.ts') as {
