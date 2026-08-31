@@ -10,6 +10,8 @@ import { Download, Sparkles, Printer } from 'lucide-react';
 import * as analytics from '@/lib/client-analytics';
 import { PrintLayout } from './PrintLayout';
 import { ShareCard } from './share-card';
+import { ShareCardModal } from '@/components/share/ShareCardModal';
+import { Share2 } from 'lucide-react';
 import { BlindSpotTeaser } from './blind-spot-teaser';
 import { CaseFileReport } from './case-file-report';
 import { StickyCTA } from '../common/sticky-cta';
@@ -382,6 +384,7 @@ function isSajuResult(value: unknown): value is SajuResult {
 export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock, isPremium, price, isLoading, onRetry, userQuestion }: PremiumReportProps) {
     const isEn = language === 'en';
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [activeChapter, setActiveChapter] = useState<ChapterKey>('brief');
     const [readingProgress, setReadingProgress] = useState(0);
     const printRef = useRef<HTMLDivElement>(null);
@@ -859,12 +862,19 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                     ? 'All 5-engine calculations, timing heatmaps, and strategic advice are securely preserved.'
                                     : '5대 계산 엔진과 타이밍 히트맵, 실전 전략이 모두 체계적으로 기록되었습니다.'}
                             </p>
-                            <div className="mt-4 flex items-center justify-center gap-3">
+                            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
                                 <button
                                     onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                                     className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs text-white font-medium transition-all"
                                 >
                                     {isEn ? 'Back to Top ⬆' : '최상단으로 이동 ⬆'}
+                                </button>
+                                <button
+                                    onClick={() => setIsShareModalOpen(true)}
+                                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37]/25 to-amber-500/20 hover:from-[#D4AF37]/35 hover:to-amber-500/30 text-xs text-[#FFE8A3] font-semibold border border-[#D4AF37]/50 shadow-[0_0_15px_rgba(212,175,55,0.2)] transition-all flex items-center gap-1.5"
+                                >
+                                    <Share2 className="w-3.5 h-3.5 text-[#D4AF37]" />
+                                    <span>{isEn ? 'Story Card (9:16)' : '소장용 스토리 카드 (9:16)'}</span>
                                 </button>
                                 <button
                                     onClick={handlePrint}
@@ -901,6 +911,18 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     }}
                 />
             )}
+                    {/* Share Card Modal for Instagram 9:16 */}
+            <ShareCardModal
+                isOpen={isShareModalOpen}
+                onClose={() => setIsShareModalOpen(false)}
+                title={report.summary?.title || (isEn ? 'CosmicPath Dossier' : 'CosmicPath VIP 운명 리포트')}
+                matchLevel="PERFECT"
+                keywords={report.traits?.map(t => t.name).slice(0, 3) || ['신뢰도 94%', '2026 골든타임', '을목 일주']}
+                source="vip_report_footer"
+                language={language}
+                readingId={readingId}
+                resultType="vip_dossier"
+            />
         </div>
     );
 }

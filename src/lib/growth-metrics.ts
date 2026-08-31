@@ -195,6 +195,7 @@ interface CampaignSessionEvent {
     canonicalEvent: string;
     sessionId: string;
     source: string;
+    metadata?: Record<string, unknown>;
 }
 
 interface CampaignFunnelBucket {
@@ -288,7 +289,11 @@ function getCampaignStageKeys(event: CampaignSessionEvent): Array<keyof Campaign
     if (event.event === 'safe_share_card_downloaded') stageKeys.push('safeShareDownloads');
     if (event.canonicalEvent === 'paywall_view') stageKeys.push('paywallViews');
     if (event.canonicalEvent === 'checkout_start') stageKeys.push('checkoutStarts');
-    if (event.canonicalEvent === 'paid_conversion') stageKeys.push('paidConversions');
+    if (event.canonicalEvent === 'paid_conversion') {
+        if (!event.metadata || isCountablePaidConversionEvent(event.metadata)) {
+            stageKeys.push('paidConversions');
+        }
+    }
     if (
         event.event === 'next_move_report_followup_seeded' ||
         event.event === 'relationship_contact_followup_seeded' ||
@@ -508,6 +513,7 @@ export async function getGrowthSummary(days: number): Promise<GrowthSummary> {
                 canonicalEvent,
                 sessionId,
                 source,
+                metadata,
             });
             campaignEventsBySession.set(sessionId, sessionEvents);
 

@@ -126,18 +126,18 @@ export function PaymentOpsDashboard({ summary }: PaymentOpsDashboardProps) {
                 'bg-[radial-gradient(circle_at_top_right,rgba(245,196,81,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]',
         },
         {
-            label: '결제 완료',
-            value: summary.totals.completedPayments.toLocaleString(),
-            caption: `${summary.totals.premiumReadingPayments.toLocaleString()}건 리딩 / ${summary.totals.chatCreditPayments.toLocaleString()}건 크레딧`,
+            label: '정가 결제 (순수 유료)',
+            value: summary.totals.standardPayments.toLocaleString(),
+            caption: `할인/쿠폰 없이 결제된 순수 유료 결제 건수입니다. (전체 ${summary.totals.completedPayments.toLocaleString()}건 중)`,
             icon: CreditCard,
-            iconClassName: 'text-sky-200',
+            iconClassName: 'text-emerald-200',
             surfaceClassName:
-                'bg-[radial-gradient(circle_at_top_right,rgba(125,211,252,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]',
+                'bg-[radial-gradient(circle_at_top_right,rgba(110,231,183,0.22),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.07),rgba(255,255,255,0.03))]',
         },
         {
-            label: '할인 결제',
+            label: '프로모션 / 할인 결제',
             value: summary.totals.promoPayments.toLocaleString(),
-            caption: '할인 코드나 프로모션이 실제 결제까지 이어진 건수입니다.',
+            caption: '할인 코드나 프로모션이 적용되어 결제된 건수입니다.',
             icon: WalletCards,
             iconClassName: 'text-violet-200',
             surfaceClassName:
@@ -166,7 +166,7 @@ export function PaymentOpsDashboard({ summary }: PaymentOpsDashboardProps) {
                             결제가 어디서 막히는지 보는 화면
                         </h2>
                         <p className="mt-4 text-sm leading-7 text-white/58 sm:text-base">
-                            매출만 보는 대신, 결제 시작, 결제 완료, 유료 처리 누락을 같이 보게 만들었습니다.
+                            매출만 보는 대신, 정가 결제와 프로모션 결제를 분리하고, 유료 처리 누락을 같이 보게 만들었습니다.
                             한 번 결제와 구독도 따로 볼 수 있게 정리했습니다.
                         </p>
                     </div>
@@ -201,14 +201,15 @@ export function PaymentOpsDashboard({ summary }: PaymentOpsDashboardProps) {
                         </p>
 
                         <div className="flex flex-wrap gap-2.5">
-                            <OpsSignalChip label="결제 완료" value={summary.totals.completedPayments.toLocaleString()} />
+                            <OpsSignalChip label="정가 결제" value={summary.totals.standardPayments.toLocaleString()} />
                             <OpsSignalChip label="할인 결제" value={summary.totals.promoPayments.toLocaleString()} />
+                            <OpsSignalChip label="총 결제 완료" value={summary.totals.completedPayments.toLocaleString()} />
                             <OpsSignalChip label="총매출" value={formatUsdFromCents(summary.totals.grossRevenueCents)} />
                         </div>
                     </div>
 
                     <h2 className="font-[var(--font-outfit)] text-2xl font-semibold tracking-[-0.04em] text-white">
-                        매출 / 결제 완료 / 할인 결제
+                        매출 / 정가 결제 / 할인 결제
                     </h2>
                     <p className="mt-3 max-w-2xl text-sm leading-7 text-white/55">
                         매출만이 아니라 결제가 꾸준히 들어오는지, 할인 결제가 너무 많지는 않은지 같이 봅니다.

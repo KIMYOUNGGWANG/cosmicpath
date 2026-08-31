@@ -30,6 +30,7 @@ interface ReadingSnapshot {
     userEmail: string | null;
     hasAccessKey: boolean;
     isPremium: boolean;
+    monetizationType: 'standard_paid' | 'promo_discount' | 'promo_free' | 'none';
     paymentSource: string | null;
     questionIntent: string;
     advisorName: string;
@@ -42,6 +43,7 @@ export interface PaymentOpsSeriesPoint {
     date: string;
     revenueCents: number;
     completedPayments: number;
+    standardPayments: number;
     premiumReadingPayments: number;
     chatCreditPayments: number;
     promoPayments: number;
@@ -53,6 +55,7 @@ export interface PaymentOpsSummary {
         grossRevenueCents: number;
         averageOrderValueCents: number;
         completedPayments: number;
+        standardPayments: number;
         premiumReadingPayments: number;
         chatCreditPayments: number;
         promoPayments: number;
@@ -321,7 +324,7 @@ function buildReadingSnapshot(
         user: { email: string | null } | null;
         chatSession: { credits: number } | null;
     },
-    hasPaymentRecord: boolean
+    paymentInfo: { hasPaymentRecord: boolean; discountPercent?: number | null } | boolean
 ): ReadingSnapshot {
     const metadata = normalizeReadingMetadata(reading.metadata);
     const advisorProfile = asRecord(metadata.advisorProfile);
@@ -330,7 +333,24 @@ function buildReadingSnapshot(
     const selectionMode = normalizeSelectionMode(getString(metadata, 'selectionMode'));
     const isPremium = getBoolean(metadata, 'isPremium');
     const hasAccessKey = Boolean(extractReadingAccessKey(reading.metadata));
+    const hasPaymentRecord = typeof paymentInfo === 'boolean' ? paymentInfo : paymentInfo.hasPaymentRecord;
+    const discountPercent = typeof paymentInfo === 'object' ? paymentInfo.discountPercent : undefined;
     const hasMonetizationProof = hasPaymentRecord || paymentSource === 'promo_redemption' || paymentSource === 'override';
+
+    let monetizationType: 'standard_paid' | 'promo_discount' | 'promo_free' | 'none' = 'none';
+    if (isPremium) {
+        if (paymentSource === 'promo_redemption') {
+            monetizationType = 'promo_free';
+        } else if (hasPaymentRecord) {
+            if ((discountPercent ?? 0) > 0) {
+                monetizationType = 'promo_discount';
+            } else {
+                monetizationType = 'standard_paid';
+            }
+        } else {
+            monetizationType = 'standard_paid';
+        }
+    }
 
     const supportRiskFlags: string[] = [];
 
@@ -354,6 +374,7 @@ function buildReadingSnapshot(
         userEmail: reading.user?.email ?? getString(metadata, 'email'),
         hasAccessKey,
         isPremium,
+        monetizationType,
         paymentSource,
         questionIntent,
         advisorName: getString(advisorProfile, 'name') ?? getString(metadata, 'characterId') ?? 'Unknown',
@@ -459,6 +480,7 @@ export async function getPaymentOpsSummary(days: number): Promise<PaymentOpsSumm
         date,
         revenueCents: 0,
         completedPayments: 0,
+        standardPayments: 0,
         premiumReadingPayments: 0,
         chatCreditPayments: 0,
         promoPayments: 0,
@@ -468,6 +490,7 @@ export async function getPaymentOpsSummary(days: number): Promise<PaymentOpsSumm
 
     let grossRevenueCents = 0;
     let completedPayments = 0;
+    let standardPayments = 0;
     let premiumReadingPayments = 0;
     let chatCreditPayments = 0;
     let promoPayments = 0;
@@ -491,6 +514,18 @@ export async function getPaymentOpsSummary(days: number): Promise<PaymentOpsSumm
 
         grossRevenueCents += payment.amount;
         completedPayments += 1;
+
+        if (hasPromo) {
+            promoPayments += 1;
+            if (point) {
+                point.promoPayments += 1;
+            }
+        } else {
+            standardPayments += 1;
+            if (point) {
+                point.standardPayments += 1;
+            }
+        }
 
         if (point) {
             point.revenueCents += payment.amount;
@@ -517,13 +552,6 @@ export async function getPaymentOpsSummary(days: number): Promise<PaymentOpsSumm
                 point.chatCreditPayments += 1;
             }
         }
-
-        if (hasPromo) {
-            promoPayments += 1;
-            if (point) {
-                point.promoPayments += 1;
-            }
-        }
     }
 
     return {
@@ -532,6 +560,7 @@ export async function getPaymentOpsSummary(days: number): Promise<PaymentOpsSumm
             grossRevenueCents,
             averageOrderValueCents: completedPayments > 0 ? Math.round(grossRevenueCents / completedPayments) : 0,
             completedPayments,
+            standardPayments,
             premiumReadingPayments,
             chatCreditPayments,
             promoPayments,
@@ -640,11 +669,22 @@ export async function getReadingSupportSummary(days: number, query?: string | nu
             },
             select: {
                 readingId: true,
+                metadata: true,
             },
         })
         : [];
 
-    const paidReadingIds = new Set(paymentRows.map((payment) => payment.readingId).filter((value): value is string => Boolean(value)));
+    const paidReadingMap = new Map<string, { hasPaymentRecord: boolean; discountPercent?: number | null }>();
+    for (const payment of paymentRows) {
+        if (!payment.readingId) continue;
+        const meta = parseJsonRecord(payment.metadata);
+        const discountPercent = getNumber(meta, 'discount');
+        paidReadingMap.set(payment.readingId, {
+            hasPaymentRecord: true,
+            discountPercent,
+        });
+    }
+
     const seriesMap = createDaySeriesMap(rangeStart, safeDays, (date) => ({
         date,
         readings: 0,
@@ -661,11 +701,15 @@ export async function getReadingSupportSummary(days: number, query?: string | nu
     let missingAccessKeys = 0;
     let premiumWithoutPaymentRecord = 0;
 
-    const recentReadings = visibleReadings.slice(0, 12).map((reading) => buildReadingSnapshot(reading, paidReadingIds.has(reading.id)));
-    const searchResults = visibleSearchResults.map((reading) => buildReadingSnapshot(reading, paidReadingIds.has(reading.id)));
+    const recentReadings = visibleReadings.slice(0, 12).map((reading) =>
+        buildReadingSnapshot(reading, paidReadingMap.get(reading.id) ?? false)
+    );
+    const searchResults = visibleSearchResults.map((reading) =>
+        buildReadingSnapshot(reading, paidReadingMap.get(reading.id) ?? false)
+    );
 
     for (const reading of visibleReadings) {
-        const snapshot = buildReadingSnapshot(reading, paidReadingIds.has(reading.id));
+        const snapshot = buildReadingSnapshot(reading, paidReadingMap.get(reading.id) ?? false);
         const dayKey = toDayKey(reading.createdAt);
         const point = seriesMap.get(dayKey);
 

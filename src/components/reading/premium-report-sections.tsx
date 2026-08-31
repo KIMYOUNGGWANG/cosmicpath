@@ -7,6 +7,7 @@ import { EvidenceTooltip } from '../ui/confidence-badge';
 import { InsightCard, InsightHighlight } from './ui/InsightCard';
 import { DraftProposal } from './draft-proposal';
 import { ActionChecklist } from './ActionChecklist';
+import { FormattedNarrative } from './ui/FormattedNarrative';
 import type { PremiumReportData } from './premium-report';
 import { ElementHarmony } from './ElementHarmony';
 import { cn } from '@/lib/utils';
@@ -225,11 +226,16 @@ export function FreeFocusSection({
   );
 }
 
-export function ContentCard({ title, content }: { title: string; content: string }) {
+export function ContentCard({ title, content, isEn = false }: { title: string; content: string; isEn?: boolean }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 md:p-5">
-      <h3 className="mb-3 text-sm font-bold text-white md:text-base">{title}</h3>
-      <p className="whitespace-pre-line text-sm leading-relaxed text-gray-300">{content}</p>
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 md:p-6 transition-all duration-300 hover:border-[#d4af37]/30 hover:bg-white/[0.07]">
+      <div className="flex items-center justify-between gap-2 mb-3.5 pb-2.5 border-b border-white/10">
+        <h3 className="text-sm font-bold text-white md:text-base flex items-center gap-2">
+          <span className="w-1.5 h-3.5 rounded-full bg-[#d4af37] inline-block" />
+          {title}
+        </h3>
+      </div>
+      <FormattedNarrative content={content} isEn={isEn} />
     </div>
   );
 }
@@ -912,9 +918,7 @@ export function AstroDeepSection({
                   >
                     <div className="px-4 pb-4">
                       <div className="pl-11">
-                        <p className="whitespace-pre-line text-[15px] leading-loose text-white/80 break-keep">
-                          {sectionData.content}
-                        </p>
+                        <FormattedNarrative content={sectionData.content} isEn={isEn} />
                       </div>
                     </div>
                   </motion.div>

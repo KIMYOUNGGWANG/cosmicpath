@@ -339,13 +339,37 @@ export function ChatInterface({ readingId }: ChatInterfaceProps) {
             {/* Messages Area */}
             <div className="h-[450px] overflow-y-auto p-6 space-y-6 scroll-smooth scrollbar-thin scrollbar-thumb-white/10">
                 {messages.length === 0 && !isThinking && (
-                    <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-60">
-                        <div className="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center text-star-yellow/40">
-                            <Sparkles className="w-8 h-8" />
+                    <div className="h-full flex flex-col items-center justify-center text-center px-2 py-4 space-y-5">
+                        <div className="w-14 h-14 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.2)]">
+                            <Sparkles className="w-7 h-7" />
                         </div>
                         <div>
-                            <p className="text-gray-300 font-medium">운명의 설계도에 대해 더 깊이 물어보세요</p>
-                            <p className="text-xs text-gray-500 mt-1">오라클이 당신의 데이터를 바탕으로 답변합니다.</p>
+                            <p className="text-gray-200 font-semibold text-base">운명의 설계도에 대해 더 깊이 물어보세요</p>
+                            <p className="text-xs text-gray-400 mt-1">보고서에 나온 시기, 선택의 갈림길, 방어 전략을 구체적으로 질문해보세요.</p>
+                        </div>
+
+                        {/* Suggested Prompt Chips */}
+                        <div className="w-full max-w-md pt-2 space-y-2 text-left">
+                            <p className="text-[11px] font-bold uppercase tracking-wider text-[#D4AF37]/80 text-center mb-2.5">
+                                💡 추천 질문 바로 물어보기
+                            </p>
+                            {[
+                                '✨ 2026년 하반기 골든타임에 제가 먼저 시작해야 할 1가지는?',
+                                '🛡️ 리포트에서 경고한 계약/지출 리스크는 어떻게 방어해야 하나요?',
+                                '💼 사주와 점성술이 공통으로 지목한 저의 핵심 승부수 디테일은?',
+                            ].map((prompt, pIdx) => (
+                                <button
+                                    key={pIdx}
+                                    type="button"
+                                    onClick={() => {
+                                        setInput(prompt);
+                                    }}
+                                    className="w-full text-left p-2.5 rounded-xl border border-white/10 bg-white/[0.04] hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/40 transition-all duration-200 text-xs text-gray-300 hover:text-white flex items-center justify-between group"
+                                >
+                                    <span className="truncate mr-2">{prompt}</span>
+                                    <span className="text-[10px] text-[#D4AF37] opacity-0 group-hover:opacity-100 transition-opacity shrink-0">선택 ↵</span>
+                                </button>
+                            ))}
                         </div>
                     </div>
                 )}

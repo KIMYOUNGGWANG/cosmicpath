@@ -338,9 +338,28 @@ export function ReadingSupportDashboard({ summary }: ReadingSupportDashboardProp
                                 <p className="mt-1 text-xs text-white/42">{reading.advisorName} · {formatSelectionModeLabel(reading.selectionMode)}</p>
                             </div>
                             <div>
-                                <p className="font-medium text-white">
-                                    {reading.isPremium ? '유료' : '무료'}
-                                </p>
+                                <div className="flex items-center gap-2">
+                                    {reading.monetizationType === 'standard_paid' && (
+                                        <span className="rounded-full border border-emerald-400/30 bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-300">
+                                            유료 결제
+                                        </span>
+                                    )}
+                                    {reading.monetizationType === 'promo_discount' && (
+                                        <span className="rounded-full border border-violet-400/30 bg-violet-500/15 px-2.5 py-0.5 text-xs font-semibold text-violet-300">
+                                            할인 결제
+                                        </span>
+                                    )}
+                                    {reading.monetizationType === 'promo_free' && (
+                                        <span className="rounded-full border border-sky-400/30 bg-sky-500/15 px-2.5 py-0.5 text-xs font-semibold text-sky-300">
+                                            프로모션 해금 (무료)
+                                        </span>
+                                    )}
+                                    {reading.monetizationType === 'none' && (
+                                        <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-xs font-medium text-white/50">
+                                            무료 리딩
+                                        </span>
+                                    )}
+                                </div>
                                 <p className="mt-1 text-xs text-white/42">
                                     {reading.hasAccessKey ? '주인 확인 키 있음' : '주인 확인 키 없음'}
                                     {reading.credits !== null ? ` · 크레딧 ${reading.credits}` : ''}

@@ -257,9 +257,9 @@ export function OpsCommandCenter({
                                 href="/ops/payments"
                                 eyebrow="결제 상태"
                                 title="결제 확인"
-                                description="결제, 할인 코드, 구독, 유료 처리가 제대로 됐는지 보는 화면입니다."
+                                description="정가 결제, 프로모션 할인, 구독, 유료 처리가 제대로 됐는지 보는 화면입니다."
                                 metricLabel="여기서 보는 것"
-                                metricValue="매출 · 결제 비율 · 유료 처리 누락"
+                                metricValue="매출 · 정가/프로모션 분리 · 유료 처리 누락"
                             />
                             <SurfaceCard
                                 href="/ops/readings"
