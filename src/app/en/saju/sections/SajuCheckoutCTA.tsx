@@ -4,7 +4,7 @@ const WHATS_INCLUDED = [
     { icon: '🗂', title: 'Full Four Pillars analysis', desc: 'Year, Month, Day, Hour pillars decoded in plain English' },
     { icon: '📅', title: 'Your 10-year Destiny Cycle (대운)', desc: 'The macro energy shaping your current life phase' },
     { icon: '⚡', title: 'Timing verdicts', desc: 'Exact windows for action in career, love, and wealth' },
-    { icon: '🎴', title: 'Tarot cross-confirmation', desc: 'Korean oracle cross-checked with a Tarot reading' },
+    { icon: '🏛️', title: 'Ziwei Doushu cross-check', desc: '12 Palaces life map cross-checked with your timing cycles' },
     { icon: '⭐', title: 'Western natal chart overlay', desc: 'East meets West — your Saju and birth chart unified' },
     { icon: '🔥', title: 'Decisive action plan', desc: '"Do this by X date" — no vague horoscope language' },
 ];

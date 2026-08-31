@@ -63,14 +63,14 @@ export default function BrandAssetsPage() {
                         <ConfidenceBadge
                             score={5}
                             percentage={94}
-                            message="사주, 점성술, 타로의 흐름이 한 곳으로 정렬되었습니다. 이 길은 당신을 위한 가장 확실한 선택지입니다."
+                            message="사주, 점성술, 자미두수의 흐름이 한 곳으로 정렬되었습니다. 이 길은 당신을 위한 가장 확실한 선택지입니다."
                         />
                     </div>
 
                     <div className="space-y-4">
                         <span className="text-[10px] text-dim block mb-1 uppercase tracking-widest">Evidence Verification</span>
                         <div className="flex flex-wrap gap-2">
-                            <EvidenceTooltip tag="#급격한_변화" sources={['saju', 'astrology', 'tarot']} explanation="모든 지표가 현재 당신의 궤도가 큰 전환점에 있음을 가리킵니다." />
+                            <EvidenceTooltip tag="#급격한_변화" sources={['saju', 'astrology', 'ziwei']} explanation="모든 지표가 현재 당신의 궤도가 큰 전환점에 있음을 가리킵니다." />
                             <EvidenceTooltip tag="#커리어_도약" sources={['saju', 'astrology']} explanation="사주의 '관운'과 점성술의 '10하우스'가 동시에 활성화되었습니다." />
                         </div>
                     </div>
@@ -79,7 +79,7 @@ export default function BrandAssetsPage() {
                 <div className="mt-12 pt-6 border-t border-white/5 flex items-center justify-between">
                     <div className="text-[9px] text-dim leading-relaxed">
                         The only platform that speaks <br />
-                        <span className="text-starlight font-bold">3 reference layers</span> in one note.
+                        <span className="text-starlight font-bold">5 calculation engines</span> in one dossier.
                     </div>
                     <div className="flex items-center gap-2">
                         <span className="text-[8px] text-acc-gold tracking-widest font-bold">START NOW</span>

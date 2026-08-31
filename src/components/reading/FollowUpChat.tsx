@@ -89,7 +89,7 @@ export function FollowUpChat({
                 objectType: 'feed',
                 content: {
                     title: '✨ 나의 CosmicPath 운세 리딩 결과',
-                    description: '사주 + 점성술 + 타로 3원 통합 분석! 나의 운명을 확인해보세요 🌟',
+                    description: '사주 + 점성술 + 자미두수 5대 엔진 통합 분석! 나의 운명을 확인해보세요 🌟',
                     imageUrl: 'https://www.cosmicpath.app/og-image.png',
                     imageWidth: 1200,
                     imageHeight: 630,

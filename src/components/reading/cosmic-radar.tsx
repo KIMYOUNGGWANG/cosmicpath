@@ -64,7 +64,7 @@ export function CosmicRadar({
         };
     };
 
-    // 각 축의 좌표 (사주: 0도, 타로: 120도, 점성술: 240도)
+    // 각 축의 좌표 (사주: 0도, 자미두수: 120도, 점성술: 240도)
     const sajuPos = getCoordinates(currentScores.saju, 0);       // Top
     const tarotPos = getCoordinates(currentScores.tarot, 120);   // Right Bottom
     const starPos = getCoordinates(currentScores.star, 240);     // Left Bottom

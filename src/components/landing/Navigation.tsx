@@ -158,7 +158,7 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
                         icon: PenLine,
                         iconColorClass: 'group-hover:bg-gold/20 group-hover:text-gold',
                         label: isEnglish ? 'DECISION NOTE' : 'DECISION NOTE 시작',
-                        subLabel: isEnglish ? 'Saju, timing, tarot signal' : '사주 구조, 타이밍, 타로 신호',
+                        subLabel: isEnglish ? '5-Engine cross-analysis' : '5대 엔진 교차 분석',
                         href: decisionStartHref,
                     },
                 ]}

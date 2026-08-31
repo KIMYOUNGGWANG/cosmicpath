@@ -75,6 +75,9 @@ export function EvidenceTooltip({ tag, sources, explanation }: EvidenceTooltipPr
         switch (source) {
             case 'saju': return '☯️';
             case 'astrology': return '✨';
+            case 'ziwei': return '🏛️';
+            case 'numerology': return '🔢';
+            case 'thai': return '👑';
             case 'tarot': return '🃏';
             default: return '📌';
         }
@@ -84,6 +87,9 @@ export function EvidenceTooltip({ tag, sources, explanation }: EvidenceTooltipPr
         switch (source) {
             case 'saju': return '사주';
             case 'astrology': return '점성술';
+            case 'ziwei': return '자미두수';
+            case 'numerology': return '수비학';
+            case 'thai': return '태국 점성술';
             case 'tarot': return '타로';
             default: return source;
         }

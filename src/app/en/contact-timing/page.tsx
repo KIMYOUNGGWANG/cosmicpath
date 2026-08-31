@@ -13,7 +13,7 @@ const PRIMARY_CONTACT_QUESTION = 'Should I text them now, or wait a little longe
 export const metadata: Metadata = {
   title: 'Contact Decision Note',
   description:
-    'Use CosmicPath Decision Note to cross-check one relationship or DM timing question. Saju = structure, astrology = timing, tarot = immediate signal.',
+    'Use CosmicPath Decision Note to cross-check one relationship or DM timing question. Saju = structure, astrology = timing, Ziwei = event alignment.',
   robots: {
     index: true,
     follow: true,
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Contact Decision Note',
-    description: 'Saju = structure, astrology = timing, tarot = immediate signal for the moment before you send the message.',
+    description: 'Saju = structure, astrology = timing, Ziwei = event alignment for the moment before you send the message.',
     images: ['/og-image.png'],
   },
 };
@@ -121,7 +121,7 @@ export default function EnglishContactTimingPage() {
               </h1>
               <p className="mt-6 max-w-2xl text-base leading-8 text-white/70 md:text-lg">
                 Before you send the message, make a contact timing note: text now, wait, narrow the move, or hold.
-                Saju = structure, astrology = timing, tarot = immediate signal. CosmicPath Decision Note names the next move without guaranteeing that someone will respond.
+                Saju = structure, astrology = timing, Ziwei = event alignment. CosmicPath Decision Note names the next move without guaranteeing that someone will respond.
               </p>
 
               <div className="mt-9 flex flex-col gap-3 sm:flex-row">

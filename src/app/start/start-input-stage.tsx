@@ -51,7 +51,7 @@ export function StartInputStage(props: StartInputStageProps) {
               <p className="max-w-2xl break-keep text-sm leading-6 text-moonlight md:leading-7">
                 {props.language === 'ko' ? (
                   <>
-                    <span className="block sm:hidden">사주·점성·타로로 선택을 정리합니다.</span>
+                    <span className="block sm:hidden">5대 계산 엔진으로 선택을 정리합니다.</span>
                     <span className="block sm:hidden">첫 판정은 무료입니다. 생년월일만 필수입니다.</span>
                     <span className="hidden sm:inline">{copy.subtitle}</span>
                   </>

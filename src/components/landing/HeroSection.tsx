@@ -19,12 +19,12 @@ export function HeroSection({ language }: HeroSectionProps) {
         ? [
             { code: '命式', title: '사주 구조', detail: '타고난 구조와 반복되는 압력을 봅니다.' },
             { code: '星盤', title: '점성 타이밍', detail: '지금 움직여도 되는 시간 흐름을 봅니다.' },
-            { code: '牌', title: '타로 즉각 신호', detail: '지금 질문에서 바로 올라온 신호를 확인합니다.' },
+            { code: '宮盤', title: '자미두수 명반', detail: '12궁 배치와 생애 사건 흐름을 대조합니다.' },
         ]
         : [
             { code: '命式', title: 'Saju structure', detail: 'The underlying pattern and recurring pressure.' },
             { code: '星盤', title: 'Astrology timing', detail: 'The timing window around the next move.' },
-            { code: '牌', title: "Tarot's immediate signal", detail: 'The signal rising from this question right now.' },
+            { code: '宮盤', title: 'Ziwei Doushu', detail: 'The 12-palace life map and event alignment.' },
         ];
     const sampleCases = isKo
         ? [
@@ -97,12 +97,12 @@ export function HeroSection({ language }: HeroSectionProps) {
                                     <>
                                         미뤄둔 선택 하나를 <br />
                                         먼저 판정하고 <br />
-                                        <span className="text-acc-gold">세 신호로 대조합니다</span>
+                                        <span className="text-acc-gold">5대 엔진으로 대조합니다</span>
                                     </>
                                 ) : (
                                     <>
                                         One delayed choice. <br />
-                                        Three cross-checks. <br />
+                                        5-Engine cross-checks. <br />
                                         <span className="text-acc-gold">One next move.</span>
                                     </>
                                 )}
@@ -113,13 +113,13 @@ export function HeroSection({ language }: HeroSectionProps) {
                                     <>
                                         <span className="block sm:hidden">사주로 구조를 봅니다.</span>
                                         <span className="block sm:hidden">점성으로 시기를 봅니다.</span>
-                                        <span className="block sm:hidden">타로 신호까지 대조합니다.</span>
+                                        <span className="block sm:hidden">자미두수와 수비학까지 대조합니다.</span>
                                         <span className="block sm:hidden">질문 하나의 방향을 정리합니다.</span>
                                         <span className="hidden sm:block">사주로 구조를 봅니다. 점성으로 시기를 봅니다.</span>
-                                        <span className="hidden sm:block">타로 즉시 신호까지 대조해 질문을 판정합니다.</span>
+                                        <span className="hidden sm:block">자미두수와 수비학까지 대조해 질문을 판정합니다.</span>
                                     </>
                                 ) : (
-                                    "CosmicPath Decision Note cross-checks Saju structure, astrology timing, and tarot's immediate signal before naming the next move."
+                                    "CosmicPath Decision Note cross-checks Saju structure, astrology timing, and deterministic engines before naming the next move."
                                 )}
                             </p>
 

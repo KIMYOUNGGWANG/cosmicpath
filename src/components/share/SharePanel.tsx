@@ -82,9 +82,9 @@ export function SharePanel({
 
     const buildTikTokTemplate = (url: string) => {
         if (isEn) {
-            return `CosmicPath Decision Note cross-checks Saju structure, astrology timing, and tarot's immediate signal.\n\nTry yours: ${url}\n#CosmicPath #DecisionNote #Saju #Astrology #Tarot`;
+            return `CosmicPath Decision Note cross-checks Saju structure, astrology timing, and 5-engine calculations.\n\nTry yours: ${url}\n#CosmicPath #DecisionNote #Saju #Astrology #Ziwei`;
         }
-        return `사주로 구조를 보고, 점성으로 타이밍을 보고, 타로로 지금 질문의 즉각 신호를 확인해 하나의 질문을 판정했어요.\n\n너도 해보기: ${url}\n#CosmicPath #DecisionNote #사주 #점성술 #타로`;
+        return `사주로 구조를 보고, 점성으로 타이밍을 보고, 5대 계산 엔진을 대조해 하나의 질문을 판정했어요.\n\n너도 해보기: ${url}\n#CosmicPath #DecisionNote #사주 #점성술 #자미두수`;
     };
 
     const claimReward = useCallback(async () => {
@@ -247,8 +247,8 @@ export function SharePanel({
 
         const url = resolveShareUrl();
         const text = isEn
-            ? `CosmicPath Decision Note cross-checks Saju structure, astrology timing, and tarot's immediate signal before naming the next move.\n\n${url}`
-            : `CosmicPath Decision Note로 사주 구조, 점성 타이밍, 타로 즉각 신호를 대조해 하나의 질문을 판정했어요.\n\n${url}`;
+            ? `CosmicPath Decision Note cross-checks Saju structure, astrology timing, and 5-engine deterministic calculations before naming the next move.\n\n${url}`
+            : `CosmicPath Decision Note로 사주 구조, 점성 타이밍, 5대 계산 엔진을 대조해 하나의 질문을 판정했어요.\n\n${url}`;
 
         const intentUrl = `https://threads.net/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
         window.open(intentUrl, '_blank', 'noopener,noreferrer');

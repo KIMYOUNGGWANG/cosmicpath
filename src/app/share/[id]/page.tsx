@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: SharedPageProps): Promise<Met
   if (!reading) {
     return {
       title: 'CosmicPath Decision Note',
-      description: '사주로 구조를 보고, 점성으로 타이밍을 보고, 타로로 지금 질문의 즉각 신호를 확인해 하나의 질문을 판정합니다.',
+      description: '사주로 구조를 보고, 점성으로 타이밍을 보고, 5대 계산 엔진을 대조해 하나의 질문을 판정합니다.',
     };
   }
 

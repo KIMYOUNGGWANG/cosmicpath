@@ -75,7 +75,7 @@ export function FinalVerdictCard({ data }: FinalVerdictProps) {
                         </div>
                         <div className="bg-slate-900/50 p-4 rounded-lg border border-white/5">
                             <div className="flex items-center gap-2 text-purple-300 mb-2 font-semibold">
-                                <Sparkles className="w-4 h-4" /> 점성술/타로 통찰
+                                <Sparkles className="w-4 h-4" /> 점성술/자미두수 통찰
                             </div>
                             <p className="text-slate-400 leading-relaxed">
                                 {data.astro_support} {data.tarot_insight && `+ ${data.tarot_insight}`}

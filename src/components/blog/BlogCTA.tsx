@@ -22,7 +22,7 @@ export function BlogCTA({ compact = false }: BlogCTAProps) {
                         이론은 충분해요. 이제 내 사주로 직접 확인해볼까요?
                     </h2>
                     <p className="text-sm leading-7 text-white/70 md:text-base">
-                        생년월일만 넣으면, 사주 · 별자리 · 타로를 한번에 읽어드려요.
+                        생년월일만 넣으면, 사주 · 별자리 · 자미두수를 한번에 읽어드려요.
                         내 데이터로 보면 해석이 완전히 달라져요.
                     </p>
                 </div>

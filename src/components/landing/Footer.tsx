@@ -14,7 +14,7 @@ export function Footer({ language = 'ko' }: FooterProps) {
                     <div className="font-cinzel text-lg tracking-[0.18em] text-starlight">
                         CosmicPath
                         <div className="mt-1 text-[9px] uppercase tracking-[0.24em] text-white/34">
-                            {isEnglish ? 'Saju · Astrology · Tarot' : '사주 · 점성술 · 타로'}
+                            {isEnglish ? '5-Engine Strategic Decision Dossier' : '5대 엔진 기반 의사결정 도시에'}
                         </div>
                     </div>
 

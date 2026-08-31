@@ -100,7 +100,7 @@ export function CrossroadsSection() {
                         흐름을 읽었다면, <br /> <span className="text-acc-gold">하나만 실행하세요.</span>
                     </h2>
                     <p className="text-moonlight text-base md:text-lg mb-10 md:mb-12 max-w-xl mx-auto font-light">
-                        첫 판정으로 방향을 좁히고, 사주·점성술·타로는 필요한 근거로만 확인합니다. <br />
+                        첫 판정으로 방향을 좁히고, 사주·점성술·자미두수 등 5대 엔진은 필요한 근거로만 확인합니다. <br />
                         그다음 오늘 밀어야 할 것과 멈춰야 할 것을 남깁니다.
                     </p>
 

@@ -98,7 +98,7 @@ export default async function PrivacyPage() {
                                     </tr>
                                     <tr className="transition-colors hover:bg-white/[0.02]">
                                         <td className="border border-white/10 p-4 font-medium">결정 정리 선택 정보</td>
-                                        <td className="border border-white/10 p-4">결정 보조를 위해 입력한 상황 설명, 메시지 초안, 선택적 출생정보, 선택적 타로 선택 정보, Next Move Ritual 행동 및 공개 안전 공유 요약</td>
+                                        <td className="border border-white/10 p-4">결정 보조를 위해 입력한 상황 설명, 메시지 초안, 선택적 출생정보, Next Move Ritual 행동 및 공개 안전 공유 요약</td>
                                     </tr>
                                     <tr className="transition-colors hover:bg-white/[0.02]">
                                         <td className="border border-white/10 p-4 font-medium">결제 및 결과 발송 (선택)</td>
@@ -116,7 +116,7 @@ export default async function PrivacyPage() {
                     <section>
                         <h2 className="mb-4 text-xl font-cinzel text-white">2. 개인정보의 처리 목적</h2>
                         <ul className="list-disc space-y-2 pl-5">
-                            <li><strong>결정 정리 노트 제공:</strong> 의사결정 보조 노트와 선택적 사주/점성술/타로 참고 해석 생성 및 전송</li>
+                            <li><strong>결정 정리 노트 제공:</strong> 의사결정 보조 노트와 선택적 사주/점성술/자미두수 참고 해석 생성 및 전송</li>
                             <li><strong>노트 복원 및 보관:</strong> 결제 후 결과 조회, 저장된 노트 복원, 고객 지원을 위한 최소 정보 확인</li>
                             <li><strong>회원 관리:</strong> 서비스 이용에 따른 본인 확인 및 부정 이용 방지</li>
                             <li><strong>결제 및 정산:</strong> 유료 콘텐츠 대금 결제 및 환불 처리</li>

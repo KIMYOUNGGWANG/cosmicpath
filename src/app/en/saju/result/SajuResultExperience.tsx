@@ -18,7 +18,7 @@ const EN_LOADING_PHASES: Record<number, string> = {
     1: 'Decoding the Four Pillars of Destiny...',
     2: 'Reading your 10-year Fortune Cycle...',
     3: 'Cross-referencing with Western Astrology...',
-    4: 'Drawing your Tarot confirmation...',
+    4: 'Aligning Ziwei Doushu Palaces...',
     5: 'Calculating life area timings...',
     6: 'Composing your decisive verdict...',
     7: 'Finalizing your reading...',

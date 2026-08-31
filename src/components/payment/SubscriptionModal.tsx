@@ -189,7 +189,7 @@ const MY_PAYWALL_COPY: PaywallCopy = {
 const DAILY_PAYWALL_COPY: PaywallCopy = {
     badge: 'Daily Premium Membership',
     headline: '매일의 결정적인 흐름을 놓치지 마세요',
-    body: '당신의 사주와 타로를 결합한 Daily Premium 정밀 분석을 매일 아침 받아볼 수 있습니다. 월간은 가장 가볍게 루틴을 열기 좋고, 연간은 장기적인 운의 흐름을 가장 경제적으로 따라가는 방법입니다.',
+    body: '당신의 사주와 점성술을 결합한 Daily Premium 정밀 분석을 매일 아침 받아볼 수 있습니다. 월간은 가장 가볍게 루틴을 열기 좋고, 연간은 장기적인 운의 흐름을 가장 경제적으로 따라가는 방법입니다.',
     insightLabel: 'Daily Routine Path',
     insightBody:
         '기본 결제 표면은 월간과 연간 두 가지 경로만 남겼습니다. 처음에는 월간으로 데일리 루틴을 열어보고, 만족스럽다면 연간으로 이어가는 구조가 가장 명확하고 안정적입니다.',

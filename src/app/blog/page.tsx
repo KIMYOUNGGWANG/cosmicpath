@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     title: 'CosmicPath Archive | 참고 글 모음',
     description:
         '메인 오라클 여정을 보조하는 CosmicPath 참고 글 모음입니다.',
-    keywords: ['사주 블로그', '신살 뜻', '궁합 가이드', '운세 콘텐츠', 'AI 사주 해석', '타로 가이드'],
+    keywords: ['사주 블로그', '신살 뜻', '궁합 가이드', '운세 콘텐츠', 'AI 사주 해석', '자미두수 가이드'],
     robots: {
         index: false,
         follow: false,

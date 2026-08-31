@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
         const description = getSearchText(
             searchParams,
             'desc',
-            '사주로 구조를 보고, 점성으로 타이밍을 보고, 타로로 지금 질문의 즉각 신호를 확인해 하나의 질문을 판정합니다.'
+            '사주로 구조를 보고, 점성으로 타이밍을 보고, 자미두수·수비학을 대조해 하나의 질문을 판정합니다.'
         );
         const cardName = getSearchText(searchParams, 'card', 'Decision Note');
         const trustScore = getSearchText(searchParams, 'score', '4.5');
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
                                 COSMICPATH
                             </div>
                             <div style={{ display: 'flex', marginTop: 34, color: '#d7ad5f', fontSize: 30, letterSpacing: '0.18em' }}>
-                                사주 구조 · 점성 타이밍 · 타로 즉각 신호
+                                사주 원국 · 점성 타이밍 · 자미두수 명반
                             </div>
                             <div
                                 style={{
@@ -131,7 +131,7 @@ export async function GET(req: NextRequest) {
                                 {[
                                     ['命式', '사주 구조'],
                                     ['星盤', '점성 타이밍'],
-                                    ['牌', '타로 즉각 신호'],
+                                    ['宮盤', '자미두수 명반'],
                                 ].map(([symbol, label]) => (
                                     <div
                                         key={label}

@@ -9,7 +9,7 @@ import OracleChatClient from './OracleChatClient';
 
 export const metadata: Metadata = {
   title: '그랜드 오라클 | CosmicPath',
-  description: '사주, 타로, 점성술이 함께 답하는 개인 오라클 채팅',
+  description: '사주, 점성술, 자미두수가 함께 답하는 개인 오라클 채팅',
 };
 
 export default async function OracleChatPage() {

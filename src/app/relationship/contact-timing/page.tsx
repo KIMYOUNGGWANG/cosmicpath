@@ -12,7 +12,7 @@ type RelationshipContactSearchParams = Record<string, string | string[] | undefi
 
 export const metadata: Metadata = {
   title: '연락 결정 정리',
-  description: '상대에게 지금 연락할지 기다릴지, 사주 구조와 점성 타이밍, 타로 즉각 신호를 대조해 먼저 판정합니다.',
+  description: '상대에게 지금 연락할지 기다릴지, 사주 구조와 점성 타이밍, 자미두수 명반을 대조해 먼저 판정합니다.',
   robots: {
     index: true,
     follow: true,
@@ -45,10 +45,10 @@ const PROMPT_CARDS = [
     Icon: MessageCircle,
   },
   {
-    id: 'response_timing',
-    title: '반응이 올까',
-    summary: '상대가 다시 반응할 가능성이 있다면 타이밍이 맞는지 봅니다.',
-    question: '상대가 다시 반응할 가능성이 있다면 내가 먼저 움직여야 할 타이밍일까?',
+    id: 'read_and_wait',
+    title: '안 읽씹일 때',
+    summary: '한 번 더 보낼지, 멈출지 기준을 세웁니다.',
+    question: '답장이 없는데 한 번 더 연락해야 할까, 지금은 가만히 있어야 할까?',
     Icon: Clock3,
   },
   {
@@ -131,7 +131,7 @@ export default async function RelationshipContactTimingPage({
             </h1>
             <p className="mt-6 max-w-xl break-keep text-base leading-8 text-white/68 md:text-lg">
               지금은 연락, 대기, 축소, 보류 중 어디에 가까운지 먼저 정리합니다.
-              사주로 구조를 보고, 점성으로 타이밍을 보고, 타로로 지금 질문의 즉각 신호를 확인하되 상대 마음이나 답장을 보장하지 않습니다.
+              사주로 구조를 보고, 점성으로 타이밍을 보고, 자미두수와 수비학으로 흐름을 확인하되 상대 마음이나 답장을 보장하지 않습니다.
             </p>
 
             <div className="mt-8">
