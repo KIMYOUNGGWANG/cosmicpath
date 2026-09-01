@@ -96,6 +96,7 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
   );
 
   const priceLabel = props.dynamicPrice || (isEn ? '$3.99' : '₩4,900');
+  const originalPrice = isEn ? '$14.99' : '₩19,800';
   const currentYear = new Date().getFullYear();
   const nextYear = currentYear + 1;
 
@@ -169,10 +170,14 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
             <button
               type="button"
               onClick={() => { void props.onUnlock(); }}
-              className="inline-flex min-h-[46px] shrink-0 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#e8c86d] to-[#c8a84d] px-6 py-3 text-xs font-bold uppercase tracking-[0.16em] text-black shadow-[0_0_24px_rgba(200,168,77,0.35)] transition-all hover:scale-[1.03] hover:brightness-110"
+              className="inline-flex min-h-[46px] shrink-0 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#f0d588] via-[#e8c86d] to-[#c8a84d] px-5 py-2.5 text-xs font-black uppercase tracking-[0.12em] text-stone-950 shadow-[0_0_24px_rgba(200,168,77,0.35)] transition-all hover:scale-[1.03] hover:brightness-110 active:scale-95"
             >
-              <Lock size={14} />
-              {isEn ? `Unlock Full Dossier (${priceLabel})` : `전체 심층 리포트 열기 (${priceLabel})`}
+              <Lock size={14} className="text-stone-950" />
+              <div className="flex items-center gap-1.5">
+                <span className="rounded bg-rose-600/25 px-1 py-0.2 text-[9px] font-extrabold text-rose-950 border border-rose-600/40">75% OFF</span>
+                <span className="line-through text-[10px] text-stone-800 opacity-75">{originalPrice}</span>
+                <span>{priceLabel}</span>
+              </div>
             </button>
           )}
         </div>
@@ -247,6 +252,75 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
           )}
         </div>
 
+        {/* 1-Click Context-Aware Consultation Prompts */}
+        <div className="rounded-[22px] border border-[#c8a84d]/30 bg-gradient-to-r from-[#c8a84d]/10 via-black/40 to-[#c8a84d]/5 p-5">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MessageCircle className="h-4 w-4 text-[#e8c86d]" />
+              <span className="text-xs font-bold uppercase tracking-wider text-[#fae19c]">
+                {isEn ? 'Personalized Follow-Up Prompts' : '사주·점성 기반 맞춤 1:1 추가 질문'}
+              </span>
+            </div>
+            <span className="text-[10px] text-stone-400">
+              {isEn ? '1-Click Consultation' : '클릭 시 즉시 1:1 대화'}
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            {(isEn
+              ? (props.readingData?.context === 'love'
+                ? [
+                    'When is the optimal golden window to initiate contact?',
+                    'What hidden friction or emotional blind spot should I avoid?',
+                    'Will this relationship reach a definitive milestone this year?',
+                  ]
+                : props.readingData?.context === 'general'
+                ? [
+                    'Which month has the highest risk of financial or contract loss?',
+                    'What are the exact zodiac & career traits of my Noble Allies?',
+                    'Is this the right timing to expand or make a major commitment?',
+                  ]
+                : [
+                    'Which specific month gives me the highest salary negotiation leverage?',
+                    'How can I preemptively prevent conflicts with managers or teammates?',
+                    'Between moving vs staying, which path minimizes 1-year regret?',
+                  ])
+              : (props.readingData?.context === 'love'
+                ? [
+                    '상대방에게 먼저 연락하기 가장 좋은 골든타임은 언제인가요?',
+                    '이 관계에서 제가 반드시 피해야 할 사주적 결핍과 충돌은 무엇인가요?',
+                    '올해 안에 관계의 확실한 진전이나 결실이 있을까요?',
+                  ]
+                : props.readingData?.context === 'general'
+                ? [
+                    '올해 가장 조심해야 할 금전·자산 손실 시기는 언제인가요?',
+                    '나에게 큰 기회를 열어줄 천을귀인의 띠와 직업적 특징은 무엇인가요?',
+                    '지금 투자나 새로운 사업 확장을 시작해도 안전한 운인가요?',
+                  ]
+                : [
+                    '이번 이직에서 연봉 협상을 가장 유리하게 끌고 갈 달은 언제인가요?',
+                    '상사/팀원과의 불화 리스크를 사전에 완벽히 피하려면 어떻게 해야 하나요?',
+                    '이직(이동) vs 잔류 중 1년 뒤 후회가 덜한 승부수는 무엇인가요?',
+                  ])
+            ).map((q, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => {
+                  const chatEl = document.getElementById('oracle-chat') || document.querySelector('[data-chat-interface]');
+                  if (chatEl) {
+                    chatEl.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                className="group flex items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/5 p-3 text-left text-xs font-medium text-stone-200 hover:border-[#c8a84d]/60 hover:bg-[#c8a84d]/15 hover:text-white transition-all shadow-sm active:scale-[0.99]"
+              >
+                <span className="truncate">{q}</span>
+                <Sparkles className="h-3.5 w-3.5 text-[#e8c86d] shrink-0 opacity-70 group-hover:opacity-100 group-hover:scale-110 transition-transform" />
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* High-Impact Blind Spot Risk Teaser */}
         {!props.isPremium && (
           <BlindSpotTeaser
@@ -302,12 +376,15 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
             })}
           </div>
 
-          {/* Big Golden CTA */}
+          {/* Big Golden CTA with 75% Anchoring */}
           <div className="mt-8 flex flex-col items-center justify-center">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-rose-500/40 bg-rose-500/15 px-3.5 py-1 text-[11px] font-bold text-rose-300 shadow-sm animate-pulse">
+              <span>🔥 {isEn ? 'First Reading Special 75% Support' : '오늘 첫 분석 한정 75% 특가 지원'}</span>
+            </div>
             <button
               type="button"
               onClick={() => { void props.onUnlock(); }}
-              className="group relative w-full max-w-md overflow-hidden rounded-full bg-gradient-to-r from-[#f0d588] via-[#e8c86d] to-[#c8a84d] p-4 text-center font-cinzel text-base font-extrabold uppercase tracking-wider text-stone-950 shadow-[0_0_35px_rgba(200,168,77,0.45)] transition-all duration-300 hover:scale-[1.02] hover:brightness-110"
+              className="group relative w-full max-w-md overflow-hidden rounded-full bg-gradient-to-r from-[#f0d588] via-[#e8c86d] to-[#c8a84d] p-4 text-center font-cinzel text-base font-extrabold uppercase tracking-wider text-stone-950 shadow-[0_0_35px_rgba(200,168,77,0.45)] transition-all duration-300 hover:scale-[1.02] hover:brightness-110 active:scale-95"
             >
               <div className="flex items-center justify-center gap-2.5">
                 <Lock size={16} className="text-stone-950" />
@@ -316,12 +393,15 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
                     ? `Unlock Full 8-Phase Report (${priceLabel})`
                     : `내 전체 심층 리포트 즉시 열기 (${priceLabel})`}
                 </span>
+                <span className="text-xs font-semibold text-stone-800 line-through opacity-80">
+                  {originalPrice}
+                </span>
               </div>
             </button>
-            <p className="mt-3 text-center text-xs text-stone-500">
+            <p className="mt-3 text-center text-xs text-stone-400">
               {isEn
-                ? 'One-time secure unlock · Instant full access · Includes 12-Month Fortune Flow'
-                : '1회성 안전 결제 · 즉시 전체 열람 가능 · 12개월 운세 장부 & 귀인 분석 포함'}
+                ? 'One-time secure unlock · Instant full access · Includes 12-Month Fortune Flow & High-Risk Clash Dates'
+                : '1회성 안전 결제 · 🚨 4분기 위험 일진 캘린더 & 천을귀인 직업/방향 즉시 포함'}
             </p>
           </div>
         </div>
