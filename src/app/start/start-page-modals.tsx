@@ -56,6 +56,11 @@ export function StartPageModals(props: StartPageModalsProps) {
           onClose={props.onCloseShare}
           title={props.reportData.summary?.title || (props.language === 'en' ? 'CosmicPath Decision Note' : '운명 의사결정 브리프')}
           matchLevel={getShareMatchLevel(props.reportData.summary?.trust_score || 94)}
+          dayMaster={
+            (props.metadata?.saju as { dayMaster?: string } | undefined)?.dayMaster ||
+            props.reportData.traits?.find((t) => t.name.includes('일간'))?.name?.replace(/[^甲乙丙丁戊己庚辛壬癸]/g, '') ||
+            '甲'
+          }
           keywords={
             props.reportData.summary?.keywords && props.reportData.summary.keywords.length > 0
               ? props.reportData.summary.keywords.slice(0, 4)

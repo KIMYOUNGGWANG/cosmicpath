@@ -15,6 +15,7 @@ interface ShareCardModalProps {
     title: string;
     matchLevel: 'PERFECT' | 'PARTIAL' | 'CONFLICT';
     keywords: string[];
+    dayMaster?: string;
     source?: string;
     language?: 'ko' | 'en';
     readingId?: string;
@@ -31,6 +32,7 @@ export function ShareCardModal({
     title,
     matchLevel,
     keywords,
+    dayMaster,
     source,
     language,
     readingId,
@@ -94,6 +96,8 @@ export function ShareCardModal({
                                 title={title}
                                 matchLevel={matchLevel}
                                 keywords={keywords}
+                                dayMaster={dayMaster}
+                                language={language}
                             />
                         </div>
 

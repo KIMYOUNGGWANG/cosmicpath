@@ -1,121 +1,153 @@
 'use client';
 
 import { forwardRef } from 'react';
-import { Sparkles, Star } from 'lucide-react';
+import { Sparkles, Star, Users, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { getSajuArchetype } from '@/lib/cosmic/archetypes';
 
-interface CosmicShareCardProps {
+export interface CosmicShareCardProps {
     title: string;
     matchLevel: 'PERFECT' | 'PARTIAL' | 'CONFLICT';
     keywords: string[];
+    dayMaster?: string;
+    language?: 'ko' | 'en';
 }
 
 /**
- * 인스타그램 스토리용 공유 카드 컴포넌트
- * 9:16 비율, 딥 네이비 + 골드 테마
+ * 인스타그램 / 스레드 스토리 전용 9:16 오행 페르소나 바이럴 카드
+ * 360x640px 비율, 다크 골드 & 오행 고유 그라디언트 테마
  */
 export const CosmicShareCard = forwardRef<HTMLDivElement, CosmicShareCardProps>(
-    function CosmicShareCard({ title, matchLevel, keywords }, ref) {
+    function CosmicShareCard({ title, matchLevel, keywords, dayMaster = '甲', language = 'ko' }, ref) {
+        const isEn = language === 'en';
+        const archetype = getSajuArchetype(dayMaster);
+
         const matchLevelConfig = {
-            PERFECT: { label: '완벽한 조화', color: 'from-emerald-400 to-teal-500', emoji: '✨' },
-            PARTIAL: { label: '부분적 일치', color: 'from-amber-400 to-orange-500', emoji: '🌙' },
-            CONFLICT: { label: '다양한 시각', color: 'from-purple-400 to-pink-500', emoji: '🔮' },
+            PERFECT: { label: isEn ? 'Perfect 94% Sync' : '5대 엔진 합의율 94%', color: 'from-emerald-400 to-teal-500', emoji: '✨' },
+            PARTIAL: { label: isEn ? 'High Resonance' : '교차 일치율 88%', color: 'from-amber-400 to-orange-500', emoji: '🌙' },
+            CONFLICT: { label: isEn ? 'Strategic Focus' : '정밀 타이밍 분기', color: 'from-purple-400 to-pink-500', emoji: '🔮' },
         };
 
-        const config = matchLevelConfig[matchLevel] || matchLevelConfig.PARTIAL;
+        const config = matchLevelConfig[matchLevel] || matchLevelConfig.PERFECT;
+        const currentYear = new Date().getFullYear();
 
         return (
             <div
                 ref={ref}
-                className="relative overflow-hidden"
+                className="relative overflow-hidden flex flex-col justify-between"
                 style={{
                     width: '360px',
                     height: '640px',
-                    background: 'linear-gradient(180deg, #0F1419 0%, #1A1F2E 50%, #0D1117 100%)',
-                    fontFamily: "'Pretendard', 'Noto Sans KR', sans-serif",
+                    background: 'linear-gradient(180deg, #090b10 0%, #121622 45%, #080a0f 100%)',
+                    fontFamily: "'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
                 }}
             >
-                {/* 배경 장식 */}
-                <div className="absolute inset-0 overflow-hidden">
-                    {/* 별 장식 */}
-                    <div className="absolute top-8 left-6 w-2 h-2 bg-white/30 rounded-full animate-pulse" />
-                    <div className="absolute top-20 right-10 w-1.5 h-1.5 bg-white/20 rounded-full" />
-                    <div className="absolute top-40 left-12 w-1 h-1 bg-white/40 rounded-full" />
-                    <div className="absolute bottom-32 right-8 w-2 h-2 bg-white/25 rounded-full animate-pulse" />
-                    <div className="absolute bottom-48 left-8 w-1.5 h-1.5 bg-white/30 rounded-full" />
-
-                    {/* 그라디언트 오버레이 */}
-                    <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#A184FF]/10 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#D4AF37]/5 to-transparent" />
+                {/* 배경 앰비언트 글로우 */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div
+                        className="absolute top-12 left-1/2 -translate-x-1/2 w-64 h-64 rounded-full blur-3xl opacity-30"
+                        style={{ backgroundColor: archetype.glowColor }}
+                    />
+                    <div className="absolute top-8 left-6 w-1.5 h-1.5 bg-white/40 rounded-full animate-pulse" />
+                    <div className="absolute top-24 right-8 w-1 h-1 bg-[#e8c86d]/60 rounded-full" />
+                    <div className="absolute bottom-36 left-10 w-2 h-2 bg-white/20 rounded-full" />
+                    <div className="absolute bottom-24 right-12 w-1.5 h-1.5 bg-[#e8c86d]/40 rounded-full animate-pulse" />
                 </div>
 
-                {/* 상단: 로고 영역 */}
-                <div className="relative pt-10 pb-6 text-center">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10">
-                        <Sparkles className="w-4 h-4 text-[#D4AF37]" />
-                        <span className="text-white/80 text-xs font-medium tracking-widest uppercase">
-                            Cosmic Reading
+                {/* 상단 헤더: 브랜드 & 일간 뱃지 */}
+                <div className="relative pt-7 px-6 flex items-center justify-between z-10">
+                    <div className="flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-[#e8c86d]" />
+                        <span className="text-white/80 text-[11px] font-bold tracking-[0.2em] uppercase font-cinzel">
+                            COSMICPATH
+                        </span>
+                    </div>
+
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/15 bg-white/5 backdrop-blur-md shadow-sm">
+                        <span className="text-xs">{archetype.emoji}</span>
+                        <span className="text-stone-200 text-[10px] font-bold tracking-wider">
+                            {archetype.stem}{isEn ? ` (${archetype.elementEn})` : `일간 · ${archetype.element} 기운`}
                         </span>
                     </div>
                 </div>
 
-                {/* 중앙: 메인 콘텐츠 */}
-                <div className="relative px-8 py-6 flex flex-col items-center">
-                    {/* Public-safe summary mark */}
-                    <div className="relative mb-6">
-                        <div className="w-32 h-32 rounded-full bg-gradient-to-br from-[#A184FF]/20 to-[#6366F1]/20 flex items-center justify-center border border-[#A184FF]/30">
-                            <div className="text-center">
-                                <div className="text-2xl font-bold text-white">
-                                    Decision
-                                </div>
-                                <div className="text-[10px] text-white/50 uppercase tracking-wider mt-1">
-                                    Note
-                                </div>
-                            </div>
+                {/* 중앙 메인: 오행 페르소나 아키타입 */}
+                <div className="relative px-6 py-2 flex flex-col items-center text-center z-10">
+                    {/* Hero Element Orb */}
+                    <div className="relative mb-3.5">
+                        <div
+                            className={`w-20 h-20 rounded-3xl bg-gradient-to-br ${archetype.gradientTheme} flex items-center justify-center border border-white/20 shadow-xl`}
+                            style={{ boxShadow: `0 8px 32px ${archetype.glowColor}` }}
+                        >
+                            <span className="text-3xl filter drop-shadow-md">{archetype.emoji}</span>
                         </div>
-                        {/* 글로우 효과 */}
-                        <div className="absolute inset-0 rounded-full bg-[#A184FF]/20 blur-xl -z-10" />
                     </div>
 
-                    {/* Match Level Badge */}
-                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${config.color} mb-6`}>
-                        <span className="text-lg">{config.emoji}</span>
-                        <span className="text-white font-semibold text-sm">{config.label}</span>
+                    {/* Consensus Pill */}
+                    <div className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gradient-to-r ${config.color} mb-2 shadow-sm`}>
+                        <span className="text-xs">{config.emoji}</span>
+                        <span className="text-black font-extrabold text-[10px] tracking-tight">{config.label}</span>
                     </div>
 
-                    {/* Title */}
-                    <h2 className="text-xl font-bold text-white text-center mb-6 leading-relaxed px-4">
-                        {title}
+                    {/* Archetype Title */}
+                    <h2 className="text-lg font-black text-white leading-snug tracking-tight px-2 mb-1">
+                        {isEn ? archetype.titleEn : archetype.titleKo}
                     </h2>
 
-                    {/* Keywords */}
-                    <div className="flex flex-wrap justify-center gap-2 mb-8">
-                        {keywords.slice(0, 4).map((keyword, index) => (
-                            <div
-                                key={index}
-                                className="px-3 py-1.5 bg-white/5 rounded-full border border-white/10"
-                            >
-                                <span className="text-white/70 text-xs font-medium">
-                                    #{keyword}
+                    {/* Quote */}
+                    <p className="text-[11px] font-medium text-amber-200/90 leading-relaxed max-w-[290px] mb-3 px-1 italic">
+                        {isEn ? archetype.quoteEn : archetype.quoteKo}
+                    </p>
+
+                    {/* Viral Relationship Grid: 귀인 vs 충돌 */}
+                    <div className="w-full rounded-2xl border border-white/10 bg-white/[0.04] p-3.5 backdrop-blur-md mb-3 text-left space-y-2">
+                        <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                            <div className="flex items-center gap-2">
+                                <Users className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                <span className="text-[10px] font-bold text-stone-300">
+                                    {isEn ? 'Noble Allies (귀인)' : '나의 운명적 귀인'}
                                 </span>
                             </div>
+                            <span className="text-[10px] font-extrabold text-emerald-300">
+                                {isEn ? archetype.nobleAlliesEn : archetype.nobleAlliesKo}
+                            </span>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                                <span className="text-[10px] font-bold text-stone-300">
+                                    {isEn ? 'Friction Clash (주의)' : '주의해야 할 충돌'}
+                                </span>
+                            </div>
+                            <span className="text-[10px] font-extrabold text-rose-300">
+                                {isEn ? archetype.frictionWarningEn : archetype.frictionWarningKo}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Hashtags */}
+                    <div className="flex flex-wrap justify-center gap-1.5">
+                        {(keywords.length > 0 ? keywords.slice(0, 3) : (isEn ? archetype.keywordsEn : archetype.keywordsKo)).map((kw, i) => (
+                            <span
+                                key={i}
+                                className="px-2.5 py-1 rounded-lg border border-[#e8c86d]/25 bg-[#e8c86d]/10 text-[10px] font-bold text-[#f5e6be]"
+                            >
+                                #{kw.replace(/^#/, '')}
+                            </span>
                         ))}
                     </div>
-
                 </div>
 
-                {/* 하단: 워터마크 (바이럴용) */}
-                <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <div className="flex items-center justify-center gap-2 mb-3">
-                        <Star className="w-4 h-4 text-[#D4AF37]" />
-                        <span className="text-white/60 text-xs tracking-widest uppercase">
-                            CosmicPath
-                        </span>
-                        <Star className="w-4 h-4 text-[#D4AF37]" />
-                    </div>
-                    <div className="text-center">
-                        <span className="text-white/40 text-[10px] tracking-wider">
-                            오늘 미룬 선택 정리하기
-                        </span>
+                {/* 하단 바이럴 워터마크 & CTA */}
+                <div className="relative pb-6 px-6 text-center z-10">
+                    <div className="pt-3 border-t border-white/10">
+                        <div className="flex items-center justify-center gap-1 text-[11px] font-bold text-stone-200">
+                            <span>{isEn ? 'Find your 100% Noble Ally Match' : '내 사주 100% 찰떡 귀인 찾기'}</span>
+                            <span className="text-[#e8c86d]">➔ cosmicpath.app</span>
+                        </div>
+                        <p className="text-[9px] text-stone-400 mt-0.5 tracking-wider">
+                            {currentYear} 5-Engine Deterministic Decision Dossier
+                        </p>
                     </div>
                 </div>
             </div>

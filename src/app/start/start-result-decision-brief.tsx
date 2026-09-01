@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   AlertTriangle,
   Calendar,
@@ -58,6 +59,46 @@ type DecisionBriefCardProps = {
 
 export function DecisionBriefCard(props: DecisionBriefCardProps) {
   const isEn = props.language === 'en';
+  const [isInviteCopied, setIsInviteCopied] = useState(false);
+  const [isCreatingInvite, setIsCreatingInvite] = useState(false);
+
+  const handleNobleAllyInvite = async () => {
+    try {
+      setIsCreatingInvite(true);
+      const hostName = props.readingData?.name || (isEn ? 'Someone' : '나의 귀인');
+      const birthDate = props.readingData?.birthDate || '1995-01-01';
+
+      const res = await fetch('/api/match/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hostName,
+          hostBirth: birthDate,
+          hostTimezone: 'Asia/Seoul',
+        }),
+      });
+
+      if (!res.ok) throw new Error('Failed to create match invite');
+      const data = await res.json();
+
+      const inviteLink = data.inviteUrl || `${window.location.origin}/match/${data.sessionId}/join`;
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(inviteLink);
+        setIsInviteCopied(true);
+        setTimeout(() => setIsInviteCopied(false), 4000);
+      }
+    } catch (e) {
+      console.error(e);
+      if (typeof window !== 'undefined') {
+        const fallbackUrl = `${window.location.origin}/match/new?inviter=${encodeURIComponent(props.readingData?.name || '귀인')}`;
+        await navigator.clipboard.writeText(fallbackUrl);
+        setIsInviteCopied(true);
+        setTimeout(() => setIsInviteCopied(false), 4000);
+      }
+    } finally {
+      setIsCreatingInvite(false);
+    }
+  };
   const isRelationshipContactTiming = isRelationshipContactTimingSource(props.landingSource);
   const freeFocus = props.reportData.free_focus;
   const decisionLabel = getDecisionVerdictLabel(
@@ -198,13 +239,52 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
       </div>
 
       {/* 5-Engine Consensus & Raw Coordinates Gauge */}
-      <div className="px-6 sm:px-8">
+      <div className="px-6 sm:px-8 space-y-4">
         <DecisionConsensusGauge
           language={props.language}
           reportData={props.reportData}
           readingData={props.readingData}
           unifiedResult={props.unifiedResult}
         />
+
+        {/* Noble Ally 1:1 Match Viral Card */}
+        <div className="rounded-[24px] border border-emerald-500/35 bg-[radial-gradient(ellipse_at_top,rgba(16,185,129,0.12),transparent_60%),linear-gradient(180deg,rgba(18,24,20,0.9),rgba(10,14,12,0.95))] p-5 sm:p-6 shadow-[0_12px_32px_rgba(0,0,0,0.45)]">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-3 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-emerald-300">
+                <Users className="h-3 w-3 text-emerald-400" />
+                <span>{isEn ? 'Noble Ally Discovery' : '나의 천을귀인(天乙貴人) 찾기'}</span>
+              </div>
+              <h4 className="text-sm sm:text-base font-bold text-white tracking-tight">
+                {isEn ? 'Invite a Friend to Check 1:1 Cosmic Chemistry' : '내 사주와 100% 찰떡인 귀인 친구 초대하기'}
+              </h4>
+              <p className="text-xs text-stone-400">
+                {isEn
+                  ? 'Send a 1:1 invite to cross-match your 5-engine synastry and synergy.'
+                  : '초대 링크를 보내 친구의 생년월일시와 나의 사주를 대조해 0초 만에 융합 궁합을 확인하세요.'}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleNobleAllyInvite}
+              disabled={isCreatingInvite}
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 px-5 py-3 text-xs font-black uppercase tracking-wider text-stone-950 shadow-[0_0_20px_rgba(16,185,129,0.35)] transition-all hover:scale-[1.03] hover:brightness-110 active:scale-95 disabled:opacity-50"
+            >
+              {isInviteCopied ? (
+                <>
+                  <CheckCircle2 size={14} className="text-stone-950" />
+                  <span>{isEn ? 'Invite Link Copied!' : '초대 링크 복사 완료!'}</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles size={14} className="text-stone-950" />
+                  <span>{isEn ? 'Copy 1:1 Match Link' : '친구 소환 링크 복사'}</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Psychological & Past Pivot Section */}
