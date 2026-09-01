@@ -45,7 +45,7 @@ export const READING_CONTEXTS: ContextOption[] = [
         questionSuggestionsKo: [
             '지금 이직을 밀어붙여야 할까, 더 버티고 준비해야 할까?',
             '새 제안을 수락하는 게 맞을까, 잔류하는 게 맞을까?',
-            '2026년 하반기 내 강점이 가장 폭발하는 커리어 방향은?',
+            '올해 하반기 내 강점이 가장 폭발하는 커리어 방향은?',
         ],
         questionSuggestionsEn: [
             'Should I push this job move now, or would staying build a stronger position?',
@@ -100,12 +100,12 @@ export const READING_CONTEXTS: ContextOption[] = [
         summaryKo: '분야를 아직 못 정했거나, 요즘 내 흐름에서 무엇을 먼저 잡아야 하는지 알고 싶을 때 여는 기본 경로예요.',
         summaryEn: 'Use this when you are not sure which domain matters most yet and want the reading to sort the main priority first.',
         questionSuggestionsKo: [
-            '2026년 남은 하반기 나의 골든타임과 피해야 할 치명적 함정은?',
+            '올해 남은 하반기 나의 골든타임과 피해야 할 치명적 함정은?',
             '여러 가지 일 중 지금 당장 무엇 하나에 집중해야 운이 풀릴까?',
             '지금 내가 즉시 멈춰야 할 것과 밀어붙여야 할 것은 무엇일까?',
         ],
         questionSuggestionsEn: [
-            'What is my biggest golden window and critical trap for late 2026?',
+            'What is my biggest golden window and critical trap for this year?',
             'Which single core priority should I focus on to trigger a breakthrough?',
             'What should I immediately stop forcing, and what should I push instead?',
         ],

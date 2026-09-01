@@ -145,7 +145,7 @@ export default function BrandAssetsPage() {
                     <div className="p-6 bg-white/5 border border-white/10 rounded-2xl">
                         <div className="flex items-center justify-between mb-6">
                             <span className="text-xs text-dim uppercase font-bold tracking-widest">Growth Curve</span>
-                            <span className="text-xs text-acc-gold font-bold">2026 - 2030</span>
+                            <span className="text-xs text-acc-gold font-bold">{new Date().getFullYear()} - {new Date().getFullYear() + 4}</span>
                         </div>
                         <div className="h-32 w-full flex items-end justify-between px-2">
                             {[40, 65, 92, 55, 80].map((h, i) => (
@@ -158,7 +158,7 @@ export default function BrandAssetsPage() {
                                             boxShadow: i === 2 ? '0 0 20px rgba(212,175,55,0.4)' : 'none'
                                         }}
                                     />
-                                    <span className="text-[10px] text-dim">{2026 + i}</span>
+                                    <span className="text-[10px] text-dim">{new Date().getFullYear() + i}</span>
                                 </div>
                             ))}
                         </div>

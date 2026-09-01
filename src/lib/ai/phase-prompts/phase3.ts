@@ -6,6 +6,7 @@ import type { PremiumReportPartial, UserData } from './types';
 // Phase 3: Fortune Flow
 export function buildPhase3Prompt(userData: UserData, previousData?: PremiumReportPartial | null): { system: string; user: string } {
   const lang = userData.language || 'ko';
+  const startYear = userData.currentDate ? new Date(userData.currentDate).getFullYear() : new Date().getFullYear();
   let system = '';
 
   if (lang === 'en') {
@@ -57,16 +58,16 @@ Users are most curious about "When will it get better?". Do not be vague saying 
       }
     ],
     "timeline_scores": [
-      { "year": 2026, "score": 85, "type": "opportunity", "summary": "Great start" },
-      { "year": 2027, "score": 60, "type": "neutral", "summary": "Stable period" },
-      { "year": 2028, "score": 40, "type": "warning", "summary": "Watch your health" },
-      { "year": 2029, "score": 90, "type": "opportunity", "summary": "Career peak" },
-      { "year": 2030, "score": 75, "type": "neutral", "summary": " steady growth" },
-      { "year": 2031, "score": 50, "type": "warning", "summary": "Conflict warning" },
-      { "year": 2032, "score": 88, "type": "opportunity", "summary": "Wealth luck" },
-      { "year": 2033, "score": 70, "type": "neutral", "summary": "Maintenance" },
-      { "year": 2034, "score": 65, "type": "neutral", "summary": "Preparation" },
-      { "year": 2035, "score": 95, "type": "opportunity", "summary": "Golden era" }
+      { "year": ${startYear}, "score": 85, "type": "opportunity", "summary": "Great start" },
+      { "year": ${startYear + 1}, "score": 60, "type": "neutral", "summary": "Stable period" },
+      { "year": ${startYear + 2}, "score": 40, "type": "warning", "summary": "Watch your health" },
+      { "year": ${startYear + 3}, "score": 90, "type": "opportunity", "summary": "Career peak" },
+      { "year": ${startYear + 4}, "score": 75, "type": "neutral", "summary": "Steady growth" },
+      { "year": ${startYear + 5}, "score": 50, "type": "warning", "summary": "Conflict warning" },
+      { "year": ${startYear + 6}, "score": 88, "type": "opportunity", "summary": "Wealth luck" },
+      { "year": ${startYear + 7}, "score": 70, "type": "neutral", "summary": "Maintenance" },
+      { "year": ${startYear + 8}, "score": 65, "type": "neutral", "summary": "Preparation" },
+      { "year": ${startYear + 9}, "score": 95, "type": "opportunity", "summary": "Golden era" }
     ]
   }
 }

@@ -106,9 +106,9 @@ export function ExitIntentPromoModal({
             {/* Title */}
             <h3 className="text-xl md:text-2xl font-bold leading-snug mb-3 text-white">
               {isEn ? (
-                <>Wait! Don&apos;t miss your <span className="text-[#e6ca7d]">2026 Golden Timing Window</span></>
+                <>Wait! Don&apos;t miss your <span className="text-[#e6ca7d]">{new Date().getFullYear()} Golden Timing Window</span></>
               ) : (
-                <>잠깐! 2026년 당신의 <span className="text-[#e6ca7d]">골든타임 분석</span>을 놓치지 마세요</>
+                <>잠깐! {new Date().getFullYear()}년 당신의 <span className="text-[#e6ca7d]">골든타임 분석</span>을 놓치지 마세요</>
               )}
             </h3>
 
@@ -140,7 +140,7 @@ export function ExitIntentPromoModal({
             <div className="space-y-2.5 mb-6 text-xs text-white/80">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-[#c8a84d] shrink-0" />
-                <span>{isEn ? '2026~2027 12-Month Fortune Flow & Golden Timing Window' : '2026~2027 12개월 월별 운세 장부 & 정확한 골든타임 날짜'}</span>
+                <span>{isEn ? `${new Date().getFullYear()}~${new Date().getFullYear() + 1} 12-Month Fortune Flow & Golden Timing Window` : `${new Date().getFullYear()}~${new Date().getFullYear() + 1} 12개월 월별 운세 장부 & 정확한 골든타임 날짜`}</span>
               </div>
               <div className="flex items-center gap-2">
                 <ShieldAlert className="h-4 w-4 text-rose-400 shrink-0" />

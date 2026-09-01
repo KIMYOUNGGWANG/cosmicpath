@@ -4,6 +4,7 @@ import { SignJWT } from 'jose';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
 import { requireAuthSecret } from '@/lib/auth/auth-secret';
+import { consumeDailyQuota } from '@/lib/plan-limits';
 
 export async function POST(request: Request) {
     try {
@@ -23,21 +24,36 @@ export async function POST(request: Request) {
         });
 
         if (!verificationToken) {
-            return NextResponse.json({ error: 'Invalid token' }, { status: 400 });
+            // Track failed attempt
+            const failQuota = await consumeDailyQuota({
+                identifier: email.toLowerCase(),
+                action: 'otp_verify_failed_count',
+                limit: 5,
+            });
+
+            if (!failQuota.allowed) {
+                // Invalidate all tokens for this email after 5 consecutive failures
+                await prisma.verificationToken.deleteMany({
+                    where: { identifier: email },
+                });
+
+                return NextResponse.json({
+                    error: '인증번호를 5회 잘못 입력하셨습니다. 보안을 위해 코드가 만료되었으니 새 인증번호를 발송해 주세요.'
+                }, { status: 400 });
+            }
+
+            return NextResponse.json({
+                error: `인증번호가 올바르지 않습니다. (남은 시도: ${failQuota.remaining}회)`
+            }, { status: 400 });
         }
 
         if (verificationToken.expires < new Date()) {
-            return NextResponse.json({ error: 'Token expired' }, { status: 400 });
+            return NextResponse.json({ error: '인증번호 유효 시간이 만료되었습니다. 다시 발송해 주세요.' }, { status: 400 });
         }
 
         // Delete used token
-        await prisma.verificationToken.delete({
-            where: {
-                identifier_token: {
-                    identifier: email,
-                    token,
-                }
-            }
+        await prisma.verificationToken.deleteMany({
+            where: { identifier: email }
         });
 
         // Create JWT

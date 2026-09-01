@@ -917,7 +917,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 onClose={() => setIsShareModalOpen(false)}
                 title={report.summary?.title || (isEn ? 'CosmicPath Dossier' : 'CosmicPath VIP 운명 리포트')}
                 matchLevel="PERFECT"
-                keywords={report.traits?.map(t => t.name).slice(0, 3) || ['신뢰도 94%', '2026 골든타임', '을목 일주']}
+                keywords={report.traits?.map(t => t.name).slice(0, 3) || ['신뢰도 94%', `${new Date().getFullYear()} 골든타임`, '사주·점성 융합']}
                 source="vip_report_footer"
                 language={language}
                 readingId={readingId}

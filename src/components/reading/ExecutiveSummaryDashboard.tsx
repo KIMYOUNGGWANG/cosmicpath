@@ -53,7 +53,7 @@ export function ExecutiveSummaryDashboard({
               <span className="text-xs text-white/40">30-Second Verdict</span>
             </div>
             <h2 className="text-base md:text-lg font-bold text-white tracking-tight mt-0.5">
-              {userName}님을 위한 2026 핵심 결단 & 타이밍 요약
+              {userName}님을 위한 {new Date().getFullYear()} 핵심 결단 & 타이밍 요약
             </h2>
           </div>
         </div>
@@ -102,7 +102,7 @@ export function ExecutiveSummaryDashboard({
                 운세 점수 {bestMonth.score || 88}점. {bestMonth.opportunity || '이직, 연봉 협상, 런칭 등 중요한 승부수를 던지기 가장 유리한 시기입니다.'}
               </>
             ) : (
-              '2026년 하반기 (8월~11월): 금수(金水) 기운의 안정적인 조력과 사회적 성취의 창이 열립니다.'
+              `${new Date().getFullYear()}년 하반기: 안정적인 조력과 사회적 성취의 창이 열립니다.`
             )}
           </p>
         </div>

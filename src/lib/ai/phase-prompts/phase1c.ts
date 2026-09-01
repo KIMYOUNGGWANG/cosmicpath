@@ -19,7 +19,8 @@ export function buildPhase1CPrompt(userData: UserData, previousData?: PremiumRep
   const birthDateObj = new Date(year, month - 1, day);
   const lifePathNumber = calculateLifePathNumber(birthDateObj);
   const lifePathKeyword = getLifePathKeyword(lifePathNumber, lang);
-  const personalYear = calculatePersonalYear(birthDateObj, 2026);
+  const targetYear = userData.currentDate ? new Date(userData.currentDate).getFullYear() : new Date().getFullYear();
+  const personalYear = calculatePersonalYear(birthDateObj, targetYear);
   const dominantElement = userData.sajuData?.enhancedYongsin?.primary || userData.sajuData?.elements?.[0]?.stem || '';
   const humanDesign = getHumanDesignStrategy({
     dayMaster: userData.sajuData?.dayMaster,
@@ -52,7 +53,7 @@ Focus on confirming strategic timing, caution points, and hidden rhythm. Keep ea
       "saju_connection": "Fusion insight connecting this number to Soul Element."
     },
     "personal_year": {
-      "year": 2026,
+      "year": ${targetYear},
       "number": ${personalYear.personalYearNumber},
       "keyword": "${personalYear.keywordEn}",
       "theme": "${personalYear.themeEn}",
@@ -98,7 +99,7 @@ Focus on confirming strategic timing, caution points, and hidden rhythm. Keep ea
       "saju_connection": "일간 및 용신과 수비학 숫자가 만났을 때의 강력한 시너지 해설"
     },
     "personal_year": {
-      "year": 2026,
+      "year": ${targetYear},
       "number": ${personalYear.personalYearNumber},
       "keyword": "${personalYear.keyword}",
       "theme": "${personalYear.themeKo}",

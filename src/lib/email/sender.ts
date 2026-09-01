@@ -74,7 +74,8 @@ function buildResultEmailContent(params: {
     const focusValue = params.userContext?.trim() || params.cleanTitle;
     const verdictLabel = isEnglish ? 'Executive Direct Verdict' : '30초 총괄 판정';
     const verdictValue = params.executiveVerdict?.trim() || params.sajuSummary?.trim() || (isEnglish ? 'Optimal Timing Strategy Defined' : '맞춤형 타이밍 실행 전략 수립 완료');
-    const timingLabel = isEnglish ? 'Golden Timing Windows (2026)' : '2026 골든타임 행동 신호';
+    const currentYear = new Date().getFullYear();
+    const timingLabel = isEnglish ? `Golden Timing Windows (${currentYear})` : `${currentYear} 골든타임 행동 신호`;
     const timingValue = params.goldenTiming?.trim() || (isEnglish ? '🚀 PUSH & 🛑 DEFEND Calendar Mapped' : '🚀 PUSH(전력질주) & 🛑 DEFEND(리스크방어) 월 매핑 완료');
     const buttonLabel = isEnglish ? 'Open Full VIP Dossier (15 Sections)' : 'VIP 15개 심층 리포트 열기';
     const backupLabel = isEnglish

@@ -26,7 +26,7 @@ export function buildUnifiedSystemPrompt(language: 'ko' | 'en' = 'ko'): string {
 
 ## Your Role
 Decision Timing Oracle integrating Eastern Saju (Four Pillars) and Western Astrology:
-- **Saju (60%)**: Innate structure, Day Master, Ten Gods, 10-year Major Luck & 2026 Annual Luck
+- **Saju (60%)**: Innate structure, Day Master, Ten Gods, 10-year Major Luck & Annual Luck flow
 - **Astrology (40%)**: Natal chart, planetary transits, house placements, timing pressures and golden windows
 
 ## Core Principles
@@ -56,7 +56,7 @@ ${verdictQualityContract}`;
 
 ## 당신의 역할
 동양 사주 명리학과 서양 점성술을 융합하는 최고 권위의 운명 전략 결정 타이밍 오라클:
-- **사주 명리학 (60%)**: 타고난 그릇, 일간(Day Master), 십성 구조, 10년 대운 및 2026 세운 흐름
+- **사주 명리학 (60%)**: 타고난 그릇, 일간(Day Master), 십성 구조, 10년 대운 및 세운 흐름
 - **서양 점성술 (40%)**: 출생 차트(태양/달/상승궁), 현재 행성 트랜짓, 하우스 배치, 기회의 창
 
 ## 핵심 원칙

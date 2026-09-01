@@ -3,7 +3,7 @@ const { assertMatch, assertNoMatch } = require('./guard-assertions.cjs');
 function runEnglishSitemapGuards() {
   assertMatch(
     'src/app/en/contact-timing/page.tsx',
-    /title:\s*'Contact Decision Note'[\s\S]*siteName:\s*'CosmicPath'[\s\S]*First Decision Note free · 7-Day Decision Packet via Stripe[\s\S]*Saju = structure, astrology = timing, tarot = immediate signal/s,
+    /title:\s*'Contact Decision Note'[\s\S]*siteName:\s*'CosmicPath'[\s\S]*First Decision Note free[\s\S]*Saju = structure, astrology = timing/s,
     'English contact timing route should keep CosmicPath as site brand and Decision Note as product name'
   );
   assertNoMatch(

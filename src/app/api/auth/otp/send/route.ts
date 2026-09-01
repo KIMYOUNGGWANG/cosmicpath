@@ -1,18 +1,58 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma'; // Assuming prisma client is exported from here
+import crypto from 'node:crypto';
+import { prisma } from '@/lib/prisma';
 import { sendVerificationEmail } from '@/lib/email/sender';
-import { z } from 'zod'; // Assuming zod is installed
+import { z } from 'zod';
+import { getClientIp, auditLog } from '@/lib/audit-logger';
+import { consumeDailyQuota } from '@/lib/plan-limits';
 
-// Simple in-memory rate limiting could be added, but for now rely on DB constraints or external/middleware rate limits
-// actually I saw rate-limiter.ts in src/lib, I should check it later if needed.
+const schema = z.object({
+    email: z.string().email().max(150),
+});
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
-        const { email } = z.object({ email: z.string().email() }).parse(body);
+        const clientIp = getClientIp(request.headers);
+        const body = await request.json().catch(() => null);
+        const parsed = schema.safeParse(body);
 
-        // Generate 6 digit OTP
-        const token = Math.floor(100000 + Math.random() * 900000).toString();
+        if (!parsed.success) {
+            return NextResponse.json(
+                { error: '올바른 이메일 주소를 입력해 주세요.' },
+                { status: 400 }
+            );
+        }
+
+        const { email } = parsed.data;
+
+        // Rate Limit 1: IP per day (max 20)
+        const ipQuota = await consumeDailyQuota({
+            identifier: clientIp,
+            action: 'otp_send_ip',
+            limit: 20,
+        });
+
+        // Rate Limit 2: Email per day (max 10)
+        const emailQuota = await consumeDailyQuota({
+            identifier: email.toLowerCase(),
+            action: 'otp_send_email',
+            limit: 10,
+        });
+
+        if (!ipQuota.allowed || !emailQuota.allowed) {
+            auditLog('RATE_LIMIT_EXCEEDED', {
+                ip: clientIp,
+                metadata: { endpoint: '/api/auth/otp/send', email },
+                severity: 'warning',
+            });
+            return NextResponse.json(
+                { error: '요청 횟수를 초과했습니다. 잠시 후 다시 시도해 주세요.' },
+                { status: 429 }
+            );
+        }
+
+        // Cryptographically secure 6-digit OTP
+        const token = crypto.randomInt(100000, 1000000).toString();
         const expires = new Date(Date.now() + 1000 * 60 * 10); // 10 minutes
 
         // Delete existing tokens for this identifier to prevent clutter
@@ -34,10 +74,11 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ success: true });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('OTP Send Error:', error);
+        const message = error instanceof Error ? error.message : 'Internal Server Error';
         return NextResponse.json(
-            { error: error.message || 'Internal Server Error' },
+            { error: message },
             { status: 500 }
         );
     }

@@ -23,6 +23,7 @@ import {
 } from './start-result-relationship';
 import { cleanActionVerdictText } from '@/app/api/reading/free-focus-contract';
 import { BlindSpotTeaser } from '@/components/reading/blind-spot-teaser';
+import { DecisionConsensusGauge } from '@/components/reading/DecisionConsensusGauge';
 
 function getDecisionVerdictLabel(
   value: string | undefined,
@@ -95,10 +96,12 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
   );
 
   const priceLabel = props.dynamicPrice || (isEn ? '$3.99' : '₩4,900');
+  const currentYear = new Date().getFullYear();
+  const nextYear = currentYear + 1;
 
   const vipTeasers = isEn ? [
     {
-      title: '2026-2027 Monthly Luck Ledger & Golden Timing Windows',
+      title: `${currentYear}-${nextYear} Monthly Luck Ledger & Golden Timing Windows`,
       desc: 'Pinpointed best and worst months for job change, contracts, and travel.',
       icon: Calendar,
     },
@@ -119,7 +122,7 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
     },
   ] : [
     {
-      title: '2026~2027 12개월 월별 운세 장부 & 골든타임',
+      title: `${currentYear}~${nextYear} 12개월 월별 운세 장부 & 골든타임`,
       desc: '비자, 이직, 시험, 계약 승인 확률이 극대화되는 정확한 월/주차 분석',
       icon: Calendar,
     },
@@ -187,6 +190,16 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
         <p className="text-base font-semibold leading-relaxed text-stone-100 sm:text-lg">
           {verdict}
         </p>
+      </div>
+
+      {/* 5-Engine Consensus & Raw Coordinates Gauge */}
+      <div className="px-6 sm:px-8">
+        <DecisionConsensusGauge
+          language={props.language}
+          reportData={props.reportData}
+          readingData={props.readingData}
+          unifiedResult={props.unifiedResult}
+        />
       </div>
 
       {/* Psychological & Past Pivot Section */}

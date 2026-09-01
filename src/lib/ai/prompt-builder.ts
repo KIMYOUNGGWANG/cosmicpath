@@ -113,7 +113,7 @@ const CONTEXT_CONFIG: Record<ReadingContext, ContextConfig> = {
     avoid: ['극단적 예측', '공포 유발'],
     tone: '균형 잡힌',
     examples: {
-      good: '대운 전환기 → 2026년 재정비 시기. 4월부터 상승',
+      good: '대운 전환기 → 올해 재정비 시기. 4월부터 상승',
       bad: '운이 좋아질 거예요'
     }
   }

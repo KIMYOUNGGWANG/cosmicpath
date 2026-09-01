@@ -462,7 +462,7 @@ export function NumerologySection({
             <div className="rounded-2xl border border-amber-500/25 bg-gradient-to-br from-amber-950/20 to-black/60 p-5">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-bold uppercase tracking-wider text-amber-300">
-                  {isEn ? '2026-2027 Personal Year Cycle' : '2026년 개인년 9년 주기'}
+                  {isEn ? `${personal_year.year || new Date().getFullYear()} Personal Year Cycle` : `${personal_year.year || new Date().getFullYear()}년 개인년 9년 주기`}
                 </span>
                 {personal_year.action_tag && (
                   <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-extrabold tracking-wider ${actionBadgeColors[personal_year.action_tag] || 'bg-amber-500/20 text-amber-300 border-amber-500/30'}`}>

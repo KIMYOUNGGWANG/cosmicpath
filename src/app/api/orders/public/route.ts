@@ -1,19 +1,48 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { z } from 'zod';
+import { getClientIp, auditLog } from '@/lib/audit-logger';
+import { consumeDailyQuota } from '@/lib/plan-limits';
+
+const lookupSchema = z.object({
+    email: z.string().email().max(150),
+    orderId: z.string().min(3).max(100),
+});
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
-        const { email, orderId } = body;
+        const clientIp = getClientIp(request.headers);
 
-        if (!email || !orderId) {
+        // Rate limiting: Max 20 lookups per IP per day to prevent brute-forcing order IDs
+        const quota = await consumeDailyQuota({
+            identifier: clientIp,
+            action: 'public_order_lookup',
+            limit: 20,
+        });
+
+        if (!quota.allowed) {
+            auditLog('RATE_LIMIT_EXCEEDED', {
+                ip: clientIp,
+                metadata: { endpoint: '/api/orders/public' },
+                severity: 'warning',
+            });
             return NextResponse.json(
-                { error: 'Email and Order ID are required' },
+                { error: 'Too many order lookup attempts. Please try again later or contact support.' },
+                { status: 429 }
+            );
+        }
+
+        const rawBody = await request.json().catch(() => null);
+        const parsed = lookupSchema.safeParse(rawBody);
+
+        if (!parsed.success) {
+            return NextResponse.json(
+                { error: 'Valid Email and Order ID are required' },
                 { status: 400 }
             );
         }
 
-        // Clean inputs
+        const { email, orderId } = parsed.data;
         const cleanEmail = email.trim();
         const cleanOrderId = orderId.trim();
 

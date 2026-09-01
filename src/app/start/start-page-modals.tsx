@@ -54,9 +54,18 @@ export function StartPageModals(props: StartPageModalsProps) {
         <ShareCardModal
           isOpen={props.isShareModalOpen}
           onClose={props.onCloseShare}
-          title={props.reportData.summary?.title || '내 리딩 결과'}
-          matchLevel={getShareMatchLevel(props.reportData.summary?.trust_score || 0)}
-          keywords={props.reportData.summary?.keywords?.slice(0, 4) || ['타이밍', '변화', '선택']}
+          title={props.reportData.summary?.title || (props.language === 'en' ? 'CosmicPath Decision Note' : '운명 의사결정 브리프')}
+          matchLevel={getShareMatchLevel(props.reportData.summary?.trust_score || 94)}
+          keywords={
+            props.reportData.summary?.keywords && props.reportData.summary.keywords.length > 0
+              ? props.reportData.summary.keywords.slice(0, 4)
+              : [
+                  `${new Date().getFullYear()}골든타임`,
+                  props.reportData.traits?.[0]?.name?.replace(/[\s·]/g, '_') || '사주점성융합',
+                  props.language === 'en' ? 'Optimal_Move' : '핵심승부수',
+                  props.language === 'en' ? 'Convergence94%' : '교차합의율94%',
+                ]
+          }
           source={props.trackingSource}
           language={props.language}
           readingId={props.shareUrl?.split('/').pop()}
@@ -68,8 +77,8 @@ export function StartPageModals(props: StartPageModalsProps) {
 }
 
 function getShareMatchLevel(trustScore: number) {
-  if (trustScore >= 4.5) return 'PERFECT';
-  if (trustScore >= 3) return 'PARTIAL';
+  if (trustScore >= 80 || trustScore >= 4.5) return 'PERFECT';
+  if (trustScore >= 60 || trustScore >= 3) return 'PARTIAL';
 
   return 'CONFLICT';
 }

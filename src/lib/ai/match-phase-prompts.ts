@@ -214,7 +214,7 @@ export function getMatchPhaseSystemPrompt(phase: number, language: 'ko' | 'en' =
 - 세상이 이 커플을 바라보는 '사회적 페르소나'를 묘사하십시오.`,
         4: `### [Phase 4 Directive: The Timeline]
 - 과거(인연의 시작) - 현재(미션) - 미래(진화)의 타임라인을 그리십시오.
-- 2026년의 구체적인 절기(입춘, 곡우 등)와 운의 흐름을 반영하십시오.
+- 올해의 구체적인 절기(입춘, 곡우 등)와 운의 흐름을 반영하십시오.
 - ${getUpcomingMonthsContext()} 데이터를 적극 활용하십시오.`,
         5: `### [Phase 5 Directive: Action Blueprint]
 - 관계 행동을 조정할 수 있는 실무적 설계도를 전달하십시오.

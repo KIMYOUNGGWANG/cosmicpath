@@ -52,7 +52,7 @@ export interface YearHeatmapResult {
  */
 export function calculateWeeklyTimingHeatmap(
   saju: SajuResult,
-  targetYear: number = 2026
+  targetYear: number = new Date().getFullYear()
 ): YearHeatmapResult {
   const yongsinPrimary = saju.enhancedYongsin?.primary || 'fire';
   const bodyStrength = saju.enhancedYongsin?.bodyStrength || '중화';
