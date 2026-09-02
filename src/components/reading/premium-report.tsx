@@ -1,8 +1,6 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
-import { useLoginModal } from '@/components/auth/LoginModal';
-import { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CompatibilityHeader } from './CompatibilityHeader';
 import { useReactToPrint } from 'react-to-print';
