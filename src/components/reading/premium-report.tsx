@@ -815,7 +815,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
 
                     {/* 1:1 Oracle Chat Follow-Up Interface */}
                     {readingId && (
-                        <div id="section-followup-chat" className="mt-12">
+                        <div id="oracle-chat" data-chat-interface className="mt-12">
                             <div className="rounded-3xl border border-[#c8a84d]/40 bg-gradient-to-b from-[#181611]/90 via-[#0f0e0b]/95 to-[#0a0907]/98 p-6 md:p-8 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
                                 <div className="mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
                                     <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#c8a84d]/40 bg-[#c8a84d]/20 text-[#f5d77f]">

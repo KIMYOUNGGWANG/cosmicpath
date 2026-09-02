@@ -174,7 +174,7 @@ export function StartResultStage(props: StartResultStageProps) {
               />
             ) : null}
 
-            {props.shareUrl ? (
+            {props.shareUrl && !props.isPremium ? (
               <div id="oracle-chat" data-chat-interface className="container relative z-10 mx-auto mt-12 mb-20 px-4">
                 <ChatInterface readingId={props.shareUrl.split('/').pop()!} />
               </div>
