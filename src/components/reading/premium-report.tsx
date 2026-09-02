@@ -2,11 +2,11 @@
 
 import { useSession } from 'next-auth/react';
 import { useLoginModal } from '@/components/auth/LoginModal';
+import { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CompatibilityHeader } from './CompatibilityHeader';
-import { useRef, useState, useEffect } from 'react';
 import { useReactToPrint } from 'react-to-print';
-import { Download, Sparkles, Printer } from 'lucide-react';
+import { Download, Sparkles, Printer, Compass, Clock, Layers, FileText, ChevronRight } from 'lucide-react';
 import * as analytics from '@/lib/client-analytics';
 import { PrintLayout } from './PrintLayout';
 import { ShareCard } from './share-card';
@@ -42,6 +42,7 @@ import {
 import dynamic from 'next/dynamic';
 import { ZiweiChartComponent } from './ziwei-chart';
 import { ExecutiveSummaryDashboard } from './ExecutiveSummaryDashboard';
+import { DecisionConsensusGauge } from './DecisionConsensusGauge';
 import { ReportSidebarNav } from './ReportSidebarNav';
 import { calculateZiweiChart, type ZiweiChartResult } from '@/lib/engines/ziwei';
 import { calculateShadowTransformations, type ShadowTransformationResult } from '@/lib/engines/saju-transformation';
@@ -386,6 +387,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [activeChapter, setActiveChapter] = useState<ChapterKey>('brief');
+    const [activeDossierTab, setActiveDossierTab] = useState<'strategy' | 'timing' | 'intelligence'>('strategy');
     const [readingProgress, setReadingProgress] = useState(0);
     const printRef = useRef<HTMLDivElement>(null);
     const metadataWithReading = metadata as MetadataWithReadingData | undefined;
@@ -551,34 +553,10 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
         report.fortune_flow ? 'section-flow' : '',
         computedWeeklyHeatmap ? 'section-weekly-heatmap' : '',
         report.life_areas ? 'section-life-areas' : '',
-        report.special_analysis ? 'section-special' : '',
-        computedCompatibility4D ? 'section-compatibility-4d' : '',
-        report.date_selection ? 'section-dates' : '',
-        report.action_plan && report.action_plan.length > 0 ? 'section-action' : '',
-        report.numerology ? 'section-numerology' : '',
-        readingId ? 'section-followup-chat' : '',
     ].filter(Boolean) as string[];
 
     return (
-        <div className={`w-full mx-auto pb-24 md:pb-32 ${isPremium ? 'max-w-7xl px-4 sm:px-6 lg:px-8' : 'max-w-3xl px-4'}`}>
-            {!(isPremium && report.final_verdict) && (
-                readingData?.partnerName ? (
-                    <CompatibilityHeader
-                        userName={String(readingData?.name || 'User')}
-                        partnerName={String(readingData.partnerName)}
-                        score={report.summary.trust_score * 20}
-                        title={report.summary.title}
-                        content={report.summary.content}
-                        language={language}
-                    />
-                ) : (
-                    <HeaderSection
-                        summary={report.summary}
-                        language={language}
-                    />
-                )
-            )}
-
+        <div className={`w-full mx-auto pb-24 md:pb-32 ${isPremium ? 'max-w-6xl px-4 sm:px-6 lg:px-8' : 'max-w-3xl px-4'}`}>
             {/* Hidden Print Layout */}
             <div className="hidden">
                 <PrintLayout
@@ -589,50 +567,84 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                 />
             </div>
 
-            {/* Responsive Executive Chapter Navigation Bar */}
             {isPremium && (
-                <ExecutiveChapterBar
-                    activeChapter={activeChapter}
-                    onSelectChapter={handleChapterSelect}
-                    language={language}
-                    progress={readingProgress}
-                />
-            )}
+                <div id="dossier-main-container" className="space-y-8">
+                    {/* Executive Hero Banner with Direct Verdict */}
+                    <div className="rounded-[28px] border border-[#c8a84d]/40 bg-[radial-gradient(ellipse_at_top,rgba(200,168,77,0.12),transparent_70%),linear-gradient(180deg,rgba(24,22,18,0.95),rgba(12,11,9,0.98))] p-6 sm:p-8 shadow-[0_16px_50px_rgba(0,0,0,0.6)]">
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
+                            <div className="inline-flex items-center gap-2 rounded-full border border-[#c8a84d]/40 bg-[#c8a84d]/15 px-3 py-1 text-xs font-bold uppercase tracking-widest text-[#f5e6be]">
+                                <Sparkles className="h-3.5 w-3.5 text-[#d4af37]" />
+                                <span>{isEn ? 'Confidential Executive Dossier' : 'VIP 의사결정 마스터 리포트'}</span>
+                            </div>
+                            <div className="text-xs text-stone-400 font-mono">
+                                {userName} · {birthDateStr}
+                            </div>
+                        </div>
 
-            {/* Executive Verdict & 7-Day Decision Packet */}
-            <CaseFileReport
-                report={report}
-                language={language}
-                isFreeView={!isPremium}
-                isLoading={isLoading}
-                onRetry={onRetry}
-                onUnlock={handleUnlock}
-                displayPrice={displayPrice}
-                personName={userName}
-                question={userQuestion}
-            />
+                        <div className="mt-6">
+                            <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-[#d4af37]/80">
+                                {isEn ? 'CORE VERDICT & STRATEGY' : '핵심 직답 판정 & 전략'}
+                            </span>
+                            <h1 className="mt-2 text-xl sm:text-2xl md:text-3xl font-bold font-cinzel text-white leading-tight">
+                                {report.summary?.title || (isEn ? 'Executive Decision Timing Blueprint' : '2026 하반기 전략 및 골든타임 블루프린트')}
+                            </h1>
+                            {userQuestion && (
+                                <p className="mt-3 text-xs sm:text-sm text-stone-300 bg-white/5 border border-white/10 rounded-xl p-3 leading-relaxed">
+                                    <span className="text-[#d4af37] font-bold">Q.</span> {userQuestion}
+                                </p>
+                            )}
+                        </div>
+                    </div>
 
-            {/* Premium In-Depth Sections (Full VIP Experience with Left Sidebar) */}
-            {isPremium && (
-                <div id="dossier-main-container" className="mt-8 flex gap-8 items-start scroll-mt-28">
-                    {/* Desktop Sticky Left Sidebar Navigation */}
-                    <ReportSidebarNav
-                        language={language}
-                        onPrint={handlePrint}
-                        availableSectionIds={availableSectionIds}
-                        activeChapter={activeChapter}
-                        onSelectChapter={handleChapterSelect}
-                        onChapterInView={handleChapterInView}
-                    />
+                    {/* 3-Tab Segmented Switcher */}
+                    <div className="sticky top-20 z-40 flex items-center justify-center p-1.5 bg-[#14120e]/95 border border-[#c8a84d]/40 rounded-2xl backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.7)] max-w-3xl mx-auto">
+                        <button
+                            type="button"
+                            onClick={() => setActiveDossierTab('strategy')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-3 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                                activeDossierTab === 'strategy'
+                                    ? 'bg-gradient-to-r from-[#f0d588] via-[#e8c86d] to-[#c8a84d] text-stone-950 shadow-md font-black'
+                                    : 'text-stone-400 hover:text-stone-200'
+                            }`}
+                        >
+                            <Compass className="w-4 h-4" />
+                            <span>{isEn ? '1. Strategy & Action' : '1. 전략 요약 & 실행'}</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveDossierTab('timing')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-3 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                                activeDossierTab === 'timing'
+                                    ? 'bg-gradient-to-r from-[#f0d588] via-[#e8c86d] to-[#c8a84d] text-stone-950 shadow-md font-black'
+                                    : 'text-stone-400 hover:text-stone-200'
+                            }`}
+                        >
+                            <Clock className="w-4 h-4" />
+                            <span>{isEn ? '2. Timing & Allies' : '2. 골든타임 & 귀인'}</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveDossierTab('intelligence')}
+                            className={`flex-1 flex items-center justify-center gap-2 py-3 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                                activeDossierTab === 'intelligence'
+                                    ? 'bg-gradient-to-r from-[#f0d588] via-[#e8c86d] to-[#c8a84d] text-stone-950 shadow-md font-black'
+                                    : 'text-stone-400 hover:text-stone-200'
+                            }`}
+                        >
+                            <Layers className="w-4 h-4" />
+                            <span>{isEn ? '3. 5-Engine Intelligence' : '3. 5대 엔진 심층근거'}</span>
+                        </button>
+                    </div>
 
-                    {/* Main Dossier Content */}
-                    <main className="flex-1 min-w-0 space-y-12 md:space-y-16">
-                        {/* ========================================================
-                            DOMAIN 1: VIP EXECUTIVE BRIEF & ACTION BLUEPRINT
-                        ======================================================== */}
-                        <div id="domain-brief" className="space-y-8 scroll-mt-24">
-                            {/* VIP 30-Second Executive Strategy Brief (Full-Width Hero) */}
-                            <div id="section-executive" className="scroll-mt-24">
+                    {/* Active Tab View */}
+                    <div className="space-y-10">
+                        {activeDossierTab === 'strategy' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="space-y-8"
+                            >
                                 <ExecutiveSummaryDashboard
                                     report={report}
                                     question={userQuestion}
@@ -640,259 +652,205 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                     sajuResult={sajuResult || undefined}
                                     userName={userName}
                                 />
-                            </div>
-
-                            {/* Action Blueprint & Action Checklist */}
-                            {report.action_plan && report.action_plan.length > 0 && (
-                                <div id="section-action" className="scroll-mt-24">
+                                {report.action_plan && report.action_plan.length > 0 && (
                                     <ActionPlanSection
                                         actionPlan={report.action_plan}
                                         trustScore={report.summary.trust_score * 20}
                                         language={language}
                                     />
-                                </div>
-                            )}
-
-                            {/* Super Days Calendar & Timing Matrix */}
-                            {report.date_selection && (
-                                <div id="section-dates" className="scroll-mt-24">
+                                )}
+                                {report.date_selection && (
                                     <DateSelectionSection
                                         data={report.date_selection}
                                         language={language}
                                     />
-                                </div>
-                            )}
+                                )}
+                                <DecisionConsensusGauge
+                                    language={language}
+                                    reportData={report as any}
+                                />
+                            </motion.div>
+                        )}
 
-                            {/* Ghost Detector Bonus Section */}
-                            {sajuResult && (
-                                <div>
-                                    <GhostDetectorSection sajuResult={sajuResult} userName={userName} />
-                                </div>
-                            )}
-                        </div>
-
-                        {/* ========================================================
-                            DOMAIN 2: TIMING & FORTUNE ROADMAP
-                        ======================================================== */}
-                        <div id="domain-timing" className="space-y-8 pt-6 border-t border-[#c8a84d]/20 scroll-mt-24">
-                            <div className="flex items-center gap-3">
-                                <div className="h-2 w-2 rounded-full bg-[#c8a84d]" />
-                                <h3 className="text-sm font-mono uppercase tracking-widest text-[#e6ca7d] font-bold">
-                                    {isEn ? 'DOMAIN II • TIMING & FORTUNE ROADMAP' : '제2영역 • 운세 및 타이밍 로드맵'}
-                                </h3>
-                            </div>
-
-                            {/* 12-Month Fortune Flow */}
-                            {report.fortune_flow && (
-                                <div id="section-flow" className="scroll-mt-24">
+                        {activeDossierTab === 'timing' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="space-y-8"
+                            >
+                                {report.fortune_flow && (
                                     <FortuneFlowSection
                                         data={report.fortune_flow}
                                         language={language}
                                     />
-                                </div>
-                            )}
-
-                            {/* 48-Week Strategic Heatmap */}
-                            {computedWeeklyHeatmap && (
-                                <div id="section-weekly-heatmap" className="scroll-mt-24">
+                                )}
+                                {computedWeeklyHeatmap && (
                                     <WeeklyHeatmapSection
                                         data={computedWeeklyHeatmap}
                                         language={language}
                                     />
-                                </div>
-                            )}
-
-                            {/* Thai Royal Astrology & Maha Thaksa 108 */}
-                            {computedThaiAstrology && (
-                                <div id="section-thai-astrology" className="scroll-mt-24">
-                                    <ThaiAstrologySection
-                                        data={computedThaiAstrology}
+                                )}
+                                {report.special_analysis && (
+                                    <SpecialAnalysisSection
+                                        data={report.special_analysis}
                                         language={language}
                                     />
-                                </div>
-                            )}
-                        </div>
+                                )}
+                                {report.life_areas && (
+                                    <LifeAreasSection
+                                        data={report.life_areas}
+                                        language={language}
+                                    />
+                                )}
+                                {sajuResult && (
+                                    <GhostDetectorSection sajuResult={sajuResult} userName={userName} />
+                                )}
+                            </motion.div>
+                        )}
 
-                        {/* ========================================================
-                            DOMAIN 3: 5-ENGINE DEEP INTELLIGENCE
-                        ======================================================== */}
-                        <div id="domain-intelligence" className="space-y-8 pt-6 border-t border-[#c8a84d]/20 scroll-mt-24">
-                            <div className="flex items-center gap-3">
-                                <div className="h-2 w-2 rounded-full bg-[#c8a84d]" />
-                                <h3 className="text-sm font-mono uppercase tracking-widest text-[#e6ca7d] font-bold">
-                                    {isEn ? 'DOMAIN III • 5-ENGINE DEEP INTELLIGENCE' : '제3영역 • 5대 엔진 심층 명반'}
-                                </h3>
-                            </div>
-
-                            {/* Ziwei 12 Palaces Chart */}
-                            {computedZiweiChart && (
-                                <div id="section-ziwei" className="scroll-mt-24">
-                                    <ZiweiChartComponent chart={computedZiweiChart} />
-                                </div>
-                            )}
-
-                            {/* Core Saju 5-Elements Harmony */}
-                            {report.core_analysis && (
-                                <div id="section-core" className="scroll-mt-24">
+                        {activeDossierTab === 'intelligence' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="space-y-8"
+                            >
+                                {computedZiweiChart && (
+                                    <ZiweiChartComponent
+                                        chart={computedZiweiChart}
+                                        language={language}
+                                    />
+                                )}
+                                {report.core_analysis && (
                                     <CoreAnalysisSection
                                         data={report.core_analysis}
-                                        sajuData={sajuResult || undefined}
                                         language={language}
                                     />
-                                </div>
-                            )}
-
-                            {/* Shadow Transformation Superpowers */}
-                            {computedShadowTransformations && (
-                                <div id="section-shadow-transformation" className="scroll-mt-24">
+                                )}
+                                {computedShadowTransformations && (
                                     <ShadowTransformationSection
                                         data={computedShadowTransformations}
                                         language={language}
                                     />
-                                </div>
-                            )}
-
-                            {/* Classical Saju 4 Pillars Breakdown */}
-                            {report.saju_sections && report.saju_sections.length > 0 && (
-                                <div id="section-saju" className="scroll-mt-24">
+                                )}
+                                {report.saju_sections && report.saju_sections.length > 0 && (
                                     <AccordionSection
                                         title={isEn ? 'Classical Saju 4 Pillars Breakdown' : '정통 사주 4주 심층 분석'}
                                         items={report.saju_sections}
                                         source="saju"
                                         language={language}
                                     />
-                                </div>
-                            )}
-
-                            {/* Western Astrology Deep Dive */}
-                            {report.astro_deep && (
-                                <div id="section-astro" className="scroll-mt-24">
+                                )}
+                                {report.astro_deep && (
                                     <AstroDeepSection
                                         data={report.astro_deep}
                                         language={language}
                                     />
-                                </div>
-                            )}
-
-                            {/* Numerology 9-Year Cycle Strategy */}
-                            {report.numerology && (
-                                <div id="section-numerology" className="scroll-mt-24">
+                                )}
+                                {computedThaiAstrology && (
+                                    <ThaiAstrologySection
+                                        data={computedThaiAstrology}
+                                        language={language}
+                                    />
+                                )}
+                                {report.numerology && (
                                     <NumerologySection
                                         data={report.numerology}
                                         language={language}
                                     />
-                                </div>
-                            )}
-                        </div>
-
-                        {/* ========================================================
-                            DOMAIN 4: LIFE AREAS, ALLIES & 1:1 CONSULTATION
-                        ======================================================== */}
-                        <div id="domain-life" className="space-y-8 pt-6 border-t border-[#c8a84d]/20 scroll-mt-24">
-                            <div className="flex items-center gap-3">
-                                <div className="h-2 w-2 rounded-full bg-[#c8a84d]" />
-                                <h3 className="text-sm font-mono uppercase tracking-widest text-[#e6ca7d] font-bold">
-                                    {isEn ? 'DOMAIN IV • LIFE AREAS, ALLIES & CONSULTATION' : '제4영역 • 인연, 라이프 & 1:1 오라클'}
-                                </h3>
-                            </div>
-
-                            {/* 4 Life Areas */}
-                            {report.life_areas && (
-                                <div id="section-life-areas" className="scroll-mt-24">
-                                    <LifeAreasSection
-                                        data={report.life_areas}
-                                        language={language}
-                                    />
-                                </div>
-                            )}
-
-                            {/* Special Analysis (Lucky Assets, Directions) */}
-                            {report.special_analysis && (
-                                <div id="section-special" className="scroll-mt-24">
-                                    <SpecialAnalysisSection
-                                        data={report.special_analysis}
-                                        language={language}
-                                    />
-                                </div>
-                            )}
-
-                            {/* 4D Compatibility Matrix */}
-                            {computedCompatibility4D && (
-                                <div id="section-compatibility-4d" className="scroll-mt-24">
+                                )}
+                                {computedCompatibility4D && (
                                     <Compatibility4DSection
                                         data={computedCompatibility4D}
                                         language={language}
                                     />
-                                </div>
-                            )}
+                                )}
+                                {report.past_life && (
+                                    <PastLifeSection
+                                        data={report.past_life}
+                                        language={language}
+                                    />
+                                )}
+                            </motion.div>
+                        )}
+                    </div>
 
-                            {/* 1:1 Oracle Chat Follow-Up Interface */}
-                            {readingId && (
-                                <div id="section-followup-chat" className="scroll-mt-24">
-                                    <div className="rounded-3xl border border-[#c8a84d]/40 bg-gradient-to-b from-[#181611]/90 via-[#0f0e0b]/95 to-[#0a0907]/98 p-6 md:p-8 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
-                                        <div className="mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#c8a84d]/40 bg-[#c8a84d]/20 text-[#f5d77f]">
-                                                <Sparkles className="h-5 w-5" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-lg font-bold text-white">
-                                                    {isEn ? '1:1 Private Oracle Consultation' : '1:1 프라이빗 오라클 심층 상담'}
-                                                </h3>
-                                                <p className="text-xs text-white/50">
-                                                    {isEn ? 'Ask follow-up questions directly to the AI Oracle Council.' : '방금 분석된 당신의 5단 융합 명반을 기반으로 추가 질문을 나눠보세요.'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <ChatInterface readingId={readingId} />
+                    {/* Master Dossier PDF Banner */}
+                    <div className="mt-12 rounded-3xl border border-[#c8a84d]/40 bg-gradient-to-r from-[#c8a84d]/15 via-[#181611] to-[#0c0b08] p-6 sm:p-8 text-center shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
+                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#c8a84d]/20 text-[#f5d77f] border border-[#c8a84d]/30 mb-4 shadow-lg">
+                            <Printer className="w-6 h-6" />
+                        </div>
+                        <h3 className="text-lg sm:text-xl font-bold font-cinzel text-white">
+                            {isEn ? '15-Page Confidential Master Dossier' : '15페이지 최고급 A4 마스터 도시에'}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-stone-300 mt-2 max-w-lg mx-auto leading-relaxed">
+                            {isEn
+                                ? 'Download or print the full high-resolution A4 executive dossier containing all 5-engine calculations, SVG celestial wheels, and dialectical synthesis.'
+                                : '동서양 5대 엔진 계산식, 천문 차트 휠, 12개월 전략 캘린더가 집약된 정식 A4 도시에를 열람하거나 PDF로 저장하세요.'}
+                        </p>
+                        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (readingId) {
+                                        window.open(`/api/report/pdf?readingId=${readingId}`, '_blank');
+                                    } else {
+                                        handlePrint();
+                                    }
+                                }}
+                                className="px-6 py-3.5 rounded-full bg-gradient-to-r from-[#f0d588] via-[#e8c86d] to-[#c8a84d] text-stone-950 font-black text-xs sm:text-sm shadow-[0_0_25px_rgba(200,168,77,0.35)] transition-all hover:scale-[1.02] hover:brightness-110 active:scale-95 flex items-center gap-2"
+                            >
+                                <Printer className="w-4 h-4 text-stone-950" />
+                                <span>{isEn ? 'Open 15p A4 Master Dossier (PDF)' : '15p A4 마스터 도시에 열기 (PDF)'}</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setIsShareModalOpen(true)}
+                                className="px-5 py-3 rounded-full bg-white/10 hover:bg-white/15 text-xs sm:text-sm text-stone-200 font-semibold border border-white/15 transition-all flex items-center gap-2"
+                            >
+                                <Share2 className="w-4 h-4 text-[#d4af37]" />
+                                <span>{isEn ? 'Story Card (9:16)' : '소장용 스토리 카드 (9:16)'}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* 1:1 Oracle Chat Follow-Up Interface */}
+                    {readingId && (
+                        <div id="section-followup-chat" className="mt-12">
+                            <div className="rounded-3xl border border-[#c8a84d]/40 bg-gradient-to-b from-[#181611]/90 via-[#0f0e0b]/95 to-[#0a0907]/98 p-6 md:p-8 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
+                                <div className="mb-6 flex items-center gap-3 border-b border-white/10 pb-4">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#c8a84d]/40 bg-[#c8a84d]/20 text-[#f5d77f]">
+                                        <Sparkles className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-white">
+                                            {isEn ? '1:1 Private Oracle Consultation' : '1:1 프라이빗 오라클 심층 상담'}
+                                        </h3>
+                                        <p className="text-xs text-white/50">
+                                            {isEn ? 'Ask follow-up questions directly to the AI Oracle Council.' : '방금 분석된 당신의 5단 융합 명반을 기반으로 추가 질문을 나눠보세요.'}
+                                        </p>
                                     </div>
                                 </div>
-                            )}
-                        </div>
-
-                        {/* Dossier Completion & Print Banner */}
-                        <div className="rounded-2xl border border-[#c8a84d]/30 bg-gradient-to-r from-[#c8a84d]/10 via-[#181611] to-[#0c0b08] p-6 text-center shadow-lg">
-                            <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#c8a84d]/20 text-[#f5d77f] mb-3">
-                                <Sparkles className="w-5 h-5" />
-                            </div>
-                            <h4 className="text-base font-bold text-white">
-                                {isEn ? 'VIP Decision Dossier Complete' : 'VIP 의사결정 마스터 리포트 완독'}
-                            </h4>
-                            <p className="text-xs text-white/60 mt-1 max-w-md mx-auto">
-                                {isEn
-                                    ? 'All 5-engine calculations, timing heatmaps, and strategic advice are securely preserved.'
-                                    : '5대 계산 엔진과 타이밍 히트맵, 실전 전략이 모두 체계적으로 기록되었습니다.'}
-                            </p>
-                            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-                                <button
-                                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                                    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs text-white font-medium transition-all"
-                                >
-                                    {isEn ? 'Back to Top ⬆' : '최상단으로 이동 ⬆'}
-                                </button>
-                                <button
-                                    onClick={() => setIsShareModalOpen(true)}
-                                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37]/25 to-amber-500/20 hover:from-[#D4AF37]/35 hover:to-amber-500/30 text-xs text-[#FFE8A3] font-semibold border border-[#D4AF37]/50 shadow-[0_0_15px_rgba(212,175,55,0.2)] transition-all flex items-center gap-1.5"
-                                >
-                                    <Share2 className="w-3.5 h-3.5 text-[#D4AF37]" />
-                                    <span>{isEn ? 'Story Card (9:16)' : '소장용 스토리 카드 (9:16)'}</span>
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        if (readingId) {
-                                            window.open(`/api/report/pdf?readingId=${readingId}`, '_blank');
-                                        } else {
-                                            handlePrint();
-                                        }
-                                    }}
-                                    className="px-4 py-2 rounded-xl bg-[#c8a84d]/20 hover:bg-[#c8a84d]/30 text-xs text-[#f5d77f] font-semibold border border-[#c8a84d]/40 transition-all flex items-center gap-1.5"
-                                >
-                                    <Printer className="w-3.5 h-3.5" />
-                                    <span>{isEn ? '15p Master Dossier (A4)' : '15p 마스터 도시에 (A4 PDF)'}</span>
-                                </button>
+                                <ChatInterface readingId={readingId} />
                             </div>
                         </div>
-                    </main>
+                    )}
                 </div>
+            )}
+
+            {!isPremium && (
+                <CaseFileReport
+                    report={report}
+                    language={language}
+                    isFreeView={true}
+                    isLoading={isLoading}
+                    onRetry={onRetry}
+                    onUnlock={handleUnlock}
+                    displayPrice={displayPrice}
+                    personName={userName}
+                    question={userQuestion}
+                />
             )}
 
             {/* Sticky Floating CTA for Free Users */}

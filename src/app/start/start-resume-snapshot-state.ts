@@ -253,5 +253,6 @@ function applySavedSnapshot(
     pendingData,
     pendingMetadataJson,
     pendingReportJson,
+    storedReadingStep: 'result',
   };
 }

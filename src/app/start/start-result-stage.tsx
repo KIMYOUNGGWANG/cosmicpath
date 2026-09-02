@@ -100,76 +100,62 @@ export function StartResultStage(props: StartResultStageProps) {
       ) : props.reportData && props.reportData.summary ? (
         <div className="animate-in fade-in slide-in-from-bottom-8 duration-1000 py-10 pt-24 md:py-12 md:pt-32">
           <ErrorBoundary>
-            <div className="mb-8 px-4 md:px-0">
-              <DecisionBriefCard
-                language={props.language}
-                reportData={props.reportData}
-                readingData={props.readingData}
-                unifiedResult={props.unifiedResult}
-                isPremium={props.isPremium}
-                dynamicPrice={props.dynamicPrice}
-                landingSource={props.landingSource}
-                onUnlock={props.onUnlock}
-              />
+            {!props.isPremium && (
+              <div className="mb-8 px-4 md:px-0">
+                <DecisionBriefCard
+                  language={props.language}
+                  reportData={props.reportData}
+                  readingData={props.readingData}
+                  unifiedResult={props.unifiedResult}
+                  isPremium={props.isPremium}
+                  dynamicPrice={props.dynamicPrice}
+                  landingSource={props.landingSource}
+                  onUnlock={props.onUnlock}
+                />
 
-              <RelationshipOutcomeSeed
-                language={props.language}
-                readingData={props.readingData}
-                landingSource={props.landingSource}
-                shareUrl={props.shareUrl}
-              />
+                <RelationshipOutcomeSeed
+                  language={props.language}
+                  readingData={props.readingData}
+                  landingSource={props.landingSource}
+                  shareUrl={props.shareUrl}
+                />
 
-              {props.unifiedResult ? <UnifiedReadingDisplay result={props.unifiedResult} /> : null}
+                {props.unifiedResult ? <UnifiedReadingDisplay result={props.unifiedResult} /> : null}
 
-              <div className="mt-8 flex flex-col items-center gap-4">
-                {(props.isPremium || props.hasPaidQuery) && !props.isInvitationMode && (
+                <div className="mt-8 flex flex-col items-center gap-4">
+                  {props.isInvitationMode && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4 w-full max-w-md rounded-[26px] border border-acc-gold/30 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.12),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-6 text-center backdrop-blur-xl">
+                      <div className="mb-2 text-xs font-bold uppercase tracking-widest text-acc-gold">
+                        {props.language === 'en' ? 'Reading Invitation' : '리딩 초대'}
+                      </div>
+                      <h3 className="mb-4 text-lg leading-relaxed text-white font-cinzel">
+                        {props.language === 'en'
+                          ? 'Ready to open your own decision note?'
+                          : `방금 본 결과, 꽤 잘 맞았나요?\n이제 내 질문도 직접 읽어보세요.`}
+                      </h3>
+                      <button
+                        onClick={() => {
+                          void props.onInviteUpsell();
+                        }}
+                        className="w-full rounded-xl border border-white/20 bg-white/10 py-3 font-bold text-starlight transition-[transform,background-color,border-color,color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-transparent hover:bg-acc-gold hover:text-bg-void hover:shadow-[0_16px_32px_rgba(212,175,55,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acc-gold/70"
+                      >
+                        {props.language === 'en' ? 'Open My Decision Reading (30% OFF)' : '내 질문도 직접 보기 (30% 할인)'}
+                      </button>
+                    </div>
+                  )}
+
                   <button
-                    onClick={() => {
-                      void props.onInviteOwner();
-                    }}
-                    className="group relative overflow-hidden rounded-[20px] bg-gradient-to-r from-acc-gold to-[#F59E0B] px-8 py-4 font-bold text-bg-void shadow-[0_14px_32px_rgba(212,175,55,0.14)] transition-[transform,box-shadow,filter] duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(212,175,55,0.28)] hover:brightness-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acc-gold/70"
+                    onClick={props.onShareCard}
+                    className="group inline-flex items-center gap-2.5 rounded-full border border-white/15 bg-white/5 px-6 py-3.5 text-sm font-semibold text-stone-200 shadow-[0_4px_20px_rgba(0,0,0,0.3)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-[#c8a84d]/50 hover:bg-[#c8a84d]/10 hover:text-white hover:shadow-[0_8px_30px_rgba(200,168,77,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8a84d]/70"
                   >
-                    <div className="absolute inset-0 translate-y-full bg-white/20 transition-transform duration-500 group-hover:translate-y-0" />
-                    <div className="relative flex items-center gap-2">
-                      <span className="font-cinzel tracking-wider">
-                        {props.language === 'en' ? 'Send Reading Invite' : '친구 초대 링크 복사하기'}
-                      </span>
-                    </div>
+                    <Sparkles className="h-4 w-4 text-[#e8c86d] transition-transform group-hover:scale-110" />
+                    <span>
+                      {props.language === 'en' ? 'Create 9:16 Story Card' : '소장용 인스타/스레드 스토리 카드 (9:16)'}
+                    </span>
                   </button>
-                )}
-
-                {props.isInvitationMode && (
-                  <div className="animate-in fade-in slide-in-from-bottom-4 w-full max-w-md rounded-[26px] border border-acc-gold/30 bg-[radial-gradient(circle_at_top,rgba(212,175,55,0.12),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-6 text-center backdrop-blur-xl">
-                    <div className="mb-2 text-xs font-bold uppercase tracking-widest text-acc-gold">
-                      {props.language === 'en' ? 'Reading Invitation' : '리딩 초대'}
-                    </div>
-                    <h3 className="mb-4 text-lg leading-relaxed text-white font-cinzel">
-                      {props.language === 'en'
-                        ? 'Ready to open your own decision note?'
-                        : `방금 본 결과, 꽤 잘 맞았나요?\n이제 내 질문도 직접 읽어보세요.`}
-                    </h3>
-                    <button
-                      onClick={() => {
-                        void props.onInviteUpsell();
-                      }}
-                      className="w-full rounded-xl border border-white/20 bg-white/10 py-3 font-bold text-starlight transition-[transform,background-color,border-color,color,box-shadow] duration-300 hover:-translate-y-0.5 hover:border-transparent hover:bg-acc-gold hover:text-bg-void hover:shadow-[0_16px_32px_rgba(212,175,55,0.18)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-acc-gold/70"
-                    >
-                      {props.language === 'en' ? 'Open My Decision Reading (30% OFF)' : '내 질문도 직접 보기 (30% 할인)'}
-                    </button>
-                  </div>
-                )}
-
-                <button
-                  onClick={props.onShareCard}
-                  className="group inline-flex items-center gap-2.5 rounded-full border border-white/15 bg-white/5 px-6 py-3.5 text-sm font-semibold text-stone-200 shadow-[0_4px_20px_rgba(0,0,0,0.3)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-[#c8a84d]/50 hover:bg-[#c8a84d]/10 hover:text-white hover:shadow-[0_8px_30px_rgba(200,168,77,0.2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c8a84d]/70"
-                >
-                  <Sparkles className="h-4 w-4 text-[#e8c86d] transition-transform group-hover:scale-110" />
-                  <span>
-                    {props.language === 'en' ? 'Create 9:16 Story Card' : '소장용 인스타/스레드 스토리 카드 (9:16)'}
-                  </span>
-                </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {props.premiumReportData ? (
               <PremiumReport

@@ -31,6 +31,7 @@ type ResumeRestoreOptions = {
   setShareUrl: (value: string | undefined) => void;
   setIsPremium: (value: boolean) => void;
   setIsDecisionAccepted: (value: boolean) => void;
+  setIsLoading?: (value: boolean) => void;
   setLoadingPhase: (value: { phase: number; label: string }) => void;
   setLanguage: (value: 'ko' | 'en') => void;
 };
@@ -91,7 +92,10 @@ function restoreBasicClientState(
     );
     if (restoredCards.length > 0) input.options.setSelectedCards(restoredCards);
   }
-  if (restoredReport) input.options.setReportData(restoredReport);
+  if (restoredReport) {
+    input.options.setReportData(restoredReport);
+    input.options.setIsLoading?.(false);
+  }
   if (input.parsedMetadata) {
     input.options.setMetadata(input.parsedMetadata as ReadingMetadata);
     if (input.parsedMetadata.language) input.options.setLanguage(input.parsedMetadata.language as 'ko' | 'en');

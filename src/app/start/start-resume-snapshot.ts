@@ -44,6 +44,7 @@ type UseStartResumeOptions = {
   setShareUrl: (value: string | undefined) => void;
   setIsPremium: (value: boolean) => void;
   setIsDecisionAccepted: (value: boolean) => void;
+  setIsLoading?: (value: boolean) => void;
   setLoadingPhase: (value: { phase: number; label: string }) => void;
   setLanguage: (value: 'ko' | 'en') => void;
 };
