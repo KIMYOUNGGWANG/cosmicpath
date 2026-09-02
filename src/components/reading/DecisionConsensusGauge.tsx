@@ -28,11 +28,19 @@ export function DecisionConsensusGauge({
 }: DecisionConsensusGaugeProps) {
   const isEn = language === 'en';
 
-  // 1. Calculate or extract consensus score (default 94%)
-  const score =
-    reportData?.summary?.trust_score ||
-    unifiedResult?.totalConfidenceScore ||
-    94;
+  // 1. Calculate consensus score from deterministic engine convergence or unified result
+  let score = 92;
+  if (typeof reportData?.oracleCouncil?.convergenceScore === 'number' && reportData.oracleCouncil.convergenceScore > 0) {
+    score = Math.min(100, Math.max(60, Math.round(reportData.oracleCouncil.convergenceScore)));
+  } else if (typeof unifiedResult?.totalConfidenceScore === 'number' && unifiedResult.totalConfidenceScore > 0) {
+    score = Math.min(100, Math.max(60, Math.round(unifiedResult.totalConfidenceScore)));
+  } else if (typeof reportData?.summary?.trust_score === 'number' && reportData.summary.trust_score > 0) {
+    const rawTrust = reportData.summary.trust_score;
+    // 1-5 scale mapped to confidence band (3 -> 85%, 4 -> 92%, 5 -> 96%)
+    score = rawTrust <= 5 ? Math.min(98, Math.max(75, Math.round(70 + rawTrust * 5.5))) : rawTrust;
+  }
+
+  const badgeLevel = score >= 80 ? 'HIGH' : score >= 65 ? 'MED' : 'FAIR';
 
   const currentYear = new Date().getFullYear();
 
@@ -100,8 +108,8 @@ export function DecisionConsensusGauge({
           </h3>
           <p className="text-xs text-stone-400">
             {isEn
-              ? '4 out of 5 independent calculation engines confirm this directional verdict.'
-              : '사주·점성·자미·수비학 5대 엔진이 동일한 행동 방향을 90% 이상 일치하여 가리킵니다.'}
+              ? `Independent calculation engines indicate ${score}% directional alignment on this choice.`
+              : `사주·점성·자미·수비학 5대 엔진이 동일한 행동 방향을 ${score}% 일치하여 가리킵니다.`}
           </p>
         </div>
 
@@ -116,7 +124,7 @@ export function DecisionConsensusGauge({
             </span>
           </div>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-[#d4af37] to-[#f9e7b2] text-black font-extrabold text-xs shadow-md">
-            HIGH
+            {badgeLevel}
           </div>
         </div>
       </div>

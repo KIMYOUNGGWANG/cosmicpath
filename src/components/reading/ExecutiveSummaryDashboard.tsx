@@ -5,6 +5,8 @@ import { Compass, Sparkles, AlertTriangle, ShieldCheck, Target, Zap, TrendingUp,
 import type { PremiumReportData } from './premium-report';
 import type { SajuResult } from '@/lib/engines/saju';
 
+import { EvidenceXRayBadge } from './EvidenceXRayBadge';
+
 interface ExecutiveSummaryDashboardProps {
   report: PremiumReportData;
   question?: string;
@@ -58,9 +60,8 @@ export function ExecutiveSummaryDashboard({
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-semibold text-stone-300">
-          <Sparkles className="h-3.5 w-3.5 text-[#d4af37]" />
-          <span>신뢰 지수 94%</span>
+        <div className="flex items-center gap-2">
+          <EvidenceXRayBadge sajuResult={sajuResult} language={language} />
         </div>
       </div>
 

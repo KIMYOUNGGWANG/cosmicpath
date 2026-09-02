@@ -5,6 +5,8 @@ import { CheckCircle2, RefreshCw, Sparkles } from 'lucide-react';
 import type { PremiumReportData } from '../premium-report';
 import type { VerdictReportLanguage } from './types';
 
+import { EvidenceXRayBadge } from '../EvidenceXRayBadge';
+
 type HeroVerdictCardProps = {
     readonly finalVerdict?: PremiumReportData['final_verdict'];
     readonly trustScore: number;
@@ -88,11 +90,12 @@ export function HeroVerdictCard({
             />
 
             <div className="relative z-10 flex h-full flex-col gap-8 p-8 md:p-12">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                     <span className="inline-flex items-center gap-1.5 rounded-sm border border-red-900/50 bg-[#2A0808]/80 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-red-400/90 backdrop-blur-md">
                         <Sparkles size={12} className="opacity-80" />
                         {isEn ? 'Decision Moment' : '통합 결정 노트'}
                     </span>
+                    <EvidenceXRayBadge language={language} />
                 </div>
 
                 {actionSummary ? (

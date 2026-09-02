@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "bash scripts/run-next-with-native-fallbacks.sh dev",
+    "dev": "bash scripts/run-next-with-native-fallbacks.sh dev --webpack",
     "build": "prisma generate && bash scripts/run-next-with-native-fallbacks.sh build",
     "start": "bash scripts/run-next-with-native-fallbacks.sh start",
     "test": "bash scripts/test-refactor-regression.sh",

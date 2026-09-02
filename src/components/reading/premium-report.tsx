@@ -877,11 +877,17 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                     <span>{isEn ? 'Story Card (9:16)' : '소장용 스토리 카드 (9:16)'}</span>
                                 </button>
                                 <button
-                                    onClick={handlePrint}
+                                    onClick={() => {
+                                        if (readingId) {
+                                            window.open(`/api/report/pdf?readingId=${readingId}`, '_blank');
+                                        } else {
+                                            handlePrint();
+                                        }
+                                    }}
                                     className="px-4 py-2 rounded-xl bg-[#c8a84d]/20 hover:bg-[#c8a84d]/30 text-xs text-[#f5d77f] font-semibold border border-[#c8a84d]/40 transition-all flex items-center gap-1.5"
                                 >
                                     <Printer className="w-3.5 h-3.5" />
-                                    <span>{isEn ? 'Save as PDF' : 'PDF로 소장하기'}</span>
+                                    <span>{isEn ? '15p Master Dossier (A4)' : '15p 마스터 도시에 (A4 PDF)'}</span>
                                 </button>
                             </div>
                         </div>

@@ -170,7 +170,19 @@ export function getSubscriptionFallbackPriceLabel(planType: ConsumerSubscription
     return formatUsdAmount(SUBSCRIPTION_FALLBACK_AMOUNTS[planType]);
 }
 
-export type ProductType = typeof READING_PRODUCT | typeof FOLLOW_UP_PRODUCT | typeof MATCH_PRODUCT;
+export const MASTER_DOSSIER_PRODUCT = {
+    id: 'cosmicpath_dossier_upsell_v1',
+    productId: process.env.NODE_ENV === 'development'
+        ? (process.env.NEXT_PUBLIC_STRIPE_DOSSIER_PRODUCT_ID_TEST || 'prod_TestDossierId')
+        : (process.env.NEXT_PUBLIC_STRIPE_DOSSIER_PRODUCT_ID || 'prod_LiveDossierId'),
+    name: '15-Page Master Dossier PDF',
+    description: '15페이지 고해상도 마스터 도시에 A4 PDF 소장본',
+    currency: 'USD',
+    price: 1499, // $14.99 in cents ($19.99 regular discounted)
+    stripeConfigured: true,
+} as const;
+
+export type ProductType = typeof READING_PRODUCT | typeof FOLLOW_UP_PRODUCT | typeof MATCH_PRODUCT | typeof MASTER_DOSSIER_PRODUCT;
 
 /**
  * 서버 사이드 productId 허용 목록.
@@ -184,6 +196,7 @@ export function getAllowedProductIds(): Set<string> {
         CHAT_CREDIT_SINGLE.productId,
         CHAT_CREDIT_PACK.productId,
         MATCH_PRODUCT.productId,
+        MASTER_DOSSIER_PRODUCT.productId,
     ].filter(Boolean));
 }
 

@@ -316,6 +316,17 @@ export async function createCheckoutSession({
 
         return { url: session.url };
     } catch (error) {
+        if (
+            process.env.NODE_ENV === 'development' &&
+            error instanceof Error &&
+            /ENOTFOUND|StripeConnectionError|connection to Stripe|STRIPE_SECRET_KEY/i.test(error.message)
+        ) {
+            const mockSessionId = `mock_dev_session_${Date.now()}`;
+            const resolvedSuccessUrl = withReadingId(successUrl, metadata?.readingId).replace('{CHECKOUT_SESSION_ID}', mockSessionId);
+            devLog.log('[Stripe Dev Fallback] Offline development redirect to:', resolvedSuccessUrl);
+            return { url: resolvedSuccessUrl };
+        }
+
         devLog.error('Error creating checkout session:', error);
         throw error;
     }
@@ -325,6 +336,20 @@ export async function createCheckoutSession({
  * Checkout Session 검증
  */
 export async function verifyCheckoutSession(sessionId: string) {
+    if (sessionId.startsWith('mock_dev_session_')) {
+        return {
+            success: true,
+            type: 'premium_reading',
+            sessionId,
+            productId: 'cosmicpath_reading_v1',
+            readingId: undefined,
+            credits: 0,
+            followUpQuestions: 0,
+            customerEmail: 'dev@cosmicpath.live',
+            session: null as unknown as Stripe.Checkout.Session,
+        };
+    }
+
     const session = await getStripe().checkout.sessions.retrieve(sessionId);
 
     await safeIncrementUsageCounter({

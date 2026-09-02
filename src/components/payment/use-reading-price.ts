@@ -49,8 +49,9 @@ export function useReadingPrice({
     const [fetchedPrice, setFetchedPrice] = useState<string | null>(null);
     const [lookupState, setLookupState] = useState<ReadingPriceLookupState>('ready');
     const hasPriceLookupFallback = !resolvedPriceProp && lookupState === 'fallback';
-    const hasBlockingPriceIssue = hasPriceLookupFallback;
-    const dynamicPrice = resolvedPriceProp || normalizePriceLabel(fetchedPrice);
+    const isDev = process.env.NODE_ENV === 'development';
+    const hasBlockingPriceIssue = hasPriceLookupFallback && !isDev;
+    const dynamicPrice = resolvedPriceProp || normalizePriceLabel(fetchedPrice) || fallbackPriceLabel;
 
     useEffect(() => {
         if (!isOpen || resolvedPriceProp) return;

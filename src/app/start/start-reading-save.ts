@@ -55,7 +55,7 @@ export async function saveIntermediatePremiumResult(input: IntermediatePremiumSa
       }
     }
   } catch (error) {
-    console.error('[Intermediate Save] Failed:', error);
+    console.warn('[Intermediate Save] Network or server error (local fallback active):', error);
   }
 }
 
@@ -85,7 +85,7 @@ export async function saveFinalReadingResult(input: FinalReadingSaveInput) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('Failed to save to database:', response.status, errorData);
+      console.warn('[Database Save] Server save failed (local fallback active):', response.status, errorData);
       return;
     }
 
@@ -98,7 +98,7 @@ export async function saveFinalReadingResult(input: FinalReadingSaveInput) {
       input.syncResultUrl(savedId);
     }
   } catch (error) {
-    console.error('Failed to save result:', error);
+    console.warn('[Database Save] Network or server error (local fallback active):', error);
   }
 }
 

@@ -18,7 +18,6 @@ import { DecisionBriefCard } from './start-result-decision-brief';
 import { GuideRematchCard } from './start-result-actions-panel';
 import { InterruptedResultPanel, QuotaExceededPanel } from './start-result-error-panels';
 import { RelationshipOutcomeSeed } from './start-result-followup-panel';
-import { MobileFloatingUnlockBar } from '@/components/reading/MobileFloatingUnlockBar';
 import { ExitIntentPromoModal } from '@/components/reading/ExitIntentPromoModal';
 
 const PremiumReport = dynamic(() => import('@/components/reading/premium-report').then((mod) => mod.PremiumReport), {
@@ -122,15 +121,6 @@ export function StartResultStage(props: StartResultStageProps) {
 
               {props.unifiedResult ? <UnifiedReadingDisplay result={props.unifiedResult} /> : null}
 
-              {props.readingData && !props.isLoading && props.reportData?.summary && (
-                <GuideRematchCard
-                  readingData={props.readingData}
-                  isPremium={props.isPremium}
-                  language={props.language}
-                  onRematchGuide={props.onRematchGuide}
-                />
-              )}
-
               <div className="mt-8 flex flex-col items-center gap-4">
                 {(props.isPremium || props.hasPaidQuery) && !props.isInvitationMode && (
                   <button
@@ -204,16 +194,17 @@ export function StartResultStage(props: StartResultStageProps) {
               </div>
             ) : null}
 
-            <div className="pb-16">
+            <div className="pb-16 space-y-6">
               <DailyRetentionBanner language={props.language} />
+              {props.readingData && !props.isLoading && props.reportData?.summary && (
+                <GuideRematchCard
+                  readingData={props.readingData}
+                  isPremium={props.isPremium}
+                  language={props.language}
+                  onRematchGuide={props.onRematchGuide}
+                />
+              )}
             </div>
-
-            <MobileFloatingUnlockBar
-              language={props.language}
-              isPremium={props.isPremium}
-              priceLabel={props.dynamicPrice}
-              onUnlock={props.onUnlock}
-            />
 
             <ExitIntentPromoModal
               isPremium={props.isPremium}
