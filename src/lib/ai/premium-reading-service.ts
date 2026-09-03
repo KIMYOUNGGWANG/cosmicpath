@@ -29,6 +29,7 @@ import {
 
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 const PRIMARY_MODEL_NAME = 'gemini-3.5-flash';
+const SECONDARY_MODEL_NAME = 'gemini-2.5-flash';
 const FAST_PHASE_REQUEST_TIMEOUT_MS = 18000;
 const PHASE_OUTPUT_TOKEN_BUDGETS: Record<number, { initial: number; retry: number; final: number }> = {
     1: { initial: 8192, retry: 12288, final: 16384 },   // Summary + traits + core analysis
@@ -103,7 +104,10 @@ function getPhaseTemperature(phaseNumber: number) {
     return 0.72;
 }
 
-function getPhaseThinkingConfig() {
+function getPhaseThinkingConfig(modelName: string = PRIMARY_MODEL_NAME) {
+    if (!modelName.startsWith('gemini-3')) {
+        return undefined;
+    }
     return {
         thinkingLevel: 'minimal',
     };
@@ -284,11 +288,24 @@ If the error mentions PREMIUM_QUALITY_GATE_FAILED, quote the missing supplied an
 
 
 
+function buildFailoverBoosterDirective(phaseNumber: number): string {
+    return `
+<FAILOVER_QUALITY_BOOSTER>
+[CRITICAL DEPTH & DENSITY REQUIREMENTS FOR PHASE ${phaseNumber}]
+1. Thorough Elaboration: Do not write brief or generic summaries. Provide an exhaustive, multidimensional breakdown covering root causes, current manifestation, and future progression (at least 3-4 dense sentences per subsection).
+2. Actionable Branching: Every guidance section must explicitly distinguish Option A (proactive move) vs Option B (conservative hold), comparing timing, risk tradeoffs, and specific deadlines.
+3. Strict Grounding: Ground every conclusion directly in the provided Saju pillars, astrological aspects, or tarot cards. Generic platitudes, vague reassurances, and filler are strictly prohibited.
+</FAILOVER_QUALITY_BOOSTER>`;
+}
+
 export interface PhaseResult {
     phase: number;
     success: boolean;
     data: PremiumReportPartial | null;
     error?: string;
+    executedModel?: string;
+    isFailover?: boolean;
+    textLength?: number;
 }
 
 export interface ProgressCallback {
@@ -440,18 +457,31 @@ export async function generateSinglePhase(
     let lastError: Error | null = null;
 
     for (let attempt = 0; attempt < PREMIUM_PHASE_MAX_ATTEMPTS; attempt++) {
+        const isFailover: boolean = attempt > 0 && lastError !== null && (
+            lastError.message.includes('503') ||
+            lastError.message.includes('429') ||
+            lastError.message.includes('500') ||
+            lastError.message.includes('502') ||
+            lastError.message.includes('504') ||
+            lastError.message.includes('timeout') ||
+            lastError.message.includes('AbortError')
+        );
+        const currentModel: string = isFailover ? SECONDARY_MODEL_NAME : PRIMARY_MODEL_NAME;
         const requestTimeoutMs = getPhaseRequestTimeoutMs(phaseNumber);
         const maxOutputTokens = getPhaseMaxOutputTokens(phaseNumber, attempt);
-        const thinkingConfig = getPhaseThinkingConfig();
+        const thinkingConfig = getPhaseThinkingConfig(currentModel);
         const userPromptForAttempt: string = attempt === 0
             ? user
             : buildQualityRetryUserPrompt(user, lastError, userData.currentDate);
+        const finalUserPrompt = isFailover
+            ? `${userPromptForAttempt}\n${buildFailoverBoosterDirective(phaseNumber)}`
+            : userPromptForAttempt;
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), requestTimeoutMs);
 
         try {
             const response: Response = await fetch(
-                `${GEMINI_API_BASE}/${PRIMARY_MODEL_NAME}:generateContent?key=${apiKey}`,
+                `${GEMINI_API_BASE}/${currentModel}:generateContent?key=${apiKey}`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -460,7 +490,7 @@ export async function generateSinglePhase(
                         systemInstruction: { parts: [{ text: system }] },
                         contents: [{
                             role: 'user',
-                            parts: [{ text: userPromptForAttempt }],
+                            parts: [{ text: finalUserPrompt }],
                         }],
                         generationConfig: {
                             temperature: getPhaseTemperature(phaseNumber),
@@ -482,20 +512,20 @@ export async function generateSinglePhase(
 
             if (!response.ok) {
                 const errorText = await response.text();
-                const errorMsg: string = `API Error (${PRIMARY_MODEL_NAME}): ${response.status} - ${errorText}`;
+                const errorMsg: string = `API Error (${currentModel}): ${response.status} - ${errorText}`;
 
                 if (response.status === 429) {
                     lastError = new Error(errorMsg);
-                    const waitTime = Math.pow(2, attempt) * 3000;
-                    console.warn(`[Phase ${phaseNumber}] Rate limited on ${PRIMARY_MODEL_NAME}. Waiting ${waitTime / 1000}s... (Attempt ${attempt + 1}/${PREMIUM_PHASE_MAX_ATTEMPTS})`);
+                    const waitTime = Math.pow(2, attempt) * 2000;
+                    console.warn(`[Phase ${phaseNumber}] Rate limited on ${currentModel}. Waiting ${waitTime / 1000}s... (Attempt ${attempt + 1}/${PREMIUM_PHASE_MAX_ATTEMPTS})`);
                     await new Promise(resolve => setTimeout(resolve, waitTime));
                     continue;
                 }
 
                 if (response.status >= 500) {
                     lastError = new Error(errorMsg);
-                    const waitTime = 1500 * (attempt + 1);
-                    console.warn(`[Phase ${phaseNumber}] Server Error on ${PRIMARY_MODEL_NAME} (${response.status}). Retrying...`);
+                    const waitTime = 1000 * (attempt + 1);
+                    console.warn(`[Phase ${phaseNumber}] Server Error on ${currentModel} (${response.status}). Retrying with failover...`);
                     await new Promise(resolve => setTimeout(resolve, waitTime));
                     continue;
                 }
@@ -515,25 +545,25 @@ export async function generateSinglePhase(
             // Log raw result for debugging (Gemini 3 compatibility check)
             if (!text) {
                 const safetyRatings = candidate?.safetyRatings;
-                console.warn(`[Phase ${phaseNumber}] Empty content from ${PRIMARY_MODEL_NAME}. FinishReason: ${finishReason}`, { safetyRatings, rawResult: JSON.stringify(result) });
+                console.warn(`[Phase ${phaseNumber}] Empty content from ${currentModel}. FinishReason: ${finishReason}`, { safetyRatings, rawResult: JSON.stringify(result) });
 
-                lastError = new Error(`Empty content. FinishReason: ${finishReason}`);
+                lastError = new Error(`Empty content from ${currentModel}. FinishReason: ${finishReason}`);
                 continue;
             }
 
             if (isMaxTokensFinish(finishReason)) {
                 lastError = new Error(
-                    `Phase ${phaseNumber} exceeded maxOutputTokens=${maxOutputTokens} on ${PRIMARY_MODEL_NAME}`
+                    `Phase ${phaseNumber} exceeded maxOutputTokens=${maxOutputTokens} on ${currentModel}`
                 );
                 console.warn(
-                    `[Phase ${phaseNumber}] MAX_TOKENS from ${PRIMARY_MODEL_NAME}; retrying with a larger output budget (attempt ${attempt + 1}/${PREMIUM_PHASE_MAX_ATTEMPTS}).`
+                    `[Phase ${phaseNumber}] MAX_TOKENS from ${currentModel}; retrying with a larger output budget (attempt ${attempt + 1}/${PREMIUM_PHASE_MAX_ATTEMPTS}).`
                 );
                 continue;
             }
 
             if (finishReason && finishReason !== 'STOP') {
                 console.warn(
-                    `[Phase ${phaseNumber}] Non-STOP finish from ${PRIMARY_MODEL_NAME}: ${finishReason} (maxOutputTokens=${maxOutputTokens}, attempt=${attempt + 1}/${PREMIUM_PHASE_MAX_ATTEMPTS})`
+                    `[Phase ${phaseNumber}] Non-STOP finish from ${currentModel}: ${finishReason} (maxOutputTokens=${maxOutputTokens}, attempt=${attempt + 1}/${PREMIUM_PHASE_MAX_ATTEMPTS})`
                 );
             }
 
@@ -549,25 +579,32 @@ export async function generateSinglePhase(
                 assertPremiumGrounding(phaseNumber, data, userData);
             } catch (e) {
                 const validationMessage = e instanceof Error ? e.message : String(e);
-                console.error(`[Phase ${phaseNumber}] Schema or quality validation error from ${PRIMARY_MODEL_NAME}. Raw text:`, text.substring(0, 200) + '...');
+                console.error(`[Phase ${phaseNumber}] Schema or quality validation error from ${currentModel}. Raw text:`, text.substring(0, 200) + '...');
                 lastError = new Error(
                     `Phase ${phaseNumber} schema validation failed${finishReason ? ` (finishReason: ${finishReason})` : ''}: ${validationMessage}`
                 );
                 continue;
             }
 
-            console.log(`[Phase ${phaseNumber}] Success with ${PRIMARY_MODEL_NAME}:`, Object.keys(data));
-            return { phase: phaseNumber, success: true, data };
+            console.log(`[Phase ${phaseNumber}] Success with ${currentModel}:`, Object.keys(data));
+            return {
+                phase: phaseNumber,
+                success: true,
+                data,
+                executedModel: currentModel,
+                isFailover,
+                textLength: text.length,
+            };
 
         } catch (error) {
             if (error instanceof Error && error.name === 'AbortError') {
-                lastError = new Error(`Phase ${phaseNumber} timed out after ${requestTimeoutMs}ms on ${PRIMARY_MODEL_NAME}`);
+                lastError = new Error(`Phase ${phaseNumber} timed out after ${requestTimeoutMs}ms on ${currentModel}`);
                 console.error(`[Phase ${phaseNumber}] Timeout:`, lastError.message);
                 continue;
             }
 
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            console.error(`[Phase ${phaseNumber}] Attempt ${attempt + 1} Error on ${PRIMARY_MODEL_NAME}:`, errorMessage);
+            console.error(`[Phase ${phaseNumber}] Attempt ${attempt + 1} Error on ${currentModel}:`, errorMessage);
             lastError = error instanceof Error ? error : new Error(String(error));
 
             if (attempt < PREMIUM_PHASE_MAX_ATTEMPTS - 1) {

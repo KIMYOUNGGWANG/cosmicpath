@@ -6,6 +6,7 @@ import type { ZiweiChartResult, ZiweiPalace, ZiweiStar } from '@/lib/engines/ziw
 export interface ZiweiChartProps {
   chart: ZiweiChartResult;
   title?: string;
+  language?: 'ko' | 'en';
 }
 
 // 12지지의 격자(Grid) 위치 매핑 (전통 4x4 사각형 명반 레이아웃)

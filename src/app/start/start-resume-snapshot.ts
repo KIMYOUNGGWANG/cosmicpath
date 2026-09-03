@@ -105,6 +105,7 @@ export function useStartResume(options: UseStartResumeOptions) {
 
         const hasClientPremiumResumeFlag =
           paid === 'true' ||
+          params.get('resume') === 'premium' ||
           sessionStorage.getItem('payment_completed') === 'true' ||
           sessionStorage.getItem('is_premium_user') === 'true';
         snapshot = await hydrateResumeSnapshotFromServer({ hasClientPremiumResumeFlag, snapshot });

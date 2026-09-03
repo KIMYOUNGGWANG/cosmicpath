@@ -31,11 +31,22 @@ import {
 import { sanitizeText } from './free-focus-contract';
 import type { AssembledReadingRuntime } from './reading-runtime-service';
 
+type GenerationAuditMeta = {
+  requestedModel: string;
+  executedModel?: string;
+  isFailover?: boolean;
+  textLength?: number;
+  timestamp: string;
+};
+
 type EnrichedPayload = {
   success: boolean;
   report: ReturnType<typeof buildOracleReportEnrichment>;
   isPremium: boolean;
-  metadata: ReturnType<typeof buildReadingMetadata> & { freeGenerationMode?: string };
+  metadata: ReturnType<typeof buildReadingMetadata> & {
+    freeGenerationMode?: string;
+    generationAudit?: GenerationAuditMeta;
+  };
   phase?: number;
   error?: string;
 };
@@ -49,6 +60,7 @@ type BuildPayloadParams = {
   phase?: number;
   error?: string;
   freeGenerationMode?: string;
+  generationAudit?: GenerationAuditMeta;
 };
 
 type PremiumReadingParams = {
@@ -543,6 +555,7 @@ function buildEnrichedPayload(params: BuildPayloadParams): EnrichedPayload {
       partnerSaju: params.runtime.partnerSaju,
     }),
     ...(params.freeGenerationMode ? { freeGenerationMode: params.freeGenerationMode } : {}),
+    ...(params.generationAudit ? { generationAudit: params.generationAudit } : {}),
   };
 
   return {
@@ -657,6 +670,12 @@ export async function runPremiumReading(params: PremiumReadingParams) {
         }));
       }
 
+      if (phaseResult.isFailover) {
+        console.warn(
+          `[Reading API Audit] Phase ${params.phase} executed with failover model ${phaseResult.executedModel} (length: ${phaseResult.textLength} chars)`
+        );
+      }
+
       return NextResponse.json(buildEnrichedPayload({
         success: true,
         phase: params.phase,
@@ -664,6 +683,13 @@ export async function runPremiumReading(params: PremiumReadingParams) {
         runtime: params.runtime,
         language: params.language,
         isPremium: true,
+        generationAudit: {
+          requestedModel: 'gemini-3.5-flash',
+          executedModel: phaseResult.executedModel,
+          isFailover: phaseResult.isFailover,
+          textLength: phaseResult.textLength,
+          timestamp: new Date().toISOString(),
+        },
       }));
     }
 

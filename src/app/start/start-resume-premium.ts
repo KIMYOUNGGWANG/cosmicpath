@@ -136,9 +136,17 @@ async function resumePremiumIfNeeded(
   isServerVerifiedPremium: boolean
 ) {
   const isPaymentCompleted = sessionStorage.getItem('payment_completed') === 'true';
-  if ((input.paid === 'true' || isPaymentCompleted) && restoredReadingData && isServerVerifiedPremium) {
-    await resumeVerifiedPremium(input, restoredReadingData, restoredReport);
-    return;
+  const isResumeRequested =
+    input.paid === 'true' ||
+    isPaymentCompleted ||
+    (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('resume') === 'premium');
+
+  if ((isResumeRequested || isServerVerifiedPremium) && restoredReadingData && isServerVerifiedPremium) {
+    const nextPhase = input.options.determineNextPremiumPhase(restoredReport);
+    if (nextPhase <= input.options.totalPremiumPhases) {
+      await resumeVerifiedPremium(input, restoredReadingData, restoredReport);
+      return;
+    }
   }
   if ((input.paid === 'true' || isPaymentCompleted) && !isServerVerifiedPremium) {
     input.options.setStreamContent(

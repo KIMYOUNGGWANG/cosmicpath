@@ -116,13 +116,33 @@ export function EvidenceXRayBadge({
                     </span>
                   </div>
 
-                  {sajuResult?.pillars ? (
+                  {sajuResult ? (
                     <div className="grid grid-cols-4 gap-2 text-center font-mono">
                       {[
-                        { label: '시주 (Hour)', value: sajuResult.pillars.hour },
-                        { label: '일주 (Day)', value: sajuResult.pillars.day },
-                        { label: '월주 (Month)', value: sajuResult.pillars.month },
-                        { label: '년주 (Year)', value: sajuResult.pillars.year },
+                        {
+                          label: '시주 (Hour)',
+                          value: sajuResult.hourPillar
+                            ? `${sajuResult.hourPillar.stem}${sajuResult.hourPillar.branch}`
+                            : (sajuResult as unknown as { pillars?: Record<string, string> }).pillars?.hour || '미상',
+                        },
+                        {
+                          label: '일주 (Day)',
+                          value: sajuResult.dayPillar
+                            ? `${sajuResult.dayPillar.stem}${sajuResult.dayPillar.branch}`
+                            : (sajuResult as unknown as { pillars?: Record<string, string> }).pillars?.day || '미상',
+                        },
+                        {
+                          label: '월주 (Month)',
+                          value: sajuResult.monthPillar
+                            ? `${sajuResult.monthPillar.stem}${sajuResult.monthPillar.branch}`
+                            : (sajuResult as unknown as { pillars?: Record<string, string> }).pillars?.month || '미상',
+                        },
+                        {
+                          label: '년주 (Year)',
+                          value: sajuResult.yeonPillar
+                            ? `${sajuResult.yeonPillar.stem}${sajuResult.yeonPillar.branch}`
+                            : (sajuResult as unknown as { pillars?: Record<string, string> }).pillars?.year || '미상',
+                        },
                       ].map((p, idx) => (
                         <div key={idx} className="rounded-xl border border-white/10 bg-black/40 p-2.5">
                           <div className="text-[10px] text-stone-400 mb-1">{p.label}</div>

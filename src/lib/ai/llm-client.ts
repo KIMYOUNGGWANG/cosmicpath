@@ -616,10 +616,31 @@ export async function generateStructuredReport<T>(
     };
 
     const primaryModel = config.provider === 'google' ? config.model : 'gemini-3.5-flash';
+    const secondaryModel = 'gemini-2.5-flash';
 
     try {
         return await requestStructuredReport(primaryModel);
     } catch (error) {
+        if (config.provider === 'google' && primaryModel !== secondaryModel) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            const isRetryableError = ['503', '500', '502', '504', '429', 'timeout', 'AbortError'].some((code) =>
+                errorMsg.includes(code)
+            );
+            if (isRetryableError) {
+                console.warn(
+                    `[AI Client] Primary model ${primaryModel} failed (${errorMsg}). Retrying with ${secondaryModel}...`
+                );
+                try {
+                    return await requestStructuredReport(secondaryModel);
+                } catch (secondaryError) {
+                    if (secondaryError instanceof StructuredParseError) {
+                        logStructuredParseFailure(secondaryError);
+                    }
+                    throw secondaryError;
+                }
+            }
+        }
+
         if (error instanceof StructuredParseError) {
             logStructuredParseFailure(error);
         }
