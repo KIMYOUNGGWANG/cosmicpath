@@ -25,6 +25,8 @@ import {
 import { cleanActionVerdictText } from '@/app/api/reading/free-focus-contract';
 import { BlindSpotTeaser } from '@/components/reading/blind-spot-teaser';
 import { DecisionConsensusGauge } from '@/components/reading/DecisionConsensusGauge';
+import { ScenarioTimelineChart } from '@/components/reading/ScenarioTimelineChart';
+import { calculateScenarioDecision, type ScenarioVerdictResult } from '@/lib/engines/scenario-engine';
 
 function getDecisionVerdictLabel(
   value: string | undefined,
@@ -141,6 +143,18 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
   const currentYear = new Date().getFullYear();
   const nextYear = currentYear + 1;
 
+  const scenarioDecision: ScenarioVerdictResult =
+    (props.reportData as Record<string, unknown>)?.metadata &&
+    typeof (props.reportData as Record<string, unknown>).metadata === 'object' &&
+    ((props.reportData as Record<string, unknown>).metadata as Record<string, unknown>)?.scenarioDecision
+      ? (((props.reportData as Record<string, unknown>).metadata as Record<string, unknown>).scenarioDecision as ScenarioVerdictResult)
+      : calculateScenarioDecision({
+          scenarioA: props.readingData?.scenarioA,
+          scenarioB: props.readingData?.scenarioB,
+          question: props.readingData?.question,
+          language: props.language,
+        });
+
   const vipTeasers = isEn ? [
     {
       title: `${currentYear}-${nextYear} Monthly Luck Ledger & Golden Timing Windows`,
@@ -245,6 +259,14 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
           reportData={props.reportData}
           readingData={props.readingData}
           unifiedResult={props.unifiedResult}
+        />
+
+        {/* A vs B 의사결정 시나리오 & 12개월 타임라인 대시보드 */}
+        <ScenarioTimelineChart
+          scenarioDecision={scenarioDecision}
+          isPremium={props.isPremium}
+          language={props.language}
+          onUnlock={props.onUnlock}
         />
 
         {/* Noble Ally 1:1 Match Viral Card */}

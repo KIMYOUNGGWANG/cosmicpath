@@ -64,6 +64,8 @@ export async function POST(request: NextRequest) {
             characterId,
             questionIntent: requestedQuestionIntent,
             selectionMode,
+            scenarioA,
+            scenarioB,
         } = validationResult.data;
         let {
             context,
@@ -171,6 +173,8 @@ export async function POST(request: NextRequest) {
             characterId,
             readingId,
             currentPhase,
+            scenarioA,
+            scenarioB,
         });
 
         if (tier === 'premium') {

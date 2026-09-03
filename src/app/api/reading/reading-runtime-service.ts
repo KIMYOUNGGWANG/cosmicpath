@@ -37,6 +37,7 @@ import type { ShadowTransformationResult } from '@/lib/engines/saju-transformati
 import { calculateShadowTransformations } from '@/lib/engines/saju-transformation';
 import type { Compatibility4DResult } from '@/lib/engines/compatibility-matrix';
 import { calculate4DCompatibility } from '@/lib/engines/compatibility-matrix';
+import { calculateScenarioDecision, type ScenarioVerdictResult } from '@/lib/engines/scenario-engine';
 
 export type AssembledReadingRuntime = {
   guide: ReadingGuideSnapshot;
@@ -57,6 +58,7 @@ export type AssembledReadingRuntime = {
   weeklyHeatmap?: YearHeatmapResult | null;
   shadowTransformations?: ShadowTransformationResult | null;
   compatibility4D?: Compatibility4DResult | null;
+  scenarioDecision?: ScenarioVerdictResult | null;
 };
 
 type RequestTarotCard = {
@@ -95,6 +97,8 @@ type ReadingRuntimeAssemblyParams = {
   characterId?: string;
   readingId?: string;
   currentPhase: number;
+  scenarioA?: string;
+  scenarioB?: string;
 };
 
 export async function assembleReadingRuntime(
@@ -245,6 +249,19 @@ export async function assembleReadingRuntime(
     console.error('Failed to compute 4D compatibility in runtime:', e);
   }
 
+  let scenarioDecision: ScenarioVerdictResult | null = null;
+  try {
+    scenarioDecision = calculateScenarioDecision({
+      scenarioA: params.scenarioA,
+      scenarioB: params.scenarioB,
+      question: params.question,
+      weeklyHeatmap,
+      language: params.language,
+    });
+  } catch (e) {
+    console.error('Failed to compute scenario decision:', e);
+  }
+
   return {
     guide,
     saju,
@@ -264,5 +281,6 @@ export async function assembleReadingRuntime(
     weeklyHeatmap,
     shadowTransformations,
     compatibility4D,
+    scenarioDecision,
   };
 }

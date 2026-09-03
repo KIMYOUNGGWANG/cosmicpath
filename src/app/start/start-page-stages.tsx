@@ -30,6 +30,8 @@ type StartPageStagesProps = {
   readonly inviteCode?: string;
   readonly initialContext?: ReadingData['context'];
   readonly initialQuestion?: string;
+  readonly initialScenarioA?: string;
+  readonly initialScenarioB?: string;
   readonly landingSource: string;
   readonly isDecisionTimingEntry: boolean;
   readonly isNextMoveReportEntry: boolean;
@@ -71,7 +73,13 @@ export function StartPageStages(props: StartPageStagesProps) {
         {props.hasCheckedResume && props.step === 'input' && (
           <StartInputStage
             language={props.language}
-            initialData={props.readingData ?? undefined}
+            initialData={
+              props.readingData
+                ? props.readingData
+                : (props.initialScenarioA || props.initialScenarioB
+                    ? { scenarioA: props.initialScenarioA, scenarioB: props.initialScenarioB }
+                    : undefined)
+            }
             isLoading={props.isLoading}
             inviterName={props.inviterName}
             inviteCode={props.inviteCode}

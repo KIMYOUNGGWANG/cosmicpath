@@ -33,6 +33,8 @@ export type ReadingData = {
     readonly inviteCode?: string;
     readonly ziSiMode?: 'tongja' | 'yaja' | 'joja';
     readonly dstCorrection?: boolean;
+    readonly scenarioA?: string;
+    readonly scenarioB?: string;
 };
 
 export type ReadingInputProps = {

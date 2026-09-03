@@ -121,6 +121,67 @@ export function getPrefilledQuestion(value: string | null): string | undefined {
   return normalized.slice(0, 240);
 }
 
+export function getPrefilledScenario(value: string | null): string | undefined {
+  if (!value) return undefined;
+  const normalized = value.trim();
+  return normalized ? normalized.slice(0, 100) : undefined;
+}
+
+export interface ScenarioPresetDefinition {
+  context: ReadingContext;
+  questionKo: string;
+  questionEn: string;
+  scenarioAKo: string;
+  scenarioAEn: string;
+  scenarioBKo: string;
+  scenarioBEn: string;
+}
+
+export const PRESET_SCENARIOS: Record<string, ScenarioPresetDefinition> = {
+  career_jump: {
+    context: 'career',
+    questionKo: '스타트업/새 포지션 이직 vs 현 직장 잔류 및 내실 다지기',
+    questionEn: 'Accept high-growth job offer vs Stay at current role',
+    scenarioAKo: '새로운 회사/포지션으로 이직 실행',
+    scenarioAEn: 'Accept job offer and transition',
+    scenarioBKo: '현 직장 잔류 및 리스크 방어',
+    scenarioBEn: 'Stay in current position and build capital',
+  },
+  startup_founding: {
+    context: 'money',
+    questionKo: '독립 창업 및 사이드 프로젝트 런칭 vs 직장인 신분 유지',
+    questionEn: 'Launch independent startup vs Keep employment stability',
+    scenarioAKo: '독립 창업 및 사업자 등록 추진',
+    scenarioAEn: 'Launch startup and pursue independent venture',
+    scenarioBKo: '직장 유지하며 실탄 비축',
+    scenarioBEn: 'Maintain salary stability and build savings',
+  },
+  relationship_decision: {
+    context: 'love',
+    questionKo: '먼저 연락하여 관계 매듭짓기 vs 침묵 유지 및 상대 행동 관망',
+    questionEn: 'Initiate direct contact vs Maintain silence and observe',
+    scenarioAKo: '먼저 대화를 시도하여 담판',
+    scenarioAEn: 'Reach out first and establish clear boundaries',
+    scenarioBKo: '연락을 멈추고 관망',
+    scenarioBEn: 'Hold silence and let the situation unfold',
+  },
+};
+
+export function getScenarioPreset(presetKey: string | null | undefined, language: 'ko' | 'en' = 'ko') {
+  if (!presetKey) return undefined;
+  const normalized = presetKey.trim().toLowerCase();
+  const preset = PRESET_SCENARIOS[normalized];
+  if (!preset) return undefined;
+
+  const isEn = language === 'en';
+  return {
+    context: preset.context,
+    question: isEn ? preset.questionEn : preset.questionKo,
+    scenarioA: isEn ? preset.scenarioAEn : preset.scenarioAKo,
+    scenarioB: isEn ? preset.scenarioBEn : preset.scenarioBKo,
+  };
+}
+
 export function getStartPageSource(hasInvite: boolean, entry: string | null): string {
   if (hasInvite) {
     return 'start_page_invite';

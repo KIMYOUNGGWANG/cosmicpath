@@ -19,9 +19,13 @@ type QuestionSectionProps = {
     readonly questionSuggestions: readonly string[];
     readonly isRelationshipContactEntry: boolean;
     readonly questionFieldRef: RefObject<HTMLTextAreaElement | null>;
+    readonly scenarioA?: string;
+    readonly scenarioB?: string;
     readonly onContextSelect: (context: ReadingContext) => void;
     readonly onQuestionChange: (question: string) => void;
     readonly onSuggestionSelect: (suggestion: string) => void;
+    readonly onScenarioAChange?: (val: string) => void;
+    readonly onScenarioBChange?: (val: string) => void;
 };
 
 export function QuestionSection({
@@ -37,9 +41,13 @@ export function QuestionSection({
     questionSuggestions,
     isRelationshipContactEntry,
     questionFieldRef,
+    scenarioA = '',
+    scenarioB = '',
     onContextSelect,
     onQuestionChange,
     onSuggestionSelect,
+    onScenarioAChange,
+    onScenarioBChange,
 }: QuestionSectionProps) {
     const isEn = language === 'en';
 
@@ -135,6 +143,46 @@ export function QuestionSection({
                             ? 'Concrete questions produce sharper notes, cleaner evidence, and a more useful action window.'
                             : '질문이 구체적일수록 방향, 근거, 행동 시점이 훨씬 선명해집니다.')}
                 </p>
+
+                {/* A vs B 의사결정 시나리오 입력 필드 */}
+                <div className="mt-5 border-t border-white/10 pt-4">
+                    <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-semibold uppercase tracking-[0.2em] text-acc-gold">
+                            {isEn ? 'Scenario Comparison (Optional)' : 'A vs B 선택지 비교 (선택)'}
+                        </label>
+                        <span className="text-[10px] text-white/40">
+                            {isEn ? 'Compare two paths' : '두 가지 경로를 교차 검증'}
+                        </span>
+                    </div>
+                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-acc-gold/90">
+                                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-acc-gold/20 font-bold">A</span>
+                                <span>{isEn ? 'Option A' : 'A안 (선택 1)'}</span>
+                            </div>
+                            <input
+                                type="text"
+                                value={scenarioA}
+                                onChange={(e) => onScenarioAChange?.(e.target.value)}
+                                placeholder={isEn ? 'e.g. Accept new job offer' : '예: 이직 제안 수락, 이직 실행'}
+                                className="mt-1.5 block min-h-[42px] w-full rounded-[14px] border border-white/15 bg-white/[0.04] px-3.5 py-2 text-sm text-starlight transition-colors placeholder:text-white/25 focus:border-acc-gold/70 focus:bg-white/[0.08] focus:outline-none"
+                            />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-sky-400/90">
+                                <span className="flex h-4 w-4 items-center justify-center rounded-full bg-sky-400/20 font-bold">B</span>
+                                <span>{isEn ? 'Option B' : 'B안 (선택 2)'}</span>
+                            </div>
+                            <input
+                                type="text"
+                                value={scenarioB}
+                                onChange={(e) => onScenarioBChange?.(e.target.value)}
+                                placeholder={isEn ? 'e.g. Stay at current company' : '예: 현 직장 잔류, 기존 프로젝트 유지'}
+                                className="mt-1.5 block min-h-[42px] w-full rounded-[14px] border border-white/15 bg-white/[0.04] px-3.5 py-2 text-sm text-starlight transition-colors placeholder:text-white/25 focus:border-acc-gold/70 focus:bg-white/[0.08] focus:outline-none"
+                            />
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

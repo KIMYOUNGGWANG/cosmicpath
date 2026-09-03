@@ -65,6 +65,8 @@ export function useReadingInputController({
         initialData?.context ?? (inviteCode ? 'love' : initialContext ?? 'general')
     );
     const [question, setQuestion] = useState(initialData?.question ?? initialQuestion ?? '');
+    const [scenarioA, setScenarioA] = useState(initialData?.scenarioA ?? '');
+    const [scenarioB, setScenarioB] = useState(initialData?.scenarioB ?? '');
     const [languageOverride, setLanguageOverride] = useState<ReadingLanguage | null>(null);
     const [showPartnerInfo, setShowPartnerInfo] = useState(
         Boolean(inviteCode || initialData?.partnerBirthDate || initialData?.partnerName)
@@ -161,6 +163,8 @@ export function useReadingInputController({
             partnerGender,
             inviteCode,
             isNextMoveReportEntry,
+            scenarioA,
+            scenarioB,
         }));
     };
 
@@ -241,6 +245,11 @@ export function useReadingInputController({
         showPrecisionFields,
         unknownTime,
         setUnknownTime,
+        scenarioA,
+        scenarioB,
+        setScenarioA,
+        setScenarioB,
+        ziSiMode: initialData?.ziSiMode,
         isUsingRecommendedGuide: selectedCharacterId === recommendedCharacterId,
         intentLabel: getOracleIntentLabel(inferredQuestionIntent, language),
     };

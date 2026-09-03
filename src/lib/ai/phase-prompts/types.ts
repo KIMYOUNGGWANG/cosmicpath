@@ -27,6 +27,8 @@ import type { YearHeatmapResult } from '../../engines/timing-heatmap';
 import type { ShadowTransformationResult } from '../../engines/saju-transformation';
 import type { Compatibility4DResult } from '../../engines/compatibility-matrix';
 
+import type { ScenarioVerdictResult } from '../../engines/scenario-engine';
+
 // 사용자 입력 데이터 타입
 export interface UserData {
   name?: string;
@@ -41,6 +43,9 @@ export interface UserData {
   advisorEvidenceSummary?: string;
   context: string;
   question: string;
+  scenarioA?: string;
+  scenarioB?: string;
+  scenarioDecision?: ScenarioVerdictResult | null;
   sajuData?: SajuResult;
   astroData?: AstroData;
   tarotCards?: unknown[];

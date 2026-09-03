@@ -25,10 +25,12 @@ type BuildReadingSubmissionInput = {
     readonly showPartnerInfo: boolean;
     readonly partnerName: string;
     readonly partnerBirthDate: string;
-    readonly partnerBirthTime: string;
-    readonly partnerGender: ReadingGender;
+    readonly partnerBirthTime?: string;
+    readonly partnerGender?: ReadingGender;
     readonly inviteCode?: string;
     readonly isNextMoveReportEntry: boolean;
+    readonly scenarioA?: string;
+    readonly scenarioB?: string;
 };
 
 export function buildReadingSubmission({
@@ -52,6 +54,8 @@ export function buildReadingSubmission({
     partnerGender,
     inviteCode,
     isNextMoveReportEntry,
+    scenarioA,
+    scenarioB,
 }: BuildReadingSubmissionInput): ReadingData {
     const isEn = language === 'en';
 
@@ -69,6 +73,8 @@ export function buildReadingSubmission({
         calendarType,
         unknownTime: isNextMoveReportEntry ? (unknownTime || !birthTime) : unknownTime,
         cityName: cityName.trim() || undefined,
+        scenarioA: scenarioA?.trim() || undefined,
+        scenarioB: scenarioB?.trim() || undefined,
         ...(showPartnerInfo && partnerBirthDate ? {
             partnerName: partnerName || undefined,
             partnerBirthDate,

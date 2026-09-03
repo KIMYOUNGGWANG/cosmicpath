@@ -187,11 +187,27 @@ export function EssentialCoordinatesSection({
                             />
                         ))}
                     </datalist>
-                    <p className="mt-2 text-[11px] leading-5 text-white/42">
-                        {isEn
-                            ? 'Recommended for true-solar-time correction. If omitted, the reading falls back to Seoul.'
-                            : '진태양시 보정용 권장 입력입니다. 비워두면 서울 기준으로 계산됩니다.'}
-                    </p>
+
+                    {/* 실시간 진태양시 보정 피드백 뱃지 */}
+                    {cityName.trim() ? (
+                        <div className="mt-2.5 rounded-xl border border-acc-gold/30 bg-acc-gold/10 p-2.5 text-xs">
+                            <div className="flex items-center gap-1.5 font-medium text-acc-gold">
+                                <span className="inline-block h-2 w-2 rounded-full bg-acc-gold animate-pulse" />
+                                <span>{isEn ? 'True Solar Time Live Correction' : '진태양시 실시간 정밀 보정'}</span>
+                            </div>
+                            <p className="mt-1 text-[11px] leading-relaxed text-starlight/90">
+                                {isEn
+                                    ? `Calibrating Tokyo 135°E standard meridian for ${cityName}. Eliminates longitude offset.`
+                                    : `동경 135도(일본 아카시) 표준시 왜곡 교정: [${cityName}] 경도 오차를 자동 상쇄하여 진짜 사주 시주(時柱)를 확정합니다.`}
+                            </p>
+                        </div>
+                    ) : (
+                        <p className="mt-2 text-[11px] leading-5 text-white/42">
+                            {isEn
+                                ? 'Recommended for true-solar-time correction. If omitted, the reading falls back to Seoul.'
+                                : '진태양시 보정용 권장 입력입니다. 비워두면 서울 기준으로 계산됩니다.'}
+                        </p>
+                    )}
                 </div>
 
                 <SegmentedChoice

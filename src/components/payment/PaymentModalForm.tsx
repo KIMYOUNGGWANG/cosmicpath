@@ -96,10 +96,10 @@ export function PaymentModalForm({
             >
                 {checkoutButtonLabel({ isEnglish, isLoading, isCheckoutPausedForPriceIssue, discount })}
             </motion.button>
-            <p className="mt-4 text-center text-xs text-white/35">
+            <p className="mt-4 text-center text-xs text-white/45">
                 {isEnglish
-                    ? 'Stripe handles the one-time 7-Day Decision Packet checkout safely. Your current result stays saved when you come back.'
-                    : 'Stripe에서 one-time 7일 결정 패킷 결제를 안전하게 처리하고, 지금 결과는 그대로 저장되어 다시 와도 이어서 볼 수 있습니다.'}
+                    ? 'Stripe handles the one-time Decision Packet checkout safely. Supports VISA, Mastercard, AMEX.'
+                    : '해외 결제 가능 카드(VISA / Mastercard / AMEX) 지원 · Stripe 256-bit SSL 보안 결제로 안전하게 1회 승인됩니다.'}
             </p>
         </>
     );

@@ -80,7 +80,8 @@ Reveal special singularities as 'Hidden Cards', and provide supported future-onl
 5. **Evidence-Bounded Tone**: Give clear action windows with an uncertainty level and review boundary; do not present dates or actions as absolute guarantees.
 6. **Regulated Decision Boundary**: For visa, immigration, legal, tax, or financial-risk decisions, never use direct regulated outcome/action instructions. Frame guidance only as document checks, deadline mapping, questions for qualified professionals, risk buffers, consultation triggers, and scenario comparisons.
 7. **Regulated Action Format**: Concrete actions are allowed only when they are neutral preparation tasks, such as "prepare questions", "compare documents", "estimate costs", or "set a qualified-review threshold". Do not turn missing paperwork into a direct regulated outcome command; write review thresholds and scenario options instead.
-8. **No Emojis**: Do NOT include emojis in titles or descriptions. Use clean executive vocabulary.`;
+8. **No Emojis**: Do NOT include emojis in titles or descriptions. Use clean executive vocabulary.
+9. **Scenario Action Roadmap**: If Path A and Path B are provided in context, ensure the action_plan explicitly separates preparation checkpoints for Path A from defensive hedging checkpoints for Path B.`;
   } else {
     system = `${buildPersonaSystemLine(userData.characterId, lang)}
 사용자가 당장 내일부터 실천할 수 있는 **구체적인 행동 지침(Action Plan)**을 설계합니다.
@@ -159,7 +160,8 @@ Reveal special singularities as 'Hidden Cards', and provide supported future-onl
 4. **확신 수준 표기**: 근거가 충분한 행동은 명확히 제시하되, 날짜 근거가 약하면 재검토 경계와 확인 조건을 함께 제시하십시오.
 5. **고위험/전문 판단 경계**: 비자/이민/법률/세금/재무 리스크에서는 고위험 결과를 확정하는 직접 행동어를 쓰지 말고, 상담 트리거와 준비 체크리스트로만 표현하십시오.
 6. **고위험 액션 형식**: 구체적 행동은 "전문가에게 물어볼 질문 작성", "문서 비교", "비용/리스크 산정", "전문가 검토 전 재검토 기준 설정"처럼 준비 작업으로만 쓰십시오. 조건 미충족을 고위험 결과 명령으로 바꾸면 실패입니다.
-7. **안전 결말 형식**: 고위험 사안에서 special_analysis.content와 action_plan.description은 다음 문장으로 끝내십시오: "따라서 이 항목의 실천은 문서/질문/비용 비교 점검이며, 전문가 검토 전 특정 선택 확정은 보류하는 재검토 기준으로 둡니다."`;
+7. **안전 결말 형식**: 고위험 사안에서 special_analysis.content와 action_plan.description은 다음 문장으로 끝내십시오: "따라서 이 항목의 실천은 문서/질문/비용 비교 점검이며, 전문가 검토 전 특정 선택 확정은 보류하는 재검토 기준으로 둡니다."
+8. **시나리오 실행 로드맵**: 사용자가 선택지 A와 B를 입력한 경우(A_VS_B_시나리오_심층_대조_판정_규격 참고), action_plan 항목들에 [선택지 A] 실행 시의 필수 사전 점검 일정과 [선택지 B] 수성 시의 리스크 방어 일정이 명확하게 구분되어 배정되어야 합니다.`;
   }
 
   const user = buildUserContext(userData) + buildPreviousPhaseContext(previousData, lang);

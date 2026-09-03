@@ -82,6 +82,8 @@ function DecisionNoteContent() {
     entry,
     initialContext,
     initialQuestion,
+    initialScenarioA,
+    initialScenarioB,
     isDecisionTimingEntry,
     isNextMoveReportEntry,
     landingSource,
@@ -229,6 +231,7 @@ function DecisionNoteContent() {
         loadingPhase={loadingPhase} searchPaid={paidFromSearchParams}
         readingData={readingData} inviterName={inviterName} inviteCode={inviteCode}
         initialContext={effectiveInitialContext} initialQuestion={initialQuestion}
+        initialScenarioA={initialScenarioA} initialScenarioB={initialScenarioB}
         landingSource={landingSource} isDecisionTimingEntry={isDecisionTimingEntry}
         isNextMoveReportEntry={isNextMoveReportEntry}
         metadata={metadata} reportData={reportData}

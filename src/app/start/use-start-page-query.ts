@@ -5,6 +5,8 @@ import { getLandingVariant } from '@/lib/language-preference';
 import {
   getPrefilledQuestion,
   getPrefilledReadingContext,
+  getPrefilledScenario,
+  getScenarioPreset,
   getStartPageSource,
   isDecisionTimingSource,
 } from './start-page-helpers';
@@ -20,8 +22,16 @@ export function useStartPageQuery(
     undefined;
   const entry = searchParams.get('entry');
   const queryLanguage = getQueryLanguage(searchParams.get('lang'), searchParams.get('language'));
-  const initialContext = getPrefilledReadingContext(searchParams.get('context'));
-  const initialQuestion = getPrefilledQuestion(searchParams.get('question'));
+  const presetKey = searchParams.get('preset');
+  const preset = getScenarioPreset(presetKey, language);
+
+  const initialContext = getPrefilledReadingContext(searchParams.get('context')) || preset?.context;
+  const initialQuestion = getPrefilledQuestion(searchParams.get('question')) || preset?.question;
+  const initialScenarioA =
+    getPrefilledScenario(searchParams.get('scenarioA') || searchParams.get('optA')) || preset?.scenarioA;
+  const initialScenarioB =
+    getPrefilledScenario(searchParams.get('scenarioB') || searchParams.get('optB')) || preset?.scenarioB;
+
   const landingSource = getStartPageSource(Boolean(searchParams.get('invite')), entry);
   const isRelationshipContactEntry =
     landingSource === 'next_move_report_mvp_v1' ||
@@ -40,6 +50,8 @@ export function useStartPageQuery(
     entry,
     initialContext,
     initialQuestion,
+    initialScenarioA,
+    initialScenarioB,
     isDecisionTimingEntry: isDecisionTimingSource(landingSource),
     isNextMoveReportEntry: isRelationshipContactEntry,
     landingSource,

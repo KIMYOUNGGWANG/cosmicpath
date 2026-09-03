@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "bash scripts/run-next-with-native-fallbacks.sh dev --webpack",
-    "build": "prisma generate && bash scripts/run-next-with-native-fallbacks.sh build",
+    "build": "prisma generate && bash scripts/run-next-with-native-fallbacks.sh build --webpack",
     "start": "bash scripts/run-next-with-native-fallbacks.sh start",
     "test": "bash scripts/test-refactor-regression.sh",
     "test:engine": "node scripts/verify-engine-accuracy.ts",

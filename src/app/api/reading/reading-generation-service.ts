@@ -554,6 +554,7 @@ function buildEnrichedPayload(params: BuildPayloadParams): EnrichedPayload {
       oracleCouncil: params.runtime.oracleCouncil,
       partnerSaju: params.runtime.partnerSaju,
     }),
+    ...(params.runtime.scenarioDecision ? { scenarioDecision: params.runtime.scenarioDecision } : {}),
     ...(params.freeGenerationMode ? { freeGenerationMode: params.freeGenerationMode } : {}),
     ...(params.generationAudit ? { generationAudit: params.generationAudit } : {}),
   };
@@ -598,6 +599,9 @@ export async function runPremiumReading(params: PremiumReadingParams) {
     advisorEvidenceSummary: params.runtime.advisorEvidenceSummary,
     context: params.context,
     question: params.question,
+    scenarioA: params.runtime.scenarioDecision?.scenarioA,
+    scenarioB: params.runtime.scenarioDecision?.scenarioB,
+    scenarioDecision: params.runtime.scenarioDecision,
     sajuData: params.runtime.saju,
     astroData: {
       sunSign: ZODIAC_SIGNS[params.runtime.astrology.sunSign].name,

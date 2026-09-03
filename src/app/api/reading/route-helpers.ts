@@ -68,6 +68,8 @@ export const ReadingRequestSchema = z.object({
   inviteCode: z.string().optional(),
   readingId: z.string().optional(),
   accessKey: z.string().optional(),
+  scenarioA: z.string().max(200).optional(),
+  scenarioB: z.string().max(200).optional(),
 });
 
 export type ReadingLanguage = 'ko' | 'en';

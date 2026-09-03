@@ -67,9 +67,13 @@ export function ReadingInput({
                     questionSuggestions={controller.questionSuggestions}
                     isRelationshipContactEntry={controller.isRelationshipContactEntry}
                     questionFieldRef={controller.questionFieldRef}
+                    scenarioA={controller.scenarioA}
+                    scenarioB={controller.scenarioB}
                     onContextSelect={controller.handleContextSelect}
                     onQuestionChange={controller.setQuestion}
                     onSuggestionSelect={controller.applyQuestionSuggestion}
+                    onScenarioAChange={controller.setScenarioA}
+                    onScenarioBChange={controller.setScenarioB}
                 />
 
                 <GuideSelectionSection

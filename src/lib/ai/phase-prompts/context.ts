@@ -45,6 +45,14 @@ Today's Date: ${currentDate}
 2. Precision Requirement: You must answer this exact dilemma directly. Map the user's pain points, decision fork (Option A vs Option B), and requested timeline directly to the Saju Day Master/Month Pillar/Major Luck and Planetary Transits.
 3. Anti-Vagueness: Do not provide generic horoscope platitudes. Provide concrete timing windows, causal diagnostic roots, and exact next moves.
 </QUESTION_INTENT_PRECISION_ANCHOR>
+${userData.scenarioA || userData.scenarioB ? `
+<A_VS_B_SCENARIO_SIMULATION_AUDIT>
+1. Path A (Option A): "${userData.scenarioA || 'Action / Change Path'}"
+2. Path B (Option B): "${userData.scenarioB || 'Hold / Preserve Path'}"
+3. Engine Verdict: ${userData.scenarioDecision?.verdictHeadlineKo || 'Strategic timing analysis required'} (Recommended: ${userData.scenarioDecision?.recommendedOption || 'A'})
+4. Mandatory Directive: You MUST explicitly contrast Path A vs Path B throughout the report. Do not speak generally. Map Path A's risks/rewards and Path B's risks/rewards directly to the Saju 10 Gods (Ten Deities) and Planetary Transits. Clearly state which path wins and why.
+</A_VS_B_SCENARIO_SIMULATION_AUDIT>
+` : ''}
 
 ${sharedPrelude}
 
@@ -98,6 +106,17 @@ ${userData.weeklyHeatmap ? `
 3. 원국-고민 인과 사슬: 사주 일간, 월지 격국, 충/형/합/파, 현재 대운, 당해 연도 세운(${userData.sajuData?.sewoon?.stem && userData.sajuData?.sewoon?.branch ? `${userData.sajuData.sewoon.year}년 ${userData.sajuData.sewoon.stem}${userData.sajuData.sewoon.branch}년` : `${currentDate.split('-')[0]}년`})과 월운의 상호작용이 "왜 지금 이 질문과 갈등을 일으켰는지"를 명확한 인과관계로 밝히십시오.
 4. 모호한 양다리 표현 금지: "~할 수도 있고 아닐 수도 있습니다" 같은 회피성 문장을 금지하고, [결론 직답] + [실제 사주/점성 데이터 근거] + [골든타임/위험 시점] + [실전 행동 수칙]으로 선명하게 제시하십시오.
 </질문_정밀_해체_및_족집게_직답_앵커>
+${userData.scenarioA || userData.scenarioB ? `
+<A_VS_B_시나리오_심층_대조_판정_규격>
+1. 선택지 A (Option A - 변화/실행 경로): "${userData.scenarioA || '적극적 실행/변화 시도'}"
+2. 선택지 B (Option B - 수성/보류 경로): "${userData.scenarioB || '현상 유지/내실 다지기'}"
+3. 결정론적 엔진 권고 판정: ${userData.scenarioDecision?.verdictHeadlineKo || '신중한 타이밍 조율 필요'} (추천 경로: ${userData.scenarioDecision?.recommendedOption || 'A'})
+4. 필수 분석 지침:
+   - 리포트 전반에 걸쳐 반드시 [선택지 A]와 [선택지 B]의 현실적 득실을 1:1로 직접 대조하십시오.
+   - 두루뭉술한 사주 해설을 금지하고, "A안을 택했을 때 겪게 될 3개월 내 최대 리스크와 6개월 후 기대 결실" vs "B안을 택했을 때의 기회비용과 안전도"를 사주 십신(재성/관성/식상/인성/비겁) 및 대운/세운 흐름과 직접 결합하여 명시하십시오.
+   - 결론에서 어느 쪽이 사주 원국과 현재 운기상 우세한지 단호하고 명확하게 판정하십시오.
+</A_VS_B_시나리오_심층_대조_판정_규격>
+` : ''}
 
 <명리학_점성술_현실언어_번역지침>
 1. 어려운 한자어나 전문 용어는 단독으로 쓰지 말고, 반드시 현대인의 일상 현실 언어로 100% 직관 번역하십시오:

@@ -41,6 +41,8 @@ import dynamic from 'next/dynamic';
 import { ZiweiChartComponent } from './ziwei-chart';
 import { ExecutiveSummaryDashboard } from './ExecutiveSummaryDashboard';
 import { DecisionConsensusGauge } from './DecisionConsensusGauge';
+import { ScenarioTimelineChart } from './ScenarioTimelineChart';
+import { calculateScenarioDecision, type ScenarioVerdictResult } from '@/lib/engines/scenario-engine';
 import { ReportSidebarNav } from './ReportSidebarNav';
 import { calculateZiweiChart, type ZiweiChartResult } from '@/lib/engines/ziwei';
 import { calculateShadowTransformations, type ShadowTransformationResult } from '@/lib/engines/saju-transformation';
@@ -556,6 +558,17 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
         }
     }
 
+    const reportMeta = (report as unknown as Record<string, unknown>)?.metadata as Record<string, unknown> | undefined;
+    const scenarioDecision: ScenarioVerdictResult =
+        reportMeta?.scenarioDecision
+            ? (reportMeta.scenarioDecision as ScenarioVerdictResult)
+            : calculateScenarioDecision({
+                scenarioA: readingData?.scenarioA as string | undefined,
+                scenarioB: readingData?.scenarioB as string | undefined,
+                question: userQuestion,
+                language,
+            });
+
     const scrollToSection = (id: string) => {
         const el = document.getElementById(id);
         if (el) {
@@ -677,6 +690,11 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                     language={language}
                                     sajuResult={sajuResult || undefined}
                                     userName={userName}
+                                />
+                                <ScenarioTimelineChart
+                                    scenarioDecision={scenarioDecision}
+                                    isPremium={true}
+                                    language={language}
                                 />
                                 {report.action_plan && report.action_plan.length > 0 && (
                                     <ActionPlanSection
