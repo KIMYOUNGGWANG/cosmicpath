@@ -396,6 +396,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
     const [intelligenceSubFilter, setIntelligenceSubFilter] = useState<'all' | 'eastern' | 'western' | 'ancient'>('all');
     const tabNavRef = useRef<HTMLDivElement>(null);
     const [readingProgress, setReadingProgress] = useState(0);
+    const [, setActiveChapter] = useState<ChapterKey>('brief');
     const printRef = useRef<HTMLDivElement>(null);
     const metadataWithReading = metadata as MetadataWithReadingData | undefined;
     const readingData = metadataWithReading?.readingData;

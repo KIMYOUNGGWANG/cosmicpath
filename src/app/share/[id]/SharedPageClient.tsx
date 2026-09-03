@@ -1,11 +1,11 @@
 'use client';
 
-import { type ComponentProps, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { type ComponentProps, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
-import { ArrowRight, ChevronLeft, Lock, Orbit, Sparkles, Stars } from 'lucide-react';
+import { ArrowRight, ChevronLeft, Lock, Orbit, RefreshCw, Sparkles, Stars } from 'lucide-react';
 
 import { PremiumReport } from '@/components/reading/premium-report';
 import { ChatInterface } from '@/components/oracle-chat/ChatInterface';
@@ -92,6 +92,7 @@ export function SharedPageClient({
   const [runtimeAccessKey, setRuntimeAccessKey] = useState<string | null>(null);
   const [isResolvingFullReport, setIsResolvingFullReport] = useState(false);
   const [ownerResolutionState, setOwnerResolutionState] = useState<'idle' | 'denied' | 'error'>('idle');
+  const resolutionAttemptedRef = useRef<string | null>(null);
   const hasStoredOwnerSession = useMemo(() => {
     if (!isClient) {
       return false;
@@ -163,6 +164,10 @@ export function SharedPageClient({
       return;
     }
 
+    if (ownerResolutionState !== 'idle') {
+      return;
+    }
+
     const shouldResolveFullReport =
       requestedView === 'full' ||
       hasAccountOwnerAccess ||
@@ -172,11 +177,16 @@ export function SharedPageClient({
       return;
     }
 
+    const attemptKey = `${id}:${runtimeAccessKey || 'none'}:${hasAccountOwnerAccess ? 'owner' : 'anon'}`;
+    if (resolutionAttemptedRef.current === attemptKey) {
+      return;
+    }
+    resolutionAttemptedRef.current = attemptKey;
+
     let cancelled = false;
 
     const resolveFullReport = async () => {
       setIsResolvingFullReport(true);
-      setOwnerResolutionState('idle');
 
       try {
         const params = new URLSearchParams({ id });
@@ -190,16 +200,31 @@ export function SharedPageClient({
         if (!response.ok || !payload?.success) {
           if (!cancelled) {
             setOwnerResolutionState(response.status === 403 ? 'denied' : 'error');
-
-            if (response.status === 403 && runtimeAccessKey && !hasAccountOwnerAccess) {
-              sessionStorage.removeItem('pending_reading_access_key');
-              localStorage.removeItem('pending_reading_access_key');
-            }
           }
           return;
         }
 
         if (cancelled) {
+          return;
+        }
+
+        const isPremiumPaid = payload.metadata?.isPremium === true;
+        const hasPremiumSections = Boolean(
+          payload.data?.astro_deep ||
+          payload.data?.saju_sections ||
+          payload.data?.fortune_flow ||
+          payload.data?.life_areas ||
+          payload.data?.special_analysis ||
+          payload.data?.premiumReport
+        );
+
+        if (isPremiumPaid && !hasPremiumSections) {
+          const resumeParams = new URLSearchParams({
+            reading_id: id,
+            resume: 'premium',
+          });
+          const hash = runtimeAccessKey ? `#accessKey=${encodeURIComponent(runtimeAccessKey)}` : '';
+          window.location.replace(`/start?${resumeParams.toString()}${hash}`);
           return;
         }
 
@@ -224,11 +249,12 @@ export function SharedPageClient({
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- isResolvingFullReport is intentionally omitted to prevent infinite re-fetch loop
   }, [
     hasAccountOwnerAccess,
     id,
     isClient,
-    isResolvingFullReport,
+    ownerResolutionState,
     reportData,
     requestedView,
     runtimeAccessKey,
@@ -416,10 +442,37 @@ export function SharedPageClient({
                   <ArrowRight className="h-5 w-5" />
                 </Link>
 
-                <div className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-sm text-white/72 transition-colors duration-300 hover:border-white/15 hover:bg-white/[0.07]">
-                  <Lock className="h-4 w-4" />
-                  {ownerLockMessage}
-                </div>
+                {ownerResolutionState === 'error' ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resolutionAttemptedRef.current = null;
+                      setOwnerResolutionState('idle');
+                    }}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-amber-400/30 bg-amber-400/10 px-6 py-4 text-sm font-medium text-amber-200 transition-all duration-300 hover:bg-amber-400/20 active:scale-[0.98]"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    {isEn ? 'Retry loading report' : '리포트 다시 불러오기'}
+                  </button>
+                ) : ownerResolutionState === 'denied' ? (
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <div className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-sm text-white/72">
+                      <Lock className="h-4 w-4" />
+                      {ownerLockMessage}
+                    </div>
+                    <Link
+                      href={`/api/auth/signin?callbackUrl=${encodeURIComponent(shareUrl)}`}
+                      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-violet-400/30 bg-violet-500/15 px-6 py-4 text-sm font-medium text-violet-200 transition-all duration-300 hover:bg-violet-500/25 active:scale-[0.98]"
+                    >
+                      {isEn ? 'Sign in to open' : '로그인하여 열기'}
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-6 py-4 text-sm text-white/72 transition-colors duration-300 hover:border-white/15 hover:bg-white/[0.07]">
+                    <Lock className="h-4 w-4" />
+                    {ownerLockMessage}
+                  </div>
+                )}
               </div>
             </motion.div>
 

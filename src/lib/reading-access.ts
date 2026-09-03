@@ -95,10 +95,7 @@ export function hasReadingAccess(params: {
         params.sessionUserId &&
         params.sessionUserId === params.readingUserId
     );
-    const canUseAccessKey = !params.readingUserId;
-    const hasAccessKeyMatch =
-        canUseAccessKey &&
-        safeCompare(params.providedAccessKey, params.storedAccessKey);
+    const hasAccessKeyMatch = safeCompare(params.providedAccessKey, params.storedAccessKey);
 
     return hasSessionAccess || hasAccessKeyMatch;
 }

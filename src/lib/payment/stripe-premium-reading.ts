@@ -3,7 +3,11 @@ import { devLog } from '@/lib/dev-logger';
 import { sendResultEmail } from '@/lib/email/sender';
 import { scheduleDefaultFollowUps } from '@/lib/followup-jobs';
 import { prisma } from '@/lib/prisma';
-import { extractReadingAccessKey } from '@/lib/reading-access';
+import {
+    attachReadingAccessKey,
+    createReadingAccessKey,
+    extractReadingAccessKey,
+} from '@/lib/reading-access';
 import { stampRuntimeMetadata } from '@/lib/runtime-environment';
 import { mergePaymentMetadata } from '@/lib/payment/stripe-payment-metadata';
 import { alertWebhookIssue } from '@/lib/payment/stripe-webhook-alerts';
@@ -78,7 +82,12 @@ async function sendPremiumReadingEmail(params: {
         }
 
         const savedMeta = parseJsonObject(reading.metadata);
-        const accessKey = extractReadingAccessKey(reading.metadata);
+        let accessKey = extractReadingAccessKey(reading.metadata);
+        let metadataToSave = savedMeta;
+        if (!accessKey) {
+            accessKey = createReadingAccessKey();
+            metadataToSave = attachReadingAccessKey(savedMeta, accessKey);
+        }
         if (savedMeta.emailSent) {
             devLog.log(`[Webhook] Email already sent for ${readingId}, skipping`);
             return;
@@ -100,7 +109,7 @@ async function sendPremiumReadingEmail(params: {
             where: { id: readingId },
             data: {
                 metadata: JSON.stringify(stampRuntimeMetadata({
-                    ...savedMeta,
+                    ...metadataToSave,
                     isPremium: true,
                     email: customerEmail,
                     emailSent: true,

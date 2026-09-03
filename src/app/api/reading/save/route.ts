@@ -112,16 +112,14 @@ export async function POST(request: Request) {
                 return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
             }
 
-            const storedAccessKey = extractReadingAccessKey(reading.metadata);
+            const storedAccessKey = extractReadingAccessKey(reading.metadata) || createReadingAccessKey();
             responseAccessKey = storedAccessKey;
             const nextMetadataSource =
                 metadata === undefined
                     ? normalizeReadingMetadata(reading.metadata)
                     : normalizeReadingMetadata(metadata);
             const nextMetadata = stampRuntimeMetadata(
-                storedAccessKey
-                    ? attachReadingAccessKey(nextMetadataSource, storedAccessKey)
-                    : nextMetadataSource
+                attachReadingAccessKey(nextMetadataSource, storedAccessKey)
             );
 
             result = await prisma.readingResult.update({
@@ -134,11 +132,9 @@ export async function POST(request: Request) {
             });
         } else {
             const nextMetadataSource = normalizeReadingMetadata(metadata);
-            responseAccessKey = userId ? null : createReadingAccessKey();
+            responseAccessKey = createReadingAccessKey();
             const nextMetadata = stampRuntimeMetadata(
-                responseAccessKey
-                    ? attachReadingAccessKey(nextMetadataSource, responseAccessKey)
-                    : nextMetadataSource
+                attachReadingAccessKey(nextMetadataSource, responseAccessKey)
             );
 
             result = await prisma.readingResult.create({
