@@ -182,7 +182,7 @@ export function StartResultStage(props: StartResultStageProps) {
 
             <div className="pb-16 space-y-6">
               <DailyRetentionBanner language={props.language} />
-              {props.readingData && !props.isLoading && props.reportData?.summary && (
+              {props.readingData && !props.isLoading && !props.isPremium && props.reportData?.summary && (
                 <GuideRematchCard
                   readingData={props.readingData}
                   isPremium={props.isPremium}

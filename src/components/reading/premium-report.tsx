@@ -384,14 +384,38 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
     const isEn = language === 'en';
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-    const [activeChapter, setActiveChapter] = useState<ChapterKey>('brief');
-    const [activeDossierTab, setActiveDossierTab] = useState<'strategy' | 'timing' | 'intelligence'>('strategy');
+    const [activeDossierTab, setActiveDossierTab] = useState<'strategy' | 'timing' | 'intelligence'>(() => {
+        if (typeof window !== 'undefined') {
+            const tabParam = new URLSearchParams(window.location.search).get('tab');
+            if (tabParam === 'strategy' || tabParam === 'timing' || tabParam === 'intelligence') {
+                return tabParam;
+            }
+        }
+        return 'strategy';
+    });
+    const [intelligenceSubFilter, setIntelligenceSubFilter] = useState<'all' | 'eastern' | 'western' | 'ancient'>('all');
+    const tabNavRef = useRef<HTMLDivElement>(null);
     const [readingProgress, setReadingProgress] = useState(0);
     const printRef = useRef<HTMLDivElement>(null);
     const metadataWithReading = metadata as MetadataWithReadingData | undefined;
     const readingData = metadataWithReading?.readingData;
     const sajuResult = isSajuResult(metadata?.sajuResult) ? metadata.sajuResult : null;
     const userName = (readingData?.name as string | undefined) || (report.summary?.title ? report.summary.title.split(' ')[0] : '귀하');
+
+    const handleTabChange = (nextTab: 'strategy' | 'timing' | 'intelligence') => {
+        setActiveDossierTab(nextTab);
+        if (typeof window !== 'undefined') {
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', nextTab);
+            window.history.replaceState({}, '', url.toString());
+        }
+        if (tabNavRef.current) {
+            const rect = tabNavRef.current.getBoundingClientRect();
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const targetY = rect.top + scrollTop - 85;
+            window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+        }
+    };
 
     // Track scroll progress for executive chapter bar
     useEffect(() => {
@@ -595,42 +619,45 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                     </div>
 
                     {/* 3-Tab Segmented Switcher */}
-                    <div className="sticky top-20 z-40 flex items-center justify-center p-1.5 bg-[#14120e]/95 border border-[#c8a84d]/40 rounded-2xl backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.7)] max-w-3xl mx-auto">
+                    <div ref={tabNavRef} className="sticky top-20 z-40 flex items-center justify-center p-1.5 bg-[#14120e]/95 border border-[#c8a84d]/40 rounded-2xl backdrop-blur-xl shadow-[0_12px_40px_rgba(0,0,0,0.7)] max-w-3xl mx-auto">
                         <button
                             type="button"
-                            onClick={() => setActiveDossierTab('strategy')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-3 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                            onClick={() => handleTabChange('strategy')}
+                            className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                                 activeDossierTab === 'strategy'
                                     ? 'bg-gradient-to-r from-[#f0d588] via-[#e8c86d] to-[#c8a84d] text-stone-950 shadow-md font-black'
                                     : 'text-stone-400 hover:text-stone-200'
                             }`}
                         >
-                            <Compass className="w-4 h-4" />
-                            <span>{isEn ? '1. Strategy & Action' : '1. 전략 요약 & 실행'}</span>
+                            <Compass className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                            <span className="hidden sm:inline">{isEn ? '1. Strategy & Action' : '1. 전략 요약 & 실행'}</span>
+                            <span className="sm:hidden">{isEn ? 'Strategy' : '전략 실행'}</span>
                         </button>
                         <button
                             type="button"
-                            onClick={() => setActiveDossierTab('timing')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-3 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                            onClick={() => handleTabChange('timing')}
+                            className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                                 activeDossierTab === 'timing'
                                     ? 'bg-gradient-to-r from-[#f0d588] via-[#e8c86d] to-[#c8a84d] text-stone-950 shadow-md font-black'
                                     : 'text-stone-400 hover:text-stone-200'
                             }`}
                         >
-                            <Clock className="w-4 h-4" />
-                            <span>{isEn ? '2. Timing & Allies' : '2. 골든타임 & 귀인'}</span>
+                            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                            <span className="hidden sm:inline">{isEn ? '2. Timing & Allies' : '2. 골든타임 & 귀인'}</span>
+                            <span className="sm:hidden">{isEn ? 'Timing' : '골든타임'}</span>
                         </button>
                         <button
                             type="button"
-                            onClick={() => setActiveDossierTab('intelligence')}
-                            className={`flex-1 flex items-center justify-center gap-2 py-3 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+                            onClick={() => handleTabChange('intelligence')}
+                            className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                                 activeDossierTab === 'intelligence'
                                     ? 'bg-gradient-to-r from-[#f0d588] via-[#e8c86d] to-[#c8a84d] text-stone-950 shadow-md font-black'
                                     : 'text-stone-400 hover:text-stone-200'
                             }`}
                         >
-                            <Layers className="w-4 h-4" />
-                            <span>{isEn ? '3. 5-Engine Intelligence' : '3. 5대 엔진 심층근거'}</span>
+                            <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                            <span className="hidden sm:inline">{isEn ? '3. 5-Engine Intelligence' : '3. 5대 엔진 심층근거'}</span>
+                            <span className="sm:hidden">{isEn ? '5 Engines' : '5대 엔진'}</span>
                         </button>
                     </div>
 
@@ -714,61 +741,129 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                 transition={{ duration: 0.3 }}
                                 className="space-y-8"
                             >
-                                {computedZiweiChart && (
-                                    <ZiweiChartComponent
-                                        chart={computedZiweiChart}
-                                        language={language}
-                                    />
+                                {/* 3-Domain Sub-Filter Bar */}
+                                <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                                    <span className="text-[11px] uppercase tracking-wider text-stone-400 font-semibold whitespace-nowrap mr-1">
+                                        {isEn ? 'Filter School:' : '분파 필터:'}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIntelligenceSubFilter('all')}
+                                        className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                                            intelligenceSubFilter === 'all'
+                                                ? 'bg-[#c8a84d] text-stone-950 shadow-sm font-bold'
+                                                : 'bg-white/5 text-stone-400 border border-white/10 hover:text-stone-200'
+                                        }`}
+                                    >
+                                        {isEn ? 'All 9 Modules' : '전체 보기 (9개)'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIntelligenceSubFilter('eastern')}
+                                        className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                                            intelligenceSubFilter === 'eastern'
+                                                ? 'bg-[#c8a84d] text-stone-950 shadow-sm font-bold'
+                                                : 'bg-white/5 text-stone-400 border border-white/10 hover:text-stone-200'
+                                        }`}
+                                    >
+                                        {isEn ? '☯️ Eastern Saju & Ziwei' : '☯️ 동양 명리 (사주 · 자미두수)'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIntelligenceSubFilter('western')}
+                                        className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                                            intelligenceSubFilter === 'western'
+                                                ? 'bg-[#c8a84d] text-stone-950 shadow-sm font-bold'
+                                                : 'bg-white/5 text-stone-400 border border-white/10 hover:text-stone-200'
+                                        }`}
+                                    >
+                                        {isEn ? '🪐 Western Astrology' : '🪐 서양 점성 (Big 3 · 트랜짓)'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIntelligenceSubFilter('ancient')}
+                                        className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                                            intelligenceSubFilter === 'ancient'
+                                                ? 'bg-[#c8a84d] text-stone-950 shadow-sm font-bold'
+                                                : 'bg-white/5 text-stone-400 border border-white/10 hover:text-stone-200'
+                                        }`}
+                                    >
+                                        {isEn ? '🪷 Ancient & Numerology' : '🪷 고대 비전 (태국 · 수비학 · 전생)'}
+                                    </button>
+                                </div>
+
+                                {/* Eastern Domain: Saju & Ziwei */}
+                                {(intelligenceSubFilter === 'all' || intelligenceSubFilter === 'eastern') && (
+                                    <>
+                                        {computedZiweiChart && (
+                                            <ZiweiChartComponent
+                                                chart={computedZiweiChart}
+                                                language={language}
+                                            />
+                                        )}
+                                        {report.core_analysis && (
+                                            <CoreAnalysisSection
+                                                data={report.core_analysis}
+                                                language={language}
+                                            />
+                                        )}
+                                        {computedShadowTransformations && (
+                                            <ShadowTransformationSection
+                                                data={computedShadowTransformations}
+                                                language={language}
+                                            />
+                                        )}
+                                        {report.saju_sections && report.saju_sections.length > 0 && (
+                                            <AccordionSection
+                                                title={isEn ? 'Classical Saju 4 Pillars Breakdown' : '정통 사주 4주 심층 분석'}
+                                                items={report.saju_sections}
+                                                source="saju"
+                                                language={language}
+                                            />
+                                        )}
+                                    </>
                                 )}
-                                {report.core_analysis && (
-                                    <CoreAnalysisSection
-                                        data={report.core_analysis}
-                                        language={language}
-                                    />
+
+                                {/* Western Domain: Astrology */}
+                                {(intelligenceSubFilter === 'all' || intelligenceSubFilter === 'western') && (
+                                    <>
+                                        {report.astro_deep && (
+                                            <AstroDeepSection
+                                                data={report.astro_deep}
+                                                language={language}
+                                            />
+                                        )}
+                                    </>
                                 )}
-                                {computedShadowTransformations && (
-                                    <ShadowTransformationSection
-                                        data={computedShadowTransformations}
-                                        language={language}
-                                    />
-                                )}
-                                {report.saju_sections && report.saju_sections.length > 0 && (
-                                    <AccordionSection
-                                        title={isEn ? 'Classical Saju 4 Pillars Breakdown' : '정통 사주 4주 심층 분석'}
-                                        items={report.saju_sections}
-                                        source="saju"
-                                        language={language}
-                                    />
-                                )}
-                                {report.astro_deep && (
-                                    <AstroDeepSection
-                                        data={report.astro_deep}
-                                        language={language}
-                                    />
-                                )}
-                                {computedThaiAstrology && (
-                                    <ThaiAstrologySection
-                                        data={computedThaiAstrology}
-                                        language={language}
-                                    />
-                                )}
-                                {report.numerology && (
-                                    <NumerologySection
-                                        data={report.numerology}
-                                        language={language}
-                                    />
-                                )}
-                                {computedCompatibility4D && (
-                                    <Compatibility4DSection
-                                        data={computedCompatibility4D}
-                                        language={language}
-                                    />
-                                )}
-                                {report.past_life && (
-                                    <PastLifeSection
-                                        data={report.past_life}
-                                        language={language}
-                                    />
+
+                                {/* Ancient Domain: Thai, Numerology, Compatibility, Past Life */}
+                                {(intelligenceSubFilter === 'all' || intelligenceSubFilter === 'ancient') && (
+                                    <>
+                                        {computedThaiAstrology && (
+                                            <ThaiAstrologySection
+                                                data={computedThaiAstrology}
+                                                language={language}
+                                            />
+                                        )}
+                                        {report.numerology && (
+                                            <NumerologySection
+                                                data={report.numerology}
+                                                language={language}
+                                            />
+                                        )}
+                                        {computedCompatibility4D && (
+                                            <Compatibility4DSection
+                                                data={computedCompatibility4D}
+                                                language={language}
+                                            />
+                                        )}
+                                        {report.past_life && (
+                                            <PastLifeSection
+                                                data={report.past_life}
+                                                language={language}
+                                            />
+                                        )}
+                                    </>
                                 )}
                             </motion.div>
                         )}
