@@ -298,6 +298,60 @@ function buildFailoverBoosterDirective(phaseNumber: number): string {
 </FAILOVER_QUALITY_BOOSTER>`;
 }
 
+async function callOpenAIPhaseFallback(
+    phaseNumber: number,
+    system: string,
+    userPrompt: string,
+    maxOutputTokens: number,
+    userData: UserData
+): Promise<{ success: boolean; data: PremiumReportPartial | null; textLength: number; error?: string }> {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+        return { success: false, data: null, textLength: 0, error: 'OPENAI_API_KEY is not configured' };
+    }
+
+    const booster = buildFailoverBoosterDirective(phaseNumber);
+    const finalPrompt = `${userPrompt}\n${booster}`;
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+                { role: 'system', content: system },
+                { role: 'user', content: finalPrompt },
+            ],
+            response_format: { type: 'json_object' },
+            temperature: getPhaseTemperature(phaseNumber),
+            max_tokens: Math.min(maxOutputTokens, 16384),
+        }),
+    });
+
+    if (!response.ok) {
+        const errBody = await response.text().catch(() => '');
+        throw new Error(`OpenAI failover error (${response.status}): ${errBody}`);
+    }
+
+    const json = await response.json();
+    let text = json.choices?.[0]?.message?.content || '{}';
+    text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+    const parsed = JSON.parse(text);
+    const data = parsePremiumPhaseResult(phaseNumber, parsed, { currentDate: userData.currentDate });
+    assertPremiumPhaseQuality(phaseNumber, data);
+    assertPremiumGrounding(phaseNumber, data, userData);
+
+    return {
+        success: true,
+        data,
+        textLength: text.length,
+    };
+}
+
 export interface PhaseResult {
     phase: number;
     success: boolean;
@@ -514,6 +568,25 @@ export async function generateSinglePhase(
                 const errorText = await response.text();
                 const errorMsg: string = `API Error (${currentModel}): ${response.status} - ${errorText}`;
 
+                if (process.env.OPENAI_API_KEY && (response.status === 429 || response.status >= 500)) {
+                    console.warn(`[Phase ${phaseNumber}] Google API returned ${response.status}. Attempting instant OpenAI (gpt-4o-mini) failover...`);
+                    try {
+                        const fallback = await callOpenAIPhaseFallback(phaseNumber, system, finalUserPrompt, maxOutputTokens, userData);
+                        if (fallback.success && fallback.data) {
+                            return {
+                                phase: phaseNumber,
+                                success: true,
+                                data: fallback.data,
+                                executedModel: 'gpt-4o-mini',
+                                isFailover: true,
+                                textLength: fallback.textLength,
+                            };
+                        }
+                    } catch (openAiErr) {
+                        console.error(`[Phase ${phaseNumber}] OpenAI failover failed:`, openAiErr);
+                    }
+                }
+
                 if (response.status === 429) {
                     lastError = new Error(errorMsg);
                     const waitTime = Math.pow(2, attempt) * 2000;
@@ -597,15 +670,38 @@ export async function generateSinglePhase(
             };
 
         } catch (error) {
-            if (error instanceof Error && error.name === 'AbortError') {
+            const isAbort = error instanceof Error && error.name === 'AbortError';
+            if (isAbort) {
                 lastError = new Error(`Phase ${phaseNumber} timed out after ${requestTimeoutMs}ms on ${currentModel}`);
                 console.error(`[Phase ${phaseNumber}] Timeout:`, lastError.message);
-                continue;
+            } else {
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                console.error(`[Phase ${phaseNumber}] Attempt ${attempt + 1} Error on ${currentModel}:`, errorMessage);
+                lastError = error instanceof Error ? error : new Error(String(error));
             }
 
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            console.error(`[Phase ${phaseNumber}] Attempt ${attempt + 1} Error on ${currentModel}:`, errorMessage);
-            lastError = error instanceof Error ? error : new Error(String(error));
+            if (process.env.OPENAI_API_KEY) {
+                console.warn(`[Phase ${phaseNumber}] Google API encountered error (${lastError.message}). Attempting instant OpenAI (gpt-4o-mini) failover...`);
+                try {
+                    const fallback = await callOpenAIPhaseFallback(phaseNumber, system, finalUserPrompt, maxOutputTokens, userData);
+                    if (fallback.success && fallback.data) {
+                        return {
+                            phase: phaseNumber,
+                            success: true,
+                            data: fallback.data,
+                            executedModel: 'gpt-4o-mini',
+                            isFailover: true,
+                            textLength: fallback.textLength,
+                        };
+                    }
+                } catch (openAiErr) {
+                    console.error(`[Phase ${phaseNumber}] OpenAI failover failed:`, openAiErr);
+                }
+            }
+
+            if (isAbort) {
+                continue;
+            }
 
             if (attempt < PREMIUM_PHASE_MAX_ATTEMPTS - 1) {
                 const waitTime = 1500 * (attempt + 1);

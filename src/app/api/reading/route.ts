@@ -141,6 +141,7 @@ export async function POST(request: NextRequest) {
             accessKey,
             sessionUserId,
             isInvitePremiumAccess,
+            phase: currentPhase,
         });
 
         if (!premiumAccess.ok) {
@@ -193,6 +194,7 @@ export async function POST(request: NextRequest) {
                 partnerName,
                 partnerBirthDate,
                 partnerBirthTime,
+                readingId: readingId || undefined,
             });
         }
 

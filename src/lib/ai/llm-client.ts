@@ -615,17 +615,70 @@ export async function generateStructuredReport<T>(
         throw lastError || new Error('Structured report generation failed');
     };
 
+    const requestStructuredReportOpenAI = async (model: string = 'gpt-4o-mini'): Promise<T> => {
+        const apiKey = process.env.OPENAI_API_KEY;
+        if (!apiKey) throw new Error('OPENAI_API_KEY is not configured');
+
+        const requestConfig = getStructuredRequestConfig(tier, 0);
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+                model,
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userPrompt },
+                ],
+                response_format: { type: 'json_object' },
+                temperature: requestConfig.temperature,
+                max_tokens: Math.min(requestConfig.maxOutputTokens, 16384),
+            }),
+        });
+
+        if (!response.ok) {
+            const errBody = await response.text().catch(() => '');
+            throw new Error(`OpenAI failover error (${response.status}): ${errBody}`);
+        }
+
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content || '{}';
+
+        await safeIncrementUsageCounter({
+            provider: 'openai',
+            metric: 'api_requests',
+            count: 1,
+            metadata: { model, mode: 'structured_report_failover' },
+        });
+
+        return parseStructuredText(content);
+    };
+
     const primaryModel = config.provider === 'google' ? config.model : 'gemini-3.5-flash';
     const secondaryModel = 'gemini-2.5-flash';
 
     try {
         return await requestStructuredReport(primaryModel);
     } catch (error) {
-        if (config.provider === 'google' && primaryModel !== secondaryModel) {
-            const errorMsg = error instanceof Error ? error.message : String(error);
-            const isRetryableError = ['503', '500', '502', '504', '429', 'timeout', 'AbortError'].some((code) =>
-                errorMsg.includes(code)
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        const isRetryableError = ['503', '500', '502', '504', '429', 'timeout', 'AbortError'].some((code) =>
+            errorMsg.includes(code)
+        );
+
+        if (isRetryableError && process.env.OPENAI_API_KEY) {
+            console.warn(
+                `[AI Client] Primary Google model ${primaryModel} failed (${errorMsg}). Failing over to OpenAI (gpt-4o-mini)...`
             );
+            try {
+                return await requestStructuredReportOpenAI('gpt-4o-mini');
+            } catch (openAiError) {
+                console.error('[AI Client] OpenAI failover also failed:', openAiError);
+            }
+        }
+
+        if (config.provider === 'google' && primaryModel !== secondaryModel) {
             if (isRetryableError) {
                 console.warn(
                     `[AI Client] Primary model ${primaryModel} failed (${errorMsg}). Retrying with ${secondaryModel}...`

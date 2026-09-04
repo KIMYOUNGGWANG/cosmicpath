@@ -1,4 +1,3 @@
-import { generateCompletion } from '@/lib/ai/llm-client';
 import type { DayMasterArchetype, DailyTransitInfo, SajuMindEmotion } from './types';
 
 // =====================================
@@ -98,7 +97,7 @@ export interface CheckInAIFeedbackResponse {
 export async function generateSajuMindCheckInFeedback(
   params: CheckInFeedbackParams
 ): Promise<CheckInAIFeedbackResponse> {
-  const { emotion, tags, note, dayMaster, dailyTransit } = params;
+  const { tags, note } = params;
 
   // Check safety on user notes/tags
   const combinedText = `${note || ''} ${tags.join(' ')}`;
@@ -112,57 +111,8 @@ export async function generateSajuMindCheckInFeedback(
     };
   }
 
-  const prompt = `User emotion: ${emotion}
-Tags: ${tags.length > 0 ? tags.join(', ') : 'None'}
-User Note: ${note ? `"${note}"` : 'None'}
-Day Master: ${dayMaster.englishName} (${dayMaster.shortTitle}) - Core nature: ${dayMaster.coreNature}
-Today's Cosmic Transit: ${dailyTransit.pillar.stem} ${dailyTransit.pillar.branch} (${dailyTransit.pillar.element.toUpperCase()} element, ${dailyTransit.pillar.animalEn})
-Transit Dynamic to User: ${dailyTransit.relationToDayMaster.labelEn} (${dailyTransit.relationToDayMaster.weatherMetaphor})
-
-Write a response under 80 words with this exact 3-part structure:
-1. Observation: Acknowledge the feeling with empathy.
-2. Pattern Connection: Lightly connect how today's Saju transit dynamic or Day Master tendency might be amplifying or shaping this feeling.
-3. Small Action: One small, gentle practical micro-action for the next 24 hours.
-
-Keep the total length strictly under 80 words. Return plain readable paragraphs.`;
-
-  try {
-    const result = await generateCompletion(
-      SAJUMIND_SYSTEM_PROMPT,
-      prompt,
-      'free'
-    );
-
-    const fullText = result.content?.trim();
-    if (fullText && fullText.length > 20) {
-      return parseCheckInFeedback(fullText, emotion, dayMaster);
-    }
-  } catch (error) {
-    console.warn('[SajuMind] AI generation failed, falling back to deterministic template:', error);
-  }
-
-  // Deterministic Fallback
+  // Use deterministic template directly to eliminate live API costs
   return generateDeterministicCheckInFeedback(params);
-}
-
-function parseCheckInFeedback(
-  text: string,
-  emotion: SajuMindEmotion,
-  dayMaster: DayMasterArchetype
-): CheckInAIFeedbackResponse {
-  const sentences = text.split(/(?<=[.!?])\s+/);
-  const observation = sentences[0] || `Noticing your ${emotion.toLowerCase()} state today.`;
-  const patternConnection =
-    sentences.slice(1, -1).join(' ') ||
-    `Your ${dayMaster.shortTitle} energy is interacting with today's cosmic transit.`;
-  const smallAction = sentences.at(-1) || dayMaster.groundingHabit;
-
-  return {
-    observation,
-    patternConnection,
-    smallAction,
-    fullText: text,
-  };
 }
 
 function generateDeterministicCheckInFeedback(
@@ -219,48 +169,9 @@ export interface WeeklyReportAIFeedbackResponse {
 export async function generateSajuMindWeeklyReport(
   params: WeeklyReportParams
 ): Promise<WeeklyReportAIFeedbackResponse> {
-  const { dayMaster, checkInHistory, dominantEmotion, elementalSummary } = params;
+  const { dayMaster, dominantEmotion } = params;
 
-  const historySummary = checkInHistory
-    .map((c) => `${c.date}: ${c.emotion} [${c.tags.join(', ')}]`)
-    .join('\n');
-
-  const prompt = `User Day Master: ${dayMaster.englishName} (${dayMaster.shortTitle})
-Past 7 Days Check-ins:
-${historySummary || 'No regular logs, general weekly synthesis.'}
-Most Frequent Emotion: ${dominantEmotion}
-Elemental Flow: ${elementalSummary}
-
-Generate a concise, insightful weekly report strictly under 180 words containing:
-1. Most frequent emotional theme: What dominated the user's emotional baseline this week.
-2. Connection to current Saju timing: How the 5-element cycle and Day Master archetype explain this current.
-3. One unnoticed pattern: A subtle connection between their triggers, pacing, or decision habits.
-4. One gentle suggestion for next week: A realistic self-care or pacing micro-adjustment.
-
-Keep tone supportive, non-dogmatic, and strictly under 180 words.`;
-
-  try {
-    const result = await generateCompletion(
-      SAJUMIND_SYSTEM_PROMPT,
-      prompt,
-      'basic'
-    );
-
-    const fullReport = result.content?.trim();
-    if (fullReport && fullReport.length > 50) {
-      return {
-        emotionalTheme: `Dominant Theme: ${dominantEmotion}`,
-        sajuTimingConnection: `Elemental Alignment with ${dayMaster.shortTitle}`,
-        unnoticedPattern: 'Subtle rhythm between daily output and emotional recovery.',
-        gentleSuggestion: 'Protect uninterrupted morning focus blocks.',
-        fullReport,
-      };
-    }
-  } catch (error) {
-    console.warn('[SajuMind] Weekly AI generation fallback:', error);
-  }
-
-  // Deterministic Fallback
+  // Deterministic Fallback - Zero API cost & 0ms latency
   const fallback = `Over the past week, your emotional baseline leaned towards feeling ${dominantEmotion}. As a ${dayMaster.shortTitle}, your ${dayMaster.element.toUpperCase()} essence responds deeply to shifting environmental rhythms. You may notice that mental overextension peaks right before moments of hesitation. For the upcoming week, embrace gentle pacing: honor your natural rest intervals and ground major decisions in calm alignment rather than urgency.`;
 
   return {

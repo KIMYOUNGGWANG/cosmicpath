@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { generateStructuredReport } from '@/lib/ai/llm-client';
 import { generateAuraProfile } from '@/lib/engines/aura';
 import { rateLimit } from '@/lib/rate-limiter';
 import { isValidTimeZone } from '@/lib/utils/timezone';
@@ -12,10 +11,6 @@ const auraRequestSchema = z.object({
     birthTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
     timezone: z.string().min(1).max(100).refine(isValidTimeZone, 'Invalid timezone'),
     language: z.enum(['en', 'ko']).default('en'),
-});
-
-const auraSummarySchema = z.object({
-    summary: z.string().trim().min(1).max(420),
 });
 
 type ApiErrorCode = 'INVALID_REQUEST' | 'RATE_LIMITED' | 'INTERNAL_ERROR';
@@ -60,38 +55,7 @@ async function generateAuraSummary(input: {
     promptFacts: string;
     fallbackSummary: string;
 }): Promise<string> {
-    if (!process.env.GOOGLE_AI_API_KEY) {
-        return input.fallbackSummary;
-    }
-
-    const languageInstruction =
-        input.language === 'ko'
-            ? 'Write the summary in natural Korean.'
-            : 'Write the summary in natural English.';
-
-    try {
-        const response = await generateStructuredReport(
-            [
-                'You are a concise aura card copywriter for CosmicPath.',
-                languageInstruction,
-                'Return strict JSON with one key: summary.',
-                'The summary must be at most 3 sentences.',
-                'Make it vivid and social-share friendly, but do not invent facts beyond the provided signals.',
-                'Do not mention astrology calculations, percentages, or raw hex codes unless they support the mood.',
-            ].join(' '),
-            [
-                'Use these aura facts to write the summary:',
-                input.promptFacts,
-            ].join('\n\n'),
-            'basic',
-            auraSummarySchema
-        );
-
-        return response.summary;
-    } catch (error) {
-        console.warn('[Aura Generate] Falling back to deterministic summary:', error);
-        return input.fallbackSummary;
-    }
+    return input.fallbackSummary;
 }
 
 export async function POST(request: NextRequest) {

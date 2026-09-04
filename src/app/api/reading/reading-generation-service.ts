@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 import { ZODIAC_SIGNS } from '@/lib/engines/astrology';
 import { isExternalEffectsDisabled } from '@/lib/runtime-environment';
 import {
@@ -78,6 +79,7 @@ type PremiumReadingParams = {
   partnerName?: string;
   partnerBirthDate?: string;
   partnerBirthTime?: string;
+  readingId?: string;
 };
 
 type PremiumFallbackMetadata = {
@@ -537,6 +539,51 @@ function mergePremiumFallbackPhases(
   return completedReport;
 }
 
+const PHASE_KEYS: Record<number, readonly string[]> = {
+  1: ['summary', 'traits', 'core_analysis'],
+  2: ['astro_deep'],
+  3: ['tarot_details', 'numerology'],
+  4: ['saju_sections'],
+  5: ['fortune_flow'],
+  6: ['life_areas'],
+  7: ['special_analysis', 'lucky_assets', 'action_plan', 'date_selection'],
+  8: ['past_life', 'glossary', 'final_verdict'],
+};
+
+export function extractPhaseSlice(phaseNumber: number, source: unknown): PremiumReportPartial | null {
+  if (!source || typeof source !== 'object' || Array.isArray(source)) {
+    return null;
+  }
+  const keys = PHASE_KEYS[phaseNumber];
+  if (!keys) return null;
+
+  const record = source as Record<string, unknown>;
+  const primaryKey = keys[0];
+  if (!record[primaryKey]) {
+    return null;
+  }
+
+  const slice: Record<string, unknown> = {};
+  for (const key of keys) {
+    if (record[key] !== undefined) {
+      slice[key] = record[key];
+    }
+  }
+
+  return slice as PremiumReportPartial;
+}
+
+const activePremiumReportCache = new Map<string, { report: PremiumReportPartial; updatedAt: number }>();
+const CACHE_TTL_MS = 1000 * 60 * 30; // 30 minutes
+
+function setReportCache(key: string, report: PremiumReportPartial) {
+  if (activePremiumReportCache.size > 200) {
+    const oldestKey = activePremiumReportCache.keys().next().value;
+    if (oldestKey) activePremiumReportCache.delete(oldestKey);
+  }
+  activePremiumReportCache.set(key, { report, updatedAt: Date.now() });
+}
+
 function buildEnrichedPayload(params: BuildPayloadParams): EnrichedPayload {
   const metadata = {
     ...buildReadingMetadata({
@@ -638,8 +685,84 @@ export async function runPremiumReading(params: PremiumReadingParams) {
     partnerSajuData: params.runtime.partnerSaju || undefined,
   };
 
+  const cacheKey = params.readingId || `${params.name}:${params.birthDate}:${params.birthTime}:${params.question?.trim() || ''}`;
+
   try {
     if (params.phase) {
+      // 1. Check previousPhaseReport
+      const fromPrevious = extractPhaseSlice(params.phase, previousPhaseReport);
+      if (fromPrevious) {
+        console.log(`[Reading API Cache] Phase ${params.phase} satisfied from previousReport`);
+        return NextResponse.json(buildEnrichedPayload({
+          success: true,
+          phase: params.phase,
+          report: fromPrevious,
+          runtime: params.runtime,
+          language: params.language,
+          isPremium: true,
+          generationAudit: {
+            requestedModel: 'gemini-3.5-flash',
+            executedModel: 'cache:previous_report',
+            timestamp: new Date().toISOString(),
+          },
+        }));
+      }
+
+      // 2. Check in-memory cache
+      const cachedEntry = activePremiumReportCache.get(cacheKey);
+      if (cachedEntry && Date.now() - cachedEntry.updatedAt < CACHE_TTL_MS) {
+        const fromCache = extractPhaseSlice(params.phase, cachedEntry.report);
+        if (fromCache) {
+          console.log(`[Reading API Cache] Phase ${params.phase} satisfied from memory cache`);
+          return NextResponse.json(buildEnrichedPayload({
+            success: true,
+            phase: params.phase,
+            report: fromCache,
+            runtime: params.runtime,
+            language: params.language,
+            isPremium: true,
+            generationAudit: {
+              requestedModel: 'gemini-3.5-flash',
+              executedModel: 'cache:memory',
+              timestamp: new Date().toISOString(),
+            },
+          }));
+        }
+      }
+
+      // 3. Check DB if readingId is present
+      if (params.readingId) {
+        try {
+          const stored = await prisma.readingResult.findUnique({
+            where: { id: params.readingId },
+            select: { data: true },
+          });
+          if (stored?.data) {
+            const parsedData = typeof stored.data === 'string' ? JSON.parse(stored.data) : stored.data;
+            const fromDb = extractPhaseSlice(params.phase, parsedData);
+            if (fromDb) {
+              console.log(`[Reading API Cache] Phase ${params.phase} satisfied from database cache`);
+              setReportCache(cacheKey, { ...(cachedEntry?.report || {}), ...(parsedData as PremiumReportPartial) });
+              return NextResponse.json(buildEnrichedPayload({
+                success: true,
+                phase: params.phase,
+                report: fromDb,
+                runtime: params.runtime,
+                language: params.language,
+                isPremium: true,
+                generationAudit: {
+                  requestedModel: 'gemini-3.5-flash',
+                  executedModel: 'cache:database',
+                  timestamp: new Date().toISOString(),
+                },
+              }));
+            }
+          }
+        } catch (dbErr) {
+          console.warn('[Reading API Cache] DB read failed:', dbErr);
+        }
+      }
+
       console.log(`Executing Phase ${params.phase} for Premium Reading`);
       const phaseResult = await generateSinglePhase(
         params.phase,
@@ -678,6 +801,22 @@ export async function runPremiumReading(params: PremiumReadingParams) {
         console.warn(
           `[Reading API Audit] Phase ${params.phase} executed with failover model ${phaseResult.executedModel} (length: ${phaseResult.textLength} chars)`
         );
+      }
+
+      if (phaseResult.data) {
+        const mergedReport: PremiumReportPartial = {
+          ...(cachedEntry?.report || {}),
+          ...(previousPhaseReport || {}),
+          ...phaseResult.data,
+        };
+        setReportCache(cacheKey, mergedReport);
+
+        if (params.readingId) {
+          prisma.readingResult.update({
+            where: { id: params.readingId },
+            data: { data: JSON.stringify(mergedReport) },
+          }).catch((err) => console.warn('[Reading API Cache] Failed to persist report slice:', err));
+        }
       }
 
       return NextResponse.json(buildEnrichedPayload({
@@ -719,6 +858,16 @@ export async function runPremiumReading(params: PremiumReadingParams) {
             },
           }
         );
+
+    if (premiumResult.success) {
+      setReportCache(cacheKey, report);
+      if (params.readingId) {
+        prisma.readingResult.update({
+          where: { id: params.readingId },
+          data: { data: JSON.stringify(report) },
+        }).catch((err) => console.warn('[Reading API Cache] Failed to persist full report:', err));
+      }
+    }
 
     return NextResponse.json(buildEnrichedPayload({
       success: true,

@@ -36,6 +36,7 @@ type PremiumAccessParams = {
   accessKey?: string;
   sessionUserId: string | null;
   isInvitePremiumAccess: boolean;
+  phase?: number;
 };
 
 type PremiumAccessResolution =
@@ -155,7 +156,11 @@ export async function verifyPremiumReadingAccess(
     };
   }
 
-  if (!params.readingId && !params.isInvitePremiumAccess) {
+  const isInviteAllowedForPhase = Boolean(
+    params.isInvitePremiumAccess && (!params.phase || params.phase === 1)
+  );
+
+  if (!params.readingId && !isInviteAllowedForPhase) {
     return {
       ok: false,
       response: NextResponse.json(
@@ -166,7 +171,7 @@ export async function verifyPremiumReadingAccess(
   }
 
   let storedReadingMetadata: Record<string, unknown> = {};
-  let hasVerifiedPremiumAccess = params.isInvitePremiumAccess;
+  let hasVerifiedPremiumAccess = isInviteAllowedForPhase;
 
   if (params.readingId) {
     const storedReading = await prisma.readingResult.findUnique({
