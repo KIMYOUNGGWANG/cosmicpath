@@ -17,7 +17,7 @@ const DATA_NODES = [
     { id: 1, orbit: 1, icon: '星', label: '점성술', color: '#D7B25D' },
     { id: 2, orbit: 1, icon: '宮', label: '자미두수', color: '#B77C6D' },
     { id: 3, orbit: 2, icon: '數', label: '수비학', color: '#CDBB83' },
-    { id: 4, orbit: 2, icon: '運', label: '10년대운', color: '#94A3B8' },
+    { id: 4, orbit: 2, icon: '泰', label: '태국점성', color: '#94A3B8' },
     { id: 5, orbit: 3, icon: '時', label: '골든타임', color: '#9F8F78' },
 ];
 
@@ -129,7 +129,7 @@ export function EngineSection() {
                         <span className="text-acc-gold">독립된 근거를 교차합니다.</span>
                     </h2>
                     <p className="text-moonlight max-w-xl mx-auto text-base md:text-lg leading-relaxed">
-                        사주(구조), 점성술(타이밍), 자미두수(명반), 수비학(주기)을 결합합니다.<br />
+                        사주(구조), 점성술(타이밍), 자미두수(명반), 태국 왕실 점성술(마하탁사), 수비학(주기)의 5대 엔진을 결합합니다.<br />
                         결론보다 먼저 어떤 천문 데이터가 같은 방향을 가리키는지 검증합니다.
                     </p>
                 </motion.div>

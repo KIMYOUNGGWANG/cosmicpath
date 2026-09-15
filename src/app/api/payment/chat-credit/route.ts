@@ -7,6 +7,8 @@ const ChatCreditRequestSchema = z.object({
     readingId: z.string().min(1, 'Missing readingId'),
     returnUrl: z.string().optional(),
     creditType: z.enum(['single', 'pack']).optional().default('single'),
+    postId: z.string().max(128).optional(),
+    pid: z.string().max(128).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -18,7 +20,8 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: parsed.error.message }, { status: 400 });
         }
 
-        const { readingId, returnUrl, creditType } = parsed.data;
+        const { readingId, returnUrl, creditType, postId, pid } = parsed.data;
+        const normalizedPostId = (postId?.trim() || pid?.trim() || '').slice(0, 128);
         const origin = request.headers.get('origin') || 'http://localhost:3000';
 
         // Select product based on creditType
@@ -38,17 +41,18 @@ export async function POST(request: NextRequest) {
             metadata: {
                 type: 'chat_credit',
                 readingId: readingId,
-                credits: String(product.credits)
+                credits: String(product.credits),
+                postId: normalizedPostId,
             },
         });
 
         return NextResponse.json({ url: session.url });
-    } catch (error: any) {
+    } catch (error) {
         console.error('Chat credit payment initialization failed:', error);
+        const message = error instanceof Error ? error.message : 'Internal Server Error';
         return NextResponse.json(
-            { error: error.message || 'Internal Server Error' },
+            { error: message },
             { status: 500 }
         );
     }
 }
-

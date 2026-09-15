@@ -11,7 +11,7 @@ export function useStartDynamicPrice() {
       try {
         const response = await fetch('/api/payment/price');
         const data: unknown = await response.json();
-        if (isPricePayload(data) && data.metadata?.fallback !== 'true' && data.formattedPrice) {
+        if (isPricePayload(data) && data.formattedPrice) {
           setDynamicPrice(data.formattedPrice);
         }
       } catch (error) {

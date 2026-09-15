@@ -39,8 +39,8 @@ export function BlueprintSection() {
                             <h4 className="text-acc-logic font-bold text-sm mb-1 uppercase tracking-wider">기준</h4>
                             <p className="text-sm text-moonlight">지금 판단을 가르는 조건이 무엇인지</p>
                         </li>
-                        <li className="relative pl-6 border-l border-tarot-purple/30">
-                            <h4 className="text-tarot-purple font-bold text-sm mb-1 uppercase tracking-wider">흔들림</h4>
+                        <li className="relative pl-6 border-l border-acc-gold/40">
+                            <h4 className="text-acc-gold font-bold text-sm mb-1 uppercase tracking-wider">흔들림</h4>
                             <p className="text-sm text-moonlight">마음이 과하게 당기거나 밀어내는 지점</p>
                         </li>
                         <li className="relative pl-6 border-l border-star-yellow/30">

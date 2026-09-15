@@ -12,6 +12,7 @@
     "extract:report-baseline": "npm run extract:report-test-data && node scripts/extract-report-baseline.ts",
     "test:t2-report-quality": "node scripts/verify-t2-report-quality-system.ts",
     "test:growth-funnel": "node scripts/verify-growth-funnel-contract.ts",
+    "test:threads-relay": "node scripts/verify-threads-conversion-relay.ts",
     "test:followup-loop": "node scripts/verify-followup-loop.ts",
     "test:decision-positioning": "node scripts/verify-decision-note-positioning.ts",
     "test:domain-knowledge-fixtures": "node scripts/verify-domain-knowledge-fixtures.ts",

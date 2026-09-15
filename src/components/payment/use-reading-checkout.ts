@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { trackClientGrowthEvent } from '@/lib/client-growth-events';
+import { getGrowthAttribution, trackClientGrowthEvent } from '@/lib/client-growth-events';
 import { READING_PRODUCT } from '@/lib/payment/payment-config';
 
 interface ReadingCheckoutMetadata {
@@ -152,6 +152,13 @@ async function createPaymentSession(
     input: StartReadingCheckoutInput,
     readingId: string | null
 ): Promise<string> {
+    const attribution = getGrowthAttribution();
+    const resolvedPostId =
+        (typeof input.metadata?.postId === 'string' ? input.metadata.postId : undefined) ||
+        (typeof input.metadata?.pid === 'string' ? input.metadata.pid : undefined) ||
+        attribution.pid ||
+        undefined;
+
     const response = await fetch('/api/payment', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -165,6 +172,7 @@ async function createPaymentSession(
             discount: input.discount || undefined,
             language: input.eventLanguage,
             source: input.trackingSource,
+            postId: resolvedPostId,
         }),
     });
 

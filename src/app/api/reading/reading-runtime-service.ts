@@ -32,7 +32,7 @@ import { calculateThaiAstrology } from '@/lib/engines/thai-astrology';
 import type { ZiweiChartResult } from '@/lib/engines/ziwei';
 import { calculateZiweiChart } from '@/lib/engines/ziwei';
 import type { YearHeatmapResult } from '@/lib/engines/timing-heatmap';
-import { calculateWeeklyTimingHeatmap } from '@/lib/engines/timing-heatmap';
+import { calculateRollingTimingHeatmap } from '@/lib/engines/timing-heatmap';
 import type { ShadowTransformationResult } from '@/lib/engines/saju-transformation';
 import { calculateShadowTransformations } from '@/lib/engines/saju-transformation';
 import type { Compatibility4DResult } from '@/lib/engines/compatibility-matrix';
@@ -229,8 +229,9 @@ export async function assembleReadingRuntime(
   }
 
   let weeklyHeatmap: YearHeatmapResult | null = null;
+  const now = new Date();
   try {
-    weeklyHeatmap = calculateWeeklyTimingHeatmap(saju, new Date().getFullYear());
+    weeklyHeatmap = calculateRollingTimingHeatmap(saju, now.getFullYear(), now.getMonth() + 1);
   } catch (e) {
     console.error('Failed to compute weekly heatmap in runtime:', e);
   }
@@ -256,6 +257,9 @@ export async function assembleReadingRuntime(
       scenarioB: params.scenarioB,
       question: params.question,
       weeklyHeatmap,
+      saju,
+      targetYear: now.getFullYear(),
+      startMonth: now.getMonth() + 1,
       language: params.language,
     });
   } catch (e) {

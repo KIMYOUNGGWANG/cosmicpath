@@ -23,6 +23,11 @@ export const metadata: Metadata = {
     ],
     alternates: {
         canonical: '/guides',
+        languages: {
+            'ko-KR': 'https://www.cosmicpath.app',
+            'en-US': 'https://www.cosmicpath.app/guides',
+            'x-default': 'https://www.cosmicpath.app',
+        },
     },
     openGraph: {
         title: 'English Starter Guides | CosmicPath',

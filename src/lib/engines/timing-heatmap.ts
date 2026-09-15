@@ -24,6 +24,7 @@ export interface WeekTimingDetail {
 }
 
 export interface MonthlyHeatmapSummary {
+  year: number;
   month: number;
   monthNameKo: string;
   monthNameEn: string;
@@ -155,6 +156,7 @@ export function calculateWeeklyTimingHeatmap(
     const dominantPhase = avgScore >= 78 ? 'ATTACK' : avgScore >= 68 ? 'HARVEST' : avgScore >= 58 ? 'NEGOTIATE' : 'DEFEND';
 
     months.push({
+      year: targetYear,
       month: m.month,
       monthNameKo: m.nameKo,
       monthNameEn: m.nameEn,
@@ -180,5 +182,71 @@ export function calculateWeeklyTimingHeatmap(
     peakQuarter,
     highestScoringWeek: highestWeek,
     months,
+  };
+}
+
+/**
+ * 현재 월을 기준으로 향후 12개월(Rolling 12-Month) 주간 타이밍 히트맵을 합성합니다.
+ * 당해(targetYear)와 익년(targetYear + 1)의 히트맵을 각각 독립 계산한 뒤 정밀 슬라이싱하여 접합합니다.
+ */
+export function calculateRollingTimingHeatmap(
+  saju: SajuResult,
+  targetYear: number = new Date().getFullYear(),
+  startMonth: number = new Date().getMonth() + 1
+): YearHeatmapResult {
+  const currentYearResult = calculateWeeklyTimingHeatmap(saju, targetYear);
+  const nextYearResult = calculateWeeklyTimingHeatmap(saju, targetYear + 1);
+
+  // targetYear의 startMonth부터 12월까지
+  const currentYearMonths = currentYearResult.months.filter((m) => m.month >= startMonth);
+  // targetYear + 1의 1월부터 startMonth - 1월까지
+  const nextYearMonths = nextYearResult.months.filter((m) => m.month < startMonth);
+
+  const combinedMonths: MonthlyHeatmapSummary[] = [...currentYearMonths, ...nextYearMonths];
+
+  // 최고 점수 주차 재계산
+  let highestWeek = combinedMonths[0]?.weeks[0]
+    ? {
+        weekOfYear: combinedMonths[0].weeks[0].weekOfYear,
+        month: combinedMonths[0].weeks[0].month,
+        weekOfMonth: combinedMonths[0].weeks[0].weekOfMonth,
+        score: combinedMonths[0].weeks[0].score,
+        dates: combinedMonths[0].weeks[0].goldenDates,
+      }
+    : currentYearResult.highestScoringWeek;
+
+  for (const m of combinedMonths) {
+    for (const w of m.weeks) {
+      if (w.score > highestWeek.score) {
+        highestWeek = {
+          weekOfYear: w.weekOfYear,
+          month: w.month,
+          weekOfMonth: w.weekOfMonth,
+          score: w.score,
+          dates: w.goldenDates,
+        };
+      }
+    }
+  }
+
+  // 4개 분기 점수 계산 (3개월씩)
+  const qScores = [
+    combinedMonths.slice(0, 3).reduce((a, c) => a + c.averageScore, 0),
+    combinedMonths.slice(3, 6).reduce((a, c) => a + c.averageScore, 0),
+    combinedMonths.slice(6, 9).reduce((a, c) => a + c.averageScore, 0),
+    combinedMonths.slice(9, 12).reduce((a, c) => a + c.averageScore, 0),
+  ];
+  const maxQIdx = qScores.indexOf(Math.max(...qScores));
+  const bestQuarterStart = combinedMonths[maxQIdx * 3];
+  const bestQuarterEnd = combinedMonths[Math.min(11, maxQIdx * 3 + 2)];
+  const peakQuarter = bestQuarterStart && bestQuarterEnd
+    ? `${bestQuarterStart.year}년 ${bestQuarterStart.month}월 ~ ${bestQuarterEnd.year}년 ${bestQuarterEnd.month}월`
+    : currentYearResult.peakQuarter;
+
+  return {
+    year: targetYear,
+    peakQuarter,
+    highestScoringWeek: highestWeek,
+    months: combinedMonths,
   };
 }

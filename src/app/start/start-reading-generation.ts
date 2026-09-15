@@ -44,7 +44,7 @@ type GenerationSetupInput = {
 export function determineNextPremiumPhase(report: PremiumReportState | null | undefined) {
   if (!report?.summary || !report?.traits || !report?.core_analysis) return 1;
   if (!report?.astro_deep) return 2;
-  if (!report?.tarot_details || !report?.numerology) return 3;
+  if (!report?.numerology && !report?.tarot_details) return 3;
   if (!report?.saju_sections) return 4;
   if (!report?.fortune_flow) return 5;
   if (!report?.life_areas) return 6;

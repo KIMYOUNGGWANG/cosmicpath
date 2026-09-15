@@ -327,8 +327,10 @@ function runEdgeScenario() {
   const restoreLoader = registerTypeScriptLoader();
 
   try {
-    const { calculateSaju } = localRequire('../src/lib/engines/saju.ts');
-    const { calculateAstrology } = localRequire('../src/lib/engines/astrology.ts');
+    const sajuEngine: typeof import('../src/lib/engines/saju') = localRequire('../src/lib/engines/saju.ts');
+    const astrologyEngine: typeof import('../src/lib/engines/astrology') = localRequire('../src/lib/engines/astrology.ts');
+    const { calculateSaju, isKoreaDstPeriod, calculateMonthlyIlwoon } = sajuEngine;
+    const { calculateAstrology } = astrologyEngine;
     assertThrows(
       () => calculateSaju(new Date(Number.NaN), 12, 0, false, 'male', 126.9780),
       'saju_invalid_date_rejected',
@@ -383,8 +385,6 @@ function runEdgeScenario() {
     mark('astrology_timezone_offset_boundary');
 
     // === 신규 업그레이드 엔진 검증 (Tasks 1, 2, 5, 7, 8) ===
-    const { isKoreaDstPeriod, calculateIlwoon, calculateMonthlyIlwoon } = localRequire('../src/lib/engines/saju.ts');
-
     // Task 1: 자시법 yaja (야자시) 모드 검증 - 23:30에 일주가 안 넘어가야 함
     const yajaZi = calculateSaju(
       new Date(2026, 5, 6),
@@ -414,9 +414,9 @@ function runEdgeScenario() {
 
     // Task 7 & 8: 점성술 Chiron, Nodes, Fortuna, Retrograde 검증
     assert.equal(kstChart.planets.length, 14);
-    const chiron = kstChart.planets.find((p: any) => p.planet === 'chiron');
-    const northNode = kstChart.planets.find((p: any) => p.planet === 'northNode');
-    const fortuna = kstChart.planets.find((p: any) => p.planet === 'fortuna');
+    const chiron = kstChart.planets.find((planet) => planet.planet === 'chiron');
+    const northNode = kstChart.planets.find((planet) => planet.planet === 'northNode');
+    const fortuna = kstChart.planets.find((planet) => planet.planet === 'fortuna');
     assert.ok(chiron, 'Chiron must be present');
     assert.ok(northNode, 'North Node must be present');
     assert.ok(fortuna, 'Fortuna must be present');
@@ -434,18 +434,19 @@ function runEdgeScenario() {
     mark('astrology_chiron_nodes_retrograde');
 
     // Task 9: 자미두수 (Ziwei Doushu) 독자 엔진 검증 (Phase 2 Upgrade)
-    const { calculateZiweiChart } = localRequire('../src/lib/engines/ziwei.ts');
+    const ziweiEngine: typeof import('../src/lib/engines/ziwei') = localRequire('../src/lib/engines/ziwei.ts');
+    const { calculateZiweiChart } = ziweiEngine;
     const ziweiRes = calculateZiweiChart(new Date(1993, 7, 2), 15, 'male', false, 2026);
     assert.ok(ziweiRes.palaceList.length === 12, 'Ziwei chart must have 12 palaces');
     assert.ok(ziweiRes.wuxingJu.number >= 2 && ziweiRes.wuxingJu.number <= 6, 'WuxingJu number must be valid');
     assert.ok(ziweiRes.siHuaSummary.화록, 'SiHua summary must exist');
 
     // 주성 7단계 밝기 및 보성/흉성 검증
-    const allStars = ziweiRes.palaceList.flatMap((p: any) => p.stars);
-    const ziweiStar = allStars.find((s: any) => s.name === '자미');
+    const allStars = ziweiRes.palaceList.flatMap((palace) => palace.stars);
+    const ziweiStar = allStars.find((star) => star.name === '자미');
     assert.ok(ziweiStar && ziweiStar.brightness, 'Ziwei star must have 7-level brightness');
-    assert.ok(allStars.some((s: any) => s.name === '문창'), 'Wenchang auxiliary star must exist');
-    assert.ok(allStars.some((s: any) => s.name === '경양'), 'Jingyang malefic star must exist');
+    assert.ok(allStars.some((star) => star.name === '문창'), 'Wenchang auxiliary star must exist');
+    assert.ok(allStars.some((star) => star.name === '경양'), 'Jingyang malefic star must exist');
     assert.ok(ziweiRes.yearlyFortune && ziweiRes.yearlyFortune.year === 2026, 'Yearly fortune for 2026 must exist');
 
     mark('saju_ziwei_chart_calc');
@@ -544,9 +545,44 @@ function runIntegrationScenario() {
     assert.equal(metadata.astrology.ascendant, astrology.ascendant);
     assert.match(metadata.saju.fullSaju, /년 .+월 .+일 .+시/);
 
+    const { calculateRollingTimingHeatmap } = localRequire('../src/lib/engines/timing-heatmap.ts');
+    const { calculateScenarioDecision } = localRequire('../src/lib/engines/scenario-engine.ts');
+
+    const rollingHeatmap = calculateRollingTimingHeatmap(legacySaju, 2026, 9);
+    assert.equal(rollingHeatmap.months.length, 12, 'Rolling heatmap should have exactly 12 months');
+    assert.equal(rollingHeatmap.months[0].month, 9, 'First month should be September');
+    assert.equal(rollingHeatmap.months[0].year, 2026, 'First month year should be 2026');
+    assert.equal(rollingHeatmap.months[11].month, 8, 'Last month should be August');
+    assert.equal(rollingHeatmap.months[11].year, 2027, 'Last month year should be 2027');
+
+    const scenarioVerdict = calculateScenarioDecision({
+      saju: legacySaju,
+      targetYear: 2026,
+      startMonth: 9,
+      language: 'ko',
+    });
+
+    assert.equal(scenarioVerdict.timeline.length, 12, 'Scenario timeline must contain 12 months');
+    assert.equal(scenarioVerdict.startYear, 2026);
+    assert.equal(scenarioVerdict.startMonth, 9);
+    assert.equal(scenarioVerdict.endYear, 2027);
+    assert.equal(scenarioVerdict.endMonth, 8);
+    assert.equal(scenarioVerdict.timeline[0].month, 9);
+    assert.equal(scenarioVerdict.timeline[0].year, 2026);
+    assert.equal(scenarioVerdict.timeline[0].isNextYear, false);
+    assert.equal(scenarioVerdict.timeline[11].month, 8);
+    assert.equal(scenarioVerdict.timeline[11].year, 2027);
+    assert.equal(scenarioVerdict.timeline[11].isNextYear, true);
+    assert.equal(scenarioVerdict.timeline[11].formattedLabelKo, "8월 ('27)");
+
+    if (scenarioVerdict.goldenWindows.some((gw: { year: number }) => gw.year > 2026)) {
+      assert.match(scenarioVerdict.verdictHeadlineKo, /내년/, 'Headline should specify next year for golden window');
+    }
+
     console.log(
       `reading_metadata_saju_astrology_contract dayMaster=${metadata.saju.dayMaster} sunSign=${metadata.astrology.sunSign} moonSign=${metadata.astrology.moonSign} ascendant=${metadata.astrology.ascendant}`,
     );
+    mark('rolling_12m_scenario_timeline_contract');
     mark('engine_accuracy_audit_integration_contract');
   } finally {
     restoreLoader();

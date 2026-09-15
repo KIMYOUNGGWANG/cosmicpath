@@ -14,9 +14,15 @@ import { scheduleDefaultFollowUps } from '@/lib/followup-jobs';
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { productId, email, readingId, accessKey, referralCode, promoCodeId, discount, language, source } = body;
+        const { productId, email, readingId, accessKey, referralCode, promoCodeId, discount, language, source, postId, pid } = body;
         const normalizedLanguage = language === 'en' ? 'en' : 'ko';
         const normalizedSource = typeof source === 'string' ? source.trim().slice(0, 64) : '';
+        const normalizedPostId =
+            typeof postId === 'string' && postId.trim()
+                ? postId.trim().slice(0, 128)
+                : typeof pid === 'string' && pid.trim()
+                ? pid.trim().slice(0, 128)
+                : '';
 
         // ── Phase A: 서버 사이드 productId 허용 목록 검증 ────────────────
         // 클라이언트가 임의의 productId(test/dev 전용 SKU 등)를 넘겨
@@ -109,6 +115,7 @@ export async function POST(request: NextRequest) {
                 discount: appliedDiscount ? String(appliedDiscount) : '',
                 language: normalizedLanguage,
                 source: normalizedSource,
+                postId: normalizedPostId,
             },
         });
 

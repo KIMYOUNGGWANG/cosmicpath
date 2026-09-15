@@ -71,6 +71,8 @@ export function buildPremiumReportMetadata(
     oraclePersona: metadata.oraclePersona,
     language: metadata.language,
     isPremium: metadata.isPremium,
+    scenarioDecision: metadata.scenarioDecision,
+    weeklyHeatmap: metadata.weeklyHeatmap,
   };
 }
 

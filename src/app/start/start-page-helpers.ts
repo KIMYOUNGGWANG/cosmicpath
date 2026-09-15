@@ -1,6 +1,8 @@
 import type { ReadingData } from '@/components/reading/reading-input';
 import type { PremiumReportData } from '@/components/reading/premium-report';
 import type { ReadingContext } from '@/lib/ai/prompt-builder';
+import type { ScenarioVerdictResult } from '@/lib/engines/scenario-engine';
+import type { YearHeatmapResult } from '@/lib/engines/timing-heatmap';
 
 export type TarotSelection = {
   id: number;
@@ -58,6 +60,8 @@ export type ReadingMetadata = {
   astrology?: SourceSummaryRecord;
   astrologyResult?: SourceSummaryRecord;
   readingData?: ReadingData;
+  scenarioDecision?: ScenarioVerdictResult;
+  weeklyHeatmap?: YearHeatmapResult;
   [key: string]: unknown;
 };
 
@@ -74,6 +78,8 @@ export type PremiumReportViewMetadata = {
   isPremium?: boolean;
   sajuResult?: Record<string, unknown>;
   astrologyResult?: Record<string, unknown>;
+  scenarioDecision?: ScenarioVerdictResult | undefined;
+  weeklyHeatmap?: YearHeatmapResult | undefined;
 };
 
 export type ReadingStep = 'input' | 'tarot' | 'reveal' | 'result';

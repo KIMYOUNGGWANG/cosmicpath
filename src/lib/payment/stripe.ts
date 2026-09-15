@@ -25,7 +25,7 @@ interface CachedPrice {
     metadata: Stripe.Metadata;
 }
 const priceCache = new Map<string, { data: CachedPrice, timestamp: number }>();
-const CACHE_TTL = 3600 * 1000; // 1 hour
+const CACHE_TTL = process.env.NODE_ENV === 'development' ? 5 * 1000 : 60 * 1000; // 5s in dev, 1m in prod
 
 function isRecoverableStripeLookupError(error: unknown) {
     if (error instanceof Stripe.errors.StripeInvalidRequestError) {

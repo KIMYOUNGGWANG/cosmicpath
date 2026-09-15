@@ -17,8 +17,9 @@ export function MobileFloatingUnlockBar({
   onUnlock,
 }: MobileFloatingUnlockBarProps) {
   const isEn = language === 'en';
-  const displayPrice = priceLabel || (isEn ? '$3.99' : '₩4,900');
-  const originalPrice = isEn ? '$14.99' : '₩19,800';
+  const displayPrice = priceLabel || '$3.99';
+  const isWonCurrency = displayPrice.startsWith('₩');
+  const originalPrice = isWonCurrency ? '₩19,800' : '$14.99';
 
   if (isPremium) return null;
 

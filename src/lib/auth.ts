@@ -38,30 +38,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             },
         }),
     ],
+    session: {
+        strategy: "jwt",
+    },
     callbacks: {
-        async session({ session, user }) {
-            if (session.user) {
-                session.user.id = user.id
-
-                try {
-                    const latestUser = await prisma.user.findUnique({
-                        where: { id: user.id },
-                        select: {
-                            role: true,
-                            email: true,
-                            name: true,
-                        },
-                    })
-
-                    session.user.role = latestUser?.role || user.role || "USER"
-                    session.user.email = latestUser?.email ?? session.user.email ?? null
-                    session.user.name = latestUser?.name ?? session.user.name ?? null
-                } catch (error) {
-                    console.error("Error refreshing session role:", error)
-                    session.user.role = user.role || "USER"
-                }
+        async jwt({ token, user }) {
+            if (user) {
+                token.id = user.id;
+                token.role = (user as { role?: string }).role || "USER";
             }
-            return session
+            return token;
+        },
+        async session({ session, token }) {
+            if (session.user && token) {
+                session.user.id = (token.id as string) || (token.sub as string);
+                session.user.role = (token.role as string) || "USER";
+            }
+            return session;
         },
     },
     pages: {

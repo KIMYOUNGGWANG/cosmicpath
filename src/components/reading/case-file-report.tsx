@@ -210,18 +210,18 @@ export function CaseFileReport({
                         </p>
                         {convergence && (
                             <div className="mt-8 grid gap-px bg-[#c8a84d]/20 md:grid-cols-[180px_1fr_1fr]">
-                                <div className="bg-[#11100d] px-4 py-4">
+                                <div className="min-w-0 bg-[#11100d] px-4 py-4">
                                     <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#c8a84d]">{isEn ? 'Convergence' : '3단 수렴도'}</p>
-                                    <p className="mt-2 font-cinzel text-xl text-stone-100">{getConvergenceLevelLabel(convergence.level, isEn)}</p>
-                                    <p className="mt-2 text-xs leading-5 text-stone-500">{convergence.conflict_note}</p>
+                                    <p className="mt-2 font-cinzel text-xl text-stone-100 break-keep">{getConvergenceLevelLabel(convergence.level, isEn)}</p>
+                                    <p className="mt-2 text-xs leading-5 text-stone-500 break-keep">{convergence.conflict_note}</p>
                                 </div>
-                                <div className="bg-[#0c0b09] px-4 py-4">
+                                <div className="min-w-0 bg-[#0c0b09] px-4 py-4">
                                     <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-stone-500">{isEn ? 'Shared Signal' : '공통 신호'}</p>
-                                    <p className="mt-2 text-sm leading-6 text-stone-300">{convergence.shared_signal}</p>
+                                    <p className="mt-2 text-sm leading-6 text-stone-300 break-keep">{convergence.shared_signal}</p>
                                 </div>
-                                <div className="bg-[#0c0b09] px-4 py-4">
+                                <div className="min-w-0 bg-[#0c0b09] px-4 py-4">
                                     <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-stone-500">{isEn ? 'Decision Rule' : '판정 규칙'}</p>
-                                    <p className="mt-2 text-sm leading-6 text-stone-300">{convergence.decision_rule}</p>
+                                    <p className="mt-2 text-sm leading-6 text-stone-300 break-keep">{convergence.decision_rule}</p>
                                 </div>
                             </div>
                         )}
@@ -229,10 +229,10 @@ export function CaseFileReport({
 
                     <div className="grid gap-px bg-white/10 md:grid-cols-3">
                         {evidence.map((item, index) => (
-                            <article key={item.label} id={`case-file-${index + 1}`} className="bg-[#0c0b09] px-5 py-7 md:px-7">
+                            <article key={item.label} id={`case-file-${index + 1}`} className="min-w-0 bg-[#0c0b09] px-5 py-7 md:px-7">
                                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#c8a84d]">{item.label}</p>
-                                <h2 className="mt-4 font-cinzel text-2xl text-stone-100">{item.title}</h2>
-                                <p className="mt-4 leading-7 text-stone-400">{item.body}</p>
+                                <h2 className="mt-4 font-cinzel text-2xl text-stone-100 break-keep">{item.title}</h2>
+                                <p className="mt-4 leading-7 text-stone-400 break-keep">{item.body}</p>
                             </article>
                         ))}
                     </div>
@@ -279,34 +279,40 @@ export function CaseFileReport({
                         </section>
                     )}
 
-                    <section id="case-file-4" className="grid gap-px bg-white/10 lg:grid-cols-[1fr_360px]">
-                        <div className="bg-[#0c0b09] px-5 py-8 md:px-10">
+                    <section id="case-file-4" className="grid gap-px bg-white/10 xl:grid-cols-[1fr_340px]">
+                        <div className="min-w-0 bg-[#0c0b09] px-5 py-8 sm:px-8 xl:px-10">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c8a84d]">{isEn ? 'Timing Ledger' : '하반기 타이밍 장부'}</p>
                             <div className="mt-6 divide-y divide-white/10 border-y border-white/10">
                                 {timeline.map((item) => (
-                                    <div key={`${item.marker}-${item.title}`} className="grid gap-3 py-4 md:grid-cols-[88px_1fr_54px] md:items-start">
-                                        <p className="font-cinzel text-lg text-[#c8a84d]">{item.marker}</p>
-                                        <div>
-                                            <h3 className="font-medium text-stone-100">{item.title}</h3>
-                                            <p className="mt-1 text-sm leading-6 text-stone-400">{item.body}</p>
+                                    <div key={`${item.marker}-${item.title}`} className="flex items-start gap-3.5 py-4 sm:gap-5">
+                                        <div className="shrink-0 w-12 sm:w-16 pt-0.5">
+                                            <p className="font-cinzel text-base sm:text-lg font-semibold text-[#c8a84d]">{item.marker}</p>
                                         </div>
-                                        {typeof item.score === 'number' && <p className="text-right font-cinzel text-xl text-stone-300">{item.score}</p>}
+                                        <div className="min-w-0 flex-1">
+                                            <h3 className="font-medium text-stone-100 break-keep">{item.title}</h3>
+                                            <p className="mt-1 text-sm leading-6 text-stone-400 break-keep">{item.body}</p>
+                                        </div>
+                                        {typeof item.score === 'number' && (
+                                            <div className="shrink-0 pl-2 pt-0.5 text-right">
+                                                <p className="font-cinzel text-lg sm:text-xl text-stone-300">{item.score}</p>
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        <aside id="case-file-5" className="bg-[#11100d] px-5 py-8 md:px-7">
+                        <aside id="case-file-5" className="min-w-0 bg-[#11100d] px-5 py-8 md:px-7">
                             <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-[#c8a84d]">{isEn ? 'Action Order' : '실행 순서'}</p>
                             <ol className="mt-6 space-y-4">
                                 {actions.map((action, index) => (
-                                    <li key={`${index}-${action}`} className="grid grid-cols-[28px_1fr] gap-3 text-sm leading-6 text-stone-300">
-                                        <span className="font-cinzel text-[#c8a84d]">{String(index + 1).padStart(2, '0')}</span>
-                                        <span>{action}</span>
+                                    <li key={`${index}-${action}`} className="flex items-start gap-3 text-sm leading-6 text-stone-300">
+                                        <span className="shrink-0 font-cinzel text-[#c8a84d] w-6 pt-0.5">{String(index + 1).padStart(2, '0')}</span>
+                                        <span className="min-w-0 flex-1 break-keep">{action}</span>
                                     </li>
                                 ))}
                             </ol>
-                            <p className="mt-8 border-t border-white/10 pt-5 text-sm leading-6 text-stone-500">{closingWords}</p>
+                            <p className="mt-8 border-t border-white/10 pt-5 text-sm leading-6 text-stone-500 break-keep">{closingWords}</p>
                         </aside>
                     </section>
 

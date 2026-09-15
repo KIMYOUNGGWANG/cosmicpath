@@ -96,11 +96,18 @@ export function PaymentModalForm({
             >
                 {checkoutButtonLabel({ isEnglish, isLoading, isCheckoutPausedForPriceIssue, discount })}
             </motion.button>
-            <p className="mt-4 text-center text-xs text-white/45">
-                {isEnglish
-                    ? 'Stripe handles the one-time Decision Packet checkout safely. Supports VISA, Mastercard, AMEX.'
-                    : '해외 결제 가능 카드(VISA / Mastercard / AMEX) 지원 · Stripe 256-bit SSL 보안 결제로 안전하게 1회 승인됩니다.'}
-            </p>
+            <div className="mt-4 flex flex-col items-center gap-2">
+                <div className="flex flex-wrap items-center justify-center gap-1.5 text-[11px] font-medium text-white/80">
+                    <span className="rounded-md border border-white/15 bg-white/10 px-2.5 py-0.5 font-semibold text-white"> Apple Pay</span>
+                    <span className="rounded-md border border-white/15 bg-white/10 px-2.5 py-0.5 font-semibold text-white">G Pay</span>
+                    <span className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-white/70">{isEnglish ? 'Credit Cards' : '국내외 카드 지원'}</span>
+                </div>
+                <p className="text-center text-xs text-white/45">
+                    {isEnglish
+                        ? 'Apple Pay · Google Pay · VISA / Mastercard / AMEX supported via Stripe 256-bit SSL.'
+                        : 'Apple Pay · Google Pay 원클릭 결제 지원 · Stripe 256-bit SSL 보안으로 안전하게 1회 결제됩니다.'}
+                </p>
+            </div>
         </>
     );
 }

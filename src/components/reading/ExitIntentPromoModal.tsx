@@ -8,6 +8,7 @@ interface ExitIntentPromoModalProps {
   isOpen?: boolean;
   isPremium?: boolean;
   language?: 'ko' | 'en';
+  priceLabel?: string;
   onUnlock: () => void;
   onClose?: () => void;
 }
@@ -15,11 +16,22 @@ interface ExitIntentPromoModalProps {
 export function ExitIntentPromoModal({
   isPremium = false,
   language = 'ko',
+  priceLabel,
   onUnlock,
   onClose,
 }: ExitIntentPromoModalProps) {
   const isEn = language === 'en';
   const [isVisible, setIsVisible] = useState(false);
+
+  const regularPrice = priceLabel || '$3.99';
+  const isWon = regularPrice.startsWith('₩');
+  const numericPrice = Number.parseFloat(regularPrice.replace(/[^0-9.]/g, '')) || (isWon ? 4900 : 3.99);
+  const discountedNumeric = isWon
+    ? Math.round((numericPrice * 0.6) / 100) * 100
+    : Math.round(numericPrice * 0.6 * 100) / 100;
+  const discountedPrice = isWon
+    ? `₩${discountedNumeric.toLocaleString('ko-KR')}`
+    : `$${discountedNumeric.toFixed(2)}`;
 
   useEffect(() => {
     // If user is already premium, do not trigger
@@ -28,8 +40,6 @@ export function ExitIntentPromoModal({
     // Check if exit intent was already shown this session
     const hasShown = typeof window !== 'undefined' && window.sessionStorage.getItem('cp_exit_intent_shown');
     if (hasShown) return;
-
-    let timeoutId: NodeJS.Timeout;
 
     // 1. Mouse exit intent (Desktop)
     const handleMouseLeave = (e: MouseEvent) => {
@@ -40,7 +50,7 @@ export function ExitIntentPromoModal({
     };
 
     // 2. Timer-based backup (Mobile & Desktop after 60s)
-    timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       if (!sessionStorage.getItem('cp_exit_intent_shown') && !isPremium) {
         sessionStorage.setItem('cp_exit_intent_shown', 'true');
         setIsVisible(true);
@@ -122,10 +132,10 @@ export function ExitIntentPromoModal({
             <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 mb-6 flex items-center justify-between">
               <div>
                 <span className="text-xs text-white/40 line-through mr-2">
-                  {isEn ? '$3.99' : '₩4,900'}
+                  {regularPrice}
                 </span>
                 <span className="text-2xl font-extrabold text-[#e6ca7d]">
-                  {isEn ? '$2.49' : '₩2,900'}
+                  {discountedPrice}
                 </span>
                 <span className="ml-2 text-xs font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
                   40% OFF

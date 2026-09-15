@@ -79,7 +79,7 @@ export function StartResultStage(props: StartResultStageProps) {
       animate={{ opacity: 1 }}
       transition={{ duration: 1.2 }}
     >
-      {props.isLoading ? (
+      {props.isLoading && (!props.isPremium || !props.premiumReportData || props.loadingPhase.phase <= 1) ? (
         <div className="flex min-h-[500px] items-center justify-center px-4 py-16 md:py-24">
           <OracleCalibrationPanel
             language={props.language}
@@ -111,6 +111,7 @@ export function StartResultStage(props: StartResultStageProps) {
                   dynamicPrice={props.dynamicPrice}
                   landingSource={props.landingSource}
                   onUnlock={props.onUnlock}
+                  metadata={props.metadata}
                 />
 
                 <RelationshipOutcomeSeed
@@ -169,6 +170,7 @@ export function StartResultStage(props: StartResultStageProps) {
                 isPremium={props.isPremium}
                 price={props.dynamicPrice}
                 isLoading={props.isLoading}
+                loadingPhase={props.loadingPhase}
                 onRetry={props.onRetryPremium}
                 userQuestion={props.readingData?.question}
               />
@@ -195,6 +197,7 @@ export function StartResultStage(props: StartResultStageProps) {
             <ExitIntentPromoModal
               isPremium={props.isPremium}
               language={props.language}
+              priceLabel={props.dynamicPrice}
               onUnlock={props.onUnlock}
             />
           </ErrorBoundary>

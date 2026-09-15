@@ -9,7 +9,7 @@ import LenisProvider from "@/components/providers/LenisProvider";
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 
 const SITE_URL = "https://www.cosmicpath.app";
-const OG_IMAGE_URL = `${SITE_URL}/og-image.png`;
+const OG_IMAGE_URL = `${SITE_URL}/og-image.png?v=2`;
 const KOREAN_TITLE = "CosmicPath | 5대 엔진 기반 인생 의사결정 도시에";
 const KOREAN_DESCRIPTION = "사주 4주 원국, 서양 점성술 천체도, 자미두수 12궁 명반, 태국 왕실 점성술(108년 마하탁사), 수비학 9년 주기의 5대 계산 엔진을 융합하여 미뤄둔 하나의 선택을 명쾌하게 판정합니다.";
 const ENGLISH_TITLE = "CosmicPath | 5-Engine Strategic Decision Dossier";
@@ -22,7 +22,18 @@ export async function generateMetadata(): Promise<Metadata> {
   const base: Metadata = {
     metadataBase: new URL(SITE_URL),
     applicationName: "CosmicPath",
-    alternates: { canonical: './' },
+    alternates: {
+      canonical: './',
+      languages: {
+        'ko-KR': 'https://www.cosmicpath.app',
+        'en-US': 'https://www.cosmicpath.app/guides',
+        'x-default': 'https://www.cosmicpath.app',
+      },
+    },
+    icons: {
+      icon: '/favicon.ico',
+      apple: '/apple-touch-icon.png',
+    },
     authors: [{ name: "Tony's Company" }],
     creator: "CosmicPath",
     publisher: "Tony's Company",

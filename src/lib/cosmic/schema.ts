@@ -32,9 +32,12 @@ export const CosmicTagEnum = z.enum([
 
 export type CosmicTag = z.infer<typeof CosmicTagEnum>;
 
+export const CosmicSourceEnum = z.enum(['SAJU', 'ASTROLOGY', 'ZIWEI', 'THAI', 'NUMEROLOGY', 'TAROT']);
+export type CosmicSource = z.infer<typeof CosmicSourceEnum>;
+
 // 2. Source- Specific Result (The Input)
 export const SingleReadingResultSchema = z.object({
-    source: z.enum(['SAJU', 'ASTROLOGY', 'ZIWEI', 'THAI', 'TAROT']),
+    source: CosmicSourceEnum,
     originalText: z.string(), // Raw text from the engine/LLM
     detectedTags: z.array(CosmicTagEnum), // Tags identified in this specific reading
     confidence: z.number().min(0).max(1), // Internal confidence of this single reading

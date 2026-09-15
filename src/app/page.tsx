@@ -13,6 +13,7 @@ import { VerdictSection } from '@/components/landing/VerdictSection';
 import { ReviewCarousel } from '@/components/landing/ReviewCarousel';
 import { CrossroadsSection } from '@/components/landing/CrossroadsSection';
 import { Footer } from '@/components/landing/Footer';
+import { NEXT_MOVE_RITUAL_ENABLED } from '@/lib/product-positioning';
 
 const SITE_URL = 'https://www.cosmicpath.app';
 const OG_IMAGE_URL = `${SITE_URL}/og-image.png`;
@@ -78,7 +79,7 @@ export default async function Home() {
 
             <HeroSection language={language} />
             {language === 'en' ? <EnglishGuideSection /> : null}
-            <RitualSection />
+            {NEXT_MOVE_RITUAL_ENABLED ? <RitualSection language={language} /> : null}
             <DiagnosisSection />
             <ReviewCarousel />
             <GapSection />

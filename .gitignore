@@ -101,3 +101,6 @@ prisma/dev.db
 
 # oma docs generated artifacts
 docs/generated/
+
+# local design/reference PDFs
+*.pdf

@@ -3,16 +3,15 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { CompatibilityHeader } from './CompatibilityHeader';
-import { useReactToPrint } from 'react-to-print';
-import { Download, Sparkles, Printer, Compass, Clock, Layers, FileText, ChevronRight } from 'lucide-react';
-import * as analytics from '@/lib/client-analytics';
+import { Sparkles, Compass, Clock, Layers, Printer } from 'lucide-react';
 import { PrintLayout } from './PrintLayout';
-import { ShareCard } from './share-card';
 import { ShareCardModal } from '@/components/share/ShareCardModal';
-import { Share2 } from 'lucide-react';
 import { BlindSpotTeaser } from './blind-spot-teaser';
 import { CaseFileReport } from './case-file-report';
 import { StickyCTA } from '../common/sticky-cta';
+import { OnePageDossierCard } from './OnePageDossierCard';
+import { FiveElementsVisualizer } from './FiveElementsVisualizer';
+import { ActionPlannerCard } from './ActionPlannerCard';
 
 import type { TimelineScore } from './FortuneTimelineChart';
 import type { SoulmateData } from './SoulmateSection';
@@ -46,7 +45,7 @@ import { calculateScenarioDecision, type ScenarioVerdictResult } from '@/lib/eng
 import { ReportSidebarNav } from './ReportSidebarNav';
 import { calculateZiweiChart, type ZiweiChartResult } from '@/lib/engines/ziwei';
 import { calculateShadowTransformations, type ShadowTransformationResult } from '@/lib/engines/saju-transformation';
-import { calculateWeeklyTimingHeatmap, type YearHeatmapResult } from '@/lib/engines/timing-heatmap';
+import { calculateRollingTimingHeatmap, type YearHeatmapResult } from '@/lib/engines/timing-heatmap';
 import { calculate4DCompatibility, type Compatibility4DResult } from '@/lib/engines/compatibility-matrix';
 import { calculateThaiAstrology, type ThaiAstrologyResult } from '@/lib/engines/thai-astrology';
 import { ThaiAstrologySection } from './ThaiAstrologySection';
@@ -66,6 +65,9 @@ const ChatInterface = dynamic(
 
 // 새로운 Premium Report 타입 (기존 CosmicReport 대체)
 export interface PremiumReportData {
+    metadata?: {
+        scenarioDecision?: ScenarioVerdictResult;
+    };
     precisionMetadata?: {
         inputDate: string;
         inputTime: string;
@@ -354,6 +356,8 @@ interface PremiumReportProps {
             name: string;
             title: string;
         };
+        scenarioDecision?: ScenarioVerdictResult;
+        weeklyHeatmap?: YearHeatmapResult;
     };
     language?: 'ko' | 'en';
     shareUrl?: string;
@@ -361,6 +365,7 @@ interface PremiumReportProps {
     isPremium?: boolean;
     price?: string;
     isLoading?: boolean;
+    loadingPhase?: { phase: number; label: string };
     onRetry?: () => void;
     userQuestion?: string;
 }
@@ -368,6 +373,36 @@ interface PremiumReportProps {
 interface MetadataWithReadingData extends NonNullable<PremiumReportProps['metadata']> {
     readingData?: Record<string, unknown>;
     tarotCards?: NonNullable<PremiumReportProps['metadata']>['tarotCards'];
+}
+
+function DossierSectionSkeleton({ title, phase, language }: { title: string; phase: number; language: 'ko' | 'en' }) {
+    const isEn = language === 'en';
+    return (
+        <div className="rounded-[26px] border border-[#c8a84d]/25 bg-gradient-to-b from-[#181611]/80 via-[#100f0c]/90 to-[#0c0b08]/95 p-6 sm:p-8 backdrop-blur-xl shadow-[0_10px_35px_rgba(0,0,0,0.5)] relative overflow-hidden">
+            <div className="flex items-center justify-between gap-4 mb-6">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-[#c8a84d]/40 bg-[#c8a84d]/15 text-[#f5d77f]">
+                        <Sparkles className="w-4 h-4 text-[#e8c86d] animate-pulse" />
+                    </div>
+                    <div>
+                        <h4 className="text-sm sm:text-base font-bold text-white font-cinzel">{title}</h4>
+                        <span className="text-[11px] font-mono text-[#c8a84d]/80">
+                            {isEn ? `Synthesizing chapter data (Phase ${phase}/8)...` : `VIP 심층 챕터 분석 편성 중... (Phase ${phase}/8)`}
+                        </span>
+                    </div>
+                </div>
+                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-[11px] text-stone-400 font-mono">
+                    <Clock className="w-3 h-3 text-[#c8a84d]" />
+                    <span>{isEn ? 'Streaming' : '실시간 인입'}</span>
+                </div>
+            </div>
+            <div className="space-y-3">
+                <div className="h-4 w-5/6 rounded-lg bg-white/10 animate-pulse" />
+                <div className="h-4 w-full rounded-lg bg-white/5 animate-pulse" />
+                <div className="h-4 w-3/5 rounded-lg bg-white/5 animate-pulse" />
+            </div>
+        </div>
+    );
 }
 
 function isSajuResult(value: unknown): value is SajuResult {
@@ -382,7 +417,7 @@ function isSajuResult(value: unknown): value is SajuResult {
     );
 }
 
-export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock, isPremium, price, isLoading, onRetry, userQuestion }: PremiumReportProps) {
+export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onUnlock, isPremium, price, isLoading, loadingPhase, onRetry, userQuestion }: PremiumReportProps) {
     const isEn = language === 'en';
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -476,12 +511,7 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
         setActiveChapter(nextChapter);
     };
 
-    const handlePrint = useReactToPrint({
-        contentRef: printRef,
-        documentTitle: `CosmicPath_Decision_Report_${report.summary.title || 'VIP'}`,
-    });
-
-    const displayPrice = normalizePriceLabel(price || (isEn ? '$3.99' : '₩4,900')) || (isEn ? '$3.99' : '₩4,900');
+    const displayPrice = normalizePriceLabel(price) || '$3.99';
 
     const handleUnlock = () => {
         if (onUnlock) {
@@ -524,10 +554,10 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
     }
 
     let computedWeeklyHeatmap: YearHeatmapResult | null = null;
+    const currentNow = new Date();
     if (sajuResult) {
         try {
-            const currentYear = new Date().getFullYear();
-            computedWeeklyHeatmap = calculateWeeklyTimingHeatmap(sajuResult, currentYear);
+            computedWeeklyHeatmap = calculateRollingTimingHeatmap(sajuResult, currentNow.getFullYear(), currentNow.getMonth() + 1);
         } catch (e) {
             console.error('Failed to compute weekly heatmap:', e);
         }
@@ -558,14 +588,20 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
         }
     }
 
-    const reportMeta = (report as unknown as Record<string, unknown>)?.metadata as Record<string, unknown> | undefined;
+    const rawSavedScenario = report.metadata?.scenarioDecision ?? metadata?.scenarioDecision;
+    const isFlat55 = rawSavedScenario?.timeline && rawSavedScenario.timeline.length > 0 && rawSavedScenario.timeline.every((t) => t.actionScore === 55);
+    const isOldFixedCalendar = rawSavedScenario && (!rawSavedScenario.startMonth || (rawSavedScenario.timeline.length === 12 && rawSavedScenario.timeline[0].month === 1 && (currentNow.getMonth() + 1 > 1)));
     const scenarioDecision: ScenarioVerdictResult =
-        reportMeta?.scenarioDecision
-            ? (reportMeta.scenarioDecision as ScenarioVerdictResult)
+        rawSavedScenario && !isFlat55 && !isOldFixedCalendar
+            ? rawSavedScenario
             : calculateScenarioDecision({
                 scenarioA: readingData?.scenarioA as string | undefined,
                 scenarioB: readingData?.scenarioB as string | undefined,
                 question: userQuestion,
+                weeklyHeatmap: computedWeeklyHeatmap || metadata?.weeklyHeatmap || undefined,
+                saju: sajuResult || undefined,
+                targetYear: currentNow.getFullYear(),
+                startMonth: currentNow.getMonth() + 1,
                 language,
             });
 
@@ -591,8 +627,15 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
         report.life_areas ? 'section-life-areas' : '',
     ].filter(Boolean) as string[];
 
+    const dossierFinalVerdict = report.final_verdict ? {
+        action: report.final_verdict.core_message || report.final_verdict.title,
+        direction: report.final_verdict.title,
+        timing: report.date_selection?.auspicious?.[0]?.date || undefined,
+        riskWarning: report.final_verdict.decision_packet?.seven_day_experiment?.stop_rule || undefined,
+    } : undefined;
+
     return (
-        <div className={`w-full mx-auto pb-24 md:pb-32 ${isPremium ? 'max-w-6xl px-4 sm:px-6 lg:px-8' : 'max-w-3xl px-4'}`}>
+        <div className={`w-full mx-auto pb-24 md:pb-32 ${isPremium ? 'max-w-6xl px-4 sm:px-6 lg:px-8' : 'max-w-7xl px-4 sm:px-6 lg:px-8'}`}>
             {/* Hidden Print Layout */}
             <div className="hidden">
                 <PrintLayout
@@ -605,6 +648,15 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
 
             {isPremium && (
                 <div id="dossier-main-container" className="space-y-8">
+                    {/* 1-Page Summary Executive Dossier Card */}
+                    <OnePageDossierCard
+                        saju={sajuResult || undefined}
+                        userName={userName}
+                        birthDate={birthDateStr}
+                        finalVerdict={dossierFinalVerdict}
+                        language={language}
+                    />
+
                     {/* Executive Hero Banner with Direct Verdict */}
                     <div className="rounded-[28px] border border-[#c8a84d]/40 bg-[radial-gradient(ellipse_at_top,rgba(200,168,77,0.12),transparent_70%),linear-gradient(180deg,rgba(24,22,18,0.95),rgba(12,11,9,0.98))] p-6 sm:p-8 shadow-[0_16px_50px_rgba(0,0,0,0.6)]">
                         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
@@ -612,8 +664,22 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                 <Sparkles className="h-3.5 w-3.5 text-[#d4af37]" />
                                 <span>{isEn ? 'Confidential Executive Dossier' : 'VIP 의사결정 마스터 리포트'}</span>
                             </div>
-                            <div className="text-xs text-stone-400 font-mono">
-                                {userName} · {birthDateStr}
+                            <div className="flex items-center gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (typeof window !== 'undefined') {
+                                            window.print();
+                                        }
+                                    }}
+                                    className="inline-flex items-center gap-1.5 rounded-xl border border-[#d4af37]/40 bg-[#d4af37]/15 px-3 py-1.5 text-xs font-bold text-[#f5e6be] hover:bg-[#d4af37]/25 transition-all active:scale-95 shadow-sm cursor-pointer"
+                                >
+                                    <Printer className="h-3.5 w-3.5 text-[#d4af37]" />
+                                    <span>{isEn ? 'Export 15P Dossier (PDF)' : '15P 소장본 A4 PDF 인쇄'}</span>
+                                </button>
+                                <div className="text-xs text-stone-400 font-mono">
+                                    {userName} · {birthDateStr}
+                                </div>
                             </div>
                         </div>
 
@@ -675,6 +741,41 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                         </button>
                     </div>
 
+                    {/* Live VIP Dossier Synthesis Progress Bar */}
+                    {isPremium && isLoading && loadingPhase && loadingPhase.phase < 8 && (
+                        <div className="rounded-2xl border border-[#c8a84d]/40 bg-gradient-to-r from-[#c8a84d]/15 via-[#181611] to-[#0c0b08] p-4 sm:p-5 shadow-xl backdrop-blur-md max-w-3xl mx-auto">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="relative flex h-3 w-3">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-acc-gold opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-acc-gold"></span>
+                                    </div>
+                                    <div>
+                                        <span className="text-xs sm:text-sm font-bold text-white font-cinzel">
+                                            {isEn ? `VIP 8-Phase Dossier Live Synthesis (${loadingPhase.phase}/8)` : `VIP 8단계 심층 도시에 실시간 분석 중 (${loadingPhase.phase}/8)`}
+                                        </span>
+                                        {loadingPhase.label && (
+                                            <p className="text-[11px] text-stone-300 mt-0.5">
+                                                {loadingPhase.label}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                                    <div className="w-full sm:w-36 h-2 rounded-full bg-white/10 overflow-hidden border border-white/10">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-[#e8c86d] via-[#f0d588] to-[#c8a84d] transition-all duration-700 rounded-full"
+                                            style={{ width: `${Math.min(100, Math.max(15, (loadingPhase.phase / 8) * 100))}%` }}
+                                        />
+                                    </div>
+                                    <span className="text-[11px] font-mono text-acc-gold font-bold">
+                                        {Math.round((loadingPhase.phase / 8) * 100)}%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Active Tab View */}
                     <div className="space-y-10">
                         {activeDossierTab === 'strategy' && (
@@ -684,6 +785,12 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                 transition={{ duration: 0.3 }}
                                 className="space-y-8"
                             >
+                                {sajuResult && (
+                                    <FiveElementsVisualizer
+                                        saju={sajuResult}
+                                        language={language}
+                                    />
+                                )}
                                 <ExecutiveSummaryDashboard
                                     report={report}
                                     question={userQuestion}
@@ -696,22 +803,37 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                     isPremium={true}
                                     language={language}
                                 />
-                                {report.action_plan && report.action_plan.length > 0 && (
+                                {report.action_plan && report.action_plan.length > 0 ? (
                                     <ActionPlanSection
                                         actionPlan={report.action_plan}
                                         trustScore={report.summary.trust_score * 20}
                                         language={language}
                                     />
-                                )}
-                                {report.date_selection && (
+                                ) : (isLoading && (loadingPhase?.phase ?? 1) < 7 ? (
+                                    <DossierSectionSkeleton
+                                        title={isEn ? '12-Month Tactical Action Plan' : '12개월 전술 액션 플랜'}
+                                        phase={7}
+                                        language={language}
+                                    />
+                                ) : null)}
+                                {report.date_selection ? (
                                     <DateSelectionSection
                                         data={report.date_selection}
                                         language={language}
                                     />
-                                )}
+                                ) : (isLoading && (loadingPhase?.phase ?? 1) < 7 ? (
+                                    <DossierSectionSkeleton
+                                        title={isEn ? 'Optimal Timing Windows (Golden Days)' : '최적 실행 택일 (골든 데이)'}
+                                        phase={7}
+                                        language={language}
+                                    />
+                                ) : null)}
                                 <DecisionConsensusGauge
                                     language={language}
-                                    reportData={report as any}
+                                    reportData={report}
+                                />
+                                <ActionPlannerCard
+                                    language={language}
                                 />
                             </motion.div>
                         )}
@@ -723,30 +845,48 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                 transition={{ duration: 0.3 }}
                                 className="space-y-8"
                             >
-                                {report.fortune_flow && (
+                                {report.fortune_flow ? (
                                     <FortuneFlowSection
                                         data={report.fortune_flow}
                                         language={language}
                                     />
-                                )}
+                                ) : (isLoading && (loadingPhase?.phase ?? 1) < 5 ? (
+                                    <DossierSectionSkeleton
+                                        title={isEn ? '10-Year Grand Cycle & Annual Turning Points' : '10년 대운 및 연간 변곡점 흐름'}
+                                        phase={5}
+                                        language={language}
+                                    />
+                                ) : null)}
                                 {computedWeeklyHeatmap && (
                                     <WeeklyHeatmapSection
                                         data={computedWeeklyHeatmap}
                                         language={language}
                                     />
                                 )}
-                                {report.special_analysis && (
+                                {report.special_analysis ? (
                                     <SpecialAnalysisSection
                                         data={report.special_analysis}
                                         language={language}
                                     />
-                                )}
-                                {report.life_areas && (
+                                ) : (isLoading && (loadingPhase?.phase ?? 1) < 7 ? (
+                                    <DossierSectionSkeleton
+                                        title={isEn ? 'Noble Ally & Protective Shield Analysis' : '천을귀인 및 리스크 방어 살성'}
+                                        phase={7}
+                                        language={language}
+                                    />
+                                ) : null)}
+                                {report.life_areas ? (
                                     <LifeAreasSection
                                         data={report.life_areas}
                                         language={language}
                                     />
-                                )}
+                                ) : (isLoading && (loadingPhase?.phase ?? 1) < 6 ? (
+                                    <DossierSectionSkeleton
+                                        title={isEn ? '6 Life Domains (Wealth, Career, Love)' : '6대 인생 영역 (재물, 커리어, 애정) 정밀 분석'}
+                                        phase={6}
+                                        language={language}
+                                    />
+                                ) : null)}
                                 {sajuResult && (
                                     <GhostDetectorSection sajuResult={sajuResult} userName={userName} />
                                 )}
@@ -832,26 +972,38 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                                 language={language}
                                             />
                                         )}
-                                        {report.saju_sections && report.saju_sections.length > 0 && (
+                                        {report.saju_sections && report.saju_sections.length > 0 ? (
                                             <AccordionSection
                                                 title={isEn ? 'Classical Saju 4 Pillars Breakdown' : '정통 사주 4주 심층 분석'}
                                                 items={report.saju_sections}
                                                 source="saju"
                                                 language={language}
                                             />
-                                        )}
+                                        ) : (isLoading && (loadingPhase?.phase ?? 1) < 4 ? (
+                                            <DossierSectionSkeleton
+                                                title={isEn ? 'Classical Saju 4 Pillars Breakdown' : '정통 사주 4주 심층 분석'}
+                                                phase={4}
+                                                language={language}
+                                            />
+                                        ) : null)}
                                     </>
                                 )}
 
                                 {/* Western Domain: Astrology */}
                                 {(intelligenceSubFilter === 'all' || intelligenceSubFilter === 'western') && (
                                     <>
-                                        {report.astro_deep && (
+                                        {report.astro_deep ? (
                                             <AstroDeepSection
                                                 data={report.astro_deep}
                                                 language={language}
                                             />
-                                        )}
+                                        ) : (isLoading && (loadingPhase?.phase ?? 1) < 2 ? (
+                                            <DossierSectionSkeleton
+                                                title={isEn ? 'Western Natal Chart Deep Aspects' : '서양 점성술 천체 배치 심층 분석'}
+                                                phase={2}
+                                                language={language}
+                                            />
+                                        ) : null)}
                                     </>
                                 )}
 
@@ -864,67 +1016,40 @@ export function PremiumReport({ report, metadata, language = 'ko', shareUrl, onU
                                                 language={language}
                                             />
                                         )}
-                                        {report.numerology && (
+                                        {report.numerology ? (
                                             <NumerologySection
                                                 data={report.numerology}
                                                 language={language}
                                             />
-                                        )}
+                                        ) : (isLoading && (loadingPhase?.phase ?? 1) < 3 ? (
+                                            <DossierSectionSkeleton
+                                                title={isEn ? 'Cosmic Numerology & Personal Year Cycle' : '우주 수비학 및 개인 연간 사이클'}
+                                                phase={3}
+                                                language={language}
+                                            />
+                                        ) : null)}
                                         {computedCompatibility4D && (
                                             <Compatibility4DSection
                                                 data={computedCompatibility4D}
                                                 language={language}
                                             />
                                         )}
-                                        {report.past_life && (
+                                        {report.past_life ? (
                                             <PastLifeSection
                                                 data={report.past_life}
                                                 language={language}
                                             />
-                                        )}
+                                        ) : (isLoading && (loadingPhase?.phase ?? 1) < 8 ? (
+                                            <DossierSectionSkeleton
+                                                title={isEn ? 'Karmic Blueprint & Soul Mission' : '카르마 원형 및 영혼 미션'}
+                                                phase={8}
+                                                language={language}
+                                            />
+                                        ) : null)}
                                     </>
                                 )}
                             </motion.div>
                         )}
-                    </div>
-
-                    {/* Master Dossier PDF Banner */}
-                    <div className="mt-12 rounded-3xl border border-[#c8a84d]/40 bg-gradient-to-r from-[#c8a84d]/15 via-[#181611] to-[#0c0b08] p-6 sm:p-8 text-center shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
-                        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#c8a84d]/20 text-[#f5d77f] border border-[#c8a84d]/30 mb-4 shadow-lg">
-                            <Printer className="w-6 h-6" />
-                        </div>
-                        <h3 className="text-lg sm:text-xl font-bold font-cinzel text-white">
-                            {isEn ? '15-Page Confidential Master Dossier' : '15페이지 최고급 A4 마스터 도시에'}
-                        </h3>
-                        <p className="text-xs sm:text-sm text-stone-300 mt-2 max-w-lg mx-auto leading-relaxed">
-                            {isEn
-                                ? 'Download or print the full high-resolution A4 executive dossier containing all 5-engine calculations, SVG celestial wheels, and dialectical synthesis.'
-                                : '동서양 5대 엔진 계산식, 천문 차트 휠, 12개월 전략 캘린더가 집약된 정식 A4 도시에를 열람하거나 PDF로 저장하세요.'}
-                        </p>
-                        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    if (readingId) {
-                                        window.open(`/api/report/pdf?readingId=${readingId}`, '_blank');
-                                    } else {
-                                        handlePrint();
-                                    }
-                                }}
-                                className="px-6 py-3.5 rounded-full bg-gradient-to-r from-[#f0d588] via-[#e8c86d] to-[#c8a84d] text-stone-950 font-black text-xs sm:text-sm shadow-[0_0_25px_rgba(200,168,77,0.35)] transition-all hover:scale-[1.02] hover:brightness-110 active:scale-95 flex items-center gap-2"
-                            >
-                                <Printer className="w-4 h-4 text-stone-950" />
-                                <span>{isEn ? 'Open 15p A4 Master Dossier (PDF)' : '15p A4 마스터 도시에 열기 (PDF)'}</span>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setIsShareModalOpen(true)}
-                                className="px-5 py-3 rounded-full bg-white/10 hover:bg-white/15 text-xs sm:text-sm text-stone-200 font-semibold border border-white/15 transition-all flex items-center gap-2"
-                            >
-                                <Share2 className="w-4 h-4 text-[#d4af37]" />
-                                <span>{isEn ? 'Story Card (9:16)' : '소장용 스토리 카드 (9:16)'}</span>
-                            </button>
-                        </div>
                     </div>
 
                     {/* 1:1 Oracle Chat Follow-Up Interface */}

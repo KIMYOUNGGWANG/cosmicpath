@@ -4,11 +4,10 @@ import { useRef, useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Link from 'next/link';
 
-export function RitualSection() {
+export function RitualSection({ language = 'ko' }: { language?: 'ko' | 'en' }) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
     const [isHovered, setIsHovered] = useState(false);
-    const language = 'ko';
 
     const { scrollYProgress } = useScroll({
         target: containerRef,
@@ -54,7 +53,7 @@ export function RitualSection() {
                     transition={{ duration: 1.5 }}
                     className="font-cinzel text-2xl sm:text-3xl md:text-7xl text-starlight mb-10 tracking-[0.1em] sm:tracking-[0.2em] md:tracking-[0.3em]"
                 >
-                    Decision Note 다음, 오늘 할 한 가지
+                    {language === 'ko' ? "Decision Note 다음, 오늘 할 한 가지" : "After the Decision Note: One Action Today"}
                 </motion.h2>
 
                 <motion.p
@@ -180,7 +179,9 @@ export function RitualSection() {
                         className="font-cinzel text-[10px] md:text-xs tracking-[0.6em] text-acc-gold uppercase flex items-center gap-4"
                     >
                         <span className="w-12 h-px bg-gradient-to-r from-transparent to-acc-gold" />
-                        {isHovered ? "판정 후 오늘 할 한 가지" : "미뤄둔 선택 대기 중"}
+                        {language === 'ko'
+                            ? (isHovered ? "판정 후 오늘 할 한 가지" : "미뤄둔 선택 대기 중")
+                            : (isHovered ? "ONE ACTION AFTER VERDICT" : "PENDING CHOICE")}
                         <span className="w-12 h-px bg-gradient-to-l from-transparent to-acc-gold" />
                     </motion.div>
                 </div>

@@ -37,8 +37,8 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
         description: post.description,
         keywords: post.keywords,
         robots: {
-            index: false,
-            follow: false,
+            index: true,
+            follow: true,
         },
         openGraph: {
             title: post.title,

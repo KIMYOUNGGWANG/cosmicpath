@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, CheckCircle2, AlertTriangle, Shield, ArrowRight, Lock } from 'lucide-react';
-import type { ScenarioVerdictResult, MonthTimelinePoint } from '@/lib/engines/scenario-engine';
+import { Calendar, CheckCircle2, Lock } from 'lucide-react';
+import type { ScenarioVerdictResult } from '@/lib/engines/scenario-engine';
 
 interface ScenarioTimelineChartProps {
   scenarioDecision: ScenarioVerdictResult;
@@ -18,14 +18,43 @@ export function ScenarioTimelineChart({
   onUnlock,
 }: ScenarioTimelineChartProps) {
   const isEn = language === 'en';
-  const [selectedMonth, setSelectedMonth] = useState<number>(scenarioDecision.goldenMonths[0] || 1);
+
+  const defaultPoint =
+    scenarioDecision.timeline.find((t) =>
+      scenarioDecision.goldenWindows?.[0]
+        ? t.year === scenarioDecision.goldenWindows[0].year && t.month === scenarioDecision.goldenWindows[0].month
+        : scenarioDecision.goldenMonths.includes(t.month)
+    ) || scenarioDecision.timeline[0];
+
+  const [selectedKey, setSelectedKey] = useState<string>(
+    defaultPoint ? `${defaultPoint.year || ''}-${defaultPoint.month}` : 'default'
+  );
 
   const selectedPoint =
-    scenarioDecision.timeline.find((t) => t.month === selectedMonth) ||
-    scenarioDecision.timeline[0];
+    scenarioDecision.timeline.find((t) => `${t.year || ''}-${t.month}` === selectedKey) ||
+    scenarioDecision.timeline[0] || {
+      year: new Date().getFullYear(),
+      month: 1,
+      monthName: '1월',
+      formattedLabelKo: '1월',
+      formattedLabelEn: 'Jan',
+      isNextYear: false,
+      actionScore: 50,
+      riskScore: 50,
+      phase: 'NEGOTIATE' as const,
+      bestOption: 'EQUAL' as const,
+      keyActionKo: '',
+      keyActionEn: '',
+    };
 
   const headline = isEn ? scenarioDecision.verdictHeadlineEn : scenarioDecision.verdictHeadlineKo;
   const detail = isEn ? scenarioDecision.verdictDetailEn : scenarioDecision.verdictDetailKo;
+
+  const timeRangeLabel = scenarioDecision.startYear && scenarioDecision.endYear
+    ? isEn
+      ? `${scenarioDecision.startYear}.${String(scenarioDecision.startMonth).padStart(2, '0')} ~ ${scenarioDecision.endYear}.${String(scenarioDecision.endMonth).padStart(2, '0')}`
+      : `${scenarioDecision.startYear}.${scenarioDecision.startMonth} ~ ${scenarioDecision.endYear}.${scenarioDecision.endMonth}`
+    : '';
 
   return (
     <div className="rounded-[24px] border border-[#c8a84d]/40 bg-[linear-gradient(180deg,rgba(25,22,18,0.95),rgba(15,13,10,0.98))] p-5 sm:p-7 shadow-[0_16px_48px_rgba(0,0,0,0.5)]">
@@ -104,13 +133,15 @@ export function ScenarioTimelineChart({
         {detail}
       </p>
 
-      {/* 1~12 Month Interactive Timeline Bar Chart */}
+      {/* 12-Month Interactive Timeline Bar Chart */}
       <div className="mt-6 border-t border-white/10 pt-5">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-acc-gold" />
             <h4 className="text-xs font-bold uppercase tracking-wider text-stone-200">
-              {isEn ? '12-Month Action vs Risk Flow' : '1~12월 행동 지수 & 리스크 타임라인'}
+              {isEn
+                ? `12-Month Action vs Risk Flow ${timeRangeLabel ? `(${timeRangeLabel})` : ''}`
+                : `향후 12개월 행동 지수 & 리스크 타임라인 ${timeRangeLabel ? `(${timeRangeLabel})` : ''}`}
             </h4>
           </div>
           <span className="text-[10px] text-stone-400">
@@ -120,26 +151,29 @@ export function ScenarioTimelineChart({
 
         {/* 12-Month Grid Bars */}
         <div className="grid grid-cols-6 sm:grid-cols-12 gap-1.5 sm:gap-2">
-          {scenarioDecision.timeline.map((point) => {
-            const isSelected = point.month === selectedMonth;
-            const isGolden = scenarioDecision.goldenMonths.includes(point.month);
+          {scenarioDecision.timeline.map((point, index) => {
+            const pointKey = `${point.year || ''}-${point.month}`;
+            const isSelected = pointKey === selectedKey;
+            const isGolden = scenarioDecision.goldenWindows
+              ? scenarioDecision.goldenWindows.some((gw) => gw.year === point.year && gw.month === point.month)
+              : scenarioDecision.goldenMonths.includes(point.month);
             const isDefense = scenarioDecision.defenseMonths.includes(point.month);
-            const isLockedForFree = !isPremium && point.month > 6;
+            const isLockedForFree = !isPremium && index >= 6;
 
             return (
               <button
-                key={point.month}
+                key={pointKey}
                 type="button"
                 onClick={() => {
                   if (isLockedForFree) {
                     void onUnlock?.();
                   } else {
-                    setSelectedMonth(point.month);
+                    setSelectedKey(pointKey);
                   }
                 }}
                 className={`relative flex flex-col items-center justify-between rounded-xl border p-2 text-center transition-all ${
                   isSelected
-                    ? 'border-acc-gold bg-acc-gold/20 scale-105 shadow-[0_0_15px_rgba(212,175,55,0.25)]'
+                    ? 'border-acc-gold bg-acc-gold/20 scale-105 shadow-[0_0_15px_rgba(212,175,55,0.25)] z-10'
                     : isGolden
                     ? 'border-emerald-500/40 bg-emerald-500/10 hover:border-emerald-400'
                     : isDefense
@@ -147,10 +181,17 @@ export function ScenarioTimelineChart({
                     : 'border-white/10 bg-white/[0.02] hover:border-white/25'
                 }`}
               >
-                {/* Month Label */}
-                <span className="text-[10px] font-bold text-stone-300">
-                  {point.month}월
-                </span>
+                {/* Month Label & Year Subtitle */}
+                <div className="flex flex-col items-center leading-none">
+                  {point.isNextYear && (
+                    <span className="text-[8px] font-extrabold text-acc-gold/90 mb-0.5 tracking-tighter">
+                      &apos;{String(point.year).slice(2)}
+                    </span>
+                  )}
+                  <span className="text-[10px] font-bold text-stone-300">
+                    {point.month}월
+                  </span>
+                </div>
 
                 {/* Score Visual Height Indicator */}
                 <div className="my-1.5 h-12 w-full flex items-end justify-center">
@@ -184,7 +225,7 @@ export function ScenarioTimelineChart({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/10 pb-3">
             <div className="flex items-center gap-2">
               <span className="rounded-lg bg-acc-gold/20 px-2.5 py-1 font-cinzel text-xs font-bold text-acc-gold">
-                {selectedPoint.month}월 세부 지침
+                {selectedPoint.year ? `${selectedPoint.year}년 ` : ''}{selectedPoint.month}월 세부 지침
               </span>
               <span className="text-xs font-semibold text-stone-300">
                 {selectedPoint.phase === 'ATTACK'

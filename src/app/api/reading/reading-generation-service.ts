@@ -542,7 +542,7 @@ function mergePremiumFallbackPhases(
 const PHASE_KEYS: Record<number, readonly string[]> = {
   1: ['summary', 'traits', 'core_analysis'],
   2: ['astro_deep'],
-  3: ['tarot_details', 'numerology'],
+  3: ['numerology', 'tarot_details'],
   4: ['saju_sections'],
   5: ['fortune_flow'],
   6: ['life_areas'],
@@ -602,6 +602,7 @@ function buildEnrichedPayload(params: BuildPayloadParams): EnrichedPayload {
       partnerSaju: params.runtime.partnerSaju,
     }),
     ...(params.runtime.scenarioDecision ? { scenarioDecision: params.runtime.scenarioDecision } : {}),
+    ...(params.runtime.weeklyHeatmap ? { weeklyHeatmap: params.runtime.weeklyHeatmap } : {}),
     ...(params.freeGenerationMode ? { freeGenerationMode: params.freeGenerationMode } : {}),
     ...(params.generationAudit ? { generationAudit: params.generationAudit } : {}),
   };

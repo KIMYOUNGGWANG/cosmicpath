@@ -7,6 +7,7 @@ import { redeemCheckoutPromo } from '@/lib/payment/stripe-promo-redemption';
 import { alertWebhookIssue } from '@/lib/payment/stripe-webhook-alerts';
 import { getErrorMessage, WEBHOOK_OK, type WebhookHandlerResult } from '@/lib/payment/stripe-webhook-utils';
 import { prisma } from '@/lib/prisma';
+import { trackGrowthEvent } from '@/lib/growth-events';
 
 async function applyCheckoutPromo(params: {
     readonly requestId: string;
@@ -116,6 +117,37 @@ async function unlockMatchSession(params: {
     }
 }
 
+async function relayPaidConversionEvent(params: {
+    readonly session: Stripe.Checkout.Session;
+}): Promise<void> {
+    const { session } = params;
+    const postId = session.metadata?.postId || session.metadata?.pid;
+    if (!postId) return;
+
+    try {
+        const amountTotal = typeof session.amount_total === 'number' ? session.amount_total : 0;
+        await trackGrowthEvent({
+            event: 'paid_conversion',
+            readingId: session.metadata?.readingId || undefined,
+            referralCode: session.metadata?.referralCode || undefined,
+            channel: session.metadata?.source || 'stripe_checkout',
+            metadata: {
+                pid: postId,
+                postId,
+                sessionId: session.id,
+                amount: amountTotal > 0 ? (session.currency === 'krw' ? amountTotal : amountTotal / 100) : undefined,
+                price: amountTotal > 0 ? (session.currency === 'krw' ? amountTotal : amountTotal / 100) : undefined,
+                currency: session.currency || 'usd',
+                plan: session.metadata?.type || 'premium_reading',
+                customerEmail: session.customer_details?.email || session.customer_email || undefined,
+            },
+        });
+        devLog.log(`[Webhook] Relayed paid conversion for post ${postId}`);
+    } catch (error) {
+        devLog.warn('[Webhook] Failed to track paid conversion growth event:', error);
+    }
+}
+
 export async function handleCheckoutSessionCompleted(params: {
     readonly requestId: string;
     readonly eventId: string;
@@ -149,6 +181,8 @@ export async function handleCheckoutSessionCompleted(params: {
     if (!checkoutType || checkoutType === 'premium_reading') {
         await handlePremiumReadingCheckout({ requestId, eventId, session });
     }
+
+    await relayPaidConversionEvent({ session });
 
     return unlockMatchSession({ requestId, eventId, session });
 }

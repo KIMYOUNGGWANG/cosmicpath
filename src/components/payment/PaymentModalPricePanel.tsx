@@ -65,8 +65,8 @@ export function PaymentModalPricePanel({
                             ? 'We will show the exact one-time price after Stripe confirms the product.'
                             : 'Stripe 상품 확인 후 정확한 one-time 금액을 다시 표시합니다.')
                         : (isEnglish
-                            ? 'One-time $3.99 unlock for this 7-Day Decision Packet.'
-                            : '이 7일 결정 패킷을 여는 one-time $3.99 결제입니다.')}
+                            ? `One-time ${displayedPriceLabel || '$3.99'} unlock for this 7-Day Decision Packet.`
+                            : `이 7일 결정 패킷을 여는 one-time ${displayedPriceLabel || '$3.99'} 결제입니다.`)}
                 </p>
                 {showPriceLoadingState ? (
                     <div className="flex items-center justify-center gap-2 text-xs text-white/45">

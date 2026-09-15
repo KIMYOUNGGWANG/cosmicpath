@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import type { UnifiedReadingResult } from '@/lib/cosmic/schema';
 import type { ReadingData } from '@/components/reading/reading-input';
-import type { PremiumReportState } from './start-page-helpers';
+import type { PremiumReportState, ReadingMetadata } from './start-page-helpers';
 import {
   compactText,
   getRelationshipVerdictLabel,
@@ -27,6 +27,7 @@ import { BlindSpotTeaser } from '@/components/reading/blind-spot-teaser';
 import { DecisionConsensusGauge } from '@/components/reading/DecisionConsensusGauge';
 import { ScenarioTimelineChart } from '@/components/reading/ScenarioTimelineChart';
 import { calculateScenarioDecision, type ScenarioVerdictResult } from '@/lib/engines/scenario-engine';
+import { diagnoseElementBalance, type SajuResult } from '@/lib/engines/saju';
 
 function getDecisionVerdictLabel(
   value: string | undefined,
@@ -57,6 +58,7 @@ type DecisionBriefCardProps = {
   dynamicPrice: string;
   landingSource: string;
   onUnlock: () => Promise<void>;
+  metadata?: ReadingMetadata;
 };
 
 export function DecisionBriefCard(props: DecisionBriefCardProps) {
@@ -138,22 +140,43 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
     freeFocus?.avoid || ''
   );
 
-  const priceLabel = props.dynamicPrice || (isEn ? '$3.99' : '₩4,900');
-  const originalPrice = isEn ? '$14.99' : '₩19,800';
+  const priceLabel = props.dynamicPrice || '$3.99';
+  const isWonCurrency = priceLabel.startsWith('₩');
+  const originalPrice = isWonCurrency ? '₩19,800' : '$14.99';
   const currentYear = new Date().getFullYear();
   const nextYear = currentYear + 1;
 
+  const rawSavedScenario = (
+    props.metadata?.scenarioDecision ||
+    ((props.reportData as Record<string, unknown>)?.metadata &&
+      typeof (props.reportData as Record<string, unknown>).metadata === 'object' &&
+      ((props.reportData as Record<string, unknown>).metadata as Record<string, unknown>)?.scenarioDecision)
+  ) as ScenarioVerdictResult | undefined;
+  const isFlat55 = rawSavedScenario?.timeline && rawSavedScenario.timeline.length > 0 && rawSavedScenario.timeline.every((t) => t.actionScore === 55);
+  const isOldFixedCalendar = rawSavedScenario && (!rawSavedScenario.startMonth || (rawSavedScenario.timeline.length === 12 && rawSavedScenario.timeline[0].month === 1 && (new Date().getMonth() + 1 > 1)));
+
+  const currentSaju = (props.metadata?.sajuResult as unknown as SajuResult) || undefined;
   const scenarioDecision: ScenarioVerdictResult =
-    (props.reportData as Record<string, unknown>)?.metadata &&
-    typeof (props.reportData as Record<string, unknown>).metadata === 'object' &&
-    ((props.reportData as Record<string, unknown>).metadata as Record<string, unknown>)?.scenarioDecision
-      ? (((props.reportData as Record<string, unknown>).metadata as Record<string, unknown>).scenarioDecision as ScenarioVerdictResult)
+    rawSavedScenario && !isFlat55 && !isOldFixedCalendar
+      ? rawSavedScenario
       : calculateScenarioDecision({
           scenarioA: props.readingData?.scenarioA,
           scenarioB: props.readingData?.scenarioB,
           question: props.readingData?.question,
+          weeklyHeatmap: props.metadata?.weeklyHeatmap || undefined,
+          saju: currentSaju,
+          targetYear: currentYear,
+          startMonth: new Date().getMonth() + 1,
           language: props.language,
         });
+
+  const deficitDiagnosis = currentSaju ? diagnoseElementBalance(currentSaju) : null;
+  const elementDeficitWarning = deficitDiagnosis && deficitDiagnosis.lacking.length > 0
+    ? (isEn ? 'Critical elemental energy depletion detected in your core pillars' : '명식 내 1대 핵심 에너지가 0%로 고갈되어 의사결정 제동 발생')
+    : undefined;
+  const timelineRiskWarning = scenarioDecision?.defenseMonths && scenarioDecision.defenseMonths.length > 0
+    ? (isEn ? `High friction phase identified in month ${scenarioDecision.defenseMonths.join(', ')}` : `${scenarioDecision.defenseMonths.join(', ')}월 돌발 변수 및 마찰 구간 포착`)
+    : undefined;
 
   const vipTeasers = isEn ? [
     {
@@ -179,23 +202,23 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
   ] : [
     {
       title: `${currentYear}~${nextYear} 12개월 월별 운세 장부 & 골든타임`,
-      desc: '비자, 이직, 시험, 계약 승인 확률이 극대화되는 정확한 월/주차 분석',
+      desc: '이직, 계약, 시험, 투자 승인 확률이 극대화되는 정확한 월/주차 골든타임 분석',
       icon: Calendar,
     },
     {
-      title: '나를 도와줄 천을귀인(天乙貴人)의 띠와 직업적 특징',
-      desc: '막힌 운을 뚫어주고 귀인이 되어줄 핵심 인물의 성향과 만남의 방향',
-      icon: Users,
+      title: '실전 대화 & 행동 전략 스크립트',
+      desc: '상대방이나 회사와의 충돌을 완벽히 피하고 판을 뒤집는 한 문장 및 금기 표현',
+      icon: Compass,
     },
     {
       title: '반드시 피해야 할 손실·충돌 위험 일진 캘린더',
-      desc: '사주 충/형과 점성술 흉각이 겹쳐 사기/손실 위험이 높은 날짜 사전 방어',
+      desc: '사주 충/형살과 점성술 흉각이 겹쳐 사기/손실 위험이 높은 날짜 사전 방어',
       icon: AlertTriangle,
     },
     {
-      title: 'If/Then 맞춤형 의사결정 시나리오 시뮬레이션',
-      desc: 'A선택(이동) vs B선택(잔류) 시 6개월 뒤 펼쳐질 운의 인과관계 예측',
-      icon: Compass,
+      title: '나를 도와줄 천을귀인(天乙貴人) 띠와 직업적 특징',
+      desc: '막힌 운을 뚫어주고 내 편이 되어줄 결정적 조력자의 성향과 만남의 방향',
+      icon: Users,
     },
   ];
 
@@ -205,19 +228,19 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
       <div className="border-b border-white/10 px-6 py-7 sm:px-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#c8a84d]/40 bg-[#c8a84d]/15 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#e8c86d] shadow-[0_0_18px_rgba(200,168,77,0.25)]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#c8a84d]/40 bg-[#c8a84d]/15 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#e8c86d] shadow-[0_0_18px_rgba(200,168,77,0.25)]">
               <Sparkles className="h-3.5 w-3.5 text-[#e8c86d]" />
-              {isEn ? '5-Layer Synthesis Brief' : '5단 융합 운명 의사결정 브리프'}
+              {isEn ? 'True Solar Time Corrected · Decision Brief' : '진태양시(30분 오차 보정) 정밀 사주 판정'}
             </div>
             <h2 className="mt-3.5 font-cinzel text-2xl font-bold leading-tight text-stone-50 sm:text-3xl">
               {props.readingData?.question ? (
                 <span>&ldquo;{props.readingData.question}&rdquo;</span>
               ) : (
-                <span>{isEn ? 'Your Destiny Timing & Strategic Verdict' : '당신의 운명 타이밍 & 핵심 전략 판정'}</span>
+                <span>{isEn ? 'Your Destiny Timing & Strategic Verdict' : '당신의 진짜 사주 타이밍 & 단 하나의 결론'}</span>
               )}
             </h2>
-            <p className="mt-2 text-xs uppercase tracking-widest text-[#c8a84d]/80">
-              {isEn ? 'Saju · Astrology · Ziwei · Numerology Synthesis' : '사주(구조) · 점성술(타이밍) · 자미두수(명반) · 수비학(주기) 융합'}
+            <p className="mt-2 text-xs font-medium tracking-wide text-[#c8a84d]/90">
+              {isEn ? 'Correcting the 30-minute standard time distortion for your true birth pillar' : '일본 동경 135도 표준시와의 30분 왜곡을 바로잡은 1:1 정밀 자문 리포트'}
             </p>
           </div>
 
@@ -432,6 +455,8 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
             language={props.language}
             isLocked={true}
             onUnlock={() => { void props.onUnlock(); }}
+            elementDeficitWarning={elementDeficitWarning}
+            timelineRiskWarning={timelineRiskWarning}
           />
         )}
       </div>
@@ -468,9 +493,13 @@ export function DecisionBriefCard(props: DecisionBriefCardProps) {
                           {item.title}
                         </h4>
                       </div>
-                      <p className="mt-1.5 text-xs leading-5 text-stone-400 filter blur-[1.5px] select-none">
+                      <p className="mt-1.5 text-xs leading-5 text-stone-300">
                         {item.desc}
                       </p>
+                      <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-md border border-[#c8a84d]/30 bg-[#c8a84d]/10 px-2.5 py-1 text-[10px] font-semibold text-[#f0d588]">
+                        <Lock size={10} className="text-[#e8c86d]" />
+                        <span>{isEn ? 'Encrypted · Unlocks with Decision Packet' : '암호화됨 · 7일 결정 패킷에서 전체 열람'}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
