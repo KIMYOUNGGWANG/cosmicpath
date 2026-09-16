@@ -1,7 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import type { ReadonlyURLSearchParams } from 'next/navigation';
 import { readPreferredClientLanguage, USER_LANGUAGE_STORAGE_KEY } from '@/lib/language-preference';
+
+export function resolveInitialStartLanguage(searchParams: ReadonlyURLSearchParams): 'ko' | 'en' {
+  const query = searchParams.get('lang') || searchParams.get('language');
+  if (query === 'en' || query === 'ko') return query;
+  if (typeof window !== 'undefined') {
+    const stored = window.localStorage.getItem(USER_LANGUAGE_STORAGE_KEY);
+    if (stored === 'en' || stored === 'ko') return stored;
+  }
+  return 'ko';
+}
 
 export function useStartDynamicPrice() {
   const [dynamicPrice, setDynamicPrice] = useState('');
@@ -31,18 +42,8 @@ export function useStartPreferredLanguage(
 ) {
   useEffect(() => {
     const nextLanguage = queryLanguage || readPreferredClientLanguage();
-    let isCurrent = true;
-
-    queueMicrotask(() => {
-      if (isCurrent) {
-        setLanguage((current) => current === nextLanguage ? current : nextLanguage);
-      }
-    });
+    setLanguage((current) => (current === nextLanguage ? current : nextLanguage));
     localStorage.setItem(USER_LANGUAGE_STORAGE_KEY, nextLanguage);
-
-    return () => {
-      isCurrent = false;
-    };
   }, [queryLanguage, setLanguage]);
 }
 

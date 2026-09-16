@@ -16,7 +16,9 @@ const binaryRows = [
     '01010110100101011010010101101001010110100101011010010101101001',
 ];
 
-export function BlueprintSection() {
+export function BlueprintSection({ language = 'ko' }: { language?: 'ko' | 'en' }) {
+    const isEn = language === 'en';
+
     return (
         <section className="relative py-16 md:py-40 overflow-hidden bg-surface">
             <div className="container-cosmic relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-20 items-center">
@@ -27,31 +29,50 @@ export function BlueprintSection() {
                         The Method
                     </span>
                     <h2 className="font-cinzel text-3xl md:text-5xl text-starlight mb-6 md:mb-8 leading-tight">
-                        리포트보다 먼저, <br />
-                        <span className="text-acc-gold">정리표가 필요합니다.</span>
+                        {isEn ? (
+                            <>
+                                Before the full report, <br />
+                                <span className="text-acc-gold">you need an operational brief.</span>
+                            </>
+                        ) : (
+                            <>
+                                리포트보다 먼저, <br />
+                                <span className="text-acc-gold">정리표가 필요합니다.</span>
+                            </>
+                        )}
                     </h2>
                     <p className="text-moonlight text-lg mb-8 leading-relaxed">
-                        긴 해석으로 밀어붙이지 않습니다. 질문, 근거, 오늘의 행동을 한 화면에서 먼저 확인하게 합니다.
+                        {isEn
+                            ? 'No endless walls of astrology text. Review the core question, empirical signals, and today’s primary action on a single high-signal canvas.'
+                            : '긴 해석으로 밀어붙이지 않습니다. 질문, 근거, 오늘의 행동을 한 화면에서 먼저 확인하게 합니다.'}
                     </p>
 
                     <ul className="space-y-6 text-dim mt-10">
                         <li className="relative pl-6 border-l border-acc-logic/30">
-                            <h4 className="text-acc-logic font-bold text-sm mb-1 uppercase tracking-wider">기준</h4>
-                            <p className="text-sm text-moonlight">지금 판단을 가르는 조건이 무엇인지</p>
+                            <h4 className="text-acc-logic font-bold text-sm mb-1 uppercase tracking-wider">{isEn ? 'Criteria' : '기준'}</h4>
+                            <p className="text-sm text-moonlight">{isEn ? 'The non-negotiable variables defining this crossroad' : '지금 판단을 가르는 조건이 무엇인지'}</p>
                         </li>
                         <li className="relative pl-6 border-l border-acc-gold/40">
-                            <h4 className="text-acc-gold font-bold text-sm mb-1 uppercase tracking-wider">흔들림</h4>
-                            <p className="text-sm text-moonlight">마음이 과하게 당기거나 밀어내는 지점</p>
+                            <h4 className="text-acc-gold font-bold text-sm mb-1 uppercase tracking-wider">{isEn ? 'Vulnerability' : '흔들림'}</h4>
+                            <p className="text-sm text-moonlight">{isEn ? 'Where cognitive and emotional bias pulls you off-track' : '마음이 과하게 당기거나 밀어내는 지점'}</p>
                         </li>
                         <li className="relative pl-6 border-l border-star-yellow/30">
-                            <h4 className="text-star-yellow font-bold text-sm mb-1 uppercase tracking-wider">타이밍</h4>
-                            <p className="text-sm text-moonlight">오늘 움직일지, 조금 더 기다릴지</p>
+                            <h4 className="text-star-yellow font-bold text-sm mb-1 uppercase tracking-wider">{isEn ? 'Timing Window' : '타이밍'}</h4>
+                            <p className="text-sm text-moonlight">{isEn ? 'Whether to execute immediately or establish defensive holding' : '오늘 움직일지, 조금 더 기다릴지'}</p>
                         </li>
                     </ul>
 
                     <div className="mt-8 p-4 bg-white/5 border border-white/10 rounded-lg">
                         <p className="text-xs text-dim leading-relaxed">
-                            <span className="text-starlight font-bold">결의 정리</span>는 이 세 가지를 한 번에 봅니다. 한쪽 감정이나 한 줄 운세에 기대지 않도록, 판단 근거를 나누어 보여줍니다.
+                            {isEn ? (
+                                <>
+                                    <span className="text-starlight font-bold">The Decision Dossier</span> cross-checks all three dimensions simultaneously, ensuring you never rely on emotional impulse or horoscope generalities.
+                                </>
+                            ) : (
+                                <>
+                                    <span className="text-starlight font-bold">결의 정리</span>는 이 세 가지를 한 번에 봅니다. 한쪽 감정이나 한 줄 운세에 기대지 않도록, 판단 근거를 나누어 보여줍니다.
+                                </>
+                            )}
                         </p>
                     </div>
                 </div>

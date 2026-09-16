@@ -22,7 +22,19 @@ const KOREAN_DESCRIPTION = '사주 4주 원국, 서양 점성술 천체도, 자�
 const ENGLISH_TITLE = 'CosmicPath | 5-Engine Strategic Decision Dossier';
 const ENGLISH_DESCRIPTION = 'Synthesizing deterministic Saju, Western Astrology, Ziwei Doushu 12 Palaces, Thai Royal Astrology, and Numerology to deliver an evidence-bound verdict for your critical decision.';
 
-async function getLandingLanguage(): Promise<'ko' | 'en'> {
+type HomeProps = {
+    searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+
+async function getLandingLanguage(searchParams?: Promise<{ [key: string]: string | string[] | undefined }>): Promise<'ko' | 'en'> {
+    if (searchParams) {
+        const resolved = await searchParams;
+        const langParam = typeof resolved?.lang === 'string' ? resolved.lang : typeof resolved?.locale === 'string' ? resolved.locale : undefined;
+        if (langParam) {
+            return langParam.toLowerCase().includes('en') ? 'en' : 'ko';
+        }
+    }
+
     const headersList = await headers();
     const acceptLang = headersList.get('accept-language') || '';
     if (acceptLang.includes('en') && !acceptLang.includes('ko')) {
@@ -31,8 +43,8 @@ async function getLandingLanguage(): Promise<'ko' | 'en'> {
     return 'ko';
 }
 
-export async function generateMetadata(): Promise<Metadata> {
-    const language = await getLandingLanguage();
+export async function generateMetadata({ searchParams }: HomeProps): Promise<Metadata> {
+    const language = await getLandingLanguage(searchParams);
     const isKorean = language === 'ko';
 
     if (isKorean) {
@@ -70,8 +82,8 @@ export async function generateMetadata(): Promise<Metadata> {
     };
 }
 
-export default async function Home() {
-    const language = await getLandingLanguage();
+export default async function Home({ searchParams }: HomeProps) {
+    const language = await getLandingLanguage(searchParams);
 
     return (
         <main className="w-full min-h-screen bg-void text-starlight selection:bg-acc-gold selection:text-bg-void">
@@ -80,13 +92,13 @@ export default async function Home() {
             <HeroSection language={language} />
             {language === 'en' ? <EnglishGuideSection /> : null}
             {NEXT_MOVE_RITUAL_ENABLED ? <RitualSection language={language} /> : null}
-            <DiagnosisSection />
-            <ReviewCarousel />
-            <GapSection />
-            <BlueprintSection />
-            <EngineSection />
-            <VerdictSection />
-            <CrossroadsSection />
+            <DiagnosisSection language={language} />
+            <ReviewCarousel language={language} />
+            <GapSection language={language} />
+            <BlueprintSection language={language} />
+            <EngineSection language={language} />
+            <VerdictSection language={language} />
+            <CrossroadsSection language={language} />
 
             <Footer language={language} />
         </main>

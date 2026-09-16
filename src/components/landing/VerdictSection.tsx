@@ -4,7 +4,9 @@ import { motion } from 'framer-motion';
 
 
 
-export function VerdictSection() {
+export function VerdictSection({ language = 'ko' }: { language?: 'ko' | 'en' }) {
+    const isEn = language === 'en';
+
     return (
         <section className="py-16 md:py-32 bg-deep border-t border-white/5">
             <div className="container-cosmic px-6 text-center">
@@ -20,7 +22,11 @@ export function VerdictSection() {
                         What You Leave With
                     </span>
                     <h2 className="font-cinzel text-2xl md:text-5xl text-starlight mb-6 leading-tight">
-                        &quot;긴 설명보다, <span className="text-acc-gold">오늘 남길 세 줄.</span>&quot;
+                        {isEn ? (
+                            <>&quot;Not a lengthy horoscope, <span className="text-acc-gold">three lines for today.</span>&quot;</>
+                        ) : (
+                            <>&quot;긴 설명보다, <span className="text-acc-gold">오늘 남길 세 줄.</span>&quot;</>
+                        )}
                     </h2>
                 </motion.div>
 
@@ -55,7 +61,7 @@ export function VerdictSection() {
                 </div>
 
                 <p className="mt-16 text-dim text-xs font-mono">
-                    질문, 기준, 행동, 보류선을 먼저 정리합니다.
+                    {isEn ? 'Question, criteria, next action, and holding thresholds—clarified first.' : '질문, 기준, 행동, 보류선을 먼저 정리합니다.'}
                 </p>
 
             </div>

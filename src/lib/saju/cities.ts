@@ -1,5 +1,3 @@
-import { BIRTH_CITY_OPTIONS } from './city-options';
-
 export interface BirthLocation {
   cityName: string;
   latitude: number;
@@ -58,6 +56,61 @@ const CITY_TABLE: Record<string, CityRecord> = {
     aliases: ['jeju', '제주', '제주시', '제주도', '제주특별자치도'],
     latitude: 33.4996,
     longitude: 126.5312,
+  },
+  newyork: {
+    aliases: ['newyork', 'new york', '뉴욕', 'nyc'],
+    latitude: 40.7128,
+    longitude: -74.006,
+  },
+  losangeles: {
+    aliases: ['losangeles', 'los angeles', 'la', '로스앤젤레스'],
+    latitude: 34.0522,
+    longitude: -118.2437,
+  },
+  chicago: {
+    aliases: ['chicago', '시카고'],
+    latitude: 41.8781,
+    longitude: -87.6298,
+  },
+  sanfrancisco: {
+    aliases: ['sanfrancisco', 'san francisco', 'sf', '샌프란시스코'],
+    latitude: 37.7749,
+    longitude: -122.4194,
+  },
+  toronto: {
+    aliases: ['toronto', '토론토'],
+    latitude: 43.6532,
+    longitude: -79.3832,
+  },
+  vancouver: {
+    aliases: ['vancouver', '밴쿠버'],
+    latitude: 49.2827,
+    longitude: -123.1207,
+  },
+  london: {
+    aliases: ['london', '런던'],
+    latitude: 51.5074,
+    longitude: -0.1278,
+  },
+  paris: {
+    aliases: ['paris', '파리'],
+    latitude: 48.8566,
+    longitude: 2.3522,
+  },
+  berlin: {
+    aliases: ['berlin', '베를린'],
+    latitude: 52.52,
+    longitude: 13.405,
+  },
+  amsterdam: {
+    aliases: ['amsterdam', '암스테르담'],
+    latitude: 52.3676,
+    longitude: 4.9041,
+  },
+  tokyo: {
+    aliases: ['tokyo', '도쿄', '동경'],
+    latitude: 35.6895,
+    longitude: 139.6917,
   },
 };
 

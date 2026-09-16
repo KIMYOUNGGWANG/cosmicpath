@@ -26,6 +26,8 @@ export default async function MyPage() {
 
     return (
         <MyPageClient
+            userEmail={session?.user?.email ?? null}
+            userName={session?.user?.name ?? null}
             initialSmsOracleProfile={smsOracleProfile ? {
                 phoneNumber: smsOracleProfile.phoneNumber,
                 isVerified: smsOracleProfile.isVerified,

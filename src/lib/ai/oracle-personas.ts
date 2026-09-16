@@ -626,7 +626,7 @@ export function buildOraclePersonaBlock(
       `Forbidden Patterns: ${forbiddenPatterns}`,
       `Style Rules: ${persona.styleRulesEn.join('; ')}`,
       `Caution: ${persona.cautionEn}`,
-      'Traditional terms must be explained once in the format 漢字(reading, plain meaning).',
+      'Translate all traditional concepts into accessible Western psychological archetypes (no raw Hanja or transliterations).',
       'This guide is domain-first. Tone must never override evidence, safety, or anti-hallucination rules.',
       '</ORACLE_GUIDE_PROFILE>',
     ].join('\n');

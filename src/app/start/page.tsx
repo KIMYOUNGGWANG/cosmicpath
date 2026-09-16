@@ -21,6 +21,7 @@ import { useStartResume } from './use-start-resume';
 import { useStartResultActions } from './use-start-result-actions';
 import { debugStartFlow, useStartStepTransitions } from './use-start-step-transitions';
 import {
+  resolveInitialStartLanguage,
   useBeforeUnloadGuard,
   useStartDynamicPrice,
   useStartPreferredLanguage,
@@ -39,17 +40,17 @@ import { StartPageModals } from './start-page-modals';
 import { StartPageStages } from './start-page-stages';
 
 function DecisionNoteContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [step, setStep] = useState<ReadingStep>('input');
   const [readingData, setReadingData] = useState<ReadingData | null>(null);
   const [selectedCards, setSelectedCards] = useState<TarotSelection[]>([]);
-
-  // 결과 상태
   const [reportData, setReportData] = useState<PremiumReportState | null>(null);
-  const [streamContent, setStreamContent] = useState(''); // Fallback용
+  const [streamContent, setStreamContent] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingPhase, setLoadingPhase] = useState<{ phase: number; label: string }>({ phase: 0, label: '' });
   const [metadata, setMetadata] = useState<ReadingMetadata | undefined>(undefined);
-  const [language, setLanguage] = useState<'ko' | 'en'>('ko');
+  const [language, setLanguage] = useState<'ko' | 'en'>(() => resolveInitialStartLanguage(searchParams));
 
   // Decision Guard State
   const [isDecisionAccepted, setIsDecisionAccepted] = useState(false);
@@ -73,8 +74,6 @@ function DecisionNoteContent() {
     openReviewModal,
   } = useStartResultModals();
 
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const {
     activeLandingVariant,
     autoReferralCode,

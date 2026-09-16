@@ -26,7 +26,14 @@ export const MAJOR_CITIES_COORDINATES: Record<string, CityCoordinate> = {
   tokyo: { nameKo: '도쿄', nameEn: 'Tokyo', longitude: 139.6917, latitude: 35.6895, standardMeridian: 135 },
   newyork: { nameKo: '뉴욕', nameEn: 'New York', longitude: -74.0060, latitude: 40.7128, standardMeridian: -75 },
   losangeles: { nameKo: '로스앤젤레스', nameEn: 'Los Angeles', longitude: -118.2437, latitude: 34.0522, standardMeridian: -120 },
+  chicago: { nameKo: '시카고', nameEn: 'Chicago', longitude: -87.6298, latitude: 41.8781, standardMeridian: -90 },
+  sanfrancisco: { nameKo: '샌프란시스코', nameEn: 'San Francisco', longitude: -122.4194, latitude: 37.7749, standardMeridian: -120 },
+  toronto: { nameKo: '토론토', nameEn: 'Toronto', longitude: -79.3832, latitude: 43.6532, standardMeridian: -75 },
+  vancouver: { nameKo: '밴쿠버', nameEn: 'Vancouver', longitude: -123.1207, latitude: 49.2827, standardMeridian: -120 },
   london: { nameKo: '런던', nameEn: 'London', longitude: -0.1278, latitude: 51.5074, standardMeridian: 0 },
+  paris: { nameKo: '파리', nameEn: 'Paris', longitude: 2.3522, latitude: 48.8566, standardMeridian: 15 },
+  berlin: { nameKo: '베를린', nameEn: 'Berlin', longitude: 13.4050, latitude: 52.5200, standardMeridian: 15 },
+  amsterdam: { nameKo: '암스테르담', nameEn: 'Amsterdam', longitude: 4.9041, latitude: 52.3676, standardMeridian: 15 },
 };
 
 // 대한민국 역사적 일광절약시간제(서머타임) 적용 기록
@@ -139,9 +146,10 @@ export function calculateTrueSolarTime(params: {
     isDstApplied ? ' 및 역사적 서머타임(-60분)' : ''
   }을 반영하여 출생 시간을 ${birthTime}에서 ${correctedTime}으로 100% 정밀 보정했습니다.`;
 
-  const explanationEn = `Calibrated true solar time by applying ${longitudeOffsetMinutes}m longitude offset for ${city.nameEn} (${city.longitude.toFixed(2)}°E)${
+  const longitudeDirection = city.longitude >= 0 ? `${city.longitude.toFixed(2)}°E` : `${Math.abs(city.longitude).toFixed(2)}°W`;
+  const explanationEn = `True Solar Time Calibration: Applied ${Math.abs(longitudeOffsetMinutes)}m ${longitudeOffsetMinutes >= 0 ? 'lead' : 'offset'} for ${city.nameEn} (${longitudeDirection})${
     isDstApplied ? ' and historic DST (-60m)' : ''
-  }, shifting birth time from ${birthTime} to ${correctedTime}.`;
+  }, synchronizing exact birth time from ${birthTime} to ${correctedTime}.`;
 
   const result: TrueSolarTimeResult = {
     originalDate: birthDateOnly,
@@ -149,7 +157,7 @@ export function calculateTrueSolarTime(params: {
     correctedDate,
     correctedTime,
     offsetMinutes: totalOffsetMinutes,
-    cityName: city.nameKo,
+    cityName: cityName?.trim() || city.nameKo,
     isDstApplied,
     isMidnightBoundaryCrossed,
     explanationKo,

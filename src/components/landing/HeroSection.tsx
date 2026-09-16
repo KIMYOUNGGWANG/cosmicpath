@@ -14,7 +14,7 @@ export function HeroSection({ language }: HeroSectionProps) {
     const careerQuestion = isKo
         ? '하반기에 이직, 사업, 지금 일 중 어디에 힘을 실어야 할까.'
         : 'Should I change jobs, build my own thing, or deepen the work I have now?';
-    const startHref = `/start?reset=true&entry=${decisionEntry}&context=career&question=${encodeURIComponent(careerQuestion)}`;
+    const startHref = `/start?reset=true&entry=${decisionEntry}&context=career&question=${encodeURIComponent(careerQuestion)}${!isKo ? '&lang=en' : ''}`;
     const layerRows = isKo
         ? [
             { code: '命式', title: '사주 구조', detail: '타고난 구조와 반복되는 압력을 봅니다.' },
@@ -194,7 +194,7 @@ export function HeroSection({ language }: HeroSectionProps) {
                                 </div>
                                 <div className="grid gap-2">
                                     {sampleCases.map((item) => {
-                                        const href = `/start?reset=true&entry=${decisionEntry}&context=${item.context}&question=${encodeURIComponent(item.question)}`;
+                                        const href = `/start?reset=true&entry=${decisionEntry}&context=${item.context}&question=${encodeURIComponent(item.question)}${!isKo ? '&lang=en' : ''}`;
 
                                         return (
                                             <GrowthTrackedLink

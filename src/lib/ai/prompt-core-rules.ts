@@ -14,12 +14,20 @@ export function buildTraditionalTermRule(
 ) {
   if (format === 'inline') {
     return language === 'en'
-      ? 'If you use traditional East Asian terms, explain them once as 漢字(reading, plain meaning).'
+      ? 'Western audience terminology rule: Never output raw Hanja or phonetically transliterated East Asian terms (such as Pyeonjae, Geopjae, Baekho). Translate Saju/Ziwei concepts directly into universal psychological archetypes (e.g., Day Master as Core Essence, 10-year pillar as Major Life Epoch, Five Elements as elemental energies: Wood/Growth, Fire/Visibility, Earth/Grounding, Metal/Structure, Water/Flow).'
       : '한자나 전통 용어를 쓰면 반드시 한자(독음, 쉬운 뜻) 형식으로 한 번 풀어 설명하세요.';
   }
 
   return language === 'en'
-    ? '# Traditional Term Rule\n- If you use traditional East Asian terms, explain them once as 漢字(reading, plain meaning).'
+    ? `# Western Audience Terminology Directive
+- **Strictly No Jargon or Transliteration**: Never output raw Chinese characters (漢字) or phonetically transliterated Korean/Chinese astrological terms (e.g., "Pyeonjae", "Geopjae", "Baekho", "Saju Palja", "Siksin").
+- **Translate to Psychological Archetypes**: Translate all East Asian metaphysical concepts into intuitive Western archetypes and psychological dynamics:
+  - **Day Master (일간)** ➔ "Core Essence / Archetypal Drive"
+  - **Ten Gods / 10 Archetypes (십성)** ➔ "Behavioral Archetype / Execution Pattern" (e.g., Creative Expression, Strategic Resource, Execution Drive, Wealth Acquisition)
+  - **10-Year Luck Pillar (대운)** ➔ "10-Year Major Epoch / Life Season"
+  - **Five Elements (오행)** ➔ "Elemental Energetics" (Wood: Growth/Pioneering, Fire: Passion/Visibility, Earth: Foundation/Trust, Metal: Precision/Discipline, Water: Depth/Strategy)
+  - **Clashes & Combinations (충/합)** ➔ "Internal friction / Catalytic breakthroughs"
+- Keep the narrative 100% fluent, relatable, and directly actionable for Western decision-makers.`
     : '# 한자 용어 규칙\n- 한자나 전통 명리 용어를 쓰면 반드시 한자(독음, 쉬운 뜻) 형식으로 한 번 풀어 설명하세요.';
 }
 

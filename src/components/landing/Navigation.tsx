@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, useMotionValueEvent, useScroll } from 'framer-motion';
 import Link from 'next/link';
 import { Menu, PenLine, Search, User } from 'lucide-react';
@@ -11,6 +11,7 @@ import { MobileMenu } from '@/components/common/MobileMenu';
 import UserMenu from '@/components/layout/UserMenu';
 import { OrderLookupModal } from '@/components/orders/OrderLookupModal';
 import { useDocumentScrollLock } from '@/hooks/useDocumentScrollLock';
+import { USER_LANGUAGE_STORAGE_KEY } from '@/lib/language-preference';
 
 interface NavigationProps {
     language?: 'ko' | 'en';
@@ -25,7 +26,15 @@ export function Navigation({ language = 'ko' }: NavigationProps) {
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const isEnglish = language === 'en';
-    const decisionStartHref = '/start?reset=true&entry=decision_timing_rebuild_v1';
+    const decisionStartHref = isEnglish
+        ? '/start?reset=true&entry=decision_timing_rebuild_v1&lang=en'
+        : '/start?reset=true&entry=decision_timing_rebuild_v1';
+
+    useEffect(() => {
+        if (typeof window !== 'undefined' && language) {
+            localStorage.setItem(USER_LANGUAGE_STORAGE_KEY, language);
+        }
+    }, [language]);
 
     useDocumentScrollLock(isMobileMenuOpen);
 

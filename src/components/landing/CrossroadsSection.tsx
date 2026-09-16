@@ -31,7 +31,8 @@ const STAR_DATA = [
     { id: 19, initialX: 0, initialY: 0, animateY: -100, duration: 9 },
 ];
 
-export function CrossroadsSection() {
+export function CrossroadsSection({ language = 'ko' }: { language?: 'ko' | 'en' }) {
+    const isEn = language === 'en';
     // Dynamic prices fetched from Stripe
     const [dynamicPrice, setDynamicPrice] = useState<string>('');
     const [originalPrice, setOriginalPrice] = useState<string>('');
@@ -55,8 +56,10 @@ export function CrossroadsSection() {
         };
         fetchPrice();
     }, []);
-    const displayPrice = dynamicPrice || '$3.99';
-    const decisionStartHref = '/start?reset=true&entry=decision_timing_rebuild_v1';
+    const displayPrice = dynamicPrice || '$9.99';
+    const decisionStartHref = isEn
+        ? '/start?reset=true&entry=decision_timing_rebuild_v1&lang=en'
+        : '/start?reset=true&entry=decision_timing_rebuild_v1';
 
     return (
         <section className="relative min-h-screen py-20 flex items-center justify-center bg-void overflow-hidden">
@@ -97,11 +100,24 @@ export function CrossroadsSection() {
                     transition={{ duration: 1 }}
                 >
                     <h2 className="font-cinzel text-3xl md:text-6xl text-starlight mb-8 leading-tight">
-                        흐름을 읽었다면, <br /> <span className="text-acc-gold">하나만 실행하세요.</span>
+                        {isEn ? (
+                            <>Once the pattern is clear, <br /> <span className="text-acc-gold">execute the single next move.</span></>
+                        ) : (
+                            <>흐름을 읽었다면, <br /> <span className="text-acc-gold">하나만 실행하세요.</span></>
+                        )}
                     </h2>
                     <p className="text-moonlight text-base md:text-lg mb-10 md:mb-12 max-w-xl mx-auto font-light">
-                        첫 판정으로 방향을 좁히고, 사주·점성술·자미두수 등 5대 엔진은 필요한 근거로만 확인합니다. <br />
-                        그다음 오늘 밀어야 할 것과 멈춰야 할 것을 남깁니다.
+                        {isEn ? (
+                            <>
+                                Narrow your direction with a free preliminary brief, verified by dual-cosmic alignment.<br />
+                                Then claim today&apos;s clear boundary on what to push and what to hold.
+                            </>
+                        ) : (
+                            <>
+                                첫 판정으로 방향을 좁히고, 사주·점성술·자미두수 등 5대 엔진은 필요한 근거로만 확인합니다. <br />
+                                그다음 오늘 밀어야 할 것과 멈춰야 할 것을 남깁니다.
+                            </>
+                        )}
                     </p>
 
                     <div className="relative group inline-block">
@@ -111,14 +127,17 @@ export function CrossroadsSection() {
                         >
                             <div className="px-7 py-6 text-left">
                                 <div className="mb-4 inline-flex border border-[#d7c59a]/20 bg-[#d7c59a]/[0.07] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-[#d7c59a]/75">
-                                    첫 판정 무료
+                                    {isEn ? 'First Verdict Free' : '첫 판정 무료'}
                                 </div>
-                                <div className="font-cinzel text-xl tracking-[0.16em] md:text-2xl">Decision Note 시작</div>
+                                <div className="font-cinzel text-xl tracking-[0.16em] md:text-2xl">
+                                    {isEn ? 'Start Decision Note' : 'Decision Note 시작'}
+                                </div>
                                 <span className="mt-3 block text-sm font-medium text-white/45 transition-colors group-hover:text-moonlight">
                                     {dynamicPrice ? (
                                         <span className="line-through opacity-50 mr-2">{originalPrice}</span>
                                     ) : null}
-                                    자세한 기록은 <span className="font-bold text-acc-gold text-lg">{displayPrice}</span>
+                                    {isEn ? 'Full dossier unlock at ' : '자세한 기록은 '}
+                                    <span className="font-bold text-acc-gold text-lg">{displayPrice}</span>
                                 </span>
                             </div>
                             <span className="flex items-center justify-center border-l border-[#d7c59a]/28 text-[#d7c59a]">
@@ -128,7 +147,9 @@ export function CrossroadsSection() {
                     </div>
 
                     <p className="mt-8 text-dim text-xs">
-                        * 결정 보조용 정리입니다. 의료, 법률, 투자 판단은 전문가 기준을 우선하세요.
+                        {isEn
+                            ? '* For decision assistance only. Consult licensed professionals for medical, legal, or investment decisions.'
+                            : '* 결정 보조용 정리입니다. 의료, 법률, 투자 판단은 전문가 기준을 우선하세요.'}
                     </p>
                 </motion.div>
             </div>

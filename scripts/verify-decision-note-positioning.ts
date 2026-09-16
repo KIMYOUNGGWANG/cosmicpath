@@ -176,10 +176,10 @@ const paymentConfig = readSurface({ filePath: 'src/lib/payment/payment-config.ts
 assertSurfaceHas(paymentConfig, 'prod_TgwKnGfpJBusty', 'Reading product must preserve the test fallback Stripe product ID.');
 assertSurfaceHas(paymentConfig, 'prod_ThdoB65NmPU37y', 'Reading product must preserve the live fallback Stripe product ID.');
 assertSurfaceHasPattern(paymentConfig, /productId:\s*readingProductId/, 'READING_PRODUCT.productId must still resolve from readingProductId.');
-assertSurfaceHasPattern(paymentConfig, /price:\s*READING_PRODUCT_PRICE_CENTS|price:\s*399/, 'Reading product must preserve the 399-cent fallback price.');
+assertSurfaceHasPattern(paymentConfig, /price:\s*READING_PRODUCT_PRICE_CENTS|price:\s*(399|999)/, 'Reading product must preserve the 399/999-cent fallback price.');
 
 const termsPage = readSurface({ filePath: 'src/app/terms/page.tsx', description: 'terms page' });
-assertSurfaceHasPattern(termsPage, /\$3\.99 USD[\s\S]*Stripe checkout|Stripe checkout[\s\S]*\$3\.99 USD/, 'Terms must disclose one-time $3.99 USD Stripe checkout.');
+assertSurfaceHasPattern(termsPage, /(\$3\.99|\$9\.99) USD[\s\S]*Stripe checkout|Stripe checkout[\s\S]*(\$3\.99|\$9\.99) USD/, 'Terms must disclose one-time $3.99/$9.99 USD Stripe checkout.');
 
 const ritualSection = getDeclaredSurfaceText('src/components/landing/RitualSection.tsx');
 assertSurfaceHas(ritualSection, CAMPAIGN_EXPERIENCE_NAME, 'Landing ritual copy must name Next Move Ritual as an experience layer.');

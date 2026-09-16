@@ -1,17 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { startTransition, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
     Calendar,
     ChevronRight,
+    Compass,
     Crown,
+    FileText,
     Loader2,
-    MessageSquareText,
-    ShieldCheck,
     Sparkles,
+    User as UserIcon,
 } from "lucide-react";
 import { SubscriptionModal } from "@/components/payment/SubscriptionModal";
 
@@ -25,15 +25,20 @@ interface ParsedReadingMetadata {
     title?: string;
     name?: string;
     birthDate?: string;
+    userContext?: string;
+    isPremium?: boolean;
+    language?: "ko" | "en";
     readingData?: {
         name?: string;
         birthDate?: string;
+        birthTime?: string;
+        question?: string;
+        context?: string;
     };
 }
 
 type SubscriptionTier = "free" | "pro" | "couple";
 type SubscriptionPlan = "pro_weekly" | "pro_monthly" | "pro_yearly" | "couple_monthly" | null;
-type SmsOracleStep = "register" | "verify" | "complete";
 
 interface SubscriptionStatusPayload {
     status: SubscriptionTier;
@@ -49,7 +54,9 @@ export interface SmsOracleProfile {
 }
 
 interface MyPageClientProps {
-    initialSmsOracleProfile: SmsOracleProfile | null;
+    initialSmsOracleProfile?: SmsOracleProfile | null;
+    userEmail?: string | null;
+    userName?: string | null;
 }
 
 const EMPTY_SUBSCRIPTION: SubscriptionStatusPayload = {
@@ -70,135 +77,99 @@ function parseReadingMetadata(metadata: string | null): ParsedReadingMetadata {
     }
 }
 
+function getReadingTitle(meta: ParsedReadingMetadata): string {
+    if (meta.readingData?.question && meta.readingData.question.trim().length > 0) {
+        return meta.readingData.question.trim();
+    }
+    if (meta.userContext && meta.userContext.trim().length > 0) {
+        return meta.userContext.trim();
+    }
+    if (meta.title && meta.title.trim().length > 0) {
+        return meta.title.trim();
+    }
+    return "Cosmic Decision Note";
+}
+
+function getContextCategory(meta: ParsedReadingMetadata): { label: string; badgeClass: string } {
+    const context = meta.readingData?.context;
+    switch (context) {
+        case "career":
+            return {
+                label: "Career & Work",
+                badgeClass: "border-sky-400/30 bg-sky-400/10 text-sky-200",
+            };
+        case "love":
+            return {
+                label: "Relationship",
+                badgeClass: "border-rose-400/30 bg-rose-400/10 text-rose-200",
+            };
+        case "money":
+            return {
+                label: "Wealth & Timing",
+                badgeClass: "border-amber-400/30 bg-amber-400/10 text-amber-200",
+            };
+        case "health":
+            return {
+                label: "Wellness & Health",
+                badgeClass: "border-emerald-400/30 bg-emerald-400/10 text-emerald-200",
+            };
+        default:
+            return {
+                label: "Decision Timing",
+                badgeClass: "border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#F4D88A]",
+            };
+    }
+}
+
+function formatDate(dateStr: string): string {
+    try {
+        return new Date(dateStr).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+        });
+    } catch {
+        return dateStr;
+    }
+}
+
+function formatExpiry(expiresAt: string | null): string {
+    if (!expiresAt) return "Active / Syncing";
+
+    try {
+        return new Date(expiresAt).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+        });
+    } catch {
+        return expiresAt;
+    }
+}
+
 function getPlanLabel(plan: SubscriptionPlan): string {
     switch (plan) {
         case "pro_weekly":
-            return "Legacy Pro Plan";
+            return "Pro Weekly";
         case "pro_monthly":
             return "Pro Monthly";
         case "pro_yearly":
             return "Pro Annual";
         case "couple_monthly":
-            return "Legacy Couple Plan";
+            return "Premium Plan";
         default:
-            return "Free Plan";
+            return "Pro Membership";
     }
 }
 
-function getTierBadge(status: SubscriptionTier): string {
-    switch (status) {
-        case "pro":
-            return "Pro Member";
-        case "couple":
-            return "Premium Member";
-        default:
-            return "Free Member";
-    }
-}
-
-function getMembershipSummary(subscription: SubscriptionStatusPayload): string {
-    switch (subscription.status) {
-        case "pro":
-            return "Grand Oracle Chat 무제한, daily premium, 프리미엄 리딩 흐름이 활성화되어 있습니다. 인증된 번호에는 Daily Signal perk도 함께 이어집니다.";
-        case "couple":
-            return "기존 관계형 멤버십이 유지 중이며, 현재는 premium membership 범주 안에서 오라클 access와 Daily Signal perk를 함께 관리합니다.";
-        default:
-            return "현재는 무료 티어입니다. 멤버십을 열면 Grand Oracle Chat, daily premium, 프리미엄 리딩 흐름이 열리고, 인증된 번호에는 Daily Signal perk도 연결할 수 있습니다.";
-    }
-}
-
-function getBadgeClasses(status: SubscriptionTier): string {
-    switch (status) {
-        case "pro":
-            return "border-emerald-400/30 bg-emerald-400/15 text-emerald-200";
-        case "couple":
-            return "border-emerald-400/30 bg-emerald-400/15 text-emerald-200";
-        default:
-            return "border-white/10 bg-white/5 text-white/70";
-    }
-}
-
-function formatExpiry(expiresAt: string | null): string {
-    if (!expiresAt) return "Active / syncing";
-
-    return new Date(expiresAt).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-    });
-}
-
-function getInitialSmsOracleStep(profile: SmsOracleProfile | null): SmsOracleStep {
-    if (!profile) {
-        return "register";
-    }
-
-    if (profile.isVerified && profile.isActive) {
-        return "complete";
-    }
-
-    return "verify";
-}
-
-function maskPhoneNumber(phoneNumber: string): string {
-    const digits = phoneNumber.replace(/[^\d]/g, "");
-
-    if (digits.length < 8) {
-        return phoneNumber;
-    }
-
-    const head = digits.slice(0, 3);
-    const tail = digits.slice(-4);
-    const middle = "*".repeat(Math.max(3, digits.length - 7));
-
-    return `${head}-${middle}-${tail}`;
-}
-
-function extractApiErrorMessage(payload: unknown, fallback: string): string {
-    if (!payload || typeof payload !== "object") {
-        return fallback;
-    }
-
-    const record = payload as Record<string, unknown>;
-    const error = record.error;
-
-    if (typeof error === "string" && error.trim()) {
-        return error;
-    }
-
-    if (error && typeof error === "object") {
-        const message = (error as Record<string, unknown>).message;
-        if (typeof message === "string" && message.trim()) {
-            return message;
-        }
-    }
-
-    return fallback;
-}
-
-export default function MyPageClient({ initialSmsOracleProfile }: MyPageClientProps) {
-    const router = useRouter();
+export default function MyPageClient({
+    userEmail,
+    userName,
+}: MyPageClientProps) {
     const [readings, setReadings] = useState<ReadingSummary[]>([]);
     const [subscription, setSubscription] = useState<SubscriptionStatusPayload>(EMPTY_SUBSCRIPTION);
     const [loading, setLoading] = useState(true);
     const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
-
-    const [smsOracleProfile, setSmsOracleProfile] = useState<SmsOracleProfile | null>(initialSmsOracleProfile);
-    const [smsPhoneNumber, setSmsPhoneNumber] = useState(initialSmsOracleProfile?.phoneNumber ?? "");
-    const [smsCode, setSmsCode] = useState("");
-    const [smsStep, setSmsStep] = useState<SmsOracleStep>(getInitialSmsOracleStep(initialSmsOracleProfile));
-    const [smsMessage, setSmsMessage] = useState("");
-    const [smsError, setSmsError] = useState("");
-    const [smsSubmitting, setSmsSubmitting] = useState(false);
-
-    useEffect(() => {
-        setSmsOracleProfile(initialSmsOracleProfile);
-        setSmsPhoneNumber(initialSmsOracleProfile?.phoneNumber ?? "");
-        setSmsCode("");
-        setSmsError("");
-        setSmsMessage("");
-        setSmsStep(getInitialSmsOracleStep(initialSmsOracleProfile));
-    }, [initialSmsOracleProfile]);
 
     useEffect(() => {
         void fetchPageData();
@@ -237,665 +208,264 @@ export default function MyPageClient({ initialSmsOracleProfile }: MyPageClientPr
         }
     }
 
-    const isSmsMembershipActive = subscription.status !== "free";
-    const smsStatusLabel = useMemo(() => {
-        if (!smsOracleProfile) {
-            return isSmsMembershipActive ? "미등록" : "잠금됨";
-        }
+    const isSubscriber = subscription.status !== "free";
 
-        if (smsOracleProfile.isVerified && isSmsMembershipActive) {
-            return "활성화 완료";
-        }
-
-        if (smsOracleProfile.isVerified) {
-            return "멤버십 대기";
-        }
-
-        return isSmsMembershipActive ? "인증 대기" : "잠금됨";
-    }, [isSmsMembershipActive, smsOracleProfile]);
-
-    async function submitSmsRegister() {
-        if (!isSmsMembershipActive) {
-            setSmsError("");
-            setSmsMessage("");
-            setIsSubscriptionModalOpen(true);
-            return;
-        }
-
-        setSmsSubmitting(true);
-        setSmsError("");
-        setSmsMessage("");
-
-        try {
-            const response = await fetch("/api/sms-oracle/register", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    phoneNumber: smsPhoneNumber,
-                }),
-            });
-
-            const payload = await response.json().catch(() => ({}));
-
-            if (!response.ok) {
-                throw new Error(extractApiErrorMessage(payload, "인증번호 발송에 실패했습니다."));
-            }
-
-            setSmsStep("verify");
-            setSmsMessage("인증번호를 문자로 보냈습니다. 10분 안에 입력해주세요.");
-            startTransition(() => {
-                router.refresh();
-            });
-        } catch (error) {
-            setSmsError(error instanceof Error ? error.message : "인증번호 발송에 실패했습니다.");
-        } finally {
-            setSmsSubmitting(false);
-        }
-    }
-
-    async function handleSmsRegister(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-        await submitSmsRegister();
-    }
-
-    async function handleSmsVerify(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-
-        if (!isSmsMembershipActive) {
-            setSmsError("");
-            setSmsMessage("");
-            setIsSubscriptionModalOpen(true);
-            return;
-        }
-
-        setSmsSubmitting(true);
-        setSmsError("");
-        setSmsMessage("");
-
-        try {
-            const response = await fetch("/api/sms-oracle/verify", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    phoneNumber: smsPhoneNumber,
-                    code: smsCode,
-                }),
-            });
-
-            const payload = await response.json().catch(() => ({}));
-
-            if (!response.ok) {
-                throw new Error(extractApiErrorMessage(payload, "번호 인증에 실패했습니다."));
-            }
-
-            setSmsOracleProfile({
-                phoneNumber: smsPhoneNumber,
-                isVerified: true,
-                isActive: true,
-            });
-            setSmsStep("complete");
-            setSmsCode("");
-            setSmsMessage(
-                isSmsMembershipActive
-                    ? "번호 인증이 완료되었습니다. 내일 아침 첫 Daily Signal이 도착합니다."
-                    : "번호 인증이 완료되었습니다. 구독을 시작하면 내일 아침 첫 Daily Signal이 도착합니다."
-            );
-            startTransition(() => {
-                router.refresh();
-            });
-        } catch (error) {
-            setSmsError(error instanceof Error ? error.message : "번호 인증에 실패했습니다.");
-        } finally {
-            setSmsSubmitting(false);
-        }
-    }
+    const latestReadingDate = useMemo(() => {
+        if (readings.length === 0) return null;
+        return formatDate(readings[0].createdAt);
+    }, [readings]);
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin" />
+            <div className="flex min-h-screen items-center justify-center bg-[#050505]">
+                <Loader2 className="h-8 w-8 animate-spin text-[#D4AF37]" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#050505] pb-24 pt-24 text-white lg:pb-12">
-            <div className="mx-auto max-w-[1820px] px-4 lg:px-8">
-                <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] xl:grid-cols-[300px_1fr] gap-8 xl:gap-14 items-start">
+        <div className="min-h-screen bg-[#050505] pb-24 pt-24 text-white lg:pb-16">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[280px_1fr] xl:gap-12">
 
-                    {/* ── SIDEBAR ── */}
-                    <aside className="hidden lg:flex flex-col gap-5 sticky top-28">
-                        {/* Nav */}
-                        <div className="rounded-[22px] border border-white/[0.08] bg-white/[0.03] p-4">
-                            <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">Navigation</p>
-                            <nav className="flex flex-col gap-1">
-                                <Link href="/my" className="flex items-center gap-3 rounded-xl bg-white/[0.06] px-3 py-3 text-sm font-semibold text-[#D4AF37]">
-                                    <Sparkles size={15} />
-                                    <span>My Hub</span>
-                                </Link>
-                                <Link href="/billing" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-white/60 transition-colors hover:bg-white/[0.05] hover:text-white">
-                                    <Crown size={15} />
-                                    <span>Membership</span>
-                                </Link>
-                                <Link href="/daily" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-white/60 transition-colors hover:bg-white/[0.05] hover:text-white">
-                                    <MessageSquareText size={15} />
-                                    <span>Daily Signal</span>
-                                </Link>
-                            </nav>
-                        </div>
-
-                        <div className="rounded-[22px] border border-white/[0.08] bg-white/[0.03] p-5">
-                            <div className="mb-4 flex items-center gap-3 border-b border-white/[0.06] pb-4">
-                                <div className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.04]">
-                                    <span className="font-cinzel text-[#D4AF37] text-base">결</span>
+                    {/* ── SIDEBAR (Profile & Quick Actions) ── */}
+                    <aside className="sticky top-28 hidden flex-col gap-5 lg:flex">
+                        {/* Profile & Stats Card */}
+                        <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-6 backdrop-blur-md">
+                            <div className="mb-6 flex items-center gap-3 border-b border-white/[0.06] pb-5">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#F4D88A]">
+                                    <UserIcon size={20} />
                                 </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-white">결의 정리</p>
-                                    <p className="text-xs text-white/40">기준과 다음 행동</p>
+                                <div className="min-w-0">
+                                    <p className="truncate text-sm font-semibold text-white">
+                                        {userName || "Cosmic Traveler"}
+                                    </p>
+                                    <p className="truncate text-xs text-white/40">
+                                        {userEmail || "Connected"}
+                                    </p>
                                 </div>
                             </div>
-                            <p className="mb-5 text-sm italic leading-relaxed text-white/55">
-                                &ldquo;이곳은 미뤄둔 선택과 오늘의 기준이 남는 공간입니다. 다시 볼 수 있게 짧게 정리해두세요.&rdquo;
+
+                            <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.2em] text-white/30">
+                                Decision Metrics
                             </p>
-                            <Link
-                                href="/start?reset=true"
-                                className="inline-flex w-full items-center justify-center rounded-full border border-white/10 bg-white/[0.04] py-3 text-sm font-medium text-white transition-colors hover:bg-white/[0.08]"
-                            >
-                                새 선택 정리하기
-                            </Link>
+                            <div className="space-y-3">
+                                <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+                                    <p className="text-[11px] uppercase tracking-wider text-white/40 font-outfit">
+                                        Saved Decisions
+                                    </p>
+                                    <p className="mt-1 text-2xl font-bold text-starlight font-cinzel">
+                                        {readings.length}
+                                    </p>
+                                </div>
+                                {latestReadingDate && (
+                                    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+                                        <p className="text-[11px] uppercase tracking-wider text-white/40 font-outfit">
+                                            Latest Analysis
+                                        </p>
+                                        <p className="mt-1 text-sm font-semibold text-white/90 font-outfit">
+                                            {latestReadingDate}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="mt-6 pt-5 border-t border-white/[0.06]">
+                                <Link
+                                    href="/start?reset=true"
+                                    className="flex w-full items-center justify-center gap-2 rounded-full bg-[#D4AF37] py-3 text-xs font-bold uppercase tracking-wider text-black transition-all hover:bg-[#E7C867] hover:shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+                                >
+                                    <Sparkles size={14} />
+                                    New Decision Note
+                                </Link>
+                            </div>
+
+                            {/* Active Subscriber link to billing */}
+                            {isSubscriber && (
+                                <div className="mt-3">
+                                    <Link
+                                        href="/billing"
+                                        className="flex w-full items-center justify-center gap-2 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 py-2.5 text-xs font-semibold text-[#F4D88A] transition-all hover:bg-[#D4AF37]/20"
+                                    >
+                                        <Crown size={13} />
+                                        Membership & Billing
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Decision Philosophy Tip */}
+                        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.015] p-5">
+                            <p className="text-xs italic leading-relaxed text-white/45">
+                                &ldquo;When you master the timing of action, even turbulent seasons turn into high-leverage pivots.&rdquo;
+                            </p>
                         </div>
                     </aside>
 
                     {/* ── MAIN CONTENT ── */}
-                    <div className="min-w-0">
-                        <header className="mb-10">
-                            <h1 className="mb-2 text-3xl text-starlight md:text-4xl font-cinzel">
-                                My CosmicPath Readings
-                            </h1>
-                            <p className="font-outfit text-white/55">
-                                Your saved notes, choices, and membership status.
-                            </p>
+                    <div className="min-w-0 space-y-8">
+                        {/* Active Subscription Banner (Only visible to paying subscribers) */}
+                        {isSubscriber && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-[#D4AF37]/30 bg-gradient-to-r from-[#D4AF37]/15 via-[#D4AF37]/5 to-transparent p-5 backdrop-blur-md"
+                            >
+                                <div className="flex items-center gap-3.5">
+                                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#D4AF37]/40 bg-[#D4AF37]/20 text-[#F4D88A]">
+                                        <Crown size={20} />
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-semibold text-white">
+                                                {getPlanLabel(subscription.plan)}
+                                            </span>
+                                            <span className="rounded-full border border-emerald-400/30 bg-emerald-400/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+                                                Active Member
+                                            </span>
+                                        </div>
+                                        <p className="mt-0.5 text-xs text-white/50 font-outfit">
+                                            Next renewal: {formatExpiry(subscription.expiresAt)}
+                                        </p>
+                                    </div>
+                                </div>
+                                <Link
+                                    href="/billing"
+                                    className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition-all hover:border-[#D4AF37]/40 hover:bg-white/10"
+                                >
+                                    <span>Manage Subscription</span>
+                                    <ChevronRight size={14} />
+                                </Link>
+                            </motion.div>
+                        )}
+
+                        {/* Section Header */}
+                        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h1 className="text-2xl font-bold text-starlight md:text-3xl font-cinzel">
+                                    My Decision Archive
+                                </h1>
+                                <p className="mt-1 font-outfit text-sm text-white/55">
+                                    Past decisions, timing analysis, and action blueprints.
+                                </p>
+                            </div>
+                            <Link
+                                href="/start?reset=true"
+                                className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[#D4AF37] px-6 text-xs font-bold uppercase tracking-wider text-black transition-all hover:bg-[#E7C867] hover:shadow-[0_0_20px_rgba(212,175,55,0.3)] sm:w-auto"
+                            >
+                                <Sparkles size={14} />
+                                New Decision Note
+                            </Link>
                         </header>
 
-                        <motion.section
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="relative mb-10 overflow-hidden rounded-[32px] border border-[#D4AF37]/20 bg-[radial-gradient(circle_at_top_left,rgba(212,175,55,0.16),transparent_36%),radial-gradient(circle_at_85%_18%,rgba(245,216,138,0.08),transparent_24%),linear-gradient(145deg,#0a0d16,#111827)] p-6 shadow-[0_36px_140px_rgba(0,0,0,0.42)]"
-                        >
-                    <div className="pointer-events-none absolute inset-x-10 top-0 h-px bg-gradient-to-r from-transparent via-[#F4D88A]/70 to-transparent" />
-                    <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-                        <div className="max-w-2xl">
-                            <div className="mb-4 flex flex-wrap items-center gap-2">
-                                <div className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F4D88A]">
-                                    <Crown size={14} />
-                                    Membership
-                                </div>
-                                <div className="inline-flex items-center gap-2 rounded-full border border-[#F4D88A]/12 bg-white/[0.03] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/70">
-                                    <Sparkles size={12} />
-                                    Primary Access
-                                </div>
-                            </div>
-                            <div className="mb-3 flex flex-wrap items-center gap-3">
-                                <h2 className="text-2xl font-semibold text-white md:text-3xl">
-                                    {getPlanLabel(subscription.plan)}
-                                </h2>
-                                <span
-                                    className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] ${getBadgeClasses(subscription.status)}`}
-                                >
-                                    {getTierBadge(subscription.status)}
-                                </span>
-                            </div>
-                            <p className="text-sm leading-7 text-white/70 md:text-base">
-                                {getMembershipSummary(subscription)}
-                            </p>
-                            <p className="mt-3 text-xs leading-6 text-[#F4D88A]/70">
-                                메인 가치는 Grand Oracle Chat과 premium reading 루틴이고, Daily Signal은 그 흐름을 아침에 먼저 떠오르게 하는 보조 perk입니다.
-                            </p>
-                            <div className="mt-4 rounded-[24px] border border-[#D4AF37]/14 bg-[#D4AF37]/8 px-4 py-4">
-                                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[#F4D88A]">
-                                    Core Access
-                                </p>
-                                <p className="mt-2 text-sm leading-7 text-white/74">
-                                    Grand Oracle Chat, daily premium, premium reading flow는 이 membership 카드가 여는 핵심 경험입니다.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-3 sm:flex-row">
-                            <Link
-                                href="/billing"
-                                className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/15 bg-white/[0.03] px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/[0.06]"
+                        {/* Readings Grid or Empty State */}
+                        {readings.length === 0 ? (
+                            <motion.div
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="rounded-3xl border border-white/[0.08] bg-white/[0.02] p-12 text-center backdrop-blur-md"
                             >
-                                멤버십 흐름 보기
-                            </Link>
-                            {subscription.status === "free" ? (
-                                <button
-                                    type="button"
-                                    onClick={() => setIsSubscriptionModalOpen(true)}
-                                    className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#D4AF37] px-6 py-3 text-sm font-semibold text-[#0A0D16] transition-colors hover:bg-[#E7C867]"
-                                >
-                                    핵심 오라클 access 열기
-                                </button>
-                            ) : (
-                                <Link
-                                    href="/daily"
-                                    className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#D4AF37] px-6 py-3 text-sm font-semibold text-[#0A0D16] transition-colors hover:bg-[#E7C867]"
-                                >
-                                    오늘의 오라클 흐름 이어가기
-                                </Link>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="mt-6 grid gap-3 md:grid-cols-3">
-                        <div className="rounded-2xl border border-[#D4AF37]/16 bg-[#D4AF37]/8 p-4">
-                            <p className="text-[11px] uppercase tracking-[0.22em] text-white/40">
-                                Access
-                            </p>
-                            <p className="mt-2 text-lg font-semibold text-white">
-                                {subscription.status === "free" ? "Free" : "Premium"}
-                            </p>
-                        </div>
-                        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                            <p className="text-[11px] uppercase tracking-[0.22em] text-white/40">
-                                Renewal
-                            </p>
-                            <p className="mt-2 text-lg font-semibold text-white">
-                                {formatExpiry(subscription.expiresAt)}
-                            </p>
-                        </div>
-                        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                            <p className="text-[11px] uppercase tracking-[0.22em] text-white/40">
-                                Billing
-                            </p>
-                            <p className="mt-2 truncate text-lg font-semibold text-white">
-                                {subscription.stripeCustomerId ? "Stripe connected" : "Not connected"}
-                            </p>
-                        </div>
-                    </div>
-                        </motion.section>
-
-                        <motion.section
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mb-8 overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.05),transparent_34%),linear-gradient(145deg,#07111a,#0a1620)] p-5 shadow-[0_18px_64px_rgba(2,12,27,0.26)]"
-                        >
-                    <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="max-w-xl">
-                            <div className="mb-4 flex flex-wrap items-center gap-2">
-                                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/16 bg-cyan-300/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-100">
-                                    <MessageSquareText size={14} />
-                                    SMS Daily Signal
+                                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#F4D88A] shadow-[0_0_30px_rgba(212,175,55,0.15)]">
+                                    <Compass size={28} />
                                 </div>
-                                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/62">
-                                    <Sparkles size={12} />
-                                    Included Perk
-                                </div>
-                            </div>
-                            <div className="mb-3 flex flex-wrap items-center gap-3">
-                                <h2 className="text-xl font-semibold text-white md:text-2xl">
-                                    아침 Daily Signal 연결
-                                </h2>
-                                <span className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100">
-                                    {smsStatusLabel}
-                                </span>
-                            </div>
-                            <p className="text-sm leading-7 text-white/66">
-                                구독 중인 사용자에게 아침마다 하루 한 번, 오늘의 흐름을 먼저 짧게 알려주는 personal daily signal입니다.
-                            </p>
-                            <p className="mt-3 text-xs leading-6 text-cyan-100/70">
-                                활성 membership에서 번호 등록과 인증을 마치면, 다음날 아침부터 one-way Daily Signal이 시작됩니다.
-                            </p>
-                            <div className="mt-4 rounded-[22px] border border-cyan-300/12 bg-white/[0.03] px-4 py-4">
-                                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-100/80">
-                                    Secondary Channel
+                                <h3 className="mb-2 text-xl font-bold text-starlight font-cinzel">
+                                    No Saved Decision Notes Yet
+                                </h3>
+                                <p className="mx-auto mb-8 max-w-md font-outfit text-sm leading-relaxed text-white/50">
+                                    Every major choice has a window of optimal timing. Start by structuring your first career, relationship, or investment decision.
                                 </p>
-                                <p className="mt-2 text-sm leading-7 text-white/66">
-                                    Daily Signal은 membership 위에 얹힌 아침 리텐션 채널입니다. 핵심 오라클 경험을 대신하지 않고, 먼저 떠오르게 돕는 역할만 합니다.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="grid w-full gap-3 sm:grid-cols-3 lg:max-w-md">
-                            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                                <p className="text-[11px] uppercase tracking-[0.22em] text-white/40">
-                                    Included With
-                                </p>
-                                <p className="mt-2 text-base font-semibold text-white">Premium</p>
-                            </div>
-                            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                                <p className="text-[11px] uppercase tracking-[0.22em] text-white/40">
-                                    Frequency
-                                </p>
-                                <p className="mt-2 text-base font-semibold text-white">1 / day</p>
-                            </div>
-                            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                                <p className="text-[11px] uppercase tracking-[0.22em] text-white/40">
-                                    Requires
-                                </p>
-                                <p className="mt-2 text-base font-semibold text-white">Verified phone</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-                        <div className="rounded-[24px] border border-white/10 bg-black/20 p-5">
-                            {!isSmsMembershipActive ? (
-                                <div className="space-y-4">
-                                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-300/10 text-cyan-100">
-                                        <ShieldCheck size={22} />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-semibold text-white">멤버십에서 열리는 설정</p>
-                                        <p className="mt-2 text-sm leading-6 text-white/62">
-                                            Daily Signal은 유료 membership에 포함된 보조 perk입니다. free 상태에서는 번호 등록과 OTP 인증 대신, 잠금 안내와 업셀만 노출됩니다.
-                                        </p>
-                                    </div>
-                                    <div className="rounded-[24px] border border-cyan-300/16 bg-cyan-400/10 px-4 py-4 text-sm leading-7 text-cyan-50">
-                                        {smsOracleProfile?.isVerified
-                                            ? `${maskPhoneNumber(smsOracleProfile.phoneNumber)} 번호는 이미 확인되었습니다. 멤버십을 다시 시작하면 다음날 아침부터 Daily Signal 발송이 재개됩니다.`
-                                            : smsOracleProfile?.phoneNumber
-                                              ? `${maskPhoneNumber(smsOracleProfile.phoneNumber)} 번호가 저장되어 있습니다. 멤버십을 시작한 뒤에만 OTP 인증과 발송 활성화를 이어갈 수 있습니다.`
-                                              : "멤버십을 시작하면 여기서 번호 등록과 OTP 인증을 완료하고, 다음날 아침부터 Daily Signal을 받을 수 있습니다."}
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsSubscriptionModalOpen(true)}
-                                        className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-200"
-                                    >
-                                        핵심 오라클 access 열기
-                                    </button>
-                                </div>
-                            ) : smsStep === "register" ? (
-                                <form onSubmit={handleSmsRegister} className="space-y-4">
-                                    <div>
-                                        <p className="text-sm font-semibold text-white">전화번호 등록</p>
-                                        <p className="mt-2 text-sm leading-6 text-white/62">
-                                            `+821012345678` 또는 `01012345678` 형식으로 입력하면 인증번호를 문자로 보냅니다.
-                                        </p>
-                                    </div>
-                                    <label className="block">
-                                        <span className="mb-2 block text-xs uppercase tracking-[0.2em] text-white/45">
-                                            Phone Number
-                                        </span>
-                                        <input
-                                            type="tel"
-                                            value={smsPhoneNumber}
-                                            onChange={(event) => setSmsPhoneNumber(event.target.value)}
-                                            placeholder="+821012345678"
-                                            className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white outline-none transition-colors placeholder:text-white/28 focus:border-cyan-300/45"
-                                        />
-                                    </label>
-                                    {smsError ? (
-                                        <p className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm leading-6 text-red-200">
-                                            {smsError}
-                                        </p>
-                                    ) : null}
-                                    {smsMessage ? (
-                                        <p className="rounded-2xl border border-cyan-300/25 bg-cyan-400/10 px-4 py-3 text-sm leading-6 text-cyan-100">
-                                            {smsMessage}
-                                        </p>
-                                    ) : null}
-                                    <button
-                                        type="submit"
-                                        disabled={smsSubmitting || !smsPhoneNumber.trim()}
-                                        className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
-                                    >
-                                        {smsSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "인증번호 받기"}
-                                    </button>
-                                </form>
-                            ) : null}
-
-                            {isSmsMembershipActive && smsStep === "verify" ? (
-                                <form onSubmit={handleSmsVerify} className="space-y-4">
-                                    <div>
-                                        <p className="text-sm font-semibold text-white">OTP 인증</p>
-                                        <p className="mt-2 text-sm leading-6 text-white/62">
-                                            {smsPhoneNumber ? `${maskPhoneNumber(smsPhoneNumber)} 번호로 보낸 6자리 인증번호를 입력해주세요.` : "문자로 받은 6자리 인증번호를 입력해주세요."}
-                                        </p>
-                                    </div>
-                                    <label className="block">
-                                        <span className="mb-2 block text-xs uppercase tracking-[0.2em] text-white/45">
-                                            Verification Code
-                                        </span>
-                                        <input
-                                            type="text"
-                                            inputMode="numeric"
-                                            value={smsCode}
-                                            onChange={(event) => setSmsCode(event.target.value.replace(/[^\d]/g, "").slice(0, 6))}
-                                            placeholder="123456"
-                                            className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-white outline-none transition-colors placeholder:text-white/28 focus:border-cyan-300/45"
-                                        />
-                                    </label>
-                                    {smsError ? (
-                                        <p className="rounded-2xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm leading-6 text-red-200">
-                                            {smsError}
-                                        </p>
-                                    ) : null}
-                                    {smsMessage ? (
-                                        <p className="rounded-2xl border border-cyan-300/25 bg-cyan-400/10 px-4 py-3 text-sm leading-6 text-cyan-100">
-                                            {smsMessage}
-                                        </p>
-                                    ) : null}
-                                    <div className="flex flex-col gap-3 sm:flex-row">
-                                        <button
-                                            type="submit"
-                                            disabled={smsSubmitting || smsCode.length !== 6}
-                                            className="inline-flex min-h-12 flex-1 items-center justify-center rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
-                                        >
-                                            {smsSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "인증 완료"}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setSmsStep("register");
-                                                setSmsCode("");
-                                                setSmsError("");
-                                                setSmsMessage("");
-                                            }}
-                                            className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/12 bg-white/[0.03] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/[0.06]"
-                                        >
-                                            번호 다시 입력
-                                        </button>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => void submitSmsRegister()}
-                                        disabled={smsSubmitting || !smsPhoneNumber.trim()}
-                                        className="text-sm font-medium text-cyan-100/80 transition-colors hover:text-cyan-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                    >
-                                        인증번호 다시 보내기
-                                    </button>
-                                </form>
-                            ) : null}
-
-                            {isSmsMembershipActive && smsStep === "complete" ? (
-                                <div className="space-y-4">
-                                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-300/10 text-emerald-200">
-                                        <ShieldCheck size={22} />
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-semibold text-white">연결 완료</p>
-                                        <p className="mt-2 text-sm leading-6 text-white/62">
-                                            {smsOracleProfile?.phoneNumber
-                                                ? `${maskPhoneNumber(smsOracleProfile.phoneNumber)} 번호가 Daily Signal에 연결되었습니다.`
-                                                : "Daily Signal 연결이 완료되었습니다."}
-                                        </p>
-                                    </div>
-                                    <div className="rounded-[24px] border border-emerald-300/20 bg-emerald-400/10 px-4 py-4 text-sm leading-7 text-emerald-50">
-                                        {isSmsMembershipActive
-                                            ? "내일 아침 첫 Daily Signal이 도착합니다. 이후에는 매일 한 번, 오늘의 흐름을 먼저 받아볼 수 있습니다."
-                                            : "번호 등록은 완료되었습니다. 구독을 시작하면 내일 아침부터 Daily Signal이 도착합니다."}
-                                    </div>
-                                    <div className="flex flex-col gap-3 sm:flex-row">
-                                        <Link
-                                            href="/daily"
-                                            className="inline-flex min-h-12 items-center justify-center rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-200"
-                                        >
-                                            오늘 흐름 계속 보기
-                                        </Link>
-                                        <button
-                                            type="button"
-                                            onClick={() => {
-                                                setSmsStep("register");
-                                                setSmsCode("");
-                                                setSmsError("");
-                                                setSmsMessage("");
-                                            }}
-                                            className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/12 bg-white/[0.03] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/[0.06]"
-                                        >
-                                            번호 변경
-                                        </button>
-                                    </div>
-                                </div>
-                            ) : null}
-                        </div>
-
-                        <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-5">
-                            <p className="text-sm font-semibold text-white">Daily Signal checklist</p>
-                            <p className="mt-2 text-sm leading-6 text-white/54">
-                                membership 위에 붙는 perk가 실제로 켜질 준비가 됐는지 확인하는 패널입니다.
-                            </p>
-                            <div className="mt-4 space-y-3">
-                                <div className="rounded-2xl border border-white/8 bg-black/20 px-4 py-3">
-                                    <p className="text-[11px] uppercase tracking-[0.22em] text-white/42">번호</p>
-                                    <p className="mt-2 text-sm font-medium text-white">
-                                        {smsOracleProfile?.phoneNumber ? maskPhoneNumber(smsOracleProfile.phoneNumber) : "아직 등록되지 않음"}
-                                    </p>
-                                </div>
-                                <div className="rounded-2xl border border-white/8 bg-black/20 px-4 py-3">
-                                    <p className="text-[11px] uppercase tracking-[0.22em] text-white/42">상태</p>
-                                    <p className="mt-2 text-sm font-medium text-white">{smsStatusLabel}</p>
-                                </div>
-                                <div className="rounded-2xl border border-white/8 bg-black/20 px-4 py-3">
-                                    <p className="text-[11px] uppercase tracking-[0.22em] text-white/42">시작 조건</p>
-                                    <p className="mt-2 text-sm leading-6 text-white/70">
-                                        전화번호 인증과 활성 membership이 모두 충족되면 다음날 아침부터 Daily Hook이 시작됩니다.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                        </motion.section>
-
-                        {/* Reading History Section */}
-                        <div className="mb-6 flex items-center justify-between">
-                            <div>
-                                <h2 className="text-lg font-semibold text-starlight font-cinzel">결정 정리 기록</h2>
-                                <p className="mt-1 text-xs text-white/40">
-                                    {readings.length > 0 ? `${readings.length}개의 정리 기록` : "아직 정리 기록이 없습니다"}
-                                </p>
-                            </div>
-                            {readings.length > 0 && (
                                 <Link
                                     href="/start?reset=true"
-                                    className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-xs font-medium text-white/70 transition-colors hover:bg-white/[0.08] hover:text-white"
+                                    className="inline-flex h-12 items-center justify-center rounded-full bg-[#D4AF37] px-8 text-xs font-bold uppercase tracking-wider text-black transition-all hover:bg-[#E7C867] hover:shadow-[0_0_24px_rgba(212,175,55,0.35)]"
                                 >
-                                    <Sparkles size={11} />
-                                    새 정리
+                                    Structure Your First Decision
                                 </Link>
-                            )}
-                        </div>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                variants={{
+                                    hidden: { opacity: 0 },
+                                    show: {
+                                        opacity: 1,
+                                        transition: {
+                                            staggerChildren: 0.08,
+                                        },
+                                    },
+                                }}
+                                initial="hidden"
+                                animate="show"
+                                className="grid gap-4 sm:grid-cols-2"
+                            >
+                                {readings.map((reading) => {
+                                    const meta = parseReadingMetadata(reading.metadata);
+                                    const title = getReadingTitle(meta);
+                                    const category = getContextCategory(meta);
+                                    const date = formatDate(reading.createdAt);
+                                    const subjectName = meta.readingData?.name || meta.name || "User";
+                                    const subjectBirth = meta.readingData?.birthDate || meta.birthDate || null;
 
-                        {readings.length === 0 ? (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="rounded-[32px] border border-white/[0.07] bg-white/[0.02] p-12 text-center"
-                    >
-                        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] shadow-[0_0_40px_rgba(212,175,55,0.12)]">
-                            <span className="font-cinzel text-[#D4AF37] text-3xl">결</span>
-                        </div>
-                        <h3 className="mb-3 text-xl text-starlight font-cinzel tracking-wide">아직 정리 기록이 없습니다</h3>
-                        <p className="mb-8 max-w-sm mx-auto text-sm leading-relaxed text-white/50">
-                            결은 캐릭터가 아니라 정리의 표시입니다. 막연한 고민보다 오늘 끝낼 선택 하나로 시작해보세요.
-                        </p>
-                        <Link
-                            href="/start?reset=true"
-                            className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-[#D4AF37] px-10 font-bold text-black transition-all hover:bg-[#E7C867] hover:shadow-[0_0_24px_rgba(212,175,55,0.35)]"
-                        >
-                            첫 선택 정리하기
-                        </Link>
-                    </motion.div>
-                ) : (
-                    <motion.div
-                        variants={{
-                            hidden: { opacity: 0 },
-                            show: {
-                                opacity: 1,
-                                transition: {
-                                    staggerChildren: 0.1,
-                                },
-                            },
-                        }}
-                        initial="hidden"
-                        animate="show"
-                        className="grid gap-4 sm:grid-cols-2"
-                    >
-                        {readings.map((reading) => {
-                            const meta = parseReadingMetadata(reading.metadata);
-                            const date = new Date(reading.createdAt).toLocaleDateString("en-US", {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                            });
+                                    return (
+                                        <motion.div
+                                            key={reading.id}
+                                            variants={{
+                                                hidden: { opacity: 0, y: 15 },
+                                                show: { opacity: 1, y: 0 },
+                                            }}
+                                            className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(145deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))] p-6 backdrop-blur-md transition-all hover:border-[#D4AF37]/40 hover:bg-white/[0.04] hover:shadow-[0_12px_40px_rgba(0,0,0,0.4)]"
+                                        >
+                                            <div className="pointer-events-none absolute right-0 top-0 p-5 opacity-5 transition-opacity group-hover:opacity-15">
+                                                <FileText size={56} className="text-[#D4AF37]" />
+                                            </div>
 
-                            return (
-                                <motion.div
-                                    key={reading.id}
-                                    variants={{
-                                        hidden: { opacity: 0, y: 20 },
-                                        show: { opacity: 1, y: 0 },
-                                    }}
-                                >
-                                    <Link
-                                        href={`/share/${reading.id}?view=full`}
-                                        className="group relative block overflow-hidden rounded-xl p-6 glass-card glass-card-hover"
-                                    >
-                                        <div className="absolute right-0 top-0 p-4 opacity-10 transition-opacity group-hover:opacity-20">
-                                            <Sparkles className="h-12 w-12 text-white" />
-                                        </div>
-
-                                        <div className="relative z-10 flex h-full flex-col justify-between">
                                             <div>
-                                                <div className="mb-4 flex items-center justify-between">
-                                                    <span className="rounded border border-[#D4AF37]/30 bg-gradient-to-r from-[#D4AF37]/20 to-[#D4AF37]/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-[#D4AF37] backdrop-blur-md">
-                                                        Premium
+                                                <div className="mb-4 flex items-center justify-between gap-2">
+                                                    <span
+                                                        className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${category.badgeClass}`}
+                                                    >
+                                                        <Sparkles size={10} />
+                                                        {category.label}
                                                     </span>
                                                     <span className="flex items-center gap-1 font-outfit text-xs text-white/40">
-                                                        <Calendar className="h-3 w-3" />
+                                                        <Calendar size={12} />
                                                         {date}
                                                     </span>
                                                 </div>
-                                                <h3 className="mb-2 line-clamp-2 text-xl font-bold text-starlight transition-colors group-hover:text-[#D4AF37] font-cinzel">
-                                                    {meta.title || "Cosmic Analysis Report"}
+
+                                                <h3 className="mb-3 line-clamp-2 text-lg font-bold text-starlight transition-colors group-hover:text-[#F4D88A] font-cinzel leading-snug">
+                                                    {title}
                                                 </h3>
-                                                <p className="font-outfit text-sm text-white/50">
-                                                    {meta.readingData?.name || meta.name || "User"} •{" "}
-                                                    {meta.readingData?.birthDate || meta.birthDate || "Unknown Date"}
-                                                </p>
+
+                                                <div className="mb-6 flex items-center gap-2 font-outfit text-xs text-white/45">
+                                                    <span>{subjectName}</span>
+                                                    {subjectBirth && (
+                                                        <>
+                                                            <span>•</span>
+                                                            <span>{subjectBirth}</span>
+                                                        </>
+                                                    )}
+                                                </div>
                                             </div>
 
-                                            <div className="mt-6 flex items-center justify-between text-sm text-white/40 transition-colors group-hover:text-white/80">
-                                                <span className="font-outfit">View Report</span>
-                                                <ChevronRight className="h-4 w-4 transform transition-transform group-hover:translate-x-1" />
+                                            <div className="pt-4 border-t border-white/[0.06]">
+                                                <Link
+                                                    href={`/share/${reading.id}?view=full`}
+                                                    className="inline-flex w-full items-center justify-between rounded-xl bg-white/[0.04] px-4 py-3 text-xs font-semibold text-white/80 transition-all group-hover:bg-[#D4AF37] group-hover:text-black"
+                                                >
+                                                    <span>View Decision Note</span>
+                                                    <ChevronRight
+                                                        size={14}
+                                                        className="transition-transform group-hover:translate-x-1"
+                                                    />
+                                                </Link>
                                             </div>
-                                        </div>
-                                    </Link>
-                                </motion.div>
-                            );
-                        })}
-                    </motion.div>
-                )}
-                    </div>{/* end main content */}
-                </div>{/* end grid */}
-
-
-            </div>{/* end max-width container */}
+                                        </motion.div>
+                                    );
+                                })}
+                            </motion.div>
+                        )}
+                    </div>
+                </div>
+            </div>
 
             <SubscriptionModal
                 isOpen={isSubscriptionModalOpen}

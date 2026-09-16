@@ -9,5 +9,5 @@ export const THREE_LAYER_ROLE_EXPLANATION_KO =
 
 export const NEXT_MOVE_RITUAL_ENABLED: boolean = false;
 
-export const READING_PRODUCT_PRICE_CENTS = 399;
-export const READING_PRODUCT_PRICE_LABEL = '$3.99';
+export const READING_PRODUCT_PRICE_CENTS = 999;
+export const READING_PRODUCT_PRICE_LABEL = '$9.99';

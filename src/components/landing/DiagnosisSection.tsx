@@ -2,7 +2,9 @@
 
 import { motion } from 'framer-motion';
 
-export function DiagnosisSection() {
+export function DiagnosisSection({ language = 'ko' }: { language?: 'ko' | 'en' }) {
+    const isEn = language === 'en';
+
     return (
         <section className="relative py-20 md:py-32 bg-deep overflow-hidden">
 
@@ -21,21 +23,45 @@ export function DiagnosisSection() {
                     className="flex-1 md:pr-12 relative z-20 w-full"
                 >
                     <span className="text-acc-nebula text-xs font-bold tracking-widest uppercase mb-4 block">
-                        Why Decisions Stall
+                        {isEn ? 'Why Decisions Stall' : 'Why Decisions Stall'}
                     </span>
                     <h2 className="font-cinzel text-2xl md:text-4xl text-starlight mb-6 md:mb-8 leading-tight">
-                        결정을 미루는 건, <br />
-                        <span className="text-acc-gold">답이 없어서만은 아니에요.</span>
+                        {isEn ? (
+                            <>
+                                Decisions stall not from lack of answers, <br />
+                                <span className="text-acc-gold">but from conflicting noise.</span>
+                            </>
+                        ) : (
+                            <>
+                                결정을 미루는 건, <br />
+                                <span className="text-acc-gold">답이 없어서만은 아니에요.</span>
+                            </>
+                        )}
                     </h2>
                     <div className="space-y-4 md:space-y-6 text-moonlight font-light leading-relaxed text-sm md:text-base">
-                        <p>
-                            움직일지, 기다릴지, 줄일지, 멈출지. <br />
-                            선택지가 섞이면 마음보다 먼저 문장이 흐려집니다.
-                        </p>
-                        <p>
-                            그래서 먼저 필요한 건 위로나 예언보다, <br />
-                            오늘 판단할 수 있는 기준을 나누는 일입니다.
-                        </p>
+                        {isEn ? (
+                            <>
+                                <p>
+                                    To act, to wait, to scale back, or to walk away. <br />
+                                    When options blur together, clarity evaporates before courage does.
+                                </p>
+                                <p>
+                                    What you need right now is neither vague comfort nor fortune-telling, <br />
+                                    but an objective lens to separate timing from emotion.
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                <p>
+                                    움직일지, 기다릴지, 줄일지, 멈출지. <br />
+                                    선택지가 섞이면 마음보다 먼저 문장이 흐려집니다.
+                                </p>
+                                <p>
+                                    그래서 먼저 필요한 건 위로나 예언보다, <br />
+                                    오늘 판단할 수 있는 기준을 나누는 일입니다.
+                                </p>
+                            </>
+                        )}
                     </div>
                 </motion.div>
 

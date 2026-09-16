@@ -111,7 +111,12 @@ export function RitualSection({ language = 'ko' }: { language?: 'ko' | 'en' }) {
                     </motion.div>
 
                     {/* The Core: High-Vibrancy Gold (Intuitive Action Point) */}
-                    <Link href="/start?reset=true&entry=decision_timing_rebuild_v1" className="group relative z-30">
+                    <Link
+                        href={language === 'en'
+                            ? '/start?reset=true&entry=decision_timing_rebuild_v1&lang=en'
+                            : '/start?reset=true&entry=decision_timing_rebuild_v1'}
+                        className="group relative z-30"
+                    >
                         {/* Radiant Aura: Dynamic Intensity */}
                         <motion.div
                             animate={{

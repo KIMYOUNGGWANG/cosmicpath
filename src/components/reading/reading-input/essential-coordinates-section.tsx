@@ -1,6 +1,6 @@
 'use client';
 
-import { BIRTH_CITY_OPTIONS } from '@/lib/saju/city-options';
+import { BIRTH_CITY_OPTIONS, GLOBAL_BIRTH_CITY_OPTIONS } from '@/lib/saju/city-options';
 import { sectionShellClass } from './constants';
 import { formatDateInput } from './formatters';
 import { SegmentedChoice } from './segmented-choice';
@@ -136,6 +136,7 @@ export function EssentialCoordinatesSection({
                     <input
                         type="time"
                         step={60}
+                        lang={isEn ? 'en-US' : 'ko-KR'}
                         value={birthTime}
                         onChange={(event) => onBirthTimeChange(event.target.value)}
                         disabled={unknownTime}
@@ -175,12 +176,16 @@ export function EssentialCoordinatesSection({
                         type="text"
                         list="birth-city-options"
                         value={cityName}
-                        onChange={(event) => onCityNameChange(event.target.value)}
-                        placeholder={isEn ? 'Seoul, Busan, Jeju...' : '서울, 부산, 제주...'}
+                        onChange={(event) => {
+                            const raw = event.target.value.slice(0, 50);
+                            const sanitized = isEn ? raw.replace(/[^\w\s,.-]/g, '') : raw;
+                            onCityNameChange(sanitized);
+                        }}
+                        placeholder={isEn ? 'New York, London, Paris...' : '서울, 부산, 제주...'}
                         className="mt-3 block min-h-[48px] w-full rounded-[18px] border border-white/15 bg-white/[0.03] px-4 py-3 text-base text-starlight transition-colors placeholder:text-white/20 focus:border-acc-gold/80 focus:bg-white/[0.06] focus:outline-none"
                     />
                     <datalist id="birth-city-options">
-                        {BIRTH_CITY_OPTIONS.map((city) => (
+                        {(isEn ? GLOBAL_BIRTH_CITY_OPTIONS : BIRTH_CITY_OPTIONS).map((city) => (
                             <option
                                 key={city.value}
                                 value={isEn ? city.labelEn : city.labelKo}
@@ -193,18 +198,18 @@ export function EssentialCoordinatesSection({
                         <div className="mt-2.5 rounded-xl border border-acc-gold/30 bg-acc-gold/10 p-2.5 text-xs">
                             <div className="flex items-center gap-1.5 font-medium text-acc-gold">
                                 <span className="inline-block h-2 w-2 rounded-full bg-acc-gold animate-pulse" />
-                                <span>{isEn ? 'True Solar Time Live Correction' : '진태양시 실시간 정밀 보정'}</span>
+                                <span>{isEn ? 'True Solar Time Live Calibration' : '진태양시 실시간 정밀 보정'}</span>
                             </div>
                             <p className="mt-1 text-[11px] leading-relaxed text-starlight/90">
                                 {isEn
-                                    ? `Calibrating Tokyo 135°E standard meridian for ${cityName}. Eliminates longitude offset.`
+                                    ? `Calibrating standard meridian and longitude deviation for ${cityName}. Eliminates local solar offset for accurate BaZi & Natal wheel.`
                                     : `동경 135도(일본 아카시) 표준시 왜곡 교정: [${cityName}] 경도 오차를 자동 상쇄하여 진짜 사주 시주(時柱)를 확정합니다.`}
                             </p>
                         </div>
                     ) : (
                         <p className="mt-2 text-[11px] leading-5 text-white/42">
                             {isEn
-                                ? 'Recommended for true-solar-time correction. If omitted, the reading falls back to Seoul.'
+                                ? 'Recommended for true-solar-time and natal ascendant calibration. If omitted, falls back to standard coordinates.'
                                 : '진태양시 보정용 권장 입력입니다. 비워두면 서울 기준으로 계산됩니다.'}
                         </p>
                     )}
@@ -228,38 +233,40 @@ export function EssentialCoordinatesSection({
                 />
             </div>
 
-            {/* 자시법 (子時法) 선택 가이드 (Task 4) */}
-            <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] p-3.5 md:p-4">
-                <div className="flex items-center justify-between">
-                    <label className="text-[11px] font-semibold uppercase tracking-[0.22em] text-acc-gold">
-                        {isEn ? 'Zi-Hour Method (子時法)' : '자시법(子時法) 선택'}
-                    </label>
-                    <span className="text-[10px] text-white/40">
-                        {isEn ? 'Default: Tongja (Recommended)' : '기본값: 통자시 (전통 추천)'}
-                    </span>
+            {/* 자시법 (子時法) 선택 가이드 (한국어 전용: 서양권 사용자에겐 통자시 기본 자동 적용) */}
+            {!isEn ? (
+                <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] p-3.5 md:p-4">
+                    <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-semibold uppercase tracking-[0.22em] text-acc-gold">
+                            자시법(子時法) 선택
+                        </label>
+                        <span className="text-[10px] text-white/40">
+                            기본값: 통자시 (전통 추천)
+                        </span>
+                    </div>
+                    <div className="mt-2.5 grid grid-cols-3 gap-2">
+                        {[
+                            { value: 'tongja', label: '통자시 (기본)', desc: '23:30~ 다음날 일진' },
+                            { value: 'yaja', label: '야자시', desc: '23시 전날 일진 유지' },
+                            { value: 'joja', label: '조자시', desc: '23시부터 다음날 일진' },
+                        ].map((opt) => (
+                            <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => onZiSiModeChange?.(opt.value as 'tongja' | 'yaja' | 'joja')}
+                                className={`flex flex-col items-center justify-center rounded-lg border py-2 px-2 text-center transition-all ${
+                                    (ziSiMode || 'tongja') === opt.value
+                                        ? 'border-acc-gold bg-acc-gold/15 text-starlight shadow-md'
+                                        : 'border-white/10 bg-white/[0.03] text-white/50 hover:bg-white/[0.06] hover:text-white/80'
+                                }`}
+                            >
+                                <span className="text-xs font-bold">{opt.label}</span>
+                                <span className="mt-0.5 text-[10px] opacity-70">{opt.desc}</span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
-                <div className="mt-2.5 grid grid-cols-3 gap-2">
-                    {[
-                        { value: 'tongja', label: isEn ? 'Tongja (Default)' : '통자시 (기본)', desc: '23:30~ 다음날 일진' },
-                        { value: 'yaja', label: isEn ? 'Yaja (23:30)' : '야자시', desc: '23시 전날 일진 유지' },
-                        { value: 'joja', label: isEn ? 'Joja (23:00)' : '조자시', desc: '23시부터 다음날 일진' },
-                    ].map((opt) => (
-                        <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => onZiSiModeChange?.(opt.value as 'tongja' | 'yaja' | 'joja')}
-                            className={`flex flex-col items-center justify-center rounded-lg border py-2 px-2 text-center transition-all ${
-                                (ziSiMode || 'tongja') === opt.value
-                                    ? 'border-acc-gold bg-acc-gold/15 text-starlight shadow-md'
-                                    : 'border-white/10 bg-white/[0.03] text-white/50 hover:bg-white/[0.06] hover:text-white/80'
-                            }`}
-                        >
-                            <span className="text-xs font-bold">{opt.label}</span>
-                            <span className="mt-0.5 text-[10px] opacity-70">{opt.desc}</span>
-                        </button>
-                    ))}
-                </div>
-            </div>
+            ) : null}
 
             <div className="mt-5 rounded-[22px] border border-white/10 bg-black/20 p-4 md:p-5">
                 <div className="flex flex-wrap items-center gap-2">

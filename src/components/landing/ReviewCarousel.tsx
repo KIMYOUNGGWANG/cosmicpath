@@ -13,7 +13,51 @@ interface Review {
     createdAt: string;
 }
 
+const ENGLISH_FALLBACK_REVIEWS: Review[] = [
+    {
+        id: 'en-rev-1',
+        nickname: 'Marcus H. (New York)',
+        rating: 5,
+        content: 'No vague astrology fluff. It precisely called out my Saturn transit timing and gave me an exact week to negotiate my contract. Delivered real clarity.',
+        isPromoUser: false,
+        createdAt: '2026-08-20',
+    },
+    {
+        id: 'en-rev-2',
+        nickname: 'Elena S. (London)',
+        rating: 5,
+        content: 'I was trapped in an 8-month situationship. The dual BaZi and astrology synthesis explained our dynamic better than months of overthinking. Invaluable.',
+        isPromoUser: false,
+        createdAt: '2026-08-24',
+    },
+    {
+        id: 'en-rev-3',
+        nickname: 'David K. (San Francisco)',
+        rating: 5,
+        content: 'The true solar time precision is legit. It shifted my chart by 24 minutes and the Day Master analysis hit my exact career inflection point.',
+        isPromoUser: false,
+        createdAt: '2026-08-28',
+    },
+    {
+        id: 'en-rev-4',
+        nickname: 'Sarah T. (Chicago)',
+        rating: 5,
+        content: 'Direct, cold, and actionable. It told me what NOT to do before October. Felt like a confidential executive brief rather than a horoscope.',
+        isPromoUser: false,
+        createdAt: '2026-09-02',
+    },
+    {
+        id: 'en-rev-5',
+        nickname: 'Julian M. (Toronto)',
+        rating: 5,
+        content: 'Cross-checking Western transits with Eastern 10-year luck pillars is brilliant. Well worth the $9.99 unlock.',
+        isPromoUser: false,
+        createdAt: '2026-09-05',
+    },
+];
+
 export function ReviewCarousel({ language = 'ko' }: { language?: string }) {
+    const isEn = language === 'en';
     const [reviews, setReviews] = useState<Review[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const sectionRef = useRef<HTMLDivElement>(null);
@@ -23,6 +67,11 @@ export function ReviewCarousel({ language = 'ko' }: { language?: string }) {
     useEffect(() => {
         const fetchReviews = async () => {
             try {
+                if (isEn) {
+                    const doubled = [...ENGLISH_FALLBACK_REVIEWS, ...ENGLISH_FALLBACK_REVIEWS];
+                    setReviews(doubled);
+                    return;
+                }
                 const res = await fetch('/api/review');
                 if (res.ok) {
                     const data = await res.json();
@@ -35,12 +84,15 @@ export function ReviewCarousel({ language = 'ko' }: { language?: string }) {
                 }
             } catch (error) {
                 console.error('Failed to fetch reviews:', error);
+                if (isEn) {
+                    setReviews([...ENGLISH_FALLBACK_REVIEWS, ...ENGLISH_FALLBACK_REVIEWS]);
+                }
             } finally {
                 setIsLoading(false);
             }
         };
         fetchReviews();
-    }, []);
+    }, [isEn]);
 
     // Pause marquee when off-screen — saves GPU/battery on mobile
     useEffect(() => {

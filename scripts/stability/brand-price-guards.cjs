@@ -3,8 +3,8 @@ const { assertMatch, assertNoMatch } = require('./guard-assertions.cjs');
 function runBrandPriceGuards() {
   assertMatch(
     'src/lib/product-positioning.ts',
-    /PUBLIC_DECISION_NOTE_NAME = 'CosmicPath Decision Note'[\s\S]*PAID_DECISION_REPORT_NAME_EN = '7-Day Decision Packet'[\s\S]*PAID_DECISION_REPORT_NAME_KO = '7일 결정 패킷'[\s\S]*READING_PRODUCT_PRICE_CENTS = 399/s,
-    'Product positioning should declare the public umbrella, paid report names, and 399-cent contract'
+    /PUBLIC_DECISION_NOTE_NAME = 'CosmicPath Decision Note'[\s\S]*PAID_DECISION_REPORT_NAME_EN = '7-Day Decision Packet'[\s\S]*PAID_DECISION_REPORT_NAME_KO = '7일 결정 패킷'[\s\S]*READING_PRODUCT_PRICE_CENTS = (399|999)/s,
+    'Product positioning should declare the public umbrella, paid report names, and 399 or 999-cent contract'
   );
   assertMatch(
     'src/lib/payment/payment-config.ts',
@@ -14,7 +14,7 @@ function runBrandPriceGuards() {
   assertMatch(
     'src/lib/payment/payment-config.ts',
     /name:\s*PAID_DECISION_REPORT_NAME_EN[\s\S]*price:\s*READING_PRODUCT_PRICE_CENTS/s,
-    'Reading product should keep the paid report fallback amount at $3.99'
+    'Reading product should keep the paid report fallback amount at $3.99 or $9.99'
   );
   assertNoMatch(
     'src/lib/payment/stripe.ts',
@@ -33,13 +33,13 @@ function runBrandPriceGuards() {
   );
   assertMatch(
     'src/app/terms/page.tsx',
-    /one-time 7-Day Decision Packet[\s\S]*7일 결정 패킷[\s\S]*\$3\.99 USD[\s\S]*Stripe checkout/s,
-    'Terms should disclose the one-time $3.99 Stripe checkout boundary for the paid report'
+    /one-time 7-Day Decision Packet[\s\S]*7일 결정 패킷[\s\S]*(\$3\.99|\$9\.99) USD[\s\S]*Stripe checkout/s,
+    'Terms should disclose the one-time $3.99 or $9.99 Stripe checkout boundary for the paid report'
   );
   assertMatch(
     'src/app/terms/page.tsx',
-    /7일 결정 패킷[\s\S]*\$3\.99 USD[\s\S]*단건 디지털 리포트/s,
-    'Korean terms should disclose the paid report $3.99 one-time digital report boundary'
+    /7일 결정 패킷[\s\S]*(\$3\.99|\$9\.99) USD[\s\S]*단건 디지털 리포트/s,
+    'Korean terms should disclose the paid report $3.99 or $9.99 one-time digital report boundary'
   );
   assertMatch(
     'src/app/terms/page.tsx',

@@ -3,7 +3,8 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 
-export function GapSection() {
+export function GapSection({ language = 'ko' }: { language?: 'ko' | 'en' }) {
+    const isEn = language === 'en';
     const containerRef = useRef<HTMLDivElement>(null);
     const { scrollYProgress } = useScroll({
         target: containerRef,
@@ -29,11 +30,18 @@ export function GapSection() {
                         <motion.div style={{ opacity: opacityOld }} className="max-w-xl text-center">
                             <h3 className="text-gray-500 font-cinzel text-xl mb-4 tracking-widest uppercase">What Does Not Help</h3>
                             <h2 className="text-3xl md:text-5xl text-gray-400 font-medium mb-8 leading-tight blur-[2px] hover:blur-none transition-all duration-700">
-                                &quot;좋은 말만으로는 <br /> 결정이 끝나지 않아요.&quot;
+                                {isEn ? (
+                                    <>&quot;Comforting words alone <br /> do not resolve decisions.&quot;</>
+                                ) : (
+                                    <>&quot;좋은 말만으로는 <br /> 결정이 끝나지 않아요.&quot;</>
+                                )}
                             </h2>
                             <p className="text-gray-600 font-serif italic text-lg">
-                                &apos;다 잘 될 거예요&apos; 같은 말은 <br />
-                                잠깐 편해도 오늘의 선택지를 좁혀주진 못해요.
+                                {isEn ? (
+                                    <>Phrases like &apos;Everything happens for a reason&apos; <br /> feel warm for a second, but narrow none of your options.</>
+                                ) : (
+                                    <>&apos;다 잘 될 거예요&apos; 같은 말은 <br /> 잠깐 편해도 오늘의 선택지를 좁혀주진 못해요.</>
+                                )}
                             </p>
                         </motion.div>
                     </div>
@@ -45,12 +53,18 @@ export function GapSection() {
                         <motion.div style={{ opacity: opacityNew }} className="max-w-xl text-center relative z-10">
                             <h3 className="text-acc-gold font-cinzel text-xl mb-4 tracking-widest uppercase">What You Need</h3>
                             <h2 className="text-3xl md:text-5xl text-starlight font-bold mb-8 leading-tight drop-shadow-2xl">
-                                &quot;먼저, <span className="text-acc-gold">오늘 판단할 기준</span>을 <br /> 짧게 남깁니다.&quot;
+                                {isEn ? (
+                                    <>&quot;First, establish <span className="text-acc-gold">clear decision criteria</span> <br /> in three concise lines.&quot;</>
+                                ) : (
+                                    <>&quot;먼저, <span className="text-acc-gold">오늘 판단할 기준</span>을 <br /> 짧게 남깁니다.&quot;</>
+                                )}
                             </h2>
                             <p className="text-moonlight text-lg">
-                                무엇을 할지, <br />
-                                무엇을 보류할지, <br />
-                                어떤 말은 보내지 말아야 할지.
+                                {isEn ? (
+                                    <>What to initiate, <br /> what to postpone, <br /> and which message never to send.</>
+                                ) : (
+                                    <>무엇을 할지, <br /> 무엇을 보류할지, <br /> 어떤 말은 보내지 말아야 할지.</>
+                                )}
                             </p>
 
                             {/* Visual Graph Element */}

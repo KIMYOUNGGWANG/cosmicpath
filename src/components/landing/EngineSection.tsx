@@ -21,7 +21,8 @@ const DATA_NODES = [
     { id: 5, orbit: 3, icon: '時', label: '골든타임', color: '#9F8F78' },
 ];
 
-export function EngineSection() {
+export function EngineSection({ language = 'ko' }: { language?: 'ko' | 'en' }) {
+    const isEn = language === 'en';
     const containerRef = useRef<HTMLDivElement>(null);
     const orbitalRef = useRef<HTMLDivElement>(null);
     const [orbitalSize, setOrbitalSize] = useState(480); // default desktop
@@ -122,15 +123,33 @@ export function EngineSection() {
                     className="text-center mb-16 md:mb-24"
                 >
                     <span className="text-acc-logic text-xs font-bold tracking-[0.3em] uppercase block mb-4">
-                        Quiet Cross-Check
+                        {isEn ? 'Dual-Cosmic Consensus' : 'Quiet Cross-Check'}
                     </span>
                     <h2 className="font-cinzel text-2xl md:text-4xl text-starlight mb-6 leading-tight">
-                        한 줄 조언보다, <br className="md:hidden" />
-                        <span className="text-acc-gold">독립된 근거를 교차합니다.</span>
+                        {isEn ? (
+                            <>
+                                Rather than one-line advice, <br className="md:hidden" />
+                                <span className="text-acc-gold">we cross-examine independent signals.</span>
+                            </>
+                        ) : (
+                            <>
+                                한 줄 조언보다, <br className="md:hidden" />
+                                <span className="text-acc-gold">독립된 근거를 교차합니다.</span>
+                            </>
+                        )}
                     </h2>
                     <p className="text-moonlight max-w-xl mx-auto text-base md:text-lg leading-relaxed">
-                        사주(구조), 점성술(타이밍), 자미두수(명반), 태국 왕실 점성술(마하탁사), 수비학(주기)의 5대 엔진을 결합합니다.<br />
-                        결론보다 먼저 어떤 천문 데이터가 같은 방향을 가리키는지 검증합니다.
+                        {isEn ? (
+                            <>
+                                Synthesizing Western Natal Astrology (timing), Eastern BaZi (structure), and 3 secondary verification engines.<br />
+                                Before reaching a conclusion, we verify which astronomical data points align in consensus.
+                            </>
+                        ) : (
+                            <>
+                                사주(구조), 점성술(타이밍), 자미두수(명반), 태국 왕실 점성술(마하탁사), 수비학(주기)의 5대 엔진을 결합합니다.<br />
+                                결론보다 먼저 어떤 천문 데이터가 같은 방향을 가리키는지 검증합니다.
+                            </>
+                        )}
                     </p>
                 </motion.div>
 
@@ -153,8 +172,8 @@ export function EngineSection() {
                         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-acc-gold via-amber-500 to-acc-gold flex items-center justify-center z-20 shadow-2xl"
                     >
                         <div className="text-center">
-                            <span className="font-cinzel text-xl md:text-3xl text-deep-navy font-bold block">결</span>
-                            <span className="font-cinzel text-sm md:text-base text-deep-navy font-bold opacity-80">정리</span>
+                            <span className="font-cinzel text-xl md:text-3xl text-deep-navy font-bold block">{isEn ? 'CORE' : '결'}</span>
+                            <span className="font-cinzel text-xs md:text-sm text-deep-navy font-bold opacity-80">{isEn ? 'DOSSIER' : '정리'}</span>
                         </div>
                     </motion.div>
 
@@ -180,6 +199,9 @@ export function EngineSection() {
                                 const x = Math.cos(angle) * (orbit.radius / 2);
                                 const y = Math.sin(angle) * (orbit.radius / 2);
 
+                                const englishLabels = ['BaZi', 'Astrology', 'Ziwei', 'Numerology', 'Thai Royal', 'Golden Timing'];
+                                const displayLabel = isEn ? (englishLabels[node.id] || node.label) : node.label;
+
                                 return (
                                     <motion.div
                                         key={node.id}
@@ -200,7 +222,7 @@ export function EngineSection() {
                                         {node.icon}
                                         {/* Tooltip */}
                                         <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-white/90 bg-black/80 px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                                            {node.label}
+                                            {displayLabel}
                                         </span>
                                     </motion.div>
                                 );
@@ -222,29 +244,29 @@ export function EngineSection() {
                         <div ref={pointsRef} className="text-4xl md:text-5xl font-bold text-acc-gold mb-2 font-cinzel">
                             0
                         </div>
-                        <div className="text-sm font-bold text-white mb-1">참고 포인트</div>
-                        <div className="text-xs text-dim text-center">사주와 별자리의<br />주요 기준을 압축해요</div>
+                        <div className="text-sm font-bold text-white mb-1">{isEn ? 'Audit Points' : '참고 포인트'}</div>
+                        <div className="text-xs text-dim text-center">{isEn ? 'Compressing core astrological & BaZi signals' : '사주와 별자리의 주요 기준을 압축해요'}</div>
                     </div>
 
                     {/* Stat 2 */}
                     <div className="flex flex-col items-center p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-acc-logic/30 transition-colors">
-                        <div className="text-4xl md:text-5xl font-bold text-acc-logic mb-2 font-cinzel">4</div>
-                        <div className="text-sm font-bold text-white mb-1">융합 엔진</div>
-                        <div className="text-xs text-dim text-center">사주 + 점성 + 자미두수 + 수비학<br />4대 체계를 교차 검증해요</div>
+                        <div className="text-4xl md:text-5xl font-bold text-acc-logic mb-2 font-cinzel">5</div>
+                        <div className="text-sm font-bold text-white mb-1">{isEn ? 'Fusion Engines' : '융합 엔진'}</div>
+                        <div className="text-xs text-dim text-center">{isEn ? 'Astrology ✕ BaZi with 3 verification models' : '사주 + 점성 + 자미두수 + 수비학 4대 체계를 교차 검증해요'}</div>
                     </div>
 
                     {/* Stat 3 */}
                     <div className="flex flex-col items-center p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-[#c8a84d]/30 transition-colors">
                         <div className="text-4xl md:text-5xl font-bold text-[#e6ca7d] mb-2 font-cinzel">12</div>
-                        <div className="text-sm font-bold text-white mb-1">월별 장부</div>
-                        <div className="text-xs text-dim text-center">12개월 월별 운세와 9년 주기를<br />정밀하게 산출해요</div>
+                        <div className="text-sm font-bold text-white mb-1">{isEn ? 'Monthly Ledger' : '월별 장부'}</div>
+                        <div className="text-xs text-dim text-center">{isEn ? '12-month rolling timeline & lifecycle cycles' : '12개월 월별 운세와 9년 주기를 정밀하게 산출해요'}</div>
                     </div>
 
                     {/* Stat 4 */}
                     <div className="flex flex-col items-center p-6 bg-white/5 rounded-2xl border border-white/10 hover:border-star-yellow/30 transition-colors">
                         <div className="text-4xl md:text-5xl font-bold text-star-yellow mb-2 font-cinzel">1</div>
-                        <div className="text-sm font-bold text-white mb-1">오늘 할 일</div>
-                        <div className="text-xs text-dim text-center">첫 정리에서 가장 작은 행동을<br />먼저 보여드려요</div>
+                        <div className="text-sm font-bold text-white mb-1">{isEn ? 'Next Move' : '오늘 할 일'}</div>
+                        <div className="text-xs text-dim text-center">{isEn ? 'One high-leverage immediate action today' : '첫 정리에서 가장 작은 행동을 먼저 보여드려요'}</div>
                     </div>
                 </motion.div>
             </div>

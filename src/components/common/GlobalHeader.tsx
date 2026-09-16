@@ -22,7 +22,9 @@ export function GlobalHeader({ language = 'ko', showBackButton = true }: GlobalH
     const { openLoginModal } = useLoginModal();
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const decisionStartHref = '/start?reset=true&entry=decision_timing_rebuild_v1';
+    const decisionStartHref = isEn
+        ? '/start?reset=true&entry=decision_timing_rebuild_v1&lang=en'
+        : '/start?reset=true&entry=decision_timing_rebuild_v1';
 
     useDocumentScrollLock(isMobileMenuOpen);
 
