@@ -1,15 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
 import { calculateCompatibility } from '@/lib/match/match-calculator';
 
 /**
- * POST /api/match/[id]/unlock - Manually unlock a match session and regenerate analysis
+ * POST /api/match/[id]/unlock - Manually unlock a match session (Admin only)
  */
 export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const sessionAuth = await auth();
+        if (!sessionAuth?.user?.id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        if (sessionAuth.user.role !== 'ADMIN') {
+            return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+        }
+
         const { id } = await params;
 
         // Get the existing session first
@@ -61,7 +71,7 @@ export async function POST(
                 unlockedAt: updatedSession.unlockedAt,
             },
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('[Match Unlock] Error:', error);
         return NextResponse.json(
             { error: 'Failed to unlock session' },

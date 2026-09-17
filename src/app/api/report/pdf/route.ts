@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
+import { extractReadingAccessKey, hasReadingAccess } from '@/lib/reading-access';
 import { generateMasterDossierHtml, type DossierUserData } from '@/lib/pdf/master-dossier-html';
 
 export const dynamic = 'force-dynamic';
@@ -8,9 +10,9 @@ export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
         const readingId = searchParams.get('readingId');
-        const format = searchParams.get('format') || 'html'; // 'html' or 'pdf'
+        const accessKey = searchParams.get('accessKey');
 
-        let dossierData: DossierUserData = {
+        const dossierData: DossierUserData = {
             name: 'Client Analysis',
             birthDate: '1995-05-15',
             birthTime: '14:30',
@@ -38,10 +40,27 @@ export async function GET(request: NextRequest) {
                 where: { id: readingId },
                 select: {
                     id: true,
+                    userId: true,
                     data: true,
                     metadata: true,
                 }
             });
+
+            if (!record) {
+                return NextResponse.json({ error: 'Reading not found' }, { status: 404 });
+            }
+
+            const session = await auth();
+            const allowed = hasReadingAccess({
+                readingUserId: record.userId,
+                sessionUserId: session?.user?.id ?? null,
+                storedAccessKey: extractReadingAccessKey(record.metadata),
+                providedAccessKey: accessKey,
+            });
+
+            if (!allowed) {
+                return NextResponse.json({ error: 'Forbidden: Access denied' }, { status: 403 });
+            }
 
             if (record) {
                 try {

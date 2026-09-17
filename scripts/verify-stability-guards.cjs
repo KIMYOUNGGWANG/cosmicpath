@@ -5,6 +5,7 @@ const { runPaymentCheckoutGuards } = require('./stability/payment-checkout-guard
 const { runReviewGrowthDataGuards } = require('./stability/review-growth-data-guards.cjs');
 const { runSizeGuards } = require('./stability/size-guards.cjs');
 const { runStartSafetyGuards } = require('./stability/start-safety-guards.cjs');
+const { runSecurityGuards } = require('./stability/security-guards.cjs');
 
 function run() {
   runSizeGuards();
@@ -14,6 +15,7 @@ function run() {
   runEnglishSitemapGuards();
   runPaymentCheckoutGuards();
   runReviewGrowthDataGuards();
+  runSecurityGuards();
   console.log('verify:stability passed');
 }
 

@@ -8,6 +8,7 @@ import {
     SUBSCRIPTION_PLAN_TYPES,
     getSubscriptionPriceIdForPlanType,
 } from '@/lib/payment/payment-config';
+import { resolveSafeAppOrigin } from '@/lib/security-url';
 
 const createSubscriptionRequestSchema = z.object({
     planType: z.enum(SUBSCRIPTION_PLAN_TYPES),
@@ -31,14 +32,7 @@ function errorResponse(
 }
 
 function resolveAppOrigin(request: NextRequest): string {
-    const forwardedHost = request.headers.get('x-forwarded-host');
-    const forwardedProto = request.headers.get('x-forwarded-proto');
-
-    if (forwardedHost && forwardedProto) {
-        return `${forwardedProto}://${forwardedHost}`;
-    }
-
-    return request.headers.get('origin') || request.nextUrl.origin;
+    return resolveSafeAppOrigin(request);
 }
 
 function getTestPriceEnvKey(planType: z.infer<typeof createSubscriptionRequestSchema>['planType']): string {

@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
 import { calculateDailyTransit } from '@/lib/sajumind/engine';
 import type { DecisionLogEntry } from '@/lib/sajumind/types';
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
     const body = await request.json();
-    const { title, description, dayMasterHangul = '갑', userId, guestId = 'guest-session' } = body;
+    const { title, description, dayMasterHangul = '갑', guestId } = body;
+    const effectiveUserId = session?.user?.id || null;
+    const effectiveGuestId = effectiveUserId ? null : (guestId || 'guest-session');
 
     if (!title || !title.trim()) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
@@ -26,8 +30,8 @@ export async function POST(request: NextRequest) {
       if (prisma.sajuMindDecision) {
         const saved = await prisma.sajuMindDecision.create({
           data: {
-            userId: userId || null,
-            guestId,
+            userId: effectiveUserId,
+            guestId: effectiveGuestId || 'guest-session',
             title,
             description,
             sajuSnapshot: JSON.stringify(sajuSnapshot),
@@ -58,15 +62,26 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    const sessionUserId = session?.user?.id;
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const guestId = searchParams.get('guestId') || 'guest-session';
+    const guestId = searchParams.get('guestId');
 
     let decisions: DecisionLogEntry[] = [];
     try {
       if (prisma.sajuMindDecision) {
+        const whereClause = sessionUserId
+          ? { userId: sessionUserId }
+          : guestId && guestId !== 'guest-session'
+            ? { guestId, userId: null }
+            : null;
+
+        if (!whereClause) {
+          return NextResponse.json({ success: true, decisions: [] });
+        }
+
         const records = await prisma.sajuMindDecision.findMany({
-          where: userId ? { userId } : { guestId },
+          where: whereClause,
           orderBy: { createdAt: 'desc' },
           take: 20,
         });

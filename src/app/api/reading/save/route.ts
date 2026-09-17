@@ -286,8 +286,7 @@ export async function GET(request: Request) {
             });
         }
 
-        const count = await prisma.readingResult.count();
-        return NextResponse.json({ status: 'ok', count });
+        return NextResponse.json({ status: 'ok' });
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({ status: 'error', message }, { status: 500 });

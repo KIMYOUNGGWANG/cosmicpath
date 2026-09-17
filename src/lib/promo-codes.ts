@@ -65,7 +65,6 @@ export async function createSingleUsePromotionCode(params: {
 export async function isPromoExemptAccount(email?: string | null): Promise<boolean> {
   if (!email) return false;
   const normalized = normalizeEmail(email);
-  if (normalized === 'rladudrhkd1095@gmail.com') return true;
 
   const envAdmins = (process.env.ADMIN_EMAILS ?? '')
     .split(',')

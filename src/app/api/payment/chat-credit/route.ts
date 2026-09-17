@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createCheckoutSession } from '@/lib/payment/stripe';
 import { CHAT_CREDIT_SINGLE, CHAT_CREDIT_PACK } from '@/lib/payment/payment-config';
+import { getSafeReturnUrl, resolveSafeAppOrigin } from '@/lib/security-url';
 import { z } from 'zod';
 
 const ChatCreditRequestSchema = z.object({
@@ -22,13 +23,15 @@ export async function POST(request: NextRequest) {
 
         const { readingId, returnUrl, creditType, postId, pid } = parsed.data;
         const normalizedPostId = (postId?.trim() || pid?.trim() || '').slice(0, 128);
-        const origin = request.headers.get('origin') || 'http://localhost:3000';
+        const origin = resolveSafeAppOrigin(request);
 
         // Select product based on creditType
         const product = creditType === 'pack' ? CHAT_CREDIT_PACK : CHAT_CREDIT_SINGLE;
 
-        // Determine success/cancel URLs
-        const baseUrl = returnUrl || `${origin}/share/${readingId}`;
+        // Determine success/cancel URLs with open-redirect protection
+        const defaultPath = `/share/${encodeURIComponent(readingId)}`;
+        const safePath = getSafeReturnUrl(returnUrl, defaultPath);
+        const baseUrl = safePath.startsWith('/') ? `${origin}${safePath}` : safePath;
         const separator = baseUrl.includes('?') ? '&' : '?';
 
         const successUrl = `${baseUrl}${separator}payment=success&session_id={CHECKOUT_SESSION_ID}`;

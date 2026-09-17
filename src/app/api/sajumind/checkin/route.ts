@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
 import {
   calculateSajuMindProfile,
   calculateDailyTransit,
@@ -10,8 +11,11 @@ import type { CheckInRequest, CheckInResult, SajuMindEmotion } from '@/lib/sajum
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await auth();
     const body: CheckInRequest = await request.json();
-    const { emotion, tags = [], note = '', userId, guestId, userProfile } = body;
+    const { emotion, tags = [], note = '', guestId, userProfile } = body;
+    const effectiveUserId = session?.user?.id || null;
+    const effectiveGuestId = effectiveUserId ? null : (guestId || 'guest-session');
 
     if (!emotion) {
       return NextResponse.json(
@@ -66,8 +70,8 @@ export async function POST(request: NextRequest) {
       if (prisma.sajuMindCheckIn) {
         const saved = await prisma.sajuMindCheckIn.create({
           data: {
-            userId: userId || null,
-            guestId: guestId || 'guest-session',
+            userId: effectiveUserId,
+            guestId: effectiveGuestId || 'guest-session',
             emotion,
             tags: JSON.stringify(tags),
             note,
@@ -106,9 +110,10 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    const sessionUserId = session?.user?.id;
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const guestId = searchParams.get('guestId') || 'guest-session';
+    const guestId = searchParams.get('guestId');
 
     let history: Array<{
       id: string;
@@ -122,8 +127,18 @@ export async function GET(request: NextRequest) {
 
     try {
       if (prisma.sajuMindCheckIn) {
+        const whereClause = sessionUserId
+          ? { userId: sessionUserId }
+          : guestId && guestId !== 'guest-session'
+            ? { guestId, userId: null }
+            : null;
+
+        if (!whereClause) {
+          return NextResponse.json({ success: true, history: [] });
+        }
+
         const records = await prisma.sajuMindCheckIn.findMany({
-          where: userId ? { userId } : { guestId },
+          where: whereClause,
           orderBy: { createdAt: 'desc' },
           take: 30,
         });

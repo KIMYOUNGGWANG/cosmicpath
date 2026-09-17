@@ -7,6 +7,7 @@ import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { extractReadingAccessKey, hasReadingAccess } from '@/lib/reading-access';
 import { scheduleDefaultFollowUps } from '@/lib/followup-jobs';
+import { resolveSafeAppOrigin } from '@/lib/security-url';
 
 /**
  * POST /api/payment - 결제 세션 생성 (Stripe)
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest) {
             appliedPromoCodeId = promoCode.id;
         }
 
-        const origin = request.headers.get('origin') || 'http://localhost:3000';
+        const origin = resolveSafeAppOrigin(request);
 
         const session = await createCheckoutSession({
             productId: resolvedProductId,

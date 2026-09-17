@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createCheckoutSession } from '@/lib/payment/stripe';
 import { MATCH_PRODUCT } from '@/lib/payment/payment-config';
 import { prisma } from '@/lib/prisma';
+import { resolveSafeAppOrigin } from '@/lib/security-url';
 
 /**
  * POST /api/match/[id]/pay - Create Stripe checkout session for Match unlock
@@ -34,7 +35,7 @@ export async function POST(
             );
         }
 
-        const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        const origin = resolveSafeAppOrigin(request);
 
         const session = await createCheckoutSession({
             productId: MATCH_PRODUCT.productId,

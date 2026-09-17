@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
 import {
   calculateSajuMindProfile,
 } from '@/lib/sajumind/engine';
@@ -8,12 +9,13 @@ import type { SajuMindEmotion, WeeklyPatternSummary } from '@/lib/sajumind/types
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth();
+    const sessionUserId = session?.user?.id;
     const { searchParams } = new URL(request.url);
     const birthDate = searchParams.get('birthDate') || '1995-05-15';
     const birthTime = searchParams.get('birthTime') || '12:00';
     const name = searchParams.get('name') || 'Friend';
-    const userId = searchParams.get('userId');
-    const guestId = searchParams.get('guestId') || 'guest-session';
+    const guestId = searchParams.get('guestId');
 
     const profile = calculateSajuMindProfile(name, birthDate, birthTime);
     const dayMaster = profile.dayMaster;
@@ -30,10 +32,16 @@ export async function GET(request: NextRequest) {
     }> = [];
 
     try {
-      if (prisma.sajuMindCheckIn) {
+      const targetFilter = sessionUserId
+        ? { userId: sessionUserId }
+        : guestId && guestId !== 'guest-session'
+          ? { guestId, userId: null }
+          : null;
+
+      if (prisma.sajuMindCheckIn && targetFilter) {
         const records = await prisma.sajuMindCheckIn.findMany({
           where: {
-            ...(userId ? { userId } : { guestId }),
+            ...targetFilter,
             createdAt: { gte: sevenDaysAgo },
           },
           orderBy: { createdAt: 'asc' },
